@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ChatList, type ChatRoom } from '@/components/Chat/ChatList';
@@ -11,24 +11,26 @@ import {
   selectPendingPeerID,
   selectPendingPeerDisplayName,
   matrixClient,
-  matrixEvents,
-  MATRIX_EVENTS,
 } from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
 import type { MatrixRoom, MatrixMessage } from '@mobazha/core';
-import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { UserInfoCard, type UserInfo } from '@/components/Chat/UserInfoCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui';
 import { VerificationDialog, type VerificationPhase } from './VerificationDialog';
+import { RoomSettingsPanel } from './RoomSettingsPanel';
+import { useChatEffects } from './hooks/useChatEffects';
 
-// 转换 MatrixRoom 到 ChatRoom
+// ---------------------------------------------------------------------------
+// Data converters
+// ---------------------------------------------------------------------------
+
 function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
   return {
     id: room.roomId,
     name: room.name || defaultName,
     avatar: room.avatarUrl,
-    rawMxcAvatarUrl: room.rawMxcAvatarUrl, // 原始 mxc URL 用于认证下载
+    rawMxcAvatarUrl: room.rawMxcAvatarUrl,
     lastMessage: room.lastMessage?.content,
     lastMessageTime: (() => {
       if (!room.timestamp) return undefined;
@@ -38,18 +40,17 @@ function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
         : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     })(),
     unreadCount: room.unreadCount,
-    isOnline: false, // Will be updated from presence
+    isOnline: false,
     isEncrypted: room.isEncrypted,
     isDirect: room.isDirect,
     roomType: room.roomType,
     isExternal: room.isExternal,
-    isVerified: false, // Will be updated from verification state
+    isVerified: false,
     isInvite: room.membership === 'invite',
     inviterName: room.inviter,
   };
 }
 
-// 转换 MatrixMessage 到 Message
 function safeTimestamp(ts: unknown): string {
   if (!ts) return new Date().toISOString();
   const d = new Date(ts as number | string);
@@ -85,20 +86,22 @@ function toDisplayMessage(msg: MatrixMessage): Message {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
 export interface ChatDrawerProps {
-  // 可选：当前用户ID
   currentUserId?: string;
-  // 可选：发送消息回调
   onSendMessage?: (roomId: string, content: string) => void;
-  // 可选：接受邀请回调
   onAcceptInvite?: (roomId: string) => void;
-  // 可选：拒绝邀请回调
   onRejectInvite?: (roomId: string) => void;
-  // 可选：新建聊天回调
   onNewChat?: () => void;
-  // 可选：分享聊天ID回调
   onShareChatId?: () => void;
 }
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   currentUserId = '',
@@ -112,12 +115,29 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const { toast } = useToast();
   const defaultRoomName = t('chat.defaultRoom');
 
-  // 房间设置显示状态
+  // ---- Local UI state ----
   const [showRoomSettings, setShowRoomSettings] = useState(false);
-  // 用户卡片显示状态
   const [userCard, setUserCard] = useState<UserInfo | null>(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
 
-  // Store 状态
+  // ---- Verification state ----
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationPhase, setVerificationPhase] = useState<VerificationPhase>('request');
+  const [verificationUserId, setVerificationUserId] = useState<string | null>(null);
+  const [verificationEmoji, setVerificationEmoji] = useState<Array<[string, string]> | null>(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
+  const resetVerification = useCallback(() => {
+    setVerificationOpen(false);
+    setVerificationPhase('request');
+    setVerificationUserId(null);
+    setVerificationEmoji(null);
+    setVerificationLoading(false);
+  }, []);
+
+  // ---- Store selectors ----
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const drawerExpanded = useChatStore(state => state.drawerExpanded);
   const closeDrawer = useChatStore(state => state.closeDrawer);
@@ -128,7 +148,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const currentInvite = useChatStore(state => state.currentInvite);
   const rooms = useChatStore(state => state.rooms);
   const invites = useChatStore(state => state.invites);
-  // 获取整个 messages 对象，然后在 useMemo 中提取当前房间的消息
   const allMessages = useChatStore(state => state.messages);
   const isConnected = useChatStore(state => state.isConnected);
   const isInitializing = useChatStore(state => state.isInitializing);
@@ -142,72 +161,41 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const clearPendingPeer = useChatStore(state => state.clearPendingPeer);
   const setRooms = useChatStore(state => state.setRooms);
   const setInvites = useChatStore(state => state.setInvites);
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const setMessages = useChatStore(state => state.setMessages);
+  const prependMessages = useChatStore(state => state.prependMessages);
+  const setLoadingMessages = useChatStore(state => state.setLoadingMessages);
+  const setHasMoreMessages = useChatStore(state => state.setHasMoreMessages);
+  const loadingMessages = useChatStore(state => state.loadingMessages);
+  const hasMoreMessages = useChatStore(state => state.hasMoreMessages);
+  const updateRoom = useChatStore(state => state.updateRoom);
 
-  // Drag-and-drop file upload state
-  const [isDragging, setIsDragging] = useState(false);
-  const dragCounterRef = useRef(0);
-
-  // Resolve pendingPeerID → create/find DM room and focus it
-  useEffect(() => {
-    if (!pendingPeerID) return;
-
-    let cancelled = false;
-    setIsCreatingRoom(true);
-
-    (async () => {
-      try {
-        const roomId = await matrixClient.getOrCreateDirectRoom(
-          pendingPeerID,
-          pendingPeerDisplayName ?? undefined
-        );
-        if (cancelled) return;
-
-        if (roomId) {
-          const allRooms = await matrixClient.getRooms();
-          if (!cancelled) {
-            const joinedRooms = allRooms.filter(r => r.membership !== 'invite');
-            const invitedRooms = allRooms.filter(r => r.membership === 'invite');
-            setRooms(joinedRooms);
-            setInvites(invitedRooms);
-            setCurrentRoom(roomId);
-          }
-        }
-      } catch (err) {
-        console.error('[ChatDrawer] Failed to open DM with peer:', err);
-        if (!cancelled) {
-          toast({
-            title: t('common.error'),
-            description: t('chat.createConversationFailed'),
-            variant: 'destructive',
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          setIsCreatingRoom(false);
-          clearPendingPeer();
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
+  // ---- Side-effects (all useEffect calls) ----
+  useChatEffects({
+    currentRoomId,
+    currentUserId,
     pendingPeerID,
     pendingPeerDisplayName,
     clearPendingPeer,
     setRooms,
     setInvites,
     setCurrentRoom,
-  ]);
+    setIsCreatingRoom,
+    setMessages,
+    updateRoom,
+    setVerificationOpen,
+    setVerificationPhase,
+    setVerificationUserId,
+    setVerificationEmoji,
+    resetVerification,
+    toast,
+    t,
+  });
 
-  // 当前房间
+  // ---- Derived state ----
   const currentRoom = useMemo(() => {
     return rooms.find(r => r.roomId === currentRoomId);
   }, [rooms, currentRoomId]);
 
-  // 房间列表转换
   const displayRooms = useMemo(() => {
     return rooms.map(room => {
       const displayRoom = toDisplayRoom(room, defaultRoomName);
@@ -224,25 +212,21 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     });
   }, [rooms, userPresence, currentUserId, defaultRoomName]);
 
-  // 邀请列表转换
   const displayInvites = useMemo(() => {
     return invites.map(room => toDisplayRoom(room, defaultRoomName));
   }, [invites, defaultRoomName]);
 
-  // 当前房间消息
   const currentMessages = useMemo(() => {
     const roomMessages = currentRoomId ? allMessages[currentRoomId] : undefined;
     if (!currentRoomId || !roomMessages) return [];
     return roomMessages.map(toDisplayMessage);
   }, [currentRoomId, allMessages]);
 
-  // 当前房间输入中的用户
   const currentTypingUsers = useMemo(() => {
     if (!currentRoomId || !typingUsers[currentRoomId]) return [];
     return typingUsers[currentRoomId];
   }, [currentRoomId, typingUsers]);
 
-  // 计算当前房间的在线状态（三态：true/false/undefined 表示在线/离线/未知）
   const isCurrentRoomOnline = useMemo((): boolean | undefined => {
     if (!currentRoom?.isDirect || !currentRoom.members?.length) return undefined;
     const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);
@@ -252,247 +236,10 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     return presence === 'online';
   }, [currentRoom, userPresence, currentUserId]);
 
-  // 获取 store 的 setMessages 和 updateRoom 方法
-  const setMessages = useChatStore(state => state.setMessages);
-  const prependMessages = useChatStore(state => state.prependMessages);
-  const setLoadingMessages = useChatStore(state => state.setLoadingMessages);
-  const setHasMoreMessages = useChatStore(state => state.setHasMoreMessages);
-  const loadingMessages = useChatStore(state => state.loadingMessages);
-  const hasMoreMessages = useChatStore(state => state.hasMoreMessages);
-  const updateRoom = useChatStore(state => state.updateRoom);
-
-  // 用于追踪已加载过消息的房间
-  const loadedRoomsRef = React.useRef<Set<string>>(new Set());
-
-  // 当选择房间时加载消息并标记已读
-  useEffect(() => {
-    if (!currentRoomId) return;
-
-    // 标记房间已读（每次进入房间时都执行）
-    matrixClient
-      .markRoomAsRead(currentRoomId)
-      .then(success => {
-        if (success) {
-          // 更新 store 中的未读数
-          updateRoom(currentRoomId, { unreadCount: 0 });
-        }
-      })
-      .catch(err => {
-        console.warn('[ChatDrawer] Failed to mark room as read:', err);
-      });
-
-    // 加载初始已读回执状态
-    matrixClient
-      .getReadReceiptForRoom(currentRoomId)
-      .then(receipts => {
-        const msgs = useChatStore.getState().messages[currentRoomId];
-        if (!msgs) return;
-        const otherReceipts = Object.entries(receipts).filter(([uid]) => uid !== currentUserId);
-        if (otherReceipts.length === 0) return;
-
-        const latestReadEventIds = new Set(otherReceipts.map(([, eid]) => eid));
-        let found = false;
-        for (let i = msgs.length - 1; i >= 0; i--) {
-          const msg = msgs[i];
-          if (latestReadEventIds.has(msg.id)) found = true;
-          if (found && msg.sender === currentUserId && msg.status !== 'read') {
-            useChatStore
-              .getState()
-              .updateMessage(currentRoomId, msg.id, { status: 'read' as const });
-          }
-        }
-      })
-      .catch(() => {});
-
-    // 如果该房间已经加载过消息，跳过加载
-    if (loadedRoomsRef.current.has(currentRoomId)) {
-      return;
-    }
-
-    const loadMessages = async () => {
-      try {
-        const messages = await matrixClient.getMessages(currentRoomId, 50);
-        setMessages(currentRoomId, messages);
-        loadedRoomsRef.current.add(currentRoomId);
-      } catch (error) {
-        console.error('[ChatDrawer] Failed to load messages:', error);
-      }
-    };
-
-    loadMessages();
-  }, [currentRoomId, setMessages, updateRoom, currentUserId]);
-
-  // 监听已读回执事件，更新消息状态
-  useEffect(() => {
-    if (!currentRoomId || !currentUserId) return;
-
-    const handleReadReceipt = (data: unknown) => {
-      const { roomId, userId, eventId } = data as {
-        roomId: string;
-        userId: string;
-        eventId: string;
-      };
-      if (roomId !== currentRoomId) return;
-
-      const msgs = useChatStore.getState().messages[roomId];
-      if (!msgs) return;
-
-      let found = false;
-      for (let i = msgs.length - 1; i >= 0; i--) {
-        const msg = msgs[i];
-        if (msg.id === eventId) found = true;
-        if (found && msg.sender === currentUserId && msg.status !== 'read') {
-          useChatStore.getState().updateMessage(roomId, msg.id, { status: 'read' as const });
-        }
-      }
-    };
-
-    const unsub = matrixEvents.on(MATRIX_EVENTS.READ_RECEIPT, handleReadReceipt);
-    return () => {
-      unsub();
-    };
-  }, [currentRoomId, currentUserId]);
-
-  // Upload progress tracking
-  useEffect(() => {
-    const handleUploadProgress = (raw: unknown) => {
-      const data = raw as { localId: string; roomId: string; progress: number };
-      if (!data?.localId || !data?.roomId) return;
-      useChatStore.getState().updateMessage(data.roomId, data.localId, {
-        uploadProgress: data.progress,
-      });
-    };
-
-    const unsub = matrixEvents.on(MATRIX_EVENTS.UPLOAD_PROGRESS, handleUploadProgress);
-    return () => {
-      unsub();
-    };
-  }, []);
-
-  // Listen for remote edit events
-  useEffect(() => {
-    const handleRemoteEdit = (raw: unknown) => {
-      const data = raw as { roomId: string; eventId: string; newContent: string };
-      if (!data?.roomId || !data?.eventId) return;
-      useChatStore.getState().updateMessage(data.roomId, data.eventId, {
-        content: data.newContent,
-        isEdited: true,
-      });
-    };
-    const unsub = matrixEvents.on(MATRIX_EVENTS.MESSAGE_EDITED, handleRemoteEdit);
-    return () => {
-      unsub();
-    };
-  }, []);
-
-  // Listen for remote reaction events
-  useEffect(() => {
-    const handleRemoteReaction = (raw: unknown) => {
-      const data = raw as { roomId: string; eventId: string; emoji: string; sender: string };
-      if (!data?.roomId || !data?.eventId || !data?.emoji) return;
-      const store = useChatStore.getState();
-      const msgs = store.messages[data.roomId] || [];
-      const msg = msgs.find(m => m.id === data.eventId);
-      const existing = msg?.reactions || {};
-      const senders = existing[data.emoji] || [];
-      if (!senders.includes(data.sender)) {
-        store.updateMessage(data.roomId, data.eventId, {
-          reactions: { ...existing, [data.emoji]: [...senders, data.sender] },
-        });
-      }
-    };
-    const unsub = matrixEvents.on(MATRIX_EVENTS.MESSAGE_REACTION, handleRemoteReaction);
-    return () => {
-      unsub();
-    };
-  }, []);
-
-  // ============ Device Verification ============
-  const [verificationOpen, setVerificationOpen] = useState(false);
-  const [verificationPhase, setVerificationPhase] = useState<VerificationPhase>('request');
-  const [verificationUserId, setVerificationUserId] = useState<string | null>(null);
-  const [verificationEmoji, setVerificationEmoji] = useState<Array<[string, string]> | null>(null);
-  const [verificationLoading, setVerificationLoading] = useState(false);
-
-  const resetVerification = useCallback(() => {
-    setVerificationOpen(false);
-    setVerificationPhase('request');
-    setVerificationUserId(null);
-    setVerificationEmoji(null);
-    setVerificationLoading(false);
-  }, []);
-
-  useEffect(() => {
-    let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
-    const unsubRequest = matrixEvents.on(
-      MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED,
-      (raw: unknown) => {
-        const data = raw as { otherUserId: string };
-        if (!data?.otherUserId) return;
-        setVerificationUserId(data.otherUserId);
-        setVerificationPhase('request');
-        setVerificationOpen(true);
-      }
-    );
-    const unsubSas = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_SHOW_SAS, (raw: unknown) => {
-      const data = raw as { emoji: Array<[string, string]> };
-      if (!data?.emoji) return;
-      setVerificationEmoji(data.emoji);
-      setVerificationPhase('sas');
-      setVerificationOpen(true);
-    });
-    const unsubCompleted = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_COMPLETED, () => {
-      setVerificationPhase('completed');
-      autoCloseTimer = setTimeout(resetVerification, 2500);
-    });
-    const unsubCancelled = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_CANCELLED, () => {
-      setVerificationPhase('cancelled');
-      autoCloseTimer = setTimeout(resetVerification, 2500);
-    });
-    return () => {
-      unsubRequest();
-      unsubSas();
-      unsubCompleted();
-      unsubCancelled();
-      if (autoCloseTimer) clearTimeout(autoCloseTimer);
-    };
-  }, [resetVerification]);
-
-  const handleVerificationAccept = useCallback(async () => {
-    setVerificationLoading(true);
-    try {
-      await matrixClient.acceptVerificationRequest();
-      setVerificationPhase('waiting');
-    } catch {
-      setVerificationPhase('cancelled');
-      setTimeout(resetVerification, 2000);
-    } finally {
-      setVerificationLoading(false);
-    }
-  }, [resetVerification]);
-
-  const handleVerificationConfirm = useCallback(async () => {
-    setVerificationLoading(true);
-    try {
-      await matrixClient.confirmVerification();
-    } catch {
-      setVerificationPhase('cancelled');
-      setTimeout(resetVerification, 2000);
-    } finally {
-      setVerificationLoading(false);
-    }
-  }, [resetVerification]);
-
-  const handleVerificationCancel = useCallback(async () => {
-    await matrixClient.cancelVerification();
-    resetVerification();
-  }, [resetVerification]);
-
-  // 加载更多历史消息（向上滚动分页）
+  // ---- Callbacks ----
   const handleLoadMore = useCallback(async () => {
     if (!currentRoomId) return;
-    const isAlreadyLoading = loadingMessages[currentRoomId];
-    if (isAlreadyLoading) return;
+    if (loadingMessages[currentRoomId]) return;
 
     setLoadingMessages(currentRoomId, true);
     try {
@@ -508,7 +255,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     }
   }, [currentRoomId, loadingMessages, setLoadingMessages, prependMessages, setHasMoreMessages]);
 
-  // 处理房间选择
   const handleRoomSelect = useCallback(
     (roomId: string) => {
       setCurrentInvite(null);
@@ -517,7 +263,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [setCurrentRoom, setCurrentInvite]
   );
 
-  // 处理邀请选择 (保留以备将来使用)
   const _handleInviteSelect = useCallback(
     (roomId: string) => {
       const invite = invites.find(r => r.roomId === roomId);
@@ -528,15 +273,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     },
     [invites, setCurrentRoom, setCurrentInvite]
   );
-  void _handleInviteSelect; // suppress unused warning
+  void _handleInviteSelect;
 
-  // 返回列表
   const handleBack = useCallback(() => {
     setCurrentRoom(null);
     setCurrentInvite(null);
   }, [setCurrentRoom, setCurrentInvite]);
 
-  // 发送消息
   const handleSendMessage = useCallback(
     (content: string) => {
       if (currentRoomId && onSendMessage) {
@@ -546,7 +289,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, onSendMessage]
   );
 
-  // 发送文件（图片、音频、视频、文档等）
   const handleSendFile = useCallback(
     async (file: File) => {
       if (!currentRoomId) return;
@@ -626,7 +368,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, currentUserId, toast, t]
   );
 
-  // Drag-and-drop event handlers
+  // Drag-and-drop
   const handleDragEnter = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -670,14 +412,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, handleSendFile]
   );
 
-  // 重发失败消息
   const handleRetryMessage = useCallback(
     async (messageId: string) => {
       if (!currentRoomId) return;
       const roomMessages = allMessages[currentRoomId];
       const failedMsg = roomMessages?.find(m => m.id === messageId || m.localId === messageId);
       if (!failedMsg || !onSendMessage) return;
-      // 移除旧的失败消息，重新发送
       const updateMessage = useChatStore.getState().updateMessage;
       updateMessage(currentRoomId, messageId, { status: 'sending' as const });
       try {
@@ -694,7 +434,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, allMessages, onSendMessage]
   );
 
-  // 删除消息（redact）
   const handleDeleteMessage = useCallback(
     async (messageId: string) => {
       if (!currentRoomId) return;
@@ -714,7 +453,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, toast, t]
   );
 
-  // 编辑消息
   const handleEditMessage = useCallback(
     async (messageId: string, newContent: string) => {
       if (!currentRoomId) return;
@@ -734,7 +472,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId, toast, t]
   );
 
-  // 发送 reaction
   const handleReaction = useCallback(
     async (messageId: string, emoji: string) => {
       if (!currentRoomId) return;
@@ -747,12 +484,10 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoomId]
   );
 
-  // 切换展开/收缩
   const toggleExpand = useCallback(() => {
     setDrawerExpanded(!drawerExpanded);
   }, [drawerExpanded, setDrawerExpanded]);
 
-  // 接受邀请
   const handleAcceptInvite = useCallback(
     (roomId: string) => {
       onAcceptInvite?.(roomId);
@@ -761,7 +496,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [onAcceptInvite, handleBack]
   );
 
-  // 拒绝邀请
   const handleRejectInvite = useCallback(
     (roomId: string) => {
       onRejectInvite?.(roomId);
@@ -770,17 +504,14 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [onRejectInvite, handleBack]
   );
 
-  // 打开房间设置
   const handleRoomSettings = useCallback(() => {
     setShowRoomSettings(true);
   }, []);
 
-  // 关闭房间设置
   const handleCloseRoomSettings = useCallback(() => {
     setShowRoomSettings(false);
   }, []);
 
-  // 打开用户卡片
   const handleAvatarClick = useCallback(
     (userId: string, displayName?: string, avatarUrl?: string) => {
       const member = currentRoom?.members?.find(m => m.userId === userId);
@@ -796,17 +527,45 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [currentRoom]
   );
 
-  // 关闭用户卡片
   const handleCloseUserCard = useCallback(() => {
     setUserCard(null);
   }, []);
 
-  // 移动端全屏，桌面端固定宽度
+  // Verification handlers
+  const handleVerificationAccept = useCallback(async () => {
+    setVerificationLoading(true);
+    try {
+      await matrixClient.acceptVerificationRequest();
+      setVerificationPhase('waiting');
+    } catch {
+      setVerificationPhase('cancelled');
+      setTimeout(resetVerification, 2000);
+    } finally {
+      setVerificationLoading(false);
+    }
+  }, [resetVerification]);
+
+  const handleVerificationConfirm = useCallback(async () => {
+    setVerificationLoading(true);
+    try {
+      await matrixClient.confirmVerification();
+    } catch {
+      setVerificationPhase('cancelled');
+      setTimeout(resetVerification, 2000);
+    } finally {
+      setVerificationLoading(false);
+    }
+  }, [resetVerification]);
+
+  const handleVerificationCancel = useCallback(async () => {
+    await matrixClient.cancelVerification();
+    resetVerification();
+  }, [resetVerification]);
+
+  // ---- Render helpers ----
   const drawerWidth = drawerExpanded ? 'w-full md:w-[600px]' : 'w-full md:w-[400px]';
 
-  // 渲染视图
   const renderView = () => {
-    // Creating a DM room for a peer
     if (isCreatingRoom) {
       return (
         <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -816,11 +575,9 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       );
     }
 
-    // 邀请确认视图
     if (currentInvite) {
       return (
         <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/10">
-          {/* 邀请头部 */}
           <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-card/80 backdrop-blur-sm">
             <Button
               variant="ghost"
@@ -840,9 +597,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             <span className="font-bold text-foreground">{t('chat.inviteConfirm')}</span>
           </div>
 
-          {/* 邀请内容 */}
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
-            {/* Background decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
             </div>
@@ -890,7 +645,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       );
     }
 
-    // 聊天视图
     if (currentRoom && currentRoomId) {
       return (
         <ChatMessages
@@ -924,7 +678,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       );
     }
 
-    // 房间列表视图
     return (
       <ChatList
         rooms={displayRooms}
@@ -944,6 +697,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     );
   };
 
+  // ---- Render ----
   return (
     <Sheet open={drawerOpen} onOpenChange={open => !open && closeDrawer()}>
       <SheetContent
@@ -955,12 +709,10 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       >
         {/* Header */}
         <SheetHeader className="flex-shrink-0 px-5 py-4 bg-gradient-to-r from-card via-card to-card/95 backdrop-blur-sm relative">
-          {/* Gradient accent line */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Chat icon */}
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-primary"
@@ -980,7 +732,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 <SheetTitle className="text-base font-bold text-foreground">
                   {t('chat.title')}
                 </SheetTitle>
-                {/* Status indicators */}
                 <div className="flex items-center gap-2 mt-0.5">
                   {totalUnread > 0 && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-full shadow-sm shadow-primary/30">
@@ -1180,148 +931,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
         {/* Room Settings Panel */}
         {showRoomSettings && currentRoom && (
-          <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col animate-in slide-in-from-right duration-200">
-            {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-card/80 backdrop-blur-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseRoomSettings}
-                className="rounded-xl hover:bg-muted/80"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </Button>
-              <span className="font-bold text-foreground">{t('chat.roomSettings')}</span>
-            </div>
-
-            {/* Room Info */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="flex flex-col items-center text-center mb-8">
-                <div className="relative mb-4">
-                  <Avatar
-                    src={currentRoom.avatarUrl}
-                    rawMxcUrl={currentRoom.rawMxcAvatarUrl}
-                    name={currentRoom.name || 'Room'}
-                    size="lg"
-                    className="w-24 h-24 ring-4 ring-background shadow-xl"
-                  />
-                  {currentRoom.isEncrypted && (
-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center ring-4 ring-background">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-xl font-bold text-foreground mb-1">
-                  {currentRoom.name || t('chat.defaultRoom')}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {currentRoom.isDirect ? t('chat.directMessage') : t('chat.groupChat')}
-                </p>
-                {currentRoom.isEncrypted && (
-                  <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-primary/15 text-primary rounded-full">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {t('chat.encrypted')}
-                  </span>
-                )}
-              </div>
-
-              {/* Members */}
-              {currentRoom.members && currentRoom.members.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-muted-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    {t('chat.members')} ({currentRoom.members.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {currentRoom.members.map(member => (
-                      <button
-                        key={member.userId}
-                        onClick={() =>
-                          handleAvatarClick(member.userId, member.displayName, member.avatarUrl)
-                        }
-                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/60 transition-colors text-left"
-                      >
-                        <Avatar
-                          src={member.avatarUrl}
-                          rawMxcUrl={member.rawMxcAvatarUrl}
-                          name={member.displayName || member.userId}
-                          size="sm"
-                          className="ring-2 ring-background"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {member.displayName || member.userId}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">{member.userId}</p>
-                        </div>
-                        {member.isExternal && (
-                          <span className="px-2 py-0.5 text-xs font-medium bg-info/15 text-info rounded-full">
-                            External
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Room ID */}
-              <div className="mb-6">
-                <h4 className="text-sm font-semibold text-foreground mb-2">{t('chat.roomId')}</h4>
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
-                  <code className="flex-1 text-xs text-muted-foreground break-all">
-                    {currentRoom.roomId}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigator.clipboard.writeText(currentRoom.roomId)}
-                    className="h-8 w-8 p-0 flex-shrink-0"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <RoomSettingsPanel
+            room={currentRoom}
+            onClose={handleCloseRoomSettings}
+            onMemberClick={handleAvatarClick}
+            t={t}
+          />
         )}
 
         {/* User Info Card */}
@@ -1331,12 +946,10 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             isOpen={true}
             onClose={handleCloseUserCard}
             onViewStore={peerID => {
-              // TODO: Navigate to store page
               window.open(`/store/${peerID}`, '_blank');
               handleCloseUserCard();
             }}
             onStartChat={_userId => {
-              // TODO: Start or navigate to direct chat
               handleCloseUserCard();
             }}
             onBlock={async userId => {
