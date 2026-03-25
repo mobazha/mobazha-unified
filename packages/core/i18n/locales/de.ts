@@ -1242,6 +1242,8 @@ export const de: TranslationResource = {
     conversations: 'Unterhaltungen',
     newMessage: 'Neue Nachricht',
     typeMessage: 'Nachricht eingeben...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: 'Senden',
     noMessages: 'Noch keine Nachrichten',
     online: 'Online',
@@ -1698,6 +1700,28 @@ export const de: TranslationResource = {
       activeStores: 'Aktive Shops',
       productsListed: 'Gelistete Produkte',
       chainsSupported: 'Unterstützte Chains',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2517,10 +2541,14 @@ export const de: TranslationResource = {
     lastBackup: 'Letztes Backup',
     never: 'Nie',
     keysBackedUp: 'Verschlüsselungsschlüssel erfolgreich gesichert',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: 'Jetzt sichern',
     restoreKeys: 'Schlüssel wiederherstellen',
     restoreKeysDesc:
       'Geben Sie Ihren Wiederherstellungsschlüssel ein, um den Nachrichtenverlauf wiederherzustellen',
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: 'Nachrichteneinladungen',
     messageInvitesDesc: 'Steuern Sie, wie mit Chat-Einladungen von neuen Benutzern umgegangen wird',
     autoAcceptAll: 'Alle Einladungen automatisch annehmen',

@@ -1227,6 +1227,8 @@ export const es: TranslationResource = {
     conversations: 'Conversaciones',
     newMessage: 'Nuevo mensaje',
     typeMessage: 'Escribe un mensaje...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: 'Enviar',
     noMessages: 'Sin mensajes',
     online: 'En línea',
@@ -1682,6 +1684,28 @@ export const es: TranslationResource = {
       activeStores: 'Tiendas activas',
       productsListed: 'Productos publicados',
       chainsSupported: 'Cadenas compatibles',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2497,10 +2521,14 @@ export const es: TranslationResource = {
     lastBackup: 'Último respaldo',
     never: 'Nunca',
     keysBackedUp: 'Claves de cifrado respaldadas correctamente',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: 'Respaldar ahora',
     restoreKeys: 'Restaurar claves',
     restoreKeysDesc:
       'Ingresa tu clave de recuperación para restaurar el historial en nuevos dispositivos',
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: 'Invitaciones de mensaje',
     messageInvitesDesc: 'Controla cómo manejar invitaciones de chat de nuevos usuarios',
     autoAcceptAll: 'Aceptar todas las invitaciones automáticamente',

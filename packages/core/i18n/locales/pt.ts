@@ -1229,6 +1229,8 @@ export const pt: TranslationResource = {
     conversations: 'Conversas',
     newMessage: 'Nova mensagem',
     typeMessage: 'Digite uma mensagem...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: 'Enviar',
     noMessages: 'Sem mensagens ainda',
     online: 'Online',
@@ -1683,6 +1685,28 @@ export const pt: TranslationResource = {
       activeStores: 'Lojas ativas',
       productsListed: 'Produtos listados',
       chainsSupported: 'Redes suportadas',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2495,9 +2519,13 @@ export const pt: TranslationResource = {
     lastBackup: 'Último backup',
     never: 'Nunca',
     keysBackedUp: 'Chaves de criptografia salvas com sucesso',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: 'Fazer backup agora',
     restoreKeys: 'Restaurar chaves',
     restoreKeysDesc: 'Digite sua chave de recuperação para restaurar o histórico de mensagens',
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: 'Convites de mensagem',
     messageInvitesDesc: 'Controle como lidar com convites de chat de novos usuários',
     autoAcceptAll: 'Aceitar todos os convites automaticamente',

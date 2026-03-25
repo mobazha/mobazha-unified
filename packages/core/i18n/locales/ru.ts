@@ -1221,6 +1221,8 @@ export const ru: TranslationResource = {
     conversations: 'Разговоры',
     newMessage: 'Новое сообщение',
     typeMessage: 'Введите сообщение...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: 'Отправить',
     noMessages: 'Нет сообщений',
     online: 'В сети',
@@ -1671,6 +1673,28 @@ export const ru: TranslationResource = {
       activeStores: 'Активных магазинов',
       productsListed: 'Товаров в каталоге',
       chainsSupported: 'Поддерживаемых сетей',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2471,9 +2495,13 @@ export const ru: TranslationResource = {
     lastBackup: 'Последняя копия',
     never: 'Никогда',
     keysBackedUp: 'Ключи сохранены',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: 'Создать копию',
     restoreKeys: 'Восстановить ключи',
     restoreKeysDesc: 'Введите ключ восстановления',
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: 'Приглашения в чат',
     messageInvitesDesc: 'Управление приглашениями от новых пользователей',
     autoAcceptAll: 'Принимать все автоматически',
