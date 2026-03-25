@@ -128,7 +128,7 @@ export interface UseProductDetailReturn {
   handleAddToCart: () => void;
   handleBuyNow: () => void;
   handleCopyLink: () => void;
-  openChatDrawer: () => void;
+  openChatWithVendor: () => void;
 
   // i18n & formatting
   t: ReturnType<typeof useI18n>['t'];
@@ -147,7 +147,7 @@ export function useProductDetail({
   const { t } = useI18n();
   const router = useRouter();
   const { formatPrice, renderPairedPrice } = useCurrency();
-  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [vendor, setVendor] = useState<UserProfile | null>(null);
@@ -628,7 +628,12 @@ export function useProductDetail({
     handleAddToCart,
     handleBuyNow,
     handleCopyLink,
-    openChatDrawer,
+    openChatWithVendor: useCallback(() => {
+      const vendorPeerID = product?.vendorID?.peerID || peerID;
+      if (vendorPeerID) {
+        openDrawerWithPeer(vendorPeerID, vendor?.name);
+      }
+    }, [product?.vendorID?.peerID, peerID, vendor?.name, openDrawerWithPeer]),
     t,
     formatPrice,
     renderPairedPrice,

@@ -1368,6 +1368,16 @@ export const en: TranslationResource = {
     shareChatId: 'Share Chat ID',
     expand: 'Expand',
     collapse: 'Collapse',
+    openingConversation: 'Opening conversation...',
+    // New chat dialog
+    newChat: {
+      title: 'New Conversation',
+      description: 'Enter a Store ID (Peer ID) to start a direct message.',
+      placeholder: 'Enter Peer ID (e.g. Qm...)',
+      start: 'Start Chat',
+      errorEmpty: 'Please enter a Peer ID',
+      errorInvalid: 'Invalid Peer ID format',
+    },
   },
 
   // Matrix room events

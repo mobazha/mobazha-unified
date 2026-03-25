@@ -1233,6 +1233,17 @@ class MatrixClientService {
   }
 
   /**
+   * Get or create a direct room with a peer by their Mobazha peer ID.
+   * Builds the Matrix userId internally from server config.
+   */
+  async getOrCreateDirectRoom(peerID: string, displayName?: string): Promise<string | null> {
+    const serverConfig = await this._getServerConfig();
+    if (!serverConfig) return null;
+    const matrixUserId = `@peer_${peerID.toLowerCase()}:${serverConfig.serverName}`;
+    return this.createDirectRoom(matrixUserId, displayName);
+  }
+
+  /**
    * 创建直接聊天房间
    */
   async createDirectRoom(userId: string, displayName?: string): Promise<string | null> {

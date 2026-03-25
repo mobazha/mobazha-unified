@@ -1233,6 +1233,15 @@ export const zh: TranslationResource = {
     shareChatId: '分享聊天 ID',
     expand: '展开',
     collapse: '收起',
+    openingConversation: '正在打开对话...',
+    newChat: {
+      title: '新建对话',
+      description: '输入店铺 ID（Peer ID）来发起私信。',
+      placeholder: '输入 Peer ID（如 Qm...）',
+      start: '开始聊天',
+      errorEmpty: '请输入 Peer ID',
+      errorInvalid: '无效的 Peer ID 格式',
+    },
   },
   matrix: {
     events: {

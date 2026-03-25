@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ChatDrawer } from '@/components/ChatDrawer';
+import { NewChatDialog } from '@/components/ChatDrawer/NewChatDialog';
 import {
   matrixClient,
   useMatrixInit,
@@ -76,9 +77,9 @@ export const ChatSystem: React.FC = () => {
   }, []);
 
   // 新建聊天
+  const [newChatOpen, setNewChatOpen] = useState(false);
   const handleNewChat = useCallback(() => {
-    // TODO: 打开新建聊天对话框
-    console.warn('[ChatSystem] New chat dialog not implemented yet');
+    setNewChatOpen(true);
   }, []);
 
   // 分享聊天 ID
@@ -106,6 +107,8 @@ export const ChatSystem: React.FC = () => {
         onNewChat={handleNewChat}
         onShareChatId={handleShareChatId}
       />
+      {/* 新建聊天对话框 */}
+      <NewChatDialog open={newChatOpen} onOpenChange={setNewChatOpen} />
     </>
   );
 };

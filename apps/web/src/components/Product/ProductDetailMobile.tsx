@@ -93,7 +93,7 @@ export function ProductDetailMobile({
     handleAddToCart,
     handleBuyNow,
     handleCopyLink,
-    openChatDrawer,
+    openChatWithVendor,
     ratingIndex,
     renderPairedPrice,
     t,
@@ -617,7 +617,7 @@ export function ProductDetailMobile({
             {/* Left icon group */}
             <div className="flex flex-shrink-0">
               <button
-                onClick={openChatDrawer}
+                onClick={openChatWithVendor}
                 className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
               >
                 <svg

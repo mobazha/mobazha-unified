@@ -112,7 +112,7 @@ export function ProductDetail({
   const { t } = useI18n();
   const router = useRouter();
   const { formatPrice, renderPairedPrice, fromMinimalUnit } = useCurrency();
-  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
 
   // 状态管理
   const [product, setProduct] = useState<Product | null>(null);
@@ -468,9 +468,12 @@ export function ProductDetail({
     if (onMessage) {
       onMessage();
     } else {
-      openChatDrawer();
+      const vendorPeerID = product?.vendorID?.peerID;
+      if (vendorPeerID) {
+        openDrawerWithPeer(vendorPeerID, vendor?.name);
+      }
     }
-  }, [onMessage, openChatDrawer]);
+  }, [onMessage, product?.vendorID?.peerID, vendor?.name, openDrawerWithPeer]);
 
   // 跳转到购物车 (reserved for future use)
   const _handleGoToCart = useCallback(() => {
@@ -584,7 +587,10 @@ export function ProductDetail({
                 variant="outline"
                 size="sm"
                 className="h-11 px-3 text-xs sm:h-9"
-                onClick={() => openChatDrawer()}
+                onClick={() => {
+                  const vendorPeerID = product?.vendorID?.peerID;
+                  if (vendorPeerID) openDrawerWithPeer(vendorPeerID, vendor?.name);
+                }}
               >
                 {t('profile.message')}
               </Button>

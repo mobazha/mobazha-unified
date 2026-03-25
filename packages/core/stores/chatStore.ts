@@ -43,6 +43,8 @@ export interface ChatState {
   // Drawer 状态
   drawerOpen: boolean;
   drawerExpanded: boolean;
+  pendingPeerID: string | null;
+  pendingPeerDisplayName: string | null;
 
   // 动作
   setConnected: (connected: boolean) => void;
@@ -77,6 +79,8 @@ export interface ChatState {
   setDrawerOpen: (open: boolean) => void;
   setDrawerExpanded: (expanded: boolean) => void;
   openDrawer: () => void;
+  openDrawerWithPeer: (peerID: string, displayName?: string) => void;
+  clearPendingPeer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
 
@@ -114,6 +118,8 @@ const initialState = {
   // Drawer 状态
   drawerOpen: false,
   drawerExpanded: false,
+  pendingPeerID: null,
+  pendingPeerDisplayName: null,
 };
 
 // ============= Store =============
@@ -261,7 +267,23 @@ export const useChatStore = create<ChatState>()(
         setDrawerOpen: open => set({ drawerOpen: open }),
         setDrawerExpanded: expanded => set({ drawerExpanded: expanded }),
         openDrawer: () => set({ drawerOpen: true }),
-        closeDrawer: () => set({ drawerOpen: false, currentRoomId: null, currentInvite: null }),
+        openDrawerWithPeer: (peerID, displayName) =>
+          set({
+            drawerOpen: true,
+            pendingPeerID: peerID,
+            pendingPeerDisplayName: displayName ?? null,
+            currentRoomId: null,
+            currentInvite: null,
+          }),
+        clearPendingPeer: () => set({ pendingPeerID: null, pendingPeerDisplayName: null }),
+        closeDrawer: () =>
+          set({
+            drawerOpen: false,
+            currentRoomId: null,
+            currentInvite: null,
+            pendingPeerID: null,
+            pendingPeerDisplayName: null,
+          }),
         toggleDrawer: () => set(state => ({ drawerOpen: !state.drawerOpen })),
 
         // 标记已读
@@ -413,6 +435,8 @@ export const selectTypingUsers = (roomId: string) => (state: ChatState) =>
 export const selectDrawerOpen = (state: ChatState) => state.drawerOpen;
 export const selectDrawerExpanded = (state: ChatState) => state.drawerExpanded;
 export const selectCurrentInvite = (state: ChatState) => state.currentInvite;
+export const selectPendingPeerID = (state: ChatState) => state.pendingPeerID;
+export const selectPendingPeerDisplayName = (state: ChatState) => state.pendingPeerDisplayName;
 
 // ============= Hook =============
 
@@ -445,6 +469,7 @@ export function useChat() {
 
     // Drawer 动作
     openDrawer: store.openDrawer,
+    openDrawerWithPeer: store.openDrawerWithPeer,
     closeDrawer: store.closeDrawer,
     toggleDrawer: store.toggleDrawer,
     setDrawerExpanded: store.setDrawerExpanded,

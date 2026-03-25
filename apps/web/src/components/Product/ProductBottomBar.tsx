@@ -41,7 +41,7 @@ export function ProductBottomBar({
 
   const addCartItem = useCartStore(state => state.addItem);
   const cartItemCount = useCartStore(state => state.getItemCount());
-  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
   const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(product?.vendorID?.peerID));
 
   const handleAddToCart = useCallback(() => {
@@ -88,8 +88,16 @@ export function ProductBottomBar({
   }, [product, quantity, router]);
 
   const handleMessage = useCallback(() => {
-    openChatDrawer();
-  }, [openChatDrawer]);
+    const vendorPeerID = product?.vendorID?.peerID;
+    if (vendorPeerID) {
+      openDrawerWithPeer(vendorPeerID, product?.vendorID?.name || product?.vendorID?.handle);
+    }
+  }, [
+    product?.vendorID?.peerID,
+    product?.vendorID?.name,
+    product?.vendorID?.handle,
+    openDrawerWithPeer,
+  ]);
 
   // 跳转到购物车
   const handleGoToCart = useCallback(() => {
