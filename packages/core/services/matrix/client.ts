@@ -929,6 +929,62 @@ class MatrixClientService {
   }
 
   /**
+   * Load older messages by paginating backward on the live timeline.
+   * Returns only the newly-loaded messages (older ones) sorted chronologically.
+   * Returns empty array when no more history is available.
+   */
+  async loadOlderMessages(roomId: string, limit = 50): Promise<MatrixMessage[]> {
+    if (!this.client) return [];
+
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const room = matrixClient.getRoom(roomId);
+    if (!room) return [];
+
+    const timeline = room.getLiveTimeline();
+    const token = timeline.getPaginationToken(sdk.Direction.Backward);
+    if (!token) return [];
+
+    const eventsBefore = new Set(
+      timeline
+        .getEvents()
+        .map(e => e.getId())
+        .filter((id): id is string => !!id)
+    );
+
+    try {
+      await matrixClient.paginateEventTimeline(timeline, { backwards: true, limit });
+    } catch (error) {
+      console.warn('[Matrix] Failed to paginate backward:', error);
+      return [];
+    }
+
+    const displayableTypes = ['m.room.message', 'm.room.member', 'm.room.encryption'];
+    const newEvents = timeline.getEvents().filter(event => {
+      const eventId = event.getId();
+      if (eventId && eventsBefore.has(eventId)) return false;
+      const type = event.getType();
+      if (!displayableTypes.includes(type)) return false;
+      if (type === 'm.room.message') {
+        const msgtype = (event.getContent()?.msgtype as string) || '';
+        if (msgtype.startsWith('m.key.verification')) return false;
+      }
+      return true;
+    });
+
+    const messages = newEvents
+      .map((event: unknown) => this.formatTimelineEvent(event, roomId))
+      .filter((msg: MatrixMessage | null): msg is MatrixMessage => msg !== null)
+      .sort((a: MatrixMessage, b: MatrixMessage) => a.timestamp - b.timestamp);
+
+    messages.forEach((msg: MatrixMessage) => {
+      if (msg.id) this.processedMessageIds.add(msg.id);
+    });
+
+    return messages;
+  }
+
+  /**
    * 格式化 timeline 事件（包括消息和房间事件）
    */
   private formatTimelineEvent(event: unknown, roomId: string): MatrixMessage | null {
@@ -975,7 +1031,10 @@ class MatrixClientService {
         };
       }
 
-      return {
+      const msgtype = (content.msgtype as string) || 'm.text';
+      const messageType = this.getMessageType(msgtype);
+
+      const msg: MatrixMessage = {
         id: e.getId(),
         roomId,
         sender: e.getSender(),
@@ -983,9 +1042,38 @@ class MatrixClientService {
         senderAvatar: senderInfo?.avatarUrl,
         senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
         content: (content.body as string) || '',
-        type: this.getMessageType((content.msgtype as string) || 'm.text'),
+        type: messageType,
         timestamp: e.getTs(),
       };
+
+      if (
+        messageType === 'image' ||
+        messageType === 'file' ||
+        messageType === 'audio' ||
+        messageType === 'video'
+      ) {
+        const mxcUrl = content.url as string | undefined;
+        const info = content.info as
+          | { mimetype?: string; size?: number; w?: number; h?: number; thumbnail_url?: string }
+          | undefined;
+        if (mxcUrl) {
+          msg.attachments = [
+            {
+              url: this.mxcToHttp(mxcUrl) || mxcUrl,
+              filename: (content.body as string) || undefined,
+              mimetype: info?.mimetype,
+              size: info?.size,
+              width: info?.w,
+              height: info?.h,
+              thumbnailUrl: info?.thumbnail_url
+                ? this.mxcToHttp(info.thumbnail_url) || info.thumbnail_url
+                : undefined,
+            },
+          ];
+        }
+      }
+
+      return msg;
     }
 
     // 加密消息但尚未解密（可能还在解密中）
@@ -2342,8 +2430,8 @@ class MatrixClientService {
       getSender: () => string;
       getType: () => string;
       getWireType?: () => string;
-      getContent: () => { body?: string; msgtype?: string };
-      getClearContent?: () => { body?: string; msgtype?: string } | null;
+      getContent: () => Record<string, unknown>;
+      getClearContent?: () => Record<string, unknown> | null;
       getTs: () => number;
       isDecryptionFailure?: () => boolean;
     };
@@ -2390,17 +2478,49 @@ class MatrixClientService {
       };
     }
 
-    return {
+    const msgtype = (content.msgtype as string) || 'm.text';
+    const messageType = this.getMessageType(msgtype);
+
+    const msg: MatrixMessage = {
       id: e.getId(),
       roomId,
       sender: e.getSender(),
       senderName: senderInfo?.displayName,
       senderAvatar: senderInfo?.avatarUrl,
       senderRawMxcAvatarUrl: senderInfo?.rawMxcAvatarUrl,
-      content: content.body || '',
-      type: this.getMessageType(content.msgtype || 'm.text'),
+      content: (content.body as string) || '',
+      type: messageType,
       timestamp: e.getTs(),
     };
+
+    if (
+      messageType === 'image' ||
+      messageType === 'file' ||
+      messageType === 'audio' ||
+      messageType === 'video'
+    ) {
+      const mxcUrl = content.url as string | undefined;
+      const info = content.info as
+        | { mimetype?: string; size?: number; w?: number; h?: number; thumbnail_url?: string }
+        | undefined;
+      if (mxcUrl) {
+        msg.attachments = [
+          {
+            url: this.mxcToHttp(mxcUrl) || mxcUrl,
+            filename: (content.body as string) || undefined,
+            mimetype: info?.mimetype,
+            size: info?.size,
+            width: info?.w,
+            height: info?.h,
+            thumbnailUrl: info?.thumbnail_url
+              ? this.mxcToHttp(info.thumbnail_url) || info.thumbnail_url
+              : undefined,
+          },
+        ];
+      }
+    }
+
+    return msg;
   }
 
   /**

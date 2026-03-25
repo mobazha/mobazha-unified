@@ -1241,7 +1241,7 @@ export const zh: TranslationResource = {
       placeholder: '输入 Peer ID（如 Qm...）',
       start: '开始聊天',
       errorEmpty: '请输入 Peer ID',
-      errorInvalid: '无效的 Peer ID 格式',
+      errorInvalid: '无效的 Peer ID 格式，应以 "Qm" 或 "12D3Koo" 开头。',
     },
   },
   matrix: {

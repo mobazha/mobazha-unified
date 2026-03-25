@@ -12,6 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useI18n, useChatStore } from '@mobazha/core';
 
+const PEER_ID_PATTERN = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{44,50})$/;
+
+function isValidPeerID(id: string): boolean {
+  return PEER_ID_PATTERN.test(id);
+}
+
 interface NewChatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,7 +38,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
         setError(t('chat.newChat.errorEmpty'));
         return;
       }
-      if (trimmed.length < 10) {
+      if (!isValidPeerID(trimmed)) {
         setError(t('chat.newChat.errorInvalid'));
         return;
       }

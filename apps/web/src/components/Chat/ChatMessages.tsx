@@ -23,6 +23,9 @@ export interface Message {
     filename?: string;
     mimetype?: string;
     size?: number;
+    width?: number;
+    height?: number;
+    thumbnailUrl?: string;
   }>;
 }
 
@@ -632,28 +635,56 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                   )}
 
                   <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
-                    <div
-                      className={`relative px-4 py-3 transition-all duration-200 ${
-                        isOwn
-                          ? 'bg-gradient-to-br from-primary via-primary to-primary/85 text-white rounded-2xl rounded-br-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5'
-                          : 'bg-card/95 backdrop-blur-sm text-foreground rounded-2xl rounded-bl-sm shadow-md border border-border/40 hover:shadow-lg hover:border-border/60 hover:-translate-y-0.5'
-                      }`}
-                    >
-                      <p className="text-[14px] whitespace-pre-wrap break-words leading-relaxed">
-                        {message.content}
-                      </p>
-
-                      {/* Retry button for failed messages */}
-                      {message.status === 'failed' && (
-                        <button
-                          onClick={() => onRetryMessage?.(message.id)}
-                          className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
-                          aria-label="Retry"
+                    {message.type === 'image' && message.attachments?.[0]?.url ? (
+                      <div className="relative">
+                        <a
+                          href={message.attachments[0].url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
                         >
-                          ↻
-                        </button>
-                      )}
-                    </div>
+                          <img
+                            src={message.attachments[0].thumbnailUrl || message.attachments[0].url}
+                            alt={message.attachments[0].filename || 'Image'}
+                            className={`max-w-[260px] max-h-[260px] rounded-2xl object-cover shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
+                              isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+                            }`}
+                            loading="lazy"
+                          />
+                        </a>
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => onRetryMessage?.(message.id)}
+                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+                            aria-label="Retry"
+                          >
+                            ↻
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div
+                        className={`relative px-4 py-3 transition-all duration-200 ${
+                          isOwn
+                            ? 'bg-gradient-to-br from-primary via-primary to-primary/85 text-white rounded-2xl rounded-br-sm shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5'
+                            : 'bg-card/95 backdrop-blur-sm text-foreground rounded-2xl rounded-bl-sm shadow-md border border-border/40 hover:shadow-lg hover:border-border/60 hover:-translate-y-0.5'
+                        }`}
+                      >
+                        <p className="text-[14px] whitespace-pre-wrap break-words leading-relaxed">
+                          {message.content}
+                        </p>
+
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => onRetryMessage?.(message.id)}
+                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+                            aria-label="Retry"
+                          >
+                            ↻
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <HStack
                       gap="xs"
                       className={`mt-1.5 text-xs text-muted-foreground/50 font-medium ${isOwn ? 'justify-end pr-1' : 'pl-1'}`}
