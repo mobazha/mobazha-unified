@@ -728,9 +728,25 @@ export const useUserStore = create<UserState>()(
               set({
                 profile: profile ? { ...profile, ...updates } : null,
               });
-              if (updates.name) {
-                import('../services/matrix/client')
-                  .then(({ matrixClient }) => matrixClient.setDisplayName(updates.name!))
+              if (updates.name || updates.avatarHashes) {
+                const updatedProfile = get().profile;
+                Promise.all([
+                  import('../services/matrix/client'),
+                  import('../services/api/config'),
+                  import('../config/apiPaths'),
+                ])
+                  .then(([{ matrixClient }, apiConfig, { NODE_API }]) => {
+                    const name = updates.name || updatedProfile?.name;
+                    if (name) {
+                      const avatarHash =
+                        updates.avatarHashes?.medium || updatedProfile?.avatarHashes?.medium;
+                      let avatarUrl: string | undefined;
+                      if (avatarHash) {
+                        avatarUrl = `${apiConfig.getGatewayUrl()}${NODE_API.MEDIA_IMAGE(avatarHash)}`;
+                      }
+                      matrixClient.syncProfileToMatrix(name, avatarUrl).catch(() => {});
+                    }
+                  })
                   .catch(() => {});
               }
               return true;

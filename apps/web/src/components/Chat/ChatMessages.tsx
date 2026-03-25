@@ -757,7 +757,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     > = [];
     let lastDate = '';
 
-    messages.forEach((message, index) => {
+    const renderableMessages = messages.filter(
+      m =>
+        m.content ||
+        (m.attachments && m.attachments.length > 0 && m.attachments[0].url) ||
+        m.isSystem
+    );
+
+    renderableMessages.forEach((message, index) => {
       const messageDate = new Date(message.timestamp).toDateString();
       if (messageDate !== lastDate) {
         result.push({ type: 'date', date: formatDate(message.timestamp) });
@@ -766,7 +773,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
       const isOwn = message.senderId === currentUserId;
       const showAvatar =
-        !isOwn && (index === 0 || messages[index - 1].senderId !== message.senderId);
+        !isOwn && (index === 0 || renderableMessages[index - 1].senderId !== message.senderId);
       result.push({ type: 'message', message, showAvatar, messageIndex: index });
     });
 
@@ -1329,7 +1336,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                           </button>
                         </div>
                       </div>
-                    ) : (
+                    ) : !message.content ? null : (
                       <div
                         className={`relative px-4 py-3 transition-all duration-200 ${
                           isOwn

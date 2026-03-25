@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ChatList, type ChatRoom } from '@/components/Chat/ChatList';
@@ -143,6 +143,10 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const setRooms = useChatStore(state => state.setRooms);
   const setInvites = useChatStore(state => state.setInvites);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
+  // Drag-and-drop file upload state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
 
   // Resolve pendingPeerID → create/find DM room and focus it
   useEffect(() => {
@@ -733,13 +737,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   // 打开用户卡片
   const handleAvatarClick = useCallback(
     (userId: string, displayName?: string, avatarUrl?: string) => {
-      // 查找该用户是否在房间成员列表中，获取更多信息
       const member = currentRoom?.members?.find(m => m.userId === userId);
+      const peerID = member?.peerID || currentRoom?.memberPeerIDs?.[userId] || undefined;
       setUserCard({
         userId,
         displayName: displayName || member?.displayName,
         avatarUrl: avatarUrl || member?.avatarUrl,
-        peerID: member?.peerID,
+        peerID,
         isExternal: member?.isExternal,
       });
     },

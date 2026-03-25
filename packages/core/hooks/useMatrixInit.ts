@@ -131,8 +131,19 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       setInvites(invites);
 
       initRef.current = true;
-      retryCountRef.current = 0; // 重置重试计数
+      retryCountRef.current = 0;
       setConnected(true);
+
+      // Sync Mobazha profile to Matrix (name + avatar)
+      const profile = useUserStore.getState().profile;
+      if (profile?.name) {
+        matrixClient.syncProfileToMatrix(profile.name, undefined).catch(() => {});
+      }
+
+      // Write own peerID into all joined rooms
+      for (const room of rooms) {
+        matrixClient.setMyPeerIDInRoom(room.roomId).catch(() => {});
+      }
 
       // eslint-disable-next-line no-console
       console.info('[Matrix] Initialized successfully with', rooms.length, 'rooms');
