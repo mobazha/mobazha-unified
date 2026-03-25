@@ -1230,6 +1230,9 @@ export const zh: TranslationResource = {
     roomNotFound: '房间未找到',
     roomNotFoundDesc: '您要查找的聊天室不存在或您没有访问权限。',
     backToMessages: '返回消息列表',
+    shareChatId: '分享聊天 ID',
+    expand: '展开',
+    collapse: '收起',
   },
   matrix: {
     events: {

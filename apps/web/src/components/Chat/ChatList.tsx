@@ -32,6 +32,8 @@ export interface ChatListProps {
   isLoading?: boolean;
   isConnected?: boolean;
   searchQuery?: string;
+  /** When true, hides the internal header (title + action buttons) — used when embedded in ChatDrawer which provides its own header */
+  embedded?: boolean;
   onSearchChange?: (query: string) => void;
   onRoomSelect?: (roomId: string) => void;
   onNewChat?: () => void;
@@ -41,7 +43,13 @@ export interface ChatListProps {
 }
 
 // 房间类型徽章
-const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type, isExternal }) => {
+// inSection=true means the item is already under a categorized section header,
+// so generic "Group" badge is redundant (but "Order"/"Dispute" stay useful).
+const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean; inSection?: boolean }> = ({
+  type,
+  isExternal,
+  inSection = false,
+}) => {
   if (isExternal) {
     return (
       <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-primary/10 text-primary">
@@ -51,6 +59,9 @@ const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type
   }
 
   if (!type || type === 'direct') return null;
+
+  // Skip generic "group" badge when already under a categorized section
+  if (inSection && type === 'group') return null;
 
   const badges: Record<string, { label: string; className: string }> = {
     group: {
@@ -109,6 +120,7 @@ export const ChatList: React.FC<ChatListProps> = ({
   isLoading = false,
   isConnected = true,
   searchQuery = '',
+  embedded = false,
   onSearchChange,
   onRoomSelect,
   onNewChat,
@@ -136,7 +148,7 @@ export const ChatList: React.FC<ChatListProps> = ({
   }, [rooms, searchQuery]);
 
   // 渲染单个房间项
-  const renderRoomItem = (room: ChatRoom, isInvite = false) => (
+  const renderRoomItem = (room: ChatRoom, isInvite = false, inSection = false) => (
     <button
       key={room.id}
       type="button"
@@ -230,7 +242,11 @@ export const ChatList: React.FC<ChatListProps> = ({
               </svg>
             )}
             {/* Type badge */}
-            <RoomTypeBadge type={room.roomType} isExternal={room.isExternal} />
+            <RoomTypeBadge
+              type={room.roomType}
+              isExternal={room.isExternal}
+              inSection={inSection}
+            />
           </HStack>
           {room.lastMessageTime && !isInvite && (
             <span className="text-xs text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
@@ -283,69 +299,96 @@ export const ChatList: React.FC<ChatListProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-card border-r border-border/50 shadow-sm">
-      {/* Header */}
-      <div className="p-3 sm:p-4 border-b border-border/50 bg-gradient-to-b from-card to-transparent">
-        {/* Title row with action buttons */}
-        <div className="flex items-center justify-between mb-0 lg:mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[17px] sm:text-lg font-bold text-foreground">{t('chat.title')}</h2>
-            {/* Connection status indicator */}
-            {!isConnected && (
-              <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-warning/15 text-warning">
-                <svg className="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+      {/* Header — hidden when embedded in ChatDrawer (which provides its own header) */}
+      {!embedded && (
+        <div className="p-3 sm:p-4 border-b border-border/50 bg-gradient-to-b from-card to-transparent">
+          <div className="flex items-center justify-between mb-0 lg:mb-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[17px] sm:text-lg font-bold text-foreground">
+                {t('chat.title')}
+              </h2>
+              {!isConnected && (
+                <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-warning/15 text-warning">
+                  <svg className="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Offline
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 lg:hidden">
+              <button
+                onClick={onShareChatId}
+                className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-all duration-200"
+                aria-label="Share Chat ID"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
                   />
                 </svg>
-                Offline
-              </span>
-            )}
+              </button>
+              <button
+                onClick={onNewChat}
+                className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-all duration-200"
+                aria-label={t('chat.newMessage')}
+                data-testid="chat-new-btn"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
-          {/* Action buttons - mobile only */}
-          <div className="flex items-center gap-1 lg:hidden">
-            {/* Share button */}
-            <button
-              onClick={onShareChatId}
-              className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-all duration-200"
-              aria-label="Share Chat ID"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                />
-              </svg>
-            </button>
-            {/* New chat button */}
-            <button
-              onClick={onNewChat}
-              className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted rounded-lg transition-all duration-200"
-              aria-label={t('chat.newMessage')}
-              data-testid="chat-new-btn"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
+
+          <div className="hidden lg:block">
+            <Input
+              placeholder={t('chat.searchConversations')}
+              value={searchQuery}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onSearchChange?.(e.target.value)
+              }
+              className="h-10 text-[13px] rounded-xl bg-muted/50 border-transparent focus:border-primary/30 transition-all duration-200"
+              leftIcon={
+                <svg
+                  className="w-4 h-4 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              }
+            />
           </div>
         </div>
+      )}
 
-        {/* Search bar - desktop only */}
-        <div className="hidden lg:block">
+      {/* Search bar — always visible when embedded (Drawer provides header, but search lives here) */}
+      {embedded && (
+        <div className="px-3 py-2 border-b border-border/30">
           <Input
             placeholder={t('chat.searchConversations')}
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange?.(e.target.value)}
-            className="h-10 text-[13px] rounded-xl bg-muted/50 border-transparent focus:border-primary/30 transition-all duration-200"
+            className="h-9 text-[13px] rounded-xl bg-muted/50 border-transparent focus:border-primary/30 transition-all duration-200"
             leftIcon={
               <svg
                 className="w-4 h-4 text-muted-foreground"
@@ -363,7 +406,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             }
           />
         </div>
-      </div>
+      )}
 
       {/* Room List */}
       <div
@@ -465,7 +508,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                     }
                   />
                 )}
-                {directRooms.map(room => renderRoomItem(room))}
+                {directRooms.map(room => renderRoomItem(room, false, true))}
               </>
             )}
 
@@ -486,7 +529,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                     </svg>
                   }
                 />
-                {groupRooms.map(room => renderRoomItem(room))}
+                {groupRooms.map(room => renderRoomItem(room, false, true))}
               </>
             )}
 
@@ -507,7 +550,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                     </svg>
                   }
                 />
-                {orderRooms.map(room => renderRoomItem(room))}
+                {orderRooms.map(room => renderRoomItem(room, false, true))}
               </>
             )}
 
@@ -521,8 +564,10 @@ export const ChatList: React.FC<ChatListProps> = ({
         )}
       </div>
 
-      {/* New Chat Button - Desktop only */}
-      <div className="hidden lg:block p-4 border-t border-border/30 bg-gradient-to-t from-card via-card/95 to-transparent backdrop-blur-sm">
+      {/* New Chat Button — visible on desktop standalone, or always when embedded in Drawer */}
+      <div
+        className={`${embedded ? '' : 'hidden lg:block'} p-4 border-t border-border/30 bg-gradient-to-t from-card via-card/95 to-transparent backdrop-blur-sm`}
+      >
         <button
           onClick={onNewChat}
           className="w-full flex items-center justify-center gap-2.5 py-3 px-5 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 active:from-primary/90 text-white rounded-xl transition-all duration-300 text-[13px] font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0"

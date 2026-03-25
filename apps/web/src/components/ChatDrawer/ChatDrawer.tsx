@@ -10,6 +10,7 @@ import { useI18n } from '@mobazha/core';
 import type { MatrixRoom, MatrixMessage } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { UserInfoCard, type UserInfo } from '@/components/Chat/UserInfoCard';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // 转换 MatrixRoom 到 ChatRoom
 function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
@@ -19,9 +20,13 @@ function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
     avatar: room.avatarUrl,
     rawMxcAvatarUrl: room.rawMxcAvatarUrl, // 原始 mxc URL 用于认证下载
     lastMessage: room.lastMessage?.content,
-    lastMessageTime: room.timestamp
-      ? new Date(room.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : undefined,
+    lastMessageTime: (() => {
+      if (!room.timestamp) return undefined;
+      const d = new Date(room.timestamp);
+      return isNaN(d.getTime())
+        ? undefined
+        : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    })(),
     unreadCount: room.unreadCount,
     isOnline: false, // Will be updated from presence
     isEncrypted: room.isEncrypted,
@@ -35,6 +40,12 @@ function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
 }
 
 // 转换 MatrixMessage 到 Message
+function safeTimestamp(ts: unknown): string {
+  if (!ts) return new Date().toISOString();
+  const d = new Date(ts as number | string);
+  return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+}
+
 function toDisplayMessage(msg: MatrixMessage): Message {
   return {
     id: msg.id,
@@ -43,7 +54,7 @@ function toDisplayMessage(msg: MatrixMessage): Message {
     senderName: msg.senderName,
     senderAvatar: msg.senderAvatar,
     senderRawMxcAvatarUrl: msg.senderRawMxcAvatarUrl, // 原始 mxc URL 用于认证下载
-    timestamp: new Date(msg.timestamp).toISOString(),
+    timestamp: safeTimestamp(msg.timestamp),
     status: msg.status,
     isSystem: msg.isSystem,
     type: msg.type === 'image' ? 'image' : msg.type === 'file' ? 'file' : 'text',
@@ -398,6 +409,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         isLoading={isInitializing}
         isConnected={isConnected}
         searchQuery={searchQuery}
+        embedded
         onSearchChange={setSearchQuery}
         onRoomSelect={handleRoomSelect}
         onNewChat={onNewChat}
@@ -485,83 +497,126 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-0.5">
-              {/* 分享按钮 */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onShareChatId}
-                className="h-9 w-9 p-0 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200"
-              >
-                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-              </Button>
-              {/* 新建聊天按钮 */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onNewChat}
-                className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-200"
-                data-testid="chat-new-btn"
-              >
-                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </Button>
-              {/* 展开/收缩按钮 */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleExpand}
-                className="h-9 w-9 p-0 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200"
-              >
-                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {drawerExpanded ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                    />
-                  )}
-                </svg>
-              </Button>
-              {/* 关闭按钮 */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeDrawer}
-                className="h-9 w-9 p-0 rounded-xl hover:bg-error/15 text-muted-foreground hover:text-error transition-all duration-200"
-                data-testid="chat-close-btn"
-              >
-                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </Button>
-            </div>
+            <TooltipProvider delayDuration={300}>
+              <div className="flex items-center gap-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onShareChatId}
+                      className="h-9 w-9 p-0 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200"
+                    >
+                      <svg
+                        className="w-4.5 h-4.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        />
+                      </svg>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{t('chat.shareChatId')}</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onNewChat}
+                      className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all duration-200"
+                      data-testid="chat-new-btn"
+                    >
+                      <svg
+                        className="w-4.5 h-4.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{t('chat.newMessage')}</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleExpand}
+                      className="h-9 w-9 p-0 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200"
+                    >
+                      <svg
+                        className="w-4.5 h-4.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        {drawerExpanded ? (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                          />
+                        ) : (
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                          />
+                        )}
+                      </svg>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {drawerExpanded ? t('chat.collapse') : t('chat.expand')}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={closeDrawer}
+                      className="h-9 w-9 p-0 rounded-xl hover:bg-error/15 text-muted-foreground hover:text-error transition-all duration-200"
+                      data-testid="chat-close-btn"
+                    >
+                      <svg
+                        className="w-4.5 h-4.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{t('common.close')}</TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           </div>
         </SheetHeader>
 

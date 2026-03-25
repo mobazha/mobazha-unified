@@ -1364,6 +1364,10 @@ export const en: TranslationResource = {
     roomNotFoundDesc:
       "The chat room you're looking for doesn't exist or you don't have access to it.",
     backToMessages: 'Back to Messages',
+    // Drawer actions
+    shareChatId: 'Share Chat ID',
+    expand: 'Expand',
+    collapse: 'Collapse',
   },
 
   // Matrix room events
