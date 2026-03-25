@@ -1248,6 +1248,7 @@ export const de: TranslationResource = {
     noMessages: 'Noch keine Nachrichten',
     online: 'Online',
     offline: 'Offline',
+    offlineHint: 'Chat ist getrennt. Verbindung wird wiederhergestellt…',
     lastSeen: 'Zuletzt online {{time}}',
     typing: 'tippt...',
     encrypted: 'Ende-zu-Ende verschlüsselt',

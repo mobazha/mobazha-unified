@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { VStack, HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { Send, ImagePlus } from 'lucide-react';
+import { Send, ImagePlus, FileText, Download } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
 export interface Message {
@@ -45,6 +45,7 @@ export interface ChatMessagesProps {
   onSendImage?: (file: File) => void;
   onTyping?: (isTyping: boolean) => void;
   onRetryMessage?: (messageId: string) => void;
+  isConnected?: boolean;
   onLoadMore?: () => void;
   hasMoreMessages?: boolean;
   isLoadingMore?: boolean;
@@ -218,6 +219,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   onSendImage,
   onTyping,
   onRetryMessage,
+  isConnected = true,
   onLoadMore,
   hasMoreMessages = false,
   isLoadingMore = false,
@@ -304,6 +306,13 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     },
     [onSendImage]
   );
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+  };
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -662,6 +671,53 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                           </button>
                         )}
                       </div>
+                    ) : message.type === 'file' && message.attachments?.[0]?.url ? (
+                      <div className="relative">
+                        <a
+                          href={message.attachments[0].url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 ${
+                            isOwn
+                              ? 'bg-gradient-to-br from-primary via-primary to-primary/85 text-white rounded-br-sm shadow-lg shadow-primary/25 hover:shadow-xl'
+                              : 'bg-card/95 backdrop-blur-sm text-foreground rounded-bl-sm shadow-md border border-border/40 hover:shadow-lg hover:border-border/60'
+                          }`}
+                        >
+                          <div
+                            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                              isOwn ? 'bg-white/20' : 'bg-primary/10'
+                            }`}
+                          >
+                            <FileText
+                              className={`w-5 h-5 ${isOwn ? 'text-white' : 'text-primary'}`}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">
+                              {message.attachments[0].filename || 'File'}
+                            </p>
+                            {message.attachments[0].size && (
+                              <p
+                                className={`text-xs mt-0.5 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}
+                              >
+                                {formatFileSize(message.attachments[0].size)}
+                              </p>
+                            )}
+                          </div>
+                          <Download
+                            className={`shrink-0 w-4 h-4 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}
+                          />
+                        </a>
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => onRetryMessage?.(message.id)}
+                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+                            aria-label="Retry"
+                          >
+                            ↻
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <div
                         className={`relative px-4 py-3 transition-all duration-200 ${
@@ -707,6 +763,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
       {/* Input */}
       <div className="px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-card border-t border-border/40">
+        {!isConnected && (
+          <div className="flex items-center justify-center gap-2 py-1.5 mb-2 text-xs font-medium text-warning bg-warning/10 rounded-lg">
+            <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+            {t('chat.offlineHint')}
+          </div>
+        )}
         <HStack gap="xs" align="center">
           {onSendImage && (
             <>
@@ -716,10 +778,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                 accept="image/*"
                 onChange={handleImageSelect}
                 className="hidden"
+                disabled={!isConnected}
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors"
+                disabled={!isConnected}
+                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-muted-foreground/60"
                 aria-label="Send image"
               >
                 <ImagePlus className="w-[18px] h-[18px]" />
@@ -733,16 +797,17 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={t('chat.typeMessage')}
+              placeholder={isConnected ? t('chat.typeMessage') : t('chat.offlineHint')}
               enterKeyHint="send"
-              className="w-full pl-4 pr-3 py-2.5 text-[14px] bg-muted/30 rounded-full border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 text-foreground placeholder:text-muted-foreground/50 transition-colors"
+              disabled={!isConnected}
+              className="w-full pl-4 pr-3 py-2.5 text-[14px] bg-muted/30 rounded-full border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 text-foreground placeholder:text-muted-foreground/50 transition-colors disabled:opacity-50 disabled:cursor-default"
               data-testid="chat-message-input"
             />
           </div>
 
           <button
             onClick={handleSend}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || !isConnected}
             className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-primary transition-all duration-150 enabled:hover:bg-primary/10 enabled:active:scale-95 disabled:text-muted-foreground/30 disabled:cursor-default"
             data-testid="chat-send-btn"
           >

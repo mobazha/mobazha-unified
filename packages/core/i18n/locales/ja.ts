@@ -1219,6 +1219,7 @@ export const ja: TranslationResource = {
     noMessages: 'メッセージがありません',
     online: 'オンライン',
     offline: 'オフライン',
+    offlineHint: 'チャットが切断されました。再接続中…',
     lastSeen: '{{time}}前にオンライン',
     typing: '入力中...',
     encrypted: 'エンドツーエンド暗号化',

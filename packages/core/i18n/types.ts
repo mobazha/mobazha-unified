@@ -450,6 +450,7 @@ export interface TranslationResource {
     noMessages: string;
     online: string;
     offline: string;
+    offlineHint: string;
     lastSeen: string;
     typing: string;
     encrypted: string;

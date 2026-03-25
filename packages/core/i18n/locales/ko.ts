@@ -1210,6 +1210,7 @@ export const ko: TranslationResource = {
     noMessages: '메시지 없음',
     online: '온라인',
     offline: '오프라인',
+    offlineHint: '채팅 연결이 끊어졌습니다. 재연결 중…',
     lastSeen: '{{time}} 전 접속',
     typing: '입력 중...',
     encrypted: '메시지는 암호화되어 있습니다',
