@@ -39,6 +39,7 @@ function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
         ? undefined
         : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     })(),
+    timestamp: room.timestamp,
     unreadCount: room.unreadCount,
     isOnline: false,
     isEncrypted: room.isEncrypted,

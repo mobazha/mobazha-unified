@@ -14,6 +14,7 @@ export interface ChatRoom {
   rawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   lastMessage?: string;
   lastMessageTime?: string;
+  timestamp?: number;
   unreadCount?: number;
   isOnline?: boolean;
   isEncrypted?: boolean;
@@ -42,14 +43,7 @@ export interface ChatListProps {
   onRejectInvite?: (roomId: string) => void;
 }
 
-// 房间类型徽章
-// inSection=true means the item is already under a categorized section header,
-// so generic "Group" badge is redundant (but "Order"/"Dispute" stay useful).
-const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean; inSection?: boolean }> = ({
-  type,
-  isExternal,
-  inSection = false,
-}) => {
+const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean }> = ({ type, isExternal }) => {
   if (isExternal) {
     return (
       <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-primary/10 text-primary">
@@ -59,9 +53,6 @@ const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean; inSection?:
   }
 
   if (!type || type === 'direct') return null;
-
-  // Skip generic "group" badge when already under a categorized section
-  if (inSection && type === 'group') return null;
 
   const badges: Record<string, { label: string; className: string }> = {
     group: {
@@ -96,14 +87,18 @@ const RoomTypeBadge: React.FC<{ type?: string; isExternal?: boolean; inSection?:
   );
 };
 
-// 分区标题
-const SectionHeader: React.FC<{ title: string; count: number; icon: React.ReactNode }> = ({
-  title,
-  count,
-  icon,
-}) => (
+const InviteSectionHeader: React.FC<{ count: number; title: string }> = ({ count, title }) => (
   <div className="flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-muted/40 to-muted/20 border-y border-border/20 backdrop-blur-sm">
-    <span className="text-muted-foreground/70">{icon}</span>
+    <span className="text-muted-foreground/70">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      </svg>
+    </span>
     <span className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">
       {title}
     </span>
@@ -130,25 +125,17 @@ export const ChatList: React.FC<ChatListProps> = ({
 }) => {
   const { t } = useI18n();
 
-  // 过滤和分组房间
-  const { filteredRooms, directRooms, groupRooms, orderRooms } = useMemo(() => {
+  const sortedRooms = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    const filtered = rooms.filter(
-      room =>
-        room.name.toLowerCase().includes(query) || room.lastMessage?.toLowerCase().includes(query)
-    );
-
-    const direct = filtered.filter(r => r.isDirect || r.roomType === 'direct');
-    const groups = filtered.filter(
-      r => r.roomType === 'group' || r.roomType === 'store' || r.roomType === 'community'
-    );
-    const orders = filtered.filter(r => r.roomType === 'order' || r.roomType === 'moderator');
-
-    return { filteredRooms: filtered, directRooms: direct, groupRooms: groups, orderRooms: orders };
+    return rooms
+      .filter(
+        room =>
+          room.name.toLowerCase().includes(query) || room.lastMessage?.toLowerCase().includes(query)
+      )
+      .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
   }, [rooms, searchQuery]);
 
-  // 渲染单个房间项
-  const renderRoomItem = (room: ChatRoom, isInvite = false, inSection = false) => (
+  const renderRoomItem = (room: ChatRoom, isInvite = false) => (
     <button
       key={room.id}
       type="button"
@@ -242,11 +229,7 @@ export const ChatList: React.FC<ChatListProps> = ({
               </svg>
             )}
             {/* Type badge */}
-            <RoomTypeBadge
-              type={room.roomType}
-              isExternal={room.isExternal}
-              inSection={inSection}
-            />
+            <RoomTypeBadge type={room.roomType} isExternal={room.isExternal} />
           </HStack>
           {room.lastMessageTime && !isInvite && (
             <span className="text-xs text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
@@ -425,9 +408,8 @@ export const ChatList: React.FC<ChatListProps> = ({
               </div>
             ))}
           </VStack>
-        ) : filteredRooms.length === 0 && invites.length === 0 ? (
+        ) : sortedRooms.length === 0 && invites.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center relative">
-            {/* Background decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/5 blur-3xl" />
             </div>
@@ -463,103 +445,16 @@ export const ChatList: React.FC<ChatListProps> = ({
           </div>
         ) : (
           <VStack gap="none">
-            {/* Invites Section */}
+            {/* Pending invites — always pinned at top */}
             {invites.length > 0 && (
               <>
-                <SectionHeader
-                  title={t('chat.invitations')}
-                  count={invites.length}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  }
-                />
+                <InviteSectionHeader count={invites.length} title={t('chat.invitations')} />
                 {invites.map(invite => renderRoomItem(invite, true))}
               </>
             )}
 
-            {/* Direct Messages Section */}
-            {directRooms.length > 0 && (
-              <>
-                {(invites.length > 0 || groupRooms.length > 0 || orderRooms.length > 0) && (
-                  <SectionHeader
-                    title={t('chat.directMessages')}
-                    count={directRooms.length}
-                    icon={
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                    }
-                  />
-                )}
-                {directRooms.map(room => renderRoomItem(room, false, true))}
-              </>
-            )}
-
-            {/* Groups & Communities Section */}
-            {groupRooms.length > 0 && (
-              <>
-                <SectionHeader
-                  title={t('chat.communities')}
-                  count={groupRooms.length}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  }
-                />
-                {groupRooms.map(room => renderRoomItem(room, false, true))}
-              </>
-            )}
-
-            {/* Orders Section */}
-            {orderRooms.length > 0 && (
-              <>
-                <SectionHeader
-                  title={t('chat.orderChats')}
-                  count={orderRooms.length}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                      />
-                    </svg>
-                  }
-                />
-                {orderRooms.map(room => renderRoomItem(room, false, true))}
-              </>
-            )}
-
-            {/* If no sections needed (no categories) */}
-            {invites.length === 0 &&
-              directRooms.length === 0 &&
-              groupRooms.length === 0 &&
-              orderRooms.length === 0 &&
-              filteredRooms.map(room => renderRoomItem(room))}
+            {/* Unified chronological list — all rooms sorted by last activity */}
+            {sortedRooms.map(room => renderRoomItem(room))}
           </VStack>
         )}
       </div>
