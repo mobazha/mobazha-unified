@@ -19,6 +19,7 @@ import {
   Pencil,
   Check,
   SmilePlus,
+  Smile,
 } from 'lucide-react';
 import { useI18n, useAuthenticatedImage } from '@mobazha/core';
 import {
@@ -491,6 +492,19 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const [reactionPickerMsgId, setReactionPickerMsgId] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClick = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as HTMLElement)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showEmojiPicker]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -534,6 +548,27 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       onTyping?.(false);
     }
   };
+
+  const handleInsertEmoji = useCallback(
+    (emoji: string) => {
+      const input = inputRef.current;
+      if (input) {
+        const start = input.selectionStart ?? inputValue.length;
+        const end = input.selectionEnd ?? start;
+        const next = inputValue.slice(0, start) + emoji + inputValue.slice(end);
+        setInputValue(next);
+        requestAnimationFrame(() => {
+          const pos = start + emoji.length;
+          input.setSelectionRange(pos, pos);
+          input.focus();
+        });
+      } else {
+        setInputValue(prev => prev + emoji);
+      }
+      setShowEmojiPicker(false);
+    },
+    [inputValue]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -679,6 +714,13 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   );
 
   const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+  const INPUT_EMOJI_GRID = [
+    ['😀', '😊', '😂', '🥲', '😍', '🤩', '😘', '🤗'],
+    ['😎', '🤔', '😏', '🙄', '😴', '🤯', '🥳', '😇'],
+    ['👍', '👋', '🙏', '💪', '🤝', '✌️', '👏', '🫡'],
+    ['❤️', '🔥', '⭐', '💰', '📦', '🎉', '✅', '💯'],
+  ];
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -1399,9 +1441,38 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               placeholder={isConnected ? t('chat.typeMessage') : t('chat.offlineHint')}
               enterKeyHint="send"
               disabled={!isConnected}
-              className="w-full pl-4 pr-3 py-2.5 text-[14px] bg-muted/30 rounded-full border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 text-foreground placeholder:text-muted-foreground/50 transition-colors disabled:opacity-50 disabled:cursor-default"
+              className="w-full pl-4 pr-10 py-2.5 text-[14px] bg-muted/30 rounded-full border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 text-foreground placeholder:text-muted-foreground/50 transition-colors disabled:opacity-50 disabled:cursor-default"
               data-testid="chat-message-input"
             />
+            <div ref={emojiPickerRef} className="absolute right-1.5 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(prev => !prev)}
+                disabled={!isConnected}
+                className="w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
+                aria-label="Emoji"
+              >
+                <Smile className="w-[17px] h-[17px]" />
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute right-0 bottom-9 z-50 p-2 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150">
+                  {INPUT_EMOJI_GRID.map((row, ri) => (
+                    <div key={ri} className="flex gap-0.5">
+                      {row.map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => handleInsertEmoji(emoji)}
+                          className="w-9 h-9 flex items-center justify-center rounded-lg text-lg hover:bg-muted/60 active:scale-90 transition-all"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <button
