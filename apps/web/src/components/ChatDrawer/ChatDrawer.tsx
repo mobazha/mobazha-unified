@@ -405,6 +405,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const handleSendFile = useCallback(
     async (file: File) => {
       if (!currentRoomId) return;
+
+      const MAX_CHAT_FILE_SIZE = 50 * 1024 * 1024;
+      if (file.size > MAX_CHAT_FILE_SIZE) {
+        toast({
+          title: t('common.error'),
+          description: t('chat.chatFileTooLarge'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
       try {
         if (file.type.startsWith('image/')) {
           await matrixClient.sendImage(currentRoomId, file);

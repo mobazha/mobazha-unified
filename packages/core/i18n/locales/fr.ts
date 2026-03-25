@@ -1245,6 +1245,7 @@ export const fr: TranslationResource = {
     deleteFailed: 'Échec de la suppression du message',
     sendImageFailed: "Échec de l'envoi de l'image",
     sendFileFailed: "Échec de l'envoi du fichier",
+    chatFileTooLarge: 'Le fichier est trop volumineux. Taille maximale : 50 Mo.',
     lastSeen: 'Vu il y a {{time}}',
     typing: 'écrit...',
     encrypted: 'Messages chiffrés de bout en bout',

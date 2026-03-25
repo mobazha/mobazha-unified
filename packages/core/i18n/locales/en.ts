@@ -1323,6 +1323,7 @@ export const en: TranslationResource = {
     deleteFailed: 'Failed to delete message',
     sendImageFailed: 'Failed to send image',
     sendFileFailed: 'Failed to send file',
+    chatFileTooLarge: 'File is too large. Maximum size is 50MB.',
     lastSeen: 'Last seen {{time}}',
     typing: 'typing...',
     encrypted: 'End-to-end encrypted',

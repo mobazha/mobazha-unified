@@ -454,6 +454,7 @@ export interface TranslationResource {
     deleteFailed: string;
     sendImageFailed: string;
     sendFileFailed: string;
+    chatFileTooLarge: string;
     lastSeen: string;
     typing: string;
     encrypted: string;
