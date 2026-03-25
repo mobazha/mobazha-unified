@@ -90,7 +90,11 @@ export async function downloadAuthenticatedImage(
   ctx: MatrixContext,
   url: string
 ): Promise<string | null> {
-  if (!url || !ctx.client) return null;
+  if (!url) return null;
+  if (!ctx.client) {
+    console.warn('[Matrix:media] downloadAuthenticatedImage: client not ready, url=', url);
+    return null;
+  }
 
   if (imageCache.has(url)) {
     return imageCache.get(url) || null;
@@ -108,6 +112,10 @@ export async function downloadAuthenticatedImage(
     }
 
     if (!mediaUrl) {
+      console.warn(
+        '[Matrix:media] downloadAuthenticatedImage: mxcToHttp returned undefined for',
+        url
+      );
       return null;
     }
 
@@ -115,6 +123,7 @@ export async function downloadAuthenticatedImage(
     const accessToken = matrixClient.getAccessToken?.();
 
     if (!accessToken) {
+      console.warn('[Matrix:media] downloadAuthenticatedImage: no access token available');
       return null;
     }
 
@@ -126,6 +135,11 @@ export async function downloadAuthenticatedImage(
     });
 
     if (!response.ok) {
+      console.warn(
+        '[Matrix:media] downloadAuthenticatedImage: fetch failed',
+        response.status,
+        mediaUrl
+      );
       return null;
     }
 
@@ -135,7 +149,8 @@ export async function downloadAuthenticatedImage(
     imageCache.set(url, blobUrl);
 
     return blobUrl;
-  } catch {
+  } catch (err) {
+    console.warn('[Matrix:media] downloadAuthenticatedImage: exception for', url, err);
     return null;
   }
 }

@@ -33,14 +33,20 @@ function readBody(req: IncomingMessage): Promise<string> {
 /**
  * Vite plugin: serve .wasm files with correct MIME type.
  * Required by @matrix-org/matrix-sdk-crypto-wasm which loads WASM at runtime.
+ * Intercepts writeHead to override Content-Type AFTER Vite's internal handlers.
  */
 function wasmMimePlugin(): Plugin {
   return {
     name: 'wasm-mime-type',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
+      server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
         if (req.url?.endsWith('.wasm')) {
-          res.setHeader('Content-Type', 'application/wasm');
+          const _writeHead = res.writeHead.bind(res);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- monkey-patching writeHead requires flexible signature
+          (res as any).writeHead = (statusCode: number, ...args: any[]) => {
+            res.setHeader('Content-Type', 'application/wasm');
+            return _writeHead(statusCode, ...args);
+          };
         }
         next();
       });

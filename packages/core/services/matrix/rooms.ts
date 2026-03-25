@@ -176,6 +176,7 @@ export function getRoomMembers(ctx: MatrixContext, room: unknown): MatrixUser[] 
       const peerID = getMemberPeerID(ctx, room, m.userId);
       const serverName = ctx.serverConfig?.serverName;
       const isExternal = serverName ? !m.userId.endsWith(`:${serverName}`) : false;
+
       return {
         userId: m.userId,
         displayName: m.name,

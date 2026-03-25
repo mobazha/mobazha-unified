@@ -6,6 +6,9 @@ import { matrixClient } from '../services/matrix';
 // 全局图片缓存
 const imageCache = new Map<string, string>();
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
 /**
  * Hook 用于加载需要认证的 Matrix 图片
  * @param mxcUrl - mxc:// URL 或已转换的认证 URL
@@ -20,7 +23,6 @@ export function useAuthenticatedImage(
   error: boolean;
 } {
   const [imageUrl, setImageUrl] = useState<string | null>(() => {
-    // 检查缓存
     if (mxcUrl && imageCache.has(mxcUrl)) {
       return imageCache.get(mxcUrl) || null;
     }
@@ -29,18 +31,17 @@ export function useAuthenticatedImage(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const loadedUrlRef = useRef<string | null>(null);
+  const retryCountRef = useRef(0);
 
   useEffect(() => {
-    // 如果没有 mxc URL，使用 fallback
     if (!mxcUrl) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- 初始化状态需要在 effect 中设置
       setImageUrl(fallbackUrl || null);
       setLoading(false);
       setError(false);
+      retryCountRef.current = 0;
       return;
     }
 
-    // 检查缓存
     if (imageCache.has(mxcUrl)) {
       setImageUrl(imageCache.get(mxcUrl) || null);
       setLoading(false);
@@ -48,32 +49,39 @@ export function useAuthenticatedImage(
       return;
     }
 
-    // 如果已经加载过这个 URL，跳过
     if (loadedUrlRef.current === mxcUrl && imageUrl) {
       return;
     }
 
     let mounted = true;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const loadImage = async () => {
+      if (!mounted) return;
       setLoading(true);
       setError(false);
 
       try {
-        // 使用 matrixClient 的认证下载方法
         const blobUrl = await matrixClient.downloadAuthenticatedImage(mxcUrl);
 
-        if (mounted) {
-          if (blobUrl) {
-            imageCache.set(mxcUrl, blobUrl);
-            loadedUrlRef.current = mxcUrl;
-            setImageUrl(blobUrl);
-            setError(false);
-          } else {
-            // 认证下载失败，使用 fallback
-            setImageUrl(fallbackUrl || null);
-            setError(true);
-          }
+        if (!mounted) return;
+
+        if (blobUrl) {
+          imageCache.set(mxcUrl, blobUrl);
+          loadedUrlRef.current = mxcUrl;
+          retryCountRef.current = 0;
+          setImageUrl(blobUrl);
+          setError(false);
+          setLoading(false);
+        } else if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setLoading(false);
+          retryTimer = setTimeout(() => {
+            if (mounted) loadImage();
+          }, RETRY_DELAY_MS * retryCountRef.current);
+        } else {
+          setImageUrl(fallbackUrl || null);
+          setError(true);
           setLoading(false);
         }
       } catch (err) {
@@ -86,12 +94,15 @@ export function useAuthenticatedImage(
       }
     };
 
+    retryCountRef.current = 0;
     loadImage();
 
     return () => {
       mounted = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [mxcUrl, fallbackUrl, imageUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- retry is internal, only re-run when mxcUrl/fallback change
+  }, [mxcUrl, fallbackUrl]);
 
   return { imageUrl, loading, error };
 }

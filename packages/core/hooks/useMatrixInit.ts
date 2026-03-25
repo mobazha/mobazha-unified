@@ -11,7 +11,8 @@ import { matrixClient } from '../services/matrix/client';
 import { matrixEvents } from '../services/matrix/events';
 import { MATRIX_EVENTS } from '../services/matrix/types';
 import type { MatrixMessage, MatrixRoom } from '../services/matrix/types';
-import { isMatrixEnabled } from '../config';
+import { isMatrixEnabled, NODE_API } from '../config';
+import { getGatewayUrl } from '../services/api/config';
 
 function splitRoomsAndInvites(allRooms: MatrixRoom[]) {
   const rooms: MatrixRoom[] = [];
@@ -137,7 +138,12 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       // Sync Mobazha profile to Matrix (name + avatar)
       const profile = useUserStore.getState().profile;
       if (profile?.name) {
-        matrixClient.syncProfileToMatrix(profile.name, undefined).catch(() => {});
+        const avatarHash = profile.avatarHashes?.medium;
+        let avatarUrl: string | undefined;
+        if (avatarHash) {
+          avatarUrl = `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(avatarHash)}`;
+        }
+        matrixClient.syncProfileToMatrix(profile.name, avatarUrl).catch(() => {});
       }
 
       // Write own peerID into all joined rooms
@@ -228,9 +234,12 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       };
 
       if (shouldIncrementUnread) {
-        const room = state.rooms.find(r => r.roomId === message.roomId);
-        if (room) {
-          roomUpdate.unreadCount = room.unreadCount + 1;
+        const sdkCount = matrixClient.getRoomUnreadCount(message.roomId);
+        if (sdkCount > 0) {
+          roomUpdate.unreadCount = sdkCount;
+        } else {
+          const room = state.rooms.find(r => r.roomId === message.roomId);
+          roomUpdate.unreadCount = (room?.unreadCount || 0) + 1;
         }
       }
 

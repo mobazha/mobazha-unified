@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui';
-import { useI18n, useUserStore } from '@mobazha/core';
-import { matrixClient, matrixCrypto, type InvitePolicy } from '@mobazha/core/services/matrix';
-import type { KeyBackupResult, NodeBackupInfo } from '@mobazha/core/services/matrix';
+import { useI18n } from '@mobazha/core';
+import { matrixClient, type InvitePolicy } from '@mobazha/core/services/matrix';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
-import { Key, Copy, Shield, Share2, Laptop, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Copy, Shield, Share2, Laptop } from 'lucide-react';
 
 const UI_TO_POLICY: Record<string, InvitePolicy> = {
   all: 'auto_all',
@@ -25,40 +24,14 @@ const POLICY_TO_UI: Record<InvitePolicy, 'all' | 'mobazha' | 'confirm'> = {
 export default function ChatEncryptionSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { profile } = useUserStore();
 
-  const [invitePolicy, setInvitePolicyUI] = useState<'all' | 'mobazha' | 'confirm'>('mobazha');
-  const [backupInfo, setBackupInfo] = useState<NodeBackupInfo | null>(null);
-  const [isLoadingBackup, setIsLoadingBackup] = useState(true);
-  const [isBackingUp, setIsBackingUp] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(false);
+  const [invitePolicy, setInvitePolicyUI] = useState<'all' | 'mobazha' | 'confirm'>(() => {
+    const currentPolicy = matrixClient.getInvitePolicy();
+    return POLICY_TO_UI[currentPolicy] || 'mobazha';
+  });
 
   const chatId = matrixClient.getUserId() || '';
   const deviceId = matrixClient.getDeviceId() || '';
-
-  // Load saved policy from matrixClient on mount
-  useEffect(() => {
-    const currentPolicy = matrixClient.getInvitePolicy();
-    setInvitePolicyUI(POLICY_TO_UI[currentPolicy] || 'mobazha');
-  }, []);
-
-  // Load real backup info on mount
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const info = await matrixCrypto.getKeyBackupInfo();
-        if (!cancelled) setBackupInfo(info);
-      } catch {
-        // No backup available
-      } finally {
-        if (!cancelled) setIsLoadingBackup(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handlePolicyChange = useCallback((uiValue: 'all' | 'mobazha' | 'confirm') => {
     setInvitePolicyUI(uiValue);
@@ -91,62 +64,6 @@ export default function ChatEncryptionSettingsPage() {
       });
     } catch {
       handleCopy();
-    }
-  };
-
-  const handleBackup = async () => {
-    setIsBackingUp(true);
-    try {
-      const result: KeyBackupResult = await matrixCrypto.backupRoomKeys();
-      if (result.success) {
-        const info = await matrixCrypto.getKeyBackupInfo();
-        setBackupInfo(info);
-        toast({
-          title: t('common.success'),
-          description: t('settingsModal.keysBackedUp'),
-        });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: result.error || result.reason || t('settingsModal.backupFailed'),
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: t('common.error'),
-        description: error instanceof Error ? error.message : t('settingsModal.backupFailed'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsBackingUp(false);
-    }
-  };
-
-  const handleRestore = async () => {
-    setIsRestoring(true);
-    try {
-      const result: KeyBackupResult = await matrixCrypto.restoreRoomKeys();
-      if (result.success) {
-        toast({
-          title: t('common.success'),
-          description: t('settingsModal.keysRestored'),
-        });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: result.error || result.reason || t('settingsModal.restoreFailed'),
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: t('common.error'),
-        description: error instanceof Error ? error.message : t('settingsModal.restoreFailed'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsRestoring(false);
     }
   };
 
@@ -254,59 +171,10 @@ export default function ChatEncryptionSettingsPage() {
           </Card>
         </SettingsSection>
 
-        {/* Key Backup section */}
-        <SettingsSection
-          className="pt-5 md:pt-8"
-          title={t('settingsModal.keyBackup')}
-          description={t('settingsModal.keyBackupDesc')}
-        >
-          <Card className="p-4 md:p-6">
-            <div className="space-y-3">
-              {isLoadingBackup ? (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">{t('common.loading')}</span>
-                </div>
-              ) : backupInfo ? (
-                <>
-                  <div className="flex items-center gap-2 text-success">
-                    <Check className="w-4 h-4" />
-                    <span className="text-sm">{t('settingsModal.backupExists')}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('settingsModal.lastBackup')}:{' '}
-                    {new Date(backupInfo.updatedAt).toLocaleString()}
-                    {backupInfo.keyCount > 0 && ` (${backupInfo.keyCount} keys)`}
-                  </p>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm">{t('settingsModal.noBackup')}</span>
-                </div>
-              )}
-              <div className="flex gap-2 flex-wrap">
-                <Button onClick={handleBackup} size="sm" disabled={isBackingUp || !chatId}>
-                  {isBackingUp ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Key className="w-4 h-4 mr-2" />
-                  )}
-                  {t('settingsModal.backupNow')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRestore}
-                  disabled={isRestoring || !chatId}
-                >
-                  {isRestoring && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {t('settingsModal.restoreKeys')}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </SettingsSection>
+        {/* Key backup is automatic — room keys and cross-signing secrets
+            are synced to the user's Mobazha node every 5 minutes and after
+            each message send, then auto-restored on new device login.
+            No manual UI needed. */}
       </div>
     </div>
   );

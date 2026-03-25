@@ -517,6 +517,17 @@ class MatrixClientService {
 
   // ============= Rooms (delegated) =============
 
+  getRoomUnreadCount(roomId: string): number {
+    if (!this.client) return 0;
+    const room = this.client.getRoom(roomId);
+    if (!room) return 0;
+    return (
+      (
+        room as { getUnreadNotificationCount?: (type?: string) => number }
+      ).getUnreadNotificationCount?.('total') || 0
+    );
+  }
+
   async getRooms(): Promise<MatrixRoom[]> {
     return roomModule.getRooms(this._ctx);
   }
