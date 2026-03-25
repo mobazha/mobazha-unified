@@ -3417,6 +3417,16 @@ export interface TranslationResource {
       activeStores: string;
       productsListed: string;
       chainsSupported: string;
+      poweredBy: string;
+      andMore: string;
+    };
+    audience: {
+      title: string;
+      subtitle: string;
+      creators: { title: string; description: string };
+      crossBorder: { title: string; description: string };
+      digitalGoods: { title: string; description: string };
+      communityCommerce: { title: string; description: string };
     };
   };
 

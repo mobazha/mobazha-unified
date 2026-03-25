@@ -1213,6 +1213,8 @@ export const ja: TranslationResource = {
     conversations: '会話',
     newMessage: '新しいメッセージ',
     typeMessage: 'メッセージを入力...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: '送信',
     noMessages: 'メッセージがありません',
     online: 'オンライン',
@@ -1664,6 +1666,28 @@ export const ja: TranslationResource = {
       activeStores: 'アクティブストア',
       productsListed: '掲載商品数',
       chainsSupported: '対応チェーン',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2454,9 +2478,13 @@ export const ja: TranslationResource = {
     lastBackup: '最終バックアップ',
     never: 'なし',
     keysBackedUp: '暗号化キーをバックアップしました',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: '今すぐバックアップ',
     restoreKeys: 'キーを復元',
     restoreKeysDesc: 'メッセージ履歴を復元するためにリカバリーキーを入力',
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: 'メッセージ招待',
     messageInvitesDesc: '新規ユーザーからのチャット招待の処理方法を制御',
     autoAcceptAll: 'すべての招待を自動承認',

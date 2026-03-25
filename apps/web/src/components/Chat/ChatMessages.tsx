@@ -237,7 +237,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -611,7 +611,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               type="text"
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder={t('chat.typeMessage')}
               enterKeyHint="send"
               className="w-full pl-4 pr-3 py-2.5 text-[14px] bg-muted/30 rounded-full border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 text-foreground placeholder:text-muted-foreground/50 transition-colors"

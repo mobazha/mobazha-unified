@@ -1204,6 +1204,8 @@ export const ko: TranslationResource = {
     conversations: '대화',
     newMessage: '새 메시지',
     typeMessage: '메시지 입력...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: '보내기',
     noMessages: '메시지 없음',
     online: '온라인',
@@ -1652,6 +1654,28 @@ export const ko: TranslationResource = {
       activeStores: '활성 스토어',
       productsListed: '등록된 상품',
       chainsSupported: '지원 체인',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2442,9 +2466,13 @@ export const ko: TranslationResource = {
     lastBackup: '마지막 백업',
     never: '없음',
     keysBackedUp: '암호화 키가 백업되었습니다',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: '지금 백업',
     restoreKeys: '키 복원',
     restoreKeysDesc: '메시지 기록 복원을 위해 복구 키 입력',
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: '메시지 초대',
     messageInvitesDesc: '새 사용자의 채팅 초대 처리 방법',
     autoAcceptAll: '모든 초대 자동 수락',

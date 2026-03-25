@@ -1235,6 +1235,8 @@ export const fr: TranslationResource = {
     conversations: 'Conversations',
     newMessage: 'Nouveau message',
     typeMessage: 'Écrire un message...',
+    createConversationFailed:
+      'Failed to create conversation. Please check the peer ID and try again.',
     send: 'Envoyer',
     noMessages: 'Aucun message',
     online: 'En ligne',
@@ -1694,6 +1696,28 @@ export const fr: TranslationResource = {
       activeStores: 'Boutiques actives',
       productsListed: 'Produits listés',
       chainsSupported: 'Chaînes prises en charge',
+      poweredBy: 'Accepted Payments',
+      andMore: '{{count}} blockchains + fiat payments — and growing',
+    },
+    audience: {
+      title: 'Built for Every Seller',
+      subtitle: 'From indie creators to global brands',
+      creators: {
+        title: 'Creators & Artists',
+        description: 'Sell digital art, templates, and creative works globally',
+      },
+      crossBorder: {
+        title: 'Cross-Border Sellers',
+        description: 'Reach buyers worldwide with crypto — no currency barriers',
+      },
+      digitalGoods: {
+        title: 'Digital Products',
+        description: 'Exclusive content, memberships, digital collectibles — instant delivery',
+      },
+      communityCommerce: {
+        title: 'Community Commerce',
+        description: 'Sell directly to your Telegram group or Discord community',
+      },
     },
   },
   footer: {
@@ -2514,9 +2538,13 @@ export const fr: TranslationResource = {
     lastBackup: 'Dernière sauvegarde',
     never: 'Jamais',
     keysBackedUp: 'Clés sauvegardées avec succès',
+    backupFailed: 'Failed to backup encryption keys',
+    noBackup: 'No backup found',
     backupNow: 'Sauvegarder maintenant',
     restoreKeys: 'Restaurer les clés',
     restoreKeysDesc: "Entrez votre clé de récupération pour restaurer l'historique",
+    keysRestored: 'Encryption keys restored successfully',
+    restoreFailed: 'Failed to restore encryption keys',
     messageInvites: 'Invitations de messages',
     messageInvitesDesc: 'Contrôler comment gérer les invitations de nouveaux utilisateurs',
     autoAcceptAll: 'Accepter toutes les invitations',
