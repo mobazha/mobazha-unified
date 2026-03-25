@@ -68,6 +68,15 @@ class MatrixClientService {
   private backupDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private autoBackupTimer: ReturnType<typeof setInterval> | null = null;
 
+  // Verification state
+  private pendingVerificationRequest: unknown = null;
+  private currentVerifier: unknown = null;
+  private sasCallbacks: unknown = null;
+  private verificationDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private verifierListenersAttached = new WeakSet<object>();
+  private verificationListenersSetup = false;
+  private ignoreMutex: Promise<void> = Promise.resolve();
+
   private static readonly INVITE_POLICY_STORAGE_KEY = 'matrix_invite_policy';
 
   // ============= 初始化和认证 =============
@@ -255,6 +264,7 @@ class MatrixClientService {
 
       // 5. 设置事件监听
       this.setupEventListeners();
+      this.setupVerificationListeners().catch(() => {});
 
       this.config = {
         homeserverUrl: config.homeserverURL,
@@ -558,6 +568,7 @@ class MatrixClientService {
 
       // 设置事件监听
       this.setupEventListeners();
+      this.setupVerificationListeners().catch(() => {});
 
       this.isInitialized = true;
 
@@ -2141,6 +2152,265 @@ class MatrixClientService {
     const sdk = await import('matrix-js-sdk');
     const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
     await matrixClient.setDisplayName(displayName);
+  }
+
+  // ============ Device Verification ============
+
+  /**
+   * Set up verification event listeners (CryptoEvent.VerificationRequestReceived)
+   * Called during initialization after crypto is ready.
+   */
+  async setupVerificationListeners(): Promise<void> {
+    if (!this.client || this.verificationListenersSetup) return;
+    this.verificationListenersSetup = true;
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const crypto = matrixClient.getCrypto?.();
+    if (!crypto) return;
+
+    const { CryptoEvent } = await import('matrix-js-sdk/lib/crypto-api');
+    const { VerificationPhase } = await import('matrix-js-sdk/lib/crypto-api/verification');
+
+    (crypto as any).on(CryptoEvent.VerificationRequestReceived, (request: any) => {
+      if (this.verificationDebounceTimer) {
+        clearTimeout(this.verificationDebounceTimer);
+        this.verificationDebounceTimer = null;
+      }
+      this.verificationDebounceTimer = setTimeout(() => {
+        this.verificationDebounceTimer = null;
+        if (request.phase === VerificationPhase.Requested) {
+          this.pendingVerificationRequest = request;
+          this._setupVerificationRequestListeners(request);
+          matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED, {
+            otherUserId: request.otherUserId,
+            requestId: request.transactionId,
+          });
+        }
+      }, 200);
+    });
+  }
+
+  private async _setupVerificationRequestListeners(request: any): Promise<void> {
+    const { VerificationPhase } = await import('matrix-js-sdk/lib/crypto-api/verification');
+    let completedEmitted = false;
+
+    request.on('change', () => {
+      switch (request.phase) {
+        case VerificationPhase.Started: {
+          matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_STARTED, {
+            requestId: request.transactionId,
+          });
+          try {
+            const verifier = request.verifier;
+            if (verifier && !this.currentVerifier) {
+              this.currentVerifier = verifier;
+              this._setupVerifierListeners(verifier, request);
+            }
+          } catch {
+            /* verifier not ready yet */
+          }
+          break;
+        }
+        case VerificationPhase.Done:
+          if (!completedEmitted) {
+            completedEmitted = true;
+            matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_COMPLETED, {
+              requestId: request.transactionId,
+              otherUserId: request.otherUserId,
+            });
+          }
+          this.pendingVerificationRequest = null;
+          this.currentVerifier = null;
+          this.sasCallbacks = null;
+          break;
+        case VerificationPhase.Cancelled:
+          matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_CANCELLED, {
+            requestId: request.transactionId,
+            reason: request.cancellingUserId,
+          });
+          this.pendingVerificationRequest = null;
+          this.currentVerifier = null;
+          this.sasCallbacks = null;
+          break;
+      }
+    });
+  }
+
+  private async _setupVerifierListeners(verifier: any, request: any): Promise<void> {
+    const { VerifierEvent } = await import('matrix-js-sdk/lib/crypto-api/verification');
+    if (this.verifierListenersAttached.has(verifier)) return;
+    this.verifierListenersAttached.add(verifier);
+
+    verifier.on(VerifierEvent.ShowSas, (sas: any) => {
+      if (this.sasCallbacks) return;
+      const sasData = sas.sas || sas;
+      matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_SHOW_SAS, {
+        requestId: request.transactionId,
+        emoji: sasData.emoji,
+        decimal: sasData.decimal,
+      });
+      this.sasCallbacks = sas;
+    });
+
+    verifier.on(VerifierEvent.Cancel, () => {
+      matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_CANCELLED, {
+        requestId: request.transactionId,
+        reason: 'verifier_cancel',
+      });
+      this.pendingVerificationRequest = null;
+      this.currentVerifier = null;
+      this.sasCallbacks = null;
+    });
+  }
+
+  /**
+   * Request SAS verification with another user
+   */
+  async requestVerification(userId: string): Promise<void> {
+    if (!this.client) throw new Error('Client not initialized');
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const crypto = matrixClient.getCrypto?.();
+    if (!crypto) throw new Error('Crypto not available');
+
+    const devices = await crypto.getUserDeviceInfo([userId]);
+    const userDevices = devices.get(userId);
+    if (!userDevices || userDevices.size === 0) {
+      throw new Error('No devices found for user');
+    }
+
+    const rooms = await this.getRooms();
+    const directRoom = rooms.find(r => r.isDirect && r.members.some(m => m.userId === userId));
+    if (!directRoom) {
+      throw new Error('No direct message room exists with this user. Start a conversation first.');
+    }
+    const request: any = await (crypto as any).requestVerificationDM(userId, directRoom.roomId);
+
+    this.pendingVerificationRequest = request;
+    this._setupVerificationRequestListeners(request);
+  }
+
+  /**
+   * Accept incoming verification request
+   */
+  async acceptVerificationRequest(): Promise<boolean> {
+    const request = this.pendingVerificationRequest as any;
+    if (!request) return false;
+
+    const { VerificationPhase } = await import('matrix-js-sdk/lib/crypto-api/verification');
+    if (request.phase === VerificationPhase.Cancelled) {
+      matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_CANCELLED, { reason: 'already_cancelled' });
+      this.pendingVerificationRequest = null;
+      return false;
+    }
+    if (request.phase >= VerificationPhase.Ready) return false;
+
+    await request.accept();
+    const verifier = await request.startVerification('m.sas.v1');
+    this.currentVerifier = verifier;
+    this._setupVerifierListeners(verifier, request);
+    return true;
+  }
+
+  /**
+   * Confirm SAS emoji match
+   */
+  async confirmVerification(): Promise<boolean> {
+    const sas = this.sasCallbacks as any;
+    if (sas && typeof sas.confirm === 'function') {
+      await sas.confirm();
+      this.currentVerifier = null;
+      this.sasCallbacks = null;
+      return true;
+    }
+    const verifier = this.currentVerifier as any;
+    if (verifier) {
+      await verifier.verify();
+      this.currentVerifier = null;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Cancel verification
+   */
+  async cancelVerification(): Promise<boolean> {
+    try {
+      const sas = this.sasCallbacks as any;
+      if (sas && typeof sas.cancel === 'function') {
+        sas.cancel();
+        this.sasCallbacks = null;
+      }
+      const verifier = this.currentVerifier as any;
+      if (verifier) {
+        verifier.cancel(new Error('User cancelled'));
+        this.currentVerifier = null;
+      }
+      const request = this.pendingVerificationRequest as any;
+      if (request) {
+        await request.cancel();
+        this.pendingVerificationRequest = null;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if a user's devices are verified
+   */
+  async isUserVerified(userId: string): Promise<boolean> {
+    if (!this.client) return false;
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    const crypto = matrixClient.getCrypto?.();
+    if (!crypto) return false;
+    try {
+      const verificationStatus = await crypto.getUserVerificationStatus(userId);
+      return verificationStatus?.isVerified?.() ?? false;
+    } catch {
+      return false;
+    }
+  }
+
+  async getIgnoredUsers(): Promise<string[]> {
+    if (!this.client) return [];
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    return (matrixClient as any).getIgnoredUsers?.() ?? [];
+  }
+
+  async isUserIgnored(userId: string): Promise<boolean> {
+    const ignored = await this.getIgnoredUsers();
+    return ignored.includes(userId);
+  }
+
+  async blockUser(userId: string): Promise<void> {
+    await this.mutateIgnoredUsers(current => {
+      if (current.includes(userId)) return current;
+      return [...current, userId];
+    });
+  }
+
+  async unblockUser(userId: string): Promise<void> {
+    await this.mutateIgnoredUsers(current => current.filter((id: string) => id !== userId));
+  }
+
+  private async mutateIgnoredUsers(mutator: (current: string[]) => string[]): Promise<void> {
+    const task = this.ignoreMutex.then(async () => {
+      if (!this.client) return;
+      const sdk = await import('matrix-js-sdk');
+      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      const current: string[] = (matrixClient as any).getIgnoredUsers?.() ?? [];
+      const next = mutator(current);
+      if (next !== current) {
+        await (matrixClient as any).setIgnoredUsers(next);
+      }
+    });
+    this.ignoreMutex = task.catch(() => {});
+    return task;
   }
 
   /**

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { VStack, HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
@@ -63,6 +64,7 @@ export interface ChatMessagesProps {
   roomRawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
   isEncrypted?: boolean;
   isOnline?: boolean;
+  isDirect?: boolean;
   isVerified?: boolean;
   messages: Message[];
   currentUserId: string;
@@ -447,6 +449,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   roomRawMxcAvatarUrl,
   isEncrypted = false,
   isOnline,
+  isDirect = false,
   isVerified = false,
   messages,
   currentUserId,
@@ -796,8 +799,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               <span className="text-primary">{t('chat.online')}</span>
             ) : isOnline === false ? (
               t('chat.offline')
-            ) : (
+            ) : isDirect ? (
               t('chat.directMessage')
+            ) : (
+              t('chat.groupChat')
             )}
           </p>
         </div>
@@ -1086,7 +1091,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                       message.status !== 'sending' &&
                       editingMessageId !== message.id && (
                         <div
-                          className={`absolute top-0 ${isOwn ? '-left-24' : '-right-24'} hidden md:group-hover:flex items-center gap-0.5 z-10`}
+                          className={`absolute top-0 ${isOwn ? 'right-full mr-1' : 'left-full ml-1'} hidden md:group-hover:flex items-center gap-0.5 z-10`}
                         >
                           {onReaction && (
                             <div className="relative">
@@ -1127,13 +1132,17 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                               )}
                             </div>
                           )}
-                          <button
-                            onClick={() => handleCopy(message)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
-                            title={copiedId === message.id ? t('common.copied') : t('common.copy')}
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
+                          {message.type === 'text' && (
+                            <button
+                              onClick={() => handleCopy(message)}
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                              title={
+                                copiedId === message.id ? t('common.copied') : t('common.copy')
+                              }
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           {isOwn && onEditMessage && message.type === 'text' && (
                             <button
                               onClick={() => handleStartEdit(message)}
@@ -1181,16 +1190,18 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                             </div>
                           )}
                           <div className="flex items-center gap-1 px-2 pb-1.5">
-                            <button
-                              onClick={() => {
-                                handleCopy(message);
-                                setLongPressMenuId(null);
-                              }}
-                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg hover:bg-muted/60 transition-colors"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                              {t('common.copy')}
-                            </button>
+                            {message.type === 'text' && (
+                              <button
+                                onClick={() => {
+                                  handleCopy(message);
+                                  setLongPressMenuId(null);
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg hover:bg-muted/60 transition-colors"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                                {t('common.copy')}
+                              </button>
+                            )}
                             {isOwn && onEditMessage && message.type === 'text' && (
                               <button
                                 onClick={() => handleStartEdit(message)}
@@ -1404,27 +1415,40 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         </HStack>
       </div>
 
-      {/* Image lightbox */}
-      {lightboxSrc && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setLightboxSrc(null)}
-        >
-          <button
-            onClick={() => setLightboxSrc(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-            aria-label="Close"
+      {/* Image lightbox — Radix Dialog so ESC/click only dismisses this layer, not the Sheet */}
+      <DialogPrimitive.Root
+        open={!!lightboxSrc}
+        onOpenChange={open => !open && setLightboxSrc(null)}
+      >
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in duration-200" />
+          <DialogPrimitive.Content
+            className="fixed inset-0 z-[200] flex items-center justify-center outline-none"
+            aria-describedby={undefined}
           >
-            <X className="w-5 h-5" />
-          </button>
-          <img
-            src={lightboxSrc}
-            alt="Preview"
-            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
-            onClick={e => e.stopPropagation()}
-          />
-        </div>
-      )}
+            <DialogPrimitive.Title className="sr-only">Image preview</DialogPrimitive.Title>
+            <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+              <a
+                href={lightboxSrc || '#'}
+                download
+                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                aria-label={t('common.download')}
+              >
+                <Download className="w-5 h-5" />
+              </a>
+              <DialogPrimitive.Close className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                <X className="w-5 h-5" />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
+            </div>
+            <img
+              src={lightboxSrc || ''}
+              alt="Preview"
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+            />
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
 
       {/* Delete confirmation dialog */}
       <AlertDialog

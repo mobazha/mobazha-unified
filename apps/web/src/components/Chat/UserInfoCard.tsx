@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n } from '@mobazha/core';
+import { ShieldBan, ShieldCheck } from 'lucide-react';
 
 export interface UserInfo {
   userId: string;
@@ -19,6 +20,9 @@ export interface UserInfoCardProps {
   onClose: () => void;
   onViewStore?: (peerID: string) => void;
   onStartChat?: (userId: string) => void;
+  isBlocked?: boolean;
+  onBlock?: (userId: string) => void;
+  onUnblock?: (userId: string) => void;
 }
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({
@@ -27,8 +31,17 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
   onClose,
   onViewStore,
   onStartChat,
+  isBlocked: isBlockedProp,
+  onBlock,
+  onUnblock,
 }) => {
   const { t } = useI18n();
+  const [blocked, setBlocked] = useState(isBlockedProp ?? false);
+  const [blockLoading, setBlockLoading] = useState(false);
+
+  useEffect(() => {
+    if (isBlockedProp !== undefined) setBlocked(isBlockedProp);
+  }, [isBlockedProp]);
 
   if (!isOpen) return null;
 
@@ -46,6 +59,23 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
   const handleStartChat = () => {
     if (onStartChat) {
       onStartChat(user.userId);
+    }
+  };
+
+  const handleToggleBlock = async () => {
+    setBlockLoading(true);
+    try {
+      if (blocked) {
+        await onUnblock?.(user.userId);
+        setBlocked(false);
+      } else {
+        await onBlock?.(user.userId);
+        setBlocked(true);
+      }
+    } catch {
+      // Revert on failure — state stays unchanged
+    } finally {
+      setBlockLoading(false);
     }
   };
 
@@ -184,6 +214,31 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
               </Button>
             )}
           </div>
+
+          {/* Block/Unblock button */}
+          {(onBlock || onUnblock) && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleBlock}
+                disabled={blockLoading}
+                className={`w-full rounded-xl text-xs ${blocked ? 'text-muted-foreground hover:text-foreground' : 'text-destructive hover:text-destructive hover:bg-destructive/10'}`}
+              >
+                {blocked ? (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+                    {t('chat.unblockUser') || 'Unblock User'}
+                  </>
+                ) : (
+                  <>
+                    <ShieldBan className="w-3.5 h-3.5 mr-1.5" />
+                    {t('chat.blockUser') || 'Block User'}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
