@@ -1221,6 +1221,7 @@ export const ja: TranslationResource = {
     offline: 'オフライン',
     offlineHint: 'チャットが切断されました。再接続中…',
     deleteFailed: 'メッセージの削除に失敗しました',
+    sendImageFailed: '画像の送信に失敗しました',
     lastSeen: '{{time}}前にオンライン',
     typing: '入力中...',
     encrypted: 'エンドツーエンド暗号化',

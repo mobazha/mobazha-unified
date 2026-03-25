@@ -1250,6 +1250,7 @@ export const de: TranslationResource = {
     offline: 'Offline',
     offlineHint: 'Chat ist getrennt. Verbindung wird wiederhergestellt…',
     deleteFailed: 'Nachricht konnte nicht gelöscht werden',
+    sendImageFailed: 'Bild konnte nicht gesendet werden',
     lastSeen: 'Zuletzt online {{time}}',
     typing: 'tippt...',
     encrypted: 'Ende-zu-Ende verschlüsselt',

@@ -160,13 +160,21 @@ class MatrixClientService {
       // 4. 创建 Matrix 客户端（包含 token refresh 支持）
       const sdk = await import('matrix-js-sdk');
 
-      // Suppress noisy SDK internal debug/info logs (FetchHttpApi, sync, etc.)
-      try {
-        const { logger } = await import('matrix-js-sdk/src/logger');
-        logger.setLevel('warn');
-      } catch {
-        // logger module not available, ignore
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const warnOnlyLogger: any = {
+        trace() {},
+        debug() {},
+        info() {},
+        warn(...msg: unknown[]) {
+          console.warn('[Matrix]', ...msg);
+        },
+        error(...msg: unknown[]) {
+          console.error('[Matrix]', ...msg);
+        },
+        getChild() {
+          return warnOnlyLogger;
+        },
+      };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clientOpts: any = {
@@ -175,6 +183,7 @@ class MatrixClientService {
         userId,
         deviceId: deviceId || undefined,
         useAuthorizationHeader: true,
+        logger: warnOnlyLogger,
       };
 
       // 如果有 refresh token，配置自动刷新

@@ -319,6 +319,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   const [longPressMenuId, setLongPressMenuId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+  }, []);
+
   const handleTouchStart = useCallback((msgId: string) => {
     longPressTimer.current = setTimeout(() => {
       setLongPressMenuId(msgId);
