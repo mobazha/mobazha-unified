@@ -188,7 +188,7 @@ export const MobileNav: React.FC = () => {
   const shouldHideNav = HIDE_NAV_PATTERNS.some(pattern => pattern.test(pathname));
 
   // TMA uses MobileNav; other embedded apps (Discord/Farcaster) have their own nav
-  if ((isEmbeddedApp && !isTGMiniApp) || shouldHideNav) {
+  if ((isEmbeddedApp && !isTGMiniApp) || shouldHideNav || drawerOpen) {
     return null;
   }
 

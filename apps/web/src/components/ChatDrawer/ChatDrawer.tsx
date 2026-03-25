@@ -237,6 +237,11 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
   // 获取 store 的 setMessages 和 updateRoom 方法
   const setMessages = useChatStore(state => state.setMessages);
+  const prependMessages = useChatStore(state => state.prependMessages);
+  const setLoadingMessages = useChatStore(state => state.setLoadingMessages);
+  const setHasMoreMessages = useChatStore(state => state.setHasMoreMessages);
+  const loadingMessages = useChatStore(state => state.loadingMessages);
+  const hasMoreMessages = useChatStore(state => state.hasMoreMessages);
   const updateRoom = useChatStore(state => state.updateRoom);
 
   // 用于追踪已加载过消息的房间
@@ -277,6 +282,26 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     loadMessages();
   }, [currentRoomId, setMessages, updateRoom]);
 
+  // 加载更多历史消息
+  const handleLoadMore = useCallback(async () => {
+    if (!currentRoomId) return;
+    const isAlreadyLoading = loadingMessages[currentRoomId];
+    if (isAlreadyLoading) return;
+
+    setLoadingMessages(currentRoomId, true);
+    try {
+      const olderMessages = await matrixClient.getMessages(currentRoomId, 50);
+      if (olderMessages.length > 0) {
+        prependMessages(currentRoomId, olderMessages);
+      }
+      setHasMoreMessages(currentRoomId, olderMessages.length >= 50);
+    } catch (err) {
+      console.warn('[ChatDrawer] Failed to load more messages:', err);
+    } finally {
+      setLoadingMessages(currentRoomId, false);
+    }
+  }, [currentRoomId, loadingMessages, setLoadingMessages, prependMessages, setHasMoreMessages]);
+
   // 处理房间选择
   const handleRoomSelect = useCallback(
     (roomId: string) => {
@@ -313,6 +338,48 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       }
     },
     [currentRoomId, onSendMessage]
+  );
+
+  // 发送图片
+  const handleSendImage = useCallback(
+    async (file: File) => {
+      if (!currentRoomId) return;
+      try {
+        await matrixClient.sendImage(currentRoomId, file);
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to send image:', err);
+        toast({
+          title: t('common.error'),
+          description: 'Failed to send image',
+          variant: 'destructive',
+        });
+      }
+    },
+    [currentRoomId, toast, t]
+  );
+
+  // 重发失败消息
+  const handleRetryMessage = useCallback(
+    async (messageId: string) => {
+      if (!currentRoomId) return;
+      const roomMessages = allMessages[currentRoomId];
+      const failedMsg = roomMessages?.find(m => m.id === messageId || m.localId === messageId);
+      if (!failedMsg || !onSendMessage) return;
+      // 移除旧的失败消息，重新发送
+      const updateMessage = useChatStore.getState().updateMessage;
+      updateMessage(currentRoomId, messageId, { status: 'sending' as const });
+      try {
+        const result = await matrixClient.sendMessage(currentRoomId, failedMsg.content);
+        if (result) {
+          updateMessage(currentRoomId, messageId, { id: result.id, status: 'sent' as const });
+        } else {
+          updateMessage(currentRoomId, messageId, { status: 'failed' as const });
+        }
+      } catch {
+        updateMessage(currentRoomId, messageId, { status: 'failed' as const });
+      }
+    },
+    [currentRoomId, allMessages, onSendMessage]
   );
 
   // 切换展开/收缩
@@ -369,8 +436,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     setUserCard(null);
   }, []);
 
-  // 动态宽度
-  const drawerWidth = drawerExpanded ? 'w-[600px]' : 'w-[400px]';
+  // 移动端全屏，桌面端固定宽度
+  const drawerWidth = drawerExpanded ? 'w-full md:w-[600px]' : 'w-full md:w-[400px]';
 
   // 渲染视图
   const renderView = () => {
@@ -474,6 +541,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           isLoading={false}
           typingUsers={currentTypingUsers}
           onSendMessage={handleSendMessage}
+          onSendImage={file => handleSendImage(file)}
+          onTyping={isTyping => matrixClient.sendTyping(currentRoomId, isTyping)}
+          onRetryMessage={handleRetryMessage}
+          onLoadMore={handleLoadMore}
+          hasMoreMessages={hasMoreMessages[currentRoomId] ?? true}
+          isLoadingMore={loadingMessages[currentRoomId] ?? false}
           onBack={handleBack}
           onRoomSettings={handleRoomSettings}
           onAvatarClick={handleAvatarClick}
@@ -639,7 +712,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={toggleExpand}
-                      className="h-9 w-9 p-0 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200"
+                      className="hidden md:flex h-9 w-9 p-0 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200"
                     >
                       <svg
                         className="w-4.5 h-4.5"

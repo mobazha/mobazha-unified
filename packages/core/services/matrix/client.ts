@@ -1190,6 +1190,62 @@ class MatrixClientService {
   }
 
   /**
+   * Send an image message to a room.
+   * Uploads the file to the Matrix content repository first, then sends an m.image event.
+   */
+  async sendImage(roomId: string, file: File): Promise<MatrixMessage | null> {
+    if (!this.client) return null;
+
+    const localId = `local_${Date.now()}`;
+    matrixEvents.emit(MATRIX_EVENTS.MESSAGE_SENDING, { localId, roomId });
+
+    try {
+      const sdk = await import('matrix-js-sdk');
+      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+
+      // Upload file to Matrix content repository
+      const uploadResponse = await matrixClient.uploadContent(file, {
+        type: file.type,
+      });
+
+      const mxcUrl =
+        typeof uploadResponse === 'string'
+          ? uploadResponse
+          : (uploadResponse as { content_uri: string }).content_uri;
+
+      await matrixClient.sendMessage(roomId, {
+        msgtype: sdk.MsgType.Image,
+        body: file.name || 'image',
+        url: mxcUrl,
+        info: {
+          mimetype: file.type,
+          size: file.size,
+        },
+      });
+
+      const message: MatrixMessage = {
+        id: localId,
+        localId,
+        roomId,
+        sender: this.config!.userId!,
+        content: file.name || 'image',
+        type: 'image',
+        timestamp: Date.now(),
+        status: MESSAGE_STATUS.SENT,
+        attachments: [{ url: mxcUrl, filename: file.name, mimetype: file.type, size: file.size }],
+      };
+
+      matrixEvents.emit(MATRIX_EVENTS.MESSAGE_SENT, message);
+      this._scheduleKeyBackup();
+      return message;
+    } catch (error) {
+      console.error('[Matrix] Send image failed:', error);
+      matrixEvents.emit(MATRIX_EVENTS.MESSAGE_FAILED, { localId, roomId, error });
+      return null;
+    }
+  }
+
+  /**
    * 调度密钥备份（防抖，避免频繁备份）
    */
   private _scheduleKeyBackup(): void {
