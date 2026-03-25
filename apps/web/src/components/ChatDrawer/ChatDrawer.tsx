@@ -130,6 +130,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const pendingPeerDisplayName = useChatStore(selectPendingPeerDisplayName);
   const clearPendingPeer = useChatStore(state => state.clearPendingPeer);
   const setRooms = useChatStore(state => state.setRooms);
+  const setInvites = useChatStore(state => state.setInvites);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   // Resolve pendingPeerID → create/find DM room and focus it
@@ -148,9 +149,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         if (cancelled) return;
 
         if (roomId) {
-          const freshRooms = await matrixClient.getRooms();
+          const allRooms = await matrixClient.getRooms();
           if (!cancelled) {
-            setRooms(freshRooms);
+            const joinedRooms = allRooms.filter(r => r.membership !== 'invite');
+            const invitedRooms = allRooms.filter(r => r.membership === 'invite');
+            setRooms(joinedRooms);
+            setInvites(invitedRooms);
             setCurrentRoom(roomId);
           }
         }
@@ -174,7 +178,14 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [pendingPeerID, pendingPeerDisplayName, clearPendingPeer, setRooms, setCurrentRoom]);
+  }, [
+    pendingPeerID,
+    pendingPeerDisplayName,
+    clearPendingPeer,
+    setRooms,
+    setInvites,
+    setCurrentRoom,
+  ]);
 
   // 当前房间
   const currentRoom = useMemo(() => {
