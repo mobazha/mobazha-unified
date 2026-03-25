@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { VStack, HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { Send } from 'lucide-react';
+import { Send, ImagePlus } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
 export interface Message {
@@ -39,6 +39,12 @@ export interface ChatMessagesProps {
   isLoading?: boolean;
   typingUsers?: string[];
   onSendMessage: (content: string) => void;
+  onSendImage?: (file: File) => void;
+  onTyping?: (isTyping: boolean) => void;
+  onRetryMessage?: (messageId: string) => void;
+  onLoadMore?: () => void;
+  hasMoreMessages?: boolean;
+  isLoadingMore?: boolean;
   onBack?: () => void;
   onRoomSettings?: () => void;
   onAvatarClick?: (senderId: string, senderName?: string, senderAvatar?: string) => void;
@@ -206,6 +212,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   isLoading = false,
   typingUsers = [],
   onSendMessage,
+  onSendImage,
+  onTyping,
+  onRetryMessage,
+  onLoadMore,
+  hasMoreMessages = false,
+  isLoadingMore = false,
   onBack,
   onRoomSettings,
   onAvatarClick,
@@ -215,7 +227,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   const displayName = useMemo(() => cleanDisplayName(roomName), [roomName]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -230,10 +245,33 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     inputRef.current?.focus();
   }, []);
 
+  // 停止输入时清除 typing 状态
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      onTyping?.(false);
+    };
+  }, [onTyping]);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+
+      if (!onTyping) return;
+
+      onTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => onTyping(false), 3000);
+    },
+    [onTyping]
+  );
+
   const handleSend = () => {
     if (inputValue.trim()) {
       onSendMessage(inputValue.trim());
       setInputValue('');
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      onTyping?.(false);
     }
   };
 
@@ -243,6 +281,26 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       handleSend();
     }
   };
+
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onLoadMore || !hasMoreMessages || isLoadingMore) return;
+    if (container.scrollTop < 60) {
+      onLoadMore();
+    }
+  }, [onLoadMore, hasMoreMessages, isLoadingMore]);
+
+  const handleImageSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file && onSendImage) {
+        onSendImage(file);
+      }
+      // Reset so same file can be re-selected
+      e.target.value = '';
+    },
+    [onSendImage]
+  );
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -413,7 +471,17 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+      >
+        {/* Load more spinner */}
+        {isLoadingMore && (
+          <div className="flex justify-center py-3">
+            <span className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
+          </div>
+        )}
         {isLoading ? (
           <VStack gap="md">
             {[...Array(5)].map((_, i) => (
@@ -577,7 +645,11 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
                       {/* Retry button for failed messages */}
                       {message.status === 'failed' && (
-                        <button className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110">
+                        <button
+                          onClick={() => onRetryMessage?.(message.id)}
+                          className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+                          aria-label="Retry"
+                        >
                           ↻
                         </button>
                       )}
@@ -605,12 +677,30 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       {/* Input */}
       <div className="px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-card border-t border-border/40">
         <HStack gap="xs" align="center">
+          {onSendImage && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors"
+                aria-label="Send image"
+              >
+                <ImagePlus className="w-[18px] h-[18px]" />
+              </button>
+            </>
+          )}
           <div className="flex-1 relative">
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={t('chat.typeMessage')}
               enterKeyHint="send"
