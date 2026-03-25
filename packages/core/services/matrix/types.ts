@@ -323,3 +323,21 @@ export interface RecoveryKey {
   privateKey: Uint8Array;
   encodedKey: string;
 }
+
+// ============ Module Context ============
+
+/** Dynamic type for the matrix-js-sdk MatrixClient instance */
+export type MatrixClientInstance = import('matrix-js-sdk').MatrixClient;
+
+/**
+ * Shared context passed from the Facade (MatrixClientService) to extracted module functions.
+ * Contains references to mutable state – mutations to Sets/Maps are visible to all holders.
+ */
+export interface MatrixContext {
+  client: MatrixClientInstance;
+  config: MatrixConfig;
+  serverConfig: { homeserverURL: string; serverName: string } | null;
+  currentPeerID: string | null;
+  processedMessageIds: Set<string>;
+  peerIdCache: Map<string, string>;
+}
