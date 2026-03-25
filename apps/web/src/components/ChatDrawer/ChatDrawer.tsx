@@ -20,6 +20,7 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { UserInfoCard, type UserInfo } from '@/components/Chat/UserInfoCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui';
+import { VerificationDialog, type VerificationPhase } from './VerificationDialog';
 
 // 转换 MatrixRoom 到 ChatRoom
 function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
@@ -400,6 +401,87 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     };
   }, []);
 
+  // ============ Device Verification ============
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationPhase, setVerificationPhase] = useState<VerificationPhase>('request');
+  const [verificationUserId, setVerificationUserId] = useState<string | null>(null);
+  const [verificationEmoji, setVerificationEmoji] = useState<Array<[string, string]> | null>(null);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
+  const resetVerification = useCallback(() => {
+    setVerificationOpen(false);
+    setVerificationPhase('request');
+    setVerificationUserId(null);
+    setVerificationEmoji(null);
+    setVerificationLoading(false);
+  }, []);
+
+  useEffect(() => {
+    let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+    const unsubRequest = matrixEvents.on(
+      MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED,
+      (raw: unknown) => {
+        const data = raw as { otherUserId: string };
+        if (!data?.otherUserId) return;
+        setVerificationUserId(data.otherUserId);
+        setVerificationPhase('request');
+        setVerificationOpen(true);
+      }
+    );
+    const unsubSas = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_SHOW_SAS, (raw: unknown) => {
+      const data = raw as { emoji: Array<[string, string]> };
+      if (!data?.emoji) return;
+      setVerificationEmoji(data.emoji);
+      setVerificationPhase('sas');
+      setVerificationOpen(true);
+    });
+    const unsubCompleted = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_COMPLETED, () => {
+      setVerificationPhase('completed');
+      autoCloseTimer = setTimeout(resetVerification, 2500);
+    });
+    const unsubCancelled = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_CANCELLED, () => {
+      setVerificationPhase('cancelled');
+      autoCloseTimer = setTimeout(resetVerification, 2500);
+    });
+    return () => {
+      unsubRequest();
+      unsubSas();
+      unsubCompleted();
+      unsubCancelled();
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    };
+  }, [resetVerification]);
+
+  const handleVerificationAccept = useCallback(async () => {
+    setVerificationLoading(true);
+    try {
+      await matrixClient.acceptVerificationRequest();
+      setVerificationPhase('waiting');
+    } catch {
+      setVerificationPhase('cancelled');
+      setTimeout(resetVerification, 2000);
+    } finally {
+      setVerificationLoading(false);
+    }
+  }, [resetVerification]);
+
+  const handleVerificationConfirm = useCallback(async () => {
+    setVerificationLoading(true);
+    try {
+      await matrixClient.confirmVerification();
+    } catch {
+      setVerificationPhase('cancelled');
+      setTimeout(resetVerification, 2000);
+    } finally {
+      setVerificationLoading(false);
+    }
+  }, [resetVerification]);
+
+  const handleVerificationCancel = useCallback(async () => {
+    await matrixClient.cancelVerification();
+    resetVerification();
+  }, [resetVerification]);
+
   // 加载更多历史消息（向上滚动分页）
   const handleLoadMore = useCallback(async () => {
     if (!currentRoomId) return;
@@ -768,6 +850,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           roomRawMxcAvatarUrl={currentRoom.rawMxcAvatarUrl}
           isEncrypted={currentRoom.isEncrypted}
           isOnline={isCurrentRoomOnline}
+          isDirect={currentRoom.isDirect}
           isVerified={false}
           messages={currentMessages}
           currentUserId={currentUserId}
@@ -1176,9 +1259,27 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
               // TODO: Start or navigate to direct chat
               handleCloseUserCard();
             }}
+            onBlock={async userId => {
+              await matrixClient.blockUser(userId);
+            }}
+            onUnblock={async userId => {
+              await matrixClient.unblockUser(userId);
+            }}
           />
         )}
       </SheetContent>
+
+      <VerificationDialog
+        open={verificationOpen}
+        phase={verificationPhase}
+        otherUserId={verificationUserId}
+        sasEmoji={verificationEmoji}
+        loading={verificationLoading}
+        onAccept={handleVerificationAccept}
+        onConfirm={handleVerificationConfirm}
+        onCancel={handleVerificationCancel}
+        onClose={resetVerification}
+      />
     </Sheet>
   );
 };
