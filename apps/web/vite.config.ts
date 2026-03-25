@@ -31,6 +31,24 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 /**
+ * Vite plugin: serve .wasm files with correct MIME type.
+ * Required by @matrix-org/matrix-sdk-crypto-wasm which loads WASM at runtime.
+ */
+function wasmMimePlugin(): Plugin {
+  return {
+    name: 'wasm-mime-type',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.endsWith('.wasm')) {
+          res.setHeader('Content-Type', 'application/wasm');
+        }
+        next();
+      });
+    },
+  };
+}
+
+/**
  * Vite plugin: AI proxy endpoint at /internal/ai/generate.
  * Mirrors the Next.js API route, sharing core logic from src/server/aiHandler.ts.
  */
@@ -94,7 +112,7 @@ export default defineConfig(({ mode }) => {
   if (env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL;
 
   return {
-    plugins: [react(), aiProxyPlugin()],
+    plugins: [react(), wasmMimePlugin(), aiProxyPlugin()],
     // 定义全局变量，兼容 Next.js 环境变量
     // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
     // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined

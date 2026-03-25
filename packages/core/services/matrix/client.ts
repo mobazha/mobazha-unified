@@ -68,6 +68,8 @@ class MatrixClientService {
   private backupDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private autoBackupTimer: ReturnType<typeof setInterval> | null = null;
 
+  private static readonly INVITE_POLICY_STORAGE_KEY = 'matrix_invite_policy';
+
   // ============= 初始化和认证 =============
 
   /**
@@ -244,6 +246,9 @@ class MatrixClientService {
       };
       this.currentPeerID = peerID;
       this.isInitialized = true;
+
+      // 6. 从持久化存储加载邀请策略
+      this._loadInvitePolicy();
 
       return true;
     } catch (error) {
@@ -1145,6 +1150,16 @@ class MatrixClientService {
       const sdk = await import('matrix-js-sdk');
       const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
 
+      // Auto-join if we're only invited (not yet a member)
+      const room = matrixClient.getRoom(roomId);
+      if (room) {
+        const membership = room.getMyMembership();
+        if (membership === 'invite') {
+          await matrixClient.joinRoom(roomId);
+          matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId });
+        }
+      }
+
       const response = await matrixClient.sendMessage(roomId, {
         msgtype: sdk.MsgType.Text,
         body: content,
@@ -1349,10 +1364,17 @@ class MatrixClientService {
   }
 
   /**
-   * 设置邀请策略
+   * 设置邀请策略并持久化
    */
   setInvitePolicy(policy: InvitePolicy): void {
     this._invitePolicy = policy;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(MatrixClientService.INVITE_POLICY_STORAGE_KEY, policy);
+      } catch {
+        // localStorage unavailable or full
+      }
+    }
   }
 
   /**
@@ -1360,6 +1382,63 @@ class MatrixClientService {
    */
   getInvitePolicy(): InvitePolicy {
     return this._invitePolicy;
+  }
+
+  /**
+   * 从 localStorage 加载邀请策略
+   */
+  private _loadInvitePolicy(): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const saved = localStorage.getItem(MatrixClientService.INVITE_POLICY_STORAGE_KEY);
+      if (saved === 'auto_all' || saved === 'auto_mobazha' || saved === 'always_confirm') {
+        this._invitePolicy = saved;
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }
+
+  /**
+   * 判断 userId 是否属于当前 Mobazha homeserver
+   */
+  isMobazhaUser(userId: string): boolean {
+    if (!this.serverConfig?.serverName) return false;
+    return userId.endsWith(`:${this.serverConfig.serverName}`);
+  }
+
+  /**
+   * 根据邀请策略处理收到的房间邀请（对齐 mobazha-mobile handleRoomInvite）
+   */
+  private async _handleRoomInvite(roomId: string, inviter: string | undefined): Promise<void> {
+    if (!this.client || !inviter) return;
+
+    let shouldAutoAccept = false;
+    switch (this._invitePolicy) {
+      case 'auto_all':
+        shouldAutoAccept = true;
+        break;
+      case 'auto_mobazha':
+        shouldAutoAccept = this.isMobazhaUser(inviter);
+        break;
+      case 'always_confirm':
+        shouldAutoAccept = false;
+        break;
+      default:
+        shouldAutoAccept = this.isMobazhaUser(inviter);
+    }
+
+    if (shouldAutoAccept) {
+      try {
+        const sdk = await import('matrix-js-sdk');
+        const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+        await matrixClient.joinRoom(roomId);
+        matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId });
+        console.warn('[Matrix] Auto-joined room based on invite policy:', roomId);
+      } catch (error) {
+        console.error('[Matrix] Auto-join failed for room:', roomId, error);
+      }
+    }
   }
 
   /**
@@ -1374,6 +1453,13 @@ class MatrixClientService {
    */
   getUserId(): string | null {
     return this.config?.userId || null;
+  }
+
+  /**
+   * 获取当前设备 ID
+   */
+  getDeviceId(): string | null {
+    return this.config?.deviceId || null;
   }
 
   // ============ 订单讨论 ============
@@ -1764,6 +1850,8 @@ class MatrixClientService {
           roomId,
           inviter: senderId,
         });
+        // Auto-join based on invite policy (aligned with mobazha-mobile)
+        this._handleRoomInvite(roomId, senderId);
       }
 
       // 发出房间事件用于时间线显示
@@ -1823,15 +1911,17 @@ class MatrixClientService {
 
       if (!roomIds || roomIds.length === 0) return null;
 
-      // 返回第一个有效的房间
+      // 返回第一个有效的房间（优先 join，其次 invite）
+      let inviteRoomId: string | null = null;
       for (const roomId of roomIds) {
         const room = matrixClient.getRoom(roomId);
-        if (room && room.getMyMembership() === 'join') {
-          return roomId;
-        }
+        if (!room) continue;
+        const membership = room.getMyMembership();
+        if (membership === 'join') return roomId;
+        if (membership === 'invite' && !inviteRoomId) inviteRoomId = roomId;
       }
 
-      return null;
+      return inviteRoomId;
     } catch (error) {
       console.warn('[Matrix] Failed to find direct room:', error);
       return null;
@@ -1951,6 +2041,8 @@ class MatrixClientService {
       roomId: string;
       name?: string;
       normalizedName?: string;
+      getMyMembership?: () => string;
+      getDMInviter?: () => string | undefined;
       getJoinedMembers?: () => unknown[];
       getAvatarUrl?: (
         baseUrl: string,
@@ -1964,6 +2056,9 @@ class MatrixClientService {
         getStateEvents?: (type: string, stateKey?: string) => unknown;
       };
     };
+
+    const membership = (r.getMyMembership?.() || 'join') as MatrixRoom['membership'];
+    const inviter = r.getDMInviter?.();
 
     // 获取房间头像 - 存储原始 mxc URL 用于认证下载
     const roomMxcUrl = r.getMxcAvatarUrl?.() || null;
@@ -2026,6 +2121,8 @@ class MatrixClientService {
       isEncrypted: this.isRoomEncrypted(room),
       unreadCount: this.getRoomUnreadCount(room),
       members,
+      membership,
+      inviter,
       roomType: roomType || (isDirect ? 'direct' : 'group'),
       orderId,
       storeId,
@@ -2050,6 +2147,11 @@ class MatrixClientService {
         ) => string | null;
         getMxcAvatarUrl?: () => string | null;
       }>;
+      getMembersWithMembership?: (membership: string) => Array<{
+        userId: string;
+        name?: string;
+        getMxcAvatarUrl?: () => string | null;
+      }>;
     };
 
     if (!r.getJoinedMembers) {
@@ -2057,24 +2159,34 @@ class MatrixClientService {
     }
 
     try {
-      const members = r.getJoinedMembers();
+      const formatMember = (m: {
+        userId: string;
+        name?: string;
+        getMxcAvatarUrl?: () => string | null;
+      }): MatrixUser => {
+        const rawMxcUrl = m.getMxcAvatarUrl?.() || undefined;
+        const avatarUrl = rawMxcUrl ? this.mxcToHttp(rawMxcUrl, 48, 48) : undefined;
+        return {
+          userId: m.userId,
+          displayName: m.name,
+          avatarUrl,
+          rawMxcAvatarUrl: rawMxcUrl,
+        };
+      };
 
-      return members
-        .filter(m => m.userId !== this.config?.userId) // 排除自己
-        .map(m => {
-          // 获取原始 mxc URL（用于认证下载）
-          const rawMxcUrl = m.getMxcAvatarUrl?.() || undefined;
+      const joined = r.getJoinedMembers();
+      const result = joined.filter(m => m.userId !== this.config?.userId).map(formatMember);
 
-          // 转换为认证媒体 URL
-          const avatarUrl = rawMxcUrl ? this.mxcToHttp(rawMxcUrl, 48, 48) : undefined;
+      // Also include invited members (for DM rooms where the other user hasn't joined yet)
+      if (result.length === 0 && r.getMembersWithMembership) {
+        const invited = r.getMembersWithMembership('invite');
+        const invitedOthers = invited
+          .filter(m => m.userId !== this.config?.userId)
+          .map(formatMember);
+        result.push(...invitedOthers);
+      }
 
-          return {
-            userId: m.userId,
-            displayName: m.name,
-            avatarUrl,
-            rawMxcAvatarUrl: rawMxcUrl,
-          };
-        });
+      return result;
     } catch {
       return [];
     }

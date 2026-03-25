@@ -1,26 +1,73 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui';
 import { useI18n, useUserStore } from '@mobazha/core';
+import { matrixClient, matrixCrypto, type InvitePolicy } from '@mobazha/core/services/matrix';
+import type { KeyBackupResult, NodeBackupInfo } from '@mobazha/core/services/matrix';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
-import { Key, Copy, Shield, Share2, Laptop, Check } from 'lucide-react';
+import { Key, Copy, Shield, Share2, Laptop, Check, Loader2, AlertCircle } from 'lucide-react';
+
+const UI_TO_POLICY: Record<string, InvitePolicy> = {
+  all: 'auto_all',
+  mobazha: 'auto_mobazha',
+  confirm: 'always_confirm',
+};
+
+const POLICY_TO_UI: Record<InvitePolicy, 'all' | 'mobazha' | 'confirm'> = {
+  auto_all: 'all',
+  auto_mobazha: 'mobazha',
+  always_confirm: 'confirm',
+};
 
 export default function ChatEncryptionSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { profile } = useUserStore();
 
-  const [invitePolicy, setInvitePolicy] = useState<'all' | 'mobazha' | 'confirm'>('mobazha');
-  const [lastBackup, setLastBackup] = useState<Date | null>(new Date());
-  // Generate stable device ID using useState initializer (runs only once)
-  const [deviceId] = useState(() => `MBZ_DESKTOP_${Date.now().toString(36).toUpperCase()}`);
+  const [invitePolicy, setInvitePolicyUI] = useState<'all' | 'mobazha' | 'confirm'>('mobazha');
+  const [backupInfo, setBackupInfo] = useState<NodeBackupInfo | null>(null);
+  const [isLoadingBackup, setIsLoadingBackup] = useState(true);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
-  const chatId = profile?.peerID ? `@peer_${profile.peerID.toLowerCase()}:matrix.mobazha.org` : '';
+  const chatId = matrixClient.getUserId() || '';
+  const deviceId = matrixClient.getDeviceId() || '';
+
+  // Load saved policy from matrixClient on mount
+  useEffect(() => {
+    const currentPolicy = matrixClient.getInvitePolicy();
+    setInvitePolicyUI(POLICY_TO_UI[currentPolicy] || 'mobazha');
+  }, []);
+
+  // Load real backup info on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const info = await matrixCrypto.getKeyBackupInfo();
+        if (!cancelled) setBackupInfo(info);
+      } catch {
+        // No backup available
+      } finally {
+        if (!cancelled) setIsLoadingBackup(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handlePolicyChange = useCallback((uiValue: 'all' | 'mobazha' | 'confirm') => {
+    setInvitePolicyUI(uiValue);
+    const policy = UI_TO_POLICY[uiValue] as InvitePolicy;
+    matrixClient.setInvitePolicy(policy);
+  }, []);
 
   const handleCopy = async () => {
+    if (!chatId) return;
     try {
       await navigator.clipboard.writeText(chatId);
       toast({
@@ -43,24 +90,64 @@ export default function ChatEncryptionSettingsPage() {
         text: chatId,
       });
     } catch {
-      // Fallback to copy
       handleCopy();
     }
   };
 
   const handleBackup = async () => {
-    setLastBackup(new Date());
-    toast({
-      title: t('common.success'),
-      description: t('settingsModal.keysBackedUp'),
-    });
+    setIsBackingUp(true);
+    try {
+      const result: KeyBackupResult = await matrixCrypto.backupRoomKeys();
+      if (result.success) {
+        const info = await matrixCrypto.getKeyBackupInfo();
+        setBackupInfo(info);
+        toast({
+          title: t('common.success'),
+          description: t('settingsModal.keysBackedUp'),
+        });
+      } else {
+        toast({
+          title: t('common.error'),
+          description: result.error || result.reason || t('settingsModal.backupFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('settingsModal.backupFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBackingUp(false);
+    }
   };
 
-  const handleRestore = () => {
-    toast({
-      title: t('settingsModal.restoreKeys'),
-      description: t('settingsModal.restoreKeysDesc'),
-    });
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      const result: KeyBackupResult = await matrixCrypto.restoreRoomKeys();
+      if (result.success) {
+        toast({
+          title: t('common.success'),
+          description: t('settingsModal.keysRestored'),
+        });
+      } else {
+        toast({
+          title: t('common.error'),
+          description: result.error || result.reason || t('settingsModal.restoreFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('settingsModal.restoreFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRestoring(false);
+    }
   };
 
   return (
@@ -106,8 +193,8 @@ export default function ChatEncryptionSettingsPage() {
                   <Laptop className="w-8 h-8 text-muted-foreground flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm">{t('settingsModal.browserDevice')}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('settingsModal.deviceId')}: {deviceId}
+                    <p className="text-xs text-muted-foreground break-all">
+                      {t('settingsModal.deviceId')}: {deviceId || '—'}
                     </p>
                   </div>
                 </div>
@@ -154,7 +241,7 @@ export default function ChatEncryptionSettingsPage() {
                     name="invitePolicy"
                     value={option.value}
                     checked={invitePolicy === option.value}
-                    onChange={() => setInvitePolicy(option.value)}
+                    onChange={() => handlePolicyChange(option.value)}
                     className="mt-0.5 w-4 h-4 text-primary border-border focus:ring-primary"
                   />
                   <div>
@@ -175,22 +262,45 @@ export default function ChatEncryptionSettingsPage() {
         >
           <Card className="p-4 md:p-6">
             <div className="space-y-3">
-              {lastBackup && (
-                <div className="flex items-center gap-2 text-success">
-                  <Check className="w-4 h-4" />
-                  <span className="text-sm">{t('settingsModal.backupExists')}</span>
+              {isLoadingBackup ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">{t('common.loading')}</span>
+                </div>
+              ) : backupInfo ? (
+                <>
+                  <div className="flex items-center gap-2 text-success">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm">{t('settingsModal.backupExists')}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('settingsModal.lastBackup')}:{' '}
+                    {new Date(backupInfo.updatedAt).toLocaleString()}
+                    {backupInfo.keyCount > 0 && ` (${backupInfo.keyCount} keys)`}
+                  </p>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">{t('settingsModal.noBackup')}</span>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                {t('settingsModal.lastBackup')}:{' '}
-                {lastBackup?.toLocaleString() || t('settingsModal.never')}
-              </p>
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={handleBackup} size="sm">
-                  <Key className="w-4 h-4 mr-2" />
+                <Button onClick={handleBackup} size="sm" disabled={isBackingUp || !chatId}>
+                  {isBackingUp ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Key className="w-4 h-4 mr-2" />
+                  )}
                   {t('settingsModal.backupNow')}
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleRestore}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestore}
+                  disabled={isRestoring || !chatId}
+                >
+                  {isRestoring && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {t('settingsModal.restoreKeys')}
                 </Button>
               </div>

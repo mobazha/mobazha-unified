@@ -17,6 +17,7 @@ import type { MatrixRoom, MatrixMessage } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { UserInfoCard, type UserInfo } from '@/components/Chat/UserInfoCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/components/ui';
 
 // 转换 MatrixRoom 到 ChatRoom
 function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
@@ -97,6 +98,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   onShareChatId,
 }) => {
   const { t } = useI18n();
+  const { toast } = useToast();
   const defaultRoomName = t('chat.defaultRoom');
 
   // 房间设置显示状态
@@ -154,6 +156,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         }
       } catch (err) {
         console.error('[ChatDrawer] Failed to open DM with peer:', err);
+        if (!cancelled) {
+          toast({
+            title: t('common.error'),
+            description: t('chat.createConversationFailed'),
+            variant: 'destructive',
+          });
+        }
       } finally {
         if (!cancelled) {
           setIsCreatingRoom(false);
@@ -205,11 +214,14 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     return typingUsers[currentRoomId];
   }, [currentRoomId, typingUsers]);
 
-  // 计算当前房间的在线状态
-  const isCurrentRoomOnline = useMemo(() => {
-    if (!currentRoom?.isDirect || !currentRoom.members?.length) return false;
+  // 计算当前房间的在线状态（三态：true/false/undefined 表示在线/离线/未知）
+  const isCurrentRoomOnline = useMemo((): boolean | undefined => {
+    if (!currentRoom?.isDirect || !currentRoom.members?.length) return undefined;
     const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);
-    return otherMember ? userPresence[otherMember.userId] === 'online' : false;
+    if (!otherMember) return undefined;
+    const presence = userPresence[otherMember.userId];
+    if (!presence) return undefined;
+    return presence === 'online';
   }, [currentRoom, userPresence, currentUserId]);
 
   // 获取 store 的 setMessages 和 updateRoom 方法

@@ -10,8 +10,21 @@ import { useChatStore } from '../stores/chatStore';
 import { matrixClient } from '../services/matrix/client';
 import { matrixEvents } from '../services/matrix/events';
 import { MATRIX_EVENTS } from '../services/matrix/types';
-import type { MatrixMessage } from '../services/matrix/types';
+import type { MatrixMessage, MatrixRoom } from '../services/matrix/types';
 import { isMatrixEnabled } from '../config';
+
+function splitRoomsAndInvites(allRooms: MatrixRoom[]) {
+  const rooms: MatrixRoom[] = [];
+  const invites: MatrixRoom[] = [];
+  for (const room of allRooms) {
+    if (room.membership === 'invite') {
+      invites.push(room);
+    } else {
+      rooms.push(room);
+    }
+  }
+  return { rooms, invites };
+}
 
 export interface UseMatrixInitOptions {
   /** 是否启用 Matrix */
@@ -63,6 +76,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     setInitializing,
     setConnectionError,
     setRooms,
+    setInvites,
     addMessage,
     updateMessage,
     updateRoom,
@@ -110,9 +124,11 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       // 启动同步
       await matrixClient.startSync();
 
-      // 加载房间列表
-      const rooms = await matrixClient.getRooms();
+      // 加载房间列表（分离已加入和待确认邀请）
+      const allRooms = await matrixClient.getRooms();
+      const { rooms, invites } = splitRoomsAndInvites(allRooms);
       setRooms(rooms);
+      setInvites(invites);
 
       initRef.current = true;
       retryCountRef.current = 0; // 重置重试计数
@@ -151,6 +167,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     setConnectionError,
     setConnected,
     setRooms,
+    setInvites,
     clearRetryTimer,
     maxRetries,
     retryInterval,
@@ -208,9 +225,10 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
     // 房间事件
     const onRoomJoined = async () => {
-      // 刷新房间列表
-      const rooms = await matrixClient.getRooms();
+      const allRooms = await matrixClient.getRooms();
+      const { rooms, invites } = splitRoomsAndInvites(allRooms);
       setRooms(rooms);
+      setInvites(invites);
     };
 
     const onRoomLeft = (data: unknown) => {
@@ -219,9 +237,10 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     };
 
     const onRoomInvite = async () => {
-      // 刷新房间列表（包括邀请）
-      const rooms = await matrixClient.getRooms();
+      const allRooms = await matrixClient.getRooms();
+      const { rooms, invites } = splitRoomsAndInvites(allRooms);
       setRooms(rooms);
+      setInvites(invites);
     };
 
     // 输入状态
@@ -303,7 +322,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       // 延迟后重新初始化（使用新的 token）
       retryTimerRef.current = setTimeout(() => {
         if (isAuthenticated && peerID) {
-          console.info('[Matrix] Re-initializing after auth required...');
+          console.warn('[Matrix] Re-initializing after auth required...');
           initialize();
         }
       }, 2000);
@@ -334,6 +353,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     updateMessage,
     updateRoom,
     setRooms,
+    setInvites,
     removeRoom,
     setTypingUsers,
     setUserPresence,
