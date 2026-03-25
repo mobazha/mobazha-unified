@@ -132,6 +132,9 @@ export function isDirectRoom(ctx: MatrixContext, roomId: string): boolean {
       }
     }
 
+    // Fallback: untyped 2-member rooms are likely DMs.
+    // Safe because formatRoom only calls this when mobazha.room.type is absent;
+    // store/order/group rooms always have the state event set by the bot.
     if (room?.getJoinedMemberCount?.() === 2) {
       return true;
     }
@@ -274,6 +277,29 @@ export function formatRoom(ctx: MatrixContext, room: unknown): MatrixRoom {
     finalMxcUrl = members[0].rawMxcAvatarUrl || null;
   }
 
+  // Extract last message from timeline for initial room list display
+  let lastMessage: import('./types').MatrixMessage | undefined;
+  let timestamp: number | undefined;
+  try {
+    const tlRoom = room as { getLiveTimeline?: () => { getEvents: () => unknown[] } };
+    const events = tlRoom.getLiveTimeline?.()?.getEvents();
+    if (events) {
+      for (let i = events.length - 1; i >= 0; i--) {
+        const ev = events[i] as { getType?: () => string };
+        if (ev.getType?.() === 'm.room.message') {
+          const msg = formatTimelineEvent(ctx, events[i], r.roomId);
+          if (msg) {
+            lastMessage = msg;
+            timestamp = msg.timestamp;
+            break;
+          }
+        }
+      }
+    }
+  } catch {
+    // Timeline not yet available during initial sync
+  }
+
   return {
     roomId: r.roomId,
     name: roomName,
@@ -282,10 +308,12 @@ export function formatRoom(ctx: MatrixContext, room: unknown): MatrixRoom {
     isDirect,
     isEncrypted: isRoomEncrypted(room),
     unreadCount: getRoomUnreadCount(room),
+    lastMessage,
+    timestamp,
     members,
     membership,
     inviter,
-    roomType: roomType || (isDirect ? 'direct' : 'group'),
+    roomType: isDirect ? 'direct' : roomType,
     orderId,
     storeId,
     moderatorId,
@@ -295,10 +323,33 @@ export function formatRoom(ctx: MatrixContext, room: unknown): MatrixRoom {
 
 // ============ Room CRUD ============
 
+function isSpaceRoom(room: unknown): boolean {
+  const r = room as {
+    currentState?: {
+      getStateEvents?: (type: string, stateKey?: string) => unknown;
+    };
+    getType?: () => string | undefined;
+  };
+
+  if (r.getType?.() === 'm.space') return true;
+
+  if (r.currentState?.getStateEvents) {
+    try {
+      const createEvent = r.currentState.getStateEvents('m.room.create', '') as {
+        getContent?: () => { type?: string };
+      } | null;
+      if (createEvent?.getContent?.().type === 'm.space') return true;
+    } catch {
+      // ignore
+    }
+  }
+  return false;
+}
+
 export async function getRooms(ctx: MatrixContext): Promise<MatrixRoom[]> {
   if (!ctx.client) return [];
   const rooms = ctx.client.getRooms();
-  return rooms.map(room => formatRoom(ctx, room));
+  return rooms.filter(room => !isSpaceRoom(room)).map(room => formatRoom(ctx, room));
 }
 
 export async function getRoomsByType(
@@ -468,6 +519,10 @@ export async function getOrCreateDirectRoom(
   displayName?: string
 ): Promise<string | null> {
   if (!ctx.serverConfig) return null;
+  if (ctx.currentPeerID && peerID === ctx.currentPeerID) {
+    console.warn('[Matrix] Blocked self-DM creation');
+    return null;
+  }
   const matrixUserId = `@peer_${peerID.toLowerCase()}:${ctx.serverConfig.serverName}`;
   return createDirectRoom(ctx, matrixUserId, displayName);
 }

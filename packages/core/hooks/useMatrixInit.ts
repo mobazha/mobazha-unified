@@ -216,10 +216,67 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     const onMessageReceived = (data: unknown) => {
       const message = data as MatrixMessage;
       addMessage(message.roomId, message);
+
+      const currentUserId = matrixClient.getUserId();
+      const state = useChatStore.getState();
+      const isViewingRoom = state.drawerOpen && state.currentRoomId === message.roomId;
+      const shouldIncrementUnread = message.sender !== currentUserId && !isViewingRoom;
+
+      const roomUpdate: Partial<MatrixRoom> = {
+        lastMessage: message,
+        timestamp: message.timestamp,
+      };
+
+      if (shouldIncrementUnread) {
+        const room = state.rooms.find(r => r.roomId === message.roomId);
+        if (room) {
+          roomUpdate.unreadCount = room.unreadCount + 1;
+        }
+      }
+
+      updateRoom(message.roomId, roomUpdate);
+    };
+
+    // 本地回显：消息正在发送（乐观 UI）
+    const onMessageSending = (data: unknown) => {
+      const { localId, roomId } = data as { localId: string; roomId: string };
+      const placeholder: MatrixMessage = {
+        id: localId,
+        localId,
+        roomId,
+        sender: matrixClient.getUserId() || '',
+        content: '',
+        type: 'text',
+        timestamp: Date.now(),
+        status: 'sending' as const,
+      };
+      addMessage(roomId, placeholder);
+    };
+
+    // 自己发送成功的消息（sendMessage 将 eventId 加入 processedMessageIds
+    // 防止 Timeline listener 重复处理，因此需要单独订阅 MESSAGE_SENT）
+    const onMessageSent = (data: unknown) => {
+      const message = data as MatrixMessage;
+      if (message.localId) {
+        updateMessage(message.roomId, message.localId, {
+          ...message,
+          status: 'sent' as const,
+        });
+      } else {
+        addMessage(message.roomId, message);
+      }
       updateRoom(message.roomId, {
         lastMessage: message,
         timestamp: message.timestamp,
       });
+    };
+
+    // 消息发送失败
+    const onMessageFailed = (data: unknown) => {
+      const { localId, roomId } = data as { localId: string; roomId: string };
+      if (localId) {
+        updateMessage(roomId, localId, { status: 'failed' as const });
+      }
     };
 
     // 消息更新事件（如解密后更新）
@@ -345,6 +402,9 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       matrixEvents.on(MATRIX_EVENTS.DISCONNECTED, onDisconnected),
       matrixEvents.on(MATRIX_EVENTS.AUTH_REQUIRED, onAuthRequired),
       matrixEvents.on(MATRIX_EVENTS.MESSAGE_RECEIVED, onMessageReceived),
+      matrixEvents.on(MATRIX_EVENTS.MESSAGE_SENDING, onMessageSending),
+      matrixEvents.on(MATRIX_EVENTS.MESSAGE_SENT, onMessageSent),
+      matrixEvents.on(MATRIX_EVENTS.MESSAGE_FAILED, onMessageFailed),
       matrixEvents.on(MATRIX_EVENTS.MESSAGE_UPDATED, onMessageUpdated),
       matrixEvents.on(MATRIX_EVENTS.ROOM_JOINED, onRoomJoined),
       matrixEvents.on(MATRIX_EVENTS.ROOM_LEFT, onRoomLeft),

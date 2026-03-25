@@ -129,7 +129,7 @@ export async function setupEventListeners(
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   matrixClient.on(sdk.MatrixEventEvent.Decrypted, onDecrypted as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   cleanups.push(() =>
     matrixClient.removeListener(sdk.MatrixEventEvent.Decrypted, onDecrypted as any)
   );
@@ -163,7 +163,7 @@ export async function setupEventListeners(
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   matrixClient.on(sdk.RoomMemberEvent.Membership, onMembership as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   cleanups.push(() =>
     matrixClient.removeListener(sdk.RoomMemberEvent.Membership, onMembership as any)
   );
@@ -180,6 +180,32 @@ export async function setupEventListeners(
   matrixClient.on(sdk.UserEvent.Presence, onPresence as any);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cleanups.push(() => matrixClient.removeListener(sdk.UserEvent.Presence, onPresence as any));
+
+  // Typing indicators
+  const onTyping = (
+    _event: unknown,
+    member: { roomId: string; userId: string; typing: boolean }
+  ) => {
+    if (!member) return;
+    const room = matrixClient.getRoom(member.roomId);
+    if (!room) return;
+
+    const members = room.getMembers();
+    const userIds = members
+      .filter(
+        (m: { userId: string; typing?: boolean }) => m.typing && m.userId !== ctx.config?.userId
+      )
+      .map((m: { userId: string }) => m.userId);
+
+    matrixEvents.emit(MATRIX_EVENTS.TYPING, {
+      roomId: member.roomId,
+      userIds,
+    });
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  matrixClient.on(sdk.RoomMemberEvent.Typing, onTyping as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cleanups.push(() => matrixClient.removeListener(sdk.RoomMemberEvent.Typing, onTyping as any));
 
   // Room state events (peerID updates)
   const onStateEvent = (event: {
