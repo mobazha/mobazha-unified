@@ -2,9 +2,9 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { VStack, HStack } from '@/components/layouts';
-import { Button } from '@/components/ui/button';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { Send } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
 export interface Message {
@@ -168,12 +168,38 @@ const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
   );
 };
 
+/**
+ * Shorten peer-style identifiers inside system event text so they remain
+ * readable without horizontal overflow.
+ * e.g. "peer_12d3koowej3dwbazwquq6r8lqw2qz4d9vntpy74z6gvyvtmox8" → "peer_12d3…mox8"
+ *      "@peer_12d3ko…:matrix.org invited @peer_ab34…:matrix.org"
+ */
+/**
+ * Strip the "peer_" prefix and Matrix user-id decorations from a room /
+ * user name so the avatar initial letter and visible label are cleaner.
+ * "peer_12d3koowej3dwb…" → "12d3ko…3dwb"
+ * Falls back to "Chat" when the result would be empty.
+ */
+function cleanDisplayName(raw: string): string {
+  let name = raw.replace(/^@/, '').replace(/:[a-z0-9._-]+$/i, '');
+  if (name.startsWith('peer_')) name = name.slice(5);
+  if (name.length > 12) name = `${name.slice(0, 6)}…${name.slice(-4)}`;
+  return name || 'Chat';
+}
+
+function shortenSystemContent(text: string): string {
+  return text.replace(
+    /(?:@)?(peer_[a-z0-9]{6})[a-z0-9]{8,}([a-z0-9]{4})(?::[a-z0-9._-]+)?/gi,
+    '$1…$2'
+  );
+}
+
 export const ChatMessages: React.FC<ChatMessagesProps> = ({
   roomName,
   roomAvatar,
   roomRawMxcAvatarUrl,
   isEncrypted = false,
-  isOnline = false,
+  isOnline,
   isVerified = false,
   messages,
   currentUserId,
@@ -186,6 +212,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   onCall,
 }) => {
   const { t } = useI18n();
+  const displayName = useMemo(() => cleanDisplayName(roomName), [roomName]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -291,7 +318,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           <Avatar
             src={roomAvatar}
             rawMxcUrl={roomRawMxcAvatarUrl}
-            name={roomName}
+            name={displayName}
             size="md"
             showOnlineStatus
             isOnline={isOnline}
@@ -301,7 +328,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         <div className="flex-1 min-w-0">
           <HStack gap="sm" align="center">
             <button onClick={onRoomSettings} className="hover:opacity-80 transition-opacity">
-              <h3 className="font-semibold text-[15px] text-foreground truncate">{roomName}</h3>
+              <h3 className="font-semibold text-[15px] text-foreground truncate">{displayName}</h3>
             </button>
             {/* Verified badge */}
             {isVerified && (
@@ -331,10 +358,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             )}
           </HStack>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            {isOnline ? (
+            {isOnline === true ? (
               <span className="text-primary">{t('chat.online')}</span>
-            ) : (
+            ) : isOnline === false ? (
               t('chat.offline')
+            ) : (
+              t('chat.directMessage')
             )}
           </p>
         </div>
@@ -414,7 +443,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               {/* Icon container with layered effect */}
               <div className="relative mb-6">
                 <div className="absolute inset-0 w-24 h-24 rounded-2xl bg-primary/10 blur-xl" />
-                <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-xl shadow-primary/10 backdrop-blur-sm rotate-3 hover:rotate-0 transition-transform duration-500">
+                <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-xl shadow-primary/10 backdrop-blur-sm">
                   <svg
                     className="w-12 h-12 text-primary/70"
                     fill="none"
@@ -489,15 +518,16 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
               const { message, showAvatar } = item;
               const isOwn = message.senderId === currentUserId;
+              const itemKey = message.id || `msg-${idx}`;
 
               if (message.isSystem) {
                 return (
                   <div
-                    key={message.id}
-                    className="text-center py-3 animate-in fade-in duration-300"
+                    key={itemKey}
+                    className="flex justify-center py-3 animate-in fade-in duration-300"
                   >
-                    <span className="text-xs text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-full font-medium border border-border/20">
-                      {message.content}
+                    <span className="inline-block max-w-[85%] text-xs text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-xl font-medium border border-border/20 break-words text-center">
+                      {shortenSystemContent(message.content)}
                     </span>
                   </div>
                 );
@@ -505,7 +535,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
               return (
                 <div
-                  key={message.id}
+                  key={itemKey}
                   className={`flex gap-2.5 group animate-in fade-in slide-in-from-bottom-2 duration-300 ${isOwn ? 'flex-row-reverse' : ''}`}
                 >
                   {!isOwn && (
@@ -573,28 +603,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       </div>
 
       {/* Input */}
-      <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-card via-card/95 to-card/90 backdrop-blur-md border-t border-border/30 shadow-[0_-2px_20px_rgba(0,0,0,0.05)]">
-        <HStack gap="sm" align="center">
-          <button
-            className="p-2.5 hover:bg-muted/60 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 group"
-            aria-label="Attach file"
-          >
-            <svg
-              className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-              />
-            </svg>
-          </button>
-
-          <div className="flex-1 relative group">
+      <div className="px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-card border-t border-border/40">
+        <HStack gap="xs" align="center">
+          <div className="flex-1 relative">
             <input
               ref={inputRef}
               type="text"
@@ -603,37 +614,19 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               onKeyPress={handleKeyPress}
               placeholder={t('chat.typeMessage')}
               enterKeyHint="send"
-              className="w-full px-5 py-3 pr-12 text-[14px] bg-muted/40 rounded-2xl border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-muted/60 text-foreground placeholder:text-muted-foreground/60 transition-all duration-300 shadow-sm focus:shadow-md"
+              className="w-full pl-4 pr-3 py-2.5 text-[14px] bg-muted/30 rounded-full border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 text-foreground placeholder:text-muted-foreground/50 transition-colors"
               data-testid="chat-message-input"
             />
-            {/* Emoji button inside input */}
-            <button className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all duration-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
           </div>
 
-          <Button
+          <button
             onClick={handleSend}
             disabled={!inputValue.trim()}
-            className="rounded-2xl w-11 h-11 p-0 flex items-center justify-center bg-gradient-to-br from-primary via-primary to-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:shadow-none disabled:scale-100 disabled:from-muted disabled:to-muted disabled:text-muted-foreground"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-primary transition-all duration-150 enabled:hover:bg-primary/10 enabled:active:scale-95 disabled:text-muted-foreground/30 disabled:cursor-default"
             data-testid="chat-send-btn"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
-          </Button>
+            <Send className="w-[18px] h-[18px]" />
+          </button>
         </HStack>
       </div>
     </div>

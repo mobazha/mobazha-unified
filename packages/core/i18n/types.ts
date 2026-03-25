@@ -445,6 +445,7 @@ export interface TranslationResource {
     conversations: string;
     newMessage: string;
     typeMessage: string;
+    createConversationFailed: string;
     send: string;
     noMessages: string;
     online: string;
@@ -1241,9 +1242,13 @@ export interface TranslationResource {
     lastBackup: string;
     never: string;
     keysBackedUp: string;
+    backupFailed: string;
+    noBackup: string;
     backupNow: string;
     restoreKeys: string;
     restoreKeysDesc: string;
+    keysRestored: string;
+    restoreFailed: string;
     messageInvites: string;
     messageInvitesDesc: string;
     autoAcceptAll: string;
