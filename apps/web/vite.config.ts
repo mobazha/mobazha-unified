@@ -157,7 +157,7 @@ export default defineConfig(({ mode }) => {
       ],
     },
     server: {
-      port: parseInt(process.env.PORT || '3001', 10),
+      port: parseInt(process.env.PORT || '3000', 10),
       allowedHosts: ['miniappdev.mobazha.org'],
       ...(mode === 'miniappdev' && {
         hmr: {
@@ -193,6 +193,14 @@ export default defineConfig(({ mode }) => {
           target: apiBase,
           changeOrigin: true,
         }),
+        '/_matrix': {
+          target: env.NEXT_PUBLIC_MATRIX_HOMESERVER_INTERNAL || 'http://localhost:18008',
+          changeOrigin: true,
+        },
+        '/_synapse': {
+          target: env.NEXT_PUBLIC_MATRIX_HOMESERVER_INTERNAL || 'http://localhost:18008',
+          changeOrigin: true,
+        },
       },
     },
     // 优化依赖预构建
