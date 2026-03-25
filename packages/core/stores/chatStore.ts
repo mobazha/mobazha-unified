@@ -250,12 +250,17 @@ export const useChatStore = create<ChatState>()(
           })),
 
         prependMessages: (roomId, messages) =>
-          set(state => ({
-            messages: {
-              ...state.messages,
-              [roomId]: [...messages, ...(state.messages[roomId] || [])],
-            },
-          })),
+          set(state => {
+            const existing = state.messages[roomId] || [];
+            const existingIds = new Set(existing.map(m => m.id).filter(Boolean));
+            const uniqueNew = messages.filter(m => !m.id || !existingIds.has(m.id));
+            return {
+              messages: {
+                ...state.messages,
+                [roomId]: [...uniqueNew, ...existing],
+              },
+            };
+          }),
 
         setLoadingMessages: (roomId, loading) =>
           set(state => ({
