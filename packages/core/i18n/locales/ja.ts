@@ -1223,6 +1223,7 @@ export const ja: TranslationResource = {
     deleteFailed: 'メッセージの削除に失敗しました',
     sendImageFailed: '画像の送信に失敗しました',
     sendFileFailed: 'ファイルの送信に失敗しました',
+    chatFileTooLarge: 'ファイルが大きすぎます。最大サイズは50MBです。',
     lastSeen: '{{time}}前にオンライン',
     typing: '入力中...',
     encrypted: 'エンドツーエンド暗号化',

@@ -1198,6 +1198,7 @@ export const zh: TranslationResource = {
     deleteFailed: '删除消息失败',
     sendImageFailed: '发送图片失败',
     sendFileFailed: '发送文件失败',
+    chatFileTooLarge: '文件过大，最大允许 50MB。',
     lastSeen: '{{time}} 前在线',
     typing: '正在输入...',
     encrypted: '端到端加密',
