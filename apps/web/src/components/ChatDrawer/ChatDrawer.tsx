@@ -547,6 +547,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           onSendImage={file => handleSendImage(file)}
           onTyping={isTyping => matrixClient.sendTyping(currentRoomId, isTyping)}
           onRetryMessage={handleRetryMessage}
+          isConnected={isConnected}
           onLoadMore={handleLoadMore}
           hasMoreMessages={hasMoreMessages[currentRoomId] ?? true}
           isLoadingMore={loadingMessages[currentRoomId] ?? false}
@@ -583,6 +584,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         side="right"
         className={`${drawerWidth} p-0 transition-all duration-300 flex flex-col shadow-2xl`}
         showCloseButton={false}
+        onOpenAutoFocus={e => e.preventDefault()}
         data-testid="chat-system"
       >
         {/* Header */}

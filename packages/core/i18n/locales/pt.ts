@@ -1235,6 +1235,7 @@ export const pt: TranslationResource = {
     noMessages: 'Sem mensagens ainda',
     online: 'Online',
     offline: 'Offline',
+    offlineHint: 'Chat desconectado. Reconectando…',
     lastSeen: 'Visto há {{time}}',
     typing: 'digitando...',
     encrypted: 'Criptografia de ponta a ponta',
