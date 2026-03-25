@@ -5,7 +5,8 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n } from '@mobazha/core';
-import { ShieldBan, ShieldCheck } from 'lucide-react';
+import { getProfile } from '@mobazha/core/services/api/profile';
+import { ShieldBan, ShieldCheck, MapPin, Star, Package } from 'lucide-react';
 
 export interface UserInfo {
   userId: string;
@@ -13,6 +14,17 @@ export interface UserInfo {
   avatarUrl?: string;
   peerID?: string;
   isExternal?: boolean;
+}
+
+interface ProfileData {
+  handle?: string;
+  shortDescription?: string;
+  about?: string;
+  location?: string;
+  vendor?: boolean;
+  listingCount?: number;
+  rating?: number;
+  reviewCount?: number;
 }
 
 export interface UserInfoCardProps {
@@ -39,10 +51,42 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
   const { t } = useI18n();
   const [blocked, setBlocked] = useState(isBlockedProp ?? false);
   const [blockLoading, setBlockLoading] = useState(false);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     if (isBlockedProp !== undefined) setBlocked(isBlockedProp);
   }, [isBlockedProp]);
+
+  useEffect(() => {
+    if (!isOpen || !user.peerID || user.isExternal) {
+      setProfile(null);
+      return;
+    }
+    let cancelled = false;
+    setProfileLoading(true);
+    getProfile(user.peerID)
+      .then(data => {
+        if (cancelled || !data) return;
+        setProfile({
+          handle: data.handle,
+          shortDescription: data.shortDescription,
+          about: data.about,
+          location: data.location,
+          vendor: data.vendor,
+          listingCount: data.stats?.listingCount,
+          rating: data.stats?.averageRating,
+          reviewCount: data.stats?.ratingCount,
+        });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setProfileLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, user.peerID, user.isExternal]);
 
   if (!isOpen) return null;
 
@@ -130,9 +174,56 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
 
           {/* User Info */}
           <div className="p-6 pt-4 text-center">
-            <h3 className="text-xl font-bold text-foreground mb-1">
+            <h3 className="text-xl font-bold text-foreground mb-0.5">
               {user.displayName || t('chat.unknownUser')}
             </h3>
+
+            {/* @handle */}
+            {profile?.handle && (
+              <p className="text-sm text-muted-foreground mb-1">@{profile.handle}</p>
+            )}
+
+            {/* Short description / about */}
+            {(profile?.shortDescription || profile?.about) && (
+              <p className="text-xs text-muted-foreground/80 line-clamp-2 mb-2 px-2">
+                {profile.shortDescription || profile.about}
+              </p>
+            )}
+
+            {/* Location & stats row */}
+            {profile &&
+              (profile.location ||
+                (profile.listingCount ?? 0) > 0 ||
+                (profile.reviewCount ?? 0) > 0) && (
+                <div className="flex items-center justify-center gap-3 mb-3 text-xs text-muted-foreground/70">
+                  {profile.location && (
+                    <span className="flex items-center gap-0.5">
+                      <MapPin className="w-3 h-3" />
+                      <span className="truncate max-w-[100px]">{profile.location}</span>
+                    </span>
+                  )}
+                  {(profile.listingCount ?? 0) > 0 && (
+                    <span className="flex items-center gap-0.5">
+                      <Package className="w-3 h-3" />
+                      {profile.listingCount}
+                    </span>
+                  )}
+                  {(profile.reviewCount ?? 0) > 0 && (
+                    <span className="flex items-center gap-0.5">
+                      <Star className="w-3 h-3" />
+                      {profile.rating?.toFixed(1)} ({profile.reviewCount})
+                    </span>
+                  )}
+                </div>
+              )}
+
+            {/* Loading skeleton for profile */}
+            {profileLoading && isMobazhaUser && (
+              <div className="flex flex-col items-center gap-1.5 mb-3">
+                <div className="h-3.5 w-20 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-40 bg-muted animate-pulse rounded" />
+              </div>
+            )}
 
             {/* ID display */}
             <div className="mb-4">
