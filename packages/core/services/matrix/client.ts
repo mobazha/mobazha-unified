@@ -64,6 +64,7 @@ class MatrixClientService {
   private _invitePolicy: InvitePolicy = 'auto_mobazha';
   private processedMessageIds = new Set<string>();
   private currentPeerID: string | null = null;
+  private _peerIdCache = new Map<string, string>();
   private initializationPromise: Promise<boolean> | null = null;
   private backupDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private autoBackupTimer: ReturnType<typeof setInterval> | null = null;
@@ -647,6 +648,7 @@ class MatrixClientService {
     this.isInitialized = false;
     this.isConnected = false;
     this.currentPeerID = null;
+    this._peerIdCache.clear();
     matrixEvents.emit(MATRIX_EVENTS.DISCONNECTED);
   }
 
@@ -1064,6 +1066,13 @@ class MatrixClientService {
 
     // 普通消息或已解密的加密消息
     if (eventType === 'm.room.message' || (isEncrypted && clearContent?.body)) {
+      const relatesTo = content['m.relates_to'] as
+        | { rel_type?: string; event_id?: string }
+        | undefined;
+      if (relatesTo?.rel_type === 'm.replace' || relatesTo?.rel_type === 'm.annotation') {
+        return null;
+      }
+
       // 检查解密是否失败
       if (e.isDecryptionFailure?.()) {
         return {
@@ -1262,12 +1271,13 @@ class MatrixClientService {
    * 从 userId 提取显示名
    */
   private extractDisplayName(userId: string): string {
-    // @peer_xxx:matrix.mobazha.org -> xxx 的前几位
     const match = userId.match(/@(?:peer_)?([^:]+):/);
     if (match) {
       const name = match[1];
-      // 如果名字太长，截取前 8 位
-      return name.length > 12 ? name.substring(0, 8) + '...' : name;
+      if (name.length > 12) {
+        return name.substring(0, 6) + '…' + name.substring(name.length - 4);
+      }
+      return name;
     }
     return userId;
   }
@@ -1301,6 +1311,8 @@ class MatrixClientService {
         msgtype: sdk.MsgType.Text,
         body: content,
       });
+
+      this.processedMessageIds.add(response.event_id);
 
       const message: MatrixMessage = {
         id: response.event_id,
@@ -1368,8 +1380,11 @@ class MatrixClientService {
         },
       });
 
+      const eventId = (response as { event_id: string }).event_id;
+      this.processedMessageIds.add(eventId);
+
       const message: MatrixMessage = {
-        id: (response as { event_id: string }).event_id,
+        id: eventId,
         localId,
         roomId,
         sender: this.config!.userId!,
@@ -1462,6 +1477,8 @@ class MatrixClientService {
           info,
         });
       }
+
+      this.processedMessageIds.add(response.event_id);
 
       const message: MatrixMessage = {
         id: response.event_id,
@@ -1577,6 +1594,9 @@ class MatrixClientService {
 
       // 更新 m.direct 账户数据
       await this._updateDirectRoomMapping(userId, response.room_id);
+
+      // Write own peerID into room state for identity resolution
+      await this.setMyPeerIDInRoom(response.room_id);
 
       return response.room_id;
     } catch (error) {
@@ -2154,6 +2174,113 @@ class MatrixClientService {
     await matrixClient.setDisplayName(displayName);
   }
 
+  /**
+   * Sync full Mobazha profile (name + avatar) to Matrix global profile.
+   * Called on init and profile updates so other users see real names/avatars.
+   */
+  async syncProfileToMatrix(displayName: string, avatarUrl?: string): Promise<void> {
+    if (!this.client) return;
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+
+    try {
+      await matrixClient.setDisplayName(displayName);
+    } catch (e) {
+      console.warn('[Matrix] setDisplayName failed:', e);
+    }
+
+    if (avatarUrl) {
+      try {
+        const resp = await fetch(avatarUrl);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const file = new File([blob], 'avatar', { type: blob.type || 'image/jpeg' });
+          const uploadResp = await matrixClient.uploadContent(file, { type: file.type });
+          const mxcUrl =
+            typeof uploadResp === 'string'
+              ? uploadResp
+              : (uploadResp as { content_uri?: string }).content_uri;
+          if (mxcUrl) {
+            await matrixClient.setAvatarUrl(mxcUrl);
+          }
+        }
+      } catch (e) {
+        console.warn('[Matrix] avatar sync failed:', e);
+      }
+    }
+  }
+
+  /**
+   * Write own peerID into room state as `org.mobazha.member_peerid`.
+   * Other users read this to resolve Matrix userId → Mobazha peerID.
+   */
+  async setMyPeerIDInRoom(roomId: string): Promise<void> {
+    if (!this.client || !this.currentPeerID || !this.config?.userId) return;
+    try {
+      const sdk = await import('matrix-js-sdk');
+      const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+      await matrixClient.sendStateEvent(
+        roomId,
+        'org.mobazha.member_peerid' as any,
+        { peer_id: this.currentPeerID },
+        this.config.userId
+      );
+    } catch (e) {
+      console.warn('[Matrix] setMyPeerIDInRoom failed:', e);
+    }
+  }
+
+  /**
+   * Extract the case-correct Peer ID from a Matrix user ID.
+   * @peer_<lowercasePeerID>:<server> → original peerID (lowercased).
+   * For rooms with org.mobazha.member_peerid state, prefer that for case accuracy.
+   */
+  extractPeerIdFromUserId(userId: string): string | null {
+    const match = userId.match(/@peer_([^:]+):/);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * Resolve a Matrix userId to a Mobazha peerID using layered fallback:
+   * cache → room state → parse MXID
+   */
+  private getMemberPeerID(room: unknown, userId: string): string | undefined {
+    if (this._peerIdCache.has(userId)) {
+      return this._peerIdCache.get(userId);
+    }
+
+    const r = room as {
+      currentState?: {
+        getStateEvents?: (type: string, stateKey?: string) => unknown;
+      };
+    };
+
+    if (r.currentState?.getStateEvents) {
+      try {
+        const stateEvent = r.currentState.getStateEvents('org.mobazha.member_peerid', userId) as {
+          getContent?: () => { peer_id?: string };
+        } | null;
+        if (stateEvent?.getContent) {
+          const peerID = stateEvent.getContent().peer_id;
+          if (peerID) {
+            this._peerIdCache.set(userId, peerID);
+            return peerID;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    const parsed = this.extractPeerIdFromUserId(userId);
+    if (parsed) {
+      this._peerIdCache.set(userId, parsed);
+      return parsed;
+    }
+
+    return undefined;
+  }
+
   // ============ Device Verification ============
 
   /**
@@ -2474,6 +2601,11 @@ class MatrixClientService {
 
       if (eventType !== 'm.room.message' && eventType !== 'm.room.encrypted') return;
 
+      // Skip local echo events — our send methods (sendMessage/sendImage/sendFile)
+      // manage the full lifecycle via MESSAGE_SENDING → MESSAGE_SENT events.
+      // Local echoes have a non-null `status` (e.g. "sending", "encrypting").
+      if ((event as { status?: unknown }).status) return;
+
       // Handle m.replace (message edit)
       const content = event.getContent() as Record<string, unknown>;
       const relatesTo = content['m.relates_to'] as
@@ -2553,8 +2685,11 @@ class MatrixClientService {
 
       if (eventType === 'org.mobazha.member_peerid') {
         const senderId = event.getSender();
+        const content = event.getContent() as { peer_id?: string };
+        if (content.peer_id && senderId) {
+          this._peerIdCache.set(senderId, content.peer_id);
+        }
         if (senderId !== this.config?.userId) {
-          const content = event.getContent() as { peer_id?: string };
           matrixEvents.emit(MATRIX_EVENTS.MEMBER_PEERID_UPDATED, {
             roomId: event.getRoomId(),
             userId: senderId,
@@ -2777,22 +2912,37 @@ class MatrixClientService {
     // isDirectRoom 现在包含: getDMInviter 检查、m.direct 检查、成员数量检查
     const isDirect = roomType === 'direct' || (!roomType && this.isDirectRoom(r.roomId));
 
-    // 获取房间成员
+    // 获取房间成员 (enriched with peerID and isExternal)
     const members = this.getRoomMembers(room);
 
+    // Build memberPeerIDs map from enriched members
+    const memberPeerIDs: Record<string, string> = {};
+    for (const m of members) {
+      if (m.peerID) {
+        memberPeerIDs[m.userId] = m.peerID;
+      }
+    }
+
+    // For DM rooms, prefer the partner's Matrix displayName over raw room name
+    let roomName = r.name || r.normalizedName;
+    if (isDirect && members.length > 0) {
+      const partner = members[0];
+      if (partner.displayName && partner.displayName !== partner.userId) {
+        roomName = partner.displayName;
+      }
+    }
+
     // 如果房间没有头像，使用第一个成员的头像
-    // 不管是否是直接聊天，都可以使用成员头像作为 fallback
     let finalAvatarUrl = avatarUrl;
     let finalMxcUrl = roomMxcUrl;
     if (!finalAvatarUrl && members.length > 0) {
-      // 使用第一个成员的头像
       finalAvatarUrl = members[0].avatarUrl;
       finalMxcUrl = members[0].rawMxcAvatarUrl || null;
     }
 
     return {
       roomId: r.roomId,
-      name: r.name || r.normalizedName,
+      name: roomName,
       avatarUrl: finalAvatarUrl,
       rawMxcAvatarUrl: finalMxcUrl || undefined,
       isDirect,
@@ -2805,6 +2955,7 @@ class MatrixClientService {
       orderId,
       storeId,
       moderatorId,
+      memberPeerIDs,
     };
   }
 
@@ -2844,11 +2995,16 @@ class MatrixClientService {
       }): MatrixUser => {
         const rawMxcUrl = m.getMxcAvatarUrl?.() || undefined;
         const avatarUrl = rawMxcUrl ? this.mxcToHttp(rawMxcUrl, 48, 48) : undefined;
+        const peerID = this.getMemberPeerID(room, m.userId);
+        const serverName = this.serverConfig?.serverName;
+        const isExternal = serverName ? !m.userId.endsWith(`:${serverName}`) : false;
         return {
           userId: m.userId,
           displayName: m.name,
           avatarUrl,
           rawMxcAvatarUrl: rawMxcUrl,
+          peerID,
+          isExternal,
         };
       };
 

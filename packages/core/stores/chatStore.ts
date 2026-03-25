@@ -166,6 +166,7 @@ export const useChatStore = create<ChatState>()(
                   ...(r.memberPeerIDs || {}),
                   [userId]: peerID,
                 },
+                members: r.members.map(m => (m.userId === userId ? { ...m, peerID } : m)),
               };
             }),
           })),
@@ -189,21 +190,36 @@ export const useChatStore = create<ChatState>()(
         addMessage: (roomId, message) =>
           set(state => {
             const existing = state.messages[roomId] || [];
-            // 检查是否已存在（通过 id 或 localId）
-            const exists = existing.some(
+            // Check by id or localId
+            const idMatch = existing.findIndex(
               m => m.id === message.id || (m.localId && m.localId === message.localId)
             );
-            if (exists) {
+            if (idMatch >= 0) {
               return {
                 messages: {
                   ...state.messages,
-                  [roomId]: existing.map(m =>
-                    m.id === message.id || (m.localId && m.localId === message.localId)
-                      ? { ...m, ...message }
-                      : m
-                  ),
+                  [roomId]: existing.map((m, i) => (i === idMatch ? { ...m, ...message } : m)),
                 },
               };
+            }
+            // Defense: merge with a "sending" placeholder from the same sender
+            // with matching content (catches SDK local echo race conditions)
+            if (message.sender) {
+              const sendingIdx = existing.findIndex(
+                m =>
+                  m.status === 'sending' &&
+                  m.sender === message.sender &&
+                  m.content === message.content &&
+                  m.type === message.type
+              );
+              if (sendingIdx >= 0) {
+                return {
+                  messages: {
+                    ...state.messages,
+                    [roomId]: existing.map((m, i) => (i === sendingIdx ? { ...m, ...message } : m)),
+                  },
+                };
+              }
             }
             return {
               messages: {
