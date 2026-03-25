@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { VStack, HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { Send, ImagePlus, FileText, Download } from 'lucide-react';
+import { Send, ImagePlus, FileText, Download, Copy, Trash2, Play } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
 export interface Message {
@@ -13,11 +13,11 @@ export interface Message {
   senderId: string;
   senderName?: string;
   senderAvatar?: string;
-  senderRawMxcAvatarUrl?: string; // 原始 mxc:// URL，用于认证下载
+  senderRawMxcAvatarUrl?: string;
   timestamp: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   isSystem?: boolean;
-  type?: 'text' | 'image' | 'file';
+  type?: 'text' | 'image' | 'file' | 'audio' | 'video';
   attachments?: Array<{
     url: string;
     filename?: string;
@@ -45,6 +45,7 @@ export interface ChatMessagesProps {
   onSendImage?: (file: File) => void;
   onTyping?: (isTyping: boolean) => void;
   onRetryMessage?: (messageId: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
   isConnected?: boolean;
   onLoadMore?: () => void;
   hasMoreMessages?: boolean;
@@ -219,6 +220,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   onSendImage,
   onTyping,
   onRetryMessage,
+  onDeleteMessage,
   isConnected = true,
   onLoadMore,
   hasMoreMessages = false,
@@ -313,6 +315,35 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / 1048576).toFixed(1)} MB`;
   };
+
+  const [longPressMenuId, setLongPressMenuId] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleTouchStart = useCallback((msgId: string) => {
+    longPressTimer.current = setTimeout(() => {
+      setLongPressMenuId(msgId);
+    }, 500);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const handleCopy = useCallback(async (msg: Message) => {
+    const text = msg.content || msg.attachments?.[0]?.url || '';
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(msg.id);
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      /* clipboard may be blocked in some contexts */
+    }
+  }, []);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -643,7 +674,70 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                     </div>
                   )}
 
-                  <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`max-w-[75%] relative group/msg ${isOwn ? 'items-end' : 'items-start'}`}
+                    onTouchStart={() => !message.isSystem && handleTouchStart(message.id)}
+                    onTouchEnd={handleTouchEnd}
+                    onTouchMove={handleTouchEnd}
+                  >
+                    {/* Desktop: hover action bar */}
+                    {!message.isSystem && message.status !== 'sending' && (
+                      <div
+                        className={`absolute top-0 ${isOwn ? '-left-16' : '-right-16'} hidden md:group-hover/msg:flex items-center gap-0.5 z-10`}
+                      >
+                        <button
+                          onClick={() => handleCopy(message)}
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                          title={copiedId === message.id ? t('common.copied') : t('common.copy')}
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        {isOwn && onDeleteMessage && (
+                          <button
+                            onClick={() => onDeleteMessage(message.id)}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-error hover:bg-error/10 transition-colors"
+                            title={t('common.delete')}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {/* Mobile: long-press popup */}
+                    {longPressMenuId === message.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setLongPressMenuId(null)}
+                        />
+                        <div
+                          className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-10 z-50 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 duration-150`}
+                        >
+                          <button
+                            onClick={() => {
+                              handleCopy(message);
+                              setLongPressMenuId(null);
+                            }}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg hover:bg-muted/60 transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            {t('common.copy')}
+                          </button>
+                          {isOwn && onDeleteMessage && (
+                            <button
+                              onClick={() => {
+                                onDeleteMessage(message.id);
+                                setLongPressMenuId(null);
+                              }}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-error hover:bg-error/10 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              {t('common.delete')}
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
                     {message.type === 'image' && message.attachments?.[0]?.url ? (
                       <div className="relative">
                         <a
@@ -708,6 +802,71 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                             className={`shrink-0 w-4 h-4 ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}
                           />
                         </a>
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => onRetryMessage?.(message.id)}
+                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+                            aria-label="Retry"
+                          >
+                            ↻
+                          </button>
+                        )}
+                      </div>
+                    ) : message.type === 'audio' && message.attachments?.[0]?.url ? (
+                      <div
+                        className={`relative rounded-2xl overflow-hidden shadow-md ${
+                          isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+                        } ${isOwn ? 'bg-gradient-to-br from-primary via-primary to-primary/85' : 'bg-card/95 backdrop-blur-sm border border-border/40'}`}
+                      >
+                        <audio
+                          controls
+                          preload="metadata"
+                          className="block w-[260px] h-11"
+                          src={message.attachments[0].url}
+                        />
+                        {message.status === 'failed' && (
+                          <button
+                            onClick={() => onRetryMessage?.(message.id)}
+                            className="absolute -right-1.5 -bottom-1.5 w-7 h-7 bg-gradient-to-br from-error to-error text-white rounded-full flex items-center justify-center text-xs font-medium hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:scale-110"
+                            aria-label="Retry"
+                          >
+                            ↻
+                          </button>
+                        )}
+                      </div>
+                    ) : message.type === 'video' && message.attachments?.[0]?.url ? (
+                      <div className="relative">
+                        {message.attachments[0].thumbnailUrl ? (
+                          <a
+                            href={message.attachments[0].url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block relative"
+                          >
+                            <img
+                              src={message.attachments[0].thumbnailUrl}
+                              alt={message.attachments[0].filename || 'Video'}
+                              className={`max-w-[260px] max-h-[260px] rounded-2xl object-cover shadow-md ${
+                                isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+                              }`}
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                                <Play className="w-6 h-6 text-white ml-0.5" />
+                              </div>
+                            </div>
+                          </a>
+                        ) : (
+                          <video
+                            controls
+                            preload="metadata"
+                            className={`max-w-[260px] max-h-[260px] rounded-2xl shadow-md ${
+                              isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
+                            }`}
+                            src={message.attachments[0].url}
+                          />
+                        )}
                         {message.status === 'failed' && (
                           <button
                             onClick={() => onRetryMessage?.(message.id)}

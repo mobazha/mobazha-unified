@@ -62,6 +62,7 @@ export interface ChatState {
   setMessages: (roomId: string, messages: MatrixMessage[]) => void;
   addMessage: (roomId: string, message: MatrixMessage) => void;
   updateMessage: (roomId: string, messageId: string, updates: Partial<MatrixMessage>) => void;
+  removeMessage: (roomId: string, messageId: string) => void;
   prependMessages: (roomId: string, messages: MatrixMessage[]) => void;
   setLoadingMessages: (roomId: string, loading: boolean) => void;
   setHasMoreMessages: (roomId: string, hasMore: boolean) => void;
@@ -218,6 +219,16 @@ export const useChatStore = create<ChatState>()(
               ...state.messages,
               [roomId]: (state.messages[roomId] || []).map(m =>
                 m.id === messageId || m.localId === messageId ? { ...m, ...updates } : m
+              ),
+            },
+          })),
+
+        removeMessage: (roomId, messageId) =>
+          set(state => ({
+            messages: {
+              ...state.messages,
+              [roomId]: (state.messages[roomId] || []).filter(
+                m => m.id !== messageId && m.localId !== messageId
               ),
             },
           })),

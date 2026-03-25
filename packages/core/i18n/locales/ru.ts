@@ -1228,6 +1228,7 @@ export const ru: TranslationResource = {
     online: 'В сети',
     offline: 'Не в сети',
     offlineHint: 'Чат отключен. Переподключение…',
+    deleteFailed: 'Не удалось удалить сообщение',
     lastSeen: 'Был {{time}} назад',
     typing: 'печатает...',
     encrypted: 'Сквозное шифрование',

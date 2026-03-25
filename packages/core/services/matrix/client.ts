@@ -159,6 +159,15 @@ class MatrixClientService {
 
       // 4. 创建 Matrix 客户端（包含 token refresh 支持）
       const sdk = await import('matrix-js-sdk');
+
+      // Suppress noisy SDK internal debug/info logs (FetchHttpApi, sync, etc.)
+      try {
+        const { logger } = await import('matrix-js-sdk/src/logger');
+        logger.setLevel('warn');
+      } catch {
+        // logger module not available, ignore
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clientOpts: any = {
         baseUrl: config.homeserverURL,
@@ -1910,6 +1919,17 @@ class MatrixClientService {
       console.error('[Matrix] Mark room as read failed:', error);
       return false;
     }
+  }
+
+  /**
+   * 撤回/删除消息（Matrix redaction）
+   */
+  async redactEvent(roomId: string, eventId: string, reason?: string): Promise<void> {
+    if (!this.client) throw new Error('Matrix client not initialized');
+
+    const sdk = await import('matrix-js-sdk');
+    const matrixClient = this.client as InstanceType<typeof sdk.MatrixClient>;
+    await matrixClient.redactEvent(roomId, eventId, undefined, reason ? { reason } : undefined);
   }
 
   /**

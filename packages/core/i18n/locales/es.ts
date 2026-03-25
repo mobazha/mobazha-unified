@@ -1234,6 +1234,7 @@ export const es: TranslationResource = {
     online: 'En línea',
     offline: 'Desconectado',
     offlineHint: 'Chat desconectado. Reconectando…',
+    deleteFailed: 'Error al eliminar el mensaje',
     lastSeen: 'Visto hace {{time}}',
     typing: 'escribiendo...',
     encrypted: 'Mensajes cifrados de extremo a extremo',
