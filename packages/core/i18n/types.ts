@@ -453,12 +453,15 @@ export interface TranslationResource {
     offlineHint: string;
     deleteFailed: string;
     sendImageFailed: string;
+    sendFileFailed: string;
     lastSeen: string;
     typing: string;
     encrypted: string;
     welcomeToMessages: string;
     selectConversation: string;
     searchConversations: string;
+    searchMessages: string;
+    attachFile: string;
     // Sections
     directMessages: string;
     communities: string;

@@ -1230,6 +1230,7 @@ export const ru: TranslationResource = {
     offlineHint: 'Чат отключен. Переподключение…',
     deleteFailed: 'Не удалось удалить сообщение',
     sendImageFailed: 'Не удалось отправить изображение',
+    sendFileFailed: 'Не удалось отправить файл',
     lastSeen: 'Был {{time}} назад',
     typing: 'печатает...',
     encrypted: 'Сквозное шифрование',
@@ -1238,6 +1239,8 @@ export const ru: TranslationResource = {
     selectConversation:
       'Выберите разговор для начала общения или создайте новый для связи с продавцами и покупателями.',
     searchConversations: 'Поиск разговоров...',
+    searchMessages: 'Поиск сообщений...',
+    attachFile: 'Прикрепить файл',
     loginRequired: 'Требуется вход',
     loginToChat: 'Войдите для доступа к сообщениям и общению.',
     connecting: 'Подключение к чату...',

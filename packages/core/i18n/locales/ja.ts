@@ -1222,6 +1222,7 @@ export const ja: TranslationResource = {
     offlineHint: 'チャットが切断されました。再接続中…',
     deleteFailed: 'メッセージの削除に失敗しました',
     sendImageFailed: '画像の送信に失敗しました',
+    sendFileFailed: 'ファイルの送信に失敗しました',
     lastSeen: '{{time}}前にオンライン',
     typing: '入力中...',
     encrypted: 'エンドツーエンド暗号化',
@@ -1230,6 +1231,8 @@ export const ja: TranslationResource = {
     selectConversation:
       '会話を選択してチャットを開始するか、新しい会話を作成して販売者や購入者と繋がりましょう。',
     searchConversations: '会話を検索...',
+    searchMessages: 'メッセージを検索...',
+    attachFile: 'ファイルを添付',
     loginRequired: 'ログインが必要です',
     loginToChat: 'メッセージにアクセスしてチャットするにはログインしてください。',
     connecting: 'チャットに接続中...',

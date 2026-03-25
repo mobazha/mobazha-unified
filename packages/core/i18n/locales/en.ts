@@ -1322,6 +1322,7 @@ export const en: TranslationResource = {
     offlineHint: 'Chat is disconnected. Reconnecting...',
     deleteFailed: 'Failed to delete message',
     sendImageFailed: 'Failed to send image',
+    sendFileFailed: 'Failed to send file',
     lastSeen: 'Last seen {{time}}',
     typing: 'typing...',
     encrypted: 'End-to-end encrypted',
@@ -1330,6 +1331,8 @@ export const en: TranslationResource = {
     selectConversation:
       'Select a conversation to start chatting, or create a new one to connect with vendors and buyers.',
     searchConversations: 'Search conversations...',
+    searchMessages: 'Search messages...',
+    attachFile: 'Attach file',
     // Login states
     loginRequired: 'Login Required',
     loginToChat: 'Please login to access your messages and start chatting with others.',
