@@ -1253,6 +1253,7 @@ export const de: TranslationResource = {
     sendImageFailed: 'Bild konnte nicht gesendet werden',
     sendFileFailed: 'Datei konnte nicht gesendet werden',
     chatFileTooLarge: 'Datei ist zu groß. Maximale Größe ist 50 MB.',
+    dropFilesHere: 'Dateien hierher ziehen zum Senden',
     lastSeen: 'Zuletzt online {{time}}',
     typing: 'tippt...',
     encrypted: 'Ende-zu-Ende verschlüsselt',

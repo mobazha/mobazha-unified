@@ -1232,6 +1232,7 @@ export const ru: TranslationResource = {
     sendImageFailed: 'Не удалось отправить изображение',
     sendFileFailed: 'Не удалось отправить файл',
     chatFileTooLarge: 'Файл слишком большой. Максимальный размер — 50 МБ.',
+    dropFilesHere: 'Перетащите файлы сюда для отправки',
     lastSeen: 'Был {{time}} назад',
     typing: 'печатает...',
     encrypted: 'Сквозное шифрование',

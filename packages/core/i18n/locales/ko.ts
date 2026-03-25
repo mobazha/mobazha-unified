@@ -1215,6 +1215,7 @@ export const ko: TranslationResource = {
     sendImageFailed: '이미지 전송에 실패했습니다',
     sendFileFailed: '파일 전송에 실패했습니다',
     chatFileTooLarge: '파일이 너무 큽니다. 최대 크기는 50MB입니다.',
+    dropFilesHere: '파일을 여기에 놓아 전송',
     lastSeen: '{{time}} 전 접속',
     typing: '입력 중...',
     encrypted: '메시지는 암호화되어 있습니다',
