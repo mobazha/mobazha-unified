@@ -222,6 +222,7 @@ export interface BackendMember {
   userId: string;
   displayName: string;
   avatarUrl?: string;
+  peerID?: string;
   membership: string;
 }
 
