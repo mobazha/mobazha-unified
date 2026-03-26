@@ -261,7 +261,7 @@ function convertRoom(r: BackendRoom): MatrixRoom {
   const members: MatrixUser[] = (r.members || []).map(convertMember);
   const memberPeerIDs: Record<string, string> = {};
   for (const m of members) {
-    const pid = extractPeerIdFromUserId(m.userId);
+    const pid = m.peerID || extractPeerIdFromUserId(m.userId);
     if (pid) {
       m.peerID = pid;
       memberPeerIDs[m.userId] = pid;
@@ -309,6 +309,7 @@ function convertMember(m: BackendMember): MatrixUser {
     displayName: m.displayName || undefined,
     avatarUrl: m.avatarUrl ? mxcToHttp(m.avatarUrl) : undefined,
     rawMxcAvatarUrl: m.avatarUrl || undefined,
+    peerID: m.peerID || undefined,
   };
 }
 

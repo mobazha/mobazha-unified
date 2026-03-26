@@ -171,8 +171,8 @@ class MatrixClientService {
     return msgModule.sendTyping(roomId, isTyping);
   }
 
-  async markRoomAsRead(roomId: string): Promise<boolean> {
-    return msgModule.markRoomAsRead(roomId);
+  async markRoomAsRead(roomId: string, eventId?: string): Promise<boolean> {
+    return msgModule.markRoomAsRead(roomId, eventId);
   }
 
   async getReadReceiptForRoom(_roomId: string): Promise<Record<string, string>> {
