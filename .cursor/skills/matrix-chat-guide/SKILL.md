@@ -1,249 +1,100 @@
 ---
 name: matrix-chat-guide
-description: Guide for Matrix chat integration in Mobazha including SDK initialization, E2E encryption, room management, message handling, and reconnection strategies. Use when working with chat features, Matrix SDK, or messaging, "Matrix", "聊天", "消息", "加密聊天", "端到端加密", "房间".
+description: Matrix 聊天前端开发指南（REST + WS 薄客户端）。当需要开发聊天 UI、修改消息处理、调试 WS 事件时使用。触发词："Matrix", "聊天", "消息", "加密聊天", "端到端加密", "房间", "chat", "mautrix"。
 ---
 
-# Matrix 聊天开发指南
+# Matrix 聊天前端开发指南
 
-Mobazha 项目的 Matrix 协议集成规范。
+> 完整设计文档：`mobazha_hosting/docs/chat/MATRIX_CHAT_DESIGN.md`
 
-## 架构概览
+## 架构
+
+前端为纯 REST + WebSocket 薄客户端，**不持有 matrix-js-sdk**。
+所有 Matrix 协议交互（包括 E2EE）由后端 mautrix-go 处理。
+
+```
+前端 ─REST─→ 后端 /v1/chat/* API
+前端 ◄──WS── 后端 chat.* 事件推送
+```
+
+## 文件结构
 
 ```
 packages/core/services/matrix/
-├── client.ts    # MatrixService 主服务 (~2500行)
-├── crypto.ts    # E2E 加密模块
-├── events.ts    # 事件发射器
-├── storage.ts   # 凭证存储适配器
-└── types.ts     # 类型定义
+├── client.ts           # MatrixClient facade（代理到 REST API）
+├── messages.ts         # 消息 CRUD（send/edit/redact/paginate）
+├── rooms.ts            # 房间 CRUD + BackendRoom → MatrixRoom 映射
+├── event-listeners.ts  # WS chat.* 事件处理分发
+├── verification.ts     # SAS 验证 REST API 调用
+├── types.ts            # TypeScript 类型（BackendRoom/Message/Member）
+└── index.ts            # 导出
 
-packages/core/hooks/
-├── useMatrixInit.ts   # 初始化 + 自动重连
-├── useMatrixChat.ts   # 消息收发 + UI 状态
-└── useMatrix.ts       # 高层抽象（房间管理）
+packages/core/config/apiPaths.ts    # NODE_API.CHAT_* 路径常量
+packages/core/stores/chatStore.ts   # Zustand 聊天状态
+apps/web/src/components/ChatDrawer/ # 聊天 UI 组件
+└── hooks/useChatEffects.ts         # WS 事件消费 + 验证事件监听
 ```
 
-## 初始化流程
+## REST API 调用模式
 
-### 自动初始化（推荐）
-
-通过 `useMatrixInit` hook，用户登录后自动初始化：
+所有 Chat API 通过 `authFetch` + `NODE_API` 常量调用：
 
 ```typescript
-// 在 App 根组件中使用
-function App() {
-  useMatrixInit();  // 自动处理初始化、重连、token 刷新
-  return <AppContent />;
-}
-```
+import { authFetch } from '../helpers';
+import { NODE_API } from '../../config/apiPaths';
 
-### 初始化顺序
-
-```
-用户登录
-  → initializeWithPeerID(peerID)
-    → 获取服务器配置
-    → 检查 localStorage 中的 token
-    → 验证 token / 自动注册
-    → 检查 crypto store 设备匹配
-    → 创建 MatrixClient
-    → 初始化 Rust Crypto (E2EE)
-    → 设置事件监听
-  → startSync()
-    → 等待 PREPARED 状态 (60s 超时)
-    → E2EE 后置设置
-    → 连接完成
-```
-
-### 重连机制
-
-`useMatrixInit` 已内置：
-
-- 最大重试 3 次，间隔 5 秒
-- 断线自动重连
-- Token 过期自动刷新（`AUTH_REQUIRED` 事件）
-
-## 房间管理
-
-### 房间类型
-
-项目中有三种特殊房间类型（通过 `useMatrix` hook）：
-
-```typescript
-const { createOrderRoom, createStoreRoom, createGroupRoom } = useMatrix();
-
-// 订单相关聊天（买卖双方 + 仲裁员）
-await createOrderRoom(orderId, participants);
-
-// 店铺相关聊天
-await createStoreRoom(storeId);
-
-// 群组聊天
-await createGroupRoom(groupName, members);
-```
-
-### 房间筛选
-
-```typescript
-// useMatrix 提供按类型筛选的房间列表
-const { rooms, orderRooms, storeRooms } = useMatrix();
-```
-
-## 消息处理
-
-### 发送消息（乐观更新模式）
-
-项目使用乐观更新确保 UI 响应性：
-
-```typescript
-// useMatrixChat 内部实现的模式：
-const localId = `local_${Date.now()}`;
-
-// 1. 立即在 UI 显示（乐观更新）
-addMessage(roomId, {
-  id: localId,
-  content: text,
-  status: 'SENDING',
+// 发送消息
+const response = await authFetch(`${NODE_API.CHAT_ROOMS}/${roomId}/messages`, {
+  method: 'POST',
+  body: JSON.stringify({ body: content }),
 });
 
-try {
-  // 2. 实际发送
-  const result = await matrixService.sendMessage(roomId, text);
-
-  // 3. 更新为成功
-  updateMessage(roomId, localId, {
-    id: result.eventId,
-    status: 'SENT',
-  });
-} catch {
-  // 4. 标记失败
-  updateMessage(roomId, localId, { status: 'FAILED' });
-}
+// 获取房间列表
+const rooms = await authFetch(NODE_API.CHAT_ROOMS);
 ```
 
-### 使用 useMatrixChat
+## WS 事件消费
 
-```typescript
-const {
-  messages, // 当前房间消息列表
-  sendMessage, // 发送文本消息
-  isLoading, // 加载状态
-  hasMore, // 是否有更多历史消息
-  loadMore, // 加载更多
-} = useMatrixChat(roomId);
-```
+后端通过 WebSocket 推送 `chat.*` 事件，前端在 `event-listeners.ts` 中处理：
 
-## 端到端加密 (E2EE)
+| 事件                  | 处理                                 |
+| --------------------- | ------------------------------------ |
+| `chat.message`        | 追加到对应房间消息列表               |
+| `chat.message_edit`   | 更新已有消息内容                     |
+| `chat.message_redact` | 从列表中移除消息                     |
+| `chat.typing`         | 更新打字指示器                       |
+| `chat.read_receipt`   | 更新已读状态                         |
+| `chat.room_invite`    | 根据 InvitePolicy 自动接受或弹出确认 |
+| `chat.verification.*` | 触发验证 UI 流程                     |
 
-### 关键概念
+## 数据类型映射
 
-- 使用 **Rust Crypto**（`matrix-js-sdk` 的 WASM 实现）
-- 加密数据存储在 **IndexedDB** 中
-- 支持 **cross-signing** 和 **密钥备份**
+后端返回 → 前端类型转换在 `rooms.ts` 的 `convertRoom()`/`convertMember()` 中：
 
-### 加密初始化
+- `BackendRoom` → `MatrixRoom`
+- `BackendMember.peerID` → `MatrixUser.peerID`（原始大小写，来自 state event）
+- `BackendMessage.media` → 处理加密房间 `content.File.URL` 路径
 
-```typescript
-// 在 client.ts 中自动处理
-await matrixClient.initRustCrypto({
-  useIndexedDB: true,
-  cryptoDatabasePrefix: `matrix-crypto-${userId}`,
-});
-```
+## 修改指引
 
-### 错误恢复
+### 新增 Chat 功能的前端部分
 
-当加密数据损坏时（WASM panic），系统会自动：
+1. 确认后端 API 已在 `mobazha3.0/internal/api/routes.go` 注册
+2. 在 `apiPaths.ts` 添加 `CHAT_*` 常量
+3. 在 `services/matrix/` 对应模块添加 REST 调用
+4. 如果是实时事件，在 `event-listeners.ts` 添加处理
+5. 在 UI 组件中消费
 
-1. 清除损坏的 IndexedDB 数据
-2. 重新初始化加密
-3. 从备份恢复密钥
+### 调试
 
-### 密钥备份策略
+- REST API：浏览器 DevTools → Network 面板
+- WS 事件：DevTools → Network → WS 连接 → Messages 面板
+- 后端日志：grep `matrix` 在节点日志中（如启用 debug 模式）
+- 聊天状态：React DevTools 查看 Zustand chatStore
 
-- 密钥 bundle 自动备份到 Mobazha 节点
-- 每 5 分钟自动备份，30 秒去抖
-- 登录新设备时自动恢复
+### 注意事项
 
-## 事件系统
-
-### 关键事件
-
-```typescript
-// packages/core/services/matrix/events.ts
-enum MatrixEvent {
-  CONNECTED, // 连接成功
-  DISCONNECTED, // 断线
-  SYNC_ERROR, // 同步错误
-  AUTH_REQUIRED, // 需要重新认证
-  MESSAGE_RECEIVED, // 收到新消息
-  ROOM_INVITE, // 收到房间邀请
-  // ...12+ 事件
-}
-```
-
-### 事件订阅模式
-
-```typescript
-// useMatrixInit 中的事件订阅模式
-useEffect(() => {
-  const unsubscribers = [
-    events.on(MatrixEvent.CONNECTED, handleConnected),
-    events.on(MatrixEvent.DISCONNECTED, handleDisconnected),
-    events.on(MatrixEvent.AUTH_REQUIRED, handleAuthRequired),
-  ];
-
-  return () => unsubscribers.forEach(unsub => unsub());
-}, []);
-```
-
-## 开发注意事项
-
-### 1. 初始化防重入
-
-```typescript
-// MatrixService 使用 Promise 防重入
-if (this.initializationPromise) return this.initializationPromise;
-this.initializationPromise = this._doInitialize();
-try {
-  return await this.initializationPromise;
-} finally {
-  this.initializationPromise = null;
-}
-```
-
-### 2. 存储适配
-
-`MatrixStorage` 接口支持多平台：
-
-- Web: localStorage
-- React Native: AsyncStorage（预留）
-
-### 3. 凭证管理
-
-- Access token 存储在 localStorage（MatrixStorage 适配器）
-- Token 过期时通过 `AUTH_REQUIRED` 事件触发刷新
-- 设备 ID 在登出后保留（避免重复设备注册）
-
-### 4. 性能考虑
-
-- 同步操作是长连接，注意内存管理
-- 大量消息时使用分页加载（`loadMore`）
-- 组件卸载时必须清理事件监听
-
-## 常见问题排查
-
-| 问题         | 可能原因             | 解决方案                         |
-| ------------ | -------------------- | -------------------------------- |
-| 连接超时     | 服务器配置错误       | 检查 `_getServerConfig()`        |
-| 消息解密失败 | 加密数据损坏         | 清除 IndexedDB 重新初始化        |
-| 同步卡住     | Token 过期           | 检查 `AUTH_REQUIRED` 事件处理    |
-| 设备不信任   | Cross-signing 未完成 | 重新执行 cross-signing bootstrap |
-
-## 快速检查清单
-
-- [ ] 是否通过 `useMatrixChat` hook 收发消息（而非直接调用 service）？
-- [ ] 事件监听是否在 cleanup 中取消订阅？
-- [ ] 新房间类型是否通过 `useMatrix` 创建？
-- [ ] 是否处理了消息发送失败的情况？
-- [ ] 加密相关操作是否有 try/catch 和降级方案？
+- 不要引入 `matrix-js-sdk`（已在迁移中移除）
+- 所有加密操作在后端完成，前端不接触密钥
+- 媒体使用 `Authorization` header 下载，不在 URL 中放 token
+- PeerID 使用 `member.peerID` 字段（原始大小写），不要从 userId 正则提取
