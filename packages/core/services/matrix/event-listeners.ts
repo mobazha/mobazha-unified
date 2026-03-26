@@ -1,244 +1,197 @@
 /**
- * Matrix 事件监听注册模块
- * 将 matrix-js-sdk 事件桥接到 matrixEvents 事件总线
+ * Matrix 事件监听器 — WebSocket 实现
+ *
+ * v1.2: 监听后端通过 WebSocket 推送的 chat.* 事件，
+ * 映射到前端 MATRIX_EVENTS，UI 组件无需改动。
  */
 
-import type { MatrixContext, InvitePolicy } from './types';
-import { MATRIX_EVENTS } from './types';
 import { matrixEvents } from './events';
-import { formatMessage, formatMembershipEvent } from './messages';
-import { handleRoomInvite } from './rooms';
+import { MATRIX_EVENTS, type InvitePolicy } from './types';
+import { convertMessage } from './messages';
+import { joinRoom } from './rooms';
+import { onWebSocketMessage, onWebSocketStatusChange, type WebSocketMessage } from '../websocket';
 
 export interface EventListenerCallbacks {
+  processedMessageIds: Set<string>;
   onSyncStateChange: (connected: boolean) => void;
   getInvitePolicy: () => InvitePolicy;
-  scheduleKeyBackup: () => void;
 }
 
 /**
- * Register all matrix-js-sdk event listeners on the client.
- * Returns a cleanup function that removes all listeners.
+ * Subscribe to backend WebSocket chat events and forward them to matrixEvents.
+ * Returns a cleanup function.
  */
-export async function setupEventListeners(
-  ctx: MatrixContext,
-  callbacks: EventListenerCallbacks
-): Promise<() => void> {
-  if (!ctx.client) return () => {};
+export function setupChatEventListeners(callbacks: EventListenerCallbacks): () => void {
+  const { processedMessageIds, onSyncStateChange, getInvitePolicy } = callbacks;
+  const cleanups: (() => void)[] = [];
 
-  const sdk = await import('matrix-js-sdk');
-  const matrixClient = ctx.client;
-  const cleanups: Array<() => void> = [];
+  const handleWsMessage = (msg: WebSocketMessage) => {
+    const wsType = msg.type || '';
+    const payload = msg.data;
 
-  // Sync state
-  const onSync = (state: string) => {
-    if (state === 'PREPARED') {
-      callbacks.onSyncStateChange(true);
-      matrixEvents.emit(MATRIX_EVENTS.CONNECTED);
-    } else if (state === 'ERROR' || state === 'STOPPED') {
-      callbacks.onSyncStateChange(false);
+    switch (wsType) {
+      case 'chat.message':
+        handleChatMessage(payload, processedMessageIds);
+        break;
+      case 'chat.message_edit':
+        handleChatEdit(payload);
+        break;
+      case 'chat.message_redact':
+        handleChatRedact(payload);
+        break;
+      case 'chat.typing':
+        handleChatTyping(payload);
+        break;
+      case 'chat.read_receipt':
+        handleChatReadReceipt(payload);
+        break;
+      case 'chat.room_member':
+        handleChatRoomMember(payload);
+        break;
+      case 'chat.invite':
+        handleChatInvite(payload, getInvitePolicy);
+        break;
+      case 'chat.room_state':
+        handleChatRoomState(payload);
+        break;
+      case 'chat.presence':
+        handleChatPresence(payload);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleWsStatus = (status: string) => {
+    if (status === 'disconnected' || status === 'error') {
+      onSyncStateChange(false);
       matrixEvents.emit(MATRIX_EVENTS.DISCONNECTED);
+    } else if (status === 'connected') {
+      onSyncStateChange(true);
+      matrixEvents.emit(MATRIX_EVENTS.CONNECTED);
     }
   };
-  matrixClient.on(sdk.ClientEvent.Sync, onSync);
-  cleanups.push(() => matrixClient.removeListener(sdk.ClientEvent.Sync, onSync));
 
-  // Timeline events (messages, reactions, edits)
-  const onTimeline = (
-    event: {
-      getType: () => string;
-      getId: () => string | undefined;
-      getSender: () => string;
-      getContent: () => Record<string, unknown>;
-      status?: unknown;
-    },
-    room: { roomId: string } | undefined,
-    toStartOfTimeline: boolean | undefined
-  ) => {
-    const eventType = event.getType();
-
-    if (toStartOfTimeline) return;
-    if (!room) return;
-
-    // m.reaction
-    if (eventType === 'm.reaction') {
-      const content = event.getContent();
-      const relatesTo = content['m.relates_to'] as
-        | { rel_type?: string; event_id?: string; key?: string }
-        | undefined;
-      if (relatesTo?.rel_type === 'm.annotation' && relatesTo.event_id && relatesTo.key) {
-        matrixEvents.emit(MATRIX_EVENTS.MESSAGE_REACTION, {
-          roomId: room.roomId,
-          eventId: relatesTo.event_id,
-          emoji: relatesTo.key,
-          sender: event.getSender(),
-        });
-      }
-      return;
-    }
-
-    if (eventType !== 'm.room.message' && eventType !== 'm.room.encrypted') return;
-
-    // Skip local echo events
-    if (event.status) return;
-
-    // m.replace (message edit)
-    const content = event.getContent();
-    const relatesTo = content['m.relates_to'] as
-      | { rel_type?: string; event_id?: string }
-      | undefined;
-    if (relatesTo?.rel_type === 'm.replace' && relatesTo.event_id) {
-      const newContent = content['m.new_content'] as { body?: string } | undefined;
-      if (newContent?.body) {
-        matrixEvents.emit(MATRIX_EVENTS.MESSAGE_EDITED, {
-          roomId: room.roomId,
-          eventId: relatesTo.event_id,
-          newContent: newContent.body,
-        });
-      }
-      return;
-    }
-
-    const eventId = event.getId();
-    if (!eventId || ctx.processedMessageIds.has(eventId)) return;
-    ctx.processedMessageIds.add(eventId);
-
-    const message = formatMessage(ctx, event, room.roomId);
-    matrixEvents.emit(MATRIX_EVENTS.MESSAGE_RECEIVED, message);
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  matrixClient.on(sdk.RoomEvent.Timeline, onTimeline as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cleanups.push(() => matrixClient.removeListener(sdk.RoomEvent.Timeline, onTimeline as any));
-
-  // Decrypted event updates
-  const onDecrypted = (event: {
-    getType: () => string;
-    getId: () => string | undefined;
-    getRoomId: () => string | undefined;
-  }) => {
-    if (event.getType() !== 'm.room.message') return;
-
-    const eventId = event.getId();
-    const roomId = event.getRoomId();
-    if (!eventId || !roomId) return;
-
-    if (ctx.processedMessageIds.has(eventId)) {
-      const message = formatMessage(ctx, event, roomId);
-      matrixEvents.emit(MATRIX_EVENTS.MESSAGE_UPDATED, message);
-    }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  matrixClient.on(sdk.MatrixEventEvent.Decrypted, onDecrypted as any);
-
-  cleanups.push(() =>
-    matrixClient.removeListener(sdk.MatrixEventEvent.Decrypted, onDecrypted as any)
-  );
-
-  // Room membership
-  const onMembership = (
-    event: {
-      getSender: () => string;
-      getPrevContent: () => { membership?: string };
-    },
-    member: { roomId: string; userId: string; name?: string; membership: string }
-  ) => {
-    const roomId = member.roomId;
-    const senderId = event.getSender();
-    const targetUserId = member.userId;
-    const membership = member.membership;
-    const prevMembership = event.getPrevContent()?.membership;
-
-    if (targetUserId === ctx.config?.userId && membership === 'invite') {
-      matrixEvents.emit(MATRIX_EVENTS.ROOM_INVITE, {
-        roomId,
-        inviter: senderId,
-      });
-      handleRoomInvite(ctx, roomId, senderId, callbacks.getInvitePolicy());
-    }
-
-    const roomEvent = formatMembershipEvent(event, member, prevMembership);
-    if (roomEvent) {
-      matrixEvents.emit(MATRIX_EVENTS.ROOM_EVENT, roomEvent);
-    }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  matrixClient.on(sdk.RoomMemberEvent.Membership, onMembership as any);
-
-  cleanups.push(() =>
-    matrixClient.removeListener(sdk.RoomMemberEvent.Membership, onMembership as any)
-  );
-
-  // Presence
-  const onPresence = (_event: unknown, user: { userId: string; presence: string } | undefined) => {
-    if (!user) return;
-    matrixEvents.emit(MATRIX_EVENTS.PRESENCE_CHANGED, {
-      userId: user.userId,
-      presence: user.presence as 'online' | 'offline' | 'unavailable',
-    });
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  matrixClient.on(sdk.UserEvent.Presence, onPresence as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cleanups.push(() => matrixClient.removeListener(sdk.UserEvent.Presence, onPresence as any));
-
-  // Typing indicators
-  const onTyping = (
-    _event: unknown,
-    member: { roomId: string; userId: string; typing: boolean }
-  ) => {
-    if (!member) return;
-    const room = matrixClient.getRoom(member.roomId);
-    if (!room) return;
-
-    const members = room.getMembers();
-    const userIds = members
-      .filter(
-        (m: { userId: string; typing?: boolean }) => m.typing && m.userId !== ctx.config?.userId
-      )
-      .map((m: { userId: string }) => m.userId);
-
-    matrixEvents.emit(MATRIX_EVENTS.TYPING, {
-      roomId: member.roomId,
-      userIds,
-    });
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  matrixClient.on(sdk.RoomMemberEvent.Typing, onTyping as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cleanups.push(() => matrixClient.removeListener(sdk.RoomMemberEvent.Typing, onTyping as any));
-
-  // Room state events (peerID updates)
-  const onStateEvent = (event: {
-    getType: () => string;
-    getSender: () => string;
-    getRoomId: () => string;
-    getContent: () => { peer_id?: string };
-  }) => {
-    const eventType = event.getType();
-
-    if (eventType === 'org.mobazha.member_peerid') {
-      const senderId = event.getSender();
-      const content = event.getContent();
-      if (content.peer_id && senderId) {
-        ctx.peerIdCache.set(senderId, content.peer_id);
-      }
-      if (senderId !== ctx.config?.userId) {
-        matrixEvents.emit(MATRIX_EVENTS.MEMBER_PEERID_UPDATED, {
-          roomId: event.getRoomId(),
-          userId: senderId,
-          peerID: content.peer_id,
-        });
-      }
-    }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  matrixClient.on(sdk.RoomStateEvent.Events, onStateEvent as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cleanups.push(() => matrixClient.removeListener(sdk.RoomStateEvent.Events, onStateEvent as any));
+  cleanups.push(onWebSocketMessage(handleWsMessage));
+  cleanups.push(onWebSocketStatusChange(handleWsStatus));
 
   return () => {
-    for (const cleanup of cleanups) {
-      cleanup();
-    }
+    for (const cleanup of cleanups) cleanup();
   };
+}
+
+// ============ Event Handlers ============
+
+function handleChatMessage(payload: unknown, processedIds: Set<string>): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = payload as any;
+  if (!p) return;
+  const eventId = p.eventID || p.eventId || p.id;
+  if (!eventId) return;
+  if (processedIds.has(eventId)) return;
+  processedIds.add(eventId);
+
+  if (p.msgType || p.content !== undefined) {
+    const message = convertMessage(p);
+    matrixEvents.emit(MATRIX_EVENTS.MESSAGE_RECEIVED, message);
+  } else {
+    matrixEvents.emit(MATRIX_EVENTS.MESSAGE_RECEIVED, {
+      id: eventId,
+      roomId: p.roomID || p.roomId,
+      sender: p.sender,
+      content: p.content || '',
+      type: 'text',
+      timestamp: p.timestamp ? new Date(p.timestamp).getTime() : Date.now(),
+    });
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatEdit(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.MESSAGE_EDITED, {
+    roomId: payload.roomID || payload.roomId,
+    eventId: payload.eventID || payload.eventId,
+    newContent: payload.newContent || payload.content,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatRedact(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.MESSAGE_UPDATED, {
+    roomId: payload.roomID || payload.roomId,
+    eventId: payload.eventID || payload.eventId,
+    redacted: true,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatTyping(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.TYPING, {
+    roomId: payload.roomID || payload.roomId,
+    userIds: payload.userIDs || payload.userIds || [],
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatReadReceipt(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.READ_RECEIPT, {
+    roomId: payload.roomID || payload.roomId,
+    userId: payload.userID || payload.userId,
+    eventId: payload.eventID || payload.eventId,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatRoomMember(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.MEMBER_CHANGED, {
+    roomId: payload.roomID || payload.roomId,
+    userId: payload.userID || payload.userId,
+    membership: payload.membership,
+    displayName: payload.displayName,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatInvite(payload: any, getPolicy: () => InvitePolicy): void {
+  if (!payload) return;
+  const policy = getPolicy();
+  const roomId = payload.roomID || payload.roomId;
+  const inviter = payload.inviter;
+
+  if (policy === 'auto_all') {
+    joinRoom(roomId).then(() => matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId }));
+  } else if (policy === 'auto_mobazha' && inviter && /^@peer_/i.test(inviter)) {
+    joinRoom(roomId).then(() => matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId }));
+  } else {
+    matrixEvents.emit(MATRIX_EVENTS.ROOM_INVITE, {
+      roomId,
+      inviter,
+      roomName: payload.roomName,
+    });
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatRoomState(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.MEMBER_PEERID_UPDATED, {
+    roomId: payload.roomID || payload.roomId,
+    userId: payload.userID || payload.userId,
+    peerID: payload.peerID || payload.peerId,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatPresence(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.PRESENCE_CHANGED, {
+    userId: payload.userID || payload.userId,
+    presence: payload.presence,
+    lastActive: payload.lastActive,
+  });
 }

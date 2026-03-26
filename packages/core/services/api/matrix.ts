@@ -4,8 +4,7 @@
  */
 
 import { getHostingUrl, getAuthHeaders } from './config';
-import { NODE_API, HOSTING_API } from '../../config/apiPaths';
-import { authGet, authPost } from './helpers';
+import { HOSTING_API } from '../../config/apiPaths';
 
 // ============= 辅助函数 =============
 
@@ -43,14 +42,6 @@ export interface MatrixServerConfig {
   homeserverURL: string;
   serverName: string;
   presenceEnabled?: boolean;
-}
-
-export interface MatrixCredentials {
-  registered: boolean;
-  matrixUserId?: string;
-  homeserverUrl?: string;
-  password?: string;
-  serverName?: string;
 }
 
 export interface MatrixAutoRegisterResponse {
@@ -92,49 +83,6 @@ export async function getMatrixConfig(): Promise<MatrixServerConfig> {
     headers: getAuthHeaders(),
   });
   return handleResponse<MatrixServerConfig>(response);
-}
-
-/**
- * 从节点获取 Matrix 凭据
- * @returns 凭据信息（如果已注册）
- */
-export async function getMatrixCredentials(): Promise<MatrixCredentials | null> {
-  try {
-    return await authGet<MatrixCredentials>(NODE_API.MATRIX_CREDENTIALS);
-  } catch (error) {
-    console.warn('[Matrix API] Failed to get credentials:', error);
-    return null;
-  }
-}
-
-/**
- * 保存 Matrix 凭据到节点
- * @param matrixUserId Matrix 用户 ID
- * @param serverName Matrix 服务器名称
- */
-export async function saveMatrixCredentials(
-  matrixUserId: string,
-  serverName: string
-): Promise<void> {
-  try {
-    await authPost(NODE_API.MATRIX_CREDENTIALS, { matrixUserId, serverName });
-  } catch (error) {
-    console.warn('[Matrix API] Failed to save credentials:', error);
-  }
-}
-
-/**
- * 从节点获取派生密码
- * @returns 派生的 Matrix 密码
- */
-export async function getDerivedPassword(): Promise<string | null> {
-  try {
-    const data = await authGet<{ password: string }>(NODE_API.MATRIX_PASSWORD);
-    return data.password;
-  } catch (error) {
-    console.warn('[Matrix API] Failed to get password:', error);
-    return null;
-  }
 }
 
 /**
