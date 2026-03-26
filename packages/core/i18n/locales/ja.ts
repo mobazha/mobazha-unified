@@ -1848,6 +1848,8 @@ export const ja: TranslationResource = {
     memberSince: '登録日',
     completionRate: '完了率 {{rate}}%',
     newStore: '新規ストア',
+    activeStore: 'アクティブストア',
+    products: '{{count}}件の商品',
     escrow: {
       paid: '支払済み',
       confirmed: '確認済み',

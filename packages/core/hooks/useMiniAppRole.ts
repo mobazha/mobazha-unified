@@ -27,6 +27,7 @@ interface StoreStatusResponse {
   storeType: string;
   name?: string;
   isOwner?: boolean;
+  activityLevel?: string;
 }
 
 interface UseMiniAppRoleResult {

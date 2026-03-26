@@ -82,7 +82,6 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     updateMessage,
     updateRoom,
     setTypingUsers,
-    setUserPresence,
     removeRoom,
     updateRoomMemberPeerID,
     reset: resetChatStore,
@@ -326,15 +325,6 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       setTypingUsers(roomId, userIds);
     };
 
-    // 在线状态
-    const onPresence = (data: unknown) => {
-      const { userId, presence } = data as {
-        userId: string;
-        presence: 'online' | 'offline' | 'unavailable';
-      };
-      setUserPresence(userId, presence);
-    };
-
     // 房间事件（成员变更等）
     const onRoomEvent = (data: unknown) => {
       const roomEvent = data as MatrixMessage;
@@ -420,7 +410,6 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       matrixEvents.on(MATRIX_EVENTS.ROOM_INVITE, onRoomInvite),
       matrixEvents.on(MATRIX_EVENTS.ROOM_EVENT, onRoomEvent),
       matrixEvents.on(MATRIX_EVENTS.TYPING, onTyping),
-      matrixEvents.on(MATRIX_EVENTS.PRESENCE_CHANGED, onPresence),
       matrixEvents.on(MATRIX_EVENTS.MEMBER_PEERID_UPDATED, onMemberPeerIDUpdated),
     ];
 
@@ -436,7 +425,6 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     setInvites,
     removeRoom,
     setTypingUsers,
-    setUserPresence,
     updateRoomMemberPeerID,
     setConnected,
     isAuthenticated,

@@ -1873,6 +1873,8 @@ export const pt: TranslationResource = {
     memberSince: 'Membro desde',
     completionRate: '{{rate}}% de conclusão',
     newStore: 'Loja nova',
+    activeStore: 'Loja ativa',
+    products: '{{count}} produtos',
     escrow: {
       paid: 'Pago',
       confirmed: 'Confirmado',

@@ -41,7 +41,6 @@ function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
     })(),
     timestamp: room.timestamp,
     unreadCount: room.unreadCount,
-    isOnline: false,
     isEncrypted: room.isEncrypted,
     isDirect: room.isDirect,
     roomType: room.roomType,
@@ -154,7 +153,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const allMessages = useChatStore(state => state.messages);
   const isConnected = useChatStore(state => state.isConnected);
   const isInitializing = useChatStore(state => state.isInitializing);
-  const userPresence = useChatStore(state => state.userPresence);
   const typingUsers = useChatStore(state => state.typingUsers);
   const searchQuery = useChatStore(state => state.searchQuery);
   const setSearchQuery = useChatStore(state => state.setSearchQuery);
@@ -202,20 +200,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
   const displayRooms = useMemo(() => {
     const sorted = [...rooms].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    return sorted.map(room => {
-      const displayRoom = toDisplayRoom(room, defaultRoomName);
-      if (room.isDirect && room.members?.length) {
-        const otherMember = room.members.find(m => m.userId !== currentUserId);
-        if (otherMember) {
-          const presence = userPresence[otherMember.userId];
-          if (presence !== undefined) {
-            displayRoom.isOnline = presence === 'online';
-          }
-        }
-      }
-      return displayRoom;
-    });
-  }, [rooms, userPresence, currentUserId, defaultRoomName]);
+    return sorted.map(room => toDisplayRoom(room, defaultRoomName));
+  }, [rooms, defaultRoomName]);
 
   const displayInvites = useMemo(() => {
     return invites.map(room => toDisplayRoom(room, defaultRoomName));
@@ -231,15 +217,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     if (!currentRoomId || !typingUsers[currentRoomId]) return [];
     return typingUsers[currentRoomId];
   }, [currentRoomId, typingUsers]);
-
-  const isCurrentRoomOnline = useMemo((): boolean | undefined => {
-    if (!currentRoom?.isDirect || !currentRoom.members?.length) return undefined;
-    const otherMember = currentRoom.members.find(m => m.userId !== currentUserId);
-    if (!otherMember) return undefined;
-    const presence = userPresence[otherMember.userId];
-    if (!presence) return undefined;
-    return presence === 'online';
-  }, [currentRoom, userPresence, currentUserId]);
 
   // ---- Callbacks ----
   const handleLoadMore = useCallback(async () => {
@@ -661,7 +638,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           roomAvatar={currentRoom.avatarUrl}
           roomRawMxcAvatarUrl={currentRoom.rawMxcAvatarUrl}
           isEncrypted={currentRoom.isEncrypted}
-          isOnline={isCurrentRoomOnline}
           isDirect={currentRoom.isDirect}
           isVerified={false}
           messages={currentMessages}

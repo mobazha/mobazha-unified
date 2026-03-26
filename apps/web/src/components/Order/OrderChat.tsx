@@ -12,7 +12,6 @@ export interface OrderChatParticipant {
   name: string;
   avatar?: string;
   role: 'buyer' | 'seller' | 'moderator';
-  isOnline?: boolean;
 }
 
 export interface OrderChatMessage {
@@ -194,9 +193,6 @@ export const OrderChat: React.FC<OrderChatProps> = ({
               key={participant.id}
               className="flex items-center gap-1 px-2 py-0.5 bg-muted rounded-full"
             >
-              <div
-                className={`w-2 h-2 rounded-full ${participant.isOnline ? 'bg-primary' : 'bg-muted-foreground/50'}`}
-              />
               <span className={`text-xs ${getRoleColor(participant.role)}`}>
                 {participant.name}
               </span>

@@ -330,25 +330,6 @@ describe('event-listeners module', () => {
     });
   });
 
-  describe('chat.presence', () => {
-    it('emits PRESENCE_CHANGED', () => {
-      simulateWsMessage('chat.presence', {
-        userId: '@peer_abc:test',
-        presence: 'online',
-        lastActive: 1711360000000,
-      });
-
-      expect(mockEmit).toHaveBeenCalledWith(
-        MATRIX_EVENTS.PRESENCE_CHANGED,
-        expect.objectContaining({
-          userId: '@peer_abc:test',
-          presence: 'online',
-          lastActive: 1711360000000,
-        })
-      );
-    });
-  });
-
   describe('WebSocket status changes', () => {
     it('handles connected status', () => {
       simulateWsStatus('connected');

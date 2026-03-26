@@ -11,8 +11,6 @@ interface AvatarCompatProps {
   name?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
-  showOnlineStatus?: boolean;
-  isOnline?: boolean;
   verified?: boolean;
 }
 
@@ -41,8 +39,6 @@ export const AvatarCompat: React.FC<AvatarCompatProps> = ({
   name,
   size = 'md',
   className,
-  showOnlineStatus,
-  isOnline,
   verified,
 }) => {
   const initial = name ? name.charAt(0).toUpperCase() : '?';
@@ -98,14 +94,6 @@ export const AvatarCompat: React.FC<AvatarCompatProps> = ({
           {initial}
         </AvatarFallback>
       </Avatar>
-      {showOnlineStatus && (
-        <span
-          className={cn(
-            'absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background',
-            isOnline ? 'bg-success' : 'bg-muted-foreground/40'
-          )}
-        />
-      )}
       {verified && (
         <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-info rounded-full flex items-center justify-center border-2 border-background">
           <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">

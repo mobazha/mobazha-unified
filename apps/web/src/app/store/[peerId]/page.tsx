@@ -37,6 +37,7 @@ import {
   useStoreListings,
   useMyListings,
   usePrefetchProduct,
+  useStoreActivity,
   queryKeys,
 } from '@mobazha/core';
 import { useQueryClient } from '@tanstack/react-query';
@@ -56,6 +57,7 @@ import {
   ChevronLeft,
   Sparkles,
   MoreHorizontal,
+  CircleCheck,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -163,6 +165,8 @@ export default function StorePage() {
   const products = isOwnStore ? myListings : storeListings;
   const productsLoading = isOwnStore ? myListingsLoading : storeListingsLoading;
   const isOffline = !isOwnStore && storeIsOffline;
+  const { activityLevel } = useStoreActivity(isOwnStore ? null : peerId);
+  const isStoreActive = activityLevel === 'active' || activityLevel === 'recently_active';
   const prefetchProduct = usePrefetchProduct();
   const queryClient = useQueryClient();
   const [storeCollections, setStoreCollections] = useState<Collection[]>([]);
@@ -917,6 +921,26 @@ export default function StorePage() {
                         {t('storeAccess.privateStoreBadge') || t('common.private')}
                       </span>
                     )}
+                    {!isOwnStore &&
+                      isStoreActive &&
+                      !store.storePaused &&
+                      !isOffline &&
+                      products.length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/30 text-white backdrop-blur-sm border border-emerald-400/30 shrink-0">
+                          <CircleCheck className="h-3 w-3" />
+                          {t('trust.activeStore')}
+                        </span>
+                      )}
+                    {!isOwnStore &&
+                      isStoreActive &&
+                      !store.storePaused &&
+                      !isOffline &&
+                      products.length === 0 &&
+                      !productsLoading && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/30 text-white backdrop-blur-sm border border-white/20 shrink-0">
+                          {t('trust.newStore')}
+                        </span>
+                      )}
                   </div>
 
                   <div className="flex items-center gap-2 sm:gap-3 mt-1 text-sm">
@@ -945,6 +969,12 @@ export default function StorePage() {
 
                   {/* Stats row */}
                   <div className="flex items-center gap-3 sm:gap-5 mt-2 text-sm">
+                    <span className="flex items-center gap-1">
+                      <span className="font-medium">{products.length}</span>
+                      <span className="opacity-70">
+                        {t('trust.products', { count: products.length })}
+                      </span>
+                    </span>
                     <button
                       onClick={() => setActiveTab('followers')}
                       className="flex items-center gap-1 hover:opacity-80 transition-opacity"

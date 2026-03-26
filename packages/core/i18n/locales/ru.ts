@@ -1859,6 +1859,8 @@ export const ru: TranslationResource = {
     memberSince: 'Участник с',
     completionRate: '{{rate}}% завершённых',
     newStore: 'Новый магазин',
+    activeStore: 'Активный магазин',
+    products: '{{count}} товаров',
     escrow: {
       paid: 'Оплачено',
       confirmed: 'Подтверждено',

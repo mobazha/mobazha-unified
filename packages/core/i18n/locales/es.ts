@@ -1871,6 +1871,8 @@ export const es: TranslationResource = {
     memberSince: 'Miembro desde',
     completionRate: '{{rate}}% de finalización',
     newStore: 'Tienda nueva',
+    activeStore: 'Tienda activa',
+    products: '{{count}} productos',
     escrow: {
       paid: 'Pagado',
       confirmed: 'Confirmado',
