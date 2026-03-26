@@ -6,7 +6,7 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: ['react', 'react-dom', 'zustand', 'matrix-js-sdk', 'ethers'],
+  external: ['react', 'react-dom', 'zustand', 'ethers'],
   treeshake: true,
   splitting: false,
   minify: false,

@@ -1,10 +1,52 @@
 # 聊天模块重构计划
 
-## 目标
+## v1.1 — 前端代码拆分（已完成 ✅）
 
-把 3 个过大文件拆到合理粒度（每个 < 800 行），让 AI 能一次性读完理解。不追求极致细分。
+把 3 个过大文件拆到合理粒度（每个 < 800 行）。Phase 1-3 全部完成。
 
-## 重构范围
+## v1.2 — Matrix 后端迁移（进行中）
+
+### 目标
+
+将 Matrix 客户端（含 E2EE）从浏览器迁移到后端节点，前端变为纯薄客户端。
+
+### 动机
+
+- 浏览器清缓存/换设备导致 E2EE 密钥丢失
+- IndexedDB crypto state 脆弱，用户体验差
+- 节点已持有 libp2p 私钥，可安全派生 Matrix 密钥
+- 统一 API 为未来多平台（Mobile/Desktop/Extension）奠定基础
+
+### 架构
+
+```
+Frontend (Browser)           Backend (MobazhaNode)           Synapse
+┌──────────────────┐        ┌─────────────────────┐        ┌──────────┐
+│  REST API calls  │──HTTP──│  MatrixChatService   │──CS──→│          │
+│  WebSocket listen│◄──WS───│  (mautrix-go client) │◄─Sync─│  Matrix  │
+│                  │        │  CryptoHelper (E2EE) │       │  Server  │
+│  无 matrix-js-sdk│        │  PostgreSQL/SQLite   │       │          │
+└──────────────────┘        └─────────────────────┘        └──────────┘
+```
+
+- **前端**：REST 调用 + WebSocket 接收实时事件，零 Matrix 协议代码
+- **后端**：mautrix-go 负责 sync、E2EE、session 管理，状态持久化到数据库
+- **SaaS**：初期每租户 lazy-load 独立 mautrix-go 实例；远期可迁移到 Appservice 模式
+
+### 技术选型
+
+- **SDK**：`mautrix-go` v0.26+（Matrix 官方 Stable，纯 Go/goolm 无 CGO，Beeper/Element 生产验证）
+- **E2EE**：`crypto/cryptohelper.CryptoHelper`（封装 Olm/Megolm session + key backup + cross-signing）
+- **存储**：复用现有 PostgreSQL/SQLite 双方言，crypto state 同库存储
+
+---
+
+## v1.1 详细记录（已完成，折叠保留）
+
+<details>
+<summary>Phase 1-3 前端拆分详情</summary>
+
+### 重构范围
 
 | 文件                                                | 当前行数 | 目标                          |
 | --------------------------------------------------- | -------- | ----------------------------- |
@@ -12,279 +54,165 @@
 | `apps/web/src/components/Chat/ChatMessages.tsx`     | 1561     | → 3-4 个文件，每个 300-600 行 |
 | `apps/web/src/components/ChatDrawer/ChatDrawer.tsx` | 1367     | → 3 个文件，每个 300-500 行   |
 
-辅助文件（不需要重构）：
+Phase 1-3 全部完成，含 Bug 修复（自我 DM、Bot 房间分类、MatrixBotService 内网 URL、formatRoom 逻辑）。
 
-| 文件                                                        | 行数 | 职责                  |
-| ----------------------------------------------------------- | ---- | --------------------- |
-| `packages/core/services/matrix/crypto.ts`                   | 1035 | E2EE 密钥备份/恢复    |
-| `packages/core/services/matrix/types.ts`                    | 325  | 类型定义 + 事件名常量 |
-| `packages/core/services/matrix/storage.ts`                  | 178  | 凭证存储              |
-| `packages/core/services/matrix/events.ts`                   | 79   | EventEmitter 单例     |
-| `apps/web/src/components/Chat/ChatList.tsx`                 | 589  | 房间列表              |
-| `apps/web/src/components/Chat/UserInfoCard.tsx`             | 345  | 用户信息卡            |
-| `apps/web/src/components/ChatDrawer/VerificationDialog.tsx` | 193  | 验证对话框            |
-| `apps/web/src/components/ChatDrawer/NewChatDialog.tsx`      | 239  | 新建聊天              |
+</details>
 
 ---
 
-## Phase 1: `client.ts` 拆分（3574 → 5 个文件）
+## v1.2 实施计划
 
-### 目标结构
+### Sprint 0：后端 mautrix-go 核心集成（mobazha3.0）
 
-```
-packages/core/services/matrix/
-├── client.ts           ← Facade + 初始化 + 同步 + 生命周期（~800行）
-├── rooms.ts            ← 房间 CRUD + 格式化 + 成员 + 邀请策略（~800行）
-├── messages.ts         ← 消息发送/加载/格式化 + 媒体上传 + 编辑/反应（~900行）
-├── verification.ts     ← SAS 验证 + 屏蔽/忽略（~400行）
-├── event-listeners.ts  ← setupEventListeners 大函数（~400行）
-├── crypto.ts           ← 不动
-├── types.ts            ← 不动
-├── storage.ts          ← 不动
-├── events.ts           ← 不动
-├── index.ts            ← 更新导出
-```
+**0.1 — 添加 mautrix-go 依赖**
 
-### 设计要点
+- `go get maunium.net/go/mautrix@v0.26`
+- 验证 go.mod 兼容性，确认无依赖冲突
+- 确认 goolm 纯 Go 构建无 CGO（`CGO_ENABLED=0 go build`）
 
-- `client.ts` 保留 `MatrixClientService` class 作为 Facade，持有 SDK client 实例和核心状态
-- 其他模块导出**纯函数**，第一个参数接收 context 对象
-- 外部调用 `matrixClient.sendMessage()` 签名不变——Facade 方法体一行委派
+**0.2 — 定义 MatrixChatService 接口**
 
-```typescript
-// client.ts (Facade 示例)
-import { sendMessage } from './messages';
+- 文件：`pkg/contracts/matrix_chat_service.go`
+- 方法分组：生命周期（Init/Close）、房间（List/Create/Join/Leave）、消息（Send/Get/Edit/Redact/React）、媒体（Upload/Download）、状态（Typing/Read/Presence）
+- 事件回调：`OnMessage`, `OnRoomUpdate`, `OnTyping`, `OnPresence`
+- 保留现有 `MatrixService` 接口不变（后续 Sprint 3 合并废弃）
 
-class MatrixClientService {
-  async sendMessage(roomId: string, content: string) {
-    return sendMessage(this.getContext(), roomId, content);
-  }
+**0.3 — 实现 mautrixChatService**
 
-  private getContext(): MatrixContext {
-    return {
-      client: this.client!,
-      config: this.config!,
-      isConnected: this.isConnected,
-      currentPeerID: this.currentPeerID,
-      processedMessageIds: this.processedMessageIds,
-      _peerIdCache: this._peerIdCache,
-    };
-  }
-}
-```
+- 文件：`internal/core/mautrix_chat_service.go`
+- mautrix.Client 初始化 + 密码登录（复用现有 HKDF 派生）
+- CryptoHelper 集成（pickleKey 从 libp2p 私钥派生，DB 存储）
+- Sync 循环（`client.SyncWithContext`），事件分发到回调
+- 基本消息收发 + E2EE 加解密
+- 媒体上传/下载使用 **streaming**（`io.Reader` 管道，不全量缓冲）
 
-### 各模块方法归属
+**0.4 — 接入 MobazhaNode**
 
-**client.ts（Facade + 初始化 + 同步 + 生命周期）**：
+- `internal/core/options.go` 添加 `WithMatrixChatService` option
+- `internal/core/node.go` 添加 `matrixChatService` 字段和 accessor
+- 节点启动时 lazy init（有 Matrix 配置才初始化）
+- SaaS 模式：hosting 注入 Matrix 配置后触发初始化
 
-- `initializeWithPeerID`, `_doInitializeWithPeerID`, `_getServerConfig`, `_autoRegister`, `_registerNewUser`, `_syncPasswordAndLogin`, `_loginWithPassword`, `_createTokenRefreshFunction`, `_getOrCreateDeviceId`, `_generateRandomString`, `_validateAccessToken`, `initialize`, `login`, `logout`
-- `startSync`, `stopSync`, `_setupE2EEAfterSync`
-- `_scheduleKeyBackup`, `_startAutoBackup`, `_stopAutoBackup`
-- `isClientConnected`, `getUserId`, `getDeviceId`
-- `syncProfileToMatrix`, `setDisplayName`
-- crypto store 清理方法（`_ensureCryptoStoreMatchesDevice` 等）
-- 需要动态 `import('matrix-js-sdk')`：4 处（init/login）+ 1 处（startSync）
+### Sprint 1：后端 REST API + WebSocket 推送
 
-**rooms.ts（房间 CRUD + 格式化 + 成员 + 邀请策略）**：
+**1.1 — Chat REST API（~20 端点）**
 
-- `getRooms`, `getOrCreateDirectRoom`, `createDirectRoom`, `_updateDirectRoomMapping`, `findDirectRoom`
-- `joinRoom`, `leaveRoom`, `inviteToRoom`, `kickFromRoom`, `setRoomName`, `setRoomTopic`
-- `createOrderRoom`, `getOrderRoom`, `createStoreRoom`, `getStoreRoom`, `createModeratorRoom`, `createGroupRoom`
-- `getRoomsByType`
-- `setInvitePolicy`, `getInvitePolicy`, `_loadInvitePolicy`, `isMobazhaUser`, `_handleRoomInvite`
-- `formatRoom`, `getRoomMembers`, `isDirectRoom`, `isRoomEncrypted`, `getRoomUnreadCount`
-- `getMemberPeerID`, `extractPeerIdFromUserId`, `setMyPeerIDInRoom`
-- 需要动态 `import('matrix-js-sdk')`：5 处（createRoom 系列）
+- 文件：`internal/api/chat_handlers.go`
+- 路由前缀：`/v1/chat/`
 
-**messages.ts（消息发送/加载/格式化 + 媒体 + 编辑/反应）**：
+| 端点                                                   | 方法        | 说明                                              |
+| ------------------------------------------------------ | ----------- | ------------------------------------------------- |
+| `/v1/chat/rooms`                                       | GET         | 房间列表                                          |
+| `/v1/chat/rooms`                                       | POST        | 创建房间                                          |
+| `/v1/chat/rooms/{roomID}/join`                         | POST        | 加入                                              |
+| `/v1/chat/rooms/{roomID}/leave`                        | POST        | 离开                                              |
+| `/v1/chat/rooms/{roomID}/messages`                     | GET         | 消息列表（分页，支持 `since` 参数做 gap filling） |
+| `/v1/chat/rooms/{roomID}/messages`                     | POST        | 发送消息                                          |
+| `/v1/chat/rooms/{roomID}/messages/{eventID}`           | PUT         | 编辑                                              |
+| `/v1/chat/rooms/{roomID}/messages/{eventID}`           | DELETE      | 撤回                                              |
+| `/v1/chat/rooms/{roomID}/messages/{eventID}/reactions` | POST        | 添加反应                                          |
+| `/v1/chat/rooms/{roomID}/typing`                       | POST        | 正在输入                                          |
+| `/v1/chat/rooms/{roomID}/read`                         | POST        | 标记已读                                          |
+| `/v1/chat/rooms/{roomID}/members`                      | GET         | 成员列表                                          |
+| `/v1/chat/rooms/{roomID}/invite`                       | POST        | 邀请                                              |
+| `/v1/chat/rooms/{roomID}/kick`                         | POST        | 踢出                                              |
+| `/v1/chat/rooms/{roomID}/settings`                     | GET/PUT     | 房间设置                                          |
+| `/v1/chat/media/upload`                                | POST        | 上传文件（streaming）                             |
+| `/v1/chat/media/{serverName}/{mediaID}`                | GET         | 下载/代理文件（streaming + 小文件 LRU 缓存）      |
+| `/v1/chat/users/{userID}/block`                        | POST/DELETE | 屏蔽/取消                                         |
+| `/v1/chat/presence`                                    | GET         | 在线状态                                          |
 
-- `getMessages`, `loadOlderMessages`, `sendMessage`, `sendTyping`, `markRoomAsRead`, `getReadReceiptForRoom`, `redactEvent`, `editMessage`, `sendReaction`
-- `formatTimelineEvent`, `extractDisplayName`, `formatMessage`, `formatMembershipEvent`, `getMessageType`, `getSenderInfo`
-- `sendImage`, `sendFile`（媒体上传）
-- `getBaseUrl`, `mxcToHttp`, `downloadAuthenticatedImage`, `imageCache`（媒体 URL）
-- 需要动态 `import('matrix-js-sdk')`：6 处（getMessages/send 系列）+ 2 处（sendImage/sendFile）
+**关键设计点**：
 
-**verification.ts（SAS 验证 + 屏蔽/忽略）**：
+- 消息发送 REST 返回含 `eventID`，前端用于去重
+- `GET /messages` 支持 `?since={lastEventID}&limit=50` 做断线补漏
+- 媒体上传响应包含 `mxcUri`，前端只需存这个 URI
+- 媒体下载走 Node 代理并设置 `Cache-Control` header（浏览器缓存）
 
-- `setupVerificationListeners`, `_setupVerificationRequestListeners`, `_setupVerifierListeners`
-- `requestVerification`, `acceptVerificationRequest`, `confirmVerification`, `cancelVerification`, `isUserVerified`
-- `getIgnoredUsers`, `isUserIgnored`, `blockUser`, `unblockUser`, `mutateIgnoredUsers`
-- 不需要 `import('matrix-js-sdk')`，用 `matrix-js-sdk/lib/crypto-api` 子路径
+**1.2 — WebSocket 聊天事件推送**
 
-**event-listeners.ts（事件监听注册）**：
+- 扩展现有 `/ws` 协议，新增事件类型：
 
-- `setupEventListeners`（当前单函数 ~200 行，含 Sync/Timeline/Decrypt/Members/Presence/RoomState）
-- 需要动态 `import('matrix-js-sdk')`：1 处
+| 事件类型           | 载荷                                            |
+| ------------------ | ----------------------------------------------- |
+| `chat.message`     | `{roomID, eventID, sender, content, timestamp}` |
+| `chat.edit`        | `{roomID, eventID, newContent}`                 |
+| `chat.redact`      | `{roomID, eventID}`                             |
+| `chat.reaction`    | `{roomID, eventID, targetEventID, key}`         |
+| `chat.typing`      | `{roomID, userIDs}`                             |
+| `chat.read`        | `{roomID, userID, eventID}`                     |
+| `chat.room_update` | `{roomID, name, lastMessage, unreadCount}`      |
+| `chat.presence`    | `{userID, presence, lastActive}`                |
+| `chat.invite`      | `{roomID, inviter, roomName}`                   |
 
-### 跨模块依赖
+- 多 Tab/Session：WS hub 广播到同一用户所有连接
+- 前端通过 `eventID` 去重（REST 响应 vs WS 推送可能重叠）
 
-- `event-listeners.ts` → `messages.ts`（`formatMessage`, `formatMembershipEvent`）
-- `event-listeners.ts` → `rooms.ts`（`_handleRoomInvite`, peer id 缓存更新）
-- `messages.ts` → `rooms.ts`（`getSenderInfo` 需要房间成员信息）
-- `verification.ts` → `rooms.ts`（`requestVerification` 需要 `getRooms` 找 DM）
-- 所有模块 → `client.ts`（通过 context 获取 client 实例和状态）
+**1.3 — SaaS 代理**
 
----
+- hosting `gateway.go` 转发 `/v1/chat/*` 到对应租户节点
+- 复用现有 `getNodeService(r)` 路由机制
 
-## Phase 2: `ChatMessages.tsx` 拆分（1561 → 3-4 个文件）
+### Sprint 2：前端迁移
 
-### 目标结构
+**2.1 — 重写 client.ts facade**
 
-```
-apps/web/src/components/Chat/
-├── ChatMessages.tsx       ← 主组件 + header + 搜索 + 删除确认（~400行）
-├── ChatMessageList.tsx    ← 滚动容器 + 消息分组 + 单条消息渲染（~600行）
-├── ChatComposer.tsx       ← 输入框 + 文件附件 + Emoji + typing（~300行）
-├── ChatMediaContent.tsx   ← Image/File/Audio/Video memo 组件 + lightbox + 辅助函数（~250行）
-├── ChatList.tsx           ← 不动
-├── UserInfoCard.tsx       ← 不动
-├── index.ts
-```
+- 移除 `matrix-js-sdk` 依赖
+- `MatrixClientService` 内部改为 REST + WS
+- 保持所有公共方法签名不变
+- 初始化：`GET /v1/chat/rooms` 替代 `client.startClient()`
+- WS 连接：复用现有 `websocket/index.ts`，添加 `chat.*` 事件处理
+- 断线重连后自动 gap filling（`GET /messages?since={lastEventID}`）
 
-### 拆分内容
+**2.2 — 重写 messages.ts + rooms.ts**
 
-**ChatMessages.tsx 保留**：
+- SDK 调用 → REST 调用（`authFetch`）
+- `formatRoom`/`formatMessage` 保留，输入从 SDK 对象变为 REST JSON
 
-- Props 定义（`ChatMessagesProps`, `Message` 类型）
-- 聊天 header（返回、头像、标题、徽章、副标题）
-- 搜索栏（`showSearch` + query + prev/next）
-- 删除确认 AlertDialog
-- 组装：`<ChatMessageList>` + `<ChatComposer>`
-- state：`searchQuery`, `searchResults`, `showSearch`, `deleteConfirmId`, `lightboxSrc`
+**2.3 — 重写 event-listeners.ts**
 
-**ChatMessageList.tsx 提取**：
+- SDK 事件 → WS 事件映射
+- 保持对外 emit 的事件名不变（UI 组件无需改动）
 
-- 滚动容器 + `onScroll` 加载更多
-- 骨架屏 / 空状态
-- `messagesWithDates` 分组逻辑（`useMemo`）
-- 日期分隔符 `DateSeparator`
-- 系统消息渲染
-- 单条消息行（头像、气泡、桌面 hover 操作、移动长按菜单、反应行、时间戳）
-- `MessageStatus` 组件
-- `TypingIndicator` 组件
-- state：`editingMessageId`, `editingContent`, `reactionPickerMsgId`, `longPressMenuId`, `copiedId`
+**2.4 — 删除 crypto.ts / verification.ts / matrix-js-sdk 依赖**
 
-**ChatComposer.tsx 提取**：
+- 前端不再处理 E2EE（后端透明处理）
+- 删除 `matrix-js-sdk`、`matrix-sdk-crypto-wasm` 依赖
+- 删除 Vite WASM 配置
+- 删除 settings 中的"聊天加密"页面
 
-- 离线横幅
-- 隐藏文件 input + 回形针按钮
-- 文本输入框 + `handleKeyDown`
-- Emoji 选择器弹出层
-- 发送按钮
-- typing 防抖逻辑
-- state：`inputValue`, `showEmojiPicker`
+### Sprint 3：清理与优化
 
-**ChatMediaContent.tsx 提取**：
+**3.1 — 后端清理旧 Matrix API**
 
-- `ChatImageContent`, `ChatFileContent`, `ChatAudioContent`, `ChatVideoContent`（4 个 `React.memo` 组件）
-- `useResolvedMediaUrl` hook
-- `needsMatrixAuth`, `cleanDisplayName`, `shortenSystemContent` 辅助函数
-- `formatFileSize` 辅助函数
+- 废弃 `/v1/matrix/key-backup/*`、`/v1/matrix/secrets-bundle/*` 等端点
+- 合并 `MatrixService` 到 `MatrixChatService`（旧接口标记 deprecated）
 
----
+**3.2 — 前端 Vite 清理**
 
-## Phase 3: `ChatDrawer.tsx` 拆分（1367 → 3 个文件）
+- 移除 WASM MIME monkey-patch
+- 移除 `/_matrix/` 代理配置
 
-### 目标结构
+**3.3 — SaaS 优化**
 
-```
-apps/web/src/components/ChatDrawer/
-├── ChatDrawer.tsx           ← Shell + header + 视图切换 + 验证状态（~500行）
-├── RoomSettingsPanel.tsx    ← 房间设置面板（~250行）
-├── hooks/useChatEffects.ts  ← 副作用 hooks（~400行）
-├── VerificationDialog.tsx   ← 不动
-├── NewChatDialog.tsx        ← 不动
-├── index.ts
-```
+- Lazy init：首次访问聊天时才启动 mautrix-go 客户端
+- Idle timeout：长时间无活动的客户端停止 sync（保留 crypto state）
+- 远期：评估 Appservice 模式替代独立客户端实例
 
-### 拆分内容
+**3.4 — 集成测试**
 
-**ChatDrawer.tsx 保留**：
+- 清缓存后聊天不丢数据
+- 换浏览器后消息完整
+- 多租户消息隔离
+- 独立站 E2EE 端到端验证
+- 大文件上传/下载 streaming 验证
 
-- Sheet 容器 + `SheetContent` + `SheetHeader`
-- Header（标题、连接状态徽章、工具栏按钮）
-- `renderView()` 视图切换（Creating / Invite / ChatMessages / ChatList）
-- 拖放 overlay
-- UserInfoCard 弹出
-- VerificationDialog 调用
-- 验证相关 state（`verificationOpen` 等）+ handlers
-- `toDisplayRoom`, `toDisplayMessage`, `safeTimestamp` 转换函数
+### 关键设计约束
 
-**RoomSettingsPanel.tsx 提取**：
-
-- 当前 `showRoomSettings && currentRoom` 时渲染的完整面板
-- 成员列表 + 头像点击
-- 房间 ID + 复制按钮
-- 加密徽章
-- Props：`room`, `onBack`, `onMemberClick`, `t`
-
-**hooks/useChatEffects.ts 提取**：
-
-- `useEffect` — pending peer → DM 创建（`pendingPeerID` + `getOrCreateDirectRoom`）
-- `useEffect` — room 选中 → mark read + load messages + read receipts
-- `useEffect` — read receipt 事件监听
-- `useEffect` — upload progress 事件
-- `useEffect` — remote edit / reaction 事件
-- `useEffect` — verification Matrix 事件监听
-
----
-
-## 执行约束
-
-1. `matrixClient` 单例所有公共方法签名不变
-2. `packages/core/services/matrix/index.ts` 导出不变
-3. TypeScript 严格模式 + ESLint 零告警（刚清零了 50 个告警）
-4. 保留 `await import('matrix-js-sdk')` 动态导入模式（tree-shaking + lazy load）
-5. 不改变任何运行时行为
-
-## 验证方式
-
-### 编译检查（每步必须通过）
-
-```bash
-# TypeScript
-npx tsc --noEmit -p packages/core/tsconfig.json
-npx tsc --noEmit -p apps/web/tsconfig.json
-
-# ESLint
-npx eslint packages/core/services/matrix/ --max-warnings 0
-npx eslint apps/web/src/components/Chat/ apps/web/src/components/ChatDrawer/ --max-warnings 0
-```
-
-### 导出兼容检查
-
-重构前记录公开 API，重构后 diff 确认无遗漏：
-
-```bash
-grep -E '^\s+(async\s+)?[a-zA-Z]+\(' packages/core/services/matrix/client.ts | grep -v private | grep -v '//'
-```
-
-### 功能手动验证清单
-
-| 场景          | 操作                                   |
-| ------------- | -------------------------------------- |
-| 初始化 + 登录 | 刷新页面，聊天自动连接显示 "Connected" |
-| 发送文本消息  | 打开 DM，发文字，对方收到              |
-| 发送图片/文件 | 附件上传，对方能下载                   |
-| 加载历史消息  | 滚动到顶部触发加载更多                 |
-| 编辑消息      | hover 编辑，确认后显示 "(edited)"      |
-| Emoji 反应    | 反应按钮选 emoji                       |
-| 创建 DM       | New Chat → 搜索用户 → 发起对话         |
-| 房间设置      | 查看成员列表，复制房间 ID              |
-| 邀请接受/拒绝 | 收到邀请，Accept / Decline             |
-| 设备验证      | SAS 验证 Emoji 匹配确认                |
-| 屏蔽用户      | UserInfoCard → Block                   |
-| 在线状态      | 对方上下线状态更新                     |
-| 拖放上传      | 拖文件到聊天区域                       |
-| E2EE          | 加密房间锁图标，消息正常解密           |
-
-### Matrix E2E 测试（已有 8 个 PASS）
-
-```bash
-# 本地 E2E 环境
-pnpm test:e2e --grep "matrix"
-```
-
-## 执行顺序
-
-Phase 1 → Phase 2 → Phase 3，每个 Phase 完成后编译检查 + 功能验证。
+1. **Streaming 媒体**：上传/下载通过 `io.Reader` 管道，Node 内存 O(bufferSize)
+2. **消息去重**：前端维护 `Set<eventID>`，REST 和 WS 可能返回同一事件
+3. **Gap Filling**：前端记录最后 `eventID`，WS 重连后请求 `?since=`
+4. **上传进度**：前端 `XMLHttpRequest.upload.onprogress`
+5. **Sync 持久化**：CryptoHelper 自动管理 `next_batch` token
+6. **E2EE 透明**：后端根据房间状态自动加解密，前端始终收到明文
+7. **Node 依赖**：聊天功能依赖 Node 可用（与钱包、商品等一致）
