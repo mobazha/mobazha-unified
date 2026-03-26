@@ -81,6 +81,7 @@ export default [
         Blob: 'readonly',
         File: 'readonly',
         FileReader: 'readonly',
+        XMLHttpRequest: 'readonly',
         Image: 'readonly',
         Window: 'readonly',
         RequestInit: 'readonly',

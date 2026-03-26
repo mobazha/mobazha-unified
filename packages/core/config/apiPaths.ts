@@ -154,9 +154,26 @@ export const NODE_API = {
   /** @deprecated Backend uses id-based DELETE /wallet/receiving-accounts/{id}, not coin-based. */
   RECEIVE_ADDRESS_COIN: (coin: string) => `/wallet/receiving-accounts/${coin}`,
 
-  // --- Matrix (node-level, 节点本地存储) ---
-  MATRIX_CREDENTIALS: '/matrix/credentials',
-  MATRIX_PASSWORD: '/matrix/password',
+  // --- Chat (node-side Matrix, mautrix-go backed) ---
+  CHAT_STATUS: '/chat/status',
+  CHAT_ROOMS: '/chat/rooms',
+  CHAT_ROOM_JOIN: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/join`,
+  CHAT_ROOM_LEAVE: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/leave`,
+  CHAT_ROOM_MESSAGES: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/messages`,
+  CHAT_ROOM_MESSAGE: (roomId: string, eventId: string) =>
+    `/chat/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(eventId)}`,
+  CHAT_ROOM_REACTION: (roomId: string, eventId: string) =>
+    `/chat/rooms/${encodeURIComponent(roomId)}/messages/${encodeURIComponent(eventId)}/reactions`,
+  CHAT_ROOM_TYPING: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/typing`,
+  CHAT_ROOM_READ: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/read`,
+  CHAT_ROOM_MEMBERS: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/members`,
+  CHAT_ROOM_INVITE: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/invite`,
+  CHAT_ROOM_KICK: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/kick`,
+  CHAT_ROOM_SETTINGS: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/settings`,
+  CHAT_MEDIA_UPLOAD: '/chat/media/upload',
+  CHAT_MEDIA: (serverName: string, mediaId: string) => `/chat/media/${serverName}/${mediaId}`,
+  CHAT_USER_BLOCK: (userId: string) => `/chat/users/${encodeURIComponent(userId)}/block`,
+  CHAT_PRESENCE: '/chat/presence',
 
   // --- Shipping ---
   SHIPPING_PROFILES: '/shipping/profiles',
