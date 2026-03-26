@@ -24,9 +24,6 @@ export * from './useMatrixChat';
 export * from './useMatrixInit';
 export * from './useAuthenticatedImage';
 
-// E2E 加密相关
-export * from './useCrypto';
-
 // 国际化相关
 export * from './useI18n';
 

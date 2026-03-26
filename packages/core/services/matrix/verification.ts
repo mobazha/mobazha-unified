@@ -1,67 +1,40 @@
 /**
- * Matrix 验证模块 — v1.2 Stub
+ * Matrix 验证模块 — v1.3 Backend-driven SAS Verification
  *
- * E2EE 验证由后端 mautrix-go 透明处理，前端不再需要 SAS 验证流程。
- * 保留导出接口以保持编译兼容性。
+ * All verification logic runs on the backend via mautrix-go VerificationHelper.
+ * The frontend drives the flow through REST API calls and receives state updates
+ * via WebSocket events (chat.verification.*).
  */
 
-export interface VerificationModuleState {
-  pendingVerificationRequest: null;
-  currentVerifier: null;
-  sasCallbacks: null;
-  verificationDebounceTimer: null;
-  verifierListenersAttached: WeakSet<object>;
-  verificationListenersSetup: boolean;
-  ignoreMutex: Promise<void>;
-}
-
-export function createVerificationState(): VerificationModuleState {
-  return {
-    pendingVerificationRequest: null,
-    currentVerifier: null,
-    sasCallbacks: null,
-    verificationDebounceTimer: null,
-    verifierListenersAttached: new WeakSet<object>(),
-    verificationListenersSetup: false,
-    ignoreMutex: Promise.resolve(),
-  };
-}
-
-export function resetVerificationState(state: VerificationModuleState): void {
-  state.pendingVerificationRequest = null;
-  state.currentVerifier = null;
-  state.sasCallbacks = null;
-  state.verificationListenersSetup = false;
-  state.ignoreMutex = Promise.resolve();
-}
+import { authPost } from '../api/helpers';
+import { NODE_API } from '../../config/apiPaths';
 
 export async function setupVerificationListeners(): Promise<void> {
-  /* no-op */
+  /* WS events handled by event-listeners.ts */
 }
-export async function requestVerification(): Promise<void> {
-  /* no-op */
+
+export async function requestVerification(userId: string): Promise<string> {
+  const resp = await authPost<{ transactionId: string }>(NODE_API.CHAT_VERIFICATION_REQUEST, {
+    userId,
+  });
+  return resp.transactionId;
 }
-export async function acceptVerificationRequest(): Promise<boolean> {
-  return false;
-}
-export async function confirmVerification(): Promise<boolean> {
-  return false;
-}
-export async function cancelVerification(): Promise<boolean> {
-  return false;
-}
-export async function isUserVerified(): Promise<boolean> {
+
+export async function acceptVerificationRequest(txnId: string): Promise<boolean> {
+  await authPost(NODE_API.CHAT_VERIFICATION_ACCEPT(txnId), {});
   return true;
 }
-export async function getIgnoredUsers(): Promise<string[]> {
-  return [];
+
+export async function confirmVerification(txnId: string): Promise<boolean> {
+  await authPost(NODE_API.CHAT_VERIFICATION_CONFIRM(txnId), {});
+  return true;
 }
-export async function isUserIgnored(): Promise<boolean> {
-  return false;
+
+export async function cancelVerification(txnId: string): Promise<boolean> {
+  await authPost(NODE_API.CHAT_VERIFICATION_CANCEL(txnId), {});
+  return true;
 }
-export async function blockUser(): Promise<void> {
-  /* no-op */
-}
-export async function unblockUser(): Promise<void> {
-  /* no-op */
+
+export async function startSAS(txnId: string): Promise<void> {
+  await authPost(NODE_API.CHAT_VERIFICATION_START_SAS(txnId), {});
 }

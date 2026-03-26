@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
-import type { MatrixRoom, MatrixMessage, VerificationState } from '../services/matrix/types';
+import type { MatrixRoom, MatrixMessage } from '../services/matrix/types';
 
 // ============= 类型定义 =============
 
@@ -33,7 +33,6 @@ export interface ChatState {
   userPresence: Record<string, 'online' | 'offline' | 'unavailable'>;
 
   // 验证状态
-  verification: VerificationState | null;
   verifiedUsers: Record<string, boolean>; // userId -> isVerified
 
   // UI 状态
@@ -70,7 +69,6 @@ export interface ChatState {
   setTypingUsers: (roomId: string, userIds: string[]) => void;
   setUserPresence: (userId: string, presence: 'online' | 'offline' | 'unavailable') => void;
 
-  setVerification: (verification: VerificationState | null) => void;
   setUserVerified: (userId: string, verified: boolean) => void;
 
   setSearchQuery: (query: string) => void;
@@ -110,7 +108,6 @@ const initialState = {
   typingUsers: {},
   userPresence: {},
 
-  verification: null,
   verifiedUsers: {},
 
   searchQuery: '',
@@ -285,7 +282,6 @@ export const useChatStore = create<ChatState>()(
           })),
 
         // 验证状态
-        setVerification: verification => set({ verification }),
         setUserVerified: (userId, verified) =>
           set(state => ({
             verifiedUsers: { ...state.verifiedUsers, [userId]: verified },

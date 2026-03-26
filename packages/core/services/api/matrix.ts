@@ -44,13 +44,6 @@ export interface MatrixServerConfig {
   presenceEnabled?: boolean;
 }
 
-export interface MatrixAutoRegisterResponse {
-  registered: boolean;
-  userID: string;
-  homeServer: string;
-  serverName?: string;
-}
-
 // ============= API 函数 =============
 
 /**
@@ -83,33 +76,6 @@ export async function getMatrixConfig(): Promise<MatrixServerConfig> {
     headers: getAuthHeaders(),
   });
   return handleResponse<MatrixServerConfig>(response);
-}
-
-/**
- * Matrix 用户自动注册
- * @param peerID 用户的 peerID
- * @param password 可选：客户端派生的密码
- * @returns 注册结果 { registered, userID, homeServer }
- */
-export async function autoRegisterMatrix(
-  peerID: string,
-  password?: string
-): Promise<MatrixAutoRegisterResponse> {
-  const hostingUrl = getHostingUrl();
-  const body: { peerID: string; password?: string } = { peerID };
-  if (password) {
-    body.password = password;
-  }
-
-  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_AUTO_REGISTER}`, {
-    method: 'POST',
-    headers: {
-      ...getAuthHeaders(),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  return handleResponse<MatrixAutoRegisterResponse>(response);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MATRIX_EVENTS, type InvitePolicy } from '../types';
+import { MATRIX_EVENTS } from '../types';
 
 let mockWsMessageHandlers: Array<(msg: { type: string; data: unknown }) => void> = [];
 let mockWsStatusHandlers: Array<(status: string) => void> = [];
@@ -46,13 +46,11 @@ describe('event-listeners module', () => {
   let cleanup: () => void;
   let processedIds: Set<string>;
   let syncStateCallback: ReturnType<typeof vi.fn>;
-  let invitePolicy: InvitePolicy;
 
   function createCallbacks(): EventListenerCallbacks {
     return {
       processedMessageIds: processedIds,
       onSyncStateChange: syncStateCallback,
-      getInvitePolicy: () => invitePolicy,
     };
   }
 
@@ -74,7 +72,6 @@ describe('event-listeners module', () => {
     mockWsStatusHandlers = [];
     processedIds = new Set<string>();
     syncStateCallback = vi.fn();
-    invitePolicy = 'auto_mobazha';
     cleanup = setupChatEventListeners(createCallbacks());
   });
 
@@ -296,47 +293,11 @@ describe('event-listeners module', () => {
   });
 
   describe('chat.invite', () => {
-    it('auto-joins for mobazha user when policy is auto_mobazha', async () => {
-      invitePolicy = 'auto_mobazha';
-      const helpers = await import('../../api/helpers');
-      const mockPost = vi.mocked(helpers.authPost);
-      mockPost.mockClear();
-
+    it('emits ROOM_INVITE for all invites (policy handled by backend)', () => {
       simulateWsMessage('chat.invite', {
         roomId: '!invited:test',
         inviter: '@peer_abc:test',
         roomName: 'A room',
-      });
-
-      await vi.waitFor(() => {
-        expect(mockPost).toHaveBeenCalled();
-      });
-    });
-
-    it('auto-joins for any user when policy is auto_all', async () => {
-      invitePolicy = 'auto_all';
-      const helpers = await import('../../api/helpers');
-      const mockPost = vi.mocked(helpers.authPost);
-      mockPost.mockClear();
-
-      simulateWsMessage('chat.invite', {
-        roomId: '!invited:test',
-        inviter: '@external:matrix.org',
-        roomName: 'External Room',
-      });
-
-      await vi.waitFor(() => {
-        expect(mockPost).toHaveBeenCalled();
-      });
-    });
-
-    it('emits ROOM_INVITE when policy is always_confirm', () => {
-      invitePolicy = 'always_confirm';
-
-      simulateWsMessage('chat.invite', {
-        roomId: '!invited:test',
-        inviter: '@peer_abc:test',
-        roomName: 'Confirm Room',
       });
 
       expect(mockEmit).toHaveBeenCalledWith(
@@ -344,25 +305,7 @@ describe('event-listeners module', () => {
         expect.objectContaining({
           roomId: '!invited:test',
           inviter: '@peer_abc:test',
-          roomName: 'Confirm Room',
-        })
-      );
-    });
-
-    it('emits ROOM_INVITE for external user when policy is auto_mobazha', () => {
-      invitePolicy = 'auto_mobazha';
-
-      simulateWsMessage('chat.invite', {
-        roomId: '!invited:test',
-        inviter: '@external:matrix.org',
-        roomName: 'External Room',
-      });
-
-      expect(mockEmit).toHaveBeenCalledWith(
-        MATRIX_EVENTS.ROOM_INVITE,
-        expect.objectContaining({
-          roomId: '!invited:test',
-          inviter: '@external:matrix.org',
+          roomName: 'A room',
         })
       );
     });
@@ -443,6 +386,99 @@ describe('event-listeners module', () => {
 
       expect(mockEmit).not.toHaveBeenCalled();
       expect(syncStateCallback).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('chat.verification.request', () => {
+    it('emits VERIFICATION_REQUEST_RECEIVED with payload', () => {
+      const payload = {
+        transactionId: 'txn_001',
+        userId: '@alice:test',
+        deviceId: 'DEVICE_A',
+      };
+      simulateWsMessage('chat.verification.request', payload);
+
+      expect(mockEmit).toHaveBeenCalledWith(
+        MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED,
+        expect.objectContaining({
+          transactionId: 'txn_001',
+          userId: '@alice:test',
+          deviceId: 'DEVICE_A',
+        })
+      );
+    });
+  });
+
+  describe('chat.verification.ready', () => {
+    it('emits VERIFICATION_READY with payload', () => {
+      const payload = {
+        transactionId: 'txn_001',
+        deviceId: 'DEVICE_B',
+        supportsSAS: true,
+      };
+      simulateWsMessage('chat.verification.ready', payload);
+
+      expect(mockEmit).toHaveBeenCalledWith(
+        MATRIX_EVENTS.VERIFICATION_READY,
+        expect.objectContaining({
+          transactionId: 'txn_001',
+          supportsSAS: true,
+        })
+      );
+    });
+  });
+
+  describe('chat.verification.show_sas', () => {
+    it('emits VERIFICATION_SHOW_SAS with emoji data', () => {
+      const payload = {
+        transactionId: 'txn_001',
+        emoji: [
+          { number: 0, description: 'Dog' },
+          { number: 1, description: 'Cat' },
+        ],
+        decimals: [1234, 5678, 9012],
+      };
+      simulateWsMessage('chat.verification.show_sas', payload);
+
+      expect(mockEmit).toHaveBeenCalledWith(
+        MATRIX_EVENTS.VERIFICATION_SHOW_SAS,
+        expect.objectContaining({
+          transactionId: 'txn_001',
+          emoji: expect.arrayContaining([expect.objectContaining({ description: 'Dog' })]),
+        })
+      );
+    });
+  });
+
+  describe('chat.verification.done', () => {
+    it('emits VERIFICATION_COMPLETED', () => {
+      const payload = { transactionId: 'txn_001' };
+      simulateWsMessage('chat.verification.done', payload);
+
+      expect(mockEmit).toHaveBeenCalledWith(
+        MATRIX_EVENTS.VERIFICATION_COMPLETED,
+        expect.objectContaining({ transactionId: 'txn_001' })
+      );
+    });
+  });
+
+  describe('chat.verification.cancelled', () => {
+    it('emits VERIFICATION_CANCELLED with code and reason', () => {
+      const payload = {
+        transactionId: 'txn_001',
+        code: 'm.user',
+        reason: 'User cancelled',
+      };
+      simulateWsMessage('chat.verification.cancelled', payload);
+
+      expect(mockEmit).toHaveBeenCalledWith(
+        MATRIX_EVENTS.VERIFICATION_CANCELLED,
+        expect.objectContaining({
+          transactionId: 'txn_001',
+          code: 'm.user',
+          reason: 'User cancelled',
+        })
+      );
     });
   });
 

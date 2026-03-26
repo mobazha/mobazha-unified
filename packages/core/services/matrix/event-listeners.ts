@@ -6,15 +6,13 @@
  */
 
 import { matrixEvents } from './events';
-import { MATRIX_EVENTS, type InvitePolicy } from './types';
+import { MATRIX_EVENTS } from './types';
 import { convertMessage } from './messages';
-import { joinRoom } from './rooms';
 import { onWebSocketMessage, onWebSocketStatusChange, type WebSocketMessage } from '../websocket';
 
 export interface EventListenerCallbacks {
   processedMessageIds: Set<string>;
   onSyncStateChange: (connected: boolean) => void;
-  getInvitePolicy: () => InvitePolicy;
 }
 
 /**
@@ -22,7 +20,7 @@ export interface EventListenerCallbacks {
  * Returns a cleanup function.
  */
 export function setupChatEventListeners(callbacks: EventListenerCallbacks): () => void {
-  const { processedMessageIds, onSyncStateChange, getInvitePolicy } = callbacks;
+  const { processedMessageIds, onSyncStateChange } = callbacks;
   const cleanups: (() => void)[] = [];
 
   const handleWsMessage = (msg: WebSocketMessage) => {
@@ -49,13 +47,28 @@ export function setupChatEventListeners(callbacks: EventListenerCallbacks): () =
         handleChatRoomMember(payload);
         break;
       case 'chat.invite':
-        handleChatInvite(payload, getInvitePolicy);
+        handleChatInvite(payload);
         break;
       case 'chat.room_state':
         handleChatRoomState(payload);
         break;
       case 'chat.presence':
         handleChatPresence(payload);
+        break;
+      case 'chat.verification.request':
+        matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED, payload);
+        break;
+      case 'chat.verification.ready':
+        matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_READY, payload);
+        break;
+      case 'chat.verification.show_sas':
+        matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_SHOW_SAS, payload);
+        break;
+      case 'chat.verification.done':
+        matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_COMPLETED, payload);
+        break;
+      case 'chat.verification.cancelled':
+        matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_CANCELLED, payload);
         break;
       default:
         break;
@@ -156,24 +169,16 @@ function handleChatRoomMember(payload: any): void {
   });
 }
 
+// Backend applies invite policy (auto-join / auto-mobazha).
+// Only invites requiring user confirmation are forwarded here.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function handleChatInvite(payload: any, getPolicy: () => InvitePolicy): void {
+function handleChatInvite(payload: any): void {
   if (!payload) return;
-  const policy = getPolicy();
-  const roomId = payload.roomID || payload.roomId;
-  const inviter = payload.inviter;
-
-  if (policy === 'auto_all') {
-    joinRoom(roomId).then(() => matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId }));
-  } else if (policy === 'auto_mobazha' && inviter && /^@peer_/i.test(inviter)) {
-    joinRoom(roomId).then(() => matrixEvents.emit(MATRIX_EVENTS.ROOM_JOINED, { roomId }));
-  } else {
-    matrixEvents.emit(MATRIX_EVENTS.ROOM_INVITE, {
-      roomId,
-      inviter,
-      roomName: payload.roomName,
-    });
-  }
+  matrixEvents.emit(MATRIX_EVENTS.ROOM_INVITE, {
+    roomId: payload.roomID || payload.roomId,
+    inviter: payload.inviter,
+    roomName: payload.roomName,
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

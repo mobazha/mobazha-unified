@@ -16,8 +16,6 @@ import type {
   BackendMember,
 } from './types';
 
-const INVITE_POLICY_KEY = '@matrix_invite_policy';
-
 // ============ Public API ============
 
 export async function getRooms(): Promise<MatrixRoom[]> {
@@ -231,28 +229,21 @@ export function isMobazhaUser(userId: string): boolean {
 
 // ============ Invite Policy ============
 
-export function loadInvitePolicy(): InvitePolicy {
+export async function loadInvitePolicy(): Promise<InvitePolicy> {
   try {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem(INVITE_POLICY_KEY);
-      if (stored === 'auto_all' || stored === 'auto_mobazha' || stored === 'always_confirm') {
-        return stored;
-      }
+    const settings = await authGet<{ invitePolicy?: string }>(NODE_API.CHAT_SETTINGS);
+    const p = settings?.invitePolicy;
+    if (p === 'auto_all' || p === 'auto_mobazha' || p === 'always_confirm') {
+      return p;
     }
   } catch {
-    /* ignore */
+    /* fallback on error */
   }
   return 'auto_mobazha';
 }
 
-export function saveInvitePolicy(policy: InvitePolicy): void {
-  try {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      localStorage.setItem(INVITE_POLICY_KEY, policy);
-    }
-  } catch {
-    /* ignore */
-  }
+export async function saveInvitePolicy(policy: InvitePolicy): Promise<void> {
+  await authPut(NODE_API.CHAT_SETTINGS, { invitePolicy: policy });
 }
 
 // ============ Converters ============
