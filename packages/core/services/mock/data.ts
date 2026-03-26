@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Mock Data for Development
  *
@@ -571,7 +570,6 @@ export interface ChatRoom {
   lastMessageTime?: string;
   unreadCount: number;
   peerID: string;
-  isOnline: boolean;
 }
 
 export interface ChatMessage {
@@ -592,7 +590,6 @@ export const mockChatRooms: ChatRoom[] = [
     lastMessageTime: '2024-01-15T10:30:00Z',
     unreadCount: 2,
     peerID: 'QmVendor123',
-    isOnline: true,
   },
   {
     id: 'room2',
@@ -601,7 +598,6 @@ export const mockChatRooms: ChatRoom[] = [
     lastMessageTime: '2024-01-14T16:45:00Z',
     unreadCount: 0,
     peerID: 'QmVendor456',
-    isOnline: false,
   },
   {
     id: 'room3',
@@ -610,7 +606,6 @@ export const mockChatRooms: ChatRoom[] = [
     lastMessageTime: '2024-01-13T11:20:00Z',
     unreadCount: 1,
     peerID: 'QmVendor789',
-    isOnline: true,
   },
 ];
 

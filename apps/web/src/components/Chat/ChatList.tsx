@@ -16,7 +16,6 @@ export interface ChatRoom {
   lastMessageTime?: string;
   timestamp?: number;
   unreadCount?: number;
-  isOnline?: boolean;
   isEncrypted?: boolean;
   isDirect?: boolean;
   roomType?: 'direct' | 'group' | 'order' | 'store' | 'community' | 'moderator';
@@ -169,10 +168,6 @@ export const ChatList: React.FC<ChatListProps> = ({
           size="sm"
           className="w-12 h-12 ring-2 ring-background shadow-md transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105"
         />
-        {/* Online status indicator */}
-        {room.isOnline && !isInvite && (
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary border-2 border-card rounded-full shadow-sm ring-2 ring-primary/20" />
-        )}
         {/* Invite badge */}
         {isInvite && (
           <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-success border-2 border-card rounded-full flex items-center justify-center shadow-md">

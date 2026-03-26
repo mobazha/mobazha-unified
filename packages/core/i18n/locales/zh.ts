@@ -1842,6 +1842,8 @@ export const zh: TranslationResource = {
     memberSince: '加入时间',
     completionRate: '{{rate}}% 完成率',
     newStore: '新店铺',
+    activeStore: '活跃店铺',
+    products: '{{count}} 件商品',
     escrow: {
       paid: '已付款',
       confirmed: '已确认',

@@ -29,9 +29,6 @@ export interface ChatState {
   // 输入状态
   typingUsers: Record<string, string[]>; // roomId -> userIds[]
 
-  // 在线状态
-  userPresence: Record<string, 'online' | 'offline' | 'unavailable'>;
-
   // 验证状态
   verifiedUsers: Record<string, boolean>; // userId -> isVerified
 
@@ -67,7 +64,6 @@ export interface ChatState {
   setHasMoreMessages: (roomId: string, hasMore: boolean) => void;
 
   setTypingUsers: (roomId: string, userIds: string[]) => void;
-  setUserPresence: (userId: string, presence: 'online' | 'offline' | 'unavailable') => void;
 
   setUserVerified: (userId: string, verified: boolean) => void;
 
@@ -106,7 +102,6 @@ const initialState = {
   hasMoreMessages: {},
 
   typingUsers: {},
-  userPresence: {},
 
   verifiedUsers: {},
 
@@ -273,12 +268,6 @@ export const useChatStore = create<ChatState>()(
         setTypingUsers: (roomId, userIds) =>
           set(state => ({
             typingUsers: { ...state.typingUsers, [roomId]: userIds },
-          })),
-
-        // 在线状态
-        setUserPresence: (userId, presence) =>
-          set(state => ({
-            userPresence: { ...state.userPresence, [userId]: presence },
           })),
 
         // 验证状态

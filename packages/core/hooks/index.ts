@@ -122,6 +122,9 @@ export * from './useVisitorTracker';
 // Mini App 角色相关
 export * from './useMiniAppRole';
 
+// Store Activity (data-driven activity badge)
+export * from './useStoreActivity';
+
 // Sales Channels (Store Links + Store Bot)
 export * from './useSalesChannels';
 

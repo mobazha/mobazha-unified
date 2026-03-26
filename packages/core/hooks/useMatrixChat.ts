@@ -82,7 +82,6 @@ export function useMatrixChat(options: UseMatrixChatOptions = {}): UseMatrixChat
     setLoadingMessages,
     setHasMoreMessages,
     setTypingUsers,
-    setUserPresence,
     markRoomAsRead,
   } = useChatStore();
 
@@ -317,15 +316,6 @@ export function useMatrixChat(options: UseMatrixChatOptions = {}): UseMatrixChat
       setTypingUsers(roomId, userIds);
     };
 
-    // 在线状态
-    const onPresence = (data: unknown) => {
-      const { userId, presence } = data as {
-        userId: string;
-        presence: 'online' | 'offline' | 'unavailable';
-      };
-      setUserPresence(userId, presence);
-    };
-
     // 订阅事件
     const unsubscribers = [
       matrixEvents.on(MATRIX_EVENTS.CONNECTED, onConnected),
@@ -337,22 +327,12 @@ export function useMatrixChat(options: UseMatrixChatOptions = {}): UseMatrixChat
       matrixEvents.on(MATRIX_EVENTS.ROOM_JOINED, onRoomJoined),
       matrixEvents.on(MATRIX_EVENTS.ROOM_LEFT, onRoomLeft),
       matrixEvents.on(MATRIX_EVENTS.TYPING, onTyping),
-      matrixEvents.on(MATRIX_EVENTS.PRESENCE_CHANGED, onPresence),
     ];
 
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
-  }, [
-    setConnected,
-    addMessage,
-    updateRoom,
-    updateMessage,
-    loadRooms,
-    removeRoom,
-    setTypingUsers,
-    setUserPresence,
-  ]);
+  }, [setConnected, addMessage, updateRoom, updateMessage, loadRooms, removeRoom, setTypingUsers]);
 
   // ============= 自动初始化 =============
 

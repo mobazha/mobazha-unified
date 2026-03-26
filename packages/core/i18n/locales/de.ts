@@ -1887,6 +1887,8 @@ export const de: TranslationResource = {
     memberSince: 'Mitglied seit',
     completionRate: '{{rate}} % abgeschlossen',
     newStore: 'Neuer Shop',
+    activeStore: 'Aktiver Shop',
+    products: '{{count}} Produkte',
     escrow: {
       paid: 'Bezahlt',
       confirmed: 'Bestätigt',

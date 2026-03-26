@@ -51,7 +51,6 @@ export interface ChatMessagesProps {
   roomAvatar?: string;
   roomRawMxcAvatarUrl?: string;
   isEncrypted?: boolean;
-  isOnline?: boolean;
   isDirect?: boolean;
   isVerified?: boolean;
   messages: Message[];
@@ -80,7 +79,6 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   roomAvatar,
   roomRawMxcAvatarUrl,
   isEncrypted = false,
-  isOnline,
   isDirect = false,
   isVerified = false,
   messages,
@@ -177,14 +175,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         )}
 
         <button onClick={onRoomSettings} className="hover:opacity-80 transition-opacity">
-          <Avatar
-            src={roomAvatar}
-            rawMxcUrl={roomRawMxcAvatarUrl}
-            name={displayName}
-            size="md"
-            showOnlineStatus
-            isOnline={isOnline}
-          />
+          <Avatar src={roomAvatar} rawMxcUrl={roomRawMxcAvatarUrl} name={displayName} size="md" />
         </button>
 
         <div className="flex-1 min-w-0">
@@ -219,17 +210,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             )}
           </HStack>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            {isDirect ? (
-              isOnline === true ? (
-                <span className="text-primary">{t('chat.online')}</span>
-              ) : isOnline === false ? (
-                t('chat.offline')
-              ) : (
-                t('chat.directMessage')
-              )
-            ) : (
-              t('chat.groupChat')
-            )}
+            {isDirect ? t('chat.directMessage') : t('chat.groupChat')}
           </p>
         </div>
 

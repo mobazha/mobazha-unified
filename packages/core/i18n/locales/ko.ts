@@ -1838,6 +1838,8 @@ export const ko: TranslationResource = {
     memberSince: '가입일',
     completionRate: '완료율 {{rate}}%',
     newStore: '신규 스토어',
+    activeStore: '활성 스토어',
+    products: '{{count}}개 상품',
     escrow: {
       paid: '결제 완료',
       confirmed: '확인됨',

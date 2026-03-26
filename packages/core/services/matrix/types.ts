@@ -23,7 +23,6 @@ export const MATRIX_EVENTS = {
   MEMBER_PEERID_UPDATED: 'matrix_member_peerid_updated',
   MEMBER_CHANGED: 'matrix_member_changed',
   TYPING: 'matrix_typing',
-  PRESENCE_CHANGED: 'matrix_presence_changed',
   UPLOAD_PROGRESS: 'matrix_upload_progress',
   MESSAGE_EDITED: 'matrix_message_edited',
   MESSAGE_REACTION: 'matrix_message_reaction',

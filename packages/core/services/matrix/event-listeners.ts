@@ -52,9 +52,6 @@ export function setupChatEventListeners(callbacks: EventListenerCallbacks): () =
       case 'chat.room_state':
         handleChatRoomState(payload);
         break;
-      case 'chat.presence':
-        handleChatPresence(payload);
-        break;
       case 'chat.verification.request':
         matrixEvents.emit(MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED, payload);
         break;
@@ -188,15 +185,5 @@ function handleChatRoomState(payload: any): void {
     roomId: payload.roomID || payload.roomId,
     userId: payload.userID || payload.userId,
     peerID: payload.peerID || payload.peerId,
-  });
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function handleChatPresence(payload: any): void {
-  if (!payload) return;
-  matrixEvents.emit(MATRIX_EVENTS.PRESENCE_CHANGED, {
-    userId: payload.userID || payload.userId,
-    presence: payload.presence,
-    lastActive: payload.lastActive,
   });
 }
