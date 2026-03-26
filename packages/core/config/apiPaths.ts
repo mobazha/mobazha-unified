@@ -155,6 +155,12 @@ export const NODE_API = {
   RECEIVE_ADDRESS_COIN: (coin: string) => `/wallet/receiving-accounts/${coin}`,
 
   // --- Chat (node-side Matrix, mautrix-go backed) ---
+  CHAT_SETTINGS: '/chat/settings',
+  CHAT_VERIFICATION_REQUEST: '/chat/verification/request',
+  CHAT_VERIFICATION_ACCEPT: (txnId: string) => `/chat/verification/${txnId}/accept`,
+  CHAT_VERIFICATION_START_SAS: (txnId: string) => `/chat/verification/${txnId}/start-sas`,
+  CHAT_VERIFICATION_CONFIRM: (txnId: string) => `/chat/verification/${txnId}/confirm`,
+  CHAT_VERIFICATION_CANCEL: (txnId: string) => `/chat/verification/${txnId}/cancel`,
   CHAT_STATUS: '/chat/status',
   CHAT_ROOMS: '/chat/rooms',
   CHAT_ROOM_JOIN: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/join`,
@@ -291,7 +297,6 @@ export const HOSTING_API = {
 
   // --- Matrix (hosting-level, 集中式注册/管理) ---
   MATRIX_CONFIG: '/platform/v1/matrix/config',
-  MATRIX_AUTO_REGISTER: '/platform/v1/matrix/auto-register',
   MATRIX_SYNC_PROFILE: '/platform/v1/matrix/sync-profile',
   MATRIX_PEER_ID: '/platform/v1/matrix/peer-id',
   MATRIX_STORE_CREATE_SPACE: '/platform/v1/matrix/store/spaces',

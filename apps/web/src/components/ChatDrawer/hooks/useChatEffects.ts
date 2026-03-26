@@ -28,6 +28,7 @@ export interface UseChatEffectsParams {
   setVerificationOpen: (v: boolean) => void;
   setVerificationPhase: (v: VerificationPhase) => void;
   setVerificationUserId: (v: string | null) => void;
+  setVerificationTxnId: (v: string | null) => void;
   setVerificationEmoji: (v: Array<[string, string]> | null) => void;
   resetVerification: () => void;
 
@@ -60,6 +61,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     setVerificationOpen,
     setVerificationPhase,
     setVerificationUserId,
+    setVerificationTxnId,
     setVerificationEmoji,
     resetVerification,
     toast,
@@ -128,19 +130,23 @@ export function useChatEffects(params: UseChatEffectsParams): void {
   useEffect(() => {
     if (!currentRoomId) return;
 
+    let cancelled = false;
+    const roomId = currentRoomId;
+
     matrixClient
-      .markRoomAsRead(currentRoomId)
+      .markRoomAsRead(roomId)
       .then(success => {
-        if (success) updateRoom(currentRoomId, { unreadCount: 0 });
+        if (!cancelled && success) updateRoom(roomId, { unreadCount: 0 });
       })
       .catch(err => {
         console.warn('[ChatDrawer] Failed to mark room as read:', err);
       });
 
     matrixClient
-      .getReadReceiptForRoom(currentRoomId)
+      .getReadReceiptForRoom(roomId)
       .then(receipts => {
-        const msgs = useChatStore.getState().messages[currentRoomId];
+        if (cancelled) return;
+        const msgs = useChatStore.getState().messages[roomId];
         if (!msgs) return;
         const otherReceipts = Object.entries(receipts).filter(([uid]) => uid !== currentUserId);
         if (otherReceipts.length === 0) return;
@@ -151,27 +157,32 @@ export function useChatEffects(params: UseChatEffectsParams): void {
           const msg = msgs[i];
           if (latestReadEventIds.has(msg.id)) found = true;
           if (found && msg.sender === currentUserId && msg.status !== 'read') {
-            useChatStore
-              .getState()
-              .updateMessage(currentRoomId, msg.id, { status: 'read' as const });
+            useChatStore.getState().updateMessage(roomId, msg.id, { status: 'read' as const });
           }
         }
       })
       .catch(() => {});
 
-    if (loadedRoomsRef.current.has(currentRoomId)) return;
+    if (loadedRoomsRef.current.has(roomId)) return;
 
     const loadMessages = async () => {
       try {
-        const messages = await matrixClient.getMessages(currentRoomId, 50);
-        setMessages(currentRoomId, messages);
-        loadedRoomsRef.current.add(currentRoomId);
+        const messages = await matrixClient.getMessages(roomId, 50);
+        if (cancelled) return;
+        setMessages(roomId, messages);
+        loadedRoomsRef.current.add(roomId);
       } catch (error) {
-        console.error('[ChatDrawer] Failed to load messages:', error);
+        if (!cancelled) {
+          console.error('[ChatDrawer] Failed to load messages:', error);
+        }
       }
     };
 
     loadMessages();
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentRoomId, setMessages, updateRoom, currentUserId]);
 
   // ---- 3. Read receipt event listener ----
@@ -264,21 +275,36 @@ export function useChatEffects(params: UseChatEffectsParams): void {
   useEffect(() => {
     let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
+    // Backend sends: { transactionId, userId, deviceId }
     const unsubRequest = matrixEvents.on(
       MATRIX_EVENTS.VERIFICATION_REQUEST_RECEIVED,
       (raw: unknown) => {
-        const data = raw as { otherUserId: string };
-        if (!data?.otherUserId) return;
-        setVerificationUserId(data.otherUserId);
+        const data = raw as { transactionId?: string; userId?: string };
+        if (!data?.transactionId) return;
+        setVerificationTxnId(data.transactionId);
+        setVerificationUserId(data.userId || null);
         setVerificationPhase('request');
         setVerificationOpen(true);
       }
     );
 
+    // Backend sends: { transactionId } — other party accepted, auto-start SAS
+    const unsubReady = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_READY, (raw: unknown) => {
+      const data = raw as { transactionId?: string };
+      if (!data?.transactionId) return;
+      setVerificationPhase('waiting');
+      matrixClient.startSAS(data.transactionId).catch(() => {});
+    });
+
+    // Backend sends: { transactionId, emojis: [{emoji, description}, ...], decimals }
     const unsubSas = matrixEvents.on(MATRIX_EVENTS.VERIFICATION_SHOW_SAS, (raw: unknown) => {
-      const data = raw as { emoji: Array<[string, string]> };
-      if (!data?.emoji) return;
-      setVerificationEmoji(data.emoji);
+      const data = raw as {
+        transactionId?: string;
+        emojis?: Array<{ emoji: string; description: string }>;
+      };
+      if (!data?.emojis?.length) return;
+      const emojiPairs: Array<[string, string]> = data.emojis.map(e => [e.emoji, e.description]);
+      setVerificationEmoji(emojiPairs);
       setVerificationPhase('sas');
       setVerificationOpen(true);
     });
@@ -295,6 +321,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
     return () => {
       unsubRequest();
+      unsubReady();
       unsubSas();
       unsubCompleted();
       unsubCancelled();
@@ -305,6 +332,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     setVerificationOpen,
     setVerificationPhase,
     setVerificationUserId,
+    setVerificationTxnId,
     setVerificationEmoji,
   ]);
 }

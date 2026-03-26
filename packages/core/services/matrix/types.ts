@@ -29,15 +29,11 @@ export const MATRIX_EVENTS = {
   MESSAGE_REACTION: 'matrix_message_reaction',
   ERROR: 'matrix_error',
   AUTH_REQUIRED: 'matrix_auth_required',
-  /** @deprecated E2EE verification handled by backend in v1.2 */
   VERIFICATION_REQUEST_RECEIVED: 'matrix_verification_request_received',
-  /** @deprecated E2EE verification handled by backend in v1.2 */
+  VERIFICATION_READY: 'matrix_verification_ready',
   VERIFICATION_SHOW_SAS: 'matrix_verification_show_sas',
-  /** @deprecated E2EE verification handled by backend in v1.2 */
   VERIFICATION_STARTED: 'matrix_verification_started',
-  /** @deprecated E2EE verification handled by backend in v1.2 */
   VERIFICATION_COMPLETED: 'matrix_verification_completed',
-  /** @deprecated E2EE verification handled by backend in v1.2 */
   VERIFICATION_CANCELLED: 'matrix_verification_cancelled',
 } as const;
 
@@ -185,12 +181,6 @@ export type InvitePolicy = 'auto_all' | 'auto_mobazha' | 'always_confirm';
 
 export type MatrixEventListener = (data: unknown) => void;
 
-export interface MatrixStorage {
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
-  removeItem(key: string): Promise<void>;
-}
-
 // ============ Backend Response Types ============
 
 /** Backend chat status from GET /v1/chat/status */
@@ -259,58 +249,4 @@ export interface BackendMediaInfo {
 export interface ChatMessagesResponse {
   messages: BackendMessage[];
   end?: string;
-}
-
-// ============ Legacy Crypto Types (stubs for useCrypto hook compatibility) ============
-
-/** @deprecated E2EE handled by backend in v1.2 */
-export interface CryptoConfig {
-  keyBackupEnabled?: boolean;
-  crossSigningEnabled?: boolean;
-  autoVerifyOwnDevices?: boolean;
-}
-
-/** @deprecated E2EE handled by backend in v1.2 */
-export interface DeviceInfo {
-  deviceId: string;
-  displayName?: string;
-  verified?: boolean;
-}
-
-/** @deprecated E2EE handled by backend in v1.2 */
-export interface VerificationRequest {
-  transactionId: string;
-  userId: string;
-  deviceId?: string;
-  methods?: string[];
-  status: 'pending' | 'started' | 'done' | 'cancelled';
-  timestamp: number;
-}
-
-/** @deprecated E2EE handled by backend in v1.2 */
-export interface KeyBackupInfo {
-  version: string;
-  algorithm: string;
-  authData: Record<string, unknown>;
-  count: number;
-  etag: string;
-}
-
-/** @deprecated E2EE verification handled by backend in v1.2 */
-export interface VerificationState {
-  phase: 'none' | 'requested' | 'started' | 'show_sas' | 'completed' | 'cancelled';
-  otherUserId?: string;
-  requestId?: string;
-  emoji?: unknown[];
-}
-
-/** @deprecated E2EE handled by backend in v1.2 */
-export interface CrossSigningStatus {
-  publicKeysOnDevice: boolean;
-  privateKeysInStorage: boolean;
-  privateKeysCachedLocally?: {
-    masterKey?: boolean;
-    selfSigningKey?: boolean;
-    userSigningKey?: boolean;
-  };
 }

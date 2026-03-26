@@ -16,6 +16,7 @@ import { authGet, authPost, authDel } from '../api/helpers';
 
 import * as msgModule from './messages';
 import * as roomModule from './rooms';
+import * as verificationModule from './verification';
 import { setupChatEventListeners } from './event-listeners';
 
 class MatrixClientService {
@@ -56,7 +57,7 @@ class MatrixClientService {
       this._userId = status?.userId || null;
       this._serverName = status?.serverName || null;
       this._isInitialized = true;
-      this._invitePolicy = roomModule.loadInvitePolicy();
+      this._invitePolicy = await roomModule.loadInvitePolicy();
 
       return true;
     } catch (error) {
@@ -107,7 +108,6 @@ class MatrixClientService {
       onSyncStateChange: connected => {
         this._isConnected = connected;
       },
-      getInvitePolicy: () => this._invitePolicy,
     });
 
     this._isConnected = true;
@@ -288,9 +288,9 @@ class MatrixClientService {
 
   // ============= Invite policy =============
 
-  setInvitePolicy(policy: InvitePolicy): void {
+  async setInvitePolicy(policy: InvitePolicy): Promise<void> {
+    await roomModule.saveInvitePolicy(policy);
     this._invitePolicy = policy;
-    roomModule.saveInvitePolicy(policy);
   }
 
   getInvitePolicy(): InvitePolicy {
@@ -319,22 +319,25 @@ class MatrixClientService {
     return roomModule.extractPeerIdFromUserId(userId);
   }
 
-  // ============= Verification stubs (E2EE handled by backend) =============
+  // ============= Verification (backend-driven SAS via REST + WS) =============
 
   async setupVerificationListeners(): Promise<void> {
-    /* no-op */
+    await verificationModule.setupVerificationListeners();
   }
-  async requestVerification(_userId: string): Promise<void> {
-    /* no-op */
+  async requestVerification(userId: string): Promise<string> {
+    return verificationModule.requestVerification(userId);
   }
-  async acceptVerificationRequest(): Promise<boolean> {
-    return false;
+  async acceptVerificationRequest(txnId: string): Promise<boolean> {
+    return verificationModule.acceptVerificationRequest(txnId);
   }
-  async confirmVerification(): Promise<boolean> {
-    return false;
+  async confirmVerification(txnId: string): Promise<boolean> {
+    return verificationModule.confirmVerification(txnId);
   }
-  async cancelVerification(): Promise<boolean> {
-    return false;
+  async startSAS(txnId: string): Promise<void> {
+    return verificationModule.startSAS(txnId);
+  }
+  async cancelVerification(txnId: string): Promise<boolean> {
+    return verificationModule.cancelVerification(txnId);
   }
   async isUserVerified(_userId: string): Promise<boolean> {
     return true;

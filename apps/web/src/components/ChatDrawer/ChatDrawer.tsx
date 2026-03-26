@@ -127,6 +127,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const [verificationOpen, setVerificationOpen] = useState(false);
   const [verificationPhase, setVerificationPhase] = useState<VerificationPhase>('request');
   const [verificationUserId, setVerificationUserId] = useState<string | null>(null);
+  const [verificationTxnId, setVerificationTxnId] = useState<string | null>(null);
   const [verificationEmoji, setVerificationEmoji] = useState<Array<[string, string]> | null>(null);
   const [verificationLoading, setVerificationLoading] = useState(false);
 
@@ -134,6 +135,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     setVerificationOpen(false);
     setVerificationPhase('request');
     setVerificationUserId(null);
+    setVerificationTxnId(null);
     setVerificationEmoji(null);
     setVerificationLoading(false);
   }, []);
@@ -186,6 +188,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     setVerificationOpen,
     setVerificationPhase,
     setVerificationUserId,
+    setVerificationTxnId,
     setVerificationEmoji,
     resetVerification,
     toast,
@@ -535,9 +538,10 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
 
   // Verification handlers
   const handleVerificationAccept = useCallback(async () => {
+    if (!verificationTxnId) return;
     setVerificationLoading(true);
     try {
-      await matrixClient.acceptVerificationRequest();
+      await matrixClient.acceptVerificationRequest(verificationTxnId);
       setVerificationPhase('waiting');
     } catch {
       setVerificationPhase('cancelled');
@@ -545,24 +549,26 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     } finally {
       setVerificationLoading(false);
     }
-  }, [resetVerification]);
+  }, [verificationTxnId, resetVerification]);
 
   const handleVerificationConfirm = useCallback(async () => {
+    if (!verificationTxnId) return;
     setVerificationLoading(true);
     try {
-      await matrixClient.confirmVerification();
+      await matrixClient.confirmVerification(verificationTxnId);
     } catch {
       setVerificationPhase('cancelled');
       setTimeout(resetVerification, 2000);
     } finally {
       setVerificationLoading(false);
     }
-  }, [resetVerification]);
+  }, [verificationTxnId, resetVerification]);
 
   const handleVerificationCancel = useCallback(async () => {
-    await matrixClient.cancelVerification();
+    if (!verificationTxnId) return;
+    await matrixClient.cancelVerification(verificationTxnId);
     resetVerification();
-  }, [resetVerification]);
+  }, [verificationTxnId, resetVerification]);
 
   // ---- Render helpers ----
   const drawerWidth = drawerExpanded ? 'w-full md:w-[600px]' : 'w-full md:w-[400px]';
