@@ -18,8 +18,6 @@ export default defineConfig({
               manualChunks(id: string) {
                 if (id.includes('node_modules')) {
                   if (id.includes('lucide-react')) return 'vendor-icons';
-                  if (id.includes('matrix-js-sdk') || id.includes('matrix_sdk_crypto_wasm'))
-                    return 'vendor-matrix';
                 }
                 if (id.includes('packages/core/')) return 'core';
               },
