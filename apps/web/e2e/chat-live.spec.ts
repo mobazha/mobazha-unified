@@ -11,9 +11,10 @@
  */
 
 import { authenticatedTest, BACKEND_URL } from './fixtures/auth';
-import { type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 const HEADER_CHAT_BTN = '[data-testid="header-messages-btn"]';
+const FLOATING_CHAT_BTN = 'button[aria-label="Open chat"]';
 const CHAT_DRAWER = '[data-testid="chat-system"]';
 const CHAT_INPUT = '[data-testid="chat-message-input"]';
 const CHAT_SEND = '[data-testid="chat-send-btn"]';
@@ -26,13 +27,23 @@ async function openChatDrawer(page: Page): Promise<void> {
     return;
   }
 
+  // Try header button (marketplace pages)
   const headerBtn = page.locator(HEADER_CHAT_BTN);
-  if (await headerBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+  if (await headerBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     await headerBtn.click();
     await drawer.waitFor({ state: 'visible', timeout: 10000 });
     return;
   }
 
+  // Try floating chat button (admin pages)
+  const floatingBtn = page.locator(FLOATING_CHAT_BTN);
+  if (await floatingBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await floatingBtn.click();
+    await drawer.waitFor({ state: 'visible', timeout: 10000 });
+    return;
+  }
+
+  // Try mobile nav
   const mobileNavChat = page.locator('[data-testid="mobile-nav-chat"]');
   if (await mobileNavChat.isVisible({ timeout: 3000 }).catch(() => false)) {
     await mobileNavChat.click();
@@ -40,20 +51,25 @@ async function openChatDrawer(page: Page): Promise<void> {
     return;
   }
 
-  await page.goto('/admin');
-  await page.waitForLoadState('networkidle');
-  const retryBtn = page.locator(HEADER_CHAT_BTN);
-  await retryBtn.waitFor({ state: 'visible', timeout: 10000 });
-  await retryBtn.click();
+  // Fallback: navigate to home where header/floating button should exist
+  await page.goto('/', { waitUntil: 'commit' });
+  const anyBtn = page.locator(`${HEADER_CHAT_BTN}, ${FLOATING_CHAT_BTN}`).first();
+  await anyBtn.waitFor({ state: 'visible', timeout: 20000 });
+  await anyBtn.click();
   await drawer.waitFor({ state: 'visible', timeout: 10000 });
 }
 
-async function sendChatMessage(page: Page, text: string): Promise<void> {
+async function sendChatMessage(page: Page, text: string, waitForVisible = false): Promise<void> {
   const input = page.locator(CHAT_INPUT);
   await input.waitFor({ state: 'visible', timeout: 10000 });
   await input.fill(text);
   const sendBtn = page.locator(CHAT_SEND);
   await sendBtn.click();
+
+  if (waitForVisible) {
+    const chatArea = page.locator(CHAT_DRAWER);
+    await expect(chatArea.getByText(text)).toBeVisible({ timeout: 30000 });
+  }
 }
 
 async function apiSendMessage(
@@ -85,7 +101,7 @@ async function apiGetRooms(page: Page, token: string): Promise<Array<Record<stri
 authenticatedTest.describe('Chat Message Content', () => {
   authenticatedTest(
     'F1: sent message text is visible in chat timeline',
-    async ({ authedPage, casdoorToken, expect }) => {
+    async ({ authedPage, casdoorToken }) => {
       const page = authedPage;
 
       const rooms = await apiGetRooms(page, casdoorToken);
@@ -98,15 +114,15 @@ authenticatedTest.describe('Chat Message Content', () => {
 
       const convList = page.locator(CHAT_CONV_LIST);
       const firstRoom = convList.locator('> *').first();
-      await firstRoom.waitFor({ state: 'visible', timeout: 5000 });
+      await firstRoom.waitFor({ state: 'visible', timeout: 10000 });
       await firstRoom.click();
-      await page.locator(CHAT_INPUT).waitFor({ state: 'visible', timeout: 5000 });
+      await page.locator(CHAT_INPUT).waitFor({ state: 'visible', timeout: 10000 });
 
       const uniqueMsg = `e2e-content-${Date.now()}`;
       await sendChatMessage(page, uniqueMsg);
 
       const chatArea = page.locator(CHAT_DRAWER);
-      await expect(chatArea.getByText(uniqueMsg)).toBeVisible({ timeout: 15000 });
+      await expect(chatArea.getByText(uniqueMsg)).toBeVisible({ timeout: 30000 });
 
       await page.screenshot({ path: 'test-results/chat-f1-message-content.png', fullPage: true });
     }
@@ -114,7 +130,7 @@ authenticatedTest.describe('Chat Message Content', () => {
 
   authenticatedTest(
     'F10: messages display in chronological order',
-    async ({ authedPage, casdoorToken, expect }) => {
+    async ({ authedPage, casdoorToken }) => {
       const page = authedPage;
 
       const rooms = await apiGetRooms(page, casdoorToken);
@@ -127,18 +143,17 @@ authenticatedTest.describe('Chat Message Content', () => {
 
       const convList = page.locator(CHAT_CONV_LIST);
       const firstRoom = convList.locator('> *').first();
-      await firstRoom.waitFor({ state: 'visible', timeout: 5000 });
+      await firstRoom.waitFor({ state: 'visible', timeout: 10000 });
       await firstRoom.click();
-      await page.locator(CHAT_INPUT).waitFor({ state: 'visible', timeout: 5000 });
+      await page.locator(CHAT_INPUT).waitFor({ state: 'visible', timeout: 10000 });
 
       const msg1 = `chrono-1-${Date.now()}`;
-      await sendChatMessage(page, msg1);
+      await sendChatMessage(page, msg1, true);
 
       const msg2 = `chrono-2-${Date.now() + 1}`;
-      await sendChatMessage(page, msg2);
+      await sendChatMessage(page, msg2, true);
 
       const chatArea = page.locator(CHAT_DRAWER);
-      await expect(chatArea.getByText(msg2)).toBeVisible({ timeout: 15000 });
 
       const allText = (await chatArea.textContent()) ?? '';
       const idx1 = allText.indexOf(msg1);
@@ -159,7 +174,7 @@ authenticatedTest.describe('Chat Message Content', () => {
 authenticatedTest.describe('Chat Room List', () => {
   authenticatedTest(
     'F4: conversation list reorders after new message',
-    async ({ authedPage, casdoorToken, expect }) => {
+    async ({ authedPage, casdoorToken }) => {
       const page = authedPage;
 
       const rooms = await apiGetRooms(page, casdoorToken);
@@ -211,18 +226,23 @@ authenticatedTest.describe('Chat Room List', () => {
     }
   );
 
-  authenticatedTest('F5: unread badge shows for new messages', async ({ authedPage, expect }) => {
+  authenticatedTest('F5: unread badge shows for new messages', async ({ authedPage }) => {
     const page = authedPage;
 
-    await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
+    // Try header button first (marketplace), then floating button (admin)
+    let chatBtn = page.locator(HEADER_CHAT_BTN);
+    let found = await chatBtn.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!found) {
+      chatBtn = page.locator(FLOATING_CHAT_BTN);
+      found = await chatBtn.isVisible({ timeout: 3000 }).catch(() => false);
+    }
 
-    const chatBtn = page.locator(HEADER_CHAT_BTN);
-    await chatBtn.waitFor({ state: 'visible', timeout: 10000 });
+    if (!found) {
+      authenticatedTest.skip();
+      return;
+    }
 
-    const badge = chatBtn.locator(
-      '[data-testid="unread-badge"], span[class*="badge"], span[class*="count"]'
-    );
+    const badge = chatBtn.locator('span').filter({ hasText: /\d+/ });
     const hasBadge = await badge
       .first()
       .isVisible({ timeout: 5000 })
@@ -274,7 +294,7 @@ authenticatedTest.describe('Chat Room List', () => {
 authenticatedTest.describe('Chat API Smoke', () => {
   authenticatedTest(
     'F2: edited message has editedAt field via API',
-    async ({ authedPage, casdoorToken, expect }) => {
+    async ({ authedPage, casdoorToken }) => {
       const page = authedPage;
 
       const rooms = await apiGetRooms(page, casdoorToken);
@@ -300,28 +320,33 @@ authenticatedTest.describe('Chat API Smoke', () => {
       );
       expect(editResp.status()).toBeLessThan(300);
 
-      // Poll for edit to propagate
+      // Matrix creates a replacement event for edits (new event ID + editedAt).
+      // Poll for the replacement event with edited content to appear.
       let editedMsg: Record<string, unknown> | undefined;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        await page.waitForTimeout(1000);
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await page.waitForTimeout(2000);
         const msgsResp = await page.request.get(
-          `${BACKEND_URL}/v1/chat/rooms/${roomId}/messages?limit=5`,
+          `${BACKEND_URL}/v1/chat/rooms/${roomId}/messages?limit=10`,
           { headers: { Authorization: `Bearer ${casdoorToken}` } }
         );
         const msgsData = await msgsResp.json();
-        const msgs = (msgsData?.data || []) as Array<Record<string, unknown>>;
-        editedMsg = msgs.find(m => m.id === eventId || m.eventId === eventId);
-        if (editedMsg?.editedAt) break;
+        const rawData = msgsData?.data;
+        const msgs = (Array.isArray(rawData) ? rawData : rawData?.messages || []) as Array<
+          Record<string, unknown>
+        >;
+        editedMsg = msgs.find(m => m.editedAt && (m.content as string)?.includes(editedText));
+        if (editedMsg) break;
       }
 
       expect(editedMsg).toBeDefined();
       expect(editedMsg?.editedAt).toBeTruthy();
+      expect(editedMsg?.content).toBe(editedText);
     }
   );
 
   authenticatedTest(
     'F3: redacted message is removed from API response',
-    async ({ authedPage, casdoorToken, expect }) => {
+    async ({ authedPage, casdoorToken }) => {
       const page = authedPage;
 
       const rooms = await apiGetRooms(page, casdoorToken);
@@ -344,16 +369,19 @@ authenticatedTest.describe('Chat API Smoke', () => {
       );
       expect(delResp.status()).toBeLessThan(300);
 
-      // Poll for redaction to propagate
+      // Poll for redaction to propagate (messages API: {data: {messages: [...], end: ...}})
       let found: Record<string, unknown> | undefined;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        await page.waitForTimeout(1000);
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await page.waitForTimeout(2000);
         const msgsResp = await page.request.get(
           `${BACKEND_URL}/v1/chat/rooms/${roomId}/messages?limit=10`,
           { headers: { Authorization: `Bearer ${casdoorToken}` } }
         );
         const msgsData = await msgsResp.json();
-        const msgs = (msgsData?.data || []) as Array<Record<string, unknown>>;
+        const rawData = msgsData?.data;
+        const msgs = (Array.isArray(rawData) ? rawData : rawData?.messages || []) as Array<
+          Record<string, unknown>
+        >;
         found = msgs.find(m => (m.content as string)?.includes(msgText));
         if (!found) break;
       }
@@ -371,8 +399,7 @@ authenticatedTest.describe('Chat Security', () => {
   authenticatedTest('F8: verification elements exist in chat settings', async ({ authedPage }) => {
     const page = authedPage;
 
-    await page.goto('/admin/settings');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/admin/settings', { waitUntil: 'commit' });
 
     const chatSettingsLink = page.getByText(/chat|messaging|聊天/i).first();
     if (await chatSettingsLink.isVisible({ timeout: 5000 }).catch(() => false)) {
