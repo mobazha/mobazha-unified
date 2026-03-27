@@ -49,6 +49,9 @@ export function setupChatEventListeners(callbacks: EventListenerCallbacks): () =
       case 'chat.invite':
         handleChatInvite(payload);
         break;
+      case 'chat.reaction':
+        handleChatReaction(payload);
+        break;
       case 'chat.room_state':
         handleChatRoomState(payload);
         break;
@@ -100,6 +103,14 @@ function handleChatMessage(payload: unknown, processedIds: Set<string>): void {
   if (!eventId) return;
   if (processedIds.has(eventId)) return;
   processedIds.add(eventId);
+  if (processedIds.size > 5000) {
+    const iter = processedIds.values();
+    for (let i = 0; i < 1000; i++) iter.next();
+    const keep = new Set<string>();
+    for (const v of iter) keep.add(v);
+    processedIds.clear();
+    for (const v of keep) processedIds.add(v);
+  }
 
   if (p.msgType || p.content !== undefined) {
     const message = convertMessage(p);
@@ -175,6 +186,17 @@ function handleChatInvite(payload: any): void {
     roomId: payload.roomID || payload.roomId,
     inviter: payload.inviter,
     roomName: payload.roomName,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChatReaction(payload: any): void {
+  if (!payload) return;
+  matrixEvents.emit(MATRIX_EVENTS.MESSAGE_REACTION, {
+    roomId: payload.roomID || payload.roomId,
+    eventId: payload.targetId || payload.eventId,
+    emoji: payload.key || payload.emoji,
+    sender: payload.sender,
   });
 }
 

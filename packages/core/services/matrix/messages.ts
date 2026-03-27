@@ -205,9 +205,8 @@ export async function sendTyping(roomId: string, isTyping: boolean): Promise<voi
 }
 
 export async function markRoomAsRead(roomId: string, eventId?: string): Promise<boolean> {
-  if (!eventId) return false;
   try {
-    await authPost(NODE_API.CHAT_ROOM_READ(roomId), { eventId });
+    await authPost(NODE_API.CHAT_ROOM_READ(roomId), eventId ? { eventId } : {});
     return true;
   } catch {
     return false;

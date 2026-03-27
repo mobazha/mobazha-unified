@@ -133,14 +133,14 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     let cancelled = false;
     const roomId = currentRoomId;
 
-    matrixClient
-      .markRoomAsRead(roomId)
-      .then(success => {
-        if (!cancelled && success) updateRoom(roomId, { unreadCount: 0 });
-      })
-      .catch(err => {
-        console.warn('[ChatDrawer] Failed to mark room as read:', err);
-      });
+    updateRoom(roomId, { unreadCount: 0 });
+    useChatStore.getState().markRoomAsRead(roomId);
+
+    const room = useChatStore.getState().rooms.find(r => r.roomId === roomId);
+    const lastEventId = room?.lastMessage?.id;
+    matrixClient.markRoomAsRead(roomId, lastEventId).catch(err => {
+      console.warn('[ChatDrawer] Failed to send read receipt:', err);
+    });
 
     matrixClient
       .getReadReceiptForRoom(roomId)
@@ -216,6 +216,30 @@ export function useChatEffects(params: UseChatEffectsParams): void {
       unsub();
     };
   }, [currentRoomId, currentUserId]);
+
+  // ---- 3b. Reconnect → refetch current room messages ----
+  useEffect(() => {
+    if (!currentRoomId) return;
+    const roomId = currentRoomId;
+
+    const handleReconnect = () => {
+      loadedRoomsRef.current.delete(roomId);
+      matrixClient
+        .getMessages(roomId, 50)
+        .then(messages => {
+          setMessages(roomId, messages);
+          loadedRoomsRef.current.add(roomId);
+        })
+        .catch(err => {
+          console.warn('[ChatDrawer] Failed to refetch messages after reconnect:', err);
+        });
+    };
+
+    const unsub = matrixEvents.on(MATRIX_EVENTS.CONNECTED, handleReconnect);
+    return () => {
+      unsub();
+    };
+  }, [currentRoomId, setMessages]);
 
   // ---- 4. Upload progress tracking ----
   useEffect(() => {
