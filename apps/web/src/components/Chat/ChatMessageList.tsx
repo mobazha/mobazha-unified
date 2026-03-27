@@ -550,7 +550,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                     message.status !== 'sending' &&
                     editingMessageId !== message.id && (
                       <div
-                        className={`absolute top-0 ${isOwn ? 'right-full mr-1' : 'left-full ml-1'} hidden md:group-hover/msg:flex items-center gap-0.5 z-10`}
+                        className={`absolute top-0 ${isOwn ? 'right-full pr-1' : 'left-full pl-1'} hidden md:group-hover/msg:flex items-center gap-0.5 z-10`}
                       >
                         {onReaction && (
                           <button
