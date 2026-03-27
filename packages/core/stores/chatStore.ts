@@ -197,25 +197,6 @@ export const useChatStore = create<ChatState>()(
                 },
               };
             }
-            // Defense: merge with a "sending" placeholder from the same sender
-            // with matching content (catches SDK local echo race conditions)
-            if (message.sender) {
-              const sendingIdx = existing.findIndex(
-                m =>
-                  m.status === 'sending' &&
-                  m.sender === message.sender &&
-                  m.content === message.content &&
-                  m.type === message.type
-              );
-              if (sendingIdx >= 0) {
-                return {
-                  messages: {
-                    ...state.messages,
-                    [roomId]: existing.map((m, i) => (i === sendingIdx ? { ...m, ...message } : m)),
-                  },
-                };
-              }
-            }
             const updated = [...existing, message];
             updated.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
             return {

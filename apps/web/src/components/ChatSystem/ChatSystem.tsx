@@ -3,13 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { ChatDrawer } from '@/components/ChatDrawer';
 import { NewChatDialog } from '@/components/ChatDrawer/NewChatDialog';
-import {
-  matrixClient,
-  useMatrixInit,
-  useUserStore,
-  useChatStore,
-  isMatrixEnabled,
-} from '@mobazha/core';
+import { matrixClient, useUserStore, useChatStore, isMatrixEnabled } from '@mobazha/core';
 
 /**
  * ChatSystem 组件
@@ -33,14 +27,6 @@ export const ChatSystem: React.FC = () => {
     }
     return '';
   })();
-
-  // 初始化 Matrix 客户端（hook 内部会从 userStore 获取 peerID）
-  useMatrixInit({
-    enabled: isAuthenticated,
-    autoConnect: true,
-    retryInterval: 5000,
-    maxRetries: 5,
-  });
 
   // 发送消息
   const handleSendMessage = useCallback(async (roomId: string, content: string) => {

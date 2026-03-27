@@ -256,18 +256,8 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
     // 本地回显：消息正在发送（乐观 UI）
     const onMessageSending = (data: unknown) => {
-      const { localId, roomId } = data as { localId: string; roomId: string };
-      const placeholder: MatrixMessage = {
-        id: localId,
-        localId,
-        roomId,
-        sender: matrixClient.getUserId() || '',
-        content: '',
-        type: 'text',
-        timestamp: Date.now(),
-        status: 'sending' as const,
-      };
-      addMessage(roomId, placeholder);
+      const message = data as MatrixMessage;
+      addMessage(message.roomId, message);
     };
 
     // 自己发送成功的消息（sendMessage 将 eventId 加入 processedMessageIds
