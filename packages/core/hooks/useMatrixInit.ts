@@ -120,13 +120,20 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
         throw new Error('Chat service not ready');
       }
 
-      await matrixClient.startSync();
-
-      // 加载房间列表（分离已加入和待确认邀请）
+      // Load rooms BEFORE starting WS listener to avoid race between
+      // backend unreadCount and WS chat.message events for the same messages.
       const allRooms = await matrixClient.getRooms();
       const { rooms, invites } = splitRoomsAndInvites(allRooms);
+
+      // Pre-seed processedMessageIds so duplicate WS events are filtered out
+      matrixClient.seedProcessedIds(allRooms);
+
       setRooms(rooms);
       setInvites(invites);
+
+      // NOW register the WS event listener — only genuinely new messages
+      // will trigger onMessageReceived from this point forward.
+      await matrixClient.startSync();
 
       initRef.current = true;
       retryCountRef.current = 0;
@@ -240,13 +247,8 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       };
 
       if (shouldIncrementUnread) {
-        const sdkCount = matrixClient.getRoomUnreadCount(message.roomId);
-        if (sdkCount > 0) {
-          roomUpdate.unreadCount = sdkCount;
-        } else {
-          const room = state.rooms.find(r => r.roomId === message.roomId);
-          roomUpdate.unreadCount = (room?.unreadCount || 0) + 1;
-        }
+        const room = state.rooms.find(r => r.roomId === message.roomId);
+        roomUpdate.unreadCount = (room?.unreadCount || 0) + 1;
       }
 
       updateRoom(message.roomId, roomUpdate);

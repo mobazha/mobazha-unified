@@ -198,6 +198,18 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     return rooms.find(r => r.roomId === currentRoomId);
   }, [rooms, currentRoomId]);
 
+  const memberNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (currentRoom?.members) {
+      for (const m of currentRoom.members) {
+        if (m.userId && m.displayName) {
+          map[m.userId] = m.displayName;
+        }
+      }
+    }
+    return map;
+  }, [currentRoom?.members]);
+
   const displayRooms = useMemo(() => {
     const sorted = [...rooms].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     return sorted.map(room => toDisplayRoom(room, defaultRoomName));
@@ -644,6 +656,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           currentUserId={currentUserId}
           isLoading={false}
           typingUsers={currentTypingUsers}
+          memberNameMap={memberNameMap}
           onSendMessage={handleSendMessage}
           onSendFile={file => handleSendFile(file)}
           onTyping={isTyping => matrixClient.sendTyping(currentRoomId, isTyping)}

@@ -57,6 +57,7 @@ export interface ChatMessagesProps {
   currentUserId: string;
   isLoading?: boolean;
   typingUsers?: string[];
+  memberNameMap?: Record<string, string>;
   onSendMessage: (content: string) => void;
   onSendFile?: (file: File) => void;
   onTyping?: (isTyping: boolean) => void;
@@ -85,6 +86,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   currentUserId,
   isLoading = false,
   typingUsers = [],
+  memberNameMap,
   onSendMessage,
   onSendFile,
   onTyping,
@@ -321,6 +323,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         isLoading={isLoading}
         isEncrypted={isEncrypted}
         typingUsers={typingUsers}
+        memberNameMap={memberNameMap}
         onRetryMessage={onRetryMessage}
         onDeleteMessage={onDeleteMessage}
         onEditMessage={onEditMessage}

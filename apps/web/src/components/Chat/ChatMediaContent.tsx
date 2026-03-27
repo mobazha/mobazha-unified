@@ -21,7 +21,7 @@ export function shortenSystemContent(text: string): string {
 
 export function needsMatrixAuth(url?: string): boolean {
   if (!url) return false;
-  return url.startsWith('mxc://') || url.includes('/_matrix/');
+  return url.startsWith('mxc://') || url.includes('/_matrix/') || url.includes('/chat/media/');
 }
 
 export function formatFileSize(bytes?: number): string {
