@@ -31,6 +31,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentRef = useRef<number>(0);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,9 +60,18 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setInputValue(e.target.value);
       if (!onTyping) return;
-      onTyping(true);
+
+      const now = Date.now();
+      if (now - lastTypingSentRef.current > 4000) {
+        onTyping(true);
+        lastTypingSentRef.current = now;
+      }
+
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(() => onTyping(false), 3000);
+      typingTimeoutRef.current = setTimeout(() => {
+        onTyping(false);
+        lastTypingSentRef.current = 0;
+      }, 5000);
     },
     [onTyping]
   );

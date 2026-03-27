@@ -13,6 +13,7 @@ import {
   ChatAudioContent,
   ChatVideoContent,
   shortenSystemContent,
+  cleanDisplayName,
 } from './ChatMediaContent';
 
 // ── Small presentational components ──
@@ -110,10 +111,60 @@ const MessageStatus: React.FC<{ status?: string }> = ({ status }) => {
   );
 };
 
-const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
-  if (!users.length) return null;
+const TYPING_MIN_DISPLAY_MS = 3000;
+
+const TypingIndicator: React.FC<{
+  users: string[];
+  currentUserId: string;
+  memberNameMap: Record<string, string>;
+}> = ({ users, currentUserId, memberNameMap }) => {
+  const otherUsers = users.filter(u => u !== currentUserId);
+  const hasTyping = otherUsers.length > 0;
+  const typingKey = otherUsers.join(',');
+
+  const [visible, setVisible] = useState(false);
+  const [displayNames, setDisplayNames] = useState<string[]>([]);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showTimestampRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (hasTyping) {
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+      if (!visible) {
+        showTimestampRef.current = Date.now();
+      }
+      setVisible(true);
+    } else if (visible) {
+      const elapsed = Date.now() - showTimestampRef.current;
+      const remaining = Math.max(0, TYPING_MIN_DISPLAY_MS - elapsed);
+      hideTimerRef.current = setTimeout(() => {
+        setVisible(false);
+        hideTimerRef.current = null;
+      }, remaining);
+    }
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTyping]);
+
+  useEffect(() => {
+    if (otherUsers.length > 0) {
+      setDisplayNames(otherUsers.map(u => memberNameMap[u] || cleanDisplayName(u)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typingKey, memberNameMap]);
+
+  if (!visible) return null;
+
   return (
-    <div className="flex items-center gap-3 px-4 py-2 ml-10">
+    <div
+      className="flex items-center gap-3 px-4 py-2 ml-10 transition-opacity duration-300"
+      style={{ opacity: hasTyping ? 1 : 0.6 }}
+    >
       <div className="flex items-center gap-1 px-3 py-2 bg-muted/50 rounded-2xl rounded-bl-sm backdrop-blur-sm">
         <span
           className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-bounce"
@@ -129,7 +180,9 @@ const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
         />
       </div>
       <span className="text-xs text-muted-foreground/70 font-medium">
-        {users.length === 1 ? `${users[0]} is typing...` : `${users.length} people are typing...`}
+        {displayNames.length === 1
+          ? `${displayNames[0]} is typing...`
+          : `${displayNames.length} people are typing...`}
       </span>
     </div>
   );
@@ -138,6 +191,7 @@ const TypingIndicator: React.FC<{ users: string[] }> = ({ users }) => {
 // ── Main component ──
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+const EMPTY_NAME_MAP: Record<string, string> = {};
 
 export interface ChatMessageListProps {
   messages: Message[];
@@ -145,6 +199,7 @@ export interface ChatMessageListProps {
   isLoading: boolean;
   isEncrypted: boolean;
   typingUsers: string[];
+  memberNameMap?: Record<string, string>;
   onRetryMessage?: (messageId: string) => void;
   onDeleteMessage?: (messageId: string) => void;
   onEditMessage?: (messageId: string, newContent: string) => void;
@@ -166,6 +221,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   isLoading,
   isEncrypted,
   typingUsers,
+  memberNameMap: memberNameMapProp,
   onRetryMessage,
   onDeleteMessage,
   onEditMessage,
@@ -181,6 +237,8 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   onDeleteConfirm,
 }) => {
   const { t } = useI18n();
+
+  const memberNameMap = memberNameMapProp || EMPTY_NAME_MAP;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -492,46 +550,20 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                     message.status !== 'sending' &&
                     editingMessageId !== message.id && (
                       <div
-                        className={`absolute top-0 ${isOwn ? 'right-full mr-1' : 'left-full ml-1'} hidden md:group-hover:flex items-center gap-0.5 z-10`}
+                        className={`absolute top-0 ${isOwn ? 'right-full mr-1' : 'left-full ml-1'} hidden md:group-hover/msg:flex items-center gap-0.5 z-10`}
                       >
                         {onReaction && (
-                          <div className="relative">
-                            <button
-                              onClick={() =>
-                                setReactionPickerMsgId(prev =>
-                                  prev === message.id ? null : message.id
-                                )
-                              }
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
-                              title={t('chat.react')}
-                            >
-                              <SmilePlus className="w-3.5 h-3.5" />
-                            </button>
-                            {reactionPickerMsgId === message.id && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-40"
-                                  onClick={() => setReactionPickerMsgId(null)}
-                                />
-                                <div
-                                  className={`absolute ${isOwn ? 'right-0' : 'left-0'} top-8 z-50 flex items-center gap-0.5 px-1.5 py-1 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 duration-150`}
-                                >
-                                  {QUICK_REACTIONS.map(emoji => (
-                                    <button
-                                      key={emoji}
-                                      onClick={() => {
-                                        onReaction(message.id, emoji);
-                                        setReactionPickerMsgId(null);
-                                      }}
-                                      className="w-8 h-8 flex items-center justify-center text-base rounded-lg hover:bg-muted/60 transition-colors"
-                                    >
-                                      {emoji}
-                                    </button>
-                                  ))}
-                                </div>
-                              </>
-                            )}
-                          </div>
+                          <button
+                            onClick={() =>
+                              setReactionPickerMsgId(prev =>
+                                prev === message.id ? null : message.id
+                              )
+                            }
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                            title={t('chat.react')}
+                          >
+                            <SmilePlus className="w-3.5 h-3.5" />
+                          </button>
                         )}
                         {message.type === 'text' && (
                           <button
@@ -562,6 +594,32 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                         )}
                       </div>
                     )}
+
+                  {/* Reaction picker — positioned on message container, not inside the action bar */}
+                  {reactionPickerMsgId === message.id && onReaction && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setReactionPickerMsgId(null)}
+                      />
+                      <div
+                        className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-11 z-50 flex items-center gap-0.5 px-1.5 py-1 rounded-xl bg-popover border border-border shadow-xl animate-in fade-in zoom-in-95 duration-150`}
+                      >
+                        {QUICK_REACTIONS.map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={() => {
+                              onReaction(message.id, emoji);
+                              setReactionPickerMsgId(null);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-base rounded-lg hover:bg-muted/60 transition-colors"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   {/* Mobile long-press popup */}
                   {longPressMenuId === message.id && editingMessageId !== message.id && (
@@ -753,7 +811,11 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
             );
           })}
 
-          <TypingIndicator users={typingUsers} />
+          <TypingIndicator
+            users={typingUsers}
+            currentUserId={currentUserId}
+            memberNameMap={memberNameMap}
+          />
           <div ref={messagesEndRef} />
         </VStack>
       )}

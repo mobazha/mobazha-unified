@@ -214,8 +214,17 @@ class MatrixClientService {
 
   // ============= Rooms (delegated) =============
 
-  getRoomUnreadCount(_roomId: string): number {
-    return 0;
+  /**
+   * Pre-seed processedMessageIds with known event IDs from rooms loaded via
+   * REST, so that duplicate WS events arriving after initialization won't
+   * cause double-counting of unread messages.
+   */
+  seedProcessedIds(rooms: Array<{ lastMessage?: { id?: string } | null }>): void {
+    for (const room of rooms) {
+      if (room.lastMessage?.id) {
+        this._processedMessageIds.add(room.lastMessage.id);
+      }
+    }
   }
 
   async getRooms(): Promise<MatrixRoom[]> {
