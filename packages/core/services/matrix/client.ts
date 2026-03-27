@@ -161,7 +161,9 @@ class MatrixClientService {
   }
 
   async sendMessage(roomId: string, content: string): Promise<MatrixMessage | null> {
-    return msgModule.sendMessage(roomId, content, this._userId);
+    const result = await msgModule.sendMessage(roomId, content, this._userId);
+    if (result?.id) this._processedMessageIds.add(result.id);
+    return result;
   }
 
   async sendImage(
@@ -169,7 +171,9 @@ class MatrixClientService {
     file: File,
     externalLocalId?: string
   ): Promise<MatrixMessage | null> {
-    return msgModule.sendImage(roomId, file, this._userId, externalLocalId);
+    const result = await msgModule.sendImage(roomId, file, this._userId, externalLocalId);
+    if (result?.id) this._processedMessageIds.add(result.id);
+    return result;
   }
 
   async sendFile(
@@ -177,7 +181,9 @@ class MatrixClientService {
     file: File,
     externalLocalId?: string
   ): Promise<MatrixMessage | null> {
-    return msgModule.sendFile(roomId, file, this._userId, externalLocalId);
+    const result = await msgModule.sendFile(roomId, file, this._userId, externalLocalId);
+    if (result?.id) this._processedMessageIds.add(result.id);
+    return result;
   }
 
   async sendTyping(roomId: string, isTyping: boolean, _timeout = 5000): Promise<void> {
