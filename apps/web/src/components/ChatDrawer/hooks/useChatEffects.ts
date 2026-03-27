@@ -138,9 +138,11 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
     const room = useChatStore.getState().rooms.find(r => r.roomId === roomId);
     const lastEventId = room?.lastMessage?.id;
-    matrixClient.markRoomAsRead(roomId, lastEventId).catch(err => {
-      console.warn('[ChatDrawer] Failed to send read receipt:', err);
-    });
+    if (lastEventId) {
+      matrixClient.markRoomAsRead(roomId, lastEventId).catch(err => {
+        console.warn('[ChatDrawer] Failed to send read receipt:', err);
+      });
+    }
 
     matrixClient
       .getReadReceiptForRoom(roomId)
