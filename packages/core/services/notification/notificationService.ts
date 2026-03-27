@@ -24,16 +24,14 @@ import { soundService } from './soundService';
 import { onWebSocketMessage, type WebSocketMessage } from '../websocket';
 import { getI18n } from '../../i18n/i18n';
 
-// ============ 类型守卫 ============
+// ============ 类型 ============
 
-function isNotificationWrapper(message: unknown): message is { notification: NotificationData } {
-  return (
-    typeof message === 'object' &&
-    message !== null &&
-    'notification' in message &&
-    typeof (message as { notification: unknown }).notification === 'object'
-  );
+interface TypedNotificationData {
+  notification?: NotificationData;
+  unread?: number;
 }
+
+// ============ 类型守卫 ============
 
 function isChatMessage(
   message: unknown
@@ -359,22 +357,29 @@ class NotificationService {
     }
 
     this.unsubscribeWebSocket = onWebSocketMessage((message: WebSocketMessage) => {
-      this.handleWebSocketMessage(message.data as Record<string, unknown>);
+      if (message.type === 'notification') {
+        this.handleTypedNotification(message.data as TypedNotificationData);
+        return;
+      }
+
+      const raw = message as unknown as Record<string, unknown>;
+      if (isChatMessage(raw)) {
+        const { chatMessage } = raw;
+        const isOrderChat = chatMessage.subject?.toLowerCase().includes('order');
+        soundService.notifyChatMessage(chatMessage.peerID, isOrderChat);
+      }
     });
   }
 
-  private handleWebSocketMessage(message: Record<string, unknown>): void {
-    if (isNotificationWrapper(message)) {
-      this.handleNotification(message.notification);
-      return;
-    }
+  private handleTypedNotification(data: TypedNotificationData): void {
+    if (!data) return;
 
-    if (isChatMessage(message)) {
-      const { chatMessage } = message;
-      // subject 包含 order 关键字时判定为订单聊天（启发式规则）
-      const isOrderChat = chatMessage.subject?.toLowerCase().includes('order');
-      soundService.notifyChatMessage(chatMessage.peerID, isOrderChat);
-      return;
+    if (data.notification) {
+      this.handleNotification(data.notification);
+    }
+    if (typeof data.unread === 'number') {
+      const store = useNotificationStore.getState();
+      store.setUnreadCount(data.unread);
     }
   }
 
