@@ -154,13 +154,21 @@ export async function sendFile(
   externalLocalId?: string
 ): Promise<MatrixMessage | null> {
   const localId = externalLocalId || nextLocalId();
+  const mime = file.type || '';
+  const msgType: MessageType = mime.startsWith('image/')
+    ? 'image'
+    : mime.startsWith('video/')
+      ? 'video'
+      : mime.startsWith('audio/')
+        ? 'audio'
+        : 'file';
   const optimistic: MatrixMessage = {
     id: localId,
     localId,
     roomId,
     sender: userId || '',
     content: file.name,
-    type: 'file',
+    type: msgType,
     timestamp: Date.now(),
     status: MESSAGE_STATUS.SENDING,
     attachments: [{ url: '', filename: file.name, mimetype: file.type, size: file.size }],
