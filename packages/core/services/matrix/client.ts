@@ -38,6 +38,9 @@ class MatrixClientService {
     if (this._isInitialized && this._currentPeerID !== peerID) {
       await this.logout();
     }
+    if (!this._isInitialized && this._currentPeerID === peerID) {
+      // Previous init returned false (backend not ready); allow re-attempt
+    }
     this._initPromise = this._doInit(peerID);
     try {
       return await this._initPromise;
@@ -50,7 +53,10 @@ class MatrixClientService {
     try {
       const status = await authGet<ChatStatusResponse>(NODE_API.CHAT_STATUS);
       if (!status?.connected && !status?.syncRunning) {
-        console.warn('[Chat] Backend chat service not ready, will retry on startSync');
+        console.warn('[Chat] Backend chat service not ready');
+        this._currentPeerID = peerID;
+        this._isInitialized = false;
+        return false;
       }
 
       this._currentPeerID = peerID;
@@ -60,8 +66,15 @@ class MatrixClientService {
       this._invitePolicy = await roomModule.loadInvitePolicy();
 
       return true;
-    } catch (error) {
-      console.error('[Chat] Initialization failed:', error);
+    } catch (error: unknown) {
+      const isRateLimited =
+        error instanceof Error &&
+        (error.message.includes('429') || error.message.includes('RATE_LIMITED'));
+      if (isRateLimited) {
+        console.warn('[Chat] Rate limited during init, will retry later');
+      } else {
+        console.error('[Chat] Initialization failed:', error);
+      }
       matrixEvents.emit(MATRIX_EVENTS.ERROR, { error });
       return false;
     }
