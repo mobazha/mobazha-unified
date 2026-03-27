@@ -34,7 +34,7 @@ export interface UseMatrixInitOptions {
   autoConnect?: boolean;
   /** 最大重试次数 */
   maxRetries?: number;
-  /** 重试间隔（毫秒） */
+  /** 初始重试间隔（毫秒），指数退避后会翻倍 */
   retryInterval?: number;
 }
 
@@ -114,14 +114,12 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     clearRetryTimer();
 
     try {
-      // 使用 peerID 初始化 Matrix（自动登录）
       const success = await matrixClient.initializeWithPeerID(peerID);
 
       if (!success) {
-        throw new Error('Failed to initialize Matrix client');
+        throw new Error('Chat service not ready');
       }
 
-      // 启动同步
       await matrixClient.startSync();
 
       // 加载房间列表（分离已加入和待确认邀请）
@@ -155,21 +153,30 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       return true;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Matrix initialization failed';
-      console.error('[Matrix] Initialization failed:', errorMsg);
+      const isRateLimited =
+        err instanceof Error &&
+        (err.message.includes('429') || err.message.includes('RATE_LIMITED'));
+
+      if (isRateLimited) {
+        console.warn('[Matrix] Rate limited, backing off');
+      } else {
+        console.error('[Matrix] Initialization failed:', errorMsg);
+      }
       setConnectionError(errorMsg);
 
-      // 自动重试逻辑
       if (retryCountRef.current < maxRetries) {
         retryCountRef.current += 1;
+        const delay = retryInterval * Math.pow(2, retryCountRef.current - 1);
+        const cappedDelay = Math.min(delay, 60000);
         console.warn(
-          `[Matrix] Will retry in ${retryInterval / 1000}s (attempt ${retryCountRef.current}/${maxRetries})`
+          `[Matrix] Will retry in ${cappedDelay / 1000}s (attempt ${retryCountRef.current}/${maxRetries})`
         );
 
         retryTimerRef.current = setTimeout(() => {
           if (isAuthenticated && peerID) {
             initialize();
           }
-        }, retryInterval);
+        }, cappedDelay);
       }
 
       return false;
@@ -354,16 +361,16 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
     const onDisconnected = () => {
       setConnected(false);
-      // 断线自动重连
       if (isAuthenticated && peerID && initRef.current && retryCountRef.current < maxRetries) {
         retryCountRef.current += 1;
-        console.warn(`[Matrix] Disconnected, will reconnect in ${retryInterval / 1000}s`);
+        const delay = Math.min(retryInterval * Math.pow(2, retryCountRef.current - 1), 60000);
+        console.warn(`[Matrix] Disconnected, will reconnect in ${delay / 1000}s`);
 
         retryTimerRef.current = setTimeout(() => {
           if (isAuthenticated && peerID) {
             matrixClient.startSync().catch(console.error);
           }
-        }, retryInterval);
+        }, delay);
       }
     };
 

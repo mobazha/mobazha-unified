@@ -176,7 +176,10 @@ export const useChatStore = create<ChatState>()(
         // 消息管理
         setMessages: (roomId, messages) =>
           set(state => ({
-            messages: { ...state.messages, [roomId]: messages },
+            messages: {
+              ...state.messages,
+              [roomId]: [...messages].sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0)),
+            },
           })),
 
         addMessage: (roomId, message) =>
@@ -213,10 +216,12 @@ export const useChatStore = create<ChatState>()(
                 };
               }
             }
+            const updated = [...existing, message];
+            updated.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
             return {
               messages: {
                 ...state.messages,
-                [roomId]: [...existing, message],
+                [roomId]: updated,
               },
             };
           }),
@@ -246,10 +251,12 @@ export const useChatStore = create<ChatState>()(
             const existing = state.messages[roomId] || [];
             const existingIds = new Set(existing.map(m => m.id).filter(Boolean));
             const uniqueNew = messages.filter(m => !m.id || !existingIds.has(m.id));
+            const merged = [...uniqueNew, ...existing];
+            merged.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
             return {
               messages: {
                 ...state.messages,
-                [roomId]: [...uniqueNew, ...existing],
+                [roomId]: merged,
               },
             };
           }),
