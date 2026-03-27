@@ -202,7 +202,7 @@ export async function createModeratorRoom(
 // ============ Profile ============
 
 export async function setDisplayName(displayName: string): Promise<void> {
-  await authPost('/chat/presence', { displayName });
+  await authPost(NODE_API.CHAT_PRESENCE, { displayName });
 }
 
 export async function syncProfileToMatrix(displayName: string, _avatarUrl?: string): Promise<void> {
