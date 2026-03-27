@@ -50,6 +50,9 @@ interface NotificationState {
   markAllAsRead: () => void;
   clearNotifications: () => void;
 
+  // 动作：未读计数（WS 推送直接设置）
+  setUnreadCount: (count: number) => void;
+
   // 动作：加载状态
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -157,6 +160,10 @@ export const useNotificationStore = create<NotificationState>()(
         clearNotifications: () => {
           set({ notifications: [], unreadCount: 0 });
         },
+
+        // ============ 未读计数（WS 推送） ============
+
+        setUnreadCount: count => set({ unreadCount: count }),
 
         // ============ 加载状态 ============
 

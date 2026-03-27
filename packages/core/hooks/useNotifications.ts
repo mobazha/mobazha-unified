@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { onWebSocketStatusChange } from '../services/websocket';
 import { notificationsApi, getNotificationRoute } from '../services/api/notifications';
 import type {
   NotificationFilter,
@@ -42,8 +43,6 @@ export type { NotificationFilter, ApiNotification };
 interface UseNotificationsOptions {
   /** 是否自动加载 */
   autoLoad?: boolean;
-  /** 自动刷新未读数量的间隔（毫秒），0 表示不自动刷新 */
-  refreshInterval?: number;
   /** 是否启用实时订阅 */
   enableRealtime?: boolean;
   /** 过滤器类型 */
@@ -116,7 +115,6 @@ interface UseNotificationsReturn {
 export function useNotifications(options: UseNotificationsOptions = {}): UseNotificationsReturn {
   const {
     autoLoad = true,
-    refreshInterval = 30000,
     enableRealtime = true,
     filter: initialFilter = 'all',
     pageSize = 20,
@@ -237,17 +235,17 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   }, []);
 
   /**
-   * 获取未读数量
+   * 获取未读数量并同步到 store
    */
   const fetchUnreadCount = useCallback(async (): Promise<number> => {
     try {
       const count = await notificationsApi.getUnreadNotificationCount();
-      // Store 会自动计算 unreadCount，这里只是同步服务器数据
+      getStoreActions().setUnreadCount(count);
       return count;
     } catch {
       return 0;
     }
-  }, []);
+  }, [getStoreActions]);
 
   /**
    * 标记单个通知为已读
@@ -414,18 +412,30 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFilter]);
 
-  // 自动刷新未读数量
+  // Reconcile unread count on tab-visible and WS reconnect.
+  // The backend pushes counts in real-time via WS; these are fallbacks
+  // to recover from missed events during disconnect or background.
   useEffect(() => {
-    if (refreshInterval <= 0) return;
+    const unsubWs = onWebSocketStatusChange(status => {
+      if (status === 'connected') {
+        void fetchUnreadCount();
+      }
+    });
 
-    const timer = setInterval(() => {
-      void fetchUnreadCount();
-    }, refreshInterval);
+    if (typeof document === 'undefined') return unsubWs;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchUnreadCount();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(timer);
+      unsubWs();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [refreshInterval, fetchUnreadCount]);
+  }, [fetchUnreadCount]);
 
   // 订阅实时通知
   useEffect(() => {
