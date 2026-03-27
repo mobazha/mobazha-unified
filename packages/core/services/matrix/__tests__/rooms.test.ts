@@ -76,23 +76,35 @@ describe('rooms module', () => {
   });
 
   describe('invite policy', () => {
-    it('defaults to auto_mobazha', () => {
-      expect(loadInvitePolicy()).toBe('auto_mobazha');
+    it('defaults to auto_mobazha when API returns empty', async () => {
+      const { authGet } = await import('../../api/helpers');
+      vi.mocked(authGet).mockResolvedValueOnce({});
+      expect(await loadInvitePolicy()).toBe('auto_mobazha');
     });
 
-    it('saves and loads auto_all', () => {
-      saveInvitePolicy('auto_all');
-      expect(loadInvitePolicy()).toBe('auto_all');
+    it('loads auto_all from API', async () => {
+      const { authGet } = await import('../../api/helpers');
+      vi.mocked(authGet).mockResolvedValueOnce({ invitePolicy: 'auto_all' });
+      expect(await loadInvitePolicy()).toBe('auto_all');
     });
 
-    it('saves and loads always_confirm', () => {
-      saveInvitePolicy('always_confirm');
-      expect(loadInvitePolicy()).toBe('always_confirm');
+    it('loads always_confirm from API', async () => {
+      const { authGet } = await import('../../api/helpers');
+      vi.mocked(authGet).mockResolvedValueOnce({ invitePolicy: 'always_confirm' });
+      expect(await loadInvitePolicy()).toBe('always_confirm');
     });
 
-    it('returns default for invalid stored value', () => {
-      localStorage.setItem('@matrix_invite_policy', 'invalid_value');
-      expect(loadInvitePolicy()).toBe('auto_mobazha');
+    it('returns default for invalid API value', async () => {
+      const { authGet } = await import('../../api/helpers');
+      vi.mocked(authGet).mockResolvedValueOnce({ invitePolicy: 'invalid_value' });
+      expect(await loadInvitePolicy()).toBe('auto_mobazha');
+    });
+
+    it('saves policy via API', async () => {
+      const { authPut } = await import('../../api/helpers');
+      const mockPut = vi.mocked(authPut).mockResolvedValueOnce(undefined);
+      await saveInvitePolicy('auto_all');
+      expect(mockPut).toHaveBeenCalledWith(expect.any(String), { invitePolicy: 'auto_all' });
     });
   });
 
