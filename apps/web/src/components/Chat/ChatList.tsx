@@ -150,6 +150,8 @@ export const ChatList: React.FC<ChatListProps> = ({
             ? 'bg-primary/5 hover:bg-primary/10'
             : 'hover:bg-muted/60 hover:translate-x-1 hover:-translate-y-0.5 hover:shadow-md'
       }`}
+      data-testid={isInvite ? 'chat-invite-item' : 'chat-room-item'}
+      data-room-id={room.id}
     >
       {/* Active indicator bar */}
       {activeRoomId === room.id && (

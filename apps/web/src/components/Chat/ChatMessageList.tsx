@@ -526,6 +526,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                           )
                         }
                         className="block hover:scale-110 transition-transform duration-200"
+                        data-testid="chat-message-avatar-btn"
                       >
                         <Avatar
                           src={message.senderAvatar}

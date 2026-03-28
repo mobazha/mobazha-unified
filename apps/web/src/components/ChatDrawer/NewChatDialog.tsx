@@ -120,7 +120,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className="sm:max-w-[440px]" data-testid="chat-new-dialog">
         <DialogHeader>
           <DialogTitle>{t('chat.newChat.title')}</DialogTitle>
           <DialogDescription>{t('chat.newChat.description')}</DialogDescription>
@@ -139,6 +139,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
               }
               className="pl-9 text-sm"
               autoFocus
+              data-testid="chat-new-dialog-input"
             />
           </div>
           {error && <p className="text-xs text-destructive">{error}</p>}
@@ -233,7 +234,9 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
               <Button type="button" variant="outline" onClick={handleClose}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit">{t('chat.newChat.start')}</Button>
+              <Button type="submit" data-testid="chat-new-dialog-submit">
+                {t('chat.newChat.start')}
+              </Button>
             </div>
           )}
         </form>

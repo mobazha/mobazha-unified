@@ -6,9 +6,17 @@ import { useAuthenticatedImage } from '@mobazha/core';
 import type { Message } from './ChatMessages';
 
 export function cleanDisplayName(raw: string): string {
-  let name = raw.replace(/^@/, '').replace(/:[a-z0-9._-]+$/i, '');
+  const trimmed = raw.trim();
+  let name = trimmed.replace(/^@/, '').replace(/:[a-z0-9._-]+$/i, '');
+  const cameFromMatrixId = trimmed !== name || trimmed.startsWith('@');
   if (name.startsWith('peer_')) name = name.slice(5);
-  if (name.length > 12) name = `${name.slice(0, 6)}…${name.slice(-4)}`;
+
+  const looksLikePeerID = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{20,})$/.test(
+    name
+  );
+  if ((cameFromMatrixId || looksLikePeerID) && name.length > 12) {
+    name = `${name.slice(0, 6)}…${name.slice(-4)}`;
+  }
   return name || 'Chat';
 }
 

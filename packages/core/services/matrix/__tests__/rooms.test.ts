@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  extractPeerIdFromUserId,
-  isMobazhaUser,
-  loadInvitePolicy,
-  saveInvitePolicy,
-} from '../rooms';
+import { isMobazhaUser, loadInvitePolicy, saveInvitePolicy } from '../rooms';
 
 vi.mock('../../api/config', () => ({
   getMyGatewayUrl: () => 'https://gateway.test.com',
@@ -18,6 +13,10 @@ vi.mock('../../api/helpers', () => ({
   authDel: vi.fn(),
 }));
 
+vi.mock('../../profileCache', () => ({
+  batchGetProfileDisplayInfo: vi.fn(),
+}));
+
 vi.mock('../events', () => ({
   matrixEvents: {
     emit: vi.fn(),
@@ -29,32 +28,6 @@ vi.mock('../events', () => ({
 describe('rooms module', () => {
   beforeEach(() => {
     localStorage.clear();
-  });
-
-  describe('extractPeerIdFromUserId', () => {
-    it('extracts peer ID from standard Matrix user ID', () => {
-      expect(extractPeerIdFromUserId('@peer_qmabc123:matrix.mobazha.org')).toBe('qmabc123');
-    });
-
-    it('handles uppercase peer ID', () => {
-      expect(extractPeerIdFromUserId('@peer_QmABC123:matrix.mobazha.org')).toBe('QmABC123');
-    });
-
-    it('returns null for non-mobazha user ID', () => {
-      expect(extractPeerIdFromUserId('@alice:matrix.org')).toBeNull();
-    });
-
-    it('returns null for empty string', () => {
-      expect(extractPeerIdFromUserId('')).toBeNull();
-    });
-
-    it('returns null for user ID without peer_ prefix', () => {
-      expect(extractPeerIdFromUserId('@user_abc:test')).toBeNull();
-    });
-
-    it('handles different server names', () => {
-      expect(extractPeerIdFromUserId('@peer_abc123:custom.server')).toBe('abc123');
-    });
   });
 
   describe('isMobazhaUser', () => {
@@ -134,8 +107,8 @@ describe('rooms module', () => {
       expect(rooms[0].isEncrypted).toBe(true);
       expect(rooms[0].unreadCount).toBe(3);
       expect(rooms[0].members).toHaveLength(1);
-      expect(rooms[0].members[0].peerID).toBe('abc123');
-      expect(rooms[0].memberPeerIDs).toEqual({ '@peer_abc123:test': 'abc123' });
+      expect(rooms[0].members[0].peerID).toBeUndefined();
+      expect(rooms[0].memberPeerIDs).toEqual({});
     });
 
     it('handles empty rooms list', async () => {
@@ -159,31 +132,233 @@ describe('rooms module', () => {
 
       expect(rooms).toHaveLength(0);
     });
+
+    it('hydrates direct-room counterpart member info from peer profile', async () => {
+      const { authGet } = await import('../../api/helpers');
+      const { batchGetProfileDisplayInfo } = await import('../../profileCache');
+      const mockAuthGet = vi.mocked(authGet);
+      const mockBatchGetProfileDisplayInfo = vi.mocked(batchGetProfileDisplayInfo);
+
+      mockAuthGet.mockResolvedValueOnce([
+        {
+          roomId: '!room1:test',
+          name: 'Alice',
+          isDirect: true,
+          encrypted: true,
+          unreadCount: 0,
+          roomType: 'direct',
+          members: [
+            { userId: '@peer_me:test', displayName: 'Me', peerID: 'mepeer', membership: 'join' },
+            {
+              userId: '@peer_alice:test',
+              displayName: 'Alice',
+              peerID: 'alicepeer',
+              membership: 'join',
+            },
+          ],
+        },
+      ]);
+      mockBatchGetProfileDisplayInfo.mockResolvedValueOnce(
+        new Map([
+          [
+            'alicepeer',
+            {
+              name: "Alice's Digital Shop",
+              avatar: '/v1/media/images/bafy-avatar?store=alicepeer',
+            },
+          ],
+        ])
+      );
+
+      const { getRooms } = await import('../rooms');
+      const rooms = await getRooms('@peer_me:test');
+
+      expect(mockBatchGetProfileDisplayInfo).toHaveBeenCalledWith(['alicepeer']);
+      expect(rooms[0].name).toBe('Alice');
+      expect(rooms[0].avatarUrl).toBeUndefined();
+      expect(rooms[0].members[1].displayName).toBe("Alice's Digital Shop");
+      expect(rooms[0].members[1].avatarUrl).toBe('/v1/media/images/bafy-avatar?store=alicepeer');
+    });
+
+    it('preserves explicit backend peer IDs for direct rooms', async () => {
+      const { authGet } = await import('../../api/helpers');
+      const { batchGetProfileDisplayInfo } = await import('../../profileCache');
+      const mockAuthGet = vi.mocked(authGet);
+      const mockBatchGetProfileDisplayInfo = vi.mocked(batchGetProfileDisplayInfo);
+
+      mockAuthGet.mockResolvedValueOnce([
+        {
+          roomId: '!room1:test',
+          name: 'DM',
+          isDirect: true,
+          encrypted: true,
+          unreadCount: 0,
+          roomType: 'direct',
+          members: [
+            {
+              userId: '@peer_me:test',
+              displayName: 'Me',
+              peerID: '12D3KooWMe',
+              membership: 'join',
+            },
+            {
+              userId: '@peer_alice:test',
+              displayName: 'Alice',
+              peerID: '12D3KooWAlice',
+              membership: 'join',
+            },
+          ],
+        },
+      ]);
+      mockBatchGetProfileDisplayInfo.mockResolvedValueOnce(new Map());
+
+      const { getRooms } = await import('../rooms');
+      const rooms = await getRooms('@peer_me:test');
+
+      expect(rooms[0].members[1].peerID).toBe('12D3KooWAlice');
+      expect(rooms[0].memberPeerIDs).toEqual({
+        '@peer_me:test': '12D3KooWMe',
+        '@peer_alice:test': '12D3KooWAlice',
+      });
+    });
+
+    it('uses direct_target_peer_id metadata when member peer IDs are missing', async () => {
+      const { authGet } = await import('../../api/helpers');
+      const { batchGetProfileDisplayInfo } = await import('../../profileCache');
+      const mockAuthGet = vi.mocked(authGet);
+      const mockBatchGetProfileDisplayInfo = vi.mocked(batchGetProfileDisplayInfo);
+
+      mockAuthGet.mockResolvedValueOnce([
+        {
+          roomId: '!room1:test',
+          name: 'Chat',
+          isDirect: true,
+          encrypted: true,
+          unreadCount: 0,
+          roomType: 'direct',
+          metadata: {
+            type: 'direct',
+            direct_target_peer_id: '12D3KooWAlice',
+          },
+          members: [
+            { userId: '@peer_me:test', displayName: 'Me', membership: 'join' },
+            { userId: '@peer_alice:test', displayName: 'Alice', membership: 'join' },
+          ],
+        },
+      ]);
+      mockBatchGetProfileDisplayInfo.mockResolvedValueOnce(
+        new Map([
+          [
+            '12D3KooWAlice',
+            {
+              name: "Alice's Digital Shop",
+              avatar: '/v1/media/images/bafy-avatar?store=12D3KooWAlice',
+            },
+          ],
+        ])
+      );
+
+      const { getRooms } = await import('../rooms');
+      const rooms = await getRooms('@peer_me:test');
+
+      expect(mockBatchGetProfileDisplayInfo).toHaveBeenCalledWith(['12D3KooWAlice']);
+      expect(rooms[0].members[1].displayName).toBe("Alice's Digital Shop");
+      expect(rooms[0].members[1].avatarUrl).toBe(
+        '/v1/media/images/bafy-avatar?store=12D3KooWAlice'
+      );
+      expect(rooms[0].memberPeerIDs?.['@peer_alice:test']).toBe('12D3KooWAlice');
+    });
+
+    it('ignores direct_target_peer_id metadata when it matches current user peerID', async () => {
+      const { authGet } = await import('../../api/helpers');
+      const { batchGetProfileDisplayInfo } = await import('../../profileCache');
+      const mockAuthGet = vi.mocked(authGet);
+      const mockBatchGetProfileDisplayInfo = vi.mocked(batchGetProfileDisplayInfo);
+
+      mockAuthGet.mockResolvedValueOnce([
+        {
+          roomId: '!room1:test',
+          name: 'Chat',
+          isDirect: true,
+          encrypted: true,
+          unreadCount: 0,
+          roomType: 'direct',
+          metadata: {
+            type: 'direct',
+            direct_target_peer_id: '12D3KooWMe',
+          },
+          members: [
+            {
+              userId: '@peer_me:test',
+              displayName: 'Me',
+              peerID: '12D3KooWMe',
+              membership: 'join',
+            },
+            { userId: '@peer_other:test', displayName: 'Other', membership: 'join' },
+          ],
+        },
+      ]);
+      mockBatchGetProfileDisplayInfo.mockResolvedValueOnce(new Map());
+
+      const { getRooms } = await import('../rooms');
+      const rooms = await getRooms('@peer_me:test');
+
+      expect(mockBatchGetProfileDisplayInfo).not.toHaveBeenCalled();
+      expect(rooms[0].members[1].peerID).toBeUndefined();
+    });
   });
 
   describe('createDirectRoom', () => {
-    it('creates a direct room and returns roomId', async () => {
+    it('creates a direct room by target peerID and returns roomId', async () => {
       const { authPost } = await import('../../api/helpers');
       const mockAuthPost = vi.mocked(authPost);
       mockAuthPost.mockResolvedValueOnce({ roomId: '!new_room:test' });
 
       const { createDirectRoom } = await import('../rooms');
-      const roomId = await createDirectRoom('@peer_abc:test');
+      const roomId = await createDirectRoom('', '12D3KooWAbc');
 
       expect(roomId).toBe('!new_room:test');
       expect(mockAuthPost).toHaveBeenCalledWith(expect.any(String), {
-        userID: '@peer_abc:test',
+        targetUserID: undefined,
+        targetPeerID: '12D3KooWAbc',
         isDM: true,
       });
     });
 
-    it('returns null on failure', async () => {
+    it('creates a direct room by target userID and returns roomId', async () => {
+      const { authPost } = await import('../../api/helpers');
+      const mockAuthPost = vi.mocked(authPost);
+      mockAuthPost.mockResolvedValueOnce({ roomId: '!new_room:test' });
+
+      const { createDirectRoom } = await import('../rooms');
+      const roomId = await createDirectRoom('@alice:matrix.org');
+
+      expect(roomId).toBe('!new_room:test');
+      expect(mockAuthPost).toHaveBeenCalledWith(expect.any(String), {
+        targetUserID: '@alice:matrix.org',
+        targetPeerID: undefined,
+        isDM: true,
+      });
+    });
+
+    it('returns null when both targets are provided', async () => {
+      const { authPost } = await import('../../api/helpers');
+      const mockAuthPost = vi.mocked(authPost);
+
+      const { createDirectRoom } = await import('../rooms');
+      const roomId = await createDirectRoom('@alice:matrix.org', '12D3KooWAbc');
+
+      expect(roomId).toBeNull();
+      expect(mockAuthPost).not.toHaveBeenCalled();
+    });
+
+    it('returns null on request failure', async () => {
       const { authPost } = await import('../../api/helpers');
       const mockAuthPost = vi.mocked(authPost);
       mockAuthPost.mockRejectedValueOnce(new Error('Network error'));
 
       const { createDirectRoom } = await import('../rooms');
-      const roomId = await createDirectRoom('@peer_abc:test');
+      const roomId = await createDirectRoom('', '12D3KooWAbc');
 
       expect(roomId).toBeNull();
     });

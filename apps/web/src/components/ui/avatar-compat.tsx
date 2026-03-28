@@ -27,7 +27,12 @@ const sizeClasses = {
  */
 function needsAuthentication(url: string | undefined): boolean {
   if (!url) return false;
-  return url.includes('/_matrix/client/v1/media/') || url.startsWith('mxc://');
+  return (
+    url.includes('/_matrix/client/v1/media/') ||
+    url.includes('/chat/media/') ||
+    url.startsWith('mxc://') ||
+    url.includes('/media/images/')
+  );
 }
 
 /**

@@ -7,6 +7,7 @@
 import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authPut } from '../api/helpers';
 import { mxcToHttp, convertMessage } from './messages';
+import { batchGetProfileDisplayInfo } from '../profileCache';
 import type {
   MatrixRoom,
   MatrixUser,
@@ -18,9 +19,10 @@ import type {
 
 // ============ Public API ============
 
-export async function getRooms(): Promise<MatrixRoom[]> {
+export async function getRooms(currentUserId?: string | null): Promise<MatrixRoom[]> {
   const backendRooms = await authGet<BackendRoom[]>(NODE_API.CHAT_ROOMS);
-  return (backendRooms || []).map(convertRoom);
+  const rooms = (backendRooms || []).map(convertRoom);
+  return enrichDirectRoomsWithProfiles(rooms, currentUserId);
 }
 
 export async function getRoomsByType(type: RoomType): Promise<MatrixRoom[]> {
@@ -30,18 +32,23 @@ export async function getRoomsByType(type: RoomType): Promise<MatrixRoom[]> {
 
 export async function getOrCreateDirectRoom(
   peerID: string,
-  serverName: string | null,
+  _serverName: string | null,
   _displayName?: string
 ): Promise<string | null> {
-  const matrixUserId = peerIdToMatrixUserId(peerID, serverName);
-  if (!matrixUserId) return null;
-  return createDirectRoom(matrixUserId);
+  if (!peerID) return null;
+  return createDirectRoom('', peerID);
 }
 
-export async function createDirectRoom(userId: string): Promise<string | null> {
+export async function createDirectRoom(userId: string, peerID?: string): Promise<string | null> {
   try {
+    const targetUserID = userId?.trim();
+    const targetPeerID = peerID?.trim();
+    if (!targetUserID && !targetPeerID) return null;
+    if (targetUserID && targetPeerID) return null;
+
     const resp = await authPost<{ roomId: string }>(NODE_API.CHAT_ROOMS, {
-      userID: userId,
+      targetUserID: targetUserID || undefined,
+      targetPeerID: targetPeerID || undefined,
       isDM: true,
     });
     return resp.roomId;
@@ -218,11 +225,6 @@ export function setMyPeerIDInRoom(_roomId: string): Promise<void> {
   return Promise.resolve();
 }
 
-export function extractPeerIdFromUserId(userId: string): string | null {
-  const match = userId.match(/^@peer_([a-z0-9]+):/i);
-  return match ? match[1] : null;
-}
-
 export function isMobazhaUser(userId: string): boolean {
   return /^@peer_[a-z0-9]+:/i.test(userId);
 }
@@ -248,13 +250,129 @@ export async function saveInvitePolicy(policy: InvitePolicy): Promise<void> {
 
 // ============ Converters ============
 
+function getDirectCounterpartyPeerID(
+  room: MatrixRoom,
+  currentUserId?: string | null
+): string | undefined {
+  const selfPeerID =
+    room.members.find(member => member.userId === currentUserId)?.peerID ||
+    (currentUserId ? room.memberPeerIDs?.[currentUserId] : undefined);
+
+  const otherMember = room.members.find(member => member.userId !== currentUserId && member.peerID);
+  if (otherMember?.peerID) {
+    return otherMember.peerID;
+  }
+
+  if (room.memberPeerIDs) {
+    for (const [userId, peerID] of Object.entries(room.memberPeerIDs)) {
+      if (userId !== currentUserId && peerID) {
+        return peerID;
+      }
+    }
+  }
+
+  const metadataPeerID = room.metadata?.direct_target_peer_id;
+  if (metadataPeerID && (!selfPeerID || metadataPeerID !== selfPeerID)) {
+    return metadataPeerID;
+  }
+
+  return undefined;
+}
+
+async function enrichDirectRoomsWithProfiles(
+  rooms: MatrixRoom[],
+  currentUserId?: string | null
+): Promise<MatrixRoom[]> {
+  if (!currentUserId) {
+    return rooms;
+  }
+
+  const roomPeerIDs = new Map<string, string>();
+  for (const room of rooms) {
+    if (!room.isDirect) continue;
+
+    const peerID = getDirectCounterpartyPeerID(room, currentUserId);
+    if (peerID) {
+      roomPeerIDs.set(room.roomId, peerID);
+    }
+  }
+
+  if (roomPeerIDs.size === 0) {
+    return rooms;
+  }
+
+  const profileMap = await batchGetProfileDisplayInfo([...new Set(roomPeerIDs.values())]);
+
+  return rooms.map(room => {
+    const peerID = roomPeerIDs.get(room.roomId);
+    if (!peerID) return room;
+
+    const profile = profileMap.get(peerID);
+    if (!profile) {
+      return room;
+    }
+
+    let membersChanged = false;
+    const members = room.members.map(member => {
+      if (member.userId === currentUserId) {
+        return member;
+      }
+
+      const nextPeerID = member.peerID || peerID;
+      const nextDisplayName = profile.name || member.displayName;
+      const nextAvatarUrl = profile.avatar || member.avatarUrl;
+
+      if (
+        nextPeerID === member.peerID &&
+        nextDisplayName === member.displayName &&
+        nextAvatarUrl === member.avatarUrl
+      ) {
+        return member;
+      }
+
+      membersChanged = true;
+      return {
+        ...member,
+        peerID: nextPeerID,
+        ...(nextDisplayName ? { displayName: nextDisplayName } : {}),
+        ...(nextAvatarUrl ? { avatarUrl: nextAvatarUrl } : {}),
+      };
+    });
+
+    let memberPeerIDsChanged = false;
+    let memberPeerIDs = room.memberPeerIDs || {};
+    for (const member of room.members) {
+      if (member.userId === currentUserId) {
+        continue;
+      }
+      if (memberPeerIDs[member.userId] === peerID) {
+        continue;
+      }
+      if (!memberPeerIDsChanged) {
+        memberPeerIDs = { ...memberPeerIDs };
+      }
+      memberPeerIDsChanged = true;
+      memberPeerIDs[member.userId] = peerID;
+    }
+
+    if (!membersChanged && !memberPeerIDsChanged) {
+      return room;
+    }
+
+    return {
+      ...room,
+      members,
+      memberPeerIDs,
+    };
+  });
+}
+
 function convertRoom(r: BackendRoom): MatrixRoom {
   const members: MatrixUser[] = (r.members || []).map(convertMember);
   const memberPeerIDs: Record<string, string> = {};
   for (const m of members) {
-    const pid = m.peerID || extractPeerIdFromUserId(m.userId);
+    const pid = m.peerID;
     if (pid) {
-      m.peerID = pid;
       memberPeerIDs[m.userId] = pid;
     }
   }
@@ -272,14 +390,7 @@ function convertRoom(r: BackendRoom): MatrixRoom {
     membership: 'join',
     roomType: (r.roomType as MatrixRoom['roomType']) || (r.isDirect ? 'direct' : 'group'),
     memberPeerIDs,
-    metadata: r.metadata
-      ? {
-          orderId: r.metadata.orderId,
-          storeId: r.metadata.storeId,
-          moderatorId: r.metadata.moderatorId,
-          storeName: r.metadata.storeName,
-        }
-      : undefined,
+    metadata: r.metadata ? { ...r.metadata } : undefined,
   };
 
   if (r.metadata?.orderId) room.orderId = r.metadata.orderId;
@@ -290,7 +401,6 @@ function convertRoom(r: BackendRoom): MatrixRoom {
     room.lastMessage = convertMessage(r.lastMessage);
     room.timestamp = room.lastMessage.timestamp;
   }
-
   return room;
 }
 
@@ -302,10 +412,4 @@ function convertMember(m: BackendMember): MatrixUser {
     rawMxcAvatarUrl: m.avatarUrl || undefined,
     peerID: m.peerID || undefined,
   };
-}
-
-function peerIdToMatrixUserId(peerID: string, serverName: string | null): string | null {
-  if (!peerID) return null;
-  const server = serverName || 'matrix.mobazha.org';
-  return `@peer_${peerID.toLowerCase()}:${server}`;
 }

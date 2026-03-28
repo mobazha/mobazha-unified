@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ChatDrawer } from '@/components/ChatDrawer';
 import { NewChatDialog } from '@/components/ChatDrawer/NewChatDialog';
 import { matrixClient, useUserStore, useChatStore, isMatrixEnabled } from '@mobazha/core';
@@ -11,22 +11,11 @@ import { matrixClient, useUserStore, useChatStore, isMatrixEnabled } from '@moba
  * 放在全局 layout 中使用
  */
 export const ChatSystem: React.FC = () => {
-  const { isAuthenticated, profile } = useUserStore();
+  const { isAuthenticated } = useUserStore();
+  const matrixConnected = useChatStore(state => state.isConnected);
 
-  // 获取当前用户 ID：优先使用 Matrix 配置，否则从 peerID 构造
-  const peerID = profile?.peerID;
-  const currentUserId = (() => {
-    // 从 matrixClient 获取当前用户 ID
-    const userId = matrixClient.getUserId();
-    if (userId) {
-      return userId;
-    }
-    // 回退：从 peerID 构造
-    if (peerID) {
-      return `@peer_${peerID.toLowerCase()}:matrix.mobazha.org`;
-    }
-    return '';
-  })();
+  // 当前用户 ID 必须以 Matrix 运行态为准，避免本地推导导致身份错位。
+  const currentUserId = useMemo(() => matrixClient.getUserId() || '', [matrixConnected]);
 
   // 发送消息
   const handleSendMessage = useCallback(async (roomId: string, content: string) => {

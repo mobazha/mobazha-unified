@@ -1,7 +1,118 @@
 import { useEffect, useRef } from 'react';
-import { useChatStore, matrixClient, matrixEvents, MATRIX_EVENTS } from '@mobazha/core';
+import {
+  useChatStore,
+  matrixClient,
+  matrixEvents,
+  MATRIX_EVENTS,
+  getProfileDisplayInfo,
+} from '@mobazha/core';
 import type { MatrixRoom } from '@mobazha/core';
 import type { VerificationPhase } from '../VerificationDialog';
+
+const DECRYPTION_RETRY_DELAY_MS = 1500;
+
+interface PendingDirectRoomPatch {
+  peerID?: string | null;
+  currentUserId?: string;
+  displayName?: string | null;
+}
+
+function patchPendingDirectRoom(
+  rooms: MatrixRoom[],
+  roomId: string,
+  patch: PendingDirectRoomPatch
+): MatrixRoom[] {
+  return rooms.map(room => {
+    if (room.roomId !== roomId) return room;
+
+    const fallbackName = patch.displayName?.trim();
+    const nextPeerID = patch.peerID?.trim();
+    const memberPeerIDs =
+      nextPeerID && patch.currentUserId
+        ? {
+            ...(room.memberPeerIDs || {}),
+            ...Object.fromEntries(
+              room.members
+                .filter(member => member.userId !== patch.currentUserId)
+                .map(member => [member.userId, nextPeerID])
+            ),
+          }
+        : room.memberPeerIDs;
+    const members = patch.currentUserId
+      ? room.members.map(member => {
+          if (member.userId === patch.currentUserId) {
+            return member;
+          }
+
+          return {
+            ...member,
+            ...(nextPeerID ? { peerID: nextPeerID } : {}),
+            ...(fallbackName ? { displayName: fallbackName } : {}),
+          };
+        })
+      : room.members;
+
+    return {
+      ...room,
+      memberPeerIDs,
+      members,
+      ...(fallbackName ? { name: fallbackName } : {}),
+      isDirect: true,
+      roomType: 'direct',
+    };
+  });
+}
+
+async function hydratePendingDirectRoomProfile(
+  roomId: string,
+  peerID: string,
+  currentUserId: string,
+  pendingPeerDisplayName: string | null,
+  roomSnapshot: MatrixRoom | undefined,
+  updateRoom: (roomId: string, updates: Partial<MatrixRoom>) => void,
+  isCancelled: () => boolean
+): Promise<void> {
+  const profile = await getProfileDisplayInfo(peerID);
+  if (isCancelled() || !profile) return;
+
+  const fallbackName = pendingPeerDisplayName?.trim();
+  const resolvedName = profile.name?.trim() || fallbackName;
+  const resolvedAvatarUrl = profile.avatar?.trim();
+  const currentRoom =
+    useChatStore.getState().rooms.find(room => room.roomId === roomId) || roomSnapshot;
+  if (!currentRoom) return;
+
+  if (!resolvedName && !resolvedAvatarUrl) return;
+
+  updateRoom(roomId, {
+    ...(resolvedName ? { name: resolvedName } : {}),
+    ...(resolvedAvatarUrl ? { avatarUrl: resolvedAvatarUrl } : {}),
+    members: currentRoom.members.map(member =>
+      member.userId !== currentUserId
+        ? {
+            ...member,
+            peerID,
+            ...(resolvedName ? { displayName: resolvedName } : {}),
+            ...(resolvedAvatarUrl ? { avatarUrl: resolvedAvatarUrl } : {}),
+          }
+        : member
+    ),
+    memberPeerIDs: {
+      ...(currentRoom.memberPeerIDs || {}),
+      ...Object.fromEntries(
+        currentRoom.members
+          .filter(member => member.userId !== currentUserId)
+          .map(member => [member.userId, peerID])
+      ),
+    },
+    isDirect: true,
+    roomType: 'direct',
+  });
+}
+
+function hasTransientDecryptionFailure(messages: import('@mobazha/core').MatrixMessage[]): boolean {
+  return messages.some(message => message.decryptionFailed);
+}
 
 // ---------------------------------------------------------------------------
 // Params
@@ -70,6 +181,10 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
   // Track rooms that already had initial messages loaded
   const loadedRoomsRef = useRef<Set<string>>(new Set());
+  const updateRoomRef = useRef(updateRoom);
+  const decryptionRetryCountRef = useRef<Map<string, number>>(new Map());
+
+  updateRoomRef.current = updateRoom;
 
   // ---- 1. Resolve pendingPeerID → create/find DM room and focus it ----
   useEffect(() => {
@@ -87,11 +202,34 @@ export function useChatEffects(params: UseChatEffectsParams): void {
         if (cancelled) return;
 
         if (roomId) {
-          const allRooms = await matrixClient.getRooms();
+          const allRooms = patchPendingDirectRoom(await matrixClient.getRooms(), roomId, {
+            peerID: pendingPeerID,
+            currentUserId,
+            displayName: pendingPeerDisplayName,
+          });
+          const roomSnapshot = allRooms.find(room => room.roomId === roomId);
           if (!cancelled) {
             setRooms(allRooms.filter(r => r.membership !== 'invite'));
             setInvites(allRooms.filter(r => r.membership === 'invite'));
             setCurrentRoom(roomId);
+          }
+
+          if (pendingPeerID) {
+            try {
+              // Await once so profile hydration can patch avatar/name before
+              // pending peer state is cleared and this effect is cleaned up.
+              await hydratePendingDirectRoomProfile(
+                roomId,
+                pendingPeerID,
+                currentUserId,
+                pendingPeerDisplayName,
+                roomSnapshot,
+                updateRoomRef.current,
+                () => cancelled
+              );
+            } catch (err) {
+              console.warn('[ChatDrawer] Failed to hydrate DM profile:', err);
+            }
           }
         }
       } catch (err) {
@@ -122,6 +260,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     setInvites,
     setCurrentRoom,
     setIsCreatingRoom,
+    currentUserId,
     toast,
     t,
   ]);
@@ -132,6 +271,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
     let cancelled = false;
     const roomId = currentRoomId;
+    let decryptionRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
     updateRoom(roomId, { unreadCount: 0 });
     useChatStore.getState().markRoomAsRead(roomId);
@@ -167,12 +307,41 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
     if (loadedRoomsRef.current.has(roomId)) return;
 
+    const scheduleTransientDecryptRetry = () => {
+      const retryCount = decryptionRetryCountRef.current.get(roomId) || 0;
+      if (retryCount >= 1 || decryptionRetryTimer) return;
+
+      decryptionRetryCountRef.current.set(roomId, retryCount + 1);
+      decryptionRetryTimer = setTimeout(() => {
+        matrixClient
+          .getMessages(roomId, 50)
+          .then(messages => {
+            if (cancelled) return;
+            setMessages(roomId, messages);
+            if (!hasTransientDecryptionFailure(messages)) {
+              decryptionRetryCountRef.current.delete(roomId);
+            }
+          })
+          .catch(error => {
+            console.warn('[ChatDrawer] Failed to retry message decryption:', error);
+          })
+          .finally(() => {
+            decryptionRetryTimer = null;
+          });
+      }, DECRYPTION_RETRY_DELAY_MS);
+    };
+
     const loadMessages = async () => {
       try {
         const messages = await matrixClient.getMessages(roomId, 50);
         if (cancelled) return;
         setMessages(roomId, messages);
         loadedRoomsRef.current.add(roomId);
+        if (hasTransientDecryptionFailure(messages)) {
+          scheduleTransientDecryptRetry();
+        } else {
+          decryptionRetryCountRef.current.delete(roomId);
+        }
       } catch (error) {
         if (!cancelled) {
           console.error('[ChatDrawer] Failed to load messages:', error);
@@ -184,6 +353,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
     return () => {
       cancelled = true;
+      if (decryptionRetryTimer) clearTimeout(decryptionRetryTimer);
     };
   }, [currentRoomId, setMessages, updateRoom, currentUserId]);
 
@@ -231,6 +401,9 @@ export function useChatEffects(params: UseChatEffectsParams): void {
         .then(messages => {
           setMessages(roomId, messages);
           loadedRoomsRef.current.add(roomId);
+          if (!hasTransientDecryptionFailure(messages)) {
+            decryptionRetryCountRef.current.delete(roomId);
+          }
         })
         .catch(err => {
           console.warn('[ChatDrawer] Failed to refetch messages after reconnect:', err);

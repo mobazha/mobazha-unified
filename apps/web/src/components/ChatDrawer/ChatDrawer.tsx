@@ -10,6 +10,9 @@ import {
   selectTotalUnreadCount,
   selectPendingPeerID,
   selectPendingPeerDisplayName,
+  getMemberPresentation,
+  getMessageSenderPresentation,
+  getRoomPresentation,
   matrixClient,
 } from '@mobazha/core';
 import { useI18n } from '@mobazha/core';
@@ -25,12 +28,17 @@ import { useChatEffects } from './hooks/useChatEffects';
 // Data converters
 // ---------------------------------------------------------------------------
 
-function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
+function toDisplayRoom(
+  room: MatrixRoom,
+  currentUserId: string | null | undefined,
+  defaultName: string
+): ChatRoom {
+  const presentation = getRoomPresentation(room, currentUserId, defaultName);
   return {
     id: room.roomId,
-    name: room.name || defaultName,
-    avatar: room.avatarUrl,
-    rawMxcAvatarUrl: room.rawMxcAvatarUrl,
+    name: presentation.title,
+    avatar: presentation.avatarUrl,
+    rawMxcAvatarUrl: presentation.rawMxcAvatarUrl,
     lastMessage: room.lastMessage?.content,
     lastMessageTime: (() => {
       if (!room.timestamp) return undefined;
@@ -44,7 +52,7 @@ function toDisplayRoom(room: MatrixRoom, defaultName: string): ChatRoom {
     isEncrypted: room.isEncrypted,
     isDirect: room.isDirect,
     roomType: room.roomType,
-    isExternal: room.isExternal,
+    isExternal: presentation.isExternal,
     isVerified: false,
     isInvite: room.membership === 'invite',
     inviterName: room.inviter,
@@ -57,14 +65,20 @@ function safeTimestamp(ts: unknown): string {
   return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }
 
-function toDisplayMessage(msg: MatrixMessage): Message {
+interface MessageSenderDisplay {
+  senderName?: string;
+  senderAvatar?: string;
+  senderRawMxcAvatarUrl?: string;
+}
+
+function toDisplayMessage(msg: MatrixMessage, sender?: MessageSenderDisplay): Message {
   return {
     id: msg.id,
     content: msg.content,
     senderId: msg.sender,
-    senderName: msg.senderName,
-    senderAvatar: msg.senderAvatar,
-    senderRawMxcAvatarUrl: msg.senderRawMxcAvatarUrl,
+    senderName: sender?.senderName,
+    senderAvatar: sender?.senderAvatar,
+    senderRawMxcAvatarUrl: sender?.senderRawMxcAvatarUrl,
     timestamp: safeTimestamp(msg.timestamp),
     status: msg.status,
     isSystem: msg.isSystem,
@@ -169,11 +183,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const loadingMessages = useChatStore(state => state.loadingMessages);
   const hasMoreMessages = useChatStore(state => state.hasMoreMessages);
   const updateRoom = useChatStore(state => state.updateRoom);
+  const effectiveCurrentUserId = matrixClient.getUserId() || currentUserId;
 
   // ---- Side-effects (all useEffect calls) ----
   useChatEffects({
     currentRoomId,
-    currentUserId,
+    currentUserId: effectiveCurrentUserId,
     pendingPeerID,
     pendingPeerDisplayName,
     clearPendingPeer,
@@ -202,28 +217,51 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     const map: Record<string, string> = {};
     if (currentRoom?.members) {
       for (const m of currentRoom.members) {
-        if (m.userId && m.displayName) {
-          map[m.userId] = m.displayName;
+        if (m.userId) {
+          map[m.userId] = getMemberPresentation(m, currentRoom).displayName;
         }
       }
     }
     return map;
-  }, [currentRoom?.members]);
+  }, [currentRoom]);
+
+  const currentRoomPresentation = useMemo(() => {
+    if (!currentRoom) return null;
+    return getRoomPresentation(currentRoom, effectiveCurrentUserId, defaultRoomName);
+  }, [currentRoom, effectiveCurrentUserId, defaultRoomName]);
 
   const displayRooms = useMemo(() => {
     const sorted = [...rooms].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    return sorted.map(room => toDisplayRoom(room, defaultRoomName));
-  }, [rooms, defaultRoomName]);
+    return sorted.map(room => toDisplayRoom(room, effectiveCurrentUserId, defaultRoomName));
+  }, [rooms, effectiveCurrentUserId, defaultRoomName]);
 
   const displayInvites = useMemo(() => {
-    return invites.map(room => toDisplayRoom(room, defaultRoomName));
-  }, [invites, defaultRoomName]);
+    return invites.map(room => toDisplayRoom(room, effectiveCurrentUserId, defaultRoomName));
+  }, [invites, effectiveCurrentUserId, defaultRoomName]);
 
   const currentMessages = useMemo(() => {
     const roomMessages = currentRoomId ? allMessages[currentRoomId] : undefined;
     if (!currentRoomId || !roomMessages) return [];
-    return roomMessages.map(toDisplayMessage);
-  }, [currentRoomId, allMessages]);
+
+    return roomMessages.map(message => {
+      const senderPresentation = getMessageSenderPresentation(
+        currentRoom,
+        message.sender,
+        effectiveCurrentUserId,
+        {
+          displayName: message.senderName,
+          avatarUrl: message.senderAvatar,
+          rawMxcAvatarUrl: message.senderRawMxcAvatarUrl,
+        }
+      );
+
+      return toDisplayMessage(message, {
+        senderName: senderPresentation.displayName,
+        senderAvatar: senderPresentation.avatarUrl,
+        senderRawMxcAvatarUrl: senderPresentation.rawMxcAvatarUrl,
+      });
+    });
+  }, [currentRoomId, allMessages, currentRoom, effectiveCurrentUserId]);
 
   const currentTypingUsers = useMemo(() => {
     if (!currentRoomId || !typingUsers[currentRoomId]) return [];
@@ -309,7 +347,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         id: localId,
         localId,
         roomId: currentRoomId,
-        sender: currentUserId,
+        sender: effectiveCurrentUserId,
         content: file.name || 'file',
         type: messageType,
         timestamp: Date.now(),
@@ -359,7 +397,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         if (localUrl) URL.revokeObjectURL(localUrl);
       }
     },
-    [currentRoomId, currentUserId, toast, t]
+    [currentRoomId, effectiveCurrentUserId, toast, t]
   );
 
   // Drag-and-drop
@@ -509,13 +547,14 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const handleAvatarClick = useCallback(
     (userId: string, displayName?: string, avatarUrl?: string) => {
       const member = currentRoom?.members?.find(m => m.userId === userId);
-      const peerID = member?.peerID || currentRoom?.memberPeerIDs?.[userId] || undefined;
+      const presentation =
+        member && currentRoom ? getMemberPresentation(member, currentRoom) : null;
       setUserCard({
         userId,
-        displayName: displayName || member?.displayName,
-        avatarUrl: avatarUrl || member?.avatarUrl,
-        peerID,
-        isExternal: member?.isExternal,
+        displayName: displayName || presentation?.displayName || member?.displayName,
+        avatarUrl: avatarUrl || presentation?.avatarUrl || member?.avatarUrl,
+        peerID: presentation?.peerID,
+        isExternal: presentation?.isExternal ?? member?.isExternal,
       });
     },
     [currentRoom]
@@ -646,14 +685,14 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       return (
         <ChatMessages
           roomId={currentRoomId}
-          roomName={currentRoom.name || t('chat.defaultRoom')}
-          roomAvatar={currentRoom.avatarUrl}
-          roomRawMxcAvatarUrl={currentRoom.rawMxcAvatarUrl}
+          roomName={currentRoomPresentation?.title || t('chat.defaultRoom')}
+          roomAvatar={currentRoomPresentation?.avatarUrl}
+          roomRawMxcAvatarUrl={currentRoomPresentation?.rawMxcAvatarUrl}
           isEncrypted={currentRoom.isEncrypted}
           isDirect={currentRoom.isDirect}
           isVerified={false}
           messages={currentMessages}
-          currentUserId={currentUserId}
+          currentUserId={effectiveCurrentUserId}
           isLoading={false}
           typingUsers={currentTypingUsers}
           memberNameMap={memberNameMap}
@@ -930,6 +969,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         {showRoomSettings && currentRoom && (
           <RoomSettingsPanel
             room={currentRoom}
+            currentUserId={effectiveCurrentUserId}
             onClose={handleCloseRoomSettings}
             onMemberClick={handleAvatarClick}
             t={t}

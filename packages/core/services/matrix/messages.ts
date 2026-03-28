@@ -260,22 +260,78 @@ export async function downloadAuthenticatedImage(url: string): Promise<string | 
 
 // ============ Converters ============
 
+function canonicalizeMessageMetadataKey(rawKey: string): string {
+  const normalized = rawKey.replace(/[_-]/g, '').toLowerCase();
+  switch (normalized) {
+    case 'sendername':
+      return 'senderName';
+    case 'senderavatar':
+    case 'senderavatarurl':
+      return 'senderAvatar';
+    case 'senderrawmxcavatarurl':
+    case 'senderrawmxcurl':
+      return 'senderRawMxcAvatarUrl';
+    case 'decryptionfailed':
+      return 'decryptionFailed';
+    default:
+      return rawKey;
+  }
+}
+
+function normalizeMessageMetadata(
+  metadata: Record<string, string> | undefined
+): Record<string, string> | undefined {
+  if (!metadata) return undefined;
+  const normalizedMetadata: Record<string, string> = {};
+
+  for (const [rawKey, rawValue] of Object.entries(metadata)) {
+    if (!rawValue) continue;
+
+    const key = canonicalizeMessageMetadataKey(rawKey);
+    const value = rawValue.trim();
+    if (!value) continue;
+
+    if (!(key in normalizedMetadata) || rawKey === key) {
+      normalizedMetadata[key] = value;
+    }
+  }
+
+  return Object.keys(normalizedMetadata).length > 0 ? normalizedMetadata : undefined;
+}
+
+function getMetadataValue(
+  metadata: Record<string, string> | undefined,
+  key: string
+): string | undefined {
+  const value = metadata?.[key];
+  return value?.trim() || undefined;
+}
+
 export function convertMessage(msg: BackendMessage): MatrixMessage {
   const ts = new Date(msg.timestamp).getTime();
   const msgType = mapMsgType(msg.msgType);
   const attachments = msg.media ? [convertMedia(msg.media)] : undefined;
+  const metadata = normalizeMessageMetadata(msg.metadata);
+  const senderName = getMetadataValue(metadata, 'senderName');
+  const senderAvatar = getMetadataValue(metadata, 'senderAvatar');
+  const senderRawMxcAvatarUrl = getMetadataValue(metadata, 'senderRawMxcAvatarUrl');
+  const decryptionFailed = getMetadataValue(metadata, 'decryptionFailed');
 
   return {
     id: msg.id,
     roomId: msg.roomId,
     sender: msg.sender,
-    senderName: msg.metadata?.senderName,
+    senderName,
+    senderAvatar,
+    senderRawMxcAvatarUrl,
     content: msg.content,
     type: msgType,
     timestamp: ts,
     replyTo: msg.replyTo || undefined,
     isEdited: !!msg.editedAt,
     attachments,
+    metadata,
+    decryptionFailed: decryptionFailed === 'true',
   };
 }
 
