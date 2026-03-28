@@ -238,20 +238,37 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
       const currentUserId = matrixClient.getUserId();
       const state = useChatStore.getState();
+      const existingRoom = state.rooms.find(r => r.roomId === message.roomId);
       const isViewingRoom = state.drawerOpen && state.currentRoomId === message.roomId;
       const shouldIncrementUnread = message.sender !== currentUserId && !isViewingRoom;
+
+      // Message can arrive before room list gets refreshed (e.g. auto-joined DM).
+      // If room is unknown locally, refresh rooms so the conversation appears in list.
+      if (!existingRoom) {
+        matrixClient
+          .getRooms()
+          .then(allRooms => {
+            const { rooms, invites } = splitRoomsAndInvites(allRooms);
+            setRooms(rooms);
+            setInvites(invites);
+          })
+          .catch(err => {
+            console.warn('[Matrix] Failed to refresh room list for incoming message:', err);
+          });
+      }
 
       const roomUpdate: Partial<MatrixRoom> = {
         lastMessage: message,
         timestamp: message.timestamp,
       };
 
-      if (shouldIncrementUnread) {
-        const room = state.rooms.find(r => r.roomId === message.roomId);
-        roomUpdate.unreadCount = (room?.unreadCount || 0) + 1;
+      if (shouldIncrementUnread && existingRoom) {
+        roomUpdate.unreadCount = (existingRoom.unreadCount || 0) + 1;
       }
 
-      updateRoom(message.roomId, roomUpdate);
+      if (existingRoom) {
+        updateRoom(message.roomId, roomUpdate);
+      }
     };
 
     // 本地回显：消息正在发送（乐观 UI）
