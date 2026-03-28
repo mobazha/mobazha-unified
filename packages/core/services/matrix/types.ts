@@ -97,10 +97,12 @@ export interface MatrixRoom {
 }
 
 export interface RoomMetadata {
+  type?: string;
   orderId?: string;
   orderState?: string;
   buyerId?: string;
   vendorId?: string;
+  direct_target_peer_id?: string;
   storeId?: string;
   storeName?: string;
   storeOwner?: string;
@@ -154,6 +156,8 @@ export interface MatrixMessage {
   roomEventType?: RoomEventType;
   targetUserId?: string; // 成员事件目标用户
   targetUserName?: string;
+  metadata?: Record<string, string>;
+  decryptionFailed?: boolean;
 }
 
 export type MessageType =

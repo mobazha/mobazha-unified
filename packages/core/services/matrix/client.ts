@@ -19,6 +19,13 @@ import * as roomModule from './rooms';
 import * as verificationModule from './verification';
 import { setupChatEventListeners } from './event-listeners';
 
+function looksLikePeerID(value?: string): boolean {
+  if (!value) return false;
+  const v = value.trim();
+  if (!v) return false;
+  return /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{20,})$/.test(v);
+}
+
 class MatrixClientService {
   private _isInitialized = false;
   private _isConnected = false;
@@ -234,7 +241,7 @@ class MatrixClientService {
   }
 
   async getRooms(): Promise<MatrixRoom[]> {
-    return roomModule.getRooms();
+    return roomModule.getRooms(this._userId);
   }
 
   async getRoomsByType(
@@ -247,7 +254,18 @@ class MatrixClientService {
     return roomModule.getOrCreateDirectRoom(peerID, this._serverName, displayName);
   }
 
-  async createDirectRoom(userId: string, _displayName?: string): Promise<string | null> {
+  async createDirectRoom(userId: string, displayNameOrPeerID?: string): Promise<string | null> {
+    const userIdOrPeerID = userId?.trim();
+    if (looksLikePeerID(userIdOrPeerID)) {
+      return roomModule.createDirectRoom('', userIdOrPeerID);
+    }
+
+    const inferredPeerID = looksLikePeerID(displayNameOrPeerID)
+      ? displayNameOrPeerID?.trim()
+      : undefined;
+    if (inferredPeerID) {
+      return roomModule.createDirectRoom('', inferredPeerID);
+    }
     return roomModule.createDirectRoom(userId);
   }
 
@@ -341,10 +359,6 @@ class MatrixClientService {
 
   async setMyPeerIDInRoom(roomId: string): Promise<void> {
     return roomModule.setMyPeerIDInRoom(roomId);
-  }
-
-  extractPeerIdFromUserId(userId: string): string | null {
-    return roomModule.extractPeerIdFromUserId(userId);
   }
 
   // ============= Verification (backend-driven SAS via REST + WS) =============

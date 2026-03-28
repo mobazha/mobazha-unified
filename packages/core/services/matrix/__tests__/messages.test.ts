@@ -146,6 +146,56 @@ describe('messages module', () => {
       const result = convertMessage(backend);
       expect(result.senderName).toBe('Alice');
     });
+
+    it('supports sender metadata aliases for avatar/name/decryption', () => {
+      const backend: BackendMessage = {
+        id: '$sn2',
+        roomId: '!room1:test',
+        sender: '@peer_abc:test',
+        content: 'Hi',
+        msgType: 'm.text',
+        timestamp: '2026-03-25T12:00:00Z',
+        metadata: {
+          sender_name: 'Alice Alias',
+          sender_avatar_url: '/v1/media/images/QmAvatar',
+          sender_raw_mxc_avatar_url: 'mxc://matrix.mobazha.org/abc123',
+          decryption_failed: 'true',
+        },
+      };
+
+      const result = convertMessage(backend);
+      expect(result.senderName).toBe('Alice Alias');
+      expect(result.senderAvatar).toBe('/v1/media/images/QmAvatar');
+      expect(result.senderRawMxcAvatarUrl).toBe('mxc://matrix.mobazha.org/abc123');
+      expect(result.decryptionFailed).toBe(true);
+      expect(result.metadata).toEqual({
+        senderName: 'Alice Alias',
+        senderAvatar: '/v1/media/images/QmAvatar',
+        senderRawMxcAvatarUrl: 'mxc://matrix.mobazha.org/abc123',
+        decryptionFailed: 'true',
+      });
+    });
+
+    it('prefers canonical metadata keys when aliases coexist', () => {
+      const backend: BackendMessage = {
+        id: '$sn3',
+        roomId: '!room1:test',
+        sender: '@peer_abc:test',
+        content: 'Hi',
+        msgType: 'm.text',
+        timestamp: '2026-03-25T12:00:00Z',
+        metadata: {
+          sender_name: 'Alias Name',
+          senderName: 'Canonical Name',
+          sender_avatar_url: '/alias/avatar.jpg',
+          senderAvatar: '/canonical/avatar.jpg',
+        },
+      };
+
+      const result = convertMessage(backend);
+      expect(result.senderName).toBe('Canonical Name');
+      expect(result.senderAvatar).toBe('/canonical/avatar.jpg');
+    });
   });
 
   describe('mxcToHttp', () => {

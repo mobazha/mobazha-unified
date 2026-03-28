@@ -157,9 +157,10 @@ export async function getProfileDisplayInfo(peerID: string): Promise<ProfileDisp
   if (!profile) return null;
 
   const avatarHash = profile.avatarHashes?.medium || profile.avatarHashes?.small || '';
+  const avatarUrl = avatarHash ? getImageUrl(avatarHash, peerID) || '' : '';
   return {
     name: profile.name || profile.handle || '',
-    avatar: avatarHash ? getImageUrl(avatarHash) || '' : '',
+    avatar: avatarUrl,
   };
 }
 

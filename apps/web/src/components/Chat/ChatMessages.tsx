@@ -159,11 +159,15 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Chat Header */}
-      <div className="flex items-center gap-3 p-4 bg-card/80 backdrop-blur-sm border-b border-border/50 shadow-sm">
+      <div
+        className="flex items-center gap-3 p-4 bg-card/80 backdrop-blur-sm border-b border-border/50 shadow-sm"
+        data-testid="chat-room-header"
+      >
         {onBack && (
           <button
             onClick={onBack}
             className="p-2 -ml-2 hover:bg-surface-hover rounded-lg transition-colors"
+            data-testid="chat-room-back-btn"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -176,14 +180,27 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </button>
         )}
 
-        <button onClick={onRoomSettings} className="hover:opacity-80 transition-opacity">
+        <button
+          onClick={onRoomSettings}
+          className="hover:opacity-80 transition-opacity"
+          data-testid="chat-room-avatar-btn"
+        >
           <Avatar src={roomAvatar} rawMxcUrl={roomRawMxcAvatarUrl} name={displayName} size="md" />
         </button>
 
         <div className="flex-1 min-w-0">
           <HStack gap="sm" align="center">
-            <button onClick={onRoomSettings} className="hover:opacity-80 transition-opacity">
-              <h3 className="font-semibold text-[15px] text-foreground truncate">{displayName}</h3>
+            <button
+              onClick={onRoomSettings}
+              className="hover:opacity-80 transition-opacity"
+              data-testid="chat-room-title-btn"
+            >
+              <h3
+                className="font-semibold text-[15px] text-foreground truncate"
+                data-testid="chat-room-title"
+              >
+                {displayName}
+              </h3>
             </button>
             {isVerified && (
               <svg
@@ -250,6 +267,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             onClick={onRoomSettings}
             className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
             aria-label="More options"
+            data-testid="chat-room-settings-btn"
           >
             <svg
               className="w-5 h-5 text-muted-foreground"
