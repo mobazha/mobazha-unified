@@ -99,6 +99,36 @@ async function sendMessage(
   expect(response.status).toBeLessThan(300);
 }
 
+async function findDirectRoomIDByPeerID(
+  request: APIRequestContext,
+  token: string,
+  targetPeerID: string
+): Promise<string | null> {
+  const response = await apiJson(request, 'GET', '/v1/chat/rooms', token);
+  expect(response.status).toBeLessThan(300);
+
+  const rooms = unwrapData<
+    Array<{
+      roomId?: string;
+      roomID?: string;
+      isDirect?: boolean;
+      roomType?: string;
+      members?: Array<{ peerID?: string }>;
+    }>
+  >(response.json);
+
+  for (const room of rooms || []) {
+    if (!room?.isDirect && room?.roomType !== 'direct') continue;
+    const hasPeer = room.members?.some(member => member?.peerID === targetPeerID);
+    if (!hasPeer) continue;
+
+    const roomId = room.roomId || room.roomID || null;
+    if (roomId) return roomId;
+  }
+
+  return null;
+}
+
 test('dm identity presentation stays consistent across list, header, settings, and incoming messages', async ({
   page,
   request,
@@ -116,12 +146,6 @@ test('dm identity presentation stays consistent across list, header, settings, a
   await completeOnboardingIfNeeded(page);
   await openChatDrawer(page);
 
-  const createRoomResponsePromise = page.waitForResponse(response => {
-    if (!response.url().includes('/v1/chat/rooms')) return false;
-    if (response.request().method() !== 'POST') return false;
-    return response.request().postData()?.includes('"isDM":true') ?? false;
-  });
-
   await page.getByTestId('chat-system').getByTestId('chat-new-btn').first().click();
   await expect(page.getByTestId('chat-new-dialog')).toBeVisible();
   await page.getByTestId('chat-new-dialog-input').fill(user1PeerID);
@@ -134,10 +158,7 @@ test('dm identity presentation stays consistent across list, header, settings, a
   await expect(headerAvatar).toBeVisible({ timeout: 30000 });
   await expect(headerAvatar).toHaveAttribute('src', /^(blob:|https?:)/);
 
-  const createRoomResponse = await createRoomResponsePromise;
-  const createRoomJson = await createRoomResponse.json().catch(() => null);
-  const createdRoom = unwrapData<{ roomId?: string; roomID?: string }>(createRoomJson);
-  const roomId = createdRoom?.roomId || createdRoom?.roomID || null;
+  const roomId = await findDirectRoomIDByPeerID(request, user2Token, user1PeerID);
   expect(roomId).toBeTruthy();
 
   await joinRoomIfPossible(request, user1Token, roomId!);
@@ -146,7 +167,7 @@ test('dm identity presentation stays consistent across list, header, settings, a
   const incomingMessage = `identity-regression-${Date.now()}`;
   await sendMessage(request, user1Token, roomId!, incomingMessage);
 
-  await expect(page.getByText(incomingMessage)).toBeVisible({ timeout: 45000 });
+  await expect(page.getByText(incomingMessage).first()).toBeVisible({ timeout: 45000 });
   const incomingMessageAvatar = page.getByTestId('chat-message-avatar-btn').locator('img').first();
   await expect(incomingMessageAvatar).toBeVisible({ timeout: 30000 });
   await expect(incomingMessageAvatar).toHaveAttribute('src', /^(blob:|https?:)/);

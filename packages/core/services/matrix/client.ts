@@ -251,7 +251,7 @@ class MatrixClientService {
   }
 
   async getOrCreateDirectRoom(peerID: string, displayName?: string): Promise<string | null> {
-    return roomModule.getOrCreateDirectRoom(peerID, this._serverName, displayName);
+    return roomModule.getOrCreateDirectRoom(peerID, this._userId, this._serverName, displayName);
   }
 
   async createDirectRoom(userId: string, displayNameOrPeerID?: string): Promise<string | null> {

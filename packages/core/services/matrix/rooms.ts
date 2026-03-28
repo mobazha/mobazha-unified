@@ -17,6 +17,8 @@ import type {
   BackendMember,
 } from './types';
 
+const pendingDirectRoomCreates = new Map<string, Promise<string | null>>();
+
 // ============ Public API ============
 
 export async function getRooms(currentUserId?: string | null): Promise<MatrixRoom[]> {
@@ -32,11 +34,35 @@ export async function getRoomsByType(type: RoomType): Promise<MatrixRoom[]> {
 
 export async function getOrCreateDirectRoom(
   peerID: string,
-  _serverName: string | null,
+  currentUserId?: string | null,
+  _serverName?: string | null,
   _displayName?: string
 ): Promise<string | null> {
-  if (!peerID) return null;
-  return createDirectRoom('', peerID);
+  const targetPeerID = peerID?.trim();
+  if (!targetPeerID) return null;
+
+  const inFlight = pendingDirectRoomCreates.get(targetPeerID);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const request = (async (): Promise<string | null> => {
+    try {
+      const existingRoomId = await findExistingDirectRoomIdByPeerID(targetPeerID, currentUserId);
+      if (existingRoomId) {
+        return existingRoomId;
+      }
+    } catch (error) {
+      console.warn('[Chat] getOrCreateDirectRoom fallback to create after lookup failure:', error);
+    }
+
+    return createDirectRoom('', targetPeerID);
+  })();
+
+  pendingDirectRoomCreates.set(targetPeerID, request);
+  return request.finally(() => {
+    pendingDirectRoomCreates.delete(targetPeerID);
+  });
 }
 
 export async function createDirectRoom(userId: string, peerID?: string): Promise<string | null> {
@@ -56,6 +82,22 @@ export async function createDirectRoom(userId: string, peerID?: string): Promise
     console.error('[Chat] createDirectRoom failed:', error);
     return null;
   }
+}
+
+async function findExistingDirectRoomIdByPeerID(
+  targetPeerID: string,
+  currentUserId?: string | null
+): Promise<string | null> {
+  const rooms = await getRooms(currentUserId);
+  for (const room of rooms) {
+    if (!room.isDirect && room.roomType !== 'direct') continue;
+
+    const counterpartyPeerID = getDirectCounterpartyPeerID(room, currentUserId);
+    if (counterpartyPeerID === targetPeerID) {
+      return room.roomId;
+    }
+  }
+  return null;
 }
 
 export async function joinRoom(roomIdOrAlias: string): Promise<boolean> {

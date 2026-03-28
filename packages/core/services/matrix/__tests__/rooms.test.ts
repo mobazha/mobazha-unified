@@ -27,6 +27,7 @@ vi.mock('../events', () => ({
 
 describe('rooms module', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
@@ -361,6 +362,79 @@ describe('rooms module', () => {
       const roomId = await createDirectRoom('', '12D3KooWAbc');
 
       expect(roomId).toBeNull();
+    });
+  });
+
+  describe('getOrCreateDirectRoom', () => {
+    it('reuses an existing direct room for the same peerID', async () => {
+      const { authGet, authPost } = await import('../../api/helpers');
+      const { batchGetProfileDisplayInfo } = await import('../../profileCache');
+      const mockAuthGet = vi.mocked(authGet);
+      const mockAuthPost = vi.mocked(authPost);
+      const mockBatchGetProfileDisplayInfo = vi.mocked(batchGetProfileDisplayInfo);
+
+      mockAuthGet.mockResolvedValueOnce([
+        {
+          roomId: '!dm_existing:test',
+          name: 'Alice',
+          isDirect: true,
+          encrypted: true,
+          unreadCount: 0,
+          roomType: 'direct',
+          members: [
+            {
+              userId: '@peer_me:test',
+              displayName: 'Me',
+              peerID: '12D3KooWMe',
+              membership: 'join',
+            },
+            {
+              userId: '@peer_alice:test',
+              displayName: 'Alice',
+              peerID: '12D3KooWAlice',
+              membership: 'join',
+            },
+          ],
+        },
+      ]);
+      mockBatchGetProfileDisplayInfo.mockResolvedValueOnce(new Map());
+
+      const { getOrCreateDirectRoom } = await import('../rooms');
+      const roomId = await getOrCreateDirectRoom('12D3KooWAlice', '@peer_me:test', null);
+
+      expect(roomId).toBe('!dm_existing:test');
+      expect(mockAuthPost).not.toHaveBeenCalled();
+    });
+
+    it('deduplicates concurrent creation requests for the same peerID', async () => {
+      const { authGet, authPost } = await import('../../api/helpers');
+      const mockAuthGet = vi.mocked(authGet);
+      const mockAuthPost = vi.mocked(authPost);
+
+      mockAuthGet.mockResolvedValueOnce([]);
+
+      let resolveCreate: ((value: { roomId: string }) => void) | undefined;
+      mockAuthPost.mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveCreate = resolve;
+          })
+      );
+
+      const { getOrCreateDirectRoom } = await import('../rooms');
+      const req1 = getOrCreateDirectRoom('12D3KooWAlice', '@peer_me:test', null);
+      const req2 = getOrCreateDirectRoom('12D3KooWAlice', '@peer_me:test', null);
+      await vi.waitFor(() => {
+        expect(mockAuthPost).toHaveBeenCalledTimes(1);
+      });
+
+      if (!resolveCreate) {
+        throw new Error('expected create resolver to be set');
+      }
+      resolveCreate({ roomId: '!dm_created:test' });
+
+      await expect(req1).resolves.toBe('!dm_created:test');
+      await expect(req2).resolves.toBe('!dm_created:test');
     });
   });
 
