@@ -4,7 +4,7 @@ import React, { memo, useCallback, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, getChainFromCoin, getTokenByPaymentCoin } from '@mobazha/core';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { MessageCircle, CheckCircle2, CreditCard } from 'lucide-react';
@@ -89,28 +89,19 @@ function formatDate(dateString: string): string {
   });
 }
 
-// 从货币代码中提取链信息
-// 例如: ETHUSDT -> { token: 'ETHUSDT', chainId: 'ETH', isToken: true }
-// 例如: BTC -> { token: 'BTC', chainId: undefined, isToken: false }
+// 从支付币种中提取图标与链信息（兼容 legacy 与 canonical 格式）
 function parseTokenInfo(currency: string): { token: string; chainId?: string; isToken: boolean } {
   if (!currency) return { token: 'USD', isToken: false };
 
-  const upperCurrency = currency.toUpperCase();
+  const normalizedToken = getTokenByPaymentCoin(currency)?.id || currency.toUpperCase();
+  const chainId = getChainFromCoin(currency) || undefined;
+  const isToken = !!chainId && normalizedToken.toUpperCase() !== chainId.toUpperCase();
 
-  // 检查是否是链上代币 (ETHUSDT, SOLUSDT, BSCUSDT, etc.)
-  const chainPrefixes = ['ETH', 'SOL', 'BSC', 'MATIC', 'BASE'];
-  const tokenSuffixes = ['USDT', 'USDC', 'DAI', 'BUSD'];
-
-  for (const prefix of chainPrefixes) {
-    for (const suffix of tokenSuffixes) {
-      if (upperCurrency === prefix + suffix) {
-        return { token: upperCurrency, chainId: prefix, isToken: true };
-      }
-    }
-  }
-
-  // 原生代币或法币
-  return { token: upperCurrency, isToken: false };
+  return {
+    token: normalizedToken,
+    chainId,
+    isToken,
+  };
 }
 
 // ============ Swipeable Order Row ============

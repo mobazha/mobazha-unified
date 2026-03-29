@@ -12,6 +12,8 @@ import {
   ordersApi,
   SEPOLIA_CONFIG,
   getContractAddress,
+  toCanonicalPaymentCoin,
+  parseCanonicalPaymentCoin,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 
@@ -200,8 +202,23 @@ export function useRwaPurchase({
 
   // 根据支付币种获取支付代币地址
   const getPaymentTokenAddress = useCallback((paymentCoin: string, chainId: number): string => {
-    // 解析支付币种，如 ETHUSDT -> USDT
-    const tokenSymbol = paymentCoin.replace(/^(ETH|BSC|MATIC|CFX)/, '');
+    const canonicalCoin = toCanonicalPaymentCoin(paymentCoin);
+    const parsedCoin = parseCanonicalPaymentCoin(canonicalCoin);
+    if (parsedCoin?.namespace === 'eip155') {
+      if (parsedCoin.standard === 'native') {
+        return ZERO_ADDRESS;
+      }
+      if (parsedCoin.standard === 'erc20' && parsedCoin.assetRef) {
+        return parsedCoin.assetRef;
+      }
+    }
+
+    const upperCoin = paymentCoin.toUpperCase();
+    const tokenSymbol = upperCoin.includes('USDT')
+      ? 'USDT'
+      : upperCoin.includes('USDC')
+        ? 'USDC'
+        : '';
 
     if (tokenSymbol === 'USDT') {
       return getContractAddress('USDT', chainId);

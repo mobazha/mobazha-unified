@@ -117,6 +117,32 @@ const LEGACY_TO_CANONICAL_PAYMENT_COIN: Record<string, string> = {
   TRONUSDT: 'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
 };
 
+const TOKENS_BY_ID = new Map<string, TokenConfig>(
+  TOKENS.map(token => [token.id.toUpperCase(), token] as const)
+);
+
+const CANONICAL_TO_PRIMARY_TOKEN_ID = new Map<string, string>();
+for (const token of TOKENS) {
+  const canonical = LEGACY_TO_CANONICAL_PAYMENT_COIN[token.id.toUpperCase()];
+  if (!canonical) continue;
+  const canonicalLower = canonical.toLowerCase();
+  if (!CANONICAL_TO_PRIMARY_TOKEN_ID.has(canonicalLower)) {
+    CANONICAL_TO_PRIMARY_TOKEN_ID.set(canonicalLower, token.id.toUpperCase());
+  }
+}
+
+const BIP122_CHAIN_REF_TO_CHAIN: Record<string, string> = {
+  '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f': 'BTC',
+  '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2': 'LTC',
+};
+
+export interface CanonicalPaymentCoinParts {
+  namespace: string;
+  chainRef: string;
+  standard: string;
+  assetRef?: string;
+}
+
 /**
  * Converts legacy CHAIN+TOKEN coin IDs to canonical payment coin IDs.
  * For canonical values (crypto:* / fiat:*), it returns input as-is.
@@ -132,6 +158,84 @@ export function toCanonicalPaymentCoin(coin: string): string {
 
   const mapped = LEGACY_TO_CANONICAL_PAYMENT_COIN[trimmed.toUpperCase()];
   return mapped || trimmed;
+}
+
+/**
+ * Parses canonical crypto payment coin (crypto:...) into structured parts.
+ * Returns null when input is not a valid canonical crypto payment coin.
+ */
+export function parseCanonicalPaymentCoin(coin: string): CanonicalPaymentCoinParts | null {
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return null;
+
+  const parts = trimmed.split(':');
+  if (parts.length !== 4 && parts.length !== 5) return null;
+  if (parts[0].toLowerCase() !== 'crypto') return null;
+
+  const namespace = parts[1].toLowerCase();
+  const chainRef = parts[2].toLowerCase();
+
+  if (parts.length === 4) {
+    if (parts[3].toLowerCase() !== 'native') return null;
+    return { namespace, chainRef, standard: 'native' };
+  }
+
+  return {
+    namespace,
+    chainRef,
+    standard: parts[3].toLowerCase(),
+    assetRef: parts[4],
+  };
+}
+
+/**
+ * Resolves payment coin (legacy/canonical) into configured token ID.
+ */
+export function getTokenIdFromPaymentCoin(coin: string): string | undefined {
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return undefined;
+
+  const upper = trimmed.toUpperCase();
+  if (TOKENS_BY_ID.has(upper)) {
+    return upper;
+  }
+
+  const canonical = toCanonicalPaymentCoin(trimmed);
+  const mappedTokenID = CANONICAL_TO_PRIMARY_TOKEN_ID.get(canonical.toLowerCase());
+  if (mappedTokenID) {
+    return mappedTokenID;
+  }
+
+  return undefined;
+}
+
+/**
+ * Gets token config from legacy/canonical payment coin.
+ */
+export function getTokenByPaymentCoin(coin: string): TokenConfig | undefined {
+  const tokenID = getTokenIdFromPaymentCoin(coin);
+  if (!tokenID) return undefined;
+  return TOKENS_BY_ID.get(tokenID);
+}
+
+/**
+ * Returns EVM ERC20 token address from payment coin.
+ * - For canonical eip155 ERC20 asset IDs, returns assetRef directly.
+ * - For native/unknown/non-EVM coins, returns null.
+ */
+export function getEVMTokenAddressFromPaymentCoin(coin: string): string | null {
+  const canonical = toCanonicalPaymentCoin(coin);
+  const parsed = parseCanonicalPaymentCoin(canonical);
+  if (!parsed || parsed.namespace !== 'eip155') {
+    return null;
+  }
+  if (parsed.standard === 'native') {
+    return null;
+  }
+  if (parsed.standard === 'erc20' && parsed.assetRef) {
+    return parsed.assetRef;
+  }
+  return null;
 }
 
 /**
@@ -220,7 +324,7 @@ export const CHAINS: PaymentChainConfig[] = [
  * 根据 token ID 获取代币配置
  */
 export function getTokenById(tokenId: string): TokenConfig | undefined {
-  return TOKENS.find(t => t.id.toUpperCase() === tokenId.toUpperCase());
+  return TOKENS_BY_ID.get(tokenId.toUpperCase());
 }
 
 /**
@@ -239,7 +343,7 @@ export function getTokensByChain(chainId: string): TokenConfig[] {
  * @returns 小数位数，默认返回 8
  */
 export function getTokenDecimals(tokenId: string): number {
-  const token = getTokenById(tokenId);
+  const token = getTokenByPaymentCoin(tokenId);
   if (token) {
     return token.decimals;
   }
@@ -309,18 +413,49 @@ export const UTXO_CHAINS = ['BTC', 'LTC', 'BCH', 'ZEC'] as const;
 export function getChainFromCoin(coinOrChain?: string): string {
   if (!coinOrChain) return '';
 
-  const upper = coinOrChain.toUpperCase();
+  const trimmed = coinOrChain.trim();
+  if (!trimmed) return '';
 
-  // 首先尝试从代币配置中获取
-  const token = getTokenById(upper);
+  const upper = trimmed.toUpperCase();
+
+  const token = getTokenByPaymentCoin(trimmed);
   if (token) {
     return token.chain.toUpperCase();
   }
 
-  // 如果是直接的链 ID
+  // 首先尝试从代币配置中获取
   const chainConfig = CHAINS.find(c => c.id.toUpperCase() === upper);
   if (chainConfig) {
     return upper;
+  }
+
+  // 尝试解析 canonical coin（crypto:...）
+  const canonical = toCanonicalPaymentCoin(trimmed);
+  const parsed = parseCanonicalPaymentCoin(canonical);
+  if (parsed) {
+    if (parsed.namespace === 'eip155') {
+      const evmChainID = Number(parsed.chainRef);
+      if (!Number.isNaN(evmChainID)) {
+        const evmChain = getChainByEVMId(evmChainID);
+        if (evmChain) {
+          return evmChain.id.toUpperCase();
+        }
+      }
+    }
+    if (parsed.namespace === 'bip122') {
+      return BIP122_CHAIN_REF_TO_CHAIN[parsed.chainRef] || '';
+    }
+    if (parsed.namespace === 'solana') {
+      return 'SOL';
+    }
+    if (parsed.namespace === 'tron') {
+      return 'TRON';
+    }
+  }
+
+  // 法币不属于链路由
+  if (canonical.toLowerCase().startsWith('fiat:')) {
+    return '';
   }
 
   // 无法识别的代币/链，打印警告并返回空字符串
