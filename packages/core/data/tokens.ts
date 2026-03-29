@@ -93,6 +93,47 @@ export const TOKENS: TokenConfig[] = [
   { id: 'TRONUSDT', token: 'USDT', chain: 'TRON', type: 'TRC20', isNative: false, decimals: 6 },
 ];
 
+// Legacy coin code -> canonical payment coin (assetID / fiat:*)
+const LEGACY_TO_CANONICAL_PAYMENT_COIN: Record<string, string> = {
+  BTC: 'crypto:bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f:native',
+  LTC: 'crypto:bip122:12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2:native',
+  ETH: 'crypto:eip155:1:native',
+  ETHUSDT: 'crypto:eip155:1:erc20:0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
+  ETHUSDC: 'crypto:eip155:1:erc20:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  BNB: 'crypto:eip155:56:native',
+  BSCUSDT: 'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955',
+  BSCUSDC: 'crypto:eip155:56:erc20:0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+  BASEETH: 'crypto:eip155:8453:native',
+  BASEUSDT: 'crypto:eip155:8453:erc20:0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
+  BASEUSDC: 'crypto:eip155:8453:erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  MATIC: 'crypto:eip155:137:native',
+  MATICUSDT: 'crypto:eip155:137:erc20:0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+  MATICUSDC: 'crypto:eip155:137:erc20:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+  SOL: 'crypto:solana:mainnet:native',
+  SOLUSDT: 'crypto:solana:mainnet:spl:Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+  SOLUSDC: 'crypto:solana:mainnet:spl:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  TRX: 'crypto:tron:mainnet:native',
+  TRXUSDT: 'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+  TRONUSDT: 'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+};
+
+/**
+ * Converts legacy CHAIN+TOKEN coin IDs to canonical payment coin IDs.
+ * For canonical values (crypto:* / fiat:*), it returns input as-is.
+ */
+export function toCanonicalPaymentCoin(coin: string): string {
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return trimmed;
+
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('crypto:') || lower.startsWith('fiat:')) {
+    return trimmed;
+  }
+
+  const mapped = LEGACY_TO_CANONICAL_PAYMENT_COIN[trimmed.toUpperCase()];
+  return mapped || trimmed;
+}
+
 /**
  * 链配置列表
  */

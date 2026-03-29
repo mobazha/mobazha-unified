@@ -6,6 +6,7 @@ import type { Order, OrderListItem } from '../../types';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
 import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
+import { toCanonicalPaymentCoin } from '../../data/tokens';
 
 // ========== 订单类型定义 ==========
 
@@ -931,9 +932,15 @@ export async function submitPayment(
   paymentData: SubmitPaymentData
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
+    const canonicalCoin = toCanonicalPaymentCoin(paymentData.coin);
     return authPost<{ success: boolean; error?: string }>(
       NODE_API.ORDER_PAYMENT(paymentData.orderID),
-      { paymentData }
+      {
+        paymentData: {
+          ...paymentData,
+          coin: canonicalCoin,
+        },
+      }
     );
   };
 
@@ -956,10 +963,11 @@ export async function fundOrder(payload: {
   memo?: string;
 }): Promise<{ success: boolean; txid?: string; error?: string }> {
   const realFn = async () => {
+    const canonicalCoin = toCanonicalPaymentCoin(payload.coin);
     return authPost<{ success: boolean; txid?: string; error?: string }>(
       NODE_API.ORDER_SPEND(payload.orderId),
       {
-        coinType: payload.coin,
+        coinType: canonicalCoin,
         orderID: payload.orderId,
         address: payload.address,
         amount: payload.amount,
@@ -1044,9 +1052,10 @@ export async function getPaymentInstructions(requestData: {
   moderator?: string; // 仲裁人 peerID
 }): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
+    const canonicalCoin = toCanonicalPaymentCoin(requestData.coin);
     const backendRequestData: Record<string, unknown> = {
       orderID: requestData.orderId,
-      coinType: requestData.coin,
+      coinType: canonicalCoin,
     };
     if (requestData.payerAddress) {
       backendRequestData.payerAddress = requestData.payerAddress;
@@ -1062,6 +1071,7 @@ export async function getPaymentInstructions(requestData: {
 
   const mockFn = async () => {
     await mockDelay();
+    const canonicalCoin = toCanonicalPaymentCoin(requestData.coin);
     const mockContractAddress = '0x' + Math.random().toString(16).slice(2, 42);
     const mockEscrowAccount = '0x' + Math.random().toString(16).slice(2, 66);
     return {
@@ -1072,7 +1082,7 @@ export async function getPaymentInstructions(requestData: {
       },
       paymentData: {
         orderID: requestData.orderId,
-        coin: requestData.coin,
+        coin: canonicalCoin,
         method: 1,
         contractAddress: mockContractAddress,
         amount: 1500,
