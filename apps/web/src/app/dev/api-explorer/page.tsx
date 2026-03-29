@@ -165,12 +165,12 @@ const ENDPOINTS: EndpointDef[] = [
     description: 'Carts',
   },
   {
-    id: 'chat-convos',
-    label: 'GET /v1/chat/conversations',
+    id: 'chat-rooms',
+    label: 'GET /v1/chat/rooms',
     group: 'node',
     method: 'GET',
-    path: '/v1/chat/conversations',
-    description: 'Chat conversations',
+    path: '/v1/chat/rooms',
+    description: 'Chat rooms',
   },
   {
     id: 'followers',

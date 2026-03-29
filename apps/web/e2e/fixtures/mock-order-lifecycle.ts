@@ -65,16 +65,33 @@ function makeBaseOrder(
                 images: [{ ...mockThumbnail(imageId), filename: `${slug}.png` }],
                 skus: [{ productID: '1', quantity: '100' }],
               },
-              shippingOptions: [
-                {
-                  name: 'Standard',
-                  type: 'FIXED_PRICE',
-                  regions: ['ALL'],
-                  services: [
-                    { name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '499' },
-                  ],
-                },
-              ],
+              shippingProfile: {
+                profileId: 'sp-standard',
+                name: 'Default Shipping',
+                isDefault: true,
+                locationGroups: [
+                  {
+                    id: 'lg-default',
+                    locationIds: [],
+                    zones: [
+                      {
+                        id: 'zone-standard',
+                        name: 'Standard',
+                        regions: ['ALL'],
+                        rates: [
+                          {
+                            id: 'rate-standard',
+                            name: 'Standard',
+                            price: '499',
+                            currency: 'USD',
+                            estimatedDelivery: '5-7 days',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
             },
           },
         ],
@@ -515,32 +532,44 @@ export async function mockReviewsAPI(page: Page): Promise<void> {
  * Mock chat messages API.
  */
 export async function mockChatAPI(page: Page): Promise<void> {
-  await page.route('**/v1/chat/conversations', route => {
+  await page.route('**/v1/chat/rooms', route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: wrapData([
         {
-          peerId: MOCK_BUYER_PEER_ID,
-          lastMessage: MOCK_CHAT_MESSAGES[MOCK_CHAT_MESSAGES.length - 1].message,
-          timestamp: NOW,
-          unread: 1,
-          outgoing: false,
-          subject: '',
+          roomId: '!mock-room:matrix.local',
+          roomType: 'direct',
+          isDirect: true,
+          unreadCount: 1,
+          members: [{ peerID: MOCK_BUYER_PEER_ID }],
+          lastMessage: {
+            id: '$mock-last-event',
+            content: MOCK_CHAT_MESSAGES[MOCK_CHAT_MESSAGES.length - 1].message,
+            sender: '@mock_buyer:matrix.local',
+            timestamp: NOW,
+          },
         },
       ]),
     });
   });
 
-  await page.route('**/v1/chat/**', route => {
-    const url = route.request().url();
-    if (url.includes('/conversations')) return route.fallback();
+  await page.route('**/v1/chat/rooms/*/messages*', route => {
+    const messages = MOCK_CHAT_MESSAGES.map(msg => ({
+      id: msg.messageId,
+      sender: msg.outgoing ? '@mock_seller:matrix.local' : '@mock_buyer:matrix.local',
+      content: msg.message,
+      timestamp: msg.timestamp,
+      type: 'message',
+    }));
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: wrapData(MOCK_CHAT_MESSAGES),
+      body: wrapData({ messages }),
     });
   });
+
+  await page.route('**/v1/chat/**', route => route.fallback());
 }
 
 /**
@@ -636,20 +665,47 @@ export async function mockVariantProductAPI(page: Page): Promise<void> {
             },
           ],
         },
-        shippingOptions: [
-          {
-            name: 'Standard',
-            type: 'FIXED_PRICE',
-            regions: ['ALL'],
-            services: [{ name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '499' }],
-          },
-          {
-            name: 'Express',
-            type: 'FIXED_PRICE',
-            regions: ['US', 'CA', 'GB'],
-            services: [{ name: 'Express', estimatedDelivery: '2-3 days', firstFreight: '1299' }],
-          },
-        ],
+        shippingProfile: {
+          profileId: 'sp-physical',
+          name: 'Physical Goods Shipping',
+          isDefault: true,
+          locationGroups: [
+            {
+              id: 'lg-default',
+              locationIds: [],
+              zones: [
+                {
+                  id: 'zone-standard',
+                  name: 'Standard',
+                  regions: ['ALL'],
+                  rates: [
+                    {
+                      id: 'rate-standard',
+                      name: 'Standard',
+                      price: '499',
+                      currency: 'USD',
+                      estimatedDelivery: '5-7 days',
+                    },
+                  ],
+                },
+                {
+                  id: 'zone-express',
+                  name: 'Express',
+                  regions: ['US', 'CA', 'GB'],
+                  rates: [
+                    {
+                      id: 'rate-express',
+                      name: 'Express',
+                      price: '1299',
+                      currency: 'USD',
+                      estimatedDelivery: '2-3 days',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
         averageRating: 4.7,
         ratingCount: 31,
         vendorID: { peerID: MOCK_PEER_ID },
