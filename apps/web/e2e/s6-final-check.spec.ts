@@ -45,14 +45,33 @@ function mockModeratedOrderDetail(page: import('@playwright/test').Page) {
                       ],
                       skus: [{ productID: '1', quantity: '100' }],
                     },
-                    shippingOptions: [
-                      {
-                        name: 'Standard',
-                        type: 'FIXED_PRICE',
-                        regions: ['ALL'],
-                        services: [{ name: 'Standard', price: 500, estimatedDelivery: '5-7 days' }],
-                      },
-                    ],
+                    shippingProfile: {
+                      profileId: 'sp-standard',
+                      name: 'Default Shipping',
+                      isDefault: true,
+                      locationGroups: [
+                        {
+                          id: 'lg-default',
+                          locationIds: [],
+                          zones: [
+                            {
+                              id: 'zone-standard',
+                              name: 'Standard',
+                              regions: ['ALL'],
+                              rates: [
+                                {
+                                  id: 'rate-standard',
+                                  name: 'Standard',
+                                  price: '500',
+                                  currency: 'USD',
+                                  estimatedDelivery: '5-7 days',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
                   },
                 },
               ],

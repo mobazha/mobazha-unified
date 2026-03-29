@@ -301,16 +301,33 @@ const mockOrderDetail = {
               images: [{ ...mockThumbnail(3), filename: 'headphones.png' }],
               skus: [{ productID: '1', quantity: '100' }],
             },
-            shippingOptions: [
-              {
-                name: 'Standard',
-                type: 'FIXED_PRICE',
-                regions: ['ALL'],
-                services: [
-                  { name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '599' },
-                ],
-              },
-            ],
+            shippingProfile: {
+              profileId: 'sp-standard',
+              name: 'Default Shipping',
+              isDefault: true,
+              locationGroups: [
+                {
+                  id: 'lg-default',
+                  locationIds: [],
+                  zones: [
+                    {
+                      id: 'zone-standard',
+                      name: 'Standard',
+                      regions: ['ALL'],
+                      rates: [
+                        {
+                          id: 'rate-standard',
+                          name: 'Standard',
+                          price: '599',
+                          currency: 'USD',
+                          estimatedDelivery: '5-7 days',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
           },
         },
       ],
@@ -724,14 +741,33 @@ function makeMockProduct(
       images: [{ ...mockThumbnail(imageId), filename: `${slug}.png` }],
       skus: [{ productID: slug, quantity: '100', price }],
     },
-    shippingOptions: [
-      {
-        name: 'Standard Shipping',
-        type: 'FIXED_PRICE',
-        regions: ['ALL'],
-        services: [{ name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '499' }],
-      },
-    ],
+    shippingProfile: {
+      profileId: 'sp-standard',
+      name: 'Default Shipping',
+      isDefault: true,
+      locationGroups: [
+        {
+          id: 'lg-default',
+          locationIds: [],
+          zones: [
+            {
+              id: 'zone-standard',
+              name: 'Standard Shipping',
+              regions: ['ALL'],
+              rates: [
+                {
+                  id: 'rate-standard',
+                  name: 'Standard',
+                  price: '499',
+                  currency: 'USD',
+                  estimatedDelivery: '5-7 days',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
     averageRating: opts?.averageRating ?? 4.7,
     ratingCount: opts?.ratingCount ?? 20,
     vendorID: { peerID: MOCK_PEER_ID },
