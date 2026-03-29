@@ -635,8 +635,6 @@ export const zh: TranslationResource = {
       awaitingPaymentBuyer: '请完成付款以处理此订单',
       awaitingPaymentSeller: '等待买家完成付款',
       awaitingPaymentHint: '点击下方"立即付款"继续',
-      awaitingPaymentBuyerFiatPending: '付款已提交，正在确认中',
-      awaitingPaymentHintFiatPending: '支付服务商正在回调确认，请稍候自动刷新',
       pendingBuyer: '等待卖家接受您的订单',
       pendingBuyerConfirmingHint: '链上确认中，通常需 15–60 秒',
       pendingSeller: '收到新订单 — 请确认并接受',

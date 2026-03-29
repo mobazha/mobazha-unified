@@ -1,17 +1,25 @@
 'use client';
 
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, ordersApi, toMinimalUnit } from '@mobazha/core';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { ShareButton } from '@/components/Share';
 import { ShieldCheck, Bell, FileSearch } from 'lucide-react';
-import { markFiatPendingConfirmation } from '@/lib/fiatPending';
+
+function buildFiatPaymentCoin(providerID: string, currency: string): string {
+  const provider = (providerID || '').trim().toLowerCase();
+  const resolvedCurrency = (currency || '').trim().toUpperCase() || 'USD';
+  if (!provider) {
+    throw new Error('fiat provider is required');
+  }
+  return `fiat:${provider}:${resolvedCurrency}`;
+}
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
@@ -20,20 +28,60 @@ function ConfirmationContent() {
 
   const orderID = searchParams.get('orderID') || '';
   const redirectStatus = searchParams.get('redirect_status');
+  const stripePaymentIntent = searchParams.get('payment_intent') || '';
+  const urlPaymentID = searchParams.get('paymentID') || '';
   const title = searchParams.get('title') || '';
   const totalRaw = searchParams.get('total') || '';
   const currency = searchParams.get('currency') || 'USD';
+  const fiatProviderRaw = searchParams.get('fiatProvider') || '';
+  const fiatAmountRaw = searchParams.get('fiatAmount') || '';
   const vendorName = searchParams.get('vendorName') || '';
   const slug = searchParams.get('slug') || '';
   const totalAmount = totalRaw ? parseFloat(totalRaw) : 0;
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const productShareUrl = slug ? `${siteUrl}/product/${slug}` : '';
+  const submitAttemptedRef = useRef(false);
 
   useEffect(() => {
-    if (redirectStatus === 'succeeded' && orderID) {
-      markFiatPendingConfirmation(orderID);
-    }
-  }, [orderID, redirectStatus]);
+    if (submitAttemptedRef.current) return;
+    if (redirectStatus !== 'succeeded' || !orderID) return;
+    submitAttemptedRef.current = true;
+
+    const providerID = (fiatProviderRaw || (stripePaymentIntent ? 'stripe' : '')).toLowerCase();
+    const transactionID = stripePaymentIntent || urlPaymentID;
+    if (!providerID || !transactionID) return;
+
+    const amountFromUrl = Number(fiatAmountRaw);
+    const amount =
+      Number.isFinite(amountFromUrl) && amountFromUrl > 0
+        ? Math.floor(amountFromUrl)
+        : totalAmount > 0
+          ? toMinimalUnit(totalAmount, currency)
+          : 0;
+    if (amount <= 0) return;
+
+    void ordersApi
+      .submitPayment({
+        orderID,
+        transactionID,
+        coin: buildFiatPaymentCoin(providerID, currency),
+        amount,
+        timestamp: new Date().toISOString(),
+        method: 5, // FIAT
+      })
+      .catch(err => {
+        console.warn('[CheckoutConfirmation] submitPayment fallback failed:', err);
+      });
+  }, [
+    currency,
+    fiatAmountRaw,
+    fiatProviderRaw,
+    orderID,
+    redirectStatus,
+    stripePaymentIntent,
+    totalAmount,
+    urlPaymentID,
+  ]);
 
   return (
     <div className="min-h-screen bg-background" data-testid="order-confirmation-page">

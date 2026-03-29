@@ -21,7 +21,6 @@ export interface OrderActionSheetProps {
   paymentMethod?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
-  suppressPayAction?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -40,7 +39,6 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   paymentMethod,
   hasRated,
   inAfterSaleWindow = false,
-  suppressPayAction = false,
   onAction,
   className,
 }: OrderActionSheetProps) {
@@ -52,18 +50,8 @@ export const OrderActionSheet = memo(function OrderActionSheet({
         paymentMethod,
         hasRated,
         inAfterSaleWindow,
-        suppressPay: suppressPayAction,
       }),
-    [
-      orderState,
-      userRole,
-      isModerated,
-      isFulfilled,
-      paymentMethod,
-      hasRated,
-      inAfterSaleWindow,
-      suppressPayAction,
-    ]
+    [orderState, userRole, isModerated, isFulfilled, paymentMethod, hasRated, inAfterSaleWindow]
   );
 
   const primaryAction = useMemo(() => getPrimaryAction(actions), [actions]);

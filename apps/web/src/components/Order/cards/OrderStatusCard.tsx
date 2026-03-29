@@ -17,7 +17,6 @@ import {
 
 export interface OrderStatusCardProps {
   displayOrder: DisplayOrder;
-  fiatPendingConfirmation?: boolean;
   className?: string;
 }
 
@@ -32,7 +31,6 @@ interface StatusConfig {
 
 export const OrderStatusCard = memo(function OrderStatusCard({
   displayOrder: order,
-  fiatPendingConfirmation = false,
   className,
 }: OrderStatusCardProps) {
   const { t } = useI18n();
@@ -44,16 +42,6 @@ export const OrderStatusCard = memo(function OrderStatusCard({
 
     switch (order.status) {
       case 'awaiting_payment':
-        if (isBuyer && fiatPendingConfirmation) {
-          return {
-            icon: Clock,
-            message: t('order.statusCard.awaitingPaymentBuyerFiatPending'),
-            hint: t('order.statusCard.awaitingPaymentHintFiatPending'),
-            color: 'text-warning',
-            bgColor: 'bg-warning/8 border-warning/20',
-            progress: 0,
-          };
-        }
         return {
           icon: CircleDollarSign,
           message: isBuyer
@@ -152,7 +140,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           progress: 0,
         };
     }
-  }, [order.status, order.userRole, isCryptoPayment, fiatPendingConfirmation, t]);
+  }, [order.status, order.userRole, isCryptoPayment, t]);
 
   const stepLabels = useMemo(
     () => [
