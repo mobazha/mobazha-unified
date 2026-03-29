@@ -21,6 +21,15 @@ describe('toCanonicalPaymentCoin', () => {
     );
   });
 
+  it('maps DAI/BUSD legacy symbols to canonical asset ids', () => {
+    expect(toCanonicalPaymentCoin('DAI')).toBe(
+      'crypto:eip155:1:erc20:0x6B175474E89094C44Da98b954EedeAC495271d0F'
+    );
+    expect(toCanonicalPaymentCoin('BUSD')).toBe(
+      'crypto:eip155:56:erc20:0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56'
+    );
+  });
+
   it('returns canonical crypto/fiat input as-is', () => {
     expect(toCanonicalPaymentCoin('crypto:eip155:1:native')).toBe('crypto:eip155:1:native');
     expect(toCanonicalPaymentCoin('fiat:stripe:USD')).toBe('fiat:stripe:USD');
