@@ -75,8 +75,8 @@ export const TOKENS: TokenConfig[] = [
   // BSC 代币
   { id: 'BNB', token: 'BNB', chain: 'BSC', isNative: true, decimals: 18 },
   { id: 'BUSD', token: 'BUSD', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 18 },
-  { id: 'BSCUSDT', token: 'USDT', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 18 },
-  { id: 'BSCUSDC', token: 'USDC', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 18 },
+  { id: 'BSCUSDT', token: 'USDT', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 6 },
+  { id: 'BSCUSDC', token: 'USDC', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 6 },
 
   // Base 代币
   { id: 'BASEETH', token: 'ETH', chain: 'BASE', isNative: true, decimals: 18 },

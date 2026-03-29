@@ -81,7 +81,7 @@ export const TOKENS: TokenConfig[] = [
     chain: 'BSC',
     type: 'BEP20',
     isNative: false,
-    decimals: 18,
+    decimals: 6,
     disabled: false,
   },
 
