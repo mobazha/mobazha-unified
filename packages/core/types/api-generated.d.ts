@@ -121,7 +121,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/signin': {
+  '/api/signin': {
     parameters: {
       query?: never;
       header?: never;
@@ -153,8 +153,6 @@ export interface paths {
             'application/json': components['schemas']['SigninResponse'];
           };
         };
-        400: components['responses']['BadRequest'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -163,7 +161,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/telegram/signin': {
+  '/api/telegramSignin': {
     parameters: {
       query?: never;
       header?: never;
@@ -195,8 +193,6 @@ export interface paths {
             'application/json': components['schemas']['SigninResponse'];
           };
         };
-        400: components['responses']['BadRequest'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -205,7 +201,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/telegram/mini-app-signin': {
+  '/api/telegramMiniAppSignin': {
     parameters: {
       query?: never;
       header?: never;
@@ -231,7 +227,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -240,7 +235,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/telegram/check-mini-app-user': {
+  '/api/checkTelegramMiniAppUser': {
     parameters: {
       query?: never;
       header?: never;
@@ -266,7 +261,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -275,7 +269,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/discord/mini-app-signin': {
+  '/api/discordMiniAppSignin': {
     parameters: {
       query?: never;
       header?: never;
@@ -301,7 +295,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -310,7 +303,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/discord/oauth2-token': {
+  '/api/discordOAuth2Token': {
     parameters: {
       query?: never;
       header?: never;
@@ -336,7 +329,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -345,7 +337,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/discord/check-user': {
+  '/api/checkDiscordUser': {
     parameters: {
       query?: never;
       header?: never;
@@ -371,7 +363,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -380,7 +371,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/auth/discord/oauth-callback': {
+  '/api/v1/discord/oauth/callback': {
     parameters: {
       query?: never;
       header?: never;
@@ -407,7 +398,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -418,7 +408,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/accounts/me': {
+  '/api/userinfo': {
     parameters: {
       query?: never;
       header?: never;
@@ -442,8 +432,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -454,7 +442,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/server/info': {
+  '/api/serverInfo': {
     parameters: {
       query?: never;
       header?: never;
@@ -477,12 +465,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['ServerInfo'];
-            };
+            'application/json': components['schemas']['ServerInfo'];
           };
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -493,7 +478,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/accounts/linked': {
+  '/api/account/linked': {
     parameters: {
       query?: never;
       header?: never;
@@ -517,8 +502,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -529,7 +512,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/accounts/unlink': {
+  '/api/account/unlink': {
     parameters: {
       query?: never;
       header?: never;
@@ -555,8 +538,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -565,7 +546,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/accounts/link-url': {
+  '/api/account/link-url': {
     parameters: {
       query?: never;
       header?: never;
@@ -589,8 +570,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -601,7 +580,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/accounts/link-callback': {
+  '/api/account/link-callback': {
     parameters: {
       query?: never;
       header?: never;
@@ -625,8 +604,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -637,7 +614,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/ipns': {
+  '/api/ipns': {
     parameters: {
       query?: never;
       header?: never;
@@ -667,9 +644,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -678,7 +652,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/ipns/{peerID}': {
+  '/api/ipns/{peerID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -703,9 +677,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['IpnsRecord'];
-            };
+            'application/json': components['schemas']['IpnsRecord'];
           };
         };
         /** @description Record not found */
@@ -715,7 +687,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -726,7 +697,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/stream/auth': {
+  '/api/stream/auth': {
     parameters: {
       query?: never;
       header?: never;
@@ -750,8 +721,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -762,7 +731,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}': {
+  '/api/stripe/account/{peerID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Stripe account info by peerID */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          peerID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Stripe account info */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/group-marketplace/{platform}': {
     parameters: {
       query?: never;
       header?: never;
@@ -789,13 +794,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['GroupMarketplace'];
-            };
+            'application/json': components['schemas']['GroupMarketplace'];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -804,7 +805,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}': {
+  '/api/v1/group-marketplace/{platform}/{chatID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -830,12 +831,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['GroupMarketplace'];
-            };
+            'application/json': components['schemas']['GroupMarketplace'];
           };
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -846,7 +844,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/apply': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/sellers/apply': {
     parameters: {
       query?: never;
       header?: never;
@@ -879,9 +877,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -890,7 +885,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/sellers': {
     parameters: {
       query?: never;
       header?: never;
@@ -916,13 +911,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['GroupMarketplaceSeller'][];
-            };
+            'application/json': components['schemas']['GroupMarketplaceSeller'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -933,7 +924,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review': {
     parameters: {
       query?: never;
       header?: never;
@@ -966,10 +957,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -979,7 +966,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/listings': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/listings': {
     parameters: {
       query?: never;
       header?: never;
@@ -1006,8 +993,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1018,7 +1003,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1047,9 +1032,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1059,7 +1041,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/featured': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/featured': {
     parameters: {
       query?: never;
       header?: never;
@@ -1086,7 +1068,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1097,7 +1078,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/banners': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/banners': {
     parameters: {
       query?: never;
       header?: never;
@@ -1124,7 +1105,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1135,7 +1115,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/search': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -1164,8 +1144,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1176,7 +1154,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/admin/featured': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/admin/featured': {
     parameters: {
       query?: never;
       header?: never;
@@ -1205,9 +1183,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Remove a featured seller (admin) */
@@ -1230,9 +1205,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1240,7 +1212,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/admin/banners': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/admin/banners': {
     parameters: {
       query?: never;
       header?: never;
@@ -1269,9 +1241,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Remove a banner listing (admin) */
@@ -1294,9 +1263,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1304,7 +1270,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/sellers/{userID}/group-marketplaces': {
+  '/api/v1/sellers/{userID}/group-marketplaces': {
     parameters: {
       query?: never;
       header?: never;
@@ -1330,9 +1296,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1343,7 +1306,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/sellers/{userID}/visibility/{platform}/{chatID}': {
+  '/api/v1/sellers/{userID}/visibility/{platform}/{chatID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1372,9 +1335,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1384,7 +1344,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/integrations/telegram/webhook': {
+  '/api/v1/telegram/webhook': {
     parameters: {
       query?: never;
       header?: never;
@@ -1410,7 +1370,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1419,7 +1378,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/groups': {
+  '/api/v1/group-marketplace/groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1443,8 +1402,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1455,7 +1412,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/telegram/{chatID}/verify-member': {
+  '/api/v1/group-marketplace/telegram/{chatID}/verify-member': {
     parameters: {
       query?: never;
       header?: never;
@@ -1483,8 +1440,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1493,7 +1448,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/discord/{chatID}/verify-member': {
+  '/api/v1/group-marketplace/discord/{chatID}/verify-member': {
     parameters: {
       query?: never;
       header?: never;
@@ -1521,8 +1476,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1531,7 +1484,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/check-admin': {
+  '/api/v1/group-marketplace/{platform}/{chatID}/check-admin': {
     parameters: {
       query?: never;
       header?: never;
@@ -1560,8 +1513,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1570,7 +1521,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/product-groups': {
+  '/api/v1/product-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1593,13 +1544,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['ProductGroup'][];
-            };
+            'application/json': components['schemas']['ProductGroup'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1623,14 +1570,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['ProductGroup'];
-            };
+            'application/json': components['schemas']['ProductGroup'];
           };
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1639,7 +1581,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/product-groups/{groupID}': {
+  '/api/v1/product-groups/{groupID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1666,9 +1608,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -1691,9 +1630,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1701,7 +1637,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/product-groups/{groupID}/items': {
+  '/api/v1/product-groups/{groupID}/items': {
     parameters: {
       query?: never;
       header?: never;
@@ -1726,14 +1662,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['ProductGroupItem'][];
-            };
+            'application/json': components['schemas']['ProductGroupItem'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1760,10 +1691,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1772,7 +1699,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/product-groups/{groupID}/items/{slug}': {
+  '/api/v1/product-groups/{groupID}/items/{slug}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1802,9 +1729,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1812,7 +1736,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/product-groups/{productGroupID}/authorizations': {
+  '/api/v1/product-groups/{productGroupID}/authorizations': {
     parameters: {
       query?: never;
       header?: never;
@@ -1837,14 +1761,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['ProductGroupAuthorization'][];
-            };
+            'application/json': components['schemas']['ProductGroupAuthorization'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1867,9 +1786,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1878,7 +1794,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/product-groups/{productGroupID}/authorizations/{authID}': {
+  '/api/v1/product-groups/{productGroupID}/authorizations/{authID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -1908,9 +1824,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -1918,7 +1831,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/user-groups': {
+  '/api/v1/user-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -1941,13 +1854,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['UserGroup'][];
-            };
+            'application/json': components['schemas']['UserGroup'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -1968,8 +1877,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -1978,7 +1885,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/user-groups/{groupID}': {
+  '/api/v1/user-groups/{groupID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2005,9 +1912,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2030,9 +1934,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2040,7 +1941,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/user-groups/{groupID}/members': {
+  '/api/v1/user-groups/{groupID}/members': {
     parameters: {
       query?: never;
       header?: never;
@@ -2065,14 +1966,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['UserGroupMember'][];
-            };
+            'application/json': components['schemas']['UserGroupMember'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2095,9 +1991,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2106,7 +1999,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/user-groups/{groupID}/members/batch': {
+  '/api/v1/user-groups/{groupID}/members/batch': {
     parameters: {
       query?: never;
       header?: never;
@@ -2134,9 +2027,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2145,7 +2035,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/user-groups/{groupID}/members/{memberID}': {
+  '/api/v1/user-groups/{groupID}/members/{memberID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2175,9 +2065,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2185,7 +2072,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-access-requests': {
+  '/api/v1/store-access-requests': {
     parameters: {
       query?: never;
       header?: never;
@@ -2208,13 +2095,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['StoreAccessRequest'][];
-            };
+            'application/json': components['schemas']['StoreAccessRequest'][];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2235,8 +2118,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2245,7 +2126,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-access-requests/{requestID}': {
+  '/api/v1/store-access-requests/{requestID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2272,9 +2153,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2284,7 +2162,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-access/check': {
+  '/api/v1/store-access/check': {
     parameters: {
       query?: never;
       header?: never;
@@ -2311,8 +2189,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2323,7 +2199,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-access-settings': {
+  '/api/v1/store-access-settings': {
     parameters: {
       query?: never;
       header?: never;
@@ -2346,13 +2222,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['StoreAccessSettings'];
-            };
+            'application/json': components['schemas']['StoreAccessSettings'];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Update store access settings */
@@ -2372,8 +2244,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2383,7 +2253,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-access-list': {
+  '/api/v1/store-access-list': {
     parameters: {
       query?: never;
       header?: never;
@@ -2407,8 +2277,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2429,8 +2297,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Remove peer from store access whitelist */
@@ -2450,8 +2316,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2459,7 +2323,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-links': {
+  '/api/v1/store-link': {
     parameters: {
       query?: never;
       header?: never;
@@ -2482,13 +2346,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['StoreShortLink'];
-            };
+            'application/json': components['schemas']['StoreShortLink'];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2509,8 +2369,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2519,7 +2377,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-links/resolve/{shortCode}': {
+  '/api/v1/store-link/resolve/{shortCode}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2552,7 +2410,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2563,7 +2420,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-links/resolve': {
+  '/api/v1/store-link/resolve': {
     parameters: {
       query?: never;
       header?: never;
@@ -2589,7 +2446,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2598,7 +2454,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-links/regenerate': {
+  '/api/v1/store-link/regenerate': {
     parameters: {
       query?: never;
       header?: never;
@@ -2624,8 +2480,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2634,7 +2488,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/store-bots': {
+  '/api/v1/store-bot': {
     parameters: {
       query?: never;
       header?: never;
@@ -2657,13 +2511,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['StoreBot'];
-            };
+            'application/json': components['schemas']['StoreBot'];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2687,14 +2537,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['StoreBot'];
-            };
+            'application/json': components['schemas']['StoreBot'];
           };
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Unbind store bot */
@@ -2714,8 +2559,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -2723,7 +2566,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/encryption/sync-listing-key': {
+  '/api/v1/encryption/sync-listing-key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2753,9 +2596,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2764,7 +2604,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/encryption/sync-product-group-key': {
+  '/api/v1/encryption/sync-product-group-key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2794,9 +2634,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2805,7 +2642,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/encryption/listings/{peerID}/{slug}/key': {
+  '/api/v1/encryption/listings/{peerID}/{slug}/key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2832,9 +2669,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -2845,7 +2679,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/encryption/stores/{peerID}/keys': {
+  '/api/v1/encryption/stores/{peerID}/keys': {
     parameters: {
       query?: never;
       header?: never;
@@ -2873,9 +2707,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2884,7 +2715,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/encryption/profile/privacy': {
+  '/api/v1/encryption/profile/privacy': {
     parameters: {
       query?: never;
       header?: never;
@@ -2909,8 +2740,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     post?: never;
@@ -2920,7 +2749,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/encryption/product-groups/{id}/rotate-key': {
+  '/api/v1/encryption/product-groups/{id}/rotate-key': {
     parameters: {
       query?: never;
       header?: never;
@@ -2948,9 +2777,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -2959,7 +2785,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/relay/execute': {
+  '/api/relay/execute': {
     parameters: {
       query?: never;
       header?: never;
@@ -3000,8 +2826,6 @@ export interface paths {
             'application/json': components['schemas']['RelayExecuteResponse'];
           };
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
         /** @description Relay service unavailable */
         503: {
           headers: {
@@ -3017,7 +2841,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/relay/status': {
+  '/api/relay/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -3040,12 +2864,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['RelayStatusResponse'];
-            };
+            'application/json': components['schemas']['RelayStatusResponse'];
           };
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3056,7 +2877,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/matrix/config': {
+  '/api/matrix/config': {
     parameters: {
       query?: never;
       header?: never;
@@ -3079,12 +2900,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['MatrixConfig'];
-            };
+            'application/json': components['schemas']['MatrixConfig'];
           };
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3095,7 +2913,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/matrix/auto-register': {
+  '/api/matrix/auto-register': {
     parameters: {
       query?: never;
       header?: never;
@@ -3121,8 +2939,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3131,7 +2947,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/matrix/peer-id': {
+  '/api/matrix/peer-id': {
     parameters: {
       query?: never;
       header?: never;
@@ -3155,8 +2971,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -3167,7 +2981,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/matrix/store/spaces': {
+  '/api/matrix/store/create-space': {
     parameters: {
       query?: never;
       header?: never;
@@ -3193,8 +3007,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3203,7 +3015,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/matrix/store/invite': {
+  '/api/matrix/store/invite': {
     parameters: {
       query?: never;
       header?: never;
@@ -3229,8 +3041,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3239,7 +3049,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/matrix/store/kick': {
+  '/api/matrix/store/kick': {
     parameters: {
       query?: never;
       header?: never;
@@ -3265,8 +3075,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -3275,7 +3083,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/orders': {
+  '/v1/orders/purchase': {
     parameters: {
       query?: never;
       header?: never;
@@ -3304,8 +3112,210 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm (accept) an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order confirmed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/fulfill': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark order as fulfilled */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order fulfilled */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Complete an order (release escrow) */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order completed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancel an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order cancelled */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Refund an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Order refunded */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Submit payment for an order */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment submitted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
       };
     };
     delete?: never;
@@ -3340,738 +3350,10 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/confirm': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Confirm (accept/reject) an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order confirmed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/fulfill': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Mark order as fulfilled */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order fulfilled */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/complete': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Complete an order (release escrow) */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order completed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Cancel an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order cancelled */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/refund': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Refund an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Order refunded */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/payment': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Submit payment for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Payment submitted */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/spend': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Spend for an order (wallet payment) */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Spend successful */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/instructions/payment': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get payment instructions for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Payment instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/instructions/confirm': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get confirm/reject instructions for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Confirm instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/instructions/reject': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get reject instructions for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Reject instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/instructions/refund': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get refund instructions for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Refund instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/instructions/complete': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get complete instructions for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Complete instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/orders/{orderID}/instructions/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get cancel instructions for an order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Cancel instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/disputes/{orderID}/open': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Open a dispute */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': {
-            claim?: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Dispute opened */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/disputes/{orderID}/close': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Close a dispute (moderator resolution) */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': {
-            resolution?: string;
-            buyerPercentage?: number;
-            vendorPercentage?: number;
-          };
-        };
-      };
-      responses: {
-        /** @description Dispute closed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/disputes/{orderID}/release': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Release funds from escrow */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': {
-            txID?: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Funds released */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/disputes/{orderID}/release-after-timeout': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Release funds after timeout */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Funds released after timeout */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/disputes/{orderID}/instructions/release': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Get dispute release funds instructions */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          orderID: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Release instructions */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
     delete?: never;
     options?: never;
     head?: never;
@@ -4105,8 +3387,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4144,8 +3424,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4181,8 +3459,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Create a listing */
@@ -4202,8 +3478,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4241,9 +3515,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -4278,8 +3549,6 @@ export interface paths {
           };
           content?: never;
         };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4316,8 +3585,6 @@ export interface paths {
           };
           content?: never;
         };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4352,8 +3619,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Update profile */
@@ -4373,8 +3638,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     /** Create profile */
@@ -4394,8 +3657,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4430,8 +3691,6 @@ export interface paths {
           };
           content?: never;
         };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4468,8 +3727,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4502,8 +3759,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4514,7 +3769,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/wallet/receiving-accounts': {
+  '/v1/wallet/receivingaccountlist': {
     parameters: {
       query?: never;
       header?: never;
@@ -4538,8 +3793,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4550,14 +3803,14 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/chat/messages': {
+  '/v1/chat/rooms': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get own chat messages */
+    /** Get chat rooms */
     get: {
       parameters: {
         query?: never;
@@ -4567,24 +3820,78 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Chat messages */
+        /** @description Room list */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
-    /** Send a chat message */
+    /** Create chat room */
     post: {
       parameters: {
         query?: never;
         header?: never;
         path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Room created */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/chat/rooms/{roomID}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get chat room messages */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          roomID: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Chat room messages */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    put?: never;
+    /** Send chat room message */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          roomID: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -4596,8 +3903,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4606,75 +3911,36 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/chat/conversations/{peerID}/messages': {
+  '/v1/chat/rooms/{roomID}/read': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get chat messages with a peer */
-    get: {
+    get?: never;
+    put?: never;
+    /** Mark chat room as read */
+    post: {
       parameters: {
         query?: never;
         header?: never;
         path: {
-          peerID: string;
+          roomID: string;
         };
         cookie?: never;
       };
       requestBody?: never;
       responses: {
-        /** @description Chat messages */
+        /** @description Read receipt updated */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/chat/conversations': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get chat conversations */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Conversation list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -4714,9 +3980,6 @@ export interface paths {
           };
           content?: never;
         };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4750,14 +4013,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'image/*': {
-              /** Format: binary */
-              data: string;
-            };
+            'image/*': string;
           };
         };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4795,8 +4053,6 @@ export interface paths {
           };
           content?: never;
         };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -4833,8 +4089,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -4843,401 +4097,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/stripe/public-key': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Stripe publishable key */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Stripe public key */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: {
-                publicKey?: string;
-              };
-            };
-          };
-        };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/stripe/connect-url': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Stripe OAuth connect URL */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Stripe connect URL */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: {
-                /** Format: uri */
-                url?: string;
-              };
-            };
-          };
-        };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/stripe/account-status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Stripe account connection status */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Account status */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: Record<string, never>;
-            };
-          };
-        };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/stripe/payment-intents': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create a Stripe payment intent */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': {
-            /** Format: int64 */
-            amount: number;
-            currency: string;
-            orderID: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Payment intent created */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: {
-                clientSecret?: string;
-              };
-            };
-          };
-        };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/stripe/webhooks': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Handle Stripe webhook events
-     * @description Receives webhook events from Stripe (payment confirmations, etc.)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description Webhook processed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/moderators': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get list of known moderators */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Moderator list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: Record<string, never>[];
-            };
-          };
-        };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    /** Set self as moderator */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'application/json': Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description Moderator set */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        400: components['responses']['BadRequest'];
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    /** Remove self as moderator */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Moderator removed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        401: components['responses']['Unauthorized'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/exchange-rates': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get all exchange rates */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Exchange rates for all currencies */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: {
-                [key: string]: {
-                  [key: string]: number;
-                };
-              };
-            };
-          };
-        };
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/exchange-rates/{currencyCode}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get exchange rates for a specific currency */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Currency code (e.g., BTC, ETH) */
-          currencyCode: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Exchange rates for the specified currency */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              data: {
-                [key: string]: number;
-              };
-            };
-          };
-        };
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/admin/tenants': {
+  '/api/v1/admin/tenants': {
     parameters: {
       query?: never;
       header?: never;
@@ -5266,12 +4126,10 @@ export interface paths {
           };
           content: {
             'application/json': {
-              data: {
-                tenants?: components['schemas']['Tenant'][];
-                total?: number;
-                limit?: number;
-                offset?: number;
-              };
+              tenants?: components['schemas']['Tenant'][];
+              total?: number;
+              limit?: number;
+              offset?: number;
             };
           };
         };
@@ -5289,7 +4147,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -5300,7 +4157,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/tenants/{id}': {
+  '/api/v1/admin/tenants/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -5325,13 +4182,9 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': {
-              data: components['schemas']['Tenant'];
-            };
+            'application/json': components['schemas']['Tenant'];
           };
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
         /** @description Tenant not found */
         404: {
           headers: {
@@ -5339,12 +4192,11 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
     post?: never;
-    /** Soft-delete a tenant (sets status to deleted) */
+    /** Permanently delete a tenant */
     delete: {
       parameters: {
         query?: never;
@@ -5363,10 +4215,8 @@ export interface paths {
           };
           content: {
             'application/json': {
-              data: {
-                /** @enum {string} */
-                status?: 'deleted';
-              };
+              /** @enum {string} */
+              status?: 'deleted';
             };
           };
         };
@@ -5377,10 +4227,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     options?: never;
@@ -5388,7 +4234,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/tenants/{id}/suspend': {
+  '/api/v1/admin/tenants/{id}/suspend': {
     parameters: {
       query?: never;
       header?: never;
@@ -5422,10 +4268,8 @@ export interface paths {
           };
           content: {
             'application/json': {
-              data: {
-                /** @enum {string} */
-                status?: 'suspended';
-              };
+              /** @enum {string} */
+              status?: 'suspended';
             };
           };
         };
@@ -5436,10 +4280,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -5448,7 +4288,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/tenants/{id}/activate': {
+  '/api/v1/admin/tenants/{id}/activate': {
     parameters: {
       query?: never;
       header?: never;
@@ -5476,10 +4316,8 @@ export interface paths {
           };
           content: {
             'application/json': {
-              data: {
-                /** @enum {string} */
-                status?: 'active';
-              };
+              /** @enum {string} */
+              status?: 'active';
             };
           };
         };
@@ -5490,10 +4328,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -5502,7 +4336,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/tenants/{id}/archive': {
+  '/api/v1/admin/tenants/{id}/archive': {
     parameters: {
       query?: never;
       header?: never;
@@ -5530,10 +4364,8 @@ export interface paths {
           };
           content: {
             'application/json': {
-              data: {
-                /** @enum {string} */
-                status?: 'archived';
-              };
+              /** @enum {string} */
+              status?: 'archived';
             };
           };
         };
@@ -5544,10 +4376,6 @@ export interface paths {
           };
           content?: never;
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
-        404: components['responses']['NotFound'];
-        500: components['responses']['InternalError'];
       };
     };
     delete?: never;
@@ -5556,7 +4384,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/admin/tenants/{id}/export': {
+  '/api/v1/admin/tenants/{id}/export': {
     parameters: {
       query?: never;
       header?: never;
@@ -5582,19 +4410,15 @@ export interface paths {
           };
           content: {
             'application/json': {
-              data: {
-                tenant?: components['schemas']['Tenant'];
-                node_running?: boolean;
-                data_summary?: {
-                  product_groups?: number;
-                  product_group_items?: number;
-                };
+              tenant?: components['schemas']['Tenant'];
+              node_running?: boolean;
+              data_summary?: {
+                product_groups?: number;
+                product_group_items?: number;
               };
             };
           };
         };
-        401: components['responses']['Unauthorized'];
-        403: components['responses']['Forbidden'];
         /** @description Tenant not found */
         404: {
           headers: {
@@ -5602,7 +4426,6 @@ export interface paths {
           };
           content?: never;
         };
-        500: components['responses']['InternalError'];
       };
     };
     put?: never;
@@ -5617,37 +4440,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    /** @description Standard error envelope */
-    ApiError: {
-      error: {
-        /** @enum {string} */
-        code:
-          | 'VALIDATION_ERROR'
-          | 'BAD_REQUEST'
-          | 'UNAUTHORIZED'
-          | 'FORBIDDEN'
-          | 'NOT_FOUND'
-          | 'CONFLICT'
-          | 'INTERNAL_ERROR'
-          | 'SERVICE_UNAVAILABLE'
-          | 'RATE_LIMITED';
-        message: string;
-        details?: {
-          field?: string;
-          message?: string;
-        }[];
-      };
-    };
-    PaginationMeta: {
-      total?: number;
-      limit?: number;
-      offset?: number;
-      nextCursor?: string;
-    };
-    /**
-     * @deprecated
-     * @description Legacy error format — use ApiError instead
-     */
     Error: {
       error: string;
     };
@@ -5664,8 +4456,9 @@ export interface components {
       state: string;
     };
     SigninResponse: {
+      status?: string;
       /** @description JWT access token */
-      data?: string;
+      token?: string;
     };
     TelegramSigninRequest: {
       /** Format: int64 */
@@ -5799,10 +4592,9 @@ export interface components {
       orderId?: string;
     };
     RelayExecuteResponse: {
-      data?: {
-        success?: boolean;
-        txHash?: string;
-      };
+      success?: boolean;
+      txHash?: string;
+      error?: string;
     };
     RelayStatusResponse: {
       enabled?: boolean;
@@ -5859,62 +4651,7 @@ export interface components {
       updatedAt?: string;
     };
   };
-  responses: {
-    /** @description Invalid request parameters */
-    BadRequest: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ApiError'];
-      };
-    };
-    /** @description Authentication required or token invalid */
-    Unauthorized: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ApiError'];
-      };
-    };
-    /** @description Insufficient permissions */
-    Forbidden: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ApiError'];
-      };
-    };
-    /** @description Resource not found */
-    NotFound: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ApiError'];
-      };
-    };
-    /** @description Resource conflict */
-    Conflict: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ApiError'];
-      };
-    };
-    /** @description Internal server error */
-    InternalError: {
-      headers: {
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ApiError'];
-      };
-    };
-  };
+  responses: never;
   parameters: never;
   requestBodies: never;
   headers: never;

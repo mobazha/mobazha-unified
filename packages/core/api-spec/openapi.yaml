@@ -2079,41 +2079,59 @@ paths:
   # =========================================================================
   # Node Proxy — Chat
   # =========================================================================
-  /v1/chat/messages:
+  /v1/chat/rooms:
+    get:
+      tags: [Node - Chat]
+      summary: Get chat rooms
+      responses:
+        '200':
+          description: Room list
     post:
       tags: [Node - Chat]
-      summary: Send a chat message
+      summary: Create chat room
       responses:
         '200':
-          description: Message sent
-    get:
-      tags: [Node - Chat]
-      summary: Get own chat messages
-      responses:
-        '200':
-          description: Chat messages
+          description: Room created
 
-  /v1/chat/conversations/{peerID}/messages:
+  /v1/chat/rooms/{roomID}/messages:
     get:
       tags: [Node - Chat]
-      summary: Get chat messages with a peer
+      summary: Get chat room messages
       parameters:
-        - name: peerID
+        - name: roomID
           in: path
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: Chat messages
-
-  /v1/chat/conversations:
-    get:
+          description: Chat room messages
+    post:
       tags: [Node - Chat]
-      summary: Get chat conversations
+      summary: Send chat room message
+      parameters:
+        - name: roomID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Conversation list
+          description: Message sent
+
+  /v1/chat/rooms/{roomID}/read:
+    post:
+      tags: [Node - Chat]
+      summary: Mark chat room as read
+      parameters:
+        - name: roomID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Read receipt updated
 
   # =========================================================================
   # Node Proxy — Media
