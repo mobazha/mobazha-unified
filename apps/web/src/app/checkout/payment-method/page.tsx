@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { useI18n, usePaymentMethods } from '@mobazha/core';
@@ -16,7 +16,11 @@ export default function PaymentMethodPage() {
   const { t } = useI18n();
 
   const initialTokenId = searchParams.get('selected') || undefined;
-  const initialFiatProvider = searchParams.get('fiatProvider') || undefined;
+  const [initialFiatProvider] = useState<string | undefined>(() => {
+    if (typeof window === 'undefined') return undefined;
+    const saved = window.sessionStorage.getItem('checkout_selected_fiat_provider');
+    return saved || undefined;
+  });
   const vendorPeerID = searchParams.get('vendor') || undefined;
   const returnUrl = searchParams.get('returnUrl') || '/checkout';
 

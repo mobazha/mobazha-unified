@@ -55,6 +55,7 @@ import {
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
+import { clearFiatPendingConfirmation, isFiatPendingConfirmation } from '@/lib/fiatPending';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -138,6 +139,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
   const { isAvailable: isTG, backButton, mainButton, haptic } = useTGMiniApp();
   const { toast } = useToast();
+  const [fiatPendingConfirmation, setFiatPendingConfirmation] = useState(false);
 
   // --- UI-only state ---
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
@@ -323,6 +325,16 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     };
   }, [isTG, backButton, router]);
 
+  useEffect(() => {
+    if (!coreOrder) return;
+    if (coreOrder.state !== 'AWAITING_PAYMENT') {
+      clearFiatPendingConfirmation(orderId);
+      setFiatPendingConfirmation(false);
+      return;
+    }
+    setFiatPendingConfirmation(isFiatPendingConfirmation(orderId));
+  }, [coreOrder, orderId]);
+
   // --- TG MainButton (maps to primary order action) ---
   const handleOrderActionRef = useRef(handleOrderAction);
 
@@ -340,10 +352,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isFulfilled: isOrderFulfilled(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        suppressPay: fiatPendingConfirmation,
       }
     );
     return !!getPrimaryAction(actions);
-  }, [isTG, mainButton, coreOrder, displayOrder]);
+  }, [isTG, mainButton, coreOrder, displayOrder, fiatPendingConfirmation]);
 
   useEffect(() => {
     if (!isTG || !mainButton || !coreOrder || !displayOrder) return;
@@ -356,6 +369,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isFulfilled: isOrderFulfilled(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        suppressPay: fiatPendingConfirmation,
       }
     );
     const primary = getPrimaryAction(actions);
@@ -373,7 +387,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       mainButton.offClick(onMain);
       mainButton.hide();
     };
-  }, [isTG, mainButton, coreOrder, displayOrder]);
+  }, [isTG, mainButton, coreOrder, displayOrder, fiatPendingConfirmation]);
 
   // --- Loading state ---
   if (isLoading) {
@@ -569,7 +583,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           className="px-4 pt-3 space-y-4"
         >
           {/* 1. Status + progress bar */}
-          <OrderStatusCard displayOrder={displayOrder} />
+          <OrderStatusCard
+            displayOrder={displayOrder}
+            fiatPendingConfirmation={fiatPendingConfirmation}
+          />
 
           {/* 2. Product card (vendor merged inline) */}
           <OrderProductCard displayOrder={displayOrder} />
@@ -762,6 +779,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           isFulfilled={isOrderFulfilled(coreOrder)}
           paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          suppressPayAction={fiatPendingConfirmation}
           onAction={handleOrderAction}
         />
       )}

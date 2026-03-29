@@ -37,6 +37,7 @@ import {
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
+import { markFiatPendingConfirmation } from '@/lib/fiatPending';
 
 // Types
 interface OrderDetails {
@@ -92,6 +93,15 @@ function buildConfirmationUrl(details: OrderDetails): string {
   if (details.items[0]?.id) url.searchParams.set('slug', details.items[0].id);
   if (details.vendor?.name) url.searchParams.set('vendorName', details.vendor.name);
   return url.toString();
+}
+
+function buildFiatPaymentCoin(providerID: string, currency: string): string {
+  const provider = (providerID || '').trim().toLowerCase();
+  const resolvedCurrency = (currency || '').trim().toUpperCase() || 'USD';
+  if (!provider) {
+    throw new Error('fiat provider is required');
+  }
+  return `fiat:${provider}:${resolvedCurrency}`;
 }
 
 /**
@@ -847,18 +857,31 @@ export default function PaymentPage() {
                             currency={orderDetails.currency}
                             description={orderDetails.items[0]?.title}
                             returnUrl={buildConfirmationUrl(orderDetails)}
-                            onPaymentSuccess={(result: FiatPaymentSuccessResult) => {
-                              ordersApi
-                                .submitPayment({
+                            onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
+                              markFiatPendingConfirmation(orderDetails.orderID);
+                              try {
+                                const submitResult = await ordersApi.submitPayment({
                                   orderID: orderDetails.orderID,
                                   transactionID: result.transactionID,
-                                  coin: `FIAT_${result.providerID.toUpperCase()}`,
+                                  coin: buildFiatPaymentCoin(result.providerID, result.currency),
                                   amount: result.amount,
                                   timestamp: new Date().toISOString(),
                                   method: 5, // FIAT
-                                })
-                                .catch(() => {});
-                              router.push(buildConfirmationUrl(orderDetails));
+                                });
+                                if (submitResult?.success === false) {
+                                  throw new Error(submitResult.error || 'submit payment failed');
+                                }
+                                router.push(buildConfirmationUrl(orderDetails));
+                              } catch (err) {
+                                const message =
+                                  err instanceof Error ? err.message : t('fiat.genericError');
+                                toast({
+                                  title: t('fiat.paymentBeingConfirmed'),
+                                  description: message,
+                                  variant: 'destructive',
+                                });
+                                router.push(buildConfirmationUrl(orderDetails));
+                              }
                             }}
                             onPaymentError={msg => {
                               toast({

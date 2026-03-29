@@ -28,6 +28,7 @@ export interface OrderFooterProps {
   paymentCoin?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
+  suppressPayAction?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -48,6 +49,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   paymentCoin,
   hasRated,
   inAfterSaleWindow = false,
+  suppressPayAction = false,
   onAction,
   className = '',
 }) => {
@@ -64,6 +66,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     paymentMethod,
     hasRated,
     inAfterSaleWindow,
+    suppressPay: suppressPayAction,
   });
 
   // 没有可用操作时不显示

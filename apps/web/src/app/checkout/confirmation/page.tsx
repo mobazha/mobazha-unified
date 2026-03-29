@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
@@ -11,6 +11,7 @@ import { useI18n, useCurrency } from '@mobazha/core';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { ShareButton } from '@/components/Share';
 import { ShieldCheck, Bell, FileSearch } from 'lucide-react';
+import { markFiatPendingConfirmation } from '@/lib/fiatPending';
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
@@ -18,6 +19,7 @@ function ConfirmationContent() {
   const { renderPairedPrice } = useCurrency();
 
   const orderID = searchParams.get('orderID') || '';
+  const redirectStatus = searchParams.get('redirect_status');
   const title = searchParams.get('title') || '';
   const totalRaw = searchParams.get('total') || '';
   const currency = searchParams.get('currency') || 'USD';
@@ -26,6 +28,12 @@ function ConfirmationContent() {
   const totalAmount = totalRaw ? parseFloat(totalRaw) : 0;
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const productShareUrl = slug ? `${siteUrl}/product/${slug}` : '';
+
+  useEffect(() => {
+    if (redirectStatus === 'succeeded' && orderID) {
+      markFiatPendingConfirmation(orderID);
+    }
+  }, [orderID, redirectStatus]);
 
   return (
     <div className="min-h-screen bg-background" data-testid="order-confirmation-page">

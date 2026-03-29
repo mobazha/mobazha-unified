@@ -108,9 +108,6 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         if (state.selectedTokenId) {
           url.searchParams.set('selected', state.selectedTokenId);
         }
-        if (state.selectedFiatProvider) {
-          url.searchParams.set('fiatProvider', state.selectedFiatProvider);
-        }
         if (vendorPeerID) {
           url.searchParams.set('vendor', vendorPeerID);
         }
@@ -122,7 +119,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         setState(prev => ({ ...prev, isPaymentDrawerOpen: true }));
       }
     },
-    [isMobile, router, state.selectedTokenId, state.selectedFiatProvider, vendorPeerID]
+    [isMobile, router, state.selectedTokenId, vendorPeerID]
   );
 
   // 打开仲裁员选择器
