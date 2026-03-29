@@ -9,7 +9,6 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { ProductImage } from '@/components/ui/product-image';
 import { useCurrency, useI18n } from '@mobazha/core';
 import { CreditCard } from 'lucide-react';
-import { isFiatPendingConfirmation } from '@/lib/fiatPending';
 
 export interface OrderItem {
   id: string;
@@ -171,9 +170,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
   const { t } = useI18n();
   const status = statusConfig[order.status];
   const isAwaitingPaymentRaw = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
-  const hasPendingFiatConfirmation =
-    isAwaitingPaymentRaw && isFiatPendingConfirmation(order.orderId);
-  const isAwaitingPayment = isAwaitingPaymentRaw && !hasPendingFiatConfirmation;
+  const isAwaitingPayment = isAwaitingPaymentRaw;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

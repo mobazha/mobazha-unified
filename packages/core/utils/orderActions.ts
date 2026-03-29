@@ -325,7 +325,6 @@ export function getOrderActions(
     paymentMethod?: string;
     hasRated?: boolean;
     inAfterSaleWindow?: boolean;
-    suppressPay?: boolean;
   } = {}
 ): OrderAction[] {
   const {
@@ -335,7 +334,6 @@ export function getOrderActions(
     paymentMethod,
     hasRated = false,
     inAfterSaleWindow = false,
-    suppressPay = false,
   } = options;
 
   const config = ORDER_STATUS_CONFIG[state];
@@ -353,10 +351,6 @@ export function getOrderActions(
 
   // 根据条件过滤操作
   actions = actions.filter(action => {
-    if (action === 'Pay' && suppressPay) {
-      return false;
-    }
-
     // Dispute 操作需要是仲裁订单
     if (action === 'Dispute') {
       if (!isModerated) return false;

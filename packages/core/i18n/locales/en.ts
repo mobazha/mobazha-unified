@@ -697,9 +697,6 @@ export const en: TranslationResource = {
       awaitingPaymentBuyer: 'Payment required to complete this order',
       awaitingPaymentSeller: 'Waiting for buyer to complete payment',
       awaitingPaymentHint: 'Tap "Pay Now" below to proceed',
-      awaitingPaymentBuyerFiatPending: 'Payment submitted, confirming with provider',
-      awaitingPaymentHintFiatPending:
-        'Your payment provider callback is in progress. This page will update shortly.',
       pendingBuyer: 'Waiting for the seller to accept your order',
       pendingBuyerConfirmingHint: 'Confirming on-chain, usually takes 15–60 seconds',
       pendingSeller: 'New order received — review and accept to proceed',

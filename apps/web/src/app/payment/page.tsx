@@ -37,7 +37,6 @@ import {
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
-import { markFiatPendingConfirmation } from '@/lib/fiatPending';
 
 // Types
 interface OrderDetails {
@@ -84,7 +83,12 @@ interface OrderDetails {
   rawOrderAmount?: number;
 }
 
-function buildConfirmationUrl(details: OrderDetails): string {
+interface FiatConfirmationContext {
+  providerID: string;
+  amount?: number;
+}
+
+function buildConfirmationUrl(details: OrderDetails, fiat?: FiatConfirmationContext): string {
   const url = new URL('/checkout/confirmation', window.location.origin);
   url.searchParams.set('orderID', details.orderID);
   url.searchParams.set('total', String(details.total));
@@ -92,6 +96,12 @@ function buildConfirmationUrl(details: OrderDetails): string {
   if (details.items[0]?.title) url.searchParams.set('title', details.items[0].title);
   if (details.items[0]?.id) url.searchParams.set('slug', details.items[0].id);
   if (details.vendor?.name) url.searchParams.set('vendorName', details.vendor.name);
+  if (fiat?.providerID) {
+    url.searchParams.set('fiatProvider', fiat.providerID);
+    if (typeof fiat.amount === 'number' && Number.isFinite(fiat.amount) && fiat.amount > 0) {
+      url.searchParams.set('fiatAmount', String(Math.floor(fiat.amount)));
+    }
+  }
   return url.toString();
 }
 
@@ -856,9 +866,11 @@ export default function PaymentPage() {
                             amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
                             currency={orderDetails.currency}
                             description={orderDetails.items[0]?.title}
-                            returnUrl={buildConfirmationUrl(orderDetails)}
+                            returnUrl={buildConfirmationUrl(orderDetails, {
+                              providerID: selectedFiatProvider,
+                              amount: toMinimalUnit(orderDetails.total, orderDetails.currency),
+                            })}
                             onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
-                              markFiatPendingConfirmation(orderDetails.orderID);
                               try {
                                 const submitResult = await ordersApi.submitPayment({
                                   orderID: orderDetails.orderID,
@@ -871,7 +883,12 @@ export default function PaymentPage() {
                                 if (submitResult?.success === false) {
                                   throw new Error(submitResult.error || 'submit payment failed');
                                 }
-                                router.push(buildConfirmationUrl(orderDetails));
+                                router.push(
+                                  buildConfirmationUrl(orderDetails, {
+                                    providerID: result.providerID,
+                                    amount: result.amount,
+                                  })
+                                );
                               } catch (err) {
                                 const message =
                                   err instanceof Error ? err.message : t('fiat.genericError');
@@ -880,7 +897,12 @@ export default function PaymentPage() {
                                   description: message,
                                   variant: 'destructive',
                                 });
-                                router.push(buildConfirmationUrl(orderDetails));
+                                router.push(
+                                  buildConfirmationUrl(orderDetails, {
+                                    providerID: result.providerID,
+                                    amount: result.amount,
+                                  })
+                                );
                               }
                             }}
                             onPaymentError={msg => {
