@@ -12,6 +12,7 @@ import type { ChainPaymentExecutor, ChainCategory } from './types';
 import { EVMPaymentExecutor } from './evmExecutor';
 import { SolanaPaymentExecutor } from './solanaExecutor';
 import { TronPaymentExecutor } from './tronExecutor';
+import { parseCanonicalPaymentCoin, toCanonicalPaymentCoin } from '../../data/tokens';
 
 // ── Registry ────────────────────────────────────────
 
@@ -85,14 +86,39 @@ const EVM_COINS = new Set([
 const SOLANA_COINS = new Set(['SOL']);
 
 /** TRON 链 coin 标识符（含 TRC20 tokens） */
-const TRON_COINS = new Set(['TRX', 'TRONUSDT']);
+const TRON_COINS = new Set(['TRX', 'TRONUSDT', 'TRXUSDT']);
 
 /**
  * 从 coin 标识符解析链分类
  * 用于在 paymentChain 不可用时，通过 paymentCoin 推断链类型
  */
 export function resolveChainCategory(coin: string): ChainCategory | null {
-  const upper = coin.toUpperCase();
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return null;
+
+  const canonical = toCanonicalPaymentCoin(trimmed);
+  const parsedCanonical = parseCanonicalPaymentCoin(canonical);
+  if (parsedCanonical) {
+    switch (parsedCanonical.namespace) {
+      case 'bip122':
+        return 'utxo';
+      case 'eip155':
+        return 'evm';
+      case 'solana':
+        return 'solana';
+      case 'tron':
+        return 'tron';
+      default:
+        return null;
+    }
+  }
+
+  // Fiat payment coins don't route to chain executors.
+  if (canonical.toLowerCase().startsWith('fiat:')) {
+    return null;
+  }
+
+  const upper = trimmed.toUpperCase();
   if (UTXO_COINS.has(upper)) return 'utxo';
   if (EVM_COINS.has(upper)) return 'evm';
   if (SOLANA_COINS.has(upper)) return 'solana';

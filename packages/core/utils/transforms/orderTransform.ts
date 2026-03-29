@@ -19,7 +19,7 @@ import type {
   TransformOrderOptions,
 } from '../../types/orderDisplay';
 import { getImageUrl } from '../../services/api/config';
-import { formatTokenAmount, getTokenById } from '../../data/tokens';
+import { formatTokenAmount, getTokenByPaymentCoin } from '../../data/tokens';
 import { formatUserName } from '../identity';
 
 // ============ Internal Types ============
@@ -183,7 +183,7 @@ export function mapOrderState(state: OrderState): DisplayOrderStatus {
  */
 function formatPriceAmount(amount: number, divisibility: number = 2, coin?: string): string {
   // 如果提供了 coin，且是已知的加密货币 token，使用 token 配置的 decimals
-  if (coin && getTokenById(coin)) {
+  if (coin && getTokenByPaymentCoin(coin)) {
     return formatTokenAmount(amount, coin);
   }
   // 法币（如 USD）或未知 coin，使用 listing metadata 中的 divisibility
@@ -504,7 +504,7 @@ export function transformCoreOrder(
   // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
   const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
   // 支付币种的 divisibility（优先从 token 配置取 decimals）
-  const paymentTokenConfig = getTokenById(pricingCoin);
+  const paymentTokenConfig = getTokenByPaymentCoin(pricingCoin);
   const paymentDivisibility = paymentTokenConfig
     ? paymentTokenConfig.decimals
     : listingDivisibility;
