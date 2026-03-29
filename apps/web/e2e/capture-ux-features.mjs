@@ -77,8 +77,21 @@ function makeOrder(id, slug, title, price, imgId, state, timestamp, overrides, i
           vendorID: { peerID: MOCK_VENDOR_PEER_ID, handle: 'TechStore' },
           item: { title, description: `Quality ${title}.`, price: String(price),
             images: [{ ...img(imgId), filename: `${slug}.png` }], skus: [{ productID: '1', quantity: '100' }] },
-          shippingOptions: [{ name: 'Standard', type: 'FIXED_PRICE', regions: ['ALL'],
-            services: [{ name: 'Standard', estimatedDelivery: '5-7 days', firstFreight: '499' }] }],
+          shippingProfile: {
+            profileId: 'sp-standard',
+            name: 'Default Shipping',
+            isDefault: true,
+            locationGroups: [{
+              id: 'lg-default',
+              locationIds: [],
+              zones: [{
+                id: 'zone-standard',
+                name: 'Standard',
+                regions: ['ALL'],
+                rates: [{ id: 'rate-standard', name: 'Standard', price: '499', currency: 'USD', estimatedDelivery: '5-7 days' }],
+              }],
+            }],
+          },
         }}],
         payment: { coin: 'ETH', chaincode: '', amount: price, method: 'MODERATED' },
         pricingCoin: 'USD', amount: price,
