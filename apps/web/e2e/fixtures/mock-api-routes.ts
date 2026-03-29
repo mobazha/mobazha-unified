@@ -1090,6 +1090,36 @@ export async function mockFiatProvidersAPI(page: Page): Promise<void> {
   });
 }
 
+interface MockPaymentMethodsOptions {
+  crypto?: string[];
+  fiat?: Array<{
+    providerID: string;
+    status: 'active' | 'restricted' | 'disabled' | 'inactive';
+    accountID?: string;
+  }>;
+}
+
+/**
+ * Mock buyer payment methods endpoint used by usePaymentMethods().
+ * Intercepts GET /v1/payment-methods/:peerID and returns crypto + fiat methods.
+ */
+export async function mockPaymentMethodsAPI(
+  page: Page,
+  opts?: MockPaymentMethodsOptions
+): Promise<void> {
+  const crypto = opts?.crypto ?? ['ETHUSDT', 'BSCUSDT', 'BASEUSDT', 'SOLUSDT', 'TRONUSDT'];
+  const fiat = opts?.fiat ?? [];
+
+  await page.route('**/payment-methods/**', route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ crypto, fiat }),
+    });
+  });
+}
+
 /**
  * Set up all mocks for a comprehensive visual test run.
  */
