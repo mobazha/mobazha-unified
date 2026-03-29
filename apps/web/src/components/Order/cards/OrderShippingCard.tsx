@@ -32,7 +32,7 @@ export const OrderShippingCard = memo(function OrderShippingCard({
 
   const isPhysicalGood = order.contractType === 'PHYSICAL_GOOD';
   const hasShippingInfo = isPhysicalGood && (order.shippingRecipient || order.shippingAddressLine1);
-  const hasShippingMeta = isPhysicalGood && (order.shippingOption || order.shippingService);
+  const hasShippingMeta = isPhysicalGood && (order.shippingZoneName || order.shippingMethodName);
 
   if (!hasShippingInfo && !hasShippingMeta) return null;
 
@@ -80,20 +80,20 @@ export const OrderShippingCard = memo(function OrderShippingCard({
 
       {hasShippingMeta && (
         <div className="flex gap-4 p-3 bg-muted/20 rounded-lg mt-2">
-          {order.shippingOption && (
+          {order.shippingZoneName && (
             <div>
               <span className="text-muted-foreground block mb-0.5 text-xs">
-                {t('order.shippingOption')}
+                {t('order.shippingZone')}
               </span>
-              <p className="text-foreground text-sm">{order.shippingOption}</p>
+              <p className="text-foreground text-sm">{order.shippingZoneName}</p>
             </div>
           )}
-          {order.shippingService && (
+          {order.shippingMethodName && (
             <div>
               <span className="text-muted-foreground block mb-0.5 text-xs">
-                {t('order.shippingService')}
+                {t('order.shippingMethod')}
               </span>
-              <p className="text-foreground text-sm">{order.shippingService}</p>
+              <p className="text-foreground text-sm">{order.shippingMethodName}</p>
             </div>
           )}
         </div>

@@ -3,7 +3,7 @@ import type { UserProfile, DisplayAddress, Address as CoreAddress } from '@mobaz
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 
-/** Checkout shipping zone (unified from ShippingProfile zones and legacy ShippingOptions) */
+/** Checkout shipping zone (from ShippingProfile zones) */
 export interface CheckoutShippingZone {
   id?: string;
   name: string;
@@ -19,7 +19,6 @@ export interface CheckoutShippingRate {
   price: number;
   currency: string;
   estimatedDelivery?: string;
-  additionalItemPrice?: number;
 }
 
 /** Resolved checkout item with all data needed for order creation */
@@ -109,4 +108,6 @@ export interface UseCheckoutReturn {
   rwaTradeMode: number | undefined;
   needsShippingAddress: boolean;
   hasAllShippingSelected: boolean;
+  hasShippingPricingIssue: boolean;
+  hasFreeShippingSelection: boolean;
 }

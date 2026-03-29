@@ -41,27 +41,19 @@ export function getStockQuantity(product: Product): number {
 }
 
 export function hasFreeShipping(product: Product): boolean {
-  if (product.shippingProfile) {
-    const zones = getAllShippingZones(product.shippingProfile);
-    if (zones.length > 0) {
-      return zones.some(
-        zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
-      );
-    }
-  }
-  if (!product.shippingOptions) return false;
-  return product.shippingOptions.some(opt => opt.services.some(svc => svc.price === 0));
+  if (!product.shippingProfile) return false;
+  const zones = getAllShippingZones(product.shippingProfile);
+  if (zones.length === 0) return false;
+  return zones.some(
+    zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
+  );
 }
 
 export function getEstimatedDelivery(product: Product): string | null {
-  if (product.shippingProfile) {
-    const zones = getAllShippingZones(product.shippingProfile);
-    if (zones.length > 0) {
-      return zones[0]?.rates[0]?.estimatedDelivery || null;
-    }
-  }
-  if (!product.shippingOptions || product.shippingOptions.length === 0) return null;
-  return product.shippingOptions[0]?.services[0]?.estimatedDelivery || null;
+  if (!product.shippingProfile) return null;
+  const zones = getAllShippingZones(product.shippingProfile);
+  if (zones.length === 0) return null;
+  return zones[0]?.rates[0]?.estimatedDelivery || null;
 }
 
 // --- Hook ---

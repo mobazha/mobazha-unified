@@ -52,9 +52,6 @@ export type {
   ProductVariant,
   SkuSelection,
   ProductSku,
-  ShippingOption,
-  ShippingType,
-  ShippingService,
   Tax,
   ProductRating,
   RatingIndex,
@@ -298,9 +295,8 @@ export type {
   UpdateCollectionRequest,
 } from './collection';
 
-// Shipping Config types (店铺配送选项设置)
+// Shipping config types (Shopify-style shipping profiles)
 export type {
-  // 新版 Shopify 风格类型
   ShippingLocation,
   RateConditionType,
   RateCondition,
@@ -310,28 +306,20 @@ export type {
   LocationGroup,
   ShippingProfile,
   ShippingData,
-  // 旧版类型（已废弃，用于迁移）
-  ShippingServiceConfig,
-  ShippingOptionConfig,
 } from './shippingConfig';
 
 export {
-  // 新版工厂函数
   generateId,
   createEmptyLocation,
   createEmptyRate,
   createEmptyZone,
   createEmptyLocationGroup,
   createEmptyShippingProfile,
-  // 新版辅助函数
   getAllZones,
   getAllRates,
   getPriceRange,
   getAllRegions,
   hasMultipleLocations,
-  // 旧版函数（已废弃）
-  createEmptyShippingService,
-  createEmptyShippingOption,
 } from './shippingConfig';
 
 // Fiat payment types

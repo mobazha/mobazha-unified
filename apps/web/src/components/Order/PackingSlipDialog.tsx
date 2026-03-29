@@ -286,8 +286,15 @@ export function PackingSlipDialog({ open, onOpenChange, order }: PackingSlipDial
                   <tr>
                     <td style={{ padding: '10px 0', borderBottom: '1px solid #eee' }} colSpan={2}>
                       {t('order.shipping')}
-                      {order.shippingOption && (
-                        <span style={{ color: '#666' }}> ({order.shippingOption})</span>
+                      {(order.shippingZoneName || order.shippingMethodName) && (
+                        <span style={{ color: '#666' }}>
+                          {' '}
+                          (
+                          {[order.shippingZoneName, order.shippingMethodName]
+                            .filter(Boolean)
+                            .join(' · ')}
+                          )
+                        </span>
                       )}
                     </td>
                     <td

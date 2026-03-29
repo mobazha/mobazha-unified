@@ -56,34 +56,21 @@ function getStockQuantity(product: Product): number {
 
 // 检查是否免运费
 function hasFreeShipping(product: Product): boolean {
-  // 新版 profile（支持直接 zones 和 LocationGroups 两种模式）
-  if (product.shippingProfile) {
-    const zones = getAllShippingZones(product.shippingProfile);
-    if (zones.length > 0) {
-      return zones.some(
-        zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
-      );
-    }
-  }
-  // 旧版兼容
-  if (!product.shippingOptions) return false;
-  return product.shippingOptions.some(opt => opt.services.some(svc => svc.price === 0));
+  if (!product.shippingProfile) return false;
+  const zones = getAllShippingZones(product.shippingProfile);
+  if (zones.length === 0) return false;
+  return zones.some(
+    zone => zone.rates?.some(rate => rate.price != null && Number(rate.price) === 0) ?? false
+  );
 }
 
 // 获取预计送达时间
 function getEstimatedDelivery(product: Product): string | null {
-  // 新版 profile（支持直接 zones 和 LocationGroups 两种模式）
-  if (product.shippingProfile) {
-    const zones = getAllShippingZones(product.shippingProfile);
-    if (zones.length > 0) {
-      const firstRate = zones[0]?.rates[0];
-      return firstRate?.estimatedDelivery || null;
-    }
-  }
-  // 旧版兼容
-  if (!product.shippingOptions || product.shippingOptions.length === 0) return null;
-  const firstService = product.shippingOptions[0]?.services[0];
-  return firstService?.estimatedDelivery || null;
+  if (!product.shippingProfile) return null;
+  const zones = getAllShippingZones(product.shippingProfile);
+  if (zones.length === 0) return null;
+  const firstRate = zones[0]?.rates[0];
+  return firstRate?.estimatedDelivery || null;
 }
 
 export interface ProductDetailProps {
@@ -1331,11 +1318,7 @@ export function ProductDetail({
 
             {/* Shipping Options - 仅对实物商品显示 */}
             {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
-              <ShippingOptionsSection
-                shippingProfile={product.shippingProfile}
-                shippingOptions={product.shippingOptions}
-                pricingCurrency={product.metadata?.pricingCurrency?.code}
-              />
+              <ShippingOptionsSection shippingProfile={product.shippingProfile} />
             )}
           </div>
 

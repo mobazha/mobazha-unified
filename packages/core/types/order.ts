@@ -1,5 +1,5 @@
 import type { Image, Price, Address, CryptoType } from './common';
-import type { ProductItem, ShippingOption, VendorID } from './product';
+import type { ProductItem, VendorID } from './product';
 
 /**
  * 订单状态
@@ -321,8 +321,6 @@ export interface ContractListing {
     };
   };
   item: ProductItem;
-  shippingOptions?: ShippingOption[];
-  coupons?: { hash: string }[];
 }
 
 /**

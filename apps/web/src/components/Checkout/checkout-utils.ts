@@ -1,5 +1,5 @@
 import type { Address as FrontendAddress } from '@/components/Address';
-import type { DisplayAddress, ShippingOption, ShippingProfile } from '@mobazha/core';
+import type { DisplayAddress, ShippingProfile } from '@mobazha/core';
 import { getAllZones } from '@mobazha/core';
 import type { CheckoutShippingZone } from './types';
 
@@ -9,30 +9,13 @@ export function profileToCheckoutZones(profile: ShippingProfile): CheckoutShippi
     id: zone.id,
     name: zone.name,
     regions: zone.regions || [],
-    currency: zone.rates?.[0]?.currency || 'USD',
+    currency: zone.rates?.[0]?.currency ?? '',
     rates: (zone.rates || []).map(rate => ({
       id: rate.id,
       name: rate.name,
       price: parseInt(rate.price, 10) || 0,
-      currency: rate.currency,
+      currency: rate.currency ?? '',
       estimatedDelivery: rate.estimatedDelivery,
-    })),
-  }));
-}
-
-/** Convert legacy ShippingOption[] to checkout shipping zones */
-export function legacyOptionsToCheckoutZones(options: ShippingOption[]): CheckoutShippingZone[] {
-  return options.map(option => ({
-    name: option.name,
-    regions: option.regions || [],
-    currency: option.currency || 'USD',
-    rates: (option.services || []).map(service => ({
-      name: service.name,
-      price: parseInt(String(service.firstFreight ?? service.price ?? 0), 10) || 0,
-      currency: option.currency || 'USD',
-      estimatedDelivery: service.estimatedDelivery,
-      additionalItemPrice:
-        parseInt(String(service.renewalUnitPrice ?? service.additionalItemPrice ?? 0), 10) || 0,
     })),
   }));
 }

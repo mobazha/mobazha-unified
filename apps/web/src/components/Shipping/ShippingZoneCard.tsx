@@ -35,7 +35,8 @@ export function ShippingZoneCard({
     const pricesByCurrency: Record<string, number[]> = {};
 
     zone.rates.forEach(rate => {
-      const currency = rate.currency || 'USD';
+      const currency = rate.currency?.trim();
+      if (!currency) return;
       if (!pricesByCurrency[currency]) {
         pricesByCurrency[currency] = [];
       }
@@ -124,11 +125,15 @@ export function ShippingZoneCard({
                 <span key={rate.id || idx}>
                   {idx > 0 && ' • '}
                   {rate.name ? `${rate.name}: ` : ''}
-                  {formatPrice(
-                    fromMinimalUnit(rate.price || '0', rate.currency || 'USD'),
-                    rate.currency || 'USD',
-                    { showSymbol: true }
-                  )}
+                  {rate.currency
+                    ? formatPrice(
+                        fromMinimalUnit(rate.price || '0', rate.currency),
+                        rate.currency,
+                        {
+                          showSymbol: true,
+                        }
+                      )
+                    : '—'}
                 </span>
               ))}
               {zone.rates.length > 3 && ` +${zone.rates.length - 3}`}

@@ -26,7 +26,6 @@ export interface PurchaseData {
       service: string;
     };
     memo?: string;
-    coupons?: string[];
   }>;
   discountCodes?: string[];
   moderatorId?: string;
@@ -358,7 +357,6 @@ export interface CreateOrderData {
       service: string;
     };
     memo?: string;
-    coupons?: string[];
   }>;
   // 地址信息（仅物理商品需要）
   address?: {
@@ -445,7 +443,6 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
       ...(item.options && item.options.length > 0 ? { options: item.options } : {}),
       ...(item.shipping ? { shipping: item.shipping } : {}),
       ...(item.memo ? { memo: item.memo } : {}),
-      ...(item.coupons && item.coupons.length > 0 ? { coupons: item.coupons } : {}),
     })),
   };
 

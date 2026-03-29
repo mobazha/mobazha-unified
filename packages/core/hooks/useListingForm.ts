@@ -297,7 +297,6 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         ? {
             condition: undefined,
             grams: undefined,
-            shippingOptions: [],
             options: [],
           }
         : {}),
@@ -305,7 +304,6 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         ? {
             condition: undefined,
             grams: undefined,
-            shippingOptions: [],
           }
         : {
             condition: prev.condition || 'NEW',

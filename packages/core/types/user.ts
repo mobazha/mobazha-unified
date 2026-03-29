@@ -1,5 +1,5 @@
 import type { Image, Address, CryptoType } from './common';
-import type { ShippingProfile, ShippingLocation, ShippingOptionConfig } from './shippingConfig';
+import type { ShippingProfile, ShippingLocation } from './shippingConfig';
 
 /**
  * 用户角色
@@ -97,8 +97,6 @@ export interface UserSettings {
   showNotifications?: boolean;
   showNsfw?: boolean;
   shippingAddresses?: Address[];
-  /** @deprecated 传统模式：配送选项列表（用于迁移） */
-  shippingOptions?: ShippingOptionConfig[];
   /** 配送档案列表（Shopify 风格） */
   shippingProfiles?: ShippingProfile[];
   /** 发货地点列表 */
