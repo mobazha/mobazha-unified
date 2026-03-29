@@ -86,7 +86,6 @@ interface RealOrderData {
       pricingCoin?: string;
       amount?: number;
       alternateContactInfo?: string;
-      fiatProvider?: string;
     };
     paymentSent?: {
       moderator?: string;
@@ -414,6 +413,27 @@ function deriveProtectionLevel(method: string | number, isFiat: boolean): Protec
   return 'standard';
 }
 
+function normalizeFiatProvider(providerID?: string): DisplayFiatPayment['provider'] | undefined {
+  const normalized = (providerID || '').trim().toLowerCase();
+  if (normalized === 'stripe' || normalized === 'paypal') {
+    return normalized;
+  }
+  return undefined;
+}
+
+function resolveFiatProviderFromCoin(
+  paymentCoin?: string
+): DisplayFiatPayment['provider'] | undefined {
+  if (!paymentCoin) {
+    return undefined;
+  }
+  const parts = paymentCoin.split(':');
+  if (parts.length < 3 || parts[0].toLowerCase() !== 'fiat') {
+    return undefined;
+  }
+  return normalizeFiatProvider(parts[1]);
+}
+
 // ============ Main Transform Function ============
 
 /**
@@ -642,12 +662,16 @@ export function transformCoreOrder(
       ? formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
       : formattedOrderAmount;
 
-  // Fiat payment detection: method === 5 or "FIAT"
+  const paymentCoinFiatProvider = resolveFiatProviderFromCoin(paymentSent?.coin);
+  const metadataFiatProvider = normalizeFiatProvider(data.fiatMetadata?.fiat_provider);
+  const resolvedFiatProvider = paymentCoinFiatProvider || metadataFiatProvider;
+
+  // Fiat payment detection: method === 5 or "FIAT" or canonical fiat coin.
   const isFiatPayment =
-    paymentSent?.method === 5 || paymentSent?.method === 'FIAT' || !!orderOpen?.fiatProvider;
+    paymentSent?.method === 5 || paymentSent?.method === 'FIAT' || !!paymentCoinFiatProvider;
   let fiatPayment: DisplayFiatPayment | undefined;
-  if (isFiatPayment) {
-    const provider = (orderOpen?.fiatProvider || 'stripe') as 'stripe' | 'paypal';
+  if (isFiatPayment && resolvedFiatProvider) {
+    const provider = resolvedFiatProvider;
     const pm = paymentSent?.paymentMethod;
     const brand = pm?.brand || pm?.type || '';
     const last4 = pm?.last4 || '';
@@ -666,17 +690,21 @@ export function transformCoreOrder(
   let fiatDispute: DisplayFiatDispute | undefined;
   if (data.fiatMetadata?.fiat_dispute_status) {
     const meta = data.fiatMetadata;
-    fiatDispute = {
-      status: meta.fiat_dispute_status === 'resolved' ? 'resolved' : 'opened',
-      disputeId: meta.fiat_dispute_id || '',
-      reason: meta.fiat_dispute_reason || '',
-      provider: (meta.fiat_dispute_provider || fiatPayment?.provider || 'stripe') as
-        | 'stripe'
-        | 'paypal',
-      openedAt: meta.fiat_dispute_opened_at,
-      resolvedAt: meta.fiat_dispute_resolved_at,
-      outcome: meta.fiat_dispute_outcome,
-    };
+    const disputeProvider =
+      normalizeFiatProvider(meta.fiat_dispute_provider) ||
+      fiatPayment?.provider ||
+      resolvedFiatProvider;
+    if (disputeProvider) {
+      fiatDispute = {
+        status: meta.fiat_dispute_status === 'resolved' ? 'resolved' : 'opened',
+        disputeId: meta.fiat_dispute_id || '',
+        reason: meta.fiat_dispute_reason || '',
+        provider: disputeProvider,
+        openedAt: meta.fiat_dispute_opened_at,
+        resolvedAt: meta.fiat_dispute_resolved_at,
+        outcome: meta.fiat_dispute_outcome,
+      };
+    }
   }
 
   // Crypto dispute (internal, moderator-mediated)

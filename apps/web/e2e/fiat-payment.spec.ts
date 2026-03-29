@@ -175,9 +175,15 @@ test.describe('Payment Selector — Fiat Methods', () => {
     await expect(content).toBeVisible();
   });
 
-  test('mobile payment-method page should accept fiatProvider param', async ({ page }) => {
+  test('mobile payment-method page should restore fiat provider from sessionStorage', async ({
+    page,
+  }) => {
     await setupMockAuth(page);
-    await page.goto('/checkout/payment-method?fiatProvider=stripe&vendor=QmTest');
+    await page.goto('/checkout');
+    await page.evaluate(() => {
+      sessionStorage.setItem('checkout_selected_fiat_provider', 'stripe');
+    });
+    await page.goto('/checkout/payment-method?vendor=QmTest');
     await page.waitForLoadState('domcontentloaded');
 
     const content = page.locator('main');

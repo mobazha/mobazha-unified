@@ -10,6 +10,7 @@ import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { MessageCircle, CheckCircle2, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import type { Order } from './OrderCard';
+import { isFiatPendingConfirmation } from '@/lib/fiatPending';
 
 // ============ Types ============
 
@@ -284,6 +285,10 @@ export const OrderListCompact = memo(function OrderListCompact({
         };
         const item = order.items[0];
         const showActions = shouldShowActions(order.rawState);
+        const showPayAction =
+          type === 'purchase' &&
+          order.rawState === 'AWAITING_PAYMENT' &&
+          !isFiatPendingConfirmation(order.orderId);
         const { showSwipe, contactCb, confirmCb } = getSwipeActions(order);
 
         return (
@@ -391,7 +396,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                 </div>
               )}
 
-              {type === 'purchase' && order.rawState === 'AWAITING_PAYMENT' && (
+              {showPayAction && (
                 <div onClick={e => e.stopPropagation()}>
                   <Link href={`/payment?orderID=${order.orderId}`} className="block">
                     <Button

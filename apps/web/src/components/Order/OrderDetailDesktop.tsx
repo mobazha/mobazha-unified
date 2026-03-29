@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
@@ -49,6 +49,7 @@ import {
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
+import { clearFiatPendingConfirmation, isFiatPendingConfirmation } from '@/lib/fiatPending';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
@@ -93,6 +94,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
+  const [fiatPendingConfirmation, setFiatPendingConfirmation] = useState(false);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
@@ -101,6 +103,16 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   }, [displayOrder, t]);
 
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
+
+  useEffect(() => {
+    if (!coreOrder) return;
+    if (coreOrder.state !== 'AWAITING_PAYMENT') {
+      clearFiatPendingConfirmation(orderId);
+      setFiatPendingConfirmation(false);
+      return;
+    }
+    setFiatPendingConfirmation(isFiatPendingConfirmation(orderId));
+  }, [coreOrder, orderId]);
 
   const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
     if (!displayOrder?.protection) return null;
@@ -407,7 +419,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
             {activeTab === 'summary' && (
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
                 {/* Status context card — gives users clear next-step guidance */}
-                <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                <OrderStatusCard
+                  displayOrder={displayOrder}
+                  fiatPendingConfirmation={fiatPendingConfirmation}
+                  className="mb-4"
+                />
 
                 {protectionStage && displayOrder.protection && (
                   <OrderProtectionStatus
@@ -564,6 +580,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           paymentCoin={coreOrder?.contract?.paymentSent?.coin}
           hasRated={displayOrder.hasRated}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          suppressPayAction={fiatPendingConfirmation}
           onAction={handleOrderAction}
         />
       )}
