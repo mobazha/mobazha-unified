@@ -106,7 +106,8 @@ export function ShippingProfileCard({
     const pricesByCurrency: Record<string, number[]> = {};
 
     rates.forEach(rate => {
-      const currency = rate.currency || 'USD';
+      const currency = rate.currency?.trim();
+      if (!currency) return;
       if (!pricesByCurrency[currency]) {
         pricesByCurrency[currency] = [];
       }

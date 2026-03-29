@@ -506,11 +506,7 @@ export function ProductDetailMobile({
                 </svg>
               </summary>
               <div className="pb-3">
-                <ShippingOptionsSection
-                  shippingProfile={product.shippingProfile}
-                  shippingOptions={product.shippingOptions}
-                  pricingCurrency={product.metadata?.pricingCurrency?.code}
-                />
+                <ShippingOptionsSection shippingProfile={product.shippingProfile} />
               </div>
             </details>
           )}

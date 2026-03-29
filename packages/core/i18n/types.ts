@@ -432,6 +432,8 @@ export interface TranslationResource {
     paymentTransaction: string;
     escrowAddress: string;
     orderNotes: string;
+    shippingZone?: string;
+    shippingMethod?: string;
     // Dispute
     disputeOpen: string;
     initiatedBy: string;
@@ -2196,21 +2198,10 @@ export interface TranslationResource {
     shippingServices: string;
     service: string;
     services: string;
-    addService: string;
-    addAtLeastOneService: string;
-    serviceName: string;
-    serviceNamePlaceholder: string;
     estimatedDelivery: string;
     deliveryPlaceholder: string;
     // 重量和定价
-    firstWeight: string;
-    firstFreight: string;
-    renewalUnitWeight: string;
-    renewalUnitPrice: string;
-    startWeight: string;
-    endWeight: string;
     shippingFee: string;
-    registrationFee: string;
     // 卡片显示
     unnamed: string;
     // 免邮设置

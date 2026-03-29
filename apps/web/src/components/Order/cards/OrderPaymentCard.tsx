@@ -41,7 +41,6 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
             escrowTimeoutHours: 0,
           },
           item: listing.item,
-          shippingOptions: listing.shippingOptions,
         }
       : null;
 

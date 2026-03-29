@@ -3,6 +3,9 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  convertCurrency,
+  fromMinimalUnit,
+  toMinimalUnit,
   productDataService,
   profileApi,
   ordersApi,
@@ -20,7 +23,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { useI18n } from '@mobazha/core';
 import {
   profileToCheckoutZones,
-  legacyOptionsToCheckoutZones,
   toFrontendAddress,
   toOrderAddress,
   isZoneAvailable,
@@ -124,7 +126,10 @@ export function useCheckout(): UseCheckoutReturn {
       if (!product) return null;
 
       const price = Number(product.item.price) || 0;
-      const currency = product.metadata?.pricingCurrency?.code || 'USD';
+      const currency = product.metadata?.pricingCurrency?.code;
+      if (!currency) {
+        throw new Error(`Listing ${slug} is missing pricing currency`);
+      }
       const imageUrl = product.item.images?.[0]?.medium || product.item.images?.[0]?.small;
       const sellerPeerID = product.vendorID?.peerID || vendorPeerID;
 
@@ -156,9 +161,7 @@ export function useCheckout(): UseCheckoutReturn {
         cryptoListingCurrencyCode: product.item?.cryptoListingCurrencyCode,
         shippingZones: product.shippingProfile
           ? profileToCheckoutZones(product.shippingProfile)
-          : product.shippingOptions
-            ? legacyOptionsToCheckoutZones(product.shippingOptions)
-            : undefined,
+          : undefined,
       };
     },
     []
@@ -261,7 +264,27 @@ export function useCheckout(): UseCheckoutReturn {
     [checkoutItems]
   );
 
+  // Pricing currency is deterministic from listing metadata once checkout items are loaded.
+  const pricingCurrency = checkoutItems[0]?.currency;
+
+  const convertMinimalAmountToPricingCurrency = useCallback(
+    (amount: number, fromCurrency: string, targetPricingCurrency: string): number => {
+      if (!amount) return 0;
+
+      const from = fromCurrency.toUpperCase();
+      const to = targetPricingCurrency.toUpperCase();
+      if (from === to) return amount;
+
+      const standardAmount = fromMinimalUnit(amount, from);
+      const convertedStandard = convertCurrency(standardAmount, from, to);
+      return toMinimalUnit(convertedStandard, to);
+    },
+    []
+  );
+
   const shippingTotal = useMemo(() => {
+    if (!pricingCurrency) return 0;
+
     return checkoutItems.reduce((sum, item) => {
       if (item.contractType !== 'PHYSICAL_GOOD') return sum;
       if (!item.shippingZones?.length) return sum;
@@ -270,10 +293,51 @@ export function useCheckout(): UseCheckoutReturn {
       const zone = item.shippingZones.find(z => z.name === sel.zoneName);
       const rate = zone?.rates.find(r => r.name === sel.rateName);
       if (!rate) return sum;
-      const extra = Math.max(item.quantity - 1, 0);
-      return sum + rate.price + (rate.additionalItemPrice || 0) * extra;
+      if (!rate.currency) return sum;
+
+      const firstItemShipping = convertMinimalAmountToPricingCurrency(
+        rate.price,
+        rate.currency,
+        pricingCurrency
+      );
+      return sum + firstItemShipping;
     }, 0);
+  }, [checkoutItems, selectedShipping, pricingCurrency, convertMinimalAmountToPricingCurrency]);
+
+  type SelectedShippingRate = { price: number; currency: string };
+  const selectedPhysicalShippingRates = useMemo<SelectedShippingRate[]>(() => {
+    const rates: SelectedShippingRate[] = [];
+
+    checkoutItems.forEach(item => {
+      if (item.contractType !== 'PHYSICAL_GOOD') return;
+      if (!item.shippingZones?.length) return;
+
+      const sel = selectedShipping[item.id];
+      if (!sel) return;
+
+      const zone = item.shippingZones.find(z => z.name === sel.zoneName);
+      const rate = zone?.rates.find(r => r.name === sel.rateName);
+      if (!rate) return;
+
+      rates.push({ price: rate.price, currency: rate.currency });
+    });
+
+    return rates;
   }, [checkoutItems, selectedShipping]);
+
+  const hasFreeShippingSelection = useMemo(() => {
+    if (!selectedPhysicalShippingRates.length) return false;
+    return selectedPhysicalShippingRates.every(rate => rate.price === 0);
+  }, [selectedPhysicalShippingRates]);
+
+  const hasShippingPricingIssue = useMemo(() => {
+    if (!selectedPhysicalShippingRates.length) return false;
+    if (!pricingCurrency) return true;
+    if (selectedPhysicalShippingRates.some(rate => !rate.currency)) return true;
+
+    const hasPaidShipping = selectedPhysicalShippingRates.some(rate => rate.price > 0);
+    return hasPaidShipping && shippingTotal <= 0;
+  }, [selectedPhysicalShippingRates, pricingCurrency, shippingTotal]);
 
   // Recalculate savedAmount for percentage-based discounts when subtotal changes
   useEffect(() => {
@@ -297,7 +361,7 @@ export function useCheckout(): UseCheckoutReturn {
   }, [checkoutItems]);
 
   const total = Math.max(0, subtotal + shippingTotal + taxTotal - discountTotal);
-  const currency = checkoutItems[0]?.currency || 'USD';
+  const currency = checkoutItems[0]?.currency ?? '';
 
   const isRwaToken = useMemo(
     () => checkoutItems.some(i => i.contractType === 'RWA_TOKEN'),
@@ -331,6 +395,7 @@ export function useCheckout(): UseCheckoutReturn {
     checkoutItems.length > 0 &&
     (!needsShippingAddress || !!selectedAddress) &&
     hasAllShippingSelected &&
+    !hasShippingPricingIssue &&
     !isSubmitting;
 
   // ---- Auto-update shipping when address country changes ----
@@ -404,7 +469,7 @@ export function useCheckout(): UseCheckoutReturn {
               valueType: d.valueType as AppliedDiscount['valueType'],
               value: numValue,
               savedAmount: calculateDiscountAmount(d.valueType, numValue, currentSubtotal),
-              currency: d.currency || checkoutItems[0]?.currency || 'USD',
+              currency: d.currency || checkoutItems[0]?.currency || '',
               auto: true,
             };
           });
@@ -481,6 +546,14 @@ export function useCheckout(): UseCheckoutReturn {
       toast({ title: t('checkout.selectShippingFirst'), variant: 'destructive' });
       return;
     }
+    if (hasShippingPricingIssue) {
+      toast({
+        title: t('checkout.loadFailed'),
+        description: t('checkout.loadFailedDesc'),
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!checkoutItems.length) {
       toast({ title: t('checkout.noItems'), variant: 'destructive' });
       return;
@@ -542,7 +615,7 @@ export function useCheckout(): UseCheckoutReturn {
         const divisibility = result.amount.currency?.divisibility ?? 2;
         const totalAmount = Number(result.amount.amount) / Math.pow(10, divisibility);
         paymentUrl.searchParams.set('amount', String(totalAmount));
-        paymentUrl.searchParams.set('currency', result.amount.currency?.code || 'USD');
+        paymentUrl.searchParams.set('currency', result.amount.currency?.code || '');
       }
 
       if (checkoutItems.length > 0) {
@@ -592,6 +665,7 @@ export function useCheckout(): UseCheckoutReturn {
     needsShippingAddress,
     selectedShipping,
     hasAllShippingSelected,
+    hasShippingPricingIssue,
     apiAddresses,
     currency,
     appliedDiscounts,
@@ -651,5 +725,7 @@ export function useCheckout(): UseCheckoutReturn {
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,
+    hasShippingPricingIssue,
+    hasFreeShippingSelection,
   };
 }

@@ -53,6 +53,8 @@ export function CheckoutMobile({ checkout }: Props) {
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,
+    hasShippingPricingIssue,
+    hasFreeShippingSelection,
     appliedDiscounts,
     applicableDiscounts,
     discountTotal,
@@ -288,8 +290,7 @@ export function CheckoutMobile({ checkout }: Props) {
                                 const isSelected =
                                   selectedShipping[item.id]?.zoneName === zone.name &&
                                   selectedShipping[item.id]?.rateName === rate.name;
-                                const rateCurrency =
-                                  rate.currency || zone.currency || item.currency;
+                                const rateCurrency = rate.currency;
                                 return (
                                   <label
                                     key={`${zone.name}-${rate.name}`}
@@ -324,9 +325,11 @@ export function CheckoutMobile({ checkout }: Props) {
                                       </div>
                                     </div>
                                     <span className="text-sm font-semibold text-foreground">
-                                      {rate.price === 0
-                                        ? t('checkout.free')
-                                        : renderPairedPrice(rate.price, rateCurrency)}
+                                      {!rateCurrency
+                                        ? '—'
+                                        : rate.price === 0
+                                          ? t('checkout.free')
+                                          : renderPairedPrice(rate.price, rateCurrency)}
                                     </span>
                                   </label>
                                 );
@@ -389,9 +392,11 @@ export function CheckoutMobile({ checkout }: Props) {
                       <span className="font-medium text-primary text-sm">
                         {!hasAllShippingSelected
                           ? t('checkout.selectShippingFirst')
-                          : shippingTotal === 0
-                            ? t('checkout.free')
-                            : renderPairedPrice(shippingTotal, currency)}
+                          : hasShippingPricingIssue
+                            ? '—'
+                            : hasFreeShippingSelection
+                              ? t('checkout.free')
+                              : renderPairedPrice(shippingTotal, currency)}
                       </span>
                     </HStack>
                   )}

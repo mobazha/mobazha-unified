@@ -47,10 +47,10 @@ export interface OrderDetailsSectionProps {
   total: string;
   /** 币种 */
   currency: string;
+  /** 配送区域 */
+  shippingZoneName?: string;
   /** 配送方式 */
-  shippingOption?: string;
-  /** 配送服务 */
-  shippingService?: string;
+  shippingMethodName?: string;
   /** 备注 */
   memo?: string;
   /** 备用联系方式 */
@@ -113,8 +113,8 @@ export const OrderDetailsSection = memo(function OrderDetailsSection({
   moderator,
   total,
   currency,
-  shippingOption,
-  shippingService,
+  shippingZoneName,
+  shippingMethodName,
   memo,
   alternateContact,
   timestamp,
@@ -268,12 +268,12 @@ export const OrderDetailsSection = memo(function OrderDetailsSection({
         {/* 两栏布局：配送方式 | 配送服务 */}
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div>
-            <div className="font-medium text-foreground mb-1">Shipping Option</div>
-            <div className="text-muted-foreground">{shippingOption || 'n/a'}</div>
+            <div className="font-medium text-foreground mb-1">Shipping Zone</div>
+            <div className="text-muted-foreground">{shippingZoneName || '—'}</div>
           </div>
           <div>
-            <div className="font-medium text-foreground mb-1">Shipping Service</div>
-            <div className="text-muted-foreground">{shippingService || 'n/a'}</div>
+            <div className="font-medium text-foreground mb-1">Shipping Method</div>
+            <div className="text-muted-foreground">{shippingMethodName || '—'}</div>
           </div>
         </div>
 

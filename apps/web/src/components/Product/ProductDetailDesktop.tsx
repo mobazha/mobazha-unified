@@ -909,11 +909,7 @@ export function ProductDetailDesktop({
 
             {/* Shipping Options - 仅对实物商品显示 */}
             {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
-              <ShippingOptionsSection
-                shippingProfile={product.shippingProfile}
-                shippingOptions={product.shippingOptions}
-                pricingCurrency={product.metadata?.pricingCurrency?.code}
-              />
+              <ShippingOptionsSection shippingProfile={product.shippingProfile} />
             )}
           </div>
 

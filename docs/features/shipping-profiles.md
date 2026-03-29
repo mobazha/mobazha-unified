@@ -1,21 +1,21 @@
 # Shipping Profiles 配送档案系统设计文档
 
-> 版本: 1.2  
-> 最后更新: 2026-02-08  
+> 版本: 1.3
+> 最后更新: 2026-03-29
 > 状态: 已实现
 
 ## 1. 概述
 
 ### 1.1 背景
 
-Mobazha 原有的配送系统采用 `ShippingOption` + `ShippingService` 的结构，包含复杂的"首重+续重"计费模式。为了提升用户体验和简化配置流程，我们对配送系统进行了重构，采用与 Shopify 对齐的 `Profile → Zone → Rate` 架构。
+Mobazha 配送系统当前统一采用与 Shopify 对齐的 `Profile → Zone → Rate` 架构，前后端均围绕 `ShippingProfile`/`ShippingZone`/`ShippingRate` 单一模型实现。
 
 ### 1.2 设计目标
 
 1. **简单易用** - 移除复杂的"首重续重"计费模式，采用简单的固定费率
 2. **与 Shopify 对齐** - 采用业界标准的配送档案架构，用户容易理解
 3. **渐进式复杂度** - 基础功能简单，高级功能（如 Location Groups）按需显示
-4. **无缝迁移** - 自动迁移旧版 `ShippingOption` 数据
+4. **数据确定性** - 仅接收 ShippingRate 显式货币与金额，不做隐式回填
 
 ## 2. 架构设计
 
@@ -70,7 +70,7 @@ LocationGroup (地点组) - 渐进式 UI
 **移除的功能：**
 
 - 首重+续重计费模式（`FIRST_RENEWAL_FEE`）
-- 复杂的 `ShippingService` 嵌套结构
+- 多层级历史配置结构
 - 承运商计算费率（暂不支持）
 
 **保留的功能：**
@@ -92,15 +92,17 @@ LocationGroup (地点组) - 渐进式 UI
 // listing.proto
 message Listing {
   // ... 其他字段 ...
-  ShippingProfile shippingProfile = 13;  // 直接嵌入完整配送档案
+  ShippingProfile shippingProfile = 9;   // 直接嵌入完整配送档案
+  string shippingProfileId = 10;         // 内部引用 ID（发布时解析为快照）
 }
 
 message ShippingProfile {
   string profileID = 1;
   string name = 2;
   bool isDefault = 3;
-  repeated ShippingZone zones = 4;
-  repeated LocationGroup locationGroups = 5;
+  repeated LocationGroup locationGroups = 4;
+  google.protobuf.Timestamp createdAt = 5;
+  google.protobuf.Timestamp updatedAt = 6;
 }
 
 message ShippingZone {
@@ -135,13 +137,13 @@ message ShippingLocation {
 
 #### 3.1.2 关键文件
 
-| 文件路径                         | 说明                  |
-| -------------------------------- | --------------------- |
-| `pkg/orders/mbzpb/listing.proto` | Protobuf 定义         |
-| `pkg/orders/mbzpb/listing.pb.go` | 生成的 Go 代码        |
-| `pkg/models/preferences.go`      | 数据模型和转换函数    |
-| `internal/core/listings.go`      | Listing 创建/更新逻辑 |
-| `internal/core/preferences.go`   | 用户偏好和迁移逻辑    |
+| 文件路径                         | 说明                   |
+| -------------------------------- | ---------------------- |
+| `pkg/orders/mbzpb/listing.proto` | Protobuf 定义          |
+| `pkg/orders/mbzpb/listing.pb.go` | 生成的 Go 代码         |
+| `pkg/models/preferences.go`      | 数据模型和转换函数     |
+| `internal/core/listings.go`      | Listing 创建/更新逻辑  |
+| `internal/core/preferences.go`   | 用户偏好与配送配置读取 |
 
 #### 3.1.3 数据转换
 
@@ -225,10 +227,6 @@ export interface RateCondition {
 | `RegionSelector`           | `RegionSelector.tsx`           | 地区选择器                            |
 | `ShippingProfileSelector`  | `ShippingProfileSelector.tsx`  | 配送档案选择器（用于 Listing 编辑）   |
 | `ShippingTemplateSelector` | `ShippingTemplateSelector.tsx` | 运费模板快速选择                      |
-| `ServiceEditor`            | `ServiceEditor.tsx`            | 配送服务编辑器                        |
-| `ShippingComparison`       | `ShippingComparison.tsx`       | 配送方案对比                          |
-| `ShippingOptionCard`       | `ShippingOptionCard.tsx`       | 配送选项卡片                          |
-| `ShippingOptionForm`       | `ShippingOptionForm.tsx`       | 配送选项表单（创建/编辑配送选项）     |
 
 #### 3.2.3 Hook 使用示例
 
@@ -296,49 +294,17 @@ function ShippingSettings() {
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## 4. 数据迁移
+## 4. 数据一致性
 
-### 4.1 自动迁移策略
+### 4.1 单一来源原则
 
-对于使用旧版 `ShippingOption` 的用户，系统会自动将其迁移到新的 `ShippingProfile` 格式：
+配送数据仅来自 `ShippingProfile -> LocationGroup -> ShippingZone -> ShippingRate`。结算与展示均以 `ShippingRate` 的 `price` 与 `currency` 为准，不从历史字段推断，不回填默认货币。
 
-```go
-// MigrateFromLegacyShippingOptions 将旧版 ShippingOption 迁移到 ShippingProfile
-func (prefs *UserPreferences) MigrateFromLegacyShippingOptions() {
-    if len(prefs.ShippingOptions) == 0 {
-        return
-    }
+### 4.2 结算展示约定
 
-    // 创建默认配送档案
-    defaultProfile := &ShippingProfile{
-        ProfileID: generateUUID(),
-        Name:      "Default Shipping",
-        IsDefault: true,
-        Zones:     make([]*ShippingZone, 0),
-    }
-
-    // 转换每个 ShippingOption 为 ShippingZone
-    for _, opt := range prefs.ShippingOptions {
-        zone := migrateOptionToZone(opt)
-        defaultProfile.Zones = append(defaultProfile.Zones, zone)
-    }
-
-    prefs.ShippingProfiles = []*ShippingProfile{defaultProfile}
-    prefs.ShippingOptions = nil // 清除旧数据
-}
-```
-
-### 4.2 迁移映射规则
-
-| 旧字段 (ShippingOption)        | 新字段 (ShippingZone/Rate)       |
-| ------------------------------ | -------------------------------- |
-| `name`                         | `zone.name`                      |
-| `regions`                      | `zone.regions`                   |
-| `currency`                     | `rate.currency`                  |
-| `services[].name`              | `rate.name`                      |
-| `services[].firstFreight`      | `rate.price`                     |
-| `services[].estimatedDelivery` | `rate.estimatedDelivery`         |
-| `freeShippingThreshold`        | `rates[0].freeShippingThreshold` |
+- 运费明细卡片按 `ShippingRate.currency` 展示费率金额
+- 订单摘要中的运费合计按 `pricingCurrency` 做金额换算
+- 若费率货币缺失，UI 显式展示不可用状态（`—`），而不是回填 `USD`
 
 ## 5. UI 设计
 
@@ -347,7 +313,6 @@ func (prefs *UserPreferences) MigrateFromLegacyShippingOptions() {
 ```
 配送档案设置页面
 ├── 页面标题 + 添加档案按钮
-├── 迁移提示横幅 (如有旧数据)
 ├── 档案列表
 │   ├── 配送档案卡片 (可展开)
 │   │   ├── 档案名称
@@ -427,7 +392,6 @@ shipping: {
 interface SettingsResponse {
   shippingProfiles?: ShippingProfile[];
   shippingLocations?: ShippingLocation[];
-  shippingOptions?: ShippingOptionConfig[]; // 旧版，仅用于迁移
 }
 ```
 
@@ -477,9 +441,9 @@ interface ListingRequest {
 
 "首重续重"模式增加了配置复杂度，但实际使用中大多数卖家都采用固定费率。Shopify 等主流平台也是采用简单的固定费率模式。
 
-### Q2: 如何处理旧数据？
+### Q2: 运费金额与货币来自哪里？
 
-系统会自动检测旧版 `ShippingOption` 数据并提示用户迁移。迁移后，旧数据会被转换为新格式，原有费率信息保留。
+结算页只使用所选 `ShippingRate` 的 `price`/`currency`，`pricingCurrency` 仅用于摘要换算。若缺失货币，不做 USD 回填，直接显示异常状态，便于尽早发现配置问题。
 
 ### Q3: 为什么不使用 `shippingProfileID` 引用？
 
@@ -487,8 +451,9 @@ interface ListingRequest {
 
 ## 10. 变更历史
 
-| 日期       | 版本 | 变更说明                                                          |
-| ---------- | ---- | ----------------------------------------------------------------- |
-| 2026-02-03 | 1.0  | 初始版本，完成基础架构重构                                        |
-| 2026-02-03 | 1.1  | 添加发货地点管理 UI（ShippingLocationCard、ShippingLocationForm） |
-| 2026-02-03 | 1.2  | 添加费率条件支持（基于重量/订单金额），更新 ShippingZoneForm UI   |
+| 日期       | 版本 | 变更说明                                                           |
+| ---------- | ---- | ------------------------------------------------------------------ |
+| 2026-02-03 | 1.0  | 初始版本，完成基础架构重构                                         |
+| 2026-02-03 | 1.1  | 添加发货地点管理 UI（ShippingLocationCard、ShippingLocationForm）  |
+| 2026-02-03 | 1.2  | 添加费率条件支持（基于重量/订单金额），更新 ShippingZoneForm UI    |
+| 2026-03-29 | 1.3  | 清理 legacy 描述，明确 ShippingRate 为唯一运费来源与无默认货币策略 |

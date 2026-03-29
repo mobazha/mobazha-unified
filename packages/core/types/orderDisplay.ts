@@ -156,10 +156,10 @@ export interface DisplayOrder {
   shippingCountryCode?: string;
   /** 运费金额（格式化后的定价币种值，如 "0.10"） */
   shippingAmount?: string;
-  /** 配送方式名称 */
-  shippingOption?: string;
-  /** 配送服务名称 */
-  shippingService?: string;
+  /** 配送区域名称（来自订单项 shippingOption.name） */
+  shippingZoneName?: string;
+  /** 配送方式名称（来自订单项 shippingOption.service） */
+  shippingMethodName?: string;
   /** 支付交易哈希 */
   paymentTx?: string;
   /** 支付交易确认数 */

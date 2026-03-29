@@ -721,8 +721,8 @@ export const en: TranslationResource = {
     // Order detail labels
     shipTo: 'Ship to',
     viewOnMap: 'View on Map',
-    shippingOption: 'Shipping Zone',
-    shippingService: 'Shipping Service',
+    shippingZone: 'Shipping Zone',
+    shippingMethod: 'Shipping Method',
     memo: 'Memo',
     additionalContact: 'Additional Contact Information',
     additionalInfo: 'Additional Information',
@@ -3876,21 +3876,10 @@ export const en: TranslationResource = {
     shippingServices: 'Shipping Services',
     service: 'Service',
     services: 'service(s)',
-    addService: 'Add Service',
-    addAtLeastOneService: 'Add at least one service',
-    serviceName: 'Service Name',
-    serviceNamePlaceholder: 'e.g. Standard',
     estimatedDelivery: 'Est. Delivery',
     deliveryPlaceholder: 'e.g. 5-7 days',
     // Weight and pricing
-    firstWeight: 'First Weight',
-    firstFreight: 'First Freight',
-    renewalUnitWeight: 'Renewal Unit Weight',
-    renewalUnitPrice: 'Renewal Unit Price',
-    startWeight: 'Min Weight',
-    endWeight: 'Max Weight',
     shippingFee: 'Shipping Fee',
-    registrationFee: 'Registration Fee',
     // Card display
     unnamed: 'Unnamed',
     // Free shipping

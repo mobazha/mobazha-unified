@@ -62,7 +62,6 @@ interface RealOrderData {
             blockchain?: string;
           };
           vendorID?: { peerID?: string; name?: string; handle?: string };
-          shippingOptions?: Array<{ regions?: string[] }>;
         };
       }>;
       items?: Array<{
@@ -516,10 +515,10 @@ export function transformCoreOrder(
   const shippingPostalCode = shipping?.postalCode;
   const shippingCountryCode = shipping?.country;
 
-  // 提取运费选项和服务（从第一个 item）
+  // 提取配送区域与配送方式（从第一个 item）
   const firstItem = orderOpenItems[0];
-  const shippingOption = firstItem?.shippingOption?.name || '';
-  const shippingService = firstItem?.shippingOption?.service || '';
+  const shippingZoneName = firstItem?.shippingOption?.name || '';
+  const shippingMethodName = firstItem?.shippingOption?.service || '';
 
   // 获取交易确认数
   const txConfirmations = data.paymentAddressTransactions?.[0]?.confirmations;
@@ -733,8 +732,8 @@ export function transformCoreOrder(
     shippingPostalCode,
     shippingCountryCode,
     shippingAmount: formattedShippingAmount,
-    shippingOption: shippingOption || undefined,
-    shippingService: shippingService || undefined,
+    shippingZoneName: shippingZoneName || undefined,
+    shippingMethodName: shippingMethodName || undefined,
     // 支持 RWA 模式和传统交易
     paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
     txConfirmations,
