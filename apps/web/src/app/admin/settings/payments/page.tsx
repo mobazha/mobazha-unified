@@ -5,7 +5,7 @@ import { useI18n } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 import { CryptoReceivingSection } from './CryptoReceivingSection';
-import { PaymentProvidersSection } from '../integrations/PaymentProvidersSection';
+import { PaymentProvidersSection } from './PaymentProvidersSection';
 
 function PayoutInfoSection() {
   const { t } = useI18n();
