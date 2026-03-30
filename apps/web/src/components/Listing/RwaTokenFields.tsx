@@ -3,7 +3,7 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { Search, Plus, X, CheckCircle } from 'lucide-react';
 import type { BlockchainNetwork, RwaTokenInfo } from '@mobazha/core';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, toCanonicalPaymentCoin } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,50 +51,36 @@ const blockchains: { code: BlockchainNetwork; name: string }[] = [
   { code: 'BSC', name: 'Binance Smart Chain (BSC)' },
   { code: 'BASE', name: 'Base (BASE)' },
   { code: 'POLYGON', name: 'Polygon (MATIC)' },
-  { code: 'ARBITRUM', name: 'Arbitrum (ARB)' },
-  { code: 'OPTIMISM', name: 'Optimism (OP)' },
-  { code: 'AVALANCHE', name: 'Avalanche (AVAX)' },
   { code: 'SOL', name: 'Solana (SOL)' },
 ];
 
 // 按区块链获取支付币种
 const getPaymentCurrencies = (blockchain: BlockchainNetwork) => {
-  const currencies: Record<BlockchainNetwork, { code: string; name: string }[]> = {
+  const currencies: Partial<Record<BlockchainNetwork, { code: string; name: string }[]>> = {
     ETH: [
-      { code: 'ETHUSDT', name: 'USDT (Ethereum)' },
-      { code: 'ETHUSDC', name: 'USDC (Ethereum)' },
-      { code: 'ETHDAI', name: 'DAI (Ethereum)' },
+      { code: toCanonicalPaymentCoin('ETHUSDT'), name: 'USDT (Ethereum)' },
+      { code: toCanonicalPaymentCoin('ETHUSDC'), name: 'USDC (Ethereum)' },
+      { code: toCanonicalPaymentCoin('DAI'), name: 'DAI (Ethereum)' },
     ],
     BSC: [
-      { code: 'BSCUSDT', name: 'USDT (BSC)' },
-      { code: 'BSCBUSD', name: 'BUSD (BSC)' },
+      { code: toCanonicalPaymentCoin('BSCUSDT'), name: 'USDT (BSC)' },
+      { code: toCanonicalPaymentCoin('BSCUSDC'), name: 'USDC (BSC)' },
+      { code: toCanonicalPaymentCoin('BUSD'), name: 'BUSD (BSC)' },
     ],
     BASE: [
-      { code: 'BASEUSDC', name: 'USDC (Base)' },
-      { code: 'BASEUSDT', name: 'USDT (Base)' },
+      { code: toCanonicalPaymentCoin('BASEUSDC'), name: 'USDC (Base)' },
+      { code: toCanonicalPaymentCoin('BASEUSDT'), name: 'USDT (Base)' },
     ],
     POLYGON: [
-      { code: 'POLYGONUSDT', name: 'USDT (Polygon)' },
-      { code: 'POLYGONUSDC', name: 'USDC (Polygon)' },
-    ],
-    ARBITRUM: [
-      { code: 'ARBITRUMUSDC', name: 'USDC (Arbitrum)' },
-      { code: 'ARBITRUMUSDT', name: 'USDT (Arbitrum)' },
-    ],
-    OPTIMISM: [
-      { code: 'OPTIMISMUSDC', name: 'USDC (Optimism)' },
-      { code: 'OPTIMISMUSDT', name: 'USDT (Optimism)' },
-    ],
-    AVALANCHE: [
-      { code: 'AVALANCHEUSDT', name: 'USDT (Avalanche)' },
-      { code: 'AVALANCHEUSDC', name: 'USDC (Avalanche)' },
+      { code: toCanonicalPaymentCoin('MATICUSDT'), name: 'USDT (Polygon)' },
+      { code: toCanonicalPaymentCoin('MATICUSDC'), name: 'USDC (Polygon)' },
     ],
     SOL: [
-      { code: 'SOLANAUSDC', name: 'USDC (Solana)' },
-      { code: 'SOLANAUSDT', name: 'USDT (Solana)' },
+      { code: toCanonicalPaymentCoin('SOLUSDC'), name: 'USDC (Solana)' },
+      { code: toCanonicalPaymentCoin('SOLUSDT'), name: 'USDT (Solana)' },
     ],
   };
-  return currencies[blockchain] || currencies.ETH;
+  return currencies[blockchain] || currencies.ETH || [];
 };
 
 // 模拟 RWA Token 数据（实际应从 API 获取）
@@ -200,7 +186,7 @@ export function RwaTokenFields({
   // 添加支付币种
   const handleAddCurrency = useCallback(() => {
     if (acceptedCurrencies.length < 5) {
-      const defaultCurrency = paymentCurrencies[0]?.code || 'ETHUSDT';
+      const defaultCurrency = paymentCurrencies[0]?.code || toCanonicalPaymentCoin('ETHUSDT');
       onAcceptedCurrenciesChange([...acceptedCurrencies, defaultCurrency]);
     }
   }, [acceptedCurrencies, paymentCurrencies, onAcceptedCurrenciesChange]);

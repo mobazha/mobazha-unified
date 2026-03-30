@@ -11,6 +11,7 @@ import {
   getImageUrl,
   decodeHtmlEntities,
   sanitizeHtml,
+  getTokenIdFromPaymentCoin,
   useI18n,
   useCartStore,
   useChatStore,
@@ -102,6 +103,10 @@ export function ProductDetailMobile({
 
   const cartItemCount = useCartStore(state => state.getItemCount());
   const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(vendorPeerID));
+  const displayAcceptedCurrencies = React.useMemo(
+    () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),
+    [acceptedCurrencies]
+  );
 
   // --- Loading ---
   if (isLoading) {
@@ -447,10 +452,10 @@ export function ProductDetailMobile({
         )}
 
         {/* Accepted currencies */}
-        {acceptedCurrencies.length > 0 && (
+        {displayAcceptedCurrencies.length > 0 && (
           <div className="text-xs text-muted-foreground">
             {t('product.acceptedCurrencies')}:{' '}
-            <span className="font-medium">{acceptedCurrencies.join(', ')}</span>
+            <span className="font-medium">{displayAcceptedCurrencies.join(', ')}</span>
           </div>
         )}
 

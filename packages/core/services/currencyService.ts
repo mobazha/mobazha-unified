@@ -118,8 +118,6 @@ function addTokenRateMappings(rates: ExchangeRates): void {
     MATICUSDC: 'USDC',
     ETHUSDT: 'USDT',
     ETHUSDC: 'USDC',
-    CFXUSDT: 'USDT',
-    CFXUSDC: 'USDC',
   };
 
   for (const [token, baseSymbol] of Object.entries(mappings)) {

@@ -15,8 +15,8 @@ describe('toCanonicalPaymentCoin', () => {
     );
   });
 
-  it('maps TRONUSDT alias to TRXUSDT canonical asset id', () => {
-    expect(toCanonicalPaymentCoin('TRONUSDT')).toBe(
+  it('maps TRXUSDT token id to canonical asset id', () => {
+    expect(toCanonicalPaymentCoin('TRXUSDT')).toBe(
       'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
     );
   });

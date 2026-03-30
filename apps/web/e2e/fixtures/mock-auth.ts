@@ -255,6 +255,23 @@ export async function mockSessionAPIs(page: Page): Promise<void> {
     })
   );
 
+  // Background polling endpoints frequently requested by app shell.
+  await page.route('**/v1/preferences*', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: {} }),
+    })
+  );
+
+  await page.route('**/v1/chat/status*', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { connected: false } }),
+    })
+  );
+
   await page.route('**/ws', route => route.abort());
   await page.route('**/ws/', route => route.abort());
 }

@@ -12,7 +12,11 @@ import type { ChainPaymentExecutor, ChainCategory } from './types';
 import { EVMPaymentExecutor } from './evmExecutor';
 import { SolanaPaymentExecutor } from './solanaExecutor';
 import { TronPaymentExecutor } from './tronExecutor';
-import { parseCanonicalPaymentCoin, toCanonicalPaymentCoin } from '../../data/tokens';
+import {
+  getChainFromCoin,
+  parseCanonicalPaymentCoin,
+  toCanonicalPaymentCoin,
+} from '../../data/tokens';
 
 // ── Registry ────────────────────────────────────────
 
@@ -65,28 +69,29 @@ export function resetExecutorRegistry(): void {
 
 // ── Coin → ChainCategory 解析 ─────────────────────
 
-/** UTXO 链 coin 标识符 */
-const UTXO_COINS = new Set(['BTC', 'BCH', 'LTC', 'ZEC']);
+const CHAIN_TO_CATEGORY: Record<string, ChainCategory> = {
+  BTC: 'utxo',
+  BCH: 'utxo',
+  LTC: 'utxo',
+  ZEC: 'utxo',
 
-/** EVM 链 coin 标识符（含 ERC20 tokens） */
-const EVM_COINS = new Set([
-  'ETH',
-  'BNB',
-  'MATIC',
-  'BASE',
-  'CFX',
-  // ERC20 tokens on various EVM chains
-  'USDT',
-  'USDC',
-  'DAI',
-  'BUSD',
-]);
+  ETH: 'evm',
+  BSC: 'evm',
+  BASE: 'evm',
+  MATIC: 'evm',
+  CFX: 'evm',
 
-/** Solana 链 coin 标识符 */
-const SOLANA_COINS = new Set(['SOL']);
+  SOL: 'solana',
 
-/** TRON 链 coin 标识符（含 TRC20 tokens） */
-const TRON_COINS = new Set(['TRX', 'TRONUSDT', 'TRXUSDT']);
+  TRON: 'tron',
+  TRX: 'tron',
+};
+
+function resolveChainCategoryFromChainID(chainID: string): ChainCategory | null {
+  const upper = (chainID || '').toUpperCase().trim();
+  if (!upper) return null;
+  return CHAIN_TO_CATEGORY[upper] ?? null;
+}
 
 /**
  * 从 coin 标识符解析链分类
@@ -118,12 +123,8 @@ export function resolveChainCategory(coin: string): ChainCategory | null {
     return null;
   }
 
-  const upper = trimmed.toUpperCase();
-  if (UTXO_COINS.has(upper)) return 'utxo';
-  if (EVM_COINS.has(upper)) return 'evm';
-  if (SOLANA_COINS.has(upper)) return 'solana';
-  if (TRON_COINS.has(upper)) return 'tron';
-  return null;
+  const chainID = getChainFromCoin(trimmed);
+  return resolveChainCategoryFromChainID(chainID);
 }
 
 /**

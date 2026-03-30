@@ -19,6 +19,7 @@ import type { Order } from '@mobazha/core';
 
 // 以太坊零地址常量
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+const DEFAULT_PAYMENT_COIN = toCanonicalPaymentCoin('ETHUSDT');
 
 /**
  * 购买步骤
@@ -269,7 +270,7 @@ export function useRwaPurchase({
       const orderOpen = (order.contract as any)?.orderOpen;
       const listing = orderOpen?.listings?.[0]?.listing;
       const item = orderOpen?.items?.[0];
-      const paymentCoin = orderOpen?.pricingCoin || 'ETHUSDT';
+      const paymentCoin = orderOpen?.pricingCoin || DEFAULT_PAYMENT_COIN;
       const chainId = getCurrentChainId() ? Number(getCurrentChainId()) : 11155111;
       const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
       const paymentAmount = getPaymentAmount();

@@ -8,7 +8,12 @@ import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { cn } from '@/lib/utils';
-import { getImageUrl, decodeHtmlEntities, sanitizeHtml } from '@mobazha/core';
+import {
+  getImageUrl,
+  decodeHtmlEntities,
+  sanitizeHtml,
+  getTokenIdFromPaymentCoin,
+} from '@mobazha/core';
 import type { Product } from '@mobazha/core';
 import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
@@ -91,6 +96,11 @@ export function ProductDetailDesktop({
     renderPairedPrice,
     router,
   } = useProductDetail({ slug, peerID, isModal, onClose, onProductLoaded });
+
+  const displayAcceptedCurrencies = React.useMemo(
+    () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),
+    [acceptedCurrencies]
+  );
 
   // 加载状态
   if (isLoading) {
@@ -826,13 +836,13 @@ export function ProductDetailDesktop({
                   )}
                 </VStack>
 
-                {acceptedCurrencies.length > 0 && (
+                {displayAcceptedCurrencies.length > 0 && (
                   <div className="pt-3 border-t border-border">
                     <span className="text-xs text-muted-foreground">
                       {t('product.acceptedCurrencies')}:{' '}
                     </span>
                     <span className="text-xs font-medium text-muted-foreground">
-                      {acceptedCurrencies.join(', ')}
+                      {displayAcceptedCurrencies.join(', ')}
                     </span>
                   </div>
                 )}

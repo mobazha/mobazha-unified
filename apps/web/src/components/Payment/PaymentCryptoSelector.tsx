@@ -62,7 +62,16 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
     let tokens = TOKENS.filter(t => !comingSoonChains.includes(t.chain) && !t.disabled);
     if (acceptedCurrencies) {
-      tokens = tokens.filter(t => acceptedCurrencies.includes(t.id));
+      const accepted = new Set(
+        acceptedCurrencies
+          .map(value => value?.trim().toLowerCase())
+          .filter((value): value is string => Boolean(value))
+      );
+      tokens = tokens.filter(token => {
+        const tokenID = token.id.trim().toLowerCase();
+        const canonical = token.assetId?.trim().toLowerCase();
+        return accepted.has(tokenID) || (canonical ? accepted.has(canonical) : false);
+      });
     }
     return tokens;
   }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);

@@ -6,6 +6,7 @@
 // 代币配置
 export interface TokenConfig {
   id: string;
+  assetId?: string;
   token: string;
   chain: string;
   type?: string;

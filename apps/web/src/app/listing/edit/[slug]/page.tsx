@@ -697,7 +697,7 @@ export default function EditListingPage() {
                     pricingCurrency={formData.pricingCurrency}
                     minQuantity={formData.minQuantity || 1}
                     maxQuantity={formData.maxQuantity || 100}
-                    acceptedCurrencies={formData.acceptedCurrencies || ['ETHUSDT']}
+                    acceptedCurrencies={formData.acceptedCurrencies || []}
                     onBlockchainChange={v => updateField('blockchain', v)}
                     onTokenAddressChange={v => updateField('tokenAddress', v)}
                     onCryptoListingCurrencyCodeChange={v =>

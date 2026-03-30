@@ -45,7 +45,7 @@ async function mockTronOrderAPI(page: import('@playwright/test').Page) {
                   metadata: {
                     contractType: 'PHYSICAL_GOOD',
                     pricingCurrency: { code: 'USD', divisibility: 2 },
-                    acceptedCurrencies: ['TRONUSDT', 'TRX', 'ETH'],
+                    acceptedCurrencies: ['TRXUSDT', 'TRX', 'ETH'],
                   },
                   vendorID: { peerID: MOCK_PEER_ID, handle: 'TechStore' },
                   item: {
@@ -94,7 +94,7 @@ async function mockTronOrderAPI(page: import('@playwright/test').Page) {
                 },
               },
             ],
-            payment: { coin: 'TRONUSDT', chaincode: '', amount: 8999, method: 'DIRECT' },
+            payment: { coin: 'TRXUSDT', chaincode: '', amount: 8999, method: 'DIRECT' },
             pricingCoin: 'USD',
             amount: 8999,
             shipping: {
@@ -229,7 +229,7 @@ test.describe('Payment Page — TRON Token', () => {
     await mockPreferencesAPI(page);
     await page.addInitScript(injectTronLinkMock());
     await page.addInitScript(() => {
-      sessionStorage.setItem('checkout_selected_token', 'TRONUSDT');
+      sessionStorage.setItem('checkout_selected_token', 'TRXUSDT');
     });
   });
 
@@ -297,7 +297,7 @@ test.describe('TronGasHint — Insufficient TRX Warning', () => {
     await mockPreferencesAPI(page);
     await page.addInitScript(injectTronLinkMock());
     await page.addInitScript(() => {
-      sessionStorage.setItem('checkout_selected_token', 'TRONUSDT');
+      sessionStorage.setItem('checkout_selected_token', 'TRXUSDT');
     });
 
     await page.goto(buildPaymentUrl());
@@ -464,7 +464,7 @@ test.describe('ConfirmationProgress Component', () => {
     await mockPreferencesAPI(page);
     await page.addInitScript(injectTronLinkMock());
     await page.addInitScript(() => {
-      sessionStorage.setItem('checkout_selected_token', 'TRONUSDT');
+      sessionStorage.setItem('checkout_selected_token', 'TRXUSDT');
     });
 
     await page.goto(buildPaymentUrl());
@@ -527,7 +527,7 @@ test.describe('ConfirmationProgress Component', () => {
 // ── 6. Payment Page — TRON Token in Payment Selector ─────────────────────────
 
 test.describe('Payment Page — TRON Token Selected', () => {
-  test('payment page with TRONUSDT selected should show TRON-related content', async ({ page }) => {
+  test('payment page with TRXUSDT selected should show TRON-related content', async ({ page }) => {
     await setupMockAuth(page);
     await mockTronOrderAPI(page);
     await mockProfilesAPI(page);
@@ -535,7 +535,7 @@ test.describe('Payment Page — TRON Token Selected', () => {
     await mockPreferencesAPI(page);
     await page.addInitScript(injectTronLinkMock());
     await page.addInitScript(() => {
-      sessionStorage.setItem('checkout_selected_token', 'TRONUSDT');
+      sessionStorage.setItem('checkout_selected_token', 'TRXUSDT');
     });
 
     await page.goto(buildPaymentUrl());

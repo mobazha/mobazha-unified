@@ -30,6 +30,7 @@ import {
   useListing,
   useFiatProviders,
   usePaymentMethods,
+  getTokenIdFromPaymentCoin,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
@@ -529,6 +530,9 @@ export function ProductDetail({
   const estimatedDelivery = getEstimatedDelivery(product);
   const vendorPeerID = product.vendorID?.peerID;
   const acceptedCurrencies = product.metadata?.acceptedCurrencies || [];
+  const displayAcceptedCurrencies = acceptedCurrencies.map(
+    coin => getTokenIdFromPaymentCoin(coin) || coin
+  );
   const rwaTradeMode = product.metadata?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
     product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
@@ -1232,13 +1236,13 @@ export function ProductDetail({
                         size="sm"
                       />
                     )}
-                    {acceptedCurrencies.length > 0 && fiatActiveProviders.length === 0 && (
+                    {displayAcceptedCurrencies.length > 0 && fiatActiveProviders.length === 0 && (
                       <div>
                         <span className="text-xs text-muted-foreground">
                           {t('product.acceptedCurrencies')}:{' '}
                         </span>
                         <span className="text-xs font-medium text-muted-foreground">
-                          {acceptedCurrencies.join(', ')}
+                          {displayAcceptedCurrencies.join(', ')}
                         </span>
                       </div>
                     )}

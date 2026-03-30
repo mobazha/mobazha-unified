@@ -15,6 +15,7 @@ import type {
 import type { ListingFormData } from '../../hooks/useListingForm';
 import { DEFAULT_LOCAL_CURRENCY } from '../../types/currency';
 import { fromMinimalUnit } from '../../services/currencyService';
+import { toCanonicalPaymentCoin } from '../../data/tokens';
 
 /**
  * 将 API 返回的 Product 转换为 ListingFormData
@@ -35,7 +36,7 @@ export function convertProductToFormData(
   // 获取 acceptedCurrencies，兼容 string[] 和 { code: string }[] 两种格式
   const acceptedCurrencies =
     metadata?.acceptedCurrencies?.map((c: string | { code: string }) =>
-      typeof c === 'string' ? c : c.code
+      toCanonicalPaymentCoin(typeof c === 'string' ? c : c.code)
     ) || [];
 
   const pricingCurrency = metadata?.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY;

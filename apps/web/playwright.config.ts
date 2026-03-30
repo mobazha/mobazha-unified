@@ -10,6 +10,10 @@
 
 import { defineConfig, devices } from '@playwright/test';
 
+const baseHost = process.env.PLAYWRIGHT_HOST || '127.0.0.1';
+const basePort = process.env.PORT || '3001';
+const webServerTimeoutMs = Number(process.env.PLAYWRIGHT_WEBSERVER_TIMEOUT_MS || 120000);
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -28,7 +32,7 @@ export default defineConfig({
   },
 
   use: {
-    baseURL: `http://localhost:${process.env.PORT || '3001'}`,
+    baseURL: `http://${baseHost}:${basePort}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -83,9 +87,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'pnpm dev',
-    url: `http://localhost:${process.env.PORT || '3001'}`,
+    command: `pnpm dev --host ${baseHost} --port ${basePort} --strictPort`,
+    url: `http://${baseHost}:${basePort}`,
     reuseExistingServer: true,
-    timeout: 120 * 1000,
+    timeout: webServerTimeoutMs,
   },
 });

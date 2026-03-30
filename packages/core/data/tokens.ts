@@ -9,6 +9,8 @@
 export interface TokenConfig {
   /** 唯一标识 (如 'ETHUSDT', 'BTC') */
   id: string;
+  /** Canonical payment asset id (crypto:* / fiat:*) */
+  assetId: string;
   /** 代币符号 (如 'USDT', 'BTC') */
   token: string;
   /** 所属链 (如 'ETH', 'BSC', 'BTC') */
@@ -56,68 +58,243 @@ export interface PaymentChainConfig {
  */
 export const TOKENS: TokenConfig[] = [
   // Bitcoin
-  { id: 'BTC', token: 'BTC', chain: 'BTC', isNative: true, decimals: 8 },
+  {
+    id: 'BTC',
+    assetId:
+      'crypto:bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f:native',
+    token: 'BTC',
+    chain: 'BTC',
+    isNative: true,
+    decimals: 8,
+  },
+
+  // Bitcoin Cash
+  {
+    id: 'BCH',
+    assetId: 'crypto:bitcoincash:mainnet:native',
+    token: 'BCH',
+    chain: 'BCH',
+    isNative: true,
+    decimals: 8,
+  },
 
   // Litecoin
-  { id: 'LTC', token: 'LTC', chain: 'LTC', isNative: true, decimals: 8 },
+  {
+    id: 'LTC',
+    assetId:
+      'crypto:bip122:12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2:native',
+    token: 'LTC',
+    chain: 'LTC',
+    isNative: true,
+    decimals: 8,
+  },
+
+  // Zcash
+  {
+    id: 'ZEC',
+    assetId: 'crypto:zcash:mainnet:native',
+    token: 'ZEC',
+    chain: 'ZEC',
+    isNative: true,
+    decimals: 8,
+  },
 
   // Ethereum 代币
-  { id: 'ETH', token: 'ETH', chain: 'ETH', isNative: true, decimals: 18 },
-  { id: 'ETHUSDT', token: 'USDT', chain: 'ETH', type: 'ERC20', isNative: false, decimals: 6 },
-  { id: 'ETHUSDC', token: 'USDC', chain: 'ETH', type: 'ERC20', isNative: false, decimals: 6 },
-  { id: 'DAI', token: 'DAI', chain: 'ETH', type: 'ERC20', isNative: false, decimals: 18 },
+  {
+    id: 'ETH',
+    assetId: 'crypto:eip155:1:native',
+    token: 'ETH',
+    chain: 'ETH',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'ETHUSDT',
+    assetId: 'crypto:eip155:1:erc20:0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
+    token: 'USDT',
+    chain: 'ETH',
+    type: 'ERC20',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'ETHUSDC',
+    assetId: 'crypto:eip155:1:erc20:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    token: 'USDC',
+    chain: 'ETH',
+    type: 'ERC20',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'DAI',
+    assetId: 'crypto:eip155:1:erc20:0x6B175474E89094C44Da98b954EedeAC495271d0F',
+    token: 'DAI',
+    chain: 'ETH',
+    type: 'ERC20',
+    isNative: false,
+    decimals: 18,
+  },
 
   // Solana 代币
-  { id: 'SOL', token: 'SOL', chain: 'SOL', isNative: true, decimals: 9 },
-  { id: 'SOLUSDT', token: 'USDT', chain: 'SOL', type: 'SPL', isNative: false, decimals: 6 },
-  { id: 'SOLUSDC', token: 'USDC', chain: 'SOL', type: 'SPL', isNative: false, decimals: 6 },
+  {
+    id: 'SOL',
+    assetId: 'crypto:solana:mainnet:native',
+    token: 'SOL',
+    chain: 'SOL',
+    isNative: true,
+    decimals: 9,
+  },
+  {
+    id: 'SOLUSDT',
+    assetId: 'crypto:solana:mainnet:spl:Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+    token: 'USDT',
+    chain: 'SOL',
+    type: 'SPL',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'SOLUSDC',
+    assetId: 'crypto:solana:mainnet:spl:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    token: 'USDC',
+    chain: 'SOL',
+    type: 'SPL',
+    isNative: false,
+    decimals: 6,
+  },
 
   // BSC 代币
-  { id: 'BNB', token: 'BNB', chain: 'BSC', isNative: true, decimals: 18 },
-  { id: 'BUSD', token: 'BUSD', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 18 },
-  { id: 'BSCUSDT', token: 'USDT', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 6 },
-  { id: 'BSCUSDC', token: 'USDC', chain: 'BSC', type: 'BEP20', isNative: false, decimals: 6 },
+  {
+    id: 'BNB',
+    assetId: 'crypto:eip155:56:native',
+    token: 'BNB',
+    chain: 'BSC',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'BUSD',
+    assetId: 'crypto:eip155:56:erc20:0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+    token: 'BUSD',
+    chain: 'BSC',
+    type: 'BEP20',
+    isNative: false,
+    decimals: 18,
+  },
+  {
+    id: 'BSCUSDT',
+    assetId: 'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955',
+    token: 'USDT',
+    chain: 'BSC',
+    type: 'BEP20',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'BSCUSDC',
+    assetId: 'crypto:eip155:56:erc20:0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+    token: 'USDC',
+    chain: 'BSC',
+    type: 'BEP20',
+    isNative: false,
+    decimals: 6,
+  },
 
   // Base 代币
-  { id: 'BASEETH', token: 'ETH', chain: 'BASE', isNative: true, decimals: 18 },
-  { id: 'BASEUSDT', token: 'USDT', chain: 'BASE', type: 'Base', isNative: false, decimals: 6 },
-  { id: 'BASEUSDC', token: 'USDC', chain: 'BASE', type: 'Base', isNative: false, decimals: 6 },
+  {
+    id: 'BASEETH',
+    assetId: 'crypto:eip155:8453:native',
+    token: 'ETH',
+    chain: 'BASE',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'BASEUSDT',
+    assetId: 'crypto:eip155:8453:erc20:0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
+    token: 'USDT',
+    chain: 'BASE',
+    type: 'Base',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'BASEUSDC',
+    assetId: 'crypto:eip155:8453:erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    token: 'USDC',
+    chain: 'BASE',
+    type: 'Base',
+    isNative: false,
+    decimals: 6,
+  },
+
+  // Conflux 代币
+  {
+    id: 'CFX',
+    assetId: 'crypto:eip155:1030:native',
+    token: 'CFX',
+    chain: 'CFX',
+    isNative: true,
+    decimals: 18,
+  },
 
   // Polygon 代币
-  { id: 'MATIC', token: 'MATIC', chain: 'MATIC', isNative: true, decimals: 18 },
-  { id: 'MATICUSDT', token: 'USDT', chain: 'MATIC', type: 'Polygon', isNative: false, decimals: 6 },
-  { id: 'MATICUSDC', token: 'USDC', chain: 'MATIC', type: 'Polygon', isNative: false, decimals: 6 },
+  {
+    id: 'MATIC',
+    assetId: 'crypto:eip155:137:native',
+    token: 'MATIC',
+    chain: 'MATIC',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'MATICUSDT',
+    assetId: 'crypto:eip155:137:erc20:0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    token: 'USDT',
+    chain: 'MATIC',
+    type: 'Polygon',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'MATICUSDC',
+    assetId: 'crypto:eip155:137:erc20:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+    token: 'USDC',
+    chain: 'MATIC',
+    type: 'Polygon',
+    isNative: false,
+    decimals: 6,
+  },
 
   // TRON 代币
-  { id: 'TRX', token: 'TRX', chain: 'TRON', isNative: true, decimals: 6 },
-  { id: 'TRONUSDT', token: 'USDT', chain: 'TRON', type: 'TRC20', isNative: false, decimals: 6 },
+  {
+    id: 'TRX',
+    assetId: 'crypto:tron:mainnet:native',
+    token: 'TRX',
+    chain: 'TRON',
+    isNative: true,
+    decimals: 6,
+  },
+  {
+    id: 'TRXUSDT',
+    assetId: 'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+    token: 'USDT',
+    chain: 'TRON',
+    type: 'TRC20',
+    isNative: false,
+    decimals: 6,
+  },
 ];
 
-// Legacy coin code -> canonical payment coin (assetID / fiat:*)
-const LEGACY_TO_CANONICAL_PAYMENT_COIN: Record<string, string> = {
-  BTC: 'crypto:bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f:native',
-  LTC: 'crypto:bip122:12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2:native',
-  ETH: 'crypto:eip155:1:native',
-  ETHUSDT: 'crypto:eip155:1:erc20:0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
-  ETHUSDC: 'crypto:eip155:1:erc20:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-  DAI: 'crypto:eip155:1:erc20:0x6B175474E89094C44Da98b954EedeAC495271d0F',
-  BNB: 'crypto:eip155:56:native',
-  BSCUSDT: 'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955',
-  BSCUSDC: 'crypto:eip155:56:erc20:0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-  BUSD: 'crypto:eip155:56:erc20:0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
-  BASEETH: 'crypto:eip155:8453:native',
-  BASEUSDT: 'crypto:eip155:8453:erc20:0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
-  BASEUSDC: 'crypto:eip155:8453:erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  MATIC: 'crypto:eip155:137:native',
-  MATICUSDT: 'crypto:eip155:137:erc20:0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-  MATICUSDC: 'crypto:eip155:137:erc20:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-  SOL: 'crypto:solana:mainnet:native',
-  SOLUSDT: 'crypto:solana:mainnet:spl:Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
-  SOLUSDC: 'crypto:solana:mainnet:spl:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-  TRX: 'crypto:tron:mainnet:native',
-  TRXUSDT: 'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-  TRONUSDT: 'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-};
+// Token ID -> canonical payment coin (assetID / fiat:*)
+const LEGACY_TO_CANONICAL_PAYMENT_COIN: Record<string, string> = (() => {
+  const mapping: Record<string, string> = {};
+  for (const token of TOKENS) {
+    mapping[token.id.toUpperCase()] = token.assetId;
+  }
+  return mapping;
+})();
 
 const TOKENS_BY_ID = new Map<string, TokenConfig>(
   TOKENS.map(token => [token.id.toUpperCase(), token] as const)
@@ -125,7 +302,7 @@ const TOKENS_BY_ID = new Map<string, TokenConfig>(
 
 const CANONICAL_TO_PRIMARY_TOKEN_ID = new Map<string, string>();
 for (const token of TOKENS) {
-  const canonical = LEGACY_TO_CANONICAL_PAYMENT_COIN[token.id.toUpperCase()];
+  const canonical = token.assetId;
   if (!canonical) continue;
   const canonicalLower = canonical.toLowerCase();
   if (!CANONICAL_TO_PRIMARY_TOKEN_ID.has(canonicalLower)) {
@@ -191,7 +368,7 @@ export function parseCanonicalPaymentCoin(coin: string): CanonicalPaymentCoinPar
 }
 
 /**
- * Resolves payment coin (legacy/canonical) into configured token ID.
+ * Resolves payment coin (tokenID/canonical) into configured token ID.
  */
 export function getTokenIdFromPaymentCoin(coin: string): string | undefined {
   const trimmed = (coin || '').trim();
@@ -212,7 +389,7 @@ export function getTokenIdFromPaymentCoin(coin: string): string | undefined {
 }
 
 /**
- * Gets token config from legacy/canonical payment coin.
+ * Gets token config from tokenID/canonical payment coin.
  */
 export function getTokenByPaymentCoin(coin: string): TokenConfig | undefined {
   const tokenID = getTokenIdFromPaymentCoin(coin);
@@ -266,6 +443,22 @@ export const CHAINS: PaymentChainConfig[] = [
     isExternalWallet: true,
   },
   {
+    id: 'BCH',
+    name: 'Bitcoin Cash',
+    iconCode: 'BCH',
+    color: '#8dc351',
+    type: 'blockchain',
+    isExternalWallet: true,
+  },
+  {
+    id: 'ZEC',
+    name: 'Zcash',
+    iconCode: 'ZEC',
+    color: '#f4b728',
+    type: 'blockchain',
+    isExternalWallet: true,
+  },
+  {
     id: 'ETH',
     name: 'Ethereum',
     iconCode: 'ETH',
@@ -291,6 +484,15 @@ export const CHAINS: PaymentChainConfig[] = [
     addressPrefix: '0x',
     type: 'blockchain',
     evmChainId: 8453,
+  },
+  {
+    id: 'CFX',
+    name: 'Conflux',
+    iconCode: 'CFX',
+    color: '#1e3a8a',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 1030,
   },
   {
     id: 'MATIC',
