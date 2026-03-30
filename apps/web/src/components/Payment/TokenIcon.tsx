@@ -37,7 +37,7 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   // TRON & TRC20
   TRON: 'trx',
   TRX: 'trx',
-  TRONUSDT: 'usdt',
+  TRXUSDT: 'usdt',
   // Conflux
   CFX: 'cfx',
   // MBZ

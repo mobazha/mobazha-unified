@@ -18,6 +18,28 @@ import type {
 import { productsApi } from '../services/api';
 import { mergeSkus } from '../utils/variantUtils';
 import { toMinimalUnit } from '../services/currencyService';
+import { toCanonicalPaymentCoin } from '../data/tokens';
+
+const DEFAULT_RWA_ACCEPTED_CURRENCIES = [toCanonicalPaymentCoin('ETHUSDT')];
+const DEFAULT_LISTING_ACCEPTED_CURRENCIES = [
+  toCanonicalPaymentCoin('BTC'),
+  toCanonicalPaymentCoin('ETH'),
+];
+
+function canonicalizeAcceptedCurrencies(
+  values: string[] | undefined,
+  fallback: string[]
+): string[] {
+  const raw = Array.isArray(values) ? values : [];
+  const normalized = raw
+    .map(v => toCanonicalPaymentCoin((v || '').trim()))
+    .filter(Boolean)
+    .filter((value, index, arr) => arr.indexOf(value) === index);
+  if (normalized.length > 0) {
+    return normalized;
+  }
+  return [...fallback];
+}
 
 /**
  * 表单数据结构
@@ -160,7 +182,7 @@ export const initialFormData: ListingFormData = {
   cryptoListingCurrencyCode: '',
   minQuantity: 1,
   maxQuantity: 100,
-  acceptedCurrencies: ['ETHUSDT'],
+  acceptedCurrencies: DEFAULT_LISTING_ACCEPTED_CURRENCIES,
   images: [],
   introVideo: '',
   altIntroVideoLinks: [],
@@ -298,8 +320,17 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
             condition: undefined,
             grams: undefined,
             options: [],
+            acceptedCurrencies:
+              prev.acceptedCurrencies && prev.acceptedCurrencies.length > 0
+                ? prev.acceptedCurrencies
+                : DEFAULT_RWA_ACCEPTED_CURRENCIES,
           }
-        : {}),
+        : {
+            acceptedCurrencies:
+              prev.acceptedCurrencies && prev.acceptedCurrencies.length > 0
+                ? prev.acceptedCurrencies
+                : DEFAULT_LISTING_ACCEPTED_CURRENCIES,
+          }),
       ...(newType !== 'PHYSICAL_GOOD'
         ? {
             condition: undefined,
@@ -417,7 +448,12 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
           code: formData.pricingCurrency,
           divisibility: 2,
         },
-        acceptedCurrencies: formData.acceptedCurrencies || ['BTC', 'ETH'],
+        acceptedCurrencies: canonicalizeAcceptedCurrencies(
+          formData.acceptedCurrencies,
+          formData.contractType === 'RWA_TOKEN'
+            ? DEFAULT_RWA_ACCEPTED_CURRENCIES
+            : DEFAULT_LISTING_ACCEPTED_CURRENCIES
+        ),
       },
       status: formData.status || 'published',
     };

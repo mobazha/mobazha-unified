@@ -9,7 +9,7 @@ const CHAIN_CASES = [
   { tokenID: 'BSCUSDT', chainTab: 'BSC', chainLabel: 'BSC' },
   { tokenID: 'BASEUSDT', chainTab: 'Base', chainLabel: 'Base' },
   { tokenID: 'SOLUSDT', chainTab: 'Solana', chainLabel: 'Solana' },
-  { tokenID: 'TRONUSDT', chainTab: 'TRON', chainLabel: 'TRON' },
+  { tokenID: 'TRXUSDT', chainTab: 'TRON', chainLabel: 'TRON' },
 ];
 
 function paymentMethodURL() {

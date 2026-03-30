@@ -1107,7 +1107,7 @@ export async function mockPaymentMethodsAPI(
   page: Page,
   opts?: MockPaymentMethodsOptions
 ): Promise<void> {
-  const crypto = opts?.crypto ?? ['ETHUSDT', 'BSCUSDT', 'BASEUSDT', 'SOLUSDT', 'TRONUSDT'];
+  const crypto = opts?.crypto ?? ['ETHUSDT', 'BSCUSDT', 'BASEUSDT', 'SOLUSDT', 'TRXUSDT'];
   const fiat = opts?.fiat ?? [];
 
   await page.route('**/payment-methods/**', route => {

@@ -64,6 +64,8 @@ type PurchaseStep =
   | 'completed'
   | 'error';
 
+const DEFAULT_PAYMENT_COIN = toCanonicalPaymentCoin('ETHUSDT');
+
 /**
  * 格式化超时时间
  */
@@ -249,7 +251,7 @@ export function RwaPurchaseFlow({
 
       // 获取支付信息
       const orderOpen = (order.contract as any)?.orderOpen;
-      const paymentCoin = orderOpen?.pricingCoin || 'ETHUSDT';
+      const paymentCoin = orderOpen?.pricingCoin || DEFAULT_PAYMENT_COIN;
       const chainId = getCurrentChainId() ? Number(getCurrentChainId()) : 11155111;
       const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
 

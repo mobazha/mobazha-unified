@@ -697,8 +697,6 @@ TOKENS.forEach(t => {
   }
 });
 // 不在 TOKENS 中但需要汇率映射的代币
-TOKEN_TO_BASE_RATE['CFXUSDT'] = 'USDT';
-TOKEN_TO_BASE_RATE['CFXUSDC'] = 'USDC';
 TOKEN_TO_BASE_RATE['MATICMBZ'] = 'MBZ';
 
 /**

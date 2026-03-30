@@ -3,149 +3,14 @@
  * 支付配置 - 代币、链、支付方式
  */
 
+import { TOKENS as CORE_TOKENS } from '@mobazha/core';
 import { TokenConfig, ChainConfig, FiatMethodConfig } from './types';
 
-// 代币配置 - 与移动端保持一致
-export const TOKENS: TokenConfig[] = [
-  // Bitcoin
-  { id: 'BTC', token: 'BTC', chain: 'BTC', isNative: true, decimals: 8, disabled: false },
-
-  // Litecoin
-  { id: 'LTC', token: 'LTC', chain: 'LTC', isNative: true, decimals: 8, disabled: false },
-
-  // 以太坊代币
-  { id: 'ETH', token: 'ETH', chain: 'ETH', isNative: true, decimals: 18, disabled: false },
-  {
-    id: 'ETHUSDT',
-    token: 'USDT',
-    chain: 'ETH',
-    type: 'ERC20',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-  {
-    id: 'ETHUSDC',
-    token: 'USDC',
-    chain: 'ETH',
-    type: 'ERC20',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-  {
-    id: 'DAI',
-    token: 'DAI',
-    chain: 'ETH',
-    type: 'ERC20',
-    isNative: false,
-    decimals: 18,
-    disabled: false,
-  },
-
-  // Solana代币
-  { id: 'SOL', token: 'SOL', chain: 'SOL', isNative: true, decimals: 9, disabled: false },
-  {
-    id: 'SOLUSDT',
-    token: 'USDT',
-    chain: 'SOL',
-    type: 'SPL',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-  {
-    id: 'SOLUSDC',
-    token: 'USDC',
-    chain: 'SOL',
-    type: 'SPL',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-
-  // BSC代币
-  { id: 'BNB', token: 'BNB', chain: 'BSC', isNative: true, decimals: 18, disabled: false },
-  {
-    id: 'BUSD',
-    token: 'BUSD',
-    chain: 'BSC',
-    type: 'BEP20',
-    isNative: false,
-    decimals: 18,
-    disabled: false,
-  },
-  {
-    id: 'BSCUSDT',
-    token: 'USDT',
-    chain: 'BSC',
-    type: 'BEP20',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-
-  // Base代币
-  {
-    id: 'BASEETH',
-    token: 'ETH',
-    chain: 'BASE',
-    isNative: false,
-    decimals: 18,
-    disabled: false,
-  },
-  {
-    id: 'BASEUSDT',
-    token: 'USDT',
-    chain: 'BASE',
-    type: 'Base',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-  {
-    id: 'BASEUSDC',
-    token: 'USDC',
-    chain: 'BASE',
-    type: 'Base',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-
-  // Polygon代币
-  { id: 'MATIC', token: 'MATIC', chain: 'MATIC', isNative: true, decimals: 18, disabled: false },
-  {
-    id: 'MATICUSDT',
-    token: 'USDT',
-    chain: 'MATIC',
-    type: 'Polygon',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-  {
-    id: 'MATICUSDC',
-    token: 'USDC',
-    chain: 'MATIC',
-    type: 'Polygon',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-
-  // TRON代币
-  { id: 'TRX', token: 'TRX', chain: 'TRON', isNative: true, decimals: 6, disabled: false },
-  {
-    id: 'TRONUSDT',
-    token: 'USDT',
-    chain: 'TRON',
-    type: 'TRC20',
-    isNative: false,
-    decimals: 6,
-    disabled: false,
-  },
-];
+// 代币配置统一复用 core 注册表，避免 web 侧手写表漂移。
+export const TOKENS: TokenConfig[] = CORE_TOKENS.map(token => ({
+  ...token,
+  disabled: token.disabled ?? false,
+}));
 
 // 链配置
 export const CHAINS: ChainConfig[] = [
@@ -171,6 +36,26 @@ export const CHAINS: ChainConfig[] = [
     name: 'Litecoin',
     iconCode: 'LTC',
     color: '#bfbbbb',
+    type: 'blockchain',
+    addressPrefix: '',
+    isExternalWallet: true,
+    comingSoon: false,
+  },
+  {
+    id: 'BCH',
+    name: 'Bitcoin Cash',
+    iconCode: 'BCH',
+    color: '#8dc351',
+    type: 'blockchain',
+    addressPrefix: '',
+    isExternalWallet: true,
+    comingSoon: false,
+  },
+  {
+    id: 'ZEC',
+    name: 'Zcash',
+    iconCode: 'ZEC',
+    color: '#f4b728',
     type: 'blockchain',
     addressPrefix: '',
     isExternalWallet: true,
@@ -212,15 +97,24 @@ export const CHAINS: ChainConfig[] = [
     addressPrefix: '',
     comingSoon: false,
   },
-  // {
-  //   id: 'MATIC',
-  //   name: 'Polygon',
-  //   iconCode: 'MATIC',
-  //   color: '#8247e5',
-  //   type: 'blockchain',
-  //   addressPrefix: '0x',
-  //   comingSoon: false,
-  // },
+  {
+    id: 'MATIC',
+    name: 'Polygon',
+    iconCode: 'MATIC',
+    color: '#8247e5',
+    type: 'blockchain',
+    addressPrefix: '0x',
+    comingSoon: false,
+  },
+  {
+    id: 'CFX',
+    name: 'Conflux',
+    iconCode: 'CFX',
+    color: '#1e3a8a',
+    type: 'blockchain',
+    addressPrefix: '0x',
+    comingSoon: false,
+  },
   {
     id: 'TRON',
     name: 'TRON',
