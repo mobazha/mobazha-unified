@@ -3373,6 +3373,16 @@ export interface TranslationResource {
     invalidEvmAddress?: string;
     invalidSolAddress?: string;
     invalidUtxoAddress?: string;
+    invalidTronAddress?: string;
+    networkMainnet?: string;
+    networkTestnet?: string;
+    environmentLocked?: string;
+    networkLockedHint?: string;
+    activeCount?: string;
+    networkMismatchNeedMainnet?: string;
+    networkMismatchNeedTestnet?: string;
+    networkMismatchTitle?: string;
+    networkMismatchDesc?: string;
   };
 
   saasHome?: {

@@ -5126,6 +5126,18 @@ export const en: TranslationResource = {
     invalidEvmAddress: 'Please enter a valid EVM address (0x followed by 40 hex characters)',
     invalidSolAddress: 'Please enter a valid Solana address',
     invalidUtxoAddress: 'Please enter a valid wallet address',
+    invalidTronAddress: 'Please enter a valid TRON address',
+    networkMainnet: 'Mainnet',
+    networkTestnet: 'Testnet',
+    environmentLocked: 'Environment network is fixed to {{network}}',
+    networkLockedHint:
+      'Network is controlled by environment and cannot be changed in this form: {{network}}',
+    activeCount: '{{active}} / {{total}} active',
+    networkMismatchNeedMainnet: 'Address network mismatch: current environment requires Mainnet',
+    networkMismatchNeedTestnet: 'Address network mismatch: current environment requires Testnet',
+    networkMismatchTitle: 'Network mismatch detected',
+    networkMismatchDesc:
+      '{{count}} address(es) do not match current environment network ({{network}}). Please update them to avoid payment issues.',
   },
 
   fiat: {

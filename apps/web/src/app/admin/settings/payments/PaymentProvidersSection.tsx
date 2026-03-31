@@ -220,29 +220,31 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       {/* SaaS mode: OAuth connect */}
       {!isStandalone && !isConnected && (
         <div className="mt-4 space-y-2">
-          <button
-            type="button"
-            onClick={() => onStartOnboarding(provider.id)}
-            disabled={isOnboarding}
-            className={cn(
-              'w-full flex items-center justify-center gap-2 h-10 rounded-lg',
-              'bg-primary text-primary-foreground text-sm font-medium',
-              'active:scale-[0.98] transition-all',
-              isOnboarding && 'opacity-70 cursor-wait'
-            )}
-          >
-            {isOnboarding ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {t('fiat.connecting')}
-              </>
-            ) : (
-              <>
-                <ExternalLink className="w-4 h-4" />
-                {t('fiat.connectProvider', { provider: provider.name })}
-              </>
-            )}
-          </button>
+          <div className="flex justify-start sm:justify-end">
+            <button
+              type="button"
+              onClick={() => onStartOnboarding(provider.id)}
+              disabled={isOnboarding}
+              className={cn(
+                'w-full sm:w-auto sm:min-w-[172px] sm:px-4 flex items-center justify-center gap-2 h-10 rounded-lg',
+                'bg-primary text-primary-foreground text-sm font-medium',
+                'active:scale-[0.98] transition-all',
+                isOnboarding && 'opacity-70 cursor-wait'
+              )}
+            >
+              {isOnboarding ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('fiat.connecting')}
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="w-4 h-4" />
+                  {t('fiat.connectProvider', { provider: provider.name })}
+                </>
+              )}
+            </button>
+          </div>
           {onboardingError && (
             <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs">
               <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
@@ -263,17 +265,19 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 
       {/* Standalone mode: API key form */}
       {isStandalone && !isConnected && !isEditing && (
-        <button
-          type="button"
-          onClick={() => setIsEditing(true)}
-          className={cn(
-            'mt-4 w-full flex items-center justify-center gap-2 h-10 rounded-lg',
-            'border border-border text-sm font-medium text-foreground',
-            'hover:bg-muted/50 active:scale-[0.98] transition-all'
-          )}
-        >
-          {t('fiat.configureApiKeys')}
-        </button>
+        <div className="mt-4 flex justify-start sm:justify-end">
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className={cn(
+              'w-full sm:w-auto sm:min-w-[172px] sm:px-4 flex items-center justify-center gap-2 h-10 rounded-lg',
+              'border border-border text-sm font-medium text-foreground',
+              'hover:bg-muted/50 active:scale-[0.98] transition-all'
+            )}
+          >
+            {t('fiat.configureApiKeys')}
+          </button>
+        </div>
       )}
 
       {/* Edit form */}
@@ -624,7 +628,7 @@ export const PaymentProvidersSection: React.FC = () => {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         {PROVIDERS.map(provider => (
           <ProviderCard
             key={provider.id}

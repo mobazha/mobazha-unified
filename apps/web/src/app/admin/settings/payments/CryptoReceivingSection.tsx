@@ -11,9 +11,13 @@ import {
   Wallet,
   LinkIcon,
   AlertCircle,
+  MoreHorizontal,
+  Settings2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TokenIcon } from '@/components/Payment';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import {
   useI18n,
   useReceivingAccounts,
@@ -21,12 +25,14 @@ import {
   useUpdateReceivingAccount,
   useDeleteReceivingAccount,
   useWallet,
+  getEnvConfig,
 } from '@mobazha/core';
+import WAValidator from 'multicoin-address-validator';
 import type { ReceivingAccount, ReceivingAccountInput } from '@mobazha/core/services/api/wallet';
 
-// ── Chain metadata ──────────────────────────────────────────────
-
 type ChainFamily = 'evm' | 'solana' | 'utxo' | 'tron';
+type NetworkMode = 'mainnet' | 'testnet';
+type StatusFilter = 'all' | 'active' | 'inactive';
 
 interface ChainMeta {
   id: string;
@@ -121,69 +127,15 @@ const CHAINS: ChainMeta[] = [
   },
 ];
 
-function chainMeta(chainType: string): ChainMeta | undefined {
-  return CHAINS.find(c => c.id === chainType);
-}
+type ValidatorNetwork = 'prod' | 'testnet';
 
-function truncateAddr(addr: string) {
-  if (addr.length <= 16) return addr;
-  return `${addr.slice(0, 8)}...${addr.slice(-6)}`;
-}
-
-const EVM_ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
-const SOL_ADDR_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-const BTC_ADDR_RE =
-  /^(1[1-9A-HJ-NP-Za-km-z]{25,34}|3[1-9A-HJ-NP-Za-km-z]{25,34}|bc1[0-9a-z]{39,59}|tb1[0-9a-z]{39,59})$/;
-const BCH_ADDR_RE = /^([13][1-9A-HJ-NP-Za-km-z]{25,34}|bitcoincash:[0-9a-z]{42,}|[0-9a-z]{42,})$/;
-const LTC_ADDR_RE = /^([LM3][1-9A-HJ-NP-Za-km-z]{25,34}|ltc1[0-9a-z]{39,59})$/;
-const ZEC_ADDR_RE = /^(t1[1-9A-HJ-NP-Za-km-z]{33}|t3[1-9A-HJ-NP-Za-km-z]{33})$/;
-const TRON_ADDR_RE = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
-
-function validateAddress(chain: ChainMeta | undefined, addr: string): string | null {
-  if (!chain || !addr.trim()) return null;
-  const a = addr.trim();
-  switch (chain.family) {
-    case 'evm':
-      return EVM_ADDR_RE.test(a) ? null : 'receivingAccounts.invalidEvmAddress';
-    case 'solana':
-      return SOL_ADDR_RE.test(a) ? null : 'receivingAccounts.invalidSolAddress';
-    case 'utxo': {
-      const regexMap: Record<string, RegExp> = {
-        BTC: BTC_ADDR_RE,
-        BCH: BCH_ADDR_RE,
-        LTC: LTC_ADDR_RE,
-        ZEC: ZEC_ADDR_RE,
-      };
-      const re = regexMap[chain.id];
-      if (!re) return null;
-      return re.test(a) ? null : 'receivingAccounts.invalidUtxoAddress';
-    }
-    case 'tron':
-      return TRON_ADDR_RE.test(a) ? null : 'receivingAccounts.invalidTronAddress';
-    default:
-      return null;
-  }
-}
-
-function addressPlaceholder(chain: ChainMeta | undefined): string {
-  if (!chain) return '';
-  switch (chain.id) {
-    case 'BTC':
-      return '1A1zP1... / bc1q...';
-    case 'BCH':
-      return '1BpEi6... / bitcoincash:q...';
-    case 'LTC':
-      return 'LQTpS3... / ltc1q...';
-    case 'ZEC':
-      return 't1UYsZ...';
-    case 'TRON':
-      return 'TJYs7M...';
-    default:
-      return chain.family === 'evm' ? '0x...' : '';
-  }
-}
-
-// ── Form State ──────────────────────────────────────────────────
+const BTC_REGTEST_RE = /^bcrt1[0-9a-z]{39,59}$/i;
+const UTXO_VALIDATOR_SYMBOL: Record<string, string> = {
+  BTC: 'btc',
+  BCH: 'bch',
+  LTC: 'ltc',
+  ZEC: 'zec',
+};
 
 interface FormState {
   name: string;
@@ -201,31 +153,172 @@ const emptyForm: FormState = {
   isActive: true,
 };
 
+function chainMeta(chainType: string): ChainMeta | undefined {
+  return CHAINS.find(c => c.id === chainType);
+}
+
+function truncateAddr(addr: string): string {
+  if (addr.length <= 16) return addr;
+  return `${addr.slice(0, 8)}...${addr.slice(-6)}`;
+}
+
+function networkLabelKey(mode: NetworkMode): string {
+  return mode === 'testnet'
+    ? 'receivingAccounts.networkTestnet'
+    : 'receivingAccounts.networkMainnet';
+}
+
+function toValidatorNetwork(mode: NetworkMode): ValidatorNetwork {
+  return mode === 'testnet' ? 'testnet' : 'prod';
+}
+
+function validateWithLibrary(address: string, symbol: string, network: ValidatorNetwork): boolean {
+  try {
+    return WAValidator.validate(address, symbol, network);
+  } catch {
+    return false;
+  }
+}
+
+function validateAddress(
+  chain: ChainMeta | undefined,
+  addr: string,
+  networkMode: NetworkMode
+): string | null {
+  if (!chain || !addr.trim()) return null;
+  const a = addr.trim();
+  const targetNetwork = toValidatorNetwork(networkMode);
+
+  switch (chain.family) {
+    case 'evm': {
+      return validateWithLibrary(a, 'eth', targetNetwork)
+        ? null
+        : 'receivingAccounts.invalidEvmAddress';
+    }
+    case 'solana': {
+      return validateWithLibrary(a, 'sol', targetNetwork)
+        ? null
+        : 'receivingAccounts.invalidSolAddress';
+    }
+    case 'tron': {
+      return validateWithLibrary(a, 'trx', targetNetwork)
+        ? null
+        : 'receivingAccounts.invalidTronAddress';
+    }
+    case 'utxo': {
+      const symbol = UTXO_VALIDATOR_SYMBOL[chain.id];
+      if (!symbol) return null;
+
+      if (
+        validateWithLibrary(a, symbol, targetNetwork) ||
+        (chain.id === 'BTC' && targetNetwork === 'testnet' && BTC_REGTEST_RE.test(a))
+      ) {
+        return null;
+      }
+
+      const oppositeNetwork: ValidatorNetwork = targetNetwork === 'testnet' ? 'prod' : 'testnet';
+      if (validateWithLibrary(a, symbol, oppositeNetwork)) {
+        return networkMode === 'testnet'
+          ? 'receivingAccounts.networkMismatchNeedTestnet'
+          : 'receivingAccounts.networkMismatchNeedMainnet';
+      }
+
+      return 'receivingAccounts.invalidUtxoAddress';
+    }
+    default:
+      return null;
+  }
+}
+
+function isNetworkMismatchError(errorKey: string | null): boolean {
+  return (
+    errorKey === 'receivingAccounts.networkMismatchNeedMainnet' ||
+    errorKey === 'receivingAccounts.networkMismatchNeedTestnet'
+  );
+}
+
+function addressPlaceholder(chain: ChainMeta | undefined, networkMode: NetworkMode): string {
+  if (!chain) return '';
+
+  switch (chain.id) {
+    case 'BTC':
+      return networkMode === 'testnet' ? 'tb1q... / m...' : 'bc1q... / 1...';
+    case 'BCH':
+      return networkMode === 'testnet' ? 'bchtest:q...' : 'bitcoincash:q...';
+    case 'LTC':
+      return networkMode === 'testnet' ? 'tltc1q... / m...' : 'ltc1q... / L...';
+    case 'ZEC':
+      return networkMode === 'testnet' ? 'tm...' : 't1...';
+    case 'TRON':
+      return 'TJYs7M...';
+    default:
+      if (chain.family === 'evm') return '0x...';
+      if (chain.family === 'solana') return '9xQeWv...';
+      return '';
+  }
+}
+
+function normalizeTokenSymbols(chain: ChainMeta | undefined, tokens: string[] = []): string[] {
+  if (!tokens.length) return [];
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const raw of tokens) {
+    const token = raw.trim();
+    if (!token) continue;
+
+    let canonical = token.toUpperCase();
+    if (chain) {
+      const bySymbol = chain.tokens.find(tk => tk.symbol.toUpperCase() === canonical);
+      if (bySymbol) {
+        canonical = bySymbol.symbol;
+      } else {
+        const byLabel = chain.tokens.find(tk => tk.label.toUpperCase() === canonical);
+        if (byLabel) canonical = byLabel.symbol;
+      }
+    }
+
+    if (seen.has(canonical)) continue;
+    seen.add(canonical);
+    normalized.push(canonical);
+  }
+
+  return normalized;
+}
+
+function tokenDisplayLabels(chain: ChainMeta | undefined, tokens: string[] = []): string[] {
+  return normalizeTokenSymbols(chain, tokens).map(symbol => {
+    const meta = chain?.tokens.find(tk => tk.symbol === symbol);
+    return meta?.label ?? symbol;
+  });
+}
+
 function formFromAccount(acc: ReceivingAccount): FormState {
+  const chain = chainMeta(acc.chainType);
   return {
     name: acc.name,
     chainType: acc.chainType,
     address: acc.address,
-    activeTokens: acc.activeTokens ?? [],
+    activeTokens: normalizeTokenSymbols(chain, acc.activeTokens ?? []),
     isActive: acc.isActive,
   };
 }
 
 function toInput(form: FormState): ReceivingAccountInput {
   const chain = chainMeta(form.chainType);
+  const normalizedActive = normalizeTokenSymbols(chain, form.activeTokens);
   const allTokens = chain?.tokens.map(t => t.symbol) ?? [];
-  const inactive = allTokens.filter(t => !form.activeTokens.includes(t));
+  const inactive = allTokens.filter(t => !normalizedActive.includes(t));
   return {
     name: form.name,
     chainType: form.chainType,
     address: form.address,
-    activeTokens: form.activeTokens,
+    activeTokens: normalizedActive,
     inactiveTokens: inactive,
     isActive: form.isActive,
   };
 }
-
-// ── AccountForm ─────────────────────────────────────────────────
 
 interface AccountFormProps {
   form: FormState;
@@ -234,6 +327,7 @@ interface AccountFormProps {
   onCancel: () => void;
   saving: boolean;
   isEdit: boolean;
+  networkMode: NetworkMode;
 }
 
 const AccountForm: React.FC<AccountFormProps> = ({
@@ -243,25 +337,28 @@ const AccountForm: React.FC<AccountFormProps> = ({
   onCancel,
   saving,
   isEdit,
+  networkMode,
 }) => {
   const { t } = useI18n();
   const { walletInfo, isConnected, openModal } = useWallet();
   const selectedChain = chainMeta(form.chainType);
   const addrError = form.address.trim()
-    ? validateAddress(selectedChain, form.address.trim())
+    ? validateAddress(selectedChain, form.address.trim(), networkMode)
     : null;
 
   const formRef = useRef(form);
   const onChangeRef = useRef(onChange);
   const prevConnected = useRef(isConnected);
+
   useEffect(() => {
     formRef.current = form;
   }, [form]);
+
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  const toggleToken = (symbol: string) => {
+  const toggleToken = (symbol: string): void => {
     const next = form.activeTokens.includes(symbol)
       ? form.activeTokens.filter(s => s !== symbol)
       : [...form.activeTokens, symbol];
@@ -271,10 +368,11 @@ const AccountForm: React.FC<AccountFormProps> = ({
   const handleConnectWallet = useCallback(async () => {
     if (isConnected && walletInfo?.address) {
       onChangeRef.current({ ...formRef.current, address: walletInfo.address });
-    } else {
-      await openModal({ view: 'Connect' });
+      return;
     }
+    await openModal({ view: 'Connect' });
   }, [isConnected, walletInfo, openModal]);
+
   useEffect(() => {
     if (
       !prevConnected.current &&
@@ -303,7 +401,22 @@ const AccountForm: React.FC<AccountFormProps> = ({
         {isEdit ? t('receivingAccounts.editAccount') : t('receivingAccounts.addAccount')}
       </h3>
 
-      {/* Chain selection */}
+      <div
+        className={cn(
+          'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs',
+          networkMode === 'testnet'
+            ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+            : 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+        )}
+      >
+        <Settings2 className="w-3.5 h-3.5" />
+        <span>
+          {t('receivingAccounts.networkLockedHint', {
+            network: t(networkLabelKey(networkMode)),
+          })}
+        </span>
+      </div>
+
       {!isEdit && (
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-2">
@@ -316,6 +429,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                 <button
                   key={c.id}
                   type="button"
+                  data-testid={`receiving-chain-${c.id}`}
                   onClick={() => {
                     const meta = chainMeta(c.id);
                     onChange({
@@ -355,16 +469,15 @@ const AccountForm: React.FC<AccountFormProps> = ({
         </div>
       )}
 
-      {/* Fields after chain selection */}
       {form.chainType && (
         <>
-          {/* Name */}
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">
               {t('receivingAccounts.name')}
             </label>
             <input
               type="text"
+              data-testid="receiving-form-name"
               value={form.name}
               onChange={e => onChange({ ...form, name: e.target.value })}
               placeholder={t('receivingAccounts.namePlaceholder')}
@@ -376,7 +489,6 @@ const AccountForm: React.FC<AccountFormProps> = ({
             />
           </div>
 
-          {/* Address */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-medium text-muted-foreground">
@@ -400,9 +512,10 @@ const AccountForm: React.FC<AccountFormProps> = ({
             </div>
             <input
               type="text"
+              data-testid="receiving-form-address"
               value={form.address}
               onChange={e => onChange({ ...form, address: e.target.value })}
-              placeholder={addressPlaceholder(selectedChain)}
+              placeholder={addressPlaceholder(selectedChain, networkMode)}
               className={cn(
                 'w-full h-10 px-3 rounded-lg text-sm font-mono',
                 'border bg-background',
@@ -420,7 +533,6 @@ const AccountForm: React.FC<AccountFormProps> = ({
             )}
           </div>
 
-          {/* Tokens (only for multi-token chains) */}
           {showTokenSelector && (
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-2">
@@ -450,10 +562,10 @@ const AccountForm: React.FC<AccountFormProps> = ({
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 pt-1">
             <button
               type="button"
+              data-testid="receiving-form-save"
               onClick={onSave}
               disabled={saving || !canSave}
               className={cn(
@@ -468,6 +580,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
             </button>
             <button
               type="button"
+              data-testid="receiving-form-cancel"
               onClick={onCancel}
               className="px-4 h-10 rounded-lg border border-border text-sm text-muted-foreground hover:bg-muted/50"
             >
@@ -479,8 +592,6 @@ const AccountForm: React.FC<AccountFormProps> = ({
     </div>
   );
 };
-
-// ── Toggle Switch ───────────────────────────────────────────────
 
 const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void; disabled?: boolean }> = ({
   checked,
@@ -508,131 +619,166 @@ const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void; disabled?
   </button>
 );
 
-// ── AccountCard ─────────────────────────────────────────────────
-
-interface AccountCardProps {
+interface AccountRowProps {
   account: ReceivingAccount;
   onEdit: () => void;
   onDelete: () => void;
   onToggleActive: () => void;
+  onOpenMobileActions: () => void;
   deleting: boolean;
   toggling: boolean;
+  networkMode: NetworkMode;
+  mobile: boolean;
 }
 
-const AccountCard: React.FC<AccountCardProps> = ({
+const AccountRow: React.FC<AccountRowProps> = ({
   account,
   onEdit,
   onDelete,
   onToggleActive,
+  onOpenMobileActions,
   deleting,
   toggling,
+  networkMode,
+  mobile,
 }) => {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const meta = chainMeta(account.chainType);
+  const issueKey = validateAddress(meta, account.address, networkMode);
+  const statusLabel = account.isActive
+    ? t('receivingAccounts.active')
+    : t('receivingAccounts.inactive');
+  const displayTokens = tokenDisplayLabels(meta, account.activeTokens ?? []);
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(account.address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(account.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
   }, [account.address]);
 
   return (
     <div
+      data-testid={`receiving-account-row-${account.id}`}
       className={cn(
-        'border rounded-xl p-4 sm:p-5 transition-opacity',
-        account.isActive ? 'border-border' : 'border-border opacity-60'
+        'border rounded-lg px-3 py-3 transition-opacity',
+        account.isActive ? 'border-border' : 'border-border opacity-70'
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-muted/50">
-            <TokenIcon token={account.chainType} size={28} />
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-muted/50">
+          <TokenIcon token={account.chainType} size={24} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-medium text-foreground truncate">{account.name}</h3>
+            <span className="text-[11px] text-muted-foreground">
+              {meta?.name ?? account.chainType}
+            </span>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-medium text-foreground truncate">{account.name}</h3>
-              <span className="text-xs text-muted-foreground shrink-0">
-                {meta?.name ?? account.chainType}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-xs font-mono text-muted-foreground">
-                {truncateAddr(account.address)}
-              </span>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={t('receivingAccounts.copyAddress')}
-              >
-                {copied ? (
-                  <Check className="w-3 h-3 text-green-500" />
-                ) : (
-                  <Copy className="w-3 h-3" />
-                )}
-              </button>
-            </div>
+
+          <div className="flex items-center gap-1.5 mt-1 min-w-0">
+            <span className="text-xs font-mono text-muted-foreground truncate">
+              {truncateAddr(account.address)}
+            </span>
+            <button
+              type="button"
+              data-testid="receiving-account-copy"
+              onClick={handleCopy}
+              className="p-0.5 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              aria-label={t('receivingAccounts.copyAddress')}
+            >
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-green-500" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+            </button>
           </div>
+
+          {displayTokens.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {displayTokens.map(tokenLabel => {
+                return (
+                  <span
+                    key={tokenLabel}
+                    className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground"
+                  >
+                    {tokenLabel}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          {issueKey && isNetworkMismatchError(issueKey) && (
+            <p className="flex items-center gap-1 mt-2 text-xs text-amber-700 dark:text-amber-400">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {t(issueKey)}
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <span className="hidden sm:inline text-xs text-muted-foreground">{statusLabel}</span>
           <ToggleSwitch checked={account.isActive} onChange={onToggleActive} disabled={toggling} />
-        </div>
-      </div>
 
-      {account.activeTokens && account.activeTokens.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-3">
-          {account.activeTokens.map(token => {
-            const tokenMeta = meta?.tokens.find(t => t.symbol === token);
-            return (
-              <span
-                key={token}
-                className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground"
-              >
-                {tokenMeta?.label ?? token}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-        <button
-          type="button"
-          onClick={onEdit}
-          className={cn(
-            'flex items-center gap-1.5 h-8 px-3 rounded-lg',
-            'border border-border text-xs font-medium text-foreground',
-            'hover:bg-muted/50 transition-colors'
-          )}
-        >
-          <Pencil className="w-3.5 h-3.5" />
-          {t('common.edit')}
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={deleting}
-          className={cn(
-            'flex items-center gap-1.5 h-8 px-3 rounded-lg',
-            'border border-destructive/30 text-xs font-medium text-destructive',
-            'hover:bg-destructive/5 transition-colors'
-          )}
-        >
-          {deleting ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          {mobile ? (
+            <button
+              type="button"
+              data-testid="receiving-account-actions"
+              onClick={onOpenMobileActions}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted/50"
+              aria-label={t('common.actions', { defaultValue: 'Actions' })}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
           ) : (
-            <Trash2 className="w-3.5 h-3.5" />
+            <>
+              <button
+                type="button"
+                data-testid="receiving-account-edit"
+                onClick={onEdit}
+                className={cn(
+                  'flex items-center gap-1.5 h-8 px-3 rounded-lg',
+                  'border border-border text-xs font-medium text-foreground',
+                  'hover:bg-muted/50 transition-colors'
+                )}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                {t('common.edit')}
+              </button>
+              <button
+                type="button"
+                data-testid="receiving-account-delete"
+                onClick={onDelete}
+                disabled={deleting}
+                className={cn(
+                  'flex items-center gap-1.5 h-8 px-3 rounded-lg',
+                  'border border-destructive/30 text-xs font-medium text-destructive',
+                  'hover:bg-destructive/5 transition-colors',
+                  deleting && 'opacity-70 cursor-not-allowed'
+                )}
+              >
+                {deleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                {t('common.delete')}
+              </button>
+            </>
           )}
-          {t('common.delete')}
-        </button>
+        </div>
       </div>
     </div>
   );
 };
-
-// ── CryptoReceivingSection ──────────────────────────────────────
 
 export const CryptoReceivingSection: React.FC = () => {
   const { t } = useI18n();
@@ -640,17 +786,42 @@ export const CryptoReceivingSection: React.FC = () => {
   const addMutation = useAddReceivingAccount();
   const updateMutation = useUpdateReceivingAccount();
   const deleteMutation = useDeleteReceivingAccount();
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const networkMode = useMemo<NetworkMode>(
+    () => (getEnvConfig().isTestEnv ? 'testnet' : 'mainnet'),
+    []
+  );
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [activeActionAccount, setActiveActionAccount] = useState<ReceivingAccount | null>(null);
 
   const knownChainIds = useMemo(() => new Set(CHAINS.map(c => c.id)), []);
   const cryptoAccounts = useMemo(
     () => accounts.filter(a => knownChainIds.has(a.chainType)),
     [accounts, knownChainIds]
+  );
+  const filteredAccounts = useMemo(() => {
+    if (statusFilter === 'active') return cryptoAccounts.filter(acc => acc.isActive);
+    if (statusFilter === 'inactive') return cryptoAccounts.filter(acc => !acc.isActive);
+    return cryptoAccounts;
+  }, [cryptoAccounts, statusFilter]);
+
+  const networkMismatchAccounts = useMemo(
+    () =>
+      cryptoAccounts.filter(acc => {
+        const issueKey = validateAddress(chainMeta(acc.chainType), acc.address, networkMode);
+        return isNetworkMismatchError(issueKey);
+      }),
+    [cryptoAccounts, networkMode]
+  );
+  const activeCount = useMemo(
+    () => cryptoAccounts.filter(acc => acc.isActive).length,
+    [cryptoAccounts]
   );
 
   const handleAdd = useCallback(() => {
@@ -663,6 +834,7 @@ export const CryptoReceivingSection: React.FC = () => {
     setEditingId(acc.id);
     setForm(formFromAccount(acc));
     setShowForm(true);
+    setActiveActionAccount(null);
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -677,7 +849,7 @@ export const CryptoReceivingSection: React.FC = () => {
       setEditingId(null);
       setForm(emptyForm);
     } catch {
-      // mutation error is surfaced via addMutation.isError / updateMutation.isError
+      // errors are surfaced by mutation states
     }
   }, [form, editingId, addMutation, updateMutation]);
 
@@ -686,8 +858,8 @@ export const CryptoReceivingSection: React.FC = () => {
       setTogglingId(acc.id);
       try {
         const chain = chainMeta(acc.chainType);
-        const allTokens = chain?.tokens.map(t => t.symbol) ?? [];
-        const inactive = allTokens.filter(t => !(acc.activeTokens ?? []).includes(t));
+        const allTokens = chain?.tokens.map(tok => tok.symbol) ?? [];
+        const inactive = allTokens.filter(tok => !(acc.activeTokens ?? []).includes(tok));
         await updateMutation.mutateAsync({
           id: acc.id,
           input: {
@@ -713,6 +885,7 @@ export const CryptoReceivingSection: React.FC = () => {
         await deleteMutation.mutateAsync(id);
       } finally {
         setDeletingId(null);
+        setActiveActionAccount(null);
       }
     },
     [deleteMutation]
@@ -724,6 +897,21 @@ export const CryptoReceivingSection: React.FC = () => {
     setForm(emptyForm);
   }, []);
 
+  const handleCopyFromSheet = useCallback(async () => {
+    if (!activeActionAccount) return;
+    try {
+      await navigator.clipboard.writeText(activeActionAccount.address);
+    } finally {
+      setActiveActionAccount(null);
+    }
+  }, [activeActionAccount]);
+
+  const filterItems: Array<{ key: StatusFilter; label: string }> = [
+    { key: 'all', label: t('common.all', { defaultValue: 'All' }) },
+    { key: 'active', label: t('receivingAccounts.active') },
+    { key: 'inactive', label: t('receivingAccounts.inactive') },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -733,7 +921,7 @@ export const CryptoReceivingSection: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="receiving-accounts-section">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">
@@ -741,9 +929,10 @@ export const CryptoReceivingSection: React.FC = () => {
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t('receivingAccounts.subtitle')}</p>
         </div>
-        {!showForm && cryptoAccounts.length > 0 && (
+        {!showForm && (
           <button
             type="button"
+            data-testid="receiving-add-button"
             onClick={handleAdd}
             className={cn(
               'flex items-center gap-1.5 h-9 px-3 sm:px-4 rounded-lg shrink-0',
@@ -758,6 +947,48 @@ export const CryptoReceivingSection: React.FC = () => {
         )}
       </div>
 
+      <div
+        data-testid="receiving-network-lock-banner"
+        className={cn(
+          'flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs',
+          networkMode === 'testnet'
+            ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+            : 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Settings2 className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate">
+            {t('receivingAccounts.environmentLocked', {
+              network: t(networkLabelKey(networkMode)),
+            })}
+          </span>
+        </div>
+        <span className="shrink-0">
+          {t('receivingAccounts.activeCount', {
+            active: activeCount,
+            total: cryptoAccounts.length,
+          })}
+        </span>
+      </div>
+
+      {networkMismatchAccounts.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium">{t('receivingAccounts.networkMismatchTitle')}</p>
+              <p className="mt-0.5">
+                {t('receivingAccounts.networkMismatchDesc', {
+                  count: networkMismatchAccounts.length,
+                  network: t(networkLabelKey(networkMode)),
+                })}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForm && (
         <AccountForm
           form={form}
@@ -766,7 +997,32 @@ export const CryptoReceivingSection: React.FC = () => {
           onCancel={handleCancel}
           saving={addMutation.isPending || updateMutation.isPending}
           isEdit={editingId !== null}
+          networkMode={networkMode}
         />
+      )}
+
+      {cryptoAccounts.length > 0 && !showForm && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="receiving-status-filters">
+          {filterItems.map(item => {
+            const selected = statusFilter === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                data-testid={`receiving-filter-${item.key}`}
+                onClick={() => setStatusFilter(item.key)}
+                className={cn(
+                  'h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  selected
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border text-muted-foreground hover:bg-muted/40'
+                )}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {cryptoAccounts.length === 0 && !showForm ? (
@@ -790,20 +1046,50 @@ export const CryptoReceivingSection: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {cryptoAccounts.map(acc => (
-            <AccountCard
-              key={acc.id}
-              account={acc}
-              onEdit={() => handleEdit(acc)}
-              onDelete={() => handleDelete(acc.id)}
-              onToggleActive={() => handleToggleActive(acc)}
-              deleting={deletingId === acc.id}
-              toggling={togglingId === acc.id}
-            />
-          ))}
-        </div>
+        !showForm && (
+          <div className="space-y-2">
+            {filteredAccounts.map(acc => (
+              <AccountRow
+                key={acc.id}
+                account={acc}
+                onEdit={() => handleEdit(acc)}
+                onDelete={() => handleDelete(acc.id)}
+                onToggleActive={() => handleToggleActive(acc)}
+                onOpenMobileActions={() => setActiveActionAccount(acc)}
+                deleting={deletingId === acc.id}
+                toggling={togglingId === acc.id}
+                networkMode={networkMode}
+                mobile={isMobile}
+              />
+            ))}
+          </div>
+        )
       )}
+
+      <BottomSheet
+        open={isMobile && !!activeActionAccount}
+        onClose={() => setActiveActionAccount(null)}
+        title={activeActionAccount?.name || t('common.actions', { defaultValue: 'Actions' })}
+      >
+        <div className="pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <BottomSheetItem
+            title={t('common.edit')}
+            icon={<Pencil className="w-4 h-4" />}
+            onClick={() => activeActionAccount && handleEdit(activeActionAccount)}
+          />
+          <BottomSheetItem
+            title={t('receivingAccounts.copyAddress')}
+            icon={<Copy className="w-4 h-4" />}
+            onClick={handleCopyFromSheet}
+          />
+          <BottomSheetItem
+            title={t('common.delete')}
+            icon={<Trash2 className="w-4 h-4" />}
+            className="text-destructive"
+            onClick={() => activeActionAccount && handleDelete(activeActionAccount.id)}
+          />
+        </div>
+      </BottomSheet>
     </div>
   );
 };
