@@ -124,6 +124,7 @@ export interface UseChatEffectsParams {
 
   // pending peer → DM creation
   pendingPeerID: string | null;
+  pendingMatrixUserID: string | null;
   pendingPeerDisplayName: string | null;
   clearPendingPeer: () => void;
   setRooms: (rooms: MatrixRoom[]) => void;
@@ -161,6 +162,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     currentRoomId,
     currentUserId,
     pendingPeerID,
+    pendingMatrixUserID,
     pendingPeerDisplayName,
     clearPendingPeer,
     setRooms,
@@ -186,24 +188,33 @@ export function useChatEffects(params: UseChatEffectsParams): void {
 
   updateRoomRef.current = updateRoom;
 
-  // ---- 1. Resolve pendingPeerID → create/find DM room and focus it ----
+  // ---- 1. Resolve pending direct target → create/find DM room and focus it ----
   useEffect(() => {
-    if (!pendingPeerID) return;
+    if (!pendingPeerID && !pendingMatrixUserID) return;
 
     let cancelled = false;
     setIsCreatingRoom(true);
 
     (async () => {
       try {
-        const roomId = await matrixClient.getOrCreateDirectRoom(
-          pendingPeerID,
-          pendingPeerDisplayName ?? undefined
-        );
+        const targetPeerID = pendingPeerID?.trim();
+        const targetMatrixUserID = pendingMatrixUserID?.trim();
+        const roomId = targetPeerID
+          ? await matrixClient.getOrCreateDirectRoom(
+              targetPeerID,
+              pendingPeerDisplayName ?? undefined
+            )
+          : targetMatrixUserID
+            ? await matrixClient.createDirectRoom(
+                targetMatrixUserID,
+                pendingPeerDisplayName ?? undefined
+              )
+            : null;
         if (cancelled) return;
 
         if (roomId) {
           const allRooms = patchPendingDirectRoom(await matrixClient.getRooms(), roomId, {
-            peerID: pendingPeerID,
+            peerID: targetPeerID,
             currentUserId,
             displayName: pendingPeerDisplayName,
           });
@@ -214,13 +225,13 @@ export function useChatEffects(params: UseChatEffectsParams): void {
             setCurrentRoom(roomId);
           }
 
-          if (pendingPeerID) {
+          if (targetPeerID) {
             try {
               // Await once so profile hydration can patch avatar/name before
               // pending peer state is cleared and this effect is cleaned up.
               await hydratePendingDirectRoomProfile(
                 roomId,
-                pendingPeerID,
+                targetPeerID,
                 currentUserId,
                 pendingPeerDisplayName,
                 roomSnapshot,
@@ -233,7 +244,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
           }
         }
       } catch (err) {
-        console.error('[ChatDrawer] Failed to open DM with peer:', err);
+        console.error('[ChatDrawer] Failed to open DM:', err);
         if (!cancelled) {
           toast({
             title: t('common.error'),
@@ -254,6 +265,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     };
   }, [
     pendingPeerID,
+    pendingMatrixUserID,
     pendingPeerDisplayName,
     clearPendingPeer,
     setRooms,

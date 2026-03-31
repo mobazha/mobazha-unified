@@ -1425,13 +1425,15 @@ export const en: TranslationResource = {
     // New chat dialog
     newChat: {
       title: 'New Conversation',
-      description: 'Search for a user or paste a Store ID to start chatting.',
-      searchPlaceholder: 'Search by name or paste Peer ID...',
-      placeholder: 'Enter Peer ID (e.g. Qm...)',
+      description:
+        'Search for a user, paste a Peer ID, or enter a Matrix ID (e.g. @alice:matrix.org).',
+      searchPlaceholder: 'Search by name, paste Peer ID, or enter Matrix ID...',
+      placeholder: 'Enter Peer ID or Matrix ID',
       start: 'Start Chat',
       noResults: 'No users found',
-      errorEmpty: 'Please enter a Peer ID',
-      errorInvalid: 'Invalid Peer ID format. It should start with "Qm" or "12D3Koo".',
+      errorEmpty: 'Please enter a user name, Peer ID, or Matrix ID',
+      errorInvalid:
+        'Invalid format. Use Peer ID starting with "Qm"/"12D3Koo", or Matrix ID like @user:matrix.org.',
     },
   },
 

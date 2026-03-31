@@ -9,6 +9,7 @@ import {
   useChatStore,
   selectTotalUnreadCount,
   selectPendingPeerID,
+  selectPendingMatrixUserID,
   selectPendingPeerDisplayName,
   getMemberPresentation,
   getMessageSenderPresentation,
@@ -172,6 +173,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const setSearchQuery = useChatStore(state => state.setSearchQuery);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const pendingPeerID = useChatStore(selectPendingPeerID);
+  const pendingMatrixUserID = useChatStore(selectPendingMatrixUserID);
   const pendingPeerDisplayName = useChatStore(selectPendingPeerDisplayName);
   const clearPendingPeer = useChatStore(state => state.clearPendingPeer);
   const setRooms = useChatStore(state => state.setRooms);
@@ -190,6 +192,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     currentRoomId,
     currentUserId: effectiveCurrentUserId,
     pendingPeerID,
+    pendingMatrixUserID,
     pendingPeerDisplayName,
     clearPendingPeer,
     setRooms,

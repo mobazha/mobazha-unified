@@ -481,7 +481,11 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
 
             const { message, showAvatar, messageIndex } = item;
             const isOwn = message.senderId === currentUserId;
-            const itemKey = message.id || `msg-${idx}`;
+            const localId = (message as { localId?: string }).localId;
+            const keyBase = message.id || localId || 'msg';
+            const keySuffix = localId || `${message.timestamp || 0}-${message.senderId}-${idx}`;
+            const itemKey = `${keyBase}-${keySuffix}`;
+            const messageAnchorId = message.id || localId || `${idx}`;
 
             const isSearchMatch =
               Boolean(searchQuery.trim()) &&
@@ -498,7 +502,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               return (
                 <div
                   key={itemKey}
-                  id={`msg-${message.id}`}
+                  id={`msg-${messageAnchorId}`}
                   className={`flex justify-center py-3 animate-in fade-in duration-300 ${searchHighlightClass}`}
                 >
                   <span className="inline-block max-w-[85%] text-xs text-muted-foreground/70 bg-muted/40 backdrop-blur-sm px-4 py-1.5 rounded-xl font-medium border border-border/20 break-words text-center">
@@ -511,7 +515,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
             return (
               <div
                 key={itemKey}
-                id={`msg-${message.id}`}
+                id={`msg-${messageAnchorId}`}
                 className={`flex gap-2.5 group animate-in fade-in slide-in-from-bottom-2 duration-300 ${isOwn ? 'flex-row-reverse' : ''} ${searchHighlightClass}`}
               >
                 {!isOwn && (
