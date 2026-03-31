@@ -12,11 +12,7 @@ import type { ChainPaymentExecutor, ChainCategory } from './types';
 import { EVMPaymentExecutor } from './evmExecutor';
 import { SolanaPaymentExecutor } from './solanaExecutor';
 import { TronPaymentExecutor } from './tronExecutor';
-import {
-  getChainFromCoin,
-  parseCanonicalPaymentCoin,
-  toCanonicalPaymentCoin,
-} from '../../data/tokens';
+import { isCanonicalPaymentCoin, parseCanonicalPaymentCoin } from '../../data/tokens';
 
 // ── Registry ────────────────────────────────────────
 
@@ -69,30 +65,6 @@ export function resetExecutorRegistry(): void {
 
 // ── Coin → ChainCategory 解析 ─────────────────────
 
-const CHAIN_TO_CATEGORY: Record<string, ChainCategory> = {
-  BTC: 'utxo',
-  BCH: 'utxo',
-  LTC: 'utxo',
-  ZEC: 'utxo',
-
-  ETH: 'evm',
-  BSC: 'evm',
-  BASE: 'evm',
-  MATIC: 'evm',
-  CFX: 'evm',
-
-  SOL: 'solana',
-
-  TRON: 'tron',
-  TRX: 'tron',
-};
-
-function resolveChainCategoryFromChainID(chainID: string): ChainCategory | null {
-  const upper = (chainID || '').toUpperCase().trim();
-  if (!upper) return null;
-  return CHAIN_TO_CATEGORY[upper] ?? null;
-}
-
 /**
  * 从 coin 标识符解析链分类
  * 用于在 paymentChain 不可用时，通过 paymentCoin 推断链类型
@@ -101,8 +73,11 @@ export function resolveChainCategory(coin: string): ChainCategory | null {
   const trimmed = (coin || '').trim();
   if (!trimmed) return null;
 
-  const canonical = toCanonicalPaymentCoin(trimmed);
-  const parsedCanonical = parseCanonicalPaymentCoin(canonical);
+  if (!isCanonicalPaymentCoin(trimmed)) {
+    return null;
+  }
+
+  const parsedCanonical = parseCanonicalPaymentCoin(trimmed);
   if (parsedCanonical) {
     switch (parsedCanonical.namespace) {
       case 'bip122':
@@ -119,12 +94,10 @@ export function resolveChainCategory(coin: string): ChainCategory | null {
   }
 
   // Fiat payment coins don't route to chain executors.
-  if (canonical.toLowerCase().startsWith('fiat:')) {
+  if (trimmed.toLowerCase().startsWith('fiat:')) {
     return null;
   }
-
-  const chainID = getChainFromCoin(trimmed);
-  return resolveChainCategoryFromChainID(chainID);
+  return null;
 }
 
 /**

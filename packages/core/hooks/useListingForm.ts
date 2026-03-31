@@ -18,12 +18,12 @@ import type {
 import { productsApi } from '../services/api';
 import { mergeSkus } from '../utils/variantUtils';
 import { toMinimalUnit } from '../services/currencyService';
-import { toCanonicalPaymentCoin } from '../data/tokens';
+import { mustAssetIdFromTokenId, mustCanonicalCoin } from '../data/tokens';
 
-const DEFAULT_RWA_ACCEPTED_CURRENCIES = [toCanonicalPaymentCoin('ETHUSDT')];
+const DEFAULT_RWA_ACCEPTED_CURRENCIES = [mustAssetIdFromTokenId('ETHUSDT')];
 const DEFAULT_LISTING_ACCEPTED_CURRENCIES = [
-  toCanonicalPaymentCoin('BTC'),
-  toCanonicalPaymentCoin('ETH'),
+  mustAssetIdFromTokenId('BTC'),
+  mustAssetIdFromTokenId('ETH'),
 ];
 
 function canonicalizeAcceptedCurrencies(
@@ -32,7 +32,7 @@ function canonicalizeAcceptedCurrencies(
 ): string[] {
   const raw = Array.isArray(values) ? values : [];
   const normalized = raw
-    .map(v => toCanonicalPaymentCoin((v || '').trim()))
+    .map(v => mustCanonicalCoin((v || '').trim()))
     .filter(Boolean)
     .filter((value, index, arr) => arr.indexOf(value) === index);
   if (normalized.length > 0) {

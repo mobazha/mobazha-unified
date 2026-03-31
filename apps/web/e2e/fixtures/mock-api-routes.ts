@@ -10,6 +10,7 @@
  */
 
 import type { Page } from '@playwright/test';
+import { mustAssetIdFromTokenId } from '@mobazha/core/data';
 
 function wrapData<T>(data: T): string {
   return JSON.stringify({ data });
@@ -1099,6 +1100,18 @@ interface MockPaymentMethodsOptions {
   }>;
 }
 
+const DEFAULT_PAYMENT_METHOD_TOKEN_IDS = [
+  'ETHUSDT',
+  'BSCUSDT',
+  'BASEUSDT',
+  'SOLUSDT',
+  'TRXUSDT',
+] as const;
+
+const DEFAULT_PAYMENT_METHOD_ASSET_IDS = DEFAULT_PAYMENT_METHOD_TOKEN_IDS.map(tokenID =>
+  mustAssetIdFromTokenId(tokenID)
+);
+
 /**
  * Mock buyer payment methods endpoint used by usePaymentMethods().
  * Intercepts GET /v1/payment-methods/:peerID and returns crypto + fiat methods.
@@ -1107,7 +1120,7 @@ export async function mockPaymentMethodsAPI(
   page: Page,
   opts?: MockPaymentMethodsOptions
 ): Promise<void> {
-  const crypto = opts?.crypto ?? ['ETHUSDT', 'BSCUSDT', 'BASEUSDT', 'SOLUSDT', 'TRXUSDT'];
+  const crypto = opts?.crypto ?? DEFAULT_PAYMENT_METHOD_ASSET_IDS;
   const fiat = opts?.fiat ?? [];
 
   await page.route('**/payment-methods/**', route => {

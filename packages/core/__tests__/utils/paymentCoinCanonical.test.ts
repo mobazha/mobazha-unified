@@ -1,38 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  assetIdFromTokenId,
   getChainFromCoin,
+  isCanonicalPaymentCoin,
+  mustCanonicalCoin,
   getTokenByPaymentCoin,
   getTokenDecimals,
   parseCanonicalPaymentCoin,
-  toCanonicalPaymentCoin,
 } from '../../data/tokens';
 
-describe('toCanonicalPaymentCoin', () => {
-  it('maps legacy chain+token to canonical asset id', () => {
-    expect(toCanonicalPaymentCoin('BSCUSDT')).toBe(
-      'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955'
-    );
-  });
-
-  it('maps TRXUSDT token id to canonical asset id', () => {
-    expect(toCanonicalPaymentCoin('TRXUSDT')).toBe(
-      'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
-    );
-  });
-
-  it('maps DAI/BUSD legacy symbols to canonical asset ids', () => {
-    expect(toCanonicalPaymentCoin('DAI')).toBe(
-      'crypto:eip155:1:erc20:0x6B175474E89094C44Da98b954EedeAC495271d0F'
-    );
-    expect(toCanonicalPaymentCoin('BUSD')).toBe(
-      'crypto:eip155:56:erc20:0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56'
-    );
+describe('mustCanonicalCoin', () => {
+  it('rejects non-canonical token IDs in hardcut mode', () => {
+    expect(() => mustCanonicalCoin('BSCUSDT')).toThrow(/non-canonical payment coin/i);
+    expect(() => mustCanonicalCoin('TRXUSDT')).toThrow(/non-canonical payment coin/i);
+    expect(() => mustCanonicalCoin('DAI')).toThrow(/non-canonical payment coin/i);
+    expect(() => mustCanonicalCoin('BUSD')).toThrow(/non-canonical payment coin/i);
   });
 
   it('returns canonical crypto/fiat input as-is', () => {
-    expect(toCanonicalPaymentCoin('crypto:eip155:1:native')).toBe('crypto:eip155:1:native');
-    expect(toCanonicalPaymentCoin('fiat:stripe:USD')).toBe('fiat:stripe:USD');
+    expect(mustCanonicalCoin('crypto:eip155:1:native')).toBe('crypto:eip155:1:native');
+    expect(mustCanonicalCoin('fiat:stripe:USD')).toBe('fiat:stripe:USD');
   });
 
   it('resolves canonical eip155 token coin to token config and decimals', () => {
@@ -59,5 +47,21 @@ describe('toCanonicalPaymentCoin', () => {
       chainRef: '8453',
       standard: 'native',
     });
+  });
+
+  it('provides explicit tokenId -> canonical assetId mapping helper', () => {
+    expect(assetIdFromTokenId('BSCUSDT')).toBe(
+      'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955'
+    );
+    expect(assetIdFromTokenId('TRXUSDT')).toBe(
+      'crypto:tron:mainnet:trc20:TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
+    );
+    expect(assetIdFromTokenId('UNKNOWN')).toBeUndefined();
+  });
+
+  it('can quickly detect canonical values', () => {
+    expect(isCanonicalPaymentCoin('crypto:eip155:1:native')).toBe(true);
+    expect(isCanonicalPaymentCoin('fiat:stripe:USD')).toBe(true);
+    expect(isCanonicalPaymentCoin('ETHUSDT')).toBe(false);
   });
 });
