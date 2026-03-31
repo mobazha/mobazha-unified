@@ -390,6 +390,8 @@ export const HOSTING_API = {
   // --- Fiat Payment Onboarding (SaaS) ---
   FIAT_ONBOARDING_START: (provider: string) => `/platform/v1/fiat/providers/${provider}/onboarding`,
   FIAT_ONBOARDING_STATUS: (provider: string) => `/platform/v1/fiat/providers/${provider}/status`,
+  FIAT_ONBOARDING_CONNECTION: (provider: string) =>
+    `/platform/v1/fiat/providers/${provider}/connection`,
 
   // --- Sales Channels: Store Links ---
   STORE_LINKS: '/platform/v1/store-links',

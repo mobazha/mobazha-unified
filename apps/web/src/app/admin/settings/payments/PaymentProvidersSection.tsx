@@ -12,6 +12,9 @@ import {
   EyeOff,
   CircleDot,
   ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n, fiatApi, isStandaloneMode } from '@mobazha/core';
@@ -21,11 +24,20 @@ import type {
   FiatAccountStatus,
 } from '@mobazha/core';
 
+interface ProviderSnapshot {
+  configs: FiatProviderConfigView[];
+  statuses: Record<string, FiatAccountStatus>;
+}
+
+let providerSnapshotInFlight: Promise<ProviderSnapshot> | null = null;
+let providerSnapshotStandaloneMode: boolean | null = null;
+
 const PROVIDERS = [
   {
     id: 'stripe' as const,
     name: 'Stripe',
     color: '#6772e5',
+    iconPath: '/icons/brands/stripe.svg',
     dashboardUrl: 'https://dashboard.stripe.com',
     descKey: 'admin.integrations.stripeDesc' as const,
     descDefault: 'Accept credit/debit cards, Apple Pay, and Google Pay',
@@ -54,6 +66,7 @@ const PROVIDERS = [
     id: 'paypal' as const,
     name: 'PayPal',
     color: '#0070ba',
+    iconPath: '/icons/brands/paypal.svg',
     dashboardUrl: 'https://www.paypal.com/businessmanage/account/aboutBusiness',
     descKey: 'admin.integrations.paypalDesc' as const,
     descDefault: 'Accept PayPal payments',
@@ -79,6 +92,70 @@ const PROVIDERS = [
     ],
   },
 ];
+
+const ProviderBrandIcon: React.FC<{ provider: (typeof PROVIDERS)[number] }> = ({ provider }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (!failed) {
+    return (
+      <img
+        src={provider.iconPath}
+        alt={`${provider.name} logo`}
+        width={24}
+        height={24}
+        className="w-6 h-6 object-contain"
+        onError={() => setFailed(true)}
+        loading="lazy"
+      />
+    );
+  }
+
+  return <CreditCard className="w-5 h-5" style={{ color: provider.color }} />;
+};
+
+async function fetchProviderSnapshot(standalone: boolean): Promise<ProviderSnapshot> {
+  const cfgs = standalone ? (await fiatApi.getConfig()) || [] : [];
+  const statusMap: Record<string, FiatAccountStatus> = {};
+
+  if (!standalone) {
+    const statusResults = await Promise.allSettled(
+      PROVIDERS.map(p => fiatApi.getOnboardingStatus(p.id))
+    );
+    statusResults.forEach((result, i) => {
+      if (result.status !== 'fulfilled') return;
+      const status = result.value;
+      if (!status?.accountID) return;
+      const providerID = PROVIDERS[i].id;
+      statusMap[providerID] = status;
+      const existing = cfgs.find(c => c.providerID === providerID);
+      if (existing) {
+        existing.isActive = status.chargesEnabled;
+        existing.accountID = status.accountID;
+      } else {
+        cfgs.push({
+          providerID,
+          accountID: status.accountID,
+          isActive: status.chargesEnabled,
+        });
+      }
+    });
+  }
+
+  return { configs: cfgs, statuses: statusMap };
+}
+
+function loadProviderSnapshot(standalone: boolean): Promise<ProviderSnapshot> {
+  if (providerSnapshotInFlight && providerSnapshotStandaloneMode === standalone) {
+    return providerSnapshotInFlight;
+  }
+
+  providerSnapshotStandaloneMode = standalone;
+  providerSnapshotInFlight = fetchProviderSnapshot(standalone).finally(() => {
+    providerSnapshotInFlight = null;
+    providerSnapshotStandaloneMode = null;
+  });
+  return providerSnapshotInFlight;
+}
 
 function truncateAccountID(id?: string) {
   if (!id) return '';
@@ -150,8 +227,24 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showSecrets, setShowSecrets] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>();
-  const isConnected = config?.isActive;
+  const isConnected = Boolean(config?.isActive);
+  const linkedAccountID = accountStatus?.accountID || config?.accountID || '';
+  const hasLinkedAccount = linkedAccountID.length > 0;
+  const needsSetup = !isConnected && hasLinkedAccount;
+  const canShowSaaSDetails = !isStandalone && hasLinkedAccount;
+
+  useEffect(() => {
+    if (!canShowSaaSDetails) {
+      setDetailsOpen(false);
+      return;
+    }
+    if (isConnected) {
+      setDetailsOpen(true);
+    }
+  }, [canShowSaaSDetails, isConnected]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -185,62 +278,144 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
     }
   }, [onDelete, provider.id, t, onRefresh]);
 
+  const handleCopyAccountID = useCallback(async () => {
+    if (!linkedAccountID || !navigator?.clipboard?.writeText) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(linkedAccountID);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }, [linkedAccountID]);
+
+  const saasStatus = isConnected
+    ? {
+        color: 'text-success',
+        label: t('fiat.connected', { defaultValue: '已连接' }),
+        icon: <CheckCircle className="w-3.5 h-3.5" />,
+      }
+    : needsSetup
+      ? {
+          color: 'text-amber-600 dark:text-amber-400',
+          label: t('admin.integrations.statusPending', { defaultValue: '待完善' }),
+          icon: <AlertCircle className="w-3.5 h-3.5" />,
+        }
+      : {
+          color: 'text-muted-foreground',
+          label: t('fiat.notConnected', { defaultValue: '未连接' }),
+          icon: <AlertCircle className="w-3.5 h-3.5" />,
+        };
+
+  const saasPrimaryLabel = isOnboarding
+    ? t('fiat.connecting', { defaultValue: '连接中...' })
+    : !hasLinkedAccount
+      ? t('fiat.connectProvider', {
+          provider: provider.name,
+          defaultValue: `连接 ${provider.name}`,
+        })
+      : needsSetup
+        ? t('fiat.continueSetup', { defaultValue: '继续完善' })
+        : detailsOpen
+          ? t('fiat.collapseDetails', { defaultValue: '收起详情' })
+          : t('fiat.manageDetails', { defaultValue: '管理详情' });
+  const isConnectCTA = !hasLinkedAccount || needsSetup;
+
+  const capabilityText = (enabled?: boolean) => {
+    if (typeof enabled !== 'boolean') {
+      return t('common.unknown', { defaultValue: '--' });
+    }
+    return enabled ? t('fiat.enabled') : t('fiat.disabled');
+  };
+
   return (
-    <div className="border border-border rounded-xl p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
+    <div className="group border border-border/80 bg-background/80 rounded-2xl p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-border">
+      <div className="flex items-start justify-between gap-3 min-h-[40px]">
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: `${provider.color}15` }}
-          >
-            <CreditCard className="w-5 h-5" style={{ color: provider.color }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-border/40 bg-background">
+            <ProviderBrandIcon provider={provider} />
           </div>
           <div>
-            <h3 className="font-medium text-foreground">{provider.name}</h3>
-            <p className="text-xs text-muted-foreground">
+            <h3 className="font-semibold text-foreground tracking-tight">{provider.name}</h3>
+            <p className="text-xs text-muted-foreground max-w-[28rem]">
               {t(provider.descKey, { defaultValue: provider.descDefault })}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {isConnected ? (
-            <span className="inline-flex items-center gap-1 text-xs text-success">
+          {!isStandalone ? (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full',
+                isConnected
+                  ? 'bg-success/10 text-success'
+                  : needsSetup
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-muted text-muted-foreground'
+              )}
+            >
+              {saasStatus.icon}
+              {saasStatus.label}
+            </span>
+          ) : isConnected ? (
+            <span className="inline-flex items-center gap-1 text-xs text-success bg-success/10 px-2.5 py-1 rounded-full">
               <CheckCircle className="w-3.5 h-3.5" />
-              {t('fiat.connected')}
+              {t('fiat.connected', { defaultValue: '已连接' })}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
               <AlertCircle className="w-3.5 h-3.5" />
-              {t('fiat.notConnected')}
+              {t('fiat.notConnected', { defaultValue: '未连接' })}
             </span>
           )}
         </div>
       </div>
 
-      {/* SaaS mode: OAuth connect */}
-      {!isStandalone && !isConnected && (
+      {/* SaaS mode: unified overview + actions */}
+      {!isStandalone && (
         <div className="mt-4 space-y-2">
-          <div className="flex justify-start sm:justify-end">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              {hasLinkedAccount
+                ? `${t('fiat.accountId', { defaultValue: '账户' })}: ${truncateAccountID(linkedAccountID)}`
+                : t('fiat.connectHint', { defaultValue: '连接后即可查看账户状态与收款能力' })}
+            </p>
             <button
               type="button"
-              onClick={() => onStartOnboarding(provider.id)}
+              onClick={() => {
+                if (!hasLinkedAccount || needsSetup) {
+                  onStartOnboarding(provider.id);
+                  return;
+                }
+                setDetailsOpen(prev => !prev);
+              }}
               disabled={isOnboarding}
               className={cn(
-                'w-full sm:w-auto sm:min-w-[172px] sm:px-4 flex items-center justify-center gap-2 h-10 rounded-lg',
-                'bg-primary text-primary-foreground text-sm font-medium',
-                'active:scale-[0.98] transition-all',
+                'w-full sm:w-auto sm:min-w-[164px] sm:px-4 flex items-center justify-center gap-2 h-9 rounded-lg',
+                'text-sm font-medium active:scale-[0.98] transition-all',
+                isConnectCTA
+                  ? 'bg-primary text-primary-foreground border border-transparent hover:opacity-90'
+                  : 'border border-border bg-background text-foreground hover:bg-muted/40',
                 isOnboarding && 'opacity-70 cursor-wait'
               )}
             >
               {isOnboarding ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('fiat.connecting')}
+                  {saasPrimaryLabel}
                 </>
               ) : (
                 <>
-                  <ExternalLink className="w-4 h-4" />
-                  {t('fiat.connectProvider', { provider: provider.name })}
+                  {!hasLinkedAccount || needsSetup ? (
+                    <ExternalLink className="w-4 h-4" />
+                  ) : detailsOpen ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                  {saasPrimaryLabel}
                 </>
               )}
             </button>
@@ -341,52 +516,71 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         </div>
       )}
 
-      {/* Connected: SaaS mode — account details */}
-      {isConnected && !isStandalone && accountStatus && (
-        <div className="mt-4 space-y-3">
-          <div className="rounded-lg bg-muted/40 p-3 space-y-2.5">
-            {accountStatus.email && (
-              <div className="flex items-center justify-between">
+      {/* SaaS mode: collapsible details */}
+      {!isStandalone && canShowSaaSDetails && detailsOpen && (
+        <div className="mt-4 space-y-3 animate-in fade-in duration-200">
+          <div className="rounded-xl border border-border/70 bg-muted/30 p-3.5 space-y-2.5">
+            {accountStatus?.email && (
+              <div className="flex items-center justify-between gap-3 min-h-6">
                 <span className="text-xs text-muted-foreground">{t('fiat.email')}</span>
                 <span className="text-xs text-foreground">{accountStatus.email}</span>
               </div>
             )}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 min-h-6">
               <span className="text-xs text-muted-foreground">{t('fiat.accountId')}</span>
-              <span className="text-xs font-mono text-foreground">
-                {truncateAccountID(accountStatus.accountID)}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-mono text-foreground">
+                  {truncateAccountID(linkedAccountID)}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyAccountID}
+                  title={t('common.copy', { defaultValue: '复制' })}
+                  className="p-1 text-muted-foreground hover:text-foreground rounded border border-border/50 hover:border-border"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+                {copied && (
+                  <span className="text-[10px] text-success">
+                    {t('common.copied', { defaultValue: '已复制' })}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 min-h-6">
               <span className="text-xs text-muted-foreground">{t('fiat.accountStatus')}</span>
-              <StatusBadge status={accountStatus.status} />
+              <StatusBadge status={accountStatus?.status || (isConnected ? 'active' : 'pending')} />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 min-h-6">
               <span className="text-xs text-muted-foreground">{t('fiat.charges')}</span>
               <span
                 className={cn(
-                  'text-xs font-medium',
-                  accountStatus.chargesEnabled ? 'text-success' : 'text-muted-foreground'
+                  'text-xs font-medium px-2 py-0.5 rounded-full',
+                  accountStatus?.chargesEnabled
+                    ? 'text-success bg-success/10'
+                    : 'text-muted-foreground bg-muted'
                 )}
               >
-                {accountStatus.chargesEnabled ? t('fiat.enabled') : t('fiat.disabled')}
+                {capabilityText(accountStatus?.chargesEnabled)}
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 min-h-6">
               <span className="text-xs text-muted-foreground">{t('fiat.payouts')}</span>
               <span
                 className={cn(
-                  'text-xs font-medium',
-                  accountStatus.payoutsEnabled ? 'text-success' : 'text-muted-foreground'
+                  'text-xs font-medium px-2 py-0.5 rounded-full',
+                  accountStatus?.payoutsEnabled
+                    ? 'text-success bg-success/10'
+                    : 'text-muted-foreground bg-muted'
                 )}
               >
-                {accountStatus.payoutsEnabled ? t('fiat.enabled') : t('fiat.disabled')}
+                {capabilityText(accountStatus?.payoutsEnabled)}
               </span>
             </div>
           </div>
 
-          {accountStatus.requirements && accountStatus.requirements.length > 0 && (
-            <div className="rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 p-3">
+          {accountStatus?.requirements && accountStatus.requirements.length > 0 && (
+            <div className="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 p-3">
               <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-1.5">
                 {t('fiat.pendingRequirements')}
               </p>
@@ -404,15 +598,15 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           )}
 
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <a
                 href={provider.dashboardUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg',
-                  'border border-border text-xs font-medium text-foreground',
-                  'hover:bg-muted/50 transition-colors'
+                  'flex-1 min-w-[140px] flex items-center justify-center gap-1.5 h-9 rounded-lg',
+                  'bg-primary text-primary-foreground border border-transparent text-xs font-medium',
+                  'hover:opacity-90 transition-colors'
                 )}
               >
                 {t('fiat.manageDashboard', { provider: provider.name })}
@@ -423,8 +617,8 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                 onClick={handleDelete}
                 disabled={deleting}
                 className={cn(
-                  'flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg',
-                  'border border-destructive/30 text-xs font-medium text-destructive',
+                  'flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg min-w-[110px]',
+                  'border border-destructive/40 bg-background text-xs font-medium text-destructive',
                   'hover:bg-destructive/5 transition-colors'
                 )}
               >
@@ -436,7 +630,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                 {t('fiat.disconnect')}
               </button>
             </div>
-            {accountStatus.email && (
+            {accountStatus?.email && (
               <p className="text-[11px] text-muted-foreground text-center">
                 {t('fiat.dashboardLoginHint', {
                   provider: provider.name,
@@ -470,28 +664,6 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         </div>
       )}
 
-      {/* Connected: SaaS mode fallback (no detailed status) */}
-      {isConnected && !isStandalone && !accountStatus && (
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground font-mono">
-            {truncateAccountID(config?.accountID)}
-          </span>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80"
-          >
-            {deleting ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <Trash2 className="w-3 h-3" />
-            )}
-            {t('fiat.disconnect')}
-          </button>
-        </div>
-      )}
-
       {errorMsg && (
         <div className="mt-3 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs">
           {errorMsg}
@@ -506,60 +678,42 @@ export const PaymentProvidersSection: React.FC = () => {
   const standalone = isStandaloneMode();
   const [configs, setConfigs] = useState<FiatProviderConfigView[]>([]);
   const [statuses, setStatuses] = useState<Record<string, FiatAccountStatus>>({});
-  const [loading, setLoading] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingRefresh, setLoadingRefresh] = useState(false);
   const [onboardingProvider, setOnboardingProvider] = useState<string | null>(null);
   const [onboardingError, setOnboardingError] = useState<string | null>(null);
   const [errorProvider, setErrorProvider] = useState<string | null>(null);
 
-  const loadConfigs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const allConfigs = await fiatApi.getConfig();
-      const cfgs = allConfigs || [];
-      const statusMap: Record<string, FiatAccountStatus> = {};
-
-      if (!standalone) {
-        const statusResults = await Promise.allSettled(
-          PROVIDERS.map(p => fiatApi.getOnboardingStatus(p.id))
-        );
-        statusResults.forEach((result, i) => {
-          if (result.status !== 'fulfilled') return;
-          const status = result.value;
-          if (!status?.accountID) return;
-          const providerID = PROVIDERS[i].id;
-          statusMap[providerID] = status;
-          const existing = cfgs.find(c => c.providerID === providerID);
-          if (existing) {
-            existing.isActive = status.chargesEnabled;
-            existing.accountID = status.accountID;
-          } else {
-            cfgs.push({
-              providerID,
-              accountID: status.accountID,
-              isActive: status.chargesEnabled,
-            });
-          }
-        });
+  const loadConfigs = useCallback(
+    async (silent = false) => {
+      if (silent) {
+        setLoadingRefresh(true);
+      } else {
+        setLoadingInitial(true);
       }
-
-      setConfigs(cfgs);
-      setStatuses(statusMap);
-    } catch {
-      setConfigs([]);
-      setStatuses({});
-    } finally {
-      setLoading(false);
-    }
-  }, [standalone]);
+      try {
+        const snapshot = await loadProviderSnapshot(standalone);
+        setConfigs(snapshot.configs);
+        setStatuses(snapshot.statuses);
+      } catch {
+        setConfigs([]);
+        setStatuses({});
+      } finally {
+        setLoadingInitial(false);
+        setLoadingRefresh(false);
+      }
+    },
+    [standalone]
+  );
 
   useEffect(() => {
-    loadConfigs();
+    loadConfigs(false);
   }, [loadConfigs]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !standalone) {
-        loadConfigs();
+        loadConfigs(true);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -569,17 +723,21 @@ export const PaymentProvidersSection: React.FC = () => {
   const handleSave = useCallback(
     async (providerID: string, input: FiatProviderConfigInput) => {
       await fiatApi.saveConfig(providerID, input);
-      await loadConfigs();
+      await loadConfigs(true);
     },
     [loadConfigs]
   );
 
   const handleDelete = useCallback(
     async (providerID: string) => {
-      await fiatApi.deleteConfig(providerID);
-      await loadConfigs();
+      if (standalone) {
+        await fiatApi.deleteConfig(providerID);
+      } else {
+        await fiatApi.disconnectProvider(providerID);
+      }
+      await loadConfigs(true);
     },
-    [loadConfigs]
+    [loadConfigs, standalone]
   );
 
   const handleStartOnboarding = useCallback(
@@ -607,19 +765,12 @@ export const PaymentProvidersSection: React.FC = () => {
     [t]
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-base font-semibold text-foreground">
+        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
           {t('admin.integrations.paymentProviders.title', { defaultValue: 'Payment Providers' })}
+          {loadingRefresh && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
           {t('admin.integrations.paymentProviders.subtitle', {
@@ -629,21 +780,40 @@ export const PaymentProvidersSection: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-        {PROVIDERS.map(provider => (
-          <ProviderCard
-            key={provider.id}
-            provider={provider}
-            config={configs.find(c => c.providerID === provider.id)}
-            accountStatus={statuses[provider.id]}
-            isStandalone={standalone}
-            isOnboarding={onboardingProvider === provider.id}
-            onboardingError={errorProvider === provider.id ? onboardingError : null}
-            onSave={handleSave}
-            onDelete={handleDelete}
-            onStartOnboarding={handleStartOnboarding}
-            onRefresh={loadConfigs}
-          />
-        ))}
+        {loadingInitial
+          ? PROVIDERS.map(provider => (
+              <div
+                key={provider.id}
+                className="border border-border/80 bg-background/80 rounded-2xl p-4 sm:p-5 shadow-sm animate-pulse"
+              >
+                <div className="flex items-start justify-between gap-3 min-h-[40px]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-muted/70" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-28 rounded bg-muted/70" />
+                      <div className="h-3 w-52 rounded bg-muted/60" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-16 rounded-full bg-muted/60" />
+                </div>
+                <div className="mt-4 h-9 w-full rounded-lg bg-muted/50" />
+              </div>
+            ))
+          : PROVIDERS.map(provider => (
+              <ProviderCard
+                key={provider.id}
+                provider={provider}
+                config={configs.find(c => c.providerID === provider.id)}
+                accountStatus={statuses[provider.id]}
+                isStandalone={standalone}
+                isOnboarding={onboardingProvider === provider.id}
+                onboardingError={errorProvider === provider.id ? onboardingError : null}
+                onSave={handleSave}
+                onDelete={handleDelete}
+                onStartOnboarding={handleStartOnboarding}
+                onRefresh={() => loadConfigs(true)}
+              />
+            ))}
       </div>
     </div>
   );
