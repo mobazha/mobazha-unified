@@ -15,65 +15,69 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 const mockT = (key: string) => key;
 
-vi.mock('@mobazha/core', () => ({
-  useI18n: () => ({ t: mockT, locale: 'en', setLocale: vi.fn() }),
-  useGatewayUrl: () => 'http://localhost:4002',
-  usePeerID: () => 'QmTest123',
-  getImageUrl: (hash: string | undefined | null) =>
-    hash ? `http://localhost:4002/v1/media/images/${hash}` : undefined,
-  getContrastText: (hex: string) => {
-    const c = hex.replace('#', '');
-    const r = parseInt(c.slice(0, 2), 16) / 255;
-    const g = parseInt(c.slice(2, 4), 16) / 255;
-    const b = parseInt(c.slice(4, 6), 16) / 255;
-    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    return lum > 0.179 ? '#000000' : '#ffffff';
-  },
-  RADIUS_MAP: { none: '0px', sm: '4px', md: '8px', lg: '16px', full: '9999px' },
-  SPACING_MAP: { none: '0', sm: '1rem', md: '2rem', lg: '3rem', xl: '4rem' },
-  WEB3_TRUST_KIT: [
-    { icon: 'escrow', title: 'Buyer Protection', description: 'Funds held securely' },
-    { icon: 'crypto', title: 'Crypto Native', description: 'Pay with ETH, BNB, SOL' },
-    { icon: 'selfHosted', title: 'Self-Hosted', description: "Seller's own server" },
-    { icon: 'p2p', title: 'Direct Trade', description: 'No middleman' },
-    { icon: 'privacy', title: 'Privacy First', description: 'No tracking' },
-  ],
-  MAX_SECTIONS: 20,
-  SECTION_TYPE_LIST: [
-    'hero',
-    'announcement-bar',
-    'featured-products',
-    'product-grid',
-    'about',
-    'trust-badges',
-    'testimonials',
-    'faq',
-    'collections',
-    'gallery',
-    'rich-text',
-    'contact',
-    'video',
-    'countdown',
-    'store-tabs',
-  ],
-  SYSTEM_SECTION_TYPES: ['store-tabs'],
-  ADDABLE_SECTION_TYPES: [
-    'hero',
-    'announcement-bar',
-    'featured-products',
-    'product-grid',
-    'about',
-    'trust-badges',
-    'testimonials',
-    'faq',
-    'collections',
-    'gallery',
-    'rich-text',
-    'contact',
-    'video',
-    'countdown',
-  ],
-}));
+vi.mock('@mobazha/core', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core')>();
+  return {
+    ...actual,
+    useI18n: () => ({ t: mockT, locale: 'en', setLocale: vi.fn() }),
+    useGatewayUrl: () => 'http://localhost:4002',
+    usePeerID: () => 'QmTest123',
+    getImageUrl: (hash: string | undefined | null) =>
+      hash ? `http://localhost:4002/v1/media/images/${hash}` : undefined,
+    getContrastText: (hex: string) => {
+      const c = hex.replace('#', '');
+      const r = parseInt(c.slice(0, 2), 16) / 255;
+      const g = parseInt(c.slice(2, 4), 16) / 255;
+      const b = parseInt(c.slice(4, 6), 16) / 255;
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      return lum > 0.179 ? '#000000' : '#ffffff';
+    },
+    RADIUS_MAP: { none: '0px', sm: '4px', md: '8px', lg: '16px', full: '9999px' },
+    SPACING_MAP: { none: '0', sm: '1rem', md: '2rem', lg: '3rem', xl: '4rem' },
+    WEB3_TRUST_KIT: [
+      { icon: 'escrow', title: 'Buyer Protection', description: 'Funds held securely' },
+      { icon: 'crypto', title: 'Crypto Native', description: 'Pay with ETH, BNB, SOL' },
+      { icon: 'selfHosted', title: 'Self-Hosted', description: "Seller's own server" },
+      { icon: 'p2p', title: 'Direct Trade', description: 'No middleman' },
+      { icon: 'privacy', title: 'Privacy First', description: 'No tracking' },
+    ],
+    MAX_SECTIONS: 20,
+    SECTION_TYPE_LIST: [
+      'hero',
+      'announcement-bar',
+      'featured-products',
+      'product-grid',
+      'about',
+      'trust-badges',
+      'testimonials',
+      'faq',
+      'collections',
+      'gallery',
+      'rich-text',
+      'contact',
+      'video',
+      'countdown',
+      'store-tabs',
+    ],
+    SYSTEM_SECTION_TYPES: ['store-tabs'],
+    ADDABLE_SECTION_TYPES: [
+      'hero',
+      'announcement-bar',
+      'featured-products',
+      'product-grid',
+      'about',
+      'trust-badges',
+      'testimonials',
+      'faq',
+      'collections',
+      'gallery',
+      'rich-text',
+      'contact',
+      'video',
+      'countdown',
+    ],
+  };
+});
 
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
