@@ -11,8 +11,7 @@ import { matrixClient } from '../services/matrix/client';
 import { matrixEvents } from '../services/matrix/events';
 import { MATRIX_EVENTS } from '../services/matrix/types';
 import type { MatrixMessage, MatrixRoom } from '../services/matrix/types';
-import { isMatrixEnabled, NODE_API } from '../config';
-import { getGatewayUrl } from '../services/api/config';
+import { isMatrixEnabled } from '../config';
 
 function splitRoomsAndInvites(allRooms: MatrixRoom[]) {
   const rooms: MatrixRoom[] = [];
@@ -143,11 +142,7 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       const profile = useUserStore.getState().profile;
       if (profile?.name) {
         const avatarHash = profile.avatarHashes?.medium;
-        let avatarUrl: string | undefined;
-        if (avatarHash) {
-          avatarUrl = `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(avatarHash)}`;
-        }
-        matrixClient.syncProfileToMatrix(profile.name, avatarUrl).catch(() => {});
+        matrixClient.syncProfileToMatrix(profile.name, avatarHash).catch(() => {});
       }
 
       // Write own peerID into all joined rooms

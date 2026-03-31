@@ -92,6 +92,20 @@ function pickAvatarCid(avatarHashes?: UserProfile['avatarHashes']): string | und
   return undefined;
 }
 
+function syncMatrixProfileBestEffort(
+  displayName: string,
+  avatarHashes?: UserProfile['avatarHashes']
+): void {
+  const avatarCid = pickAvatarCid(avatarHashes);
+  import('../services/matrix/client')
+    .then(({ matrixClient }) => {
+      matrixClient.syncProfileToMatrix(displayName, avatarCid).catch(err => {
+        console.warn('[UserStore] Matrix profile sync failed:', err);
+      });
+    })
+    .catch(() => {});
+}
+
 interface UserState {
   // 状态
   profile: UserProfile | null;
@@ -770,14 +784,7 @@ export const useUserStore = create<UserState>()(
 
               const name = get().profile?.name;
               if (name) {
-                const avatarCid = pickAvatarCid(updates.avatarHashes);
-                import('../services/api/matrix')
-                  .then(matrixApi => {
-                    matrixApi.syncProfileToMatrix(name, avatarCid).catch(err => {
-                      console.warn('[UserStore] avatar-only Matrix sync failed:', err);
-                    });
-                  })
-                  .catch(() => {});
+                syncMatrixProfileBestEffort(name, updates.avatarHashes);
               }
 
               return true;
@@ -792,17 +799,10 @@ export const useUserStore = create<UserState>()(
               });
               if (updates.name || updates.avatarHashes) {
                 const updatedProfile = get().profile;
-                import('../services/api/matrix')
-                  .then(matrixApi => {
-                    const name = updates.name || updatedProfile?.name;
-                    if (name) {
-                      const avatarCid = pickAvatarCid(updates.avatarHashes);
-                      matrixApi.syncProfileToMatrix(name, avatarCid).catch(err => {
-                        console.warn('[UserStore] Matrix profile sync failed:', err);
-                      });
-                    }
-                  })
-                  .catch(() => {});
+                const name = updates.name || updatedProfile?.name;
+                if (name) {
+                  syncMatrixProfileBestEffort(name, updates.avatarHashes);
+                }
               }
               return true;
             }

@@ -353,8 +353,8 @@ class MatrixClientService {
     return roomModule.setDisplayName(displayName);
   }
 
-  async syncProfileToMatrix(displayName: string, avatarUrl?: string): Promise<void> {
-    return roomModule.syncProfileToMatrix(displayName, avatarUrl);
+  async syncProfileToMatrix(displayName: string, avatarHash?: string): Promise<void> {
+    return roomModule.syncProfileToMatrix(displayName, avatarHash);
   }
 
   async setMyPeerIDInRoom(roomId: string): Promise<void> {
