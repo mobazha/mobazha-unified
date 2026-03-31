@@ -1283,13 +1283,14 @@ export const zh: TranslationResource = {
     openingConversation: '正在打开对话...',
     newChat: {
       title: '新建对话',
-      description: '搜索用户或粘贴店铺 ID 来开始聊天。',
-      searchPlaceholder: '搜索用户名或粘贴 Peer ID...',
-      placeholder: '输入 Peer ID（如 Qm...）',
+      description: '搜索用户、粘贴 Peer ID，或输入 Matrix ID（如 @alice:matrix.org）。',
+      searchPlaceholder: '搜索用户名、粘贴 Peer ID，或输入 Matrix ID...',
+      placeholder: '输入 Peer ID 或 Matrix ID',
       start: '开始聊天',
       noResults: '未找到用户',
-      errorEmpty: '请输入 Peer ID',
-      errorInvalid: '无效的 Peer ID 格式，应以 "Qm" 或 "12D3Koo" 开头。',
+      errorEmpty: '请输入用户名、Peer ID 或 Matrix ID',
+      errorInvalid:
+        '格式无效。请使用以 "Qm"/"12D3Koo" 开头的 Peer ID，或 @user:matrix.org 形式的 Matrix ID。',
     },
   },
   matrix: {

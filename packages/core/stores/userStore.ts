@@ -57,6 +57,41 @@ function resolveAuthMode(token: string | null | undefined): 'hosted' | 'basic' |
   return 'standalone';
 }
 
+function extractCidFromValue(value?: string): string | undefined {
+  const v = (value || '').trim();
+  if (!v) return undefined;
+
+  const parts = v.split(/[/?#:&]/).filter(Boolean);
+  for (const part of parts) {
+    if (/^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(part)) {
+      return part;
+    }
+    if (/^b[a-z2-7]{20,}$/.test(part)) {
+      return part;
+    }
+  }
+
+  return undefined;
+}
+
+function pickAvatarCid(avatarHashes?: UserProfile['avatarHashes']): string | undefined {
+  if (!avatarHashes) return undefined;
+  const candidates = [
+    avatarHashes.medium,
+    avatarHashes.small,
+    avatarHashes.large,
+    avatarHashes.original,
+    avatarHashes.tiny,
+  ];
+
+  for (const candidate of candidates) {
+    const cid = extractCidFromValue(candidate);
+    if (cid) return cid;
+  }
+
+  return undefined;
+}
+
 interface UserState {
   // 状态
   profile: UserProfile | null;
@@ -721,6 +756,33 @@ export const useUserStore = create<UserState>()(
           set({ error: null });
 
           try {
+            const updateKeys = Object.keys(updates);
+            const isAvatarOnlyUpdate =
+              updateKeys.length > 0 && updateKeys.every(key => key === 'avatarHashes');
+
+            if (isAvatarOnlyUpdate && updates.avatarHashes) {
+              const currentProfile = get().profile;
+              set({
+                profile: currentProfile
+                  ? { ...currentProfile, avatarHashes: updates.avatarHashes }
+                  : null,
+              });
+
+              const name = get().profile?.name;
+              if (name) {
+                const avatarCid = pickAvatarCid(updates.avatarHashes);
+                import('../services/api/matrix')
+                  .then(matrixApi => {
+                    matrixApi.syncProfileToMatrix(name, avatarCid).catch(err => {
+                      console.warn('[UserStore] avatar-only Matrix sync failed:', err);
+                    });
+                  })
+                  .catch(() => {});
+              }
+
+              return true;
+            }
+
             const result = await profileApi.setProfile(updates);
 
             if (result.success) {
@@ -730,21 +792,14 @@ export const useUserStore = create<UserState>()(
               });
               if (updates.name || updates.avatarHashes) {
                 const updatedProfile = get().profile;
-                Promise.all([
-                  import('../services/matrix/client'),
-                  import('../services/api/config'),
-                  import('../config/apiPaths'),
-                ])
-                  .then(([{ matrixClient }, apiConfig, { NODE_API }]) => {
+                import('../services/api/matrix')
+                  .then(matrixApi => {
                     const name = updates.name || updatedProfile?.name;
                     if (name) {
-                      const avatarHash =
-                        updates.avatarHashes?.medium || updatedProfile?.avatarHashes?.medium;
-                      let avatarUrl: string | undefined;
-                      if (avatarHash) {
-                        avatarUrl = `${apiConfig.getGatewayUrl()}${NODE_API.MEDIA_IMAGE(avatarHash)}`;
-                      }
-                      matrixClient.syncProfileToMatrix(name, avatarUrl).catch(() => {});
+                      const avatarCid = pickAvatarCid(updates.avatarHashes);
+                      matrixApi.syncProfileToMatrix(name, avatarCid).catch(err => {
+                        console.warn('[UserStore] Matrix profile sync failed:', err);
+                      });
                     }
                   })
                   .catch(() => {});

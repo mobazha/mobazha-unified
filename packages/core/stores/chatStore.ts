@@ -40,6 +40,7 @@ export interface ChatState {
   drawerOpen: boolean;
   drawerExpanded: boolean;
   pendingPeerID: string | null;
+  pendingMatrixUserID: string | null;
   pendingPeerDisplayName: string | null;
 
   // 动作
@@ -75,6 +76,7 @@ export interface ChatState {
   setDrawerExpanded: (expanded: boolean) => void;
   openDrawer: () => void;
   openDrawerWithPeer: (peerID: string, displayName?: string) => void;
+  openDrawerWithMatrixUser: (userID: string, displayName?: string) => void;
   clearPendingPeer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
@@ -112,6 +114,7 @@ const initialState = {
   drawerOpen: false,
   drawerExpanded: false,
   pendingPeerID: null,
+  pendingMatrixUserID: null,
   pendingPeerDisplayName: null,
 };
 
@@ -276,17 +279,33 @@ export const useChatStore = create<ChatState>()(
           set({
             drawerOpen: true,
             pendingPeerID: peerID,
+            pendingMatrixUserID: null,
             pendingPeerDisplayName: displayName ?? null,
             currentRoomId: null,
             currentInvite: null,
           }),
-        clearPendingPeer: () => set({ pendingPeerID: null, pendingPeerDisplayName: null }),
+        openDrawerWithMatrixUser: (userID, displayName) =>
+          set({
+            drawerOpen: true,
+            pendingPeerID: null,
+            pendingMatrixUserID: userID,
+            pendingPeerDisplayName: displayName ?? null,
+            currentRoomId: null,
+            currentInvite: null,
+          }),
+        clearPendingPeer: () =>
+          set({
+            pendingPeerID: null,
+            pendingMatrixUserID: null,
+            pendingPeerDisplayName: null,
+          }),
         closeDrawer: () =>
           set({
             drawerOpen: false,
             currentRoomId: null,
             currentInvite: null,
             pendingPeerID: null,
+            pendingMatrixUserID: null,
             pendingPeerDisplayName: null,
           }),
         toggleDrawer: () => set(state => ({ drawerOpen: !state.drawerOpen })),
@@ -441,6 +460,7 @@ export const selectDrawerOpen = (state: ChatState) => state.drawerOpen;
 export const selectDrawerExpanded = (state: ChatState) => state.drawerExpanded;
 export const selectCurrentInvite = (state: ChatState) => state.currentInvite;
 export const selectPendingPeerID = (state: ChatState) => state.pendingPeerID;
+export const selectPendingMatrixUserID = (state: ChatState) => state.pendingMatrixUserID;
 export const selectPendingPeerDisplayName = (state: ChatState) => state.pendingPeerDisplayName;
 
 // ============= Hook =============
@@ -475,6 +495,7 @@ export function useChat() {
     // Drawer 动作
     openDrawer: store.openDrawer,
     openDrawerWithPeer: store.openDrawerWithPeer,
+    openDrawerWithMatrixUser: store.openDrawerWithMatrixUser,
     closeDrawer: store.closeDrawer,
     toggleDrawer: store.toggleDrawer,
     setDrawerExpanded: store.setDrawerExpanded,
