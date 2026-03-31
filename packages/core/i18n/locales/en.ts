@@ -654,6 +654,7 @@ export const en: TranslationResource = {
     statusLabels: {
       pending: 'Pending',
       awaitingPayment: 'Awaiting Payment',
+      awaitingPaymentVerification: 'Awaiting Payment Verification',
       awaitingPickup: 'Awaiting Pickup',
       processing: 'Processing',
       partialShipped: 'Partial Shipped',
@@ -682,6 +683,8 @@ export const en: TranslationResource = {
     // Timeline event descriptions
     timeline: {
       orderPlaced: 'Order placed',
+      paymentSubmitted: 'Payment submitted, awaiting verification',
+      paymentVerificationFailed: 'Payment verification failed',
       paymentConfirmed: 'Payment confirmed',
       vendorConfirmed: 'Vendor confirmed order',
       packageShipped: 'Package shipped',
@@ -697,6 +700,19 @@ export const en: TranslationResource = {
       awaitingPaymentBuyer: 'Payment required to complete this order',
       awaitingPaymentSeller: 'Waiting for buyer to complete payment',
       awaitingPaymentHint: 'Tap "Pay Now" below to proceed',
+      paymentSubmittedBuyer: 'Payment submitted, awaiting verification',
+      paymentSubmittedSeller: 'Buyer submitted payment, awaiting verification',
+      paymentSubmittedHint: 'We are verifying your payment and will update automatically',
+      paymentVerificationFailedBuyer: 'Payment verification failed',
+      paymentVerificationFailedSeller: "Buyer's payment verification failed",
+      paymentVerificationFailedReasonAddressMismatch:
+        'Verification failed: payment address mismatch. Please retry payment.',
+      paymentVerificationFailedReasonTimeout:
+        'Verification timed out. Please retry payment or contact support.',
+      paymentVerificationFailedReasonProviderFailed:
+        'Payment provider verification failed. Please retry or use another method.',
+      paymentVerificationFailedReasonUnknown:
+        'Verification failed. Please retry payment or contact support.',
       pendingBuyer: 'Waiting for the seller to accept your order',
       pendingBuyerConfirmingHint: 'Confirming on-chain, usually takes 15–60 seconds',
       pendingSeller: 'New order received — review and accept to proceed',

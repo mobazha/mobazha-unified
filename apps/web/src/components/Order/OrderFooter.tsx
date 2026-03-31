@@ -200,6 +200,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     const statusKeys: Record<string, string> = {
       PENDING: 'order.statusLabels.pending',
       AWAITING_PAYMENT: 'order.statusLabels.awaitingPayment',
+      AWAITING_PAYMENT_VERIFICATION: 'order.statusLabels.awaitingPaymentVerification',
       AWAITING_PICKUP: 'order.statusLabels.awaitingPickup',
       AWAITING_FULFILLMENT: 'order.statusLabels.processing',
       PARTIALLY_FULFILLED: 'order.statusLabels.partialShipped',

@@ -39,9 +39,63 @@ export const OrderStatusCard = memo(function OrderStatusCard({
 
   const config = useMemo((): StatusConfig => {
     const isBuyer = order.userRole === 'buyer';
+    const isSubmittedAwaitingVerification = !!order.awaitingPaymentVerification;
+    const isVerificationFailed = !!order.paymentVerificationFailed;
+    const verificationFailureReason = (order.paymentVerificationFailureReason || '')
+      .trim()
+      .toLowerCase();
+    const submittedBuyerKey = t('order.statusCard.paymentSubmittedBuyer');
+    const submittedSellerKey = t('order.statusCard.paymentSubmittedSeller');
+    const submittedHintKey = t('order.statusCard.paymentSubmittedHint');
+    const submittedBuyerMessage =
+      submittedBuyerKey === 'order.statusCard.paymentSubmittedBuyer'
+        ? t('order.statusCard.pendingBuyer')
+        : submittedBuyerKey;
+    const submittedSellerMessage =
+      submittedSellerKey === 'order.statusCard.paymentSubmittedSeller'
+        ? t('order.statusCard.awaitingPaymentSeller')
+        : submittedSellerKey;
+    const submittedHint =
+      submittedHintKey === 'order.statusCard.paymentSubmittedHint'
+        ? t('order.statusCard.pendingBuyerConfirmingHint')
+        : submittedHintKey;
+    const failedReasonHint = (() => {
+      switch (verificationFailureReason) {
+        case 'address_mismatch':
+          return t('order.statusCard.paymentVerificationFailedReasonAddressMismatch');
+        case 'timeout':
+          return t('order.statusCard.paymentVerificationFailedReasonTimeout');
+        case 'provider_failed':
+          return t('order.statusCard.paymentVerificationFailedReasonProviderFailed');
+        default:
+          return t('order.statusCard.paymentVerificationFailedReasonUnknown');
+      }
+    })();
 
     switch (order.status) {
       case 'awaiting_payment':
+        if (isVerificationFailed) {
+          return {
+            icon: AlertTriangle,
+            message: isBuyer
+              ? t('order.statusCard.paymentVerificationFailedBuyer')
+              : t('order.statusCard.paymentVerificationFailedSeller'),
+            hint: failedReasonHint,
+            color: 'text-destructive',
+            bgColor: 'bg-destructive/8 border-destructive/20',
+            progress: 1,
+          };
+        }
+        if (isSubmittedAwaitingVerification) {
+          return {
+            icon: Clock,
+            message: isBuyer ? submittedBuyerMessage : submittedSellerMessage,
+            hint: isBuyer ? submittedHint : undefined,
+            color: 'text-warning',
+            bgColor: 'bg-warning/8 border-warning/20',
+            progress: 1,
+          };
+        }
         return {
           icon: CircleDollarSign,
           message: isBuyer
@@ -140,7 +194,15 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           progress: 0,
         };
     }
-  }, [order.status, order.userRole, isCryptoPayment, t]);
+  }, [
+    order.status,
+    order.userRole,
+    order.awaitingPaymentVerification,
+    order.paymentVerificationFailed,
+    order.paymentVerificationFailureReason,
+    isCryptoPayment,
+    t,
+  ]);
 
   const stepLabels = useMemo(
     () => [

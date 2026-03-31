@@ -169,8 +169,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { t } = useI18n();
   const status = statusConfig[order.status];
-  const isAwaitingPaymentRaw = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
-  const isAwaitingPayment = isAwaitingPaymentRaw;
+  const isAwaitingPayment = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
