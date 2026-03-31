@@ -4,13 +4,23 @@
  * Buyer endpoints: getProviders, createPayment, capturePayment
  * Seller endpoints: getConfig, saveConfig, deleteConfig, getProviderStatus
  * SaaS onboarding: startOnboarding, getOnboardingStatus
+ * SaaS disconnect: disconnectProvider
  *
  * NOTE: client.ts request() auto-unwraps {"data": ...} envelopes,
  * so callers receive the inner payload directly — do NOT access .data again.
  */
 
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
-import { authGet, authPost, authPut, authDel, publicGet, hostingPost, hostingGet } from './helpers';
+import {
+  authGet,
+  authPost,
+  authPut,
+  authDel,
+  publicGet,
+  hostingPost,
+  hostingGet,
+  hostingDel,
+} from './helpers';
 import type {
   FiatProviderInfo,
   PaymentMethodsResponse,
@@ -113,4 +123,8 @@ export async function startOnboarding(
 
 export async function getOnboardingStatus(provider: string): Promise<FiatAccountStatus> {
   return hostingGet<FiatAccountStatus>(HOSTING_API.FIAT_ONBOARDING_STATUS(provider));
+}
+
+export async function disconnectProvider(provider: string): Promise<void> {
+  await hostingDel<null>(HOSTING_API.FIAT_ONBOARDING_CONNECTION(provider));
 }
