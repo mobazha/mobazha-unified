@@ -101,6 +101,8 @@ export type DisplayOrderStatus =
  */
 export type DisplayUserRole = 'buyer' | 'seller' | 'moderator';
 
+export type DisplayPaymentVerificationStatus = 'pending' | 'verified' | 'failed';
+
 /**
  * 订单展示数据 - 统一的 UI 数据结构
  * 由 transformCoreOrder 函数将 API 数据转换而来
@@ -186,6 +188,14 @@ export interface DisplayOrder {
   isRwaInstant?: boolean;
   /** 是否为 RWA 托管交易 */
   isRwaEscrow?: boolean;
+  /** 买家已提交支付，等待后端校验（AWAITING_PAYMENT_VERIFICATION） */
+  awaitingPaymentVerification?: boolean;
+  /** 支付验证状态（pending/verified/failed） */
+  paymentVerificationStatus?: DisplayPaymentVerificationStatus;
+  /** 支付验证失败原因 */
+  paymentVerificationFailureReason?: string;
+  /** 支付验证失败标记（用于状态卡展示） */
+  paymentVerificationFailed?: boolean;
   /** RWA 支付锁定信息（仅用于托管模式） */
   paymentLocked?: DisplayPaymentLocked;
   /** 争议信息（平台内部仲裁，由 Moderator 管理） */

@@ -15,6 +15,7 @@ import type {
   DisplayTimelineEvent,
   ProtectionLevel,
   DisplayOrderStatus,
+  DisplayPaymentVerificationStatus,
   DisplayUserRole,
   TransformOrderOptions,
 } from '../../types/orderDisplay';
@@ -30,6 +31,12 @@ import { formatUserName } from '../identity';
  */
 interface RealOrderData {
   state: string;
+  paymentState?: {
+    verificationStatus?: string;
+    verificationFailureReason?: string;
+    verificationFailedAt?: string;
+    fiatMetadata?: Record<string, string>;
+  };
   funded?: boolean;
   read?: boolean;
   unreadChatMessages?: number;
@@ -133,7 +140,6 @@ interface RealOrderData {
       memo?: string;
     };
   };
-  fiatMetadata?: Record<string, string>;
   protection?: {
     stage: string;
     daysRemaining: number;
@@ -158,6 +164,8 @@ export function mapOrderState(state: OrderState): DisplayOrderStatus {
     // PENDING 表示订单已创建且已支付，等待卖家确认（参考桌面端）
     PENDING: 'paid',
     AWAITING_PAYMENT: 'awaiting_payment',
+    // 已提交支付，等待系统验证（通过 awaitingPaymentVerification 标记区分文案）
+    AWAITING_PAYMENT_VERIFICATION: 'awaiting_payment',
     AWAITING_PICKUP: 'processing',
     AWAITING_FULFILLMENT: 'processing',
     PARTIALLY_FULFILLED: 'processing',
@@ -176,6 +184,13 @@ export function mapOrderState(state: OrderState): DisplayOrderStatus {
     PROCESSING_ERROR: 'awaiting_payment',
   };
   return stateMap[state] || 'awaiting_payment';
+}
+
+function normalizePaymentVerificationStatus(status?: string): DisplayPaymentVerificationStatus {
+  const normalized = (status || '').trim().toLowerCase();
+  if (normalized === 'verified') return 'verified';
+  if (normalized === 'failed') return 'failed';
+  return 'pending';
 }
 
 /**
@@ -256,18 +271,34 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     });
   }
 
-  // 资金到账 (使用 PaymentSent 统一消息)
+  // 资金状态 (使用 PaymentSent 统一消息)
   if (
     data.funded ||
     contract.paymentSent ||
     (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
   ) {
+    const verificationStatus = normalizePaymentVerificationStatus(
+      data.paymentState?.verificationStatus
+    );
+    const verificationFailed =
+      data.state === 'AWAITING_PAYMENT_VERIFICATION' && verificationStatus === 'failed';
     const confirmTimestamp = contract.orderConfirmation?.timestamp || orderTimestamp || '';
+    const awaitingVerification = data.state === 'AWAITING_PAYMENT_VERIFICATION';
+    const description = verificationFailed
+      ? 'Payment verification failed'
+      : awaitingVerification
+        ? 'Payment submitted'
+        : 'Payment confirmed';
+    const descriptionKey = verificationFailed
+      ? 'order.timeline.paymentVerificationFailed'
+      : awaitingVerification
+        ? 'order.timeline.paymentSubmitted'
+        : 'order.timeline.paymentConfirmed';
     timeline.push({
       status: 'paid',
       timestamp: confirmTimestamp,
-      description: 'Payment confirmed',
-      descriptionKey: 'order.timeline.paymentConfirmed',
+      description,
+      descriptionKey,
       actor: 'system',
     });
   }
@@ -663,7 +694,9 @@ export function transformCoreOrder(
       : formattedOrderAmount;
 
   const paymentCoinFiatProvider = resolveFiatProviderFromCoin(paymentSent?.coin);
-  const metadataFiatProvider = normalizeFiatProvider(data.fiatMetadata?.fiat_provider);
+  const metadataFiatProvider = normalizeFiatProvider(
+    data.paymentState?.fiatMetadata?.fiat_provider
+  );
   const resolvedFiatProvider = paymentCoinFiatProvider || metadataFiatProvider;
 
   // Fiat payment detection: method === 5 or "FIAT" or canonical fiat coin.
@@ -688,8 +721,8 @@ export function transformCoreOrder(
   // Fiat dispute: from API fiatMetadata (independent of order state).
   // Backend records dispute metadata without changing order FSM state.
   let fiatDispute: DisplayFiatDispute | undefined;
-  if (data.fiatMetadata?.fiat_dispute_status) {
-    const meta = data.fiatMetadata;
+  if (data.paymentState?.fiatMetadata?.fiat_dispute_status) {
+    const meta = data.paymentState.fiatMetadata;
     const disputeProvider =
       normalizeFiatProvider(meta.fiat_dispute_provider) ||
       fiatPayment?.provider ||
@@ -720,6 +753,13 @@ export function transformCoreOrder(
     : undefined;
 
   const cancelReason = contract.orderCancel?.reason || contract.refund?.memo || undefined;
+  const paymentVerificationStatus = normalizePaymentVerificationStatus(
+    data.paymentState?.verificationStatus
+  );
+  const paymentVerificationFailed =
+    data.state === 'AWAITING_PAYMENT_VERIFICATION' && paymentVerificationStatus === 'failed';
+  const awaitingPaymentVerification =
+    data.state === 'AWAITING_PAYMENT_VERIFICATION' && !paymentVerificationFailed;
 
   const result: DisplayOrder = {
     id: fullOrderId,
@@ -768,6 +808,10 @@ export function transformCoreOrder(
     // RWA 标识
     isRwaInstant,
     isRwaEscrow,
+    awaitingPaymentVerification,
+    paymentVerificationStatus,
+    paymentVerificationFailureReason: data.paymentState?.verificationFailureReason || undefined,
+    paymentVerificationFailed,
     // RWA 支付锁定信息（仅用于托管模式）
     paymentLocked,
     escrowAddress: paymentAddress,

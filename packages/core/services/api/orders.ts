@@ -294,7 +294,10 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       },
       state: orderItem.state,
       read: orderItem.read,
-      funded: orderItem.state !== 'PENDING' && orderItem.state !== 'AWAITING_PAYMENT',
+      funded:
+        orderItem.state !== 'PENDING' &&
+        orderItem.state !== 'AWAITING_PAYMENT' &&
+        orderItem.state !== 'AWAITING_PAYMENT_VERIFICATION',
       unreadChatMessages: orderItem.unreadChatMessages || 0,
       paymentAddressTransactions: [],
       protection: (() => {

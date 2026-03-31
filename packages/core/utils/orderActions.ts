@@ -48,6 +48,14 @@ const ORDER_STATUS_CONFIG: Record<OrderState, OrderStatusConfig> = {
       seller: [],
     },
   },
+  AWAITING_PAYMENT_VERIFICATION: {
+    label: 'Awaiting Payment Verification',
+    description: 'Payment submitted and awaiting verification',
+    actions: {
+      buyer: [],
+      seller: [],
+    },
+  },
   PENDING: {
     label: 'Pending',
     description: 'Waiting to be accepted',
@@ -546,6 +554,11 @@ export function getOrderStatusColor(state: OrderState): {
 } {
   const colorMap: Record<string, { bg: string; text: string; border: string }> = {
     AWAITING_PAYMENT: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
+    AWAITING_PAYMENT_VERIFICATION: {
+      bg: 'bg-yellow-100',
+      text: 'text-yellow-700',
+      border: 'border-yellow-300',
+    },
     PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
     AWAITING_PICKUP: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
     AWAITING_FULFILLMENT: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },

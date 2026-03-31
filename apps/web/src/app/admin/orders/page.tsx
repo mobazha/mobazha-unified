@@ -153,7 +153,13 @@ export default function AdminOrdersPage() {
   }, [orders, statusFilter, searchTerm, dateFrom, dateTo]);
 
   const pendingCount = useMemo(
-    () => orders.filter(o => o.rawState === 'PENDING' || o.rawState === 'AWAITING_PAYMENT').length,
+    () =>
+      orders.filter(
+        o =>
+          o.rawState === 'PENDING' ||
+          o.rawState === 'AWAITING_PAYMENT' ||
+          o.rawState === 'AWAITING_PAYMENT_VERIFICATION'
+      ).length,
     [orders]
   );
 

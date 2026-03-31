@@ -7,6 +7,7 @@ import type { ProductItem, VendorID } from './product';
 export type OrderState =
   | 'PENDING'
   | 'AWAITING_PAYMENT'
+  | 'AWAITING_PAYMENT_VERIFICATION'
   | 'AWAITING_PICKUP'
   | 'AWAITING_FULFILLMENT'
   | 'PARTIALLY_FULFILLED'
@@ -26,6 +27,15 @@ export type OrderState =
  * 订单角色
  */
 export type OrderRole = 'buyer' | 'vendor';
+
+export type PaymentVerificationStatus = 'pending' | 'verified' | 'failed';
+
+export interface OrderPaymentState {
+  verificationStatus: PaymentVerificationStatus;
+  verificationFailureReason?: string;
+  verificationFailedAt?: string;
+  fiatMetadata?: Record<string, string>;
+}
 
 /**
  * 订单列表项
@@ -61,6 +71,7 @@ export interface OrderListItem {
 export interface Order {
   contract: OrderContract;
   state: OrderState;
+  paymentState?: OrderPaymentState;
   read: boolean;
   funded: boolean;
   unreadChatMessages: number;

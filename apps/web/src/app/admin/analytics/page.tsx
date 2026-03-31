@@ -38,6 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
   FULFILLED: 'hsl(var(--chart-2))',
   PAYMENT_FINALIZED: 'hsl(var(--chart-3))',
   AWAITING_PAYMENT: 'hsl(var(--chart-4))',
+  AWAITING_PAYMENT_VERIFICATION: 'hsl(var(--chart-4))',
   AWAITING_FULFILLMENT: 'hsl(var(--chart-5))',
   PENDING: 'hsl(var(--muted-foreground))',
   CANCELED: 'hsl(var(--destructive))',

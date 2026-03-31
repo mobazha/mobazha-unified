@@ -8,6 +8,8 @@ import { getOrderCurrencyCode } from './utils';
 const STATE_COLORS: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   AWAITING_PAYMENT: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  AWAITING_PAYMENT_VERIFICATION:
+    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   AWAITING_FULFILLMENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   PARTIALLY_FULFILLED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   FULFILLED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -25,6 +27,7 @@ const STATE_COLORS: Record<string, string> = {
 const STATE_TO_I18N_KEY: Record<string, string> = {
   PENDING: 'pending',
   AWAITING_PAYMENT: 'awaitingPayment',
+  AWAITING_PAYMENT_VERIFICATION: 'awaitingPaymentVerification',
   AWAITING_PICKUP: 'awaitingPickup',
   AWAITING_FULFILLMENT: 'processing',
   PARTIALLY_FULFILLED: 'partialShipped',
