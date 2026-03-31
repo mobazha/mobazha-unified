@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mustAssetIdFromTokenId } from '@mobazha/core/data';
 import { setupMockAuth } from './fixtures/mock-auth';
 import { mockPaymentMethodsAPI } from './fixtures/mock-api-routes';
 
@@ -10,7 +11,10 @@ const CHAIN_CASES = [
   { tokenID: 'BASEUSDT', chainTab: 'Base', chainLabel: 'Base' },
   { tokenID: 'SOLUSDT', chainTab: 'Solana', chainLabel: 'Solana' },
   { tokenID: 'TRXUSDT', chainTab: 'TRON', chainLabel: 'TRON' },
-];
+].map(chain => ({
+  ...chain,
+  assetId: mustAssetIdFromTokenId(chain.tokenID),
+}));
 
 function paymentMethodURL() {
   return `/checkout/payment-method?vendor=${MOCK_VENDOR_PEER_ID}`;
@@ -20,7 +24,7 @@ test.describe('Payment Method Multi-chain Smoke', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockAuth(page);
     await mockPaymentMethodsAPI(page, {
-      crypto: CHAIN_CASES.map(c => c.tokenID),
+      crypto: CHAIN_CASES.map(c => c.assetId),
       fiat: [{ providerID: 'stripe', status: 'active', accountID: 'acct_stage2_mock' }],
     });
   });

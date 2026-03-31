@@ -19,11 +19,11 @@ import {
   resolveRwaAsset,
   UniversalSwapService,
   TradeMode,
-  getContractAddress,
   ordersApi,
   getExplorerResourceUrl,
   getCurrentChainId as getAppkitChainId,
-  toCanonicalPaymentCoin,
+  mustCanonicalCoin,
+  mustAssetIdFromTokenId,
   parseCanonicalPaymentCoin,
 } from '@mobazha/core';
 import { ethers } from 'ethers';
@@ -64,7 +64,7 @@ type PurchaseStep =
   | 'completed'
   | 'error';
 
-const DEFAULT_PAYMENT_COIN = toCanonicalPaymentCoin('ETHUSDT');
+const DEFAULT_PAYMENT_COIN = mustAssetIdFromTokenId('ETHUSDT');
 
 /**
  * 格式化超时时间
@@ -204,8 +204,8 @@ export function RwaPurchaseFlow({
   }, [openModal, t]);
 
   // 根据支付币种获取支付代币地址
-  const getPaymentTokenAddress = useCallback((paymentCoin: string, chainId: number): string => {
-    const canonicalCoin = toCanonicalPaymentCoin(paymentCoin);
+  const getPaymentTokenAddress = useCallback((paymentCoin: string): string => {
+    const canonicalCoin = mustCanonicalCoin(paymentCoin);
     const parsedCoin = parseCanonicalPaymentCoin(canonicalCoin);
     if (parsedCoin?.namespace === 'eip155') {
       if (parsedCoin.standard === 'native') {
@@ -214,19 +214,6 @@ export function RwaPurchaseFlow({
       if (parsedCoin.standard === 'erc20' && parsedCoin.assetRef) {
         return parsedCoin.assetRef;
       }
-    }
-
-    const upperCoin = paymentCoin.toUpperCase();
-    const tokenSymbol = upperCoin.includes('USDT')
-      ? 'USDT'
-      : upperCoin.includes('USDC')
-        ? 'USDC'
-        : '';
-
-    if (tokenSymbol === 'USDT') {
-      return getContractAddress('USDT', chainId);
-    } else if (tokenSymbol === 'USDC') {
-      return getContractAddress('USDC', chainId);
     }
 
     // ETH 原生支付
@@ -252,8 +239,7 @@ export function RwaPurchaseFlow({
       // 获取支付信息
       const orderOpen = (order.contract as any)?.orderOpen;
       const paymentCoin = orderOpen?.pricingCoin || DEFAULT_PAYMENT_COIN;
-      const chainId = getCurrentChainId() ? Number(getCurrentChainId()) : 11155111;
-      const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
+      const paymentTokenAddress = getPaymentTokenAddress(paymentCoin);
 
       // 计算支付金额
       const listing = orderOpen?.listings?.[0]?.listing;

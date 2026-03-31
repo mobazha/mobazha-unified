@@ -57,7 +57,6 @@ export interface PaymentChainConfig {
  * 与移动端/桌面端保持一致
  */
 export const TOKENS: TokenConfig[] = [
-  // Bitcoin
   {
     id: 'BTC',
     assetId:
@@ -67,8 +66,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: true,
     decimals: 8,
   },
-
-  // Bitcoin Cash
   {
     id: 'BCH',
     assetId: 'crypto:bitcoincash:mainnet:native',
@@ -77,8 +74,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: true,
     decimals: 8,
   },
-
-  // Litecoin
   {
     id: 'LTC',
     assetId:
@@ -88,8 +83,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: true,
     decimals: 8,
   },
-
-  // Zcash
   {
     id: 'ZEC',
     assetId: 'crypto:zcash:mainnet:native',
@@ -98,8 +91,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: true,
     decimals: 8,
   },
-
-  // Ethereum 代币
   {
     id: 'ETH',
     assetId: 'crypto:eip155:1:native',
@@ -135,51 +126,12 @@ export const TOKENS: TokenConfig[] = [
     isNative: false,
     decimals: 18,
   },
-
-  // Solana 代币
-  {
-    id: 'SOL',
-    assetId: 'crypto:solana:mainnet:native',
-    token: 'SOL',
-    chain: 'SOL',
-    isNative: true,
-    decimals: 9,
-  },
-  {
-    id: 'SOLUSDT',
-    assetId: 'crypto:solana:mainnet:spl:Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
-    token: 'USDT',
-    chain: 'SOL',
-    type: 'SPL',
-    isNative: false,
-    decimals: 6,
-  },
-  {
-    id: 'SOLUSDC',
-    assetId: 'crypto:solana:mainnet:spl:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    token: 'USDC',
-    chain: 'SOL',
-    type: 'SPL',
-    isNative: false,
-    decimals: 6,
-  },
-
-  // BSC 代币
   {
     id: 'BNB',
     assetId: 'crypto:eip155:56:native',
     token: 'BNB',
     chain: 'BSC',
     isNative: true,
-    decimals: 18,
-  },
-  {
-    id: 'BUSD',
-    assetId: 'crypto:eip155:56:erc20:0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
-    token: 'BUSD',
-    chain: 'BSC',
-    type: 'BEP20',
-    isNative: false,
     decimals: 18,
   },
   {
@@ -200,8 +152,15 @@ export const TOKENS: TokenConfig[] = [
     isNative: false,
     decimals: 6,
   },
-
-  // Base 代币
+  {
+    id: 'BUSD',
+    assetId: 'crypto:eip155:56:erc20:0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+    token: 'BUSD',
+    chain: 'BSC',
+    type: 'BEP20',
+    isNative: false,
+    decimals: 18,
+  },
   {
     id: 'BASEETH',
     assetId: 'crypto:eip155:8453:native',
@@ -228,8 +187,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: false,
     decimals: 6,
   },
-
-  // Conflux 代币
   {
     id: 'CFX',
     assetId: 'crypto:eip155:1030:native',
@@ -238,8 +195,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: true,
     decimals: 18,
   },
-
-  // Polygon 代币
   {
     id: 'MATIC',
     assetId: 'crypto:eip155:137:native',
@@ -266,8 +221,32 @@ export const TOKENS: TokenConfig[] = [
     isNative: false,
     decimals: 6,
   },
-
-  // TRON 代币
+  {
+    id: 'SOL',
+    assetId: 'crypto:solana:mainnet:native',
+    token: 'SOL',
+    chain: 'SOL',
+    isNative: true,
+    decimals: 9,
+  },
+  {
+    id: 'SOLUSDT',
+    assetId: 'crypto:solana:mainnet:spl:Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+    token: 'USDT',
+    chain: 'SOL',
+    type: 'SPL',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'SOLUSDC',
+    assetId: 'crypto:solana:mainnet:spl:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    token: 'USDC',
+    chain: 'SOL',
+    type: 'SPL',
+    isNative: false,
+    decimals: 6,
+  },
   {
     id: 'TRX',
     assetId: 'crypto:tron:mainnet:native',
@@ -286,15 +265,6 @@ export const TOKENS: TokenConfig[] = [
     decimals: 6,
   },
 ];
-
-// Token ID -> canonical payment coin (assetID / fiat:*)
-const LEGACY_TO_CANONICAL_PAYMENT_COIN: Record<string, string> = (() => {
-  const mapping: Record<string, string> = {};
-  for (const token of TOKENS) {
-    mapping[token.id.toUpperCase()] = token.assetId;
-  }
-  return mapping;
-})();
 
 const TOKENS_BY_ID = new Map<string, TokenConfig>(
   TOKENS.map(token => [token.id.toUpperCase(), token] as const)
@@ -322,21 +292,42 @@ export interface CanonicalPaymentCoinParts {
   assetRef?: string;
 }
 
-/**
- * Converts legacy CHAIN+TOKEN coin IDs to canonical payment coin IDs.
- * For canonical values (crypto:* / fiat:*), it returns input as-is.
- */
-export function toCanonicalPaymentCoin(coin: string): string {
+export function isCanonicalPaymentCoin(coin: string): boolean {
   const trimmed = (coin || '').trim();
-  if (!trimmed) return trimmed;
+  if (!trimmed) return false;
 
   const lower = trimmed.toLowerCase();
-  if (lower.startsWith('crypto:') || lower.startsWith('fiat:')) {
-    return trimmed;
+  if (lower.startsWith('fiat:')) {
+    return true;
   }
+  if (lower.startsWith('crypto:')) {
+    return parseCanonicalPaymentCoin(trimmed) !== null;
+  }
+  return false;
+}
 
-  const mapped = LEGACY_TO_CANONICAL_PAYMENT_COIN[trimmed.toUpperCase()];
-  return mapped || trimmed;
+export function mustCanonicalCoin(coin: string): string {
+  const trimmed = (coin || '').trim();
+  if (!trimmed) {
+    throw new Error('payment coin must not be empty');
+  }
+  if (!isCanonicalPaymentCoin(trimmed)) {
+    throw new Error(`non-canonical payment coin: ${trimmed}`);
+  }
+  return trimmed;
+}
+
+export function assetIdFromTokenId(tokenId: string): string | undefined {
+  const token = TOKENS_BY_ID.get((tokenId || '').trim().toUpperCase());
+  return token?.assetId;
+}
+
+export function mustAssetIdFromTokenId(tokenId: string): string {
+  const assetID = assetIdFromTokenId(tokenId);
+  if (!assetID) {
+    throw new Error(`unknown token id: ${tokenId}`);
+  }
+  return assetID;
 }
 
 /**
@@ -379,8 +370,11 @@ export function getTokenIdFromPaymentCoin(coin: string): string | undefined {
     return upper;
   }
 
-  const canonical = toCanonicalPaymentCoin(trimmed);
-  const mappedTokenID = CANONICAL_TO_PRIMARY_TOKEN_ID.get(canonical.toLowerCase());
+  if (!isCanonicalPaymentCoin(trimmed)) {
+    return undefined;
+  }
+
+  const mappedTokenID = CANONICAL_TO_PRIMARY_TOKEN_ID.get(trimmed.toLowerCase());
   if (mappedTokenID) {
     return mappedTokenID;
   }
@@ -403,7 +397,15 @@ export function getTokenByPaymentCoin(coin: string): TokenConfig | undefined {
  * - For native/unknown/non-EVM coins, returns null.
  */
 export function getEVMTokenAddressFromPaymentCoin(coin: string): string | null {
-  const canonical = toCanonicalPaymentCoin(coin);
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return null;
+
+  const token = TOKENS_BY_ID.get(trimmed.toUpperCase());
+  const canonical = token?.assetId ?? (isCanonicalPaymentCoin(trimmed) ? trimmed : '');
+  if (!canonical) {
+    return null;
+  }
+
   const parsed = parseCanonicalPaymentCoin(canonical);
   if (!parsed || parsed.namespace !== 'eip155') {
     return null;
@@ -634,8 +636,7 @@ export function getChainFromCoin(coinOrChain?: string): string {
   }
 
   // 尝试解析 canonical coin（crypto:...）
-  const canonical = toCanonicalPaymentCoin(trimmed);
-  const parsed = parseCanonicalPaymentCoin(canonical);
+  const parsed = parseCanonicalPaymentCoin(trimmed);
   if (parsed) {
     if (parsed.namespace === 'eip155') {
       const evmChainID = Number(parsed.chainRef);
@@ -658,7 +659,7 @@ export function getChainFromCoin(coinOrChain?: string): string {
   }
 
   // 法币不属于链路由
-  if (canonical.toLowerCase().startsWith('fiat:')) {
+  if (trimmed.toLowerCase().startsWith('fiat:')) {
     return '';
   }
 

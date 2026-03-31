@@ -11,15 +11,15 @@ import {
   TradeMode,
   ordersApi,
   SEPOLIA_CONFIG,
-  getContractAddress,
-  toCanonicalPaymentCoin,
+  mustCanonicalCoin,
+  mustAssetIdFromTokenId,
   parseCanonicalPaymentCoin,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 
 // 以太坊零地址常量
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-const DEFAULT_PAYMENT_COIN = toCanonicalPaymentCoin('ETHUSDT');
+const DEFAULT_PAYMENT_COIN = mustAssetIdFromTokenId('ETHUSDT');
 
 /**
  * 购买步骤
@@ -202,8 +202,8 @@ export function useRwaPurchase({
   }, [openModal, onError]);
 
   // 根据支付币种获取支付代币地址
-  const getPaymentTokenAddress = useCallback((paymentCoin: string, chainId: number): string => {
-    const canonicalCoin = toCanonicalPaymentCoin(paymentCoin);
+  const getPaymentTokenAddress = useCallback((paymentCoin: string): string => {
+    const canonicalCoin = mustCanonicalCoin(paymentCoin);
     const parsedCoin = parseCanonicalPaymentCoin(canonicalCoin);
     if (parsedCoin?.namespace === 'eip155') {
       if (parsedCoin.standard === 'native') {
@@ -212,19 +212,6 @@ export function useRwaPurchase({
       if (parsedCoin.standard === 'erc20' && parsedCoin.assetRef) {
         return parsedCoin.assetRef;
       }
-    }
-
-    const upperCoin = paymentCoin.toUpperCase();
-    const tokenSymbol = upperCoin.includes('USDT')
-      ? 'USDT'
-      : upperCoin.includes('USDC')
-        ? 'USDC'
-        : '';
-
-    if (tokenSymbol === 'USDT') {
-      return getContractAddress('USDT', chainId);
-    } else if (tokenSymbol === 'USDC') {
-      return getContractAddress('USDC', chainId);
     }
 
     // ETH 原生支付
@@ -271,8 +258,7 @@ export function useRwaPurchase({
       const listing = orderOpen?.listings?.[0]?.listing;
       const item = orderOpen?.items?.[0];
       const paymentCoin = orderOpen?.pricingCoin || DEFAULT_PAYMENT_COIN;
-      const chainId = getCurrentChainId() ? Number(getCurrentChainId()) : 11155111;
-      const paymentTokenAddress = getPaymentTokenAddress(paymentCoin, chainId);
+      const paymentTokenAddress = getPaymentTokenAddress(paymentCoin);
       const paymentAmount = getPaymentAmount();
 
       // 从后端获取身份地址（buyerAddress 和 vendorAddress 是 Mobazha 系统中的链上统一身份地址）

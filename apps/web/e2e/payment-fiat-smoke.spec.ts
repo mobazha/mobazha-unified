@@ -3,6 +3,7 @@ import { setupMockAuth } from './fixtures/mock-auth';
 import { mockPaymentMethodsAPI } from './fixtures/mock-api-routes';
 
 const MOCK_VENDOR_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
+const ETH_USDT_ASSET_ID = 'crypto:eip155:1:erc20:0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA';
 
 function paymentMethodURL() {
   return `/checkout/payment-method?vendor=${MOCK_VENDOR_PEER_ID}&returnUrl=%2Fcheckout`;
@@ -12,7 +13,7 @@ test.describe('Payment Fiat Smoke', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockAuth(page);
     await mockPaymentMethodsAPI(page, {
-      crypto: ['ETHUSDT'],
+      crypto: [ETH_USDT_ASSET_ID],
       fiat: [{ providerID: 'stripe', status: 'active', accountID: 'acct_stage2_mock' }],
     });
   });
