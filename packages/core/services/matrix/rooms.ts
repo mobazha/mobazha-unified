@@ -254,9 +254,12 @@ export async function setDisplayName(displayName: string): Promise<void> {
   await authPost(NODE_API.CHAT_PRESENCE, { displayName });
 }
 
-export async function syncProfileToMatrix(displayName: string, _avatarUrl?: string): Promise<void> {
+export async function syncProfileToMatrix(displayName: string, avatarHash?: string): Promise<void> {
   try {
-    await setDisplayName(displayName);
+    await authPost(NODE_API.CHAT_PRESENCE, {
+      displayName,
+      avatarHash: avatarHash || undefined,
+    });
   } catch {
     // Profile sync is best-effort
   }

@@ -297,7 +297,6 @@ export const HOSTING_API = {
 
   // --- Matrix (hosting-level, 集中式注册/管理) ---
   MATRIX_CONFIG: '/platform/v1/matrix/config',
-  MATRIX_SYNC_PROFILE: '/platform/v1/matrix/sync-profile',
   MATRIX_PEER_ID: '/platform/v1/matrix/peer-id',
   MATRIX_STORE_CREATE_SPACE: '/platform/v1/matrix/store/spaces',
   MATRIX_STORE_INVITE: '/platform/v1/matrix/store/invite',

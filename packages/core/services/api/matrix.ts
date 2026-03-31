@@ -78,33 +78,6 @@ export async function getMatrixConfig(): Promise<MatrixServerConfig> {
   return handleResponse<MatrixServerConfig>(response);
 }
 
-/**
- * 同步用户资料到 Matrix
- * @param displayName 显示名称
- * @param avatarHash 头像 IPFS hash（可选）
- */
-export async function syncProfileToMatrix(displayName: string, avatarHash?: string): Promise<void> {
-  const hostingUrl = getHostingUrl();
-  const body: { displayName: string; avatarHash?: string } = { displayName };
-  if (avatarHash) {
-    body.avatarHash = avatarHash;
-  }
-
-  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_SYNC_PROFILE}`, {
-    method: 'POST',
-    headers: {
-      ...getAuthHeaders(),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const raw = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(extractErrorMessage(raw));
-  }
-}
-
 // ============= 店铺空间 API =============
 
 export interface StoreSpaceCreateResponse {
