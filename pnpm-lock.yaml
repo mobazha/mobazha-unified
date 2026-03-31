@@ -216,6 +216,9 @@ importers:
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.3)
+      multicoin-address-validator:
+        specifier: ^0.5.26
+        version: 0.5.26
       next:
         specifier: ^16.1.1
         version: 16.1.1(@babel/core@7.28.5)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -4587,6 +4590,12 @@ packages:
         integrity: sha512-xz7wQ8xDhdyP7tQxwdteLYeFfS68tSMNCZ/Y37WJ4bhGfKPpqEIlmIyueQHqOyoPhE6xNUqjzRr8ra0eF9VRvA==,
       }
 
+  base-x@4.0.1:
+    resolution:
+      {
+        integrity: sha512-uAZ8x6r6S3aUM9rbHGVOIsR15U/ZSc82b3ymnCPsT45Gk1DDvhDPdIgB5MrhirZWt+5K0EEPQH985kNqZgNPFw==,
+      }
+
   base-x@5.0.1:
     resolution:
       {
@@ -4700,6 +4709,12 @@ packages:
       }
     engines: { node: '>=8' }
 
+  browserify-bignum@1.3.0-2:
+    resolution:
+      {
+        integrity: sha512-PwVvKC3WIV7ENfsG6VAIDq4R5st6kQt+Fod3WL5l7+MRONClo3J6xGQvRJHHM/ScwcNCH3GfYX5UOCuoNN/rLw==,
+      }
+
   browserslist@4.28.1:
     resolution:
       {
@@ -4747,6 +4762,12 @@ packages:
     engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
     peerDependencies:
       esbuild: '>=0.18'
+
+  bundle@2.1.0:
+    resolution:
+      {
+        integrity: sha512-d7TeT8m2HuymDjSEmMppWe/h5SSPPUZkaWKrAofx6gNXDdZ3FL/81oOTGPG+LIaZbNr9m4rtUi98Yw0Q1vHIIw==,
+      }
 
   cac@6.7.14:
     resolution:
@@ -4801,6 +4822,12 @@ packages:
     resolution:
       {
         integrity: sha512-PxZwGNvH7Ak8WX5iXzoK1KPZttBXNPuaOvI2ZYU7NrlM+d9Ov+TUvlLOBNGzVXAntMSMMlJPd+jY6ovrVjSmUw==,
+      }
+
+  cbor-js@0.1.0:
+    resolution:
+      {
+        integrity: sha512-7sQ/TvDZPl7csT1Sif9G0+MA0I0JOVah8+wWlJVQdVEgIbCzlN/ab3x+uvMNsc34TUvO6osQTAmB2ls80JX6tw==,
       }
 
   ccount@2.0.1:
@@ -5090,6 +5117,18 @@ packages:
       {
         integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==,
       }
+
+  crc@4.3.2:
+    resolution:
+      {
+        integrity: sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A==,
+      }
+    engines: { node: '>=12' }
+    peerDependencies:
+      buffer: '>=6.0.3'
+    peerDependenciesMeta:
+      buffer:
+        optional: true
 
   cross-fetch@3.2.0:
     resolution:
@@ -7040,6 +7079,12 @@ packages:
       }
     engines: { node: '>=0.10.0' }
 
+  js-sha512@0.9.0:
+    resolution:
+      {
+        integrity: sha512-mirki9WS/SUahm+1TbAPkqvbCiCfOAAsyXeHxK1UkullnJVVqoJG2pL9ObvT05CN+tM7fxhfYm0NbXn+1hWoZg==,
+      }
+
   js-tokens@4.0.0:
     resolution:
       {
@@ -7147,6 +7192,12 @@ packages:
     resolution:
       {
         integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==,
+      }
+
+  jssha@3.3.1:
+    resolution:
+      {
+        integrity: sha512-VCMZj12FCFMQYcFLPRm/0lOBbLi8uM2BhXPTqw3U4YAfs4AZfiApOoBLoN8cQE60Z50m1MYMTQVCfgF/KaCVhQ==,
       }
 
   jsx-ast-utils@3.3.5:
@@ -7405,6 +7456,13 @@ packages:
         integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==,
       }
     engines: { node: '>=10' }
+
+  lodash.isequal@4.5.0:
+    resolution:
+      {
+        integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==,
+      }
+    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
 
   lodash.merge@4.6.2:
     resolution:
@@ -7889,6 +7947,13 @@ packages:
       {
         integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==,
       }
+
+  multicoin-address-validator@0.5.26:
+    resolution:
+      {
+        integrity: sha512-WM9Zo7J+eVBa1tgzC/LZwaI1eu+FEwE+8X8KbEIIrb1Ghyi5tK38mzZdVp8PmIypZ1x4BHlNncWGOqvWw2/Cmg==,
+      }
+    engines: { node: '>=12.0.0' }
 
   multiformats@9.9.0:
     resolution:
@@ -14103,6 +14168,8 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
+  base-x@4.0.1: {}
+
   base-x@5.0.1: {}
 
   base64-js@1.5.1: {}
@@ -14165,6 +14232,8 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
+  browserify-bignum@1.3.0-2: {}
+
   browserslist@4.28.1:
     dependencies:
       baseline-browser-mapping: 2.9.11
@@ -14198,6 +14267,8 @@ snapshots:
       esbuild: 0.27.2
       load-tsconfig: 0.2.5
 
+  bundle@2.1.0: {}
+
   cac@6.7.14: {}
 
   call-bind-apply-helpers@1.0.2:
@@ -14224,6 +14295,8 @@ snapshots:
   camelcase@8.0.0: {}
 
   caniuse-lite@1.0.30001762: {}
+
+  cbor-js@0.1.0: {}
 
   ccount@2.0.1: {}
 
@@ -14362,6 +14435,10 @@ snapshots:
   cookie@1.1.1: {}
 
   core-util-is@1.0.3: {}
+
+  crc@4.3.2(buffer@6.0.3):
+    optionalDependencies:
+      buffer: 6.0.3
 
   cross-fetch@3.2.0:
     dependencies:
@@ -15624,6 +15701,8 @@ snapshots:
 
   js-levenshtein@1.1.6: {}
 
+  js-sha512@0.9.0: {}
+
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -15712,6 +15791,8 @@ snapshots:
       universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
+
+  jssha@3.3.1: {}
 
   jsx-ast-utils@3.3.5:
     dependencies:
@@ -15873,6 +15954,8 @@ snapshots:
   locate-path@6.0.0:
     dependencies:
       p-locate: 5.0.0
+
+  lodash.isequal@4.5.0: {}
 
   lodash.merge@4.6.2: {}
 
@@ -16323,6 +16406,18 @@ snapshots:
       ufo: 1.6.1
 
   ms@2.1.3: {}
+
+  multicoin-address-validator@0.5.26:
+    dependencies:
+      base-x: 4.0.1
+      browserify-bignum: 1.3.0-2
+      buffer: 6.0.3
+      bundle: 2.1.0
+      cbor-js: 0.1.0
+      crc: 4.3.2(buffer@6.0.3)
+      js-sha512: 0.9.0
+      jssha: 3.3.1
+      lodash.isequal: 4.5.0
 
   multiformats@9.9.0: {}
 

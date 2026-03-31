@@ -4638,6 +4638,17 @@ export const zh: TranslationResource = {
     invalidEvmAddress: '请输入有效的 EVM 地址（0x 开头，40 位十六进制）',
     invalidSolAddress: '请输入有效的 Solana 地址',
     invalidUtxoAddress: '请输入有效的钱包地址',
+    invalidTronAddress: '请输入有效的 TRON 地址',
+    networkMainnet: '主网',
+    networkTestnet: '测试网',
+    environmentLocked: '当前环境网络固定为 {{network}}',
+    networkLockedHint: '网络由环境统一控制，当前表单不可切换：{{network}}',
+    activeCount: '已启用 {{active}} / {{total}}',
+    networkMismatchNeedMainnet: '地址网络不匹配：当前环境要求主网地址',
+    networkMismatchNeedTestnet: '地址网络不匹配：当前环境要求测试网地址',
+    networkMismatchTitle: '检测到网络不匹配地址',
+    networkMismatchDesc:
+      '有 {{count}} 个地址与当前环境网络（{{network}}）不一致，请尽快修正以避免收款异常。',
   },
   fiat: {
     creditDebitCard: '信用卡 / 借记卡',
