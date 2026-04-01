@@ -2476,6 +2476,7 @@ export interface TranslationResource {
       analytics?: string;
       discounts?: string;
       settings?: string;
+      system?: string;
       storefront?: string;
       viewStore?: string;
       help?: string;
