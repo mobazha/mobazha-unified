@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
-import { isBasicAuthMode } from '@mobazha/core/config/env';
+import { isBasicAuthMode, isStandaloneMode } from '@mobazha/core/config/env';
 import {
   getSystemHealth,
   publishStore,
@@ -60,7 +60,7 @@ export default function SystemPage() {
   const [copiedPeerID, setCopiedPeerID] = useState(false);
 
   const { toast } = useToast();
-  const isAdmin = isBasicAuthMode();
+  const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
   const fetchHealth = useCallback(async () => {
     setLoading(true);
