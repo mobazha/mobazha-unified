@@ -5165,7 +5165,21 @@ export const en: TranslationResource = {
     connectProvider: 'Connect {{provider}}',
     connecting: 'Connecting...',
     onboardingFailed: 'Failed to start connection. Please try again.',
+    continueSetup: 'Continue setup',
+    connectHint: 'Connect to view account status and payment capabilities',
+    modeConnectStandard: 'Connect Standard',
+    modeDirectApi: 'Direct API',
     configureApiKeys: 'Configure API Keys',
+    saveAndVerify: 'Save and verify',
+    verifySuccess: 'Configuration verified. Provider is ready.',
+    verifyFailed: 'Saved, but verification failed. Please check your keys.',
+    directModeHint:
+      'Direct API is for merchants who already have payment technical setup. For faster onboarding, use Connect Standard.',
+    directSetupHint:
+      'Prepare your API key and webhook details before configuring. We recommend creating an app in the provider dashboard first.',
+    directFieldGuide:
+      'Each field includes where to find it in the provider dashboard. We will verify after saving.',
+    openProviderConsole: 'Open {{provider}} developer console',
     disconnect: 'Disconnect',
     saveFailed: 'Failed to save configuration',
     deleteFailed: 'Failed to disconnect',
@@ -5184,6 +5198,10 @@ export const en: TranslationResource = {
     enabled: 'Enabled',
     disabled: 'Disabled',
     pendingRequirements: 'Action needed',
+    manageDetails: 'Manage details',
+    collapseDetails: 'Hide details',
+    modeRecommendation:
+      'Recommended: Connect Standard for most merchants. Use Direct API only if you already manage provider API credentials.',
     manageDashboard: '{{provider}} Dashboard',
     dashboardLoginHint: 'Sign in to {{provider}} with {{email}}',
     payoutInfoTitle: 'How do I get paid?',
@@ -5194,6 +5212,27 @@ export const en: TranslationResource = {
     payoutInfoCrypto:
       'Cryptocurrency payments go directly to your wallet address. No intermediary — you have full control of your funds.',
     payoutInfoLearnMore: 'Learn more',
+    webhookEndpointUrl: 'Webhook Endpoint URL',
+    webhookEndpointHint:
+      'Add this URL in your {{provider}} Webhook settings, then paste the signing secret below.',
+    webhookLocalhostWarning:
+      'Local development URL — not reachable by payment providers. Use a tunnel service (e.g. ngrok) for testing.',
+    webhookAutoConfigured: 'Webhook configured automatically',
+    webhookNeedsSetup: 'Webhook needs configuration',
+    webhookNeedsSetupDesc:
+      'API keys verified. Automatic webhook setup was not successful — please configure manually or retry.',
+    webhookRetryAuto: 'Auto-configure',
+    webhookRetrying: 'Configuring...',
+    webhookRetrySuccess: 'Webhook configured successfully',
+    webhookRetryFailed: 'Auto-configuration failed. Please set up manually.',
+    webhookRequiredEvents: 'Required webhook events',
+    webhookManualHint:
+      'Create a webhook in your {{provider}} dashboard with the URL and events above, then paste the secret below.',
+    webhookSecretSave: 'Save webhook config',
+    webhookManualSetup: 'Manual setup',
+    disconnectConfirmTitle: 'Disconnect {{provider}}?',
+    disconnectConfirmDesc:
+      'After disconnecting, you will no longer be able to accept payments through {{provider}}. Orders already in progress will not be affected.',
   },
   support: {
     documentation: 'Documentation',

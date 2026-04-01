@@ -231,6 +231,8 @@ export const NODE_API = {
   FIAT_REFUND_PAYMENT: (provider: string, paymentID: string) =>
     `/fiat/${provider}/payments/${paymentID}/refund`,
   FIAT_PROVIDER_CONFIG: (provider: string) => `/fiat/${provider}/config`,
+  FIAT_PROVIDER_VERIFY: (provider: string) => `/fiat/${provider}/verify`,
+  FIAT_SETUP_WEBHOOK: (provider: string) => `/fiat/${provider}/setup-webhook`,
 
   // --- Storefront (PG-201) ---
   SETTINGS_STOREFRONT: '/settings/storefront',

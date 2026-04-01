@@ -76,15 +76,21 @@ export interface FiatProviderConfigView {
   providerID: string;
   accountID?: string;
   publicKey?: string;
-  maskedSecretKey?: string;
-  maskedWebhookSecret?: string;
+  secretKey?: string;
+  webhookSecret?: string;
   isActive: boolean;
+  webhookAutoConfigured?: boolean;
+}
+
+export interface WebhookSetupResult {
+  webhookID: string;
+  webhookSecret: string;
 }
 
 export interface FiatProviderConfigInput {
   providerID: string;
   secretKey: string;
-  publishableKey: string;
+  publicKey: string;
   webhookSecret: string;
 }
 

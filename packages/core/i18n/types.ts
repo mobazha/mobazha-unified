@@ -3441,14 +3441,25 @@ export interface TranslationResource {
 
   fiat?: {
     connectProvider?: string;
+    connectHint?: string;
     connecting?: string;
+    continueSetup?: string;
     onboardingFailed?: string;
+    modeConnectStandard?: string;
+    modeDirectApi?: string;
     cryptoBadge?: string;
     creditDebitCard?: string;
     paypal?: string;
     notConnected?: string;
     cryptoSection?: string;
     configureApiKeys?: string;
+    saveAndVerify?: string;
+    verifySuccess?: string;
+    verifyFailed?: string;
+    directModeHint?: string;
+    directSetupHint?: string;
+    directFieldGuide?: string;
+    openProviderConsole?: string;
     disconnect?: string;
     saveFailed?: string;
     orPayWithCrypto?: string;
@@ -3482,6 +3493,9 @@ export interface TranslationResource {
     enabled?: string;
     disabled?: string;
     pendingRequirements?: string;
+    manageDetails?: string;
+    collapseDetails?: string;
+    modeRecommendation?: string;
     manageDashboard?: string;
     dashboardLoginHint?: string;
     payoutInfoTitle?: string;
@@ -3489,6 +3503,22 @@ export interface TranslationResource {
     payoutInfoPaypal?: string;
     payoutInfoCrypto?: string;
     payoutInfoLearnMore?: string;
+    webhookEndpointUrl?: string;
+    webhookEndpointHint?: string;
+    webhookLocalhostWarning?: string;
+    webhookAutoConfigured?: string;
+    webhookNeedsSetup?: string;
+    webhookNeedsSetupDesc?: string;
+    webhookRetryAuto?: string;
+    webhookRetrying?: string;
+    webhookRetrySuccess?: string;
+    webhookRetryFailed?: string;
+    webhookRequiredEvents?: string;
+    webhookManualHint?: string;
+    webhookSecretSave?: string;
+    webhookManualSetup?: string;
+    disconnectConfirmTitle?: string;
+    disconnectConfirmDesc?: string;
     rateUpdated?: string;
   };
 

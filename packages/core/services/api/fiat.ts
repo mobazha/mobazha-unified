@@ -32,6 +32,7 @@ import type {
   CreateFiatPaymentParams,
   FiatRefundParams,
   FiatRefundResult,
+  WebhookSetupResult,
 } from '../../types/fiat';
 
 // ========== Buyer-facing ==========
@@ -101,12 +102,23 @@ export async function getConfig(): Promise<FiatProviderConfigView[]> {
     .map(r => r.value);
 }
 
-export async function saveConfig(provider: string, input: FiatProviderConfigInput): Promise<void> {
-  await authPut<null>(NODE_API.FIAT_PROVIDER_CONFIG(provider), input);
+export async function saveConfig(
+  provider: string,
+  input: FiatProviderConfigInput
+): Promise<FiatProviderConfigView> {
+  return authPut<FiatProviderConfigView>(NODE_API.FIAT_PROVIDER_CONFIG(provider), input);
 }
 
 export async function deleteConfig(provider: string): Promise<void> {
   await authDel<null>(NODE_API.FIAT_PROVIDER_CONFIG(provider));
+}
+
+export async function verifyConfig(provider: string): Promise<void> {
+  await authPost<{ verified: boolean }>(NODE_API.FIAT_PROVIDER_VERIFY(provider), {});
+}
+
+export async function setupWebhook(provider: string): Promise<WebhookSetupResult> {
+  return authPost<WebhookSetupResult>(NODE_API.FIAT_SETUP_WEBHOOK(provider), {});
 }
 
 // ========== SaaS onboarding ==========
