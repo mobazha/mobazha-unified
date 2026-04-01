@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
+  Server,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -30,7 +31,7 @@ interface NavItem {
   badge?: number;
 }
 
-const navItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
@@ -50,6 +51,15 @@ const navItems: NavItem[] = [
   { id: 'analytics', labelKey: 'admin.nav.analytics', href: '/admin/analytics', icon: BarChart3 },
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
 ];
+
+const standaloneNavItems: NavItem[] = [
+  ...baseNavItems,
+  { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
+];
+
+function getNavItems(): NavItem[] {
+  return isStandalone() ? standaloneNavItems : baseNavItems;
+}
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -103,7 +113,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-        {navItems.map(item => {
+        {getNavItems().map(item => {
           const Icon = item.icon;
           const active = isActive(item.href);
           return (
