@@ -683,6 +683,7 @@ export default function PaymentPage() {
             ...pd,
             transactionID: txHash,
             timestamp: new Date().toISOString(),
+            ...(txResult.blockNumber ? { blockHeight: txResult.blockNumber } : {}),
           };
           await ordersApi.submitPayment(submitData);
         }
