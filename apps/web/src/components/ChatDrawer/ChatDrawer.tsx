@@ -154,6 +154,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     setVerificationLoading(false);
   }, []);
 
+  const getVerificationErrorMessage = useCallback(
+    (err: unknown): string => {
+      if (err instanceof Error) {
+        const msg = err.message.trim();
+        if (msg && msg !== 'VERIFICATION_UNAVAILABLE') return msg;
+      }
+      return t('matrix.verification.unavailable');
+    },
+    [t]
+  );
+
   // ---- Store selectors ----
   const drawerOpen = useChatStore(state => state.drawerOpen);
   const drawerExpanded = useChatStore(state => state.drawerExpanded);
@@ -574,32 +585,47 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     try {
       await matrixClient.acceptVerificationRequest(verificationTxnId);
       setVerificationPhase('waiting');
-    } catch {
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: getVerificationErrorMessage(err),
+      });
       setVerificationPhase('cancelled');
       setTimeout(resetVerification, 2000);
     } finally {
       setVerificationLoading(false);
     }
-  }, [verificationTxnId, resetVerification]);
+  }, [verificationTxnId, toast, t, getVerificationErrorMessage, resetVerification]);
 
   const handleVerificationConfirm = useCallback(async () => {
     if (!verificationTxnId) return;
     setVerificationLoading(true);
     try {
       await matrixClient.confirmVerification(verificationTxnId);
-    } catch {
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: getVerificationErrorMessage(err),
+      });
       setVerificationPhase('cancelled');
       setTimeout(resetVerification, 2000);
     } finally {
       setVerificationLoading(false);
     }
-  }, [verificationTxnId, resetVerification]);
+  }, [verificationTxnId, toast, t, getVerificationErrorMessage, resetVerification]);
 
   const handleVerificationCancel = useCallback(async () => {
     if (!verificationTxnId) return;
-    await matrixClient.cancelVerification(verificationTxnId);
+    try {
+      await matrixClient.cancelVerification(verificationTxnId);
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: getVerificationErrorMessage(err),
+      });
+    }
     resetVerification();
-  }, [verificationTxnId, resetVerification]);
+  }, [verificationTxnId, toast, t, getVerificationErrorMessage, resetVerification]);
 
   // ---- Render helpers ----
   const drawerWidth = drawerExpanded ? 'w-full md:w-[600px]' : 'w-full md:w-[400px]';

@@ -193,6 +193,8 @@ export interface ChatStatusResponse {
   deviceId?: string;
   serverName?: string;
   syncRunning: boolean;
+  verificationAvailable?: boolean;
+  verificationReason?: string;
 }
 
 /** Backend room from GET /v1/chat/rooms */

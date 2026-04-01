@@ -504,7 +504,15 @@ export function useChatEffects(params: UseChatEffectsParams): void {
       const data = raw as { transactionId?: string };
       if (!data?.transactionId) return;
       setVerificationPhase('waiting');
-      matrixClient.startSAS(data.transactionId).catch(() => {});
+      matrixClient.startSAS(data.transactionId).catch(err => {
+        const msg = err instanceof Error ? err.message.trim() : '';
+        const description =
+          msg && msg !== 'VERIFICATION_UNAVAILABLE' ? msg : t('matrix.verification.unavailable');
+        toast({
+          title: t('common.error'),
+          description,
+        });
+      });
     });
 
     // Backend sends: { transactionId, emojis: [{emoji, description}, ...], decimals }
@@ -545,5 +553,7 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     setVerificationUserId,
     setVerificationTxnId,
     setVerificationEmoji,
+    toast,
+    t,
   ]);
 }

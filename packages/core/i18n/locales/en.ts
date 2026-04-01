@@ -1439,6 +1439,9 @@ export const en: TranslationResource = {
 
   // Matrix room events
   matrix: {
+    verification: {
+      unavailable: 'User verification is currently unavailable',
+    },
     events: {
       join: '{{name}} joined the chat',
       left: '{{name}} left the chat',

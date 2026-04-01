@@ -32,6 +32,8 @@ class MatrixClientService {
   private _currentPeerID: string | null = null;
   private _userId: string | null = null;
   private _serverName: string | null = null;
+  private _verificationAvailable = false;
+  private _verificationReason: string | null = null;
   private _invitePolicy: InvitePolicy = 'auto_mobazha';
   private _initPromise: Promise<boolean> | null = null;
   private _wsCleanup: (() => void) | null = null;
@@ -59,6 +61,10 @@ class MatrixClientService {
   private async _doInit(peerID: string): Promise<boolean> {
     try {
       const status = await authGet<ChatStatusResponse>(NODE_API.CHAT_STATUS);
+      const verificationAvailable =
+        status?.verificationAvailable ?? Boolean(status?.connected && status?.syncRunning);
+      this._verificationAvailable = verificationAvailable;
+      this._verificationReason = status?.verificationReason || null;
       if (!status?.connected && !status?.syncRunning) {
         console.warn('[Chat] Backend chat service not ready');
         this._currentPeerID = peerID;
@@ -77,6 +83,8 @@ class MatrixClientService {
       const isRateLimited =
         error instanceof Error &&
         (error.message.includes('429') || error.message.includes('RATE_LIMITED'));
+      this._verificationAvailable = false;
+      this._verificationReason = null;
       if (isRateLimited) {
         console.warn('[Chat] Rate limited during init, will retry later');
       } else {
@@ -113,6 +121,8 @@ class MatrixClientService {
     this._currentPeerID = null;
     this._userId = null;
     this._serverName = null;
+    this._verificationAvailable = false;
+    this._verificationReason = null;
     this._processedMessageIds.clear();
     msgModule.resetPaginationState();
     matrixEvents.emit(MATRIX_EVENTS.DISCONNECTED);
@@ -155,6 +165,20 @@ class MatrixClientService {
 
   getDeviceId(): string | null {
     return null;
+  }
+
+  getVerificationStatus(): { available: boolean; reason?: string } {
+    if (this._verificationAvailable) {
+      return { available: true };
+    }
+    const reason = this._verificationReason?.trim();
+    return reason ? { available: false, reason } : { available: false };
+  }
+
+  private ensureVerificationAvailable(): void {
+    if (this._verificationAvailable) return;
+    const reason = this._verificationReason?.trim();
+    throw new Error(reason || 'VERIFICATION_UNAVAILABLE');
   }
 
   // ============= Messages (delegated) =============
@@ -367,18 +391,23 @@ class MatrixClientService {
     await verificationModule.setupVerificationListeners();
   }
   async requestVerification(userId: string): Promise<string> {
+    this.ensureVerificationAvailable();
     return verificationModule.requestVerification(userId);
   }
   async acceptVerificationRequest(txnId: string): Promise<boolean> {
+    this.ensureVerificationAvailable();
     return verificationModule.acceptVerificationRequest(txnId);
   }
   async confirmVerification(txnId: string): Promise<boolean> {
+    this.ensureVerificationAvailable();
     return verificationModule.confirmVerification(txnId);
   }
   async startSAS(txnId: string): Promise<void> {
+    this.ensureVerificationAvailable();
     return verificationModule.startSAS(txnId);
   }
   async cancelVerification(txnId: string): Promise<boolean> {
+    this.ensureVerificationAvailable();
     return verificationModule.cancelVerification(txnId);
   }
   async isUserVerified(_userId: string): Promise<boolean> {
