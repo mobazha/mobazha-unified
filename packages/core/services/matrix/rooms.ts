@@ -23,8 +23,13 @@ const pendingDirectRoomCreates = new Map<string, Promise<string | null>>();
 
 export async function getRooms(currentUserId?: string | null): Promise<MatrixRoom[]> {
   const backendRooms = await authGet<BackendRoom[]>(NODE_API.CHAT_ROOMS);
-  const rooms = (backendRooms || []).map(convertRoom);
+  const rooms = (backendRooms || []).map(r => convertRoom(r, 'join'));
   return enrichDirectRoomsWithProfiles(rooms, currentUserId);
+}
+
+export async function getInvitedRooms(): Promise<MatrixRoom[]> {
+  const backendRooms = await authGet<BackendRoom[]>(NODE_API.CHAT_INVITES);
+  return (backendRooms || []).map(r => convertRoom(r, 'invite'));
 }
 
 export async function getRoomsByType(type: RoomType): Promise<MatrixRoom[]> {
@@ -412,7 +417,13 @@ async function enrichDirectRoomsWithProfiles(
   });
 }
 
-function convertRoom(r: BackendRoom): MatrixRoom {
+function extractInviter(members?: BackendMember[]): string | undefined {
+  if (!members) return undefined;
+  const inviterMember = members.find(m => m.membership === 'join' || m.membership === 'invite');
+  return inviterMember?.displayName || inviterMember?.userId;
+}
+
+function convertRoom(r: BackendRoom, membership: 'join' | 'invite' = 'join'): MatrixRoom {
   const members: MatrixUser[] = (r.members || []).map(convertMember);
   const memberPeerIDs: Record<string, string> = {};
   for (const m of members) {
@@ -421,6 +432,8 @@ function convertRoom(r: BackendRoom): MatrixRoom {
       memberPeerIDs[m.userId] = pid;
     }
   }
+
+  const inviter = membership === 'invite' ? extractInviter(r.members) : undefined;
 
   const room: MatrixRoom = {
     roomId: r.roomId,
@@ -432,7 +445,8 @@ function convertRoom(r: BackendRoom): MatrixRoom {
     isEncrypted: r.encrypted,
     unreadCount: r.unreadCount || 0,
     members,
-    membership: 'join',
+    membership,
+    inviter,
     roomType: (r.roomType as MatrixRoom['roomType']) || (r.isDirect ? 'direct' : 'group'),
     memberPeerIDs,
     metadata: r.metadata ? { ...r.metadata } : undefined,

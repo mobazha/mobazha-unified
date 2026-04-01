@@ -482,7 +482,24 @@ export function useChatEffects(params: UseChatEffectsParams): void {
     };
   }, []);
 
-  // ---- 7. Verification Matrix event listeners ----
+  // ---- 7. Invite toast notification ----
+  useEffect(() => {
+    const handleInviteToast = (data: unknown) => {
+      const payload = data as { roomId?: string; inviter?: string };
+      if (!payload?.roomId) return;
+      toast({
+        title: t('chat.newInvite'),
+        description: payload.inviter || '',
+      });
+    };
+
+    const unsub = matrixEvents.on(MATRIX_EVENTS.ROOM_INVITE, handleInviteToast);
+    return () => {
+      unsub();
+    };
+  }, [toast, t]);
+
+  // ---- 8. Verification Matrix event listeners ----
   useEffect(() => {
     let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 

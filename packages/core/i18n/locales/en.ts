@@ -1397,6 +1397,11 @@ export const en: TranslationResource = {
     invitedYou: 'Invited you to chat',
     inviteConfirm: 'Invitation',
     invitedBy: 'Invited by {{name}}',
+    accept: 'Accept',
+    decline: 'Decline',
+    newInvite: 'New chat invitation',
+    acceptFailed: 'Failed to accept invitation',
+    declineFailed: 'Failed to decline invitation',
     // Room settings
     roomSettings: 'Room Settings',
     roomId: 'Room ID',

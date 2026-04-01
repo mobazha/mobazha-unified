@@ -13,19 +13,6 @@ import { MATRIX_EVENTS } from '../services/matrix/types';
 import type { MatrixMessage, MatrixRoom } from '../services/matrix/types';
 import { isMatrixEnabled } from '../config';
 
-function splitRoomsAndInvites(allRooms: MatrixRoom[]) {
-  const rooms: MatrixRoom[] = [];
-  const invites: MatrixRoom[] = [];
-  for (const room of allRooms) {
-    if (room.membership === 'invite') {
-      invites.push(room);
-    } else {
-      rooms.push(room);
-    }
-  }
-  return { rooms, invites };
-}
-
 export interface UseMatrixInitOptions {
   /** 是否启用 Matrix */
   enabled?: boolean;
@@ -121,14 +108,16 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
       // Load rooms BEFORE starting WS listener to avoid race between
       // backend unreadCount and WS chat.message events for the same messages.
-      const allRooms = await matrixClient.getRooms();
-      const { rooms, invites } = splitRoomsAndInvites(allRooms);
+      const [rooms, invitedRooms] = await Promise.all([
+        matrixClient.getRooms(),
+        matrixClient.getInvitedRooms(),
+      ]);
 
       // Pre-seed processedMessageIds so duplicate WS events are filtered out
-      matrixClient.seedProcessedIds(allRooms);
+      matrixClient.seedProcessedIds(rooms);
 
       setRooms(rooms);
-      setInvites(invites);
+      setInvites(invitedRooms);
 
       // NOW register the WS event listener — only genuinely new messages
       // will trigger onMessageReceived from this point forward.
@@ -242,10 +231,8 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       if (!existingRoom) {
         matrixClient
           .getRooms()
-          .then(allRooms => {
-            const { rooms, invites } = splitRoomsAndInvites(allRooms);
+          .then(rooms => {
             setRooms(rooms);
-            setInvites(invites);
           })
           .catch(err => {
             console.warn('[Matrix] Failed to refresh room list for incoming message:', err);
@@ -312,10 +299,16 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
 
     // 房间事件
     const onRoomJoined = async () => {
-      const allRooms = await matrixClient.getRooms();
-      const { rooms, invites } = splitRoomsAndInvites(allRooms);
-      setRooms(rooms);
-      setInvites(invites);
+      try {
+        const [rooms, invitedRooms] = await Promise.all([
+          matrixClient.getRooms(),
+          matrixClient.getInvitedRooms(),
+        ]);
+        setRooms(rooms);
+        setInvites(invitedRooms);
+      } catch (err) {
+        console.warn('[Matrix] Failed to refresh rooms after join:', err);
+      }
     };
 
     const onRoomLeft = (data: unknown) => {
@@ -324,10 +317,12 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
     };
 
     const onRoomInvite = async () => {
-      const allRooms = await matrixClient.getRooms();
-      const { rooms, invites } = splitRoomsAndInvites(allRooms);
-      setRooms(rooms);
-      setInvites(invites);
+      try {
+        const invitedRooms = await matrixClient.getInvitedRooms();
+        setInvites(invitedRooms);
+      } catch (err) {
+        console.warn('[Matrix] Failed to refresh invite list:', err);
+      }
     };
 
     // 输入状态

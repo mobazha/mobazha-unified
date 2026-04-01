@@ -163,6 +163,7 @@ export const NODE_API = {
   CHAT_VERIFICATION_CANCEL: (txnId: string) => `/chat/verification/${txnId}/cancel`,
   CHAT_STATUS: '/chat/status',
   CHAT_ROOMS: '/chat/rooms',
+  CHAT_INVITES: '/chat/invites',
   CHAT_ROOM_JOIN: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/join`,
   CHAT_ROOM_LEAVE: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/leave`,
   CHAT_ROOM_MESSAGES: (roomId: string) => `/chat/rooms/${encodeURIComponent(roomId)}/messages`,
