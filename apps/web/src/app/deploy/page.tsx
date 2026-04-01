@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useAuthGuard } from '@mobazha/core';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Server,
   Globe,
@@ -29,6 +30,7 @@ import {
   MemoryStick,
   MonitorSmartphone,
   Network,
+  LogIn,
 } from 'lucide-react';
 import {
   prepareDeploy,
@@ -55,6 +57,9 @@ const STAGE_ORDER = [
 export default function DeployWizardPage() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, isSessionRestored, shouldRedirect } = useAuthGuard(pathname);
 
   const [step, setStep] = useState<Step>(0);
 
@@ -131,7 +136,6 @@ export default function DeployWizardPage() {
       const res = await prepareDeploy({
         domainType,
         domain: getDomain(),
-        serverIP,
         adminPassword,
         connectivity: domainType === 'overlay' ? 'overlay' : 'public',
         ...(domainType === 'overlay' && { overlayType: overlayNetwork }),
@@ -147,7 +151,7 @@ export default function DeployWizardPage() {
     } finally {
       setPreparing(false);
     }
-  }, [domainType, getDomain, serverIP, adminPassword, overlayNetwork, toast, t]);
+  }, [domainType, getDomain, adminPassword, overlayNetwork, toast, t]);
 
   const handleCopy = useCallback(async () => {
     if (!deployResult) return;
@@ -253,6 +257,35 @@ export default function DeployWizardPage() {
     t('deploy.steps.progress'),
     t('deploy.steps.done'),
   ];
+
+  if (!isSessionRestored) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (shouldRedirect || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 rounded-full bg-muted/80 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">{t('deploy.auth.title')}</h2>
+          <p className="text-sm text-muted-foreground mb-6">{t('deploy.auth.description')}</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            {t('deploy.auth.login')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

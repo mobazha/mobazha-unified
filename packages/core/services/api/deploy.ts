@@ -5,7 +5,6 @@ import { getHostingUrl } from './config';
 export interface DeployPrepareRequest {
   domainType: 'subdomain' | 'custom' | 'ip' | 'overlay';
   domain: string;
-  serverIP: string;
   adminPassword: string;
   connectivity: 'public' | 'nat' | 'tunnel' | 'overlay';
   overlayType?: 'lokinet' | 'tor';

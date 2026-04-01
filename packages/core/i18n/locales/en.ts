@@ -5273,6 +5273,12 @@ export const en: TranslationResource = {
   deploy: {
     title: 'Deploy Your Store',
     subtitle: 'Launch your own independent store on your VPS in minutes',
+    auth: {
+      title: 'Sign In Required',
+      description:
+        'You need to sign in to your Mobazha account before deploying a standalone store. Your store will be linked to your account for management.',
+      login: 'Sign In',
+    },
     steps: {
       vps: 'Get a VPS',
       domain: 'Choose Domain',
@@ -5284,12 +5290,12 @@ export const en: TranslationResource = {
     vps: {
       title: 'Get a VPS Server',
       subtitle: 'Choose a cloud provider and create a server with these minimum specs',
-      minSpecs: 'Minimum: 1 CPU, 1 GB RAM, 20 GB Disk, Ubuntu 22.04+',
+      minSpecs: 'Minimum: 1 CPU, 1 GB RAM, 20 GB Disk, Ubuntu 22.04+ or Debian 11+',
       minSpecsDetail: {
         cpu: '1 vCPU (any architecture)',
         ram: '1 GB RAM minimum (2 GB recommended)',
         disk: '20 GB SSD storage',
-        os: 'Ubuntu 22.04 LTS or newer',
+        os: 'Ubuntu 22.04+ or Debian 11+ (any Docker-compatible Linux)',
         network: 'Public IPv4 address with SSH access',
       },
       showSpecs: 'View minimum requirements',
@@ -5305,7 +5311,7 @@ export const en: TranslationResource = {
         step1: 'Sign up at vultr.com and add a payment method',
         step2: 'Click "Deploy New Server" → choose "Cloud Compute - Shared CPU"',
         step3: 'Select the closest region to your target audience',
-        step4: 'Choose "Ubuntu 22.04 LTS" as the operating system',
+        step4: 'Choose "Ubuntu 22.04 LTS" or "Debian 12" as the operating system',
         step5: 'Select the $6/mo plan (1 vCPU, 1 GB RAM, 25 GB SSD)',
         step6: 'Add an SSH key (recommended) or use password authentication',
         step7: 'Click "Deploy Now" and wait 1-2 minutes for the server to start',
@@ -5315,7 +5321,7 @@ export const en: TranslationResource = {
         step1: 'Sign up at digitalocean.com and add a payment method',
         step2: 'Click "Create" → "Droplets"',
         step3: 'Select the closest datacenter region',
-        step4: 'Choose "Ubuntu 22.04 (LTS) x64" as the image',
+        step4: 'Choose "Ubuntu 22.04 (LTS) x64" or "Debian 12 x64" as the image',
         step5: 'Select the $6/mo plan (1 vCPU, 1 GB RAM, 25 GB SSD)',
         step6: 'Choose SSH key authentication (recommended) or password',
         step7: 'Click "Create Droplet" and wait for it to be ready',
@@ -5325,7 +5331,7 @@ export const en: TranslationResource = {
         step1: 'Sign up at hetzner.com/cloud and verify your account',
         step2: 'Go to Cloud Console → click "Add Server"',
         step3: 'Select a location (Nuremberg, Falkenstein, Helsinki, or Ashburn)',
-        step4: 'Choose "Ubuntu 22.04" as the image',
+        step4: 'Choose "Ubuntu 22.04" or "Debian 12" as the image',
         step5: 'Select CX22 plan (2 vCPU, 4 GB RAM) starting at ~€4/mo',
         step6: 'Add an SSH key for secure access',
         step7: 'Click "Create & Buy" to provision the server',
