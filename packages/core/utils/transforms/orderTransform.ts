@@ -20,7 +20,12 @@ import type {
   TransformOrderOptions,
 } from '../../types/orderDisplay';
 import { getImageUrl } from '../../services/api/config';
-import { formatTokenAmount, getTokenByPaymentCoin } from '../../data/tokens';
+import {
+  formatTokenAmount,
+  getTokenByPaymentCoin,
+  getPaymentCoinDisplayLabel,
+  resolveTokenIdForDisplay,
+} from '../../data/tokens';
 import { formatUserName } from '../identity';
 
 // ============ Internal Types ============
@@ -769,7 +774,7 @@ export function transformCoreOrder(
     items: orderItems, // items[].price 使用 listing 定价货币, items[].currency = listingCurrencyCode
     // total：实际支付金额（支付币种，用于订单列表等场景）
     total: formattedPaymentAmount,
-    currency: paymentCoin,
+    currency: getPaymentCoinDisplayLabel(paymentCoin),
     // 定价总额（listing 货币，用于订单详情概要「总计」）
     pricingAmount: formattedPricingAmount,
     pricingCurrency: listingCurrencyCode,

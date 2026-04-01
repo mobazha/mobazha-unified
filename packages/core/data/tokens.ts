@@ -768,6 +768,60 @@ export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefi
 }
 
 /**
+ * Returns a user-friendly display label for a payment coin.
+ * Resolves canonical asset IDs (e.g., "crypto:eip155:1:native") to
+ * human-readable token symbols (e.g., "ETH").
+ * Falls back to chain name for unknown tokens, or the raw input as last resort.
+ */
+export function getPaymentCoinDisplayLabel(coin: string): string {
+  if (!coin) return '';
+
+  const token = getTokenByPaymentCoin(coin);
+  if (token) {
+    return token.token;
+  }
+
+  const parsed = parseCanonicalPaymentCoin(coin);
+  if (parsed) {
+    if (parsed.namespace === 'eip155') {
+      const evmChainID = Number(parsed.chainRef);
+      if (!Number.isNaN(evmChainID)) {
+        const chain = getChainByEVMId(evmChainID);
+        if (chain) {
+          return parsed.standard === 'native' ? chain.name : coin;
+        }
+      }
+    }
+    if (parsed.namespace === 'solana' && parsed.standard === 'native') return 'SOL';
+    if (parsed.namespace === 'tron' && parsed.standard === 'native') return 'TRX';
+    if (parsed.namespace === 'bip122') {
+      const chainId = BIP122_CHAIN_REF_TO_CHAIN[parsed.chainRef];
+      if (chainId) return chainId;
+    }
+    if (parsed.namespace === 'bitcoincash') return 'BCH';
+    if (parsed.namespace === 'zcash') return 'ZEC';
+  }
+
+  if (coin.toLowerCase().startsWith('fiat:')) {
+    const parts = coin.split(':');
+    return parts.length >= 2 ? parts[1].toUpperCase() : coin;
+  }
+
+  return coin;
+}
+
+/**
+ * Resolves a payment coin (canonical or token ID) to a token ID suitable
+ * for TokenIcon and other UI components.
+ * Returns the token ID (e.g., "ETH") if found, otherwise the input as-is.
+ */
+export function resolveTokenIdForDisplay(coin: string): string {
+  if (!coin) return '';
+  const tokenId = getTokenIdFromPaymentCoin(coin);
+  return tokenId || coin;
+}
+
+/**
  * 获取智能小数位数（参考币安/OKX等主流交易所的显示规则）
  *
  * 规则：
