@@ -5,7 +5,7 @@
  *          mobazha3.0/internal/api/system_admin_handlers.go
  */
 
-import { publicGet, publicPost, authGet, authPost, authDel } from './helpers';
+import { publicGet, publicPost, authGet } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
 // --- Setup types ---
@@ -72,12 +72,4 @@ export async function getSystemHealth(): Promise<SystemHealthResponse> {
 
 export async function getSystemLogs(): Promise<string> {
   return authGet<string>(NODE_API.SYSTEM_LOGS);
-}
-
-export async function publishStore(): Promise<void> {
-  await authPost(NODE_API.SYSTEM_PUBLISH, {});
-}
-
-export async function purgeCache(): Promise<void> {
-  await authDel(NODE_API.SYSTEM_CACHE);
 }

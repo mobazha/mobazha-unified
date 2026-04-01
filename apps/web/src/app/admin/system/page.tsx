@@ -3,12 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { isBasicAuthMode, isStandaloneMode } from '@mobazha/core/config/env';
-import {
-  getSystemHealth,
-  publishStore,
-  purgeCache,
-  type SystemHealthResponse,
-} from '@mobazha/core/services/api/system';
+import { getSystemHealth, type SystemHealthResponse } from '@mobazha/core/services/api/system';
 import {
   Server,
   Cpu,
@@ -16,8 +11,6 @@ import {
   MemoryStick,
   Activity,
   RefreshCw,
-  Upload,
-  Trash2,
   FileDown,
   AlertCircle,
   CheckCircle2,
@@ -26,7 +19,6 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 
 function formatUptime(seconds: number, t: (key: string) => string): string {
   const days = Math.floor(seconds / 86400);
@@ -55,11 +47,8 @@ export default function SystemPage() {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [publishing, setPublishing] = useState(false);
-  const [purging, setPurging] = useState(false);
   const [copiedPeerID, setCopiedPeerID] = useState(false);
 
-  const { toast } = useToast();
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
   const fetchHealth = useCallback(async () => {
@@ -82,30 +71,6 @@ export default function SystemPage() {
       return () => clearInterval(interval);
     }
   }, [isAdmin, fetchHealth]);
-
-  const handlePublish = async () => {
-    setPublishing(true);
-    try {
-      await publishStore();
-      toast({ description: t('system.actions.publishSuccess') });
-    } catch {
-      toast({ description: t('system.error'), variant: 'destructive' });
-    } finally {
-      setPublishing(false);
-    }
-  };
-
-  const handlePurgeCache = async () => {
-    setPurging(true);
-    try {
-      await purgeCache();
-      toast({ description: t('system.actions.purgeSuccess') });
-    } catch {
-      toast({ description: t('system.error'), variant: 'destructive' });
-    } finally {
-      setPurging(false);
-    }
-  };
 
   const handleCopyPeerID = async () => {
     if (health?.node.peerID) {
@@ -277,44 +242,6 @@ export default function SystemPage() {
           {t('system.actions.title')}
         </h2>
         <div className="space-y-3">
-          <button
-            onClick={handlePublish}
-            disabled={publishing}
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
-          >
-            {publishing ? (
-              <Loader2 className="w-5 h-5 text-primary animate-spin" />
-            ) : (
-              <Upload className="w-5 h-5 text-primary" />
-            )}
-            <div className="text-left">
-              <div className="font-medium text-foreground text-sm">
-                {publishing ? t('system.actions.publishing') : t('system.actions.publish')}
-              </div>
-              <div className="text-xs text-muted-foreground">{t('system.actions.publishDesc')}</div>
-            </div>
-          </button>
-
-          <button
-            onClick={handlePurgeCache}
-            disabled={purging}
-            className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
-          >
-            {purging ? (
-              <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
-            ) : (
-              <Trash2 className="w-5 h-5 text-orange-500" />
-            )}
-            <div className="text-left">
-              <div className="font-medium text-foreground text-sm">
-                {purging ? t('system.actions.purging') : t('system.actions.purgeCache')}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {t('system.actions.purgeCacheDesc')}
-              </div>
-            </div>
-          </button>
-
           <a
             href={`${window.location.origin}/v1/system/logs`}
             target="_blank"
