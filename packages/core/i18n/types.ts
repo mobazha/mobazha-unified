@@ -3562,6 +3562,10 @@ export interface TranslationResource {
   about?: {
     intro?: string;
   };
+
+  deploy?: TranslationSection;
+
+  system?: TranslationSection;
 }
 
 // i18n 上下文类型
