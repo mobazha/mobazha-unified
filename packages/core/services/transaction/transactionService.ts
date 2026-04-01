@@ -340,7 +340,7 @@ export class UnifiedTransactionService {
 
       if (receipt && isSuccess) {
         console.log('✅ 交易执行成功');
-        return { success: true, transactionHash: txHash };
+        return { success: true, transactionHash: txHash, blockNumber: receipt.blockNumber };
       } else {
         console.log('❌ 交易执行失败');
         return { success: false, error: '交易执行失败' };

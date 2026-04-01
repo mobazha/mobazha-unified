@@ -129,7 +129,11 @@ export class SolanaPaymentExecutor implements ChainPaymentExecutor {
         };
       }
 
-      return { success: true, transactionHash: signature };
+      return {
+        success: true,
+        transactionHash: signature,
+        blockNumber: status.value?.slot ?? undefined,
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { success: false, error: `Solana transaction failed: ${message}` };

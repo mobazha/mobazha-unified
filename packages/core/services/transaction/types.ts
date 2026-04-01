@@ -32,6 +32,8 @@ export interface TransactionData {
 export interface TxExecutionResult {
   success: boolean;
   transactionHash?: string;
+  /** Block number in which the transaction was mined (EVM/SOL) */
+  blockNumber?: number;
   error?: string;
 }
 
