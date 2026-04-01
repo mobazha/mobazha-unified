@@ -30,6 +30,8 @@ export interface ErrorEnvelope {
 export interface ApiErrorDetail {
   code: ApiErrorCode;
   message: string;
+  detail?: string;
+  traceID?: string;
   details?: FieldError[];
 }
 
@@ -47,7 +49,8 @@ export type ApiErrorCode =
   | 'CONFLICT'
   | 'INTERNAL_ERROR'
   | 'SERVICE_UNAVAILABLE'
-  | 'RATE_LIMITED';
+  | 'RATE_LIMITED'
+  | 'PROVIDER_ERROR';
 
 /**
  * @deprecated Use DataEnvelope<T> instead. Kept for backward compatibility during migration.

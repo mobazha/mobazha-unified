@@ -18,6 +18,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ErrorAlert } from '@/components/ui/error-alert';
+import { ApiError } from '@mobazha/core/services/api/client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -348,12 +350,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   const [showSecrets, setShowSecrets] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string>();
+  const [errorMsg, setErrorMsg] = useState<string | ApiError>();
   const [verifyMsg, setVerifyMsg] = useState<string>();
   const [verifyOK, setVerifyOK] = useState<boolean | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [webhookRetrying, setWebhookRetrying] = useState(false);
-  const [webhookMsg, setWebhookMsg] = useState<string>();
+  const [webhookMsg, setWebhookMsg] = useState<string | ApiError>();
   const [webhookMsgOK, setWebhookMsgOK] = useState<boolean | null>(null);
   const [manualWebhookSecret, setManualWebhookSecret] = useState('');
   const [savingWebhook, setSavingWebhook] = useState(false);
@@ -394,12 +396,16 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         setFormData({});
       } catch (verifyErr) {
         setVerifyOK(false);
-        setVerifyMsg(verifyErr instanceof Error ? verifyErr.message : t('fiat.verifyFailed'));
+        setVerifyMsg(
+          verifyErr instanceof ApiError && verifyErr.detail
+            ? `${t('fiat.verifyFailed')}: ${verifyErr.detail}`
+            : t('fiat.verifyFailed')
+        );
       } finally {
         setVerifying(false);
       }
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : t('fiat.saveFailed'));
+      setErrorMsg(err instanceof ApiError ? err : t('fiat.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -412,7 +418,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       await onDelete(provider.id, isManualMode ? 'direct' : 'connected');
       onRefresh();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : t('fiat.deleteFailed'));
+      setErrorMsg(err instanceof ApiError ? err : t('fiat.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -444,7 +450,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       onRefresh();
     } catch (err) {
       setWebhookMsgOK(false);
-      setWebhookMsg(err instanceof Error ? err.message : t('fiat.webhookRetryFailed'));
+      setWebhookMsg(err instanceof ApiError ? err : t('fiat.webhookRetryFailed'));
     } finally {
       setWebhookRetrying(false);
     }
@@ -467,9 +473,9 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       setManualWebhookSecret('');
       setShowManualWebhook(false);
       onRefresh();
-    } catch (err) {
+    } catch {
       setWebhookMsgOK(false);
-      setWebhookMsg(err instanceof Error ? err.message : t('fiat.saveFailed'));
+      setWebhookMsg(t('fiat.saveFailed'));
     } finally {
       setSavingWebhook(false);
     }
@@ -1014,17 +1020,17 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                 </button>
               </div>
 
-              {webhookMsg && (
-                <div
-                  className={cn(
-                    'px-3 py-2 rounded-lg text-xs',
-                    webhookMsgOK
-                      ? 'bg-success/10 text-success'
-                      : 'bg-destructive/10 text-destructive'
-                  )}
-                >
-                  {webhookMsg}
+              {webhookMsg && webhookMsgOK && (
+                <div className="px-3 py-2 rounded-lg text-xs break-words bg-success/10 text-success">
+                  {typeof webhookMsg === 'string' ? webhookMsg : webhookMsg.message}
                 </div>
+              )}
+              {webhookMsg && !webhookMsgOK && (
+                <ErrorAlert
+                  error={webhookMsg}
+                  onRetry={handleRetryWebhook}
+                  retrying={webhookRetrying}
+                />
               )}
 
               {showManualWebhook && (
@@ -1131,11 +1137,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         </div>
       )}
 
-      {errorMsg && (
-        <div className="mt-3 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs">
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && <ErrorAlert error={errorMsg} className="mt-3" />}
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
@@ -1280,10 +1282,10 @@ export const PaymentProvidersSection: React.FC = () => {
         } else {
           setOnboardingProvider(null);
         }
-      } catch (err) {
+      } catch {
         setOnboardingProvider(null);
         setErrorProvider(providerID);
-        setOnboardingError(err instanceof Error ? err.message : t('fiat.onboardingFailed'));
+        setOnboardingError(t('fiat.onboardingFailed'));
       }
     },
     [t]

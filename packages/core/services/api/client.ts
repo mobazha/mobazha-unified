@@ -35,10 +35,23 @@ export class ApiError extends Error {
     message: string,
     public status?: number,
     public code?: ApiErrorCode | string,
-    public details?: Array<{ field: string; message: string }>
+    public details?: Array<{ field: string; message: string }>,
+    public detail?: string,
+    public traceID?: string
   ) {
     super(message);
     this.name = 'ApiError';
+  }
+
+  toDiagnostic(): string {
+    return [
+      `Code: ${this.code || 'UNKNOWN'}`,
+      this.detail && `Detail: ${this.detail}`,
+      this.traceID && `Trace: ${this.traceID}`,
+      `Time: ${new Date().toISOString()}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
 }
 
@@ -50,8 +63,8 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
   try {
     const body = await response.json();
     if (body?.error?.code && body?.error?.message) {
-      const { code, message, details } = body.error as ErrorEnvelope['error'];
-      return new ApiError(message, response.status, code, details);
+      const { code, message, detail, traceID, details } = body.error as ErrorEnvelope['error'];
+      return new ApiError(message, response.status, code, details, detail, traceID);
     }
     const fallbackMsg = body?.error || body?.message || response.statusText;
     return new ApiError(String(fallbackMsg), response.status);
