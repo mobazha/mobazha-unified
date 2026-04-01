@@ -11,6 +11,7 @@ interface FontConfig {
   weight?: string[];
   variable?: string;
   display?: string;
+  preload?: boolean;
 }
 
 interface FontResult {
