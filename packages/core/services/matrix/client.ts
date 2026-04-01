@@ -268,6 +268,18 @@ class MatrixClientService {
     return roomModule.getRooms(this._userId);
   }
 
+  async getInvitedRooms(): Promise<MatrixRoom[]> {
+    return roomModule.getInvitedRooms();
+  }
+
+  async acceptInvite(roomId: string): Promise<void> {
+    await authPost(NODE_API.CHAT_ROOM_JOIN(roomId));
+  }
+
+  async declineInvite(roomId: string): Promise<void> {
+    await authPost(NODE_API.CHAT_ROOM_LEAVE(roomId));
+  }
+
   async getRoomsByType(
     type: 'direct' | 'group' | 'order' | 'store' | 'moderator'
   ): Promise<MatrixRoom[]> {

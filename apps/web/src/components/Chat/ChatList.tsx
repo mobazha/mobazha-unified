@@ -36,6 +36,7 @@ export interface ChatListProps {
   embedded?: boolean;
   onSearchChange?: (query: string) => void;
   onRoomSelect?: (roomId: string) => void;
+  onInviteSelect?: (roomId: string) => void;
   onNewChat?: () => void;
   onShareChatId?: () => void;
   onAcceptInvite?: (roomId: string) => void;
@@ -117,6 +118,7 @@ export const ChatList: React.FC<ChatListProps> = ({
   embedded = false,
   onSearchChange,
   onRoomSelect,
+  onInviteSelect,
   onNewChat,
   onShareChatId,
   onAcceptInvite,
@@ -139,7 +141,9 @@ export const ChatList: React.FC<ChatListProps> = ({
       key={room.id}
       type="button"
       onClick={() => {
-        if (!isInvite) {
+        if (isInvite) {
+          onInviteSelect?.(room.id);
+        } else {
           onRoomSelect?.(room.id);
         }
       }}
@@ -254,7 +258,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                 }}
                 className="px-3 py-1.5 text-xs font-semibold bg-success hover:bg-success/90 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
               >
-                Accept
+                {t('chat.accept')}
               </button>
               <button
                 onClick={e => {
@@ -264,7 +268,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                 }}
                 className="px-3 py-1.5 text-xs font-semibold bg-muted/80 hover:bg-muted text-muted-foreground rounded-lg transition-all"
               >
-                Decline
+                {t('chat.decline')}
               </button>
             </div>
           ) : room.unreadCount && room.unreadCount > 0 ? (

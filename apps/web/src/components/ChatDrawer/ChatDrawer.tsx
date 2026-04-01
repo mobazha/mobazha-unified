@@ -309,7 +309,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     [setCurrentRoom, setCurrentInvite]
   );
 
-  const _handleInviteSelect = useCallback(
+  const handleInviteSelect = useCallback(
     (roomId: string) => {
       const invite = invites.find(r => r.roomId === roomId);
       if (invite) {
@@ -319,7 +319,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     },
     [invites, setCurrentRoom, setCurrentInvite]
   );
-  void _handleInviteSelect;
 
   const handleBack = useCallback(() => {
     setCurrentRoom(null);
@@ -535,19 +534,48 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   }, [drawerExpanded, setDrawerExpanded]);
 
   const handleAcceptInvite = useCallback(
-    (roomId: string) => {
+    async (roomId: string) => {
+      try {
+        await matrixClient.acceptInvite(roomId);
+        const [rooms, invitedRooms] = await Promise.all([
+          matrixClient.getRooms(),
+          matrixClient.getInvitedRooms(),
+        ]);
+        setRooms(rooms);
+        setInvites(invitedRooms);
+        setCurrentInvite(null);
+        setCurrentRoom(roomId);
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to accept invite:', err);
+        toast({
+          title: t('common.error'),
+          description: t('chat.acceptFailed'),
+          variant: 'destructive',
+        });
+      }
       onAcceptInvite?.(roomId);
-      handleBack();
     },
-    [onAcceptInvite, handleBack]
+    [onAcceptInvite, setRooms, setInvites, setCurrentInvite, setCurrentRoom, toast, t]
   );
 
   const handleRejectInvite = useCallback(
-    (roomId: string) => {
+    async (roomId: string) => {
+      try {
+        await matrixClient.declineInvite(roomId);
+        const invitedRooms = await matrixClient.getInvitedRooms();
+        setInvites(invitedRooms);
+        setCurrentInvite(null);
+      } catch (err) {
+        console.error('[ChatDrawer] Failed to decline invite:', err);
+        toast({
+          title: t('common.error'),
+          description: t('chat.declineFailed'),
+          variant: 'destructive',
+        });
+      }
       onRejectInvite?.(roomId);
-      handleBack();
     },
-    [onRejectInvite, handleBack]
+    [onRejectInvite, setInvites, setCurrentInvite, toast, t]
   );
 
   const handleRoomSettings = useCallback(() => {
@@ -754,6 +782,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         embedded
         onSearchChange={setSearchQuery}
         onRoomSelect={handleRoomSelect}
+        onInviteSelect={handleInviteSelect}
         onNewChat={onNewChat}
         onShareChatId={onShareChatId}
         onAcceptInvite={handleAcceptInvite}
