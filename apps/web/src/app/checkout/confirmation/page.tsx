@@ -65,7 +65,7 @@ function ConfirmationContent() {
         orderID,
         transactionID,
         coin: buildFiatPaymentCoin(providerID, currency),
-        amount,
+        amount: String(amount),
         timestamp: new Date().toISOString(),
         method: 5, // FIAT
       })

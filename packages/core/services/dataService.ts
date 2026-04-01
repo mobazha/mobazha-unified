@@ -296,7 +296,7 @@ export const orderDataService = {
   async fundOrder(params: {
     coin: string;
     address: string;
-    amount: number;
+    amount: string;
     orderId: string;
     memo?: string;
   }) {

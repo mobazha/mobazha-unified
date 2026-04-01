@@ -905,7 +905,7 @@ export interface SubmitPaymentData {
   orderID: string;
   transactionID: string;
   coin: string;
-  amount: number; // 必须是数字类型（后端期望 uint64）
+  amount: string; // 字符串传输，避免 JS number 精度丢失（后端 uint64 + json:",string"）
   timestamp: string;
   method: number; // 0: DIRECT, 1: CANCELABLE, 2: MODERATED, 3: RWA_ESCROW, 4: RWA_INSTANT, 5: FIAT
   // 支付目标地址（托管合约地址）- 后端验证必需
@@ -965,7 +965,7 @@ export async function submitPayment(
 export async function fundOrder(payload: {
   coin: string;
   address: string;
-  amount: number;
+  amount: string;
   orderId: string;
   memo?: string;
 }): Promise<{ success: boolean; txid?: string; error?: string }> {
@@ -1022,7 +1022,7 @@ export interface PaymentInstructionsResponse {
     payerAddress?: string;
     moderator?: string;
     moderatorAddress?: string;
-    amount: number; // 支付金额（最小单位）
+    amount: string; // 支付金额（最小单位，字符串避免精度丢失）
     fromID?: string;
     toAddress?: string;
     toID?: string;
@@ -1038,7 +1038,7 @@ export interface PaymentInstructionsResponse {
   paymentAddress?: string;
   // 兼容旧字段
   address?: string;
-  amount?: number;
+  amount?: string;
   buyerAddress?: string;
   vendorAddress?: string;
   // 错误字段
@@ -1092,7 +1092,7 @@ export async function getPaymentInstructions(requestData: {
         coin: canonicalCoin,
         method: 1,
         contractAddress: mockContractAddress,
-        amount: 1500,
+        amount: '1500',
         unlockHours: 720,
         paymentTokenAddress: '0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
       },
@@ -1108,9 +1108,9 @@ export async function getPaymentInstructions(requestData: {
  */
 export async function getPaymentRemaining(
   orderId: string
-): Promise<{ remaining?: number; paid?: number; error?: string }> {
+): Promise<{ remaining?: string; paid?: string; error?: string }> {
   const realFn = async () => {
-    return authGet<{ remaining?: number; paid?: number; error?: string }>(
+    return authGet<{ remaining?: string; paid?: string; error?: string }>(
       NODE_API.ORDER_PAYMENT_REMAINING(orderId)
     );
   };
@@ -1118,8 +1118,8 @@ export async function getPaymentRemaining(
   const mockFn = async () => {
     await mockDelay();
     return {
-      remaining: 0,
-      paid: 100.0,
+      remaining: '0',
+      paid: '100',
     };
   };
 

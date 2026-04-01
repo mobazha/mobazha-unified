@@ -358,7 +358,7 @@ export function useRwaPurchase({
               orderID: externalOrderId,
               transactionID: result.transactionHash,
               coin: paymentCoin,
-              amount: paymentAmount,
+              amount: String(paymentAmount),
               timestamp: new Date().toISOString(),
               method: 4, // RWA_INSTANT（即时交易模式）
               paymentTokenAddress: paymentTokenAddress,
@@ -410,7 +410,7 @@ export function useRwaPurchase({
               orderID: externalOrderId,
               transactionID: result.transactionHash,
               coin: paymentCoin,
-              amount: paymentAmount,
+              amount: String(paymentAmount),
               timestamp: new Date().toISOString(),
               method: 3, // RWA_ESCROW（确认交易模式）
               paymentTokenAddress: paymentTokenAddress,

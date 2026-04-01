@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import {
@@ -12,6 +12,7 @@ import {
   TronGasHint,
 } from '@/components/Payment';
 import type { PaymentStep, FiatPaymentSuccessResult } from '@/components/Payment';
+import { getTokenById } from '@/components/Payment/config';
 import { OrderSummaryCard } from '@/components/Order';
 import { RwaPurchaseFlow } from '@/components/RwaToken';
 import { Container, HStack, VStack } from '@/components/layouts';
@@ -179,8 +180,16 @@ export default function PaymentPage() {
     setVendorPeerID,
   } = usePaymentSelector();
 
+  const selectedPaymentCoin = useMemo(() => {
+    const tokenId = (selectedTokenId || '').trim();
+    if (!tokenId) return '';
+    return getTokenById(tokenId)?.assetId?.trim() || tokenId;
+  }, [selectedTokenId]);
+
   // TRON 链检测与统一钱包状态
-  const isTronPayment = selectedTokenId ? resolveChainCategory(selectedTokenId) === 'tron' : false;
+  const isTronPayment = selectedPaymentCoin
+    ? resolveChainCategory(selectedPaymentCoin) === 'tron'
+    : false;
   const isConnected = isTronPayment ? tronWallet.isConnected : evmWallet.isConnected;
   const isConnecting = isTronPayment ? tronWallet.isConnecting : evmWallet.isConnecting;
   const connect = isTronPayment
@@ -550,12 +559,14 @@ export default function PaymentPage() {
 
     try {
       // 1. 计算支付金额（仅 RWA Token 需要客户端计算，普通订单由后端统一计算）
-      let paymentAmountForApi: number | undefined;
+      let paymentAmountForApi: string | undefined;
       if (orderDetails?.isRwaToken) {
         const totalInFiat = orderDetails.total;
         const isDAI = selectedTokenId.toUpperCase().includes('DAI');
         const stableCoinDivisibility = isDAI ? 18 : 6;
-        paymentAmountForApi = Math.round(totalInFiat * Math.pow(10, stableCoinDivisibility));
+        paymentAmountForApi = String(
+          Math.round(totalInFiat * Math.pow(10, stableCoinDivisibility))
+        );
       }
 
       // 2. 获取钱包地址
@@ -573,7 +584,7 @@ export default function PaymentPage() {
 
       const response = await ordersApi.getPaymentInstructions({
         orderId: orderID!,
-        coin: selectedTokenId,
+        coin: selectedPaymentCoin,
         payerAddress: payerAddress,
         moderator: moderatorPeerID,
       });
@@ -613,7 +624,7 @@ export default function PaymentPage() {
           throw new Error(t('payment.signerNotAvailable'));
         }
 
-        const executor = getPaymentExecutor('TRON', selectedTokenId);
+        const executor = getPaymentExecutor('TRON', selectedPaymentCoin);
         if (!executor) {
           throw new Error(t('payment.providerNotAvailable'));
         }
@@ -627,7 +638,7 @@ export default function PaymentPage() {
         txResult = await executor.executeContractPayment(response.instructions, {
           tokenAddress: paymentData?.paymentTokenAddress,
           contractAddress: paymentData?.contractAddress || to,
-          amount: (paymentAmountForApi ?? 0).toString(),
+          amount: paymentAmountForApi ?? '0',
         });
       } else {
         // ── EVM 支付路径 ──
@@ -697,6 +708,7 @@ export default function PaymentPage() {
     orderDetails,
     orderID,
     selectedTokenId,
+    selectedPaymentCoin,
     selectedFiatProvider,
     paymentProtectionEnabled,
     paymentModerator,
@@ -876,7 +888,7 @@ export default function PaymentPage() {
                                   orderID: orderDetails.orderID,
                                   transactionID: result.transactionID,
                                   coin: buildFiatPaymentCoin(result.providerID, result.currency),
-                                  amount: result.amount,
+                                  amount: String(result.amount),
                                   timestamp: new Date().toISOString(),
                                   method: 5, // FIAT
                                 });

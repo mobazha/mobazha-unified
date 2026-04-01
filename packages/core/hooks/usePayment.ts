@@ -75,7 +75,10 @@ export interface UsePaymentReturn {
   }) => Promise<TransactionResult | null>;
 
   // 扫描支付（BTC/LTC）
-  getPaymentInstructions: (orderId: string, currency: string) => Promise<PaymentInstructions | null>;
+  getPaymentInstructions: (
+    orderId: string,
+    currency: string
+  ) => Promise<PaymentInstructions | null>;
   checkPaymentStatus: (orderId: string) => Promise<PaymentResult | null>;
 
   // 直接支付（节点钱包）
@@ -83,7 +86,7 @@ export interface UsePaymentReturn {
     orderId: string;
     coin: string;
     address: string;
-    amount: number;
+    amount: string;
   }) => Promise<boolean>;
 
   // 工具
@@ -124,7 +127,12 @@ const SUPPORTED_COINS: PaymentCoin[] = [
  */
 export function usePayment(): UsePaymentReturn {
   const { isConnected, walletInfo, switchChain } = useWallet();
-  const { createEscrow, transactionResult, error: escrowError, isLoading: escrowLoading } = useEscrow();
+  const {
+    createEscrow,
+    transactionResult,
+    error: escrowError,
+    isLoading: escrowLoading,
+  } = useEscrow();
 
   const [paymentState, setPaymentState] = useState<PaymentState>('idle');
   const [isLoading, setIsLoading] = useState(false);
@@ -168,7 +176,9 @@ export function usePayment(): UsePaymentReturn {
       setError(null);
 
       // 找到币种对应的链
-      const coin = SUPPORTED_COINS.find(c => c.code === params.currency || c.tokenAddress === params.tokenAddress);
+      const coin = SUPPORTED_COINS.find(
+        c => c.code === params.currency || c.tokenAddress === params.tokenAddress
+      );
       if (!coin?.chainId) {
         setError(`不支持的支付币种: ${params.currency}`);
         return null;
@@ -248,7 +258,7 @@ export function usePayment(): UsePaymentReturn {
         const paymentInstructions: PaymentInstructions = {
           orderId,
           address: response.address || '',
-          amount: String(response.amount || 0),
+          amount: response.amount || '0',
           currency,
           // QR 码可以在前端生成
           qrCode: `bitcoin:${response.address}?amount=${response.amount}`,
@@ -279,14 +289,17 @@ export function usePayment(): UsePaymentReturn {
       const paymentResult: PaymentResult = {
         orderId,
         method: 'scan',
-        status: response.remaining === 0 ? 'completed' : 'awaiting_payment',
+        status:
+          response.remaining === '0' || response.remaining === undefined
+            ? 'completed'
+            : 'awaiting_payment',
         paidAmount: String(response.paid || 0),
         remainingAmount: String(response.remaining || 0),
       };
 
       setResult(paymentResult);
 
-      if (response.remaining === 0) {
+      if (response.remaining === '0' || response.remaining === undefined) {
         setPaymentState('completed');
       }
 
@@ -300,7 +313,12 @@ export function usePayment(): UsePaymentReturn {
    * 从节点钱包直接支付
    */
   const payFromNodeWallet = useCallback(
-    async (params: { orderId: string; coin: string; address: string; amount: number }): Promise<boolean> => {
+    async (params: {
+      orderId: string;
+      coin: string;
+      address: string;
+      amount: string;
+    }): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
       setPaymentState('processing');
@@ -419,4 +437,3 @@ export function usePayment(): UsePaymentReturn {
 }
 
 export default usePayment;
-

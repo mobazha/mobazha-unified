@@ -278,9 +278,9 @@ export function useCreateOrder() {
 export function useOrderPayment(orderId: string | null) {
   const [paymentInfo, setPaymentInfo] = useState<{
     address?: string;
-    amount?: number;
-    remaining?: number;
-    paid?: number;
+    amount?: string;
+    remaining?: string;
+    paid?: string;
   } | null>(null);
 
   const instructionsMutation = useMutation({
@@ -289,7 +289,7 @@ export function useOrderPayment(orderId: string | null) {
   });
 
   const fundMutation = useMutation({
-    mutationFn: (params: { coin: string; address: string; amount: number; memo?: string }) =>
+    mutationFn: (params: { coin: string; address: string; amount: string; memo?: string }) =>
       ordersApi.fundOrder({ ...params, orderId: orderId! }),
   });
 
@@ -317,7 +317,7 @@ export function useOrderPayment(orderId: string | null) {
   }, [orderId]);
 
   const fundOrder = useCallback(
-    async (params: { coin: string; address: string; amount: number; memo?: string }) => {
+    async (params: { coin: string; address: string; amount: string; memo?: string }) => {
       if (!orderId) return null;
       try {
         const result = await fundMutation.mutateAsync(params);
