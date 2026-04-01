@@ -249,8 +249,6 @@ export const NODE_API = {
   SYSTEM_HEALTH: '/system/health',
   SYSTEM_LOGS: '/system/logs',
   SYSTEM_INFO: '/system/info',
-  SYSTEM_PUBLISH: '/system/publish',
-  SYSTEM_CACHE: '/system/cache',
 
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
