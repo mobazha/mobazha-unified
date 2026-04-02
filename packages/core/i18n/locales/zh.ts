@@ -1634,7 +1634,7 @@ export const zh: TranslationResource = {
     badge: 'Web3 建站平台',
     titleLine1: '创建你的',
     titleLine2: 'Web3 店铺',
-    subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
+    subtitle: '零佣金。数据自主。加密货币支付，买家保障全覆盖。',
     exploreMarket: '探索市场',
     startSelling: '开始销售',
     activeStores: '活跃店铺',
@@ -1644,7 +1644,7 @@ export const zh: TranslationResource = {
   saasHome: {
     hero: {
       title: '创建你的 Web3 店铺',
-      subtitle: '零平台费用。数据自主。加密货币支付，买家保障全覆盖。',
+      subtitle: '零佣金。数据自主。加密货币支付，买家保障全覆盖。',
       ctaCreate: '创建店铺',
       ctaExplore: '发现店铺',
       welcomeBack: '欢迎回来，{{storeName}}',
@@ -1663,8 +1663,8 @@ export const zh: TranslationResource = {
         description: '在自己的服务器上运行店铺，或使用我们的托管服务',
       },
       lowFees: {
-        title: '零平台费用',
-        description: '无月费，无交易佣金',
+        title: '零佣金',
+        description: '不从你的销售额中抽成',
       },
       cryptoNative: {
         title: '加密货币原生',
@@ -4124,8 +4124,8 @@ export const zh: TranslationResource = {
     onboarding: {
       landingTitle: '开设你的在线店铺',
       landingSubtitle: '加入 Mobazha 卖家社区，几分钟即可开店，面向全球销售。',
-      landingFeature1: '零平台费用',
-      landingFeature1Desc: '100% 收入归你所有',
+      landingFeature1: '零佣金',
+      landingFeature1Desc: '不从你的销售额中抽成',
       landingFeature2: '买家保障',
       landingFeature2Desc: '内置托管交易保护',
       landingFeature3: '全球销售',

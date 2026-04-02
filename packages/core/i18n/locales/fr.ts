@@ -1642,7 +1642,7 @@ export const fr: TranslationResource = {
     titleLine1: 'Échangez librement.',
     titleLine2: 'Échangez en sécurité.',
     subtitle:
-      'Une place de marché véritablement décentralisée pour les biens, services et actifs numériques. Sans intermédiaires. Sans censure.',
+      'Zéro commission. Vos données vous appartiennent. Paiements crypto avec protection acheteur.',
     exploreMarket: 'Explorer le Marché',
     startSelling: 'Commencer à Vendre',
     activeStores: 'Boutiques Actives',
@@ -1653,7 +1653,7 @@ export const fr: TranslationResource = {
     hero: {
       title: 'Lancez votre boutique Web3',
       subtitle:
-        "Zéro frais de plateforme. Vos données vous appartiennent. Acceptez les paiements en crypto avec protection de l'acheteur.",
+        'Zéro commission. Vos données vous appartiennent. Paiements crypto avec protection acheteur.',
       ctaCreate: 'Créer votre boutique',
       ctaExplore: 'Explorer les boutiques',
       welcomeBack: 'Bon retour, {{storeName}}',
@@ -1673,8 +1673,8 @@ export const fr: TranslationResource = {
           'Hébergez votre boutique sur votre propre matériel ou utilisez notre service hébergé',
       },
       lowFees: {
-        title: 'Zéro frais de plateforme',
-        description: "Pas d'abonnement mensuel, pas de commission sur les transactions",
+        title: 'Zéro commission',
+        description: 'Zéro commission sur toutes les transactions',
       },
       cryptoNative: {
         title: 'Natif crypto',
@@ -4235,8 +4235,8 @@ export const fr: TranslationResource = {
       landingTitle: 'Lancez votre boutique en ligne',
       landingSubtitle:
         'Rejoignez des milliers de vendeurs sur Mobazha. Configurez en quelques minutes, vendez dans le monde entier.',
-      landingFeature1: 'Zéro frais de plateforme',
-      landingFeature1Desc: 'Conservez 100 % de vos revenus',
+      landingFeature1: 'Zéro commission',
+      landingFeature1Desc: 'Aucun prélèvement sur vos ventes',
       landingFeature2: "Protection de l'acheteur",
       landingFeature2Desc: 'Séquestre intégré pour des transactions sécurisées',
       landingFeature3: 'Vendez dans le monde entier',

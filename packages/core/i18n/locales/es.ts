@@ -1630,8 +1630,7 @@ export const es: TranslationResource = {
     badge: 'Descentralizado & Peer-to-Peer',
     titleLine1: 'Comercia libremente.',
     titleLine2: 'Comercia seguro.',
-    subtitle:
-      'Un mercado verdaderamente descentralizado para bienes, servicios y activos digitales. Sin intermediarios. Sin censura.',
+    subtitle: 'Cero comisiones. Tus datos, tu control. Pagos cripto con protección al comprador.',
     exploreMarket: 'Explorar Mercado',
     startSelling: 'Empezar a Vender',
     activeStores: 'Tiendas Activas',
@@ -1641,8 +1640,7 @@ export const es: TranslationResource = {
   saasHome: {
     hero: {
       title: 'Lanza tu tienda Web3',
-      subtitle:
-        'Cero comisiones de plataforma. Tú controlas tus datos. Acepta pagos en cripto con Protección al Comprador.',
+      subtitle: 'Cero comisiones. Tus datos, tu control. Pagos cripto con protección al comprador.',
       ctaCreate: 'Crear tu tienda',
       ctaExplore: 'Explorar tiendas',
       welcomeBack: 'Bienvenido de nuevo, {{storeName}}',
@@ -1661,8 +1659,8 @@ export const es: TranslationResource = {
         description: 'Ejecuta tu tienda en tu propio hardware o usa nuestro servicio alojado',
       },
       lowFees: {
-        title: 'Cero comisiones de plataforma',
-        description: 'Sin suscripciones mensuales ni comisiones por transacción',
+        title: 'Cero comisiones',
+        description: 'Cero comisiones en todas las transacciones',
       },
       cryptoNative: {
         title: 'Nativo en cripto',
@@ -4216,8 +4214,8 @@ export const es: TranslationResource = {
       landingTitle: 'Abre tu tienda en línea',
       landingSubtitle:
         'Únete a miles de vendedores en Mobazha. Configura en minutos y vende globalmente.',
-      landingFeature1: 'Cero comisiones de plataforma',
-      landingFeature1Desc: 'Quédate con el 100% de tus ingresos',
+      landingFeature1: 'Cero comisiones',
+      landingFeature1Desc: 'Sin comisiones sobre tus ventas',
       landingFeature2: 'Protección al Comprador',
       landingFeature2Desc: 'Depósito en garantía integrado para transacciones seguras',
       landingFeature3: 'Vende globalmente',
