@@ -6,7 +6,7 @@ import type { Order, OrderListItem } from '../../types';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
 import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
-import { mustCanonicalCoin } from '../../data/tokens';
+import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
 
 // ========== 订单类型定义 ==========
 
@@ -266,7 +266,10 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
                 metadata: {
                   contractType: 'PHYSICAL_GOOD',
                   format: 'FIXED_PRICE',
-                  acceptedCurrencies: ['ETH', 'BTC'],
+                  acceptedCurrencies: [
+                    mustAssetIdFromTokenId('ETH'),
+                    mustAssetIdFromTokenId('BTC'),
+                  ],
                   pricingCurrency: { code: 'USD', divisibility: 2 },
                 },
                 item: {
@@ -1033,9 +1036,18 @@ export interface PaymentInstructionsResponse {
   };
   // 托管账户地址
   escrowAccount?: string;
-  // 外部钱包支付（UTXO 链）
+  // 外部钱包支付（UTXO 链: BTC/LTC/BCH/ZEC）
   paymentType?: string;
   paymentAddress?: string;
+  paymentURI?: string;
+  coin?: string;
+  chainType?: string;
+  qrCodeData?: string;
+  scriptHash?: string;
+  script?: string;
+  moderator?: string;
+  unlockHours?: number;
+  expiresAt?: string;
   // 兼容旧字段
   address?: string;
   amount?: string;
@@ -1100,7 +1112,11 @@ export async function getPaymentInstructions(requestData: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${requestData.orderId}/instructions/payment`);
+  const mode = getApiMode();
+  if (mode === 'mock') {
+    return mockFn();
+  }
+  return realFn();
 }
 
 /**

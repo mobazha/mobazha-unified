@@ -10,8 +10,13 @@ import {
   TransactionOverlay,
   FiatPaymentSection,
   TronGasHint,
+  ExternalWalletPayment,
 } from '@/components/Payment';
-import type { PaymentStep, FiatPaymentSuccessResult } from '@/components/Payment';
+import type {
+  PaymentStep,
+  FiatPaymentSuccessResult,
+  ExternalWalletPaymentInfo,
+} from '@/components/Payment';
 import { getTokenById } from '@/components/Payment/config';
 import { OrderSummaryCard } from '@/components/Order';
 import { RwaPurchaseFlow } from '@/components/RwaToken';
@@ -106,6 +111,13 @@ function buildConfirmationUrl(details: OrderDetails, fiat?: FiatConfirmationCont
   return url.toString();
 }
 
+function formatCryptoAmountForSummary(rawAmount: string, decimals: number): string {
+  const num = Number(rawAmount);
+  if (!num || !Number.isFinite(num)) return '0';
+  const result = num / Math.pow(10, decimals);
+  return result.toFixed(decimals).replace(/\.?0+$/, '') || '0';
+}
+
 function buildFiatPaymentCoin(providerID: string, currency: string): string {
   const provider = (providerID || '').trim().toLowerCase();
   const resolvedCurrency = (currency || '').trim().toUpperCase() || 'USD';
@@ -186,16 +198,26 @@ export default function PaymentPage() {
     return getTokenById(tokenId)?.assetId?.trim() || tokenId;
   }, [selectedTokenId]);
 
-  // TRON 链检测与统一钱包状态
-  const isTronPayment = selectedPaymentCoin
-    ? resolveChainCategory(selectedPaymentCoin) === 'tron'
-    : false;
+  // 链类别检测与统一钱包状态
+  const chainCategory = selectedPaymentCoin ? resolveChainCategory(selectedPaymentCoin) : null;
+  const isTronPayment = chainCategory === 'tron';
+  const isUtxoPayment = chainCategory === 'utxo';
   const isConnected = isTronPayment ? tronWallet.isConnected : evmWallet.isConnected;
   const isConnecting = isTronPayment ? tronWallet.isConnecting : evmWallet.isConnecting;
   const connect = isTronPayment
     ? () => tronWallet.connect().then(() => undefined)
     : evmWallet.connect;
   const getSigner = evmWallet.getSigner;
+
+  // UTXO 外部钱包支付信息（BTC/LTC/BCH/ZEC）
+  const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
+    null
+  );
+
+  // 切换支付方式时清除外部钱包信息
+  useEffect(() => {
+    setExternalWalletInfo(null);
+  }, [selectedTokenId]);
 
   // beforeunload: warn user when payment is in progress
   useEffect(() => {
@@ -545,7 +567,7 @@ export default function PaymentPage() {
       return;
     }
 
-    if (!isConnected) {
+    if (!isUtxoPayment && !isConnected) {
       toast({
         title: t('payment.connectWalletFirst'),
         variant: 'destructive',
@@ -569,13 +591,15 @@ export default function PaymentPage() {
         );
       }
 
-      // 2. 获取钱包地址
+      // 2. 获取钱包地址（UTXO 链不需要前端钱包地址）
       let payerAddress: string | undefined;
-      if (isTronPayment) {
-        payerAddress = tronWallet.address ?? undefined;
-      } else {
-        const signer = await getSigner();
-        payerAddress = signer ? await signer.getAddress() : undefined;
+      if (!isUtxoPayment) {
+        if (isTronPayment) {
+          payerAddress = tronWallet.address ?? undefined;
+        } else {
+          const signer = await getSigner();
+          payerAddress = signer ? await signer.getAddress() : undefined;
+        }
       }
 
       // 3. 获取支付指令（传入金额、付款地址和仲裁人）
@@ -595,10 +619,18 @@ export default function PaymentPage() {
       }
 
       // 5. 检查是否为外部钱包支付（UTXO 链如 BTC/LTC）
-      if (response.paymentType === 'external_wallet') {
-        toast({
-          title: t('payment.externalWalletRequired'),
-          description: t('payment.pleaseUseExternalWallet'),
+      if (response.paymentType === 'external_wallet' || isUtxoPayment) {
+        const addr = response.paymentAddress || response.paymentData?.payerAddress || '';
+        const tokenInfo = selectedTokenId ? getTokenById(selectedTokenId) : null;
+        setExternalWalletInfo({
+          paymentAddress: addr,
+          paymentURI: response.paymentURI,
+          amount: response.amount || response.paymentData?.amount || '0',
+          coin: selectedTokenId || response.coin || selectedPaymentCoin,
+          decimals: tokenInfo?.decimals ?? 8,
+          qrCodeData: response.qrCodeData,
+          expiresAt: response.expiresAt,
+          orderID: orderID!,
         });
         setPaymentStep('idle');
         return;
@@ -715,6 +747,7 @@ export default function PaymentPage() {
     paymentModerator,
     isConnected,
     isTronPayment,
+    isUtxoPayment,
     tronWallet,
     getSigner,
     router,
@@ -771,8 +804,8 @@ export default function PaymentPage() {
 
           <CheckoutProgressBar currentStep="payment" className="mb-6 sm:mb-8" />
 
-          {/* Payment window countdown */}
-          {(paymentTimeRemaining || paymentExpired) && (
+          {/* Payment window countdown — hidden when ExternalWalletPayment is shown (it has its own countdown) */}
+          {(paymentTimeRemaining || paymentExpired) && !externalWalletInfo && (
             <div
               className={`mb-4 sm:mb-6 p-3 rounded-lg border text-center ${
                 paymentExpired
@@ -854,93 +887,115 @@ export default function PaymentPage() {
                   />
                 ) : (
                   <>
-                    {/* Payment Method Selection */}
-                    <Card>
-                      <CardContent className="p-4 sm:p-6">
-                        <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                          {t('payment.paymentMethod')}
-                        </h2>
-                        <PaymentMethodSummary
-                          selectedTokenId={selectedTokenId}
-                          selectedFiatProvider={selectedFiatProvider}
-                          onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    {/* Fiat Payment Form (Stripe / PayPal) */}
-                    {selectedFiatProvider && (
-                      <Card>
-                        <CardContent className="p-4 sm:p-6">
-                          <FiatPaymentSection
-                            providerID={selectedFiatProvider}
-                            vendorPeerID={orderDetails.vendor.peerID}
-                            orderID={orderDetails.orderID}
-                            amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
-                            currency={orderDetails.currency}
-                            description={orderDetails.items[0]?.title}
-                            returnUrl={buildConfirmationUrl(orderDetails, {
-                              providerID: selectedFiatProvider,
-                              amount: toMinimalUnit(orderDetails.total, orderDetails.currency),
-                            })}
-                            onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
-                              try {
-                                const submitResult = await ordersApi.submitPayment({
-                                  orderID: orderDetails.orderID,
-                                  transactionID: result.transactionID,
-                                  coin: buildFiatPaymentCoin(result.providerID, result.currency),
-                                  amount: String(result.amount),
-                                  timestamp: new Date().toISOString(),
-                                  method: 5, // FIAT
-                                });
-                                if (submitResult?.success === false) {
-                                  throw new Error(submitResult.error || 'submit payment failed');
-                                }
-                                router.push(
-                                  buildConfirmationUrl(orderDetails, {
-                                    providerID: result.providerID,
-                                    amount: result.amount,
-                                  })
-                                );
-                              } catch (err) {
-                                const message =
-                                  err instanceof Error ? err.message : t('fiat.genericError');
-                                toast({
-                                  title: t('fiat.paymentBeingConfirmed'),
-                                  description: message,
-                                  variant: 'destructive',
-                                });
-                                router.push(
-                                  buildConfirmationUrl(orderDetails, {
-                                    providerID: result.providerID,
-                                    amount: result.amount,
-                                  })
-                                );
-                              }
-                            }}
-                            onPaymentError={msg => {
-                              toast({
-                                title: t('fiat.genericError'),
-                                description: msg,
-                                variant: 'destructive',
-                              });
-                            }}
-                          />
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Payment Protection (crypto only) */}
-                    {!selectedFiatProvider && (
-                      <PaymentProtectionCard
-                        enabled={paymentProtectionEnabled}
-                        onEnabledChange={setPaymentProtectionEnabled}
-                        selectedModerator={paymentModerator}
-                        onChangeModerator={() =>
-                          openModeratorSelector('/payment?orderID=' + orderID)
-                        }
-                        protectionDays={45}
+                    {externalWalletInfo ? (
+                      <ExternalWalletPayment
+                        paymentInfo={externalWalletInfo}
+                        tokenId={selectedTokenId || undefined}
+                        onRefresh={() => {
+                          setExternalWalletInfo(null);
+                          handlePayment();
+                        }}
+                        onClose={() => {
+                          setExternalWalletInfo(null);
+                          router.push(`/orders/${orderDetails.orderID}`);
+                        }}
                       />
+                    ) : (
+                      <>
+                        {/* Payment Method Selection */}
+                        <Card>
+                          <CardContent className="p-4 sm:p-6">
+                            <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                              {t('payment.paymentMethod')}
+                            </h2>
+                            <PaymentMethodSummary
+                              selectedTokenId={selectedTokenId}
+                              selectedFiatProvider={selectedFiatProvider}
+                              onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
+                            />
+                          </CardContent>
+                        </Card>
+
+                        {/* Fiat Payment Form (Stripe / PayPal) */}
+                        {selectedFiatProvider && (
+                          <Card>
+                            <CardContent className="p-4 sm:p-6">
+                              <FiatPaymentSection
+                                providerID={selectedFiatProvider}
+                                vendorPeerID={orderDetails.vendor.peerID}
+                                orderID={orderDetails.orderID}
+                                amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
+                                currency={orderDetails.currency}
+                                description={orderDetails.items[0]?.title}
+                                returnUrl={buildConfirmationUrl(orderDetails, {
+                                  providerID: selectedFiatProvider,
+                                  amount: toMinimalUnit(orderDetails.total, orderDetails.currency),
+                                })}
+                                onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
+                                  try {
+                                    const submitResult = await ordersApi.submitPayment({
+                                      orderID: orderDetails.orderID,
+                                      transactionID: result.transactionID,
+                                      coin: buildFiatPaymentCoin(
+                                        result.providerID,
+                                        result.currency
+                                      ),
+                                      amount: String(result.amount),
+                                      timestamp: new Date().toISOString(),
+                                      method: 5, // FIAT
+                                    });
+                                    if (submitResult?.success === false) {
+                                      throw new Error(
+                                        submitResult.error || 'submit payment failed'
+                                      );
+                                    }
+                                    router.push(
+                                      buildConfirmationUrl(orderDetails, {
+                                        providerID: result.providerID,
+                                        amount: result.amount,
+                                      })
+                                    );
+                                  } catch (err) {
+                                    const message =
+                                      err instanceof Error ? err.message : t('fiat.genericError');
+                                    toast({
+                                      title: t('fiat.paymentBeingConfirmed'),
+                                      description: message,
+                                      variant: 'destructive',
+                                    });
+                                    router.push(
+                                      buildConfirmationUrl(orderDetails, {
+                                        providerID: result.providerID,
+                                        amount: result.amount,
+                                      })
+                                    );
+                                  }
+                                }}
+                                onPaymentError={msg => {
+                                  toast({
+                                    title: t('fiat.genericError'),
+                                    description: msg,
+                                    variant: 'destructive',
+                                  });
+                                }}
+                              />
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Payment Protection (crypto only) */}
+                        {!selectedFiatProvider && (
+                          <PaymentProtectionCard
+                            enabled={paymentProtectionEnabled}
+                            onEnabledChange={setPaymentProtectionEnabled}
+                            selectedModerator={paymentModerator}
+                            onChangeModerator={() =>
+                              openModeratorSelector('/payment?orderID=' + orderID)
+                            }
+                            protectionDays={45}
+                          />
+                        )}
+                      </>
                     )}
                   </>
                 )}
@@ -1002,7 +1057,16 @@ export default function PaymentPage() {
                               isMinimalUnit: false,
                             })}
                           </p>
-                          {selectedTokenId && cryptoAmount > 0 && (
+                          {externalWalletInfo ? (
+                            <p className="text-xs text-muted-foreground">
+                              ={' '}
+                              {formatCryptoAmountForSummary(
+                                externalWalletInfo.amount,
+                                externalWalletInfo.decimals ?? 8
+                              )}{' '}
+                              {nativeSymbol.toUpperCase()}
+                            </p>
+                          ) : selectedTokenId && cryptoAmount > 0 ? (
                             <p className="text-xs text-muted-foreground">
                               ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
                               {secondsAgo !== null && (
@@ -1011,7 +1075,7 @@ export default function PaymentPage() {
                                 </span>
                               )}
                             </p>
-                          )}
+                          ) : null}
                         </div>
                       </HStack>
 
@@ -1027,17 +1091,28 @@ export default function PaymentPage() {
                         <div className="p-3 bg-muted/50 rounded-lg text-center">
                           <p className="text-sm text-muted-foreground">{t('fiat.sectionTitle')}</p>
                         </div>
+                      ) : externalWalletInfo ? (
+                        <div className="p-3 bg-muted/50 rounded-lg text-center">
+                          <p className="text-sm text-muted-foreground">
+                            {t('payment.waitingForPayment')}
+                          </p>
+                        </div>
                       ) : (
                         <Button
                           className="w-full touch-feedback hidden sm:flex"
                           size="default"
-                          onClick={!isConnected ? connect : handlePayment}
+                          onClick={
+                            isUtxoPayment ? handlePayment : !isConnected ? connect : handlePayment
+                          }
                           disabled={
                             isProcessing ||
                             isConnecting ||
                             paymentExpired ||
-                            (isConnected &&
-                              (!selectedTokenId || (paymentProtectionEnabled && !paymentModerator)))
+                            !selectedTokenId ||
+                            (!isUtxoPayment &&
+                              isConnected &&
+                              paymentProtectionEnabled &&
+                              !paymentModerator)
                           }
                         >
                           {isProcessing ? (
@@ -1078,6 +1153,8 @@ export default function PaymentPage() {
                               </svg>
                               <span>{t('payment.connecting')}</span>
                             </HStack>
+                          ) : isUtxoPayment ? (
+                            t('payment.getPaymentInfo')
                           ) : !isConnected ? (
                             t('payment.connectWallet')
                           ) : cryptoAmount > 0 ? (
@@ -1133,7 +1210,7 @@ export default function PaymentPage() {
       <Footer />
 
       {/* Mobile Bottom Bar (crypto only, fiat uses FiatPaymentSection) */}
-      {orderDetails && !orderDetails.isRwaToken && !selectedFiatProvider && (
+      {orderDetails && !orderDetails.isRwaToken && !selectedFiatProvider && !externalWalletInfo && (
         <CheckoutBottomBar
           totalAmount={totalWithFee}
           currency={orderDetails.currency}
@@ -1141,9 +1218,9 @@ export default function PaymentPage() {
           cryptoCurrency={nativeSymbol}
           paymentMethod={selectedTokenId || undefined}
           onPay={handlePayment}
-          onConnect={connect}
+          onConnect={isUtxoPayment ? handlePayment : connect}
           isLoading={isProcessing}
-          isConnected={isConnected}
+          isConnected={isUtxoPayment || isConnected}
           isConnecting={isConnecting}
           disabled={
             paymentExpired || !selectedTokenId || (paymentProtectionEnabled && !paymentModerator)

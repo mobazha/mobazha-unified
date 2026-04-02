@@ -24,4 +24,6 @@ export { PayPalPaymentForm } from './PayPalPaymentForm';
 export { FiatPaymentSection } from './FiatPaymentSection';
 export { PaymentMethodBadges } from './PaymentMethodBadges';
 export { TronGasHint } from './TronGasHint';
+export { ExternalWalletPayment } from './ExternalWalletPayment';
+export type { ExternalWalletPaymentInfo } from './ExternalWalletPayment';
 export { ConfirmationProgress } from './ConfirmationProgress';
