@@ -5,7 +5,7 @@
 
 import { CHAIN_CONFIG } from './chains';
 import { ChainId } from './types';
-import { getChainFromCoin, getEVMChainId } from '../../data/tokens';
+import { getChainFromCoin, getEVMChainId, parseCanonicalPaymentCoin } from '../../data/tokens';
 
 export type ExplorerResource = 'tx' | 'address' | 'token' | 'nft';
 
@@ -42,11 +42,31 @@ function getEvmExplorerBase(chainId: number): string | null {
   return config?.blockExplorerUrls?.[0] ?? null;
 }
 
+/**
+ * Extracts EVM chainId from a canonical asset ID (e.g. "crypto:eip155:11155111:native" → 11155111).
+ * Returns undefined for non-EIP155 or unparseable inputs.
+ */
+function tryExtractEVMChainIdFromCanonical(coin: string): number | undefined {
+  const parsed = parseCanonicalPaymentCoin(coin);
+  if (!parsed || parsed.namespace !== 'eip155') return undefined;
+  const id = Number(parsed.chainRef);
+  return Number.isFinite(id) && id > 0 ? id : undefined;
+}
+
 export function getExplorerBaseUrl({ chainId, coin }: ExplorerContext = {}): string | null {
   // 优先使用传入的 chainId
   if (chainId) {
     const base = getEvmExplorerBase(chainId);
     if (base) return base;
+  }
+
+  // 解析 canonical asset ID（crypto:eip155:CHAIN_ID:...）以提取精确 chainId
+  if (coin) {
+    const canonicalChainId = tryExtractEVMChainIdFromCanonical(coin);
+    if (canonicalChainId) {
+      const base = getEvmExplorerBase(canonicalChainId);
+      if (base) return base;
+    }
   }
 
   const coinUpper = coin?.toUpperCase();
@@ -79,14 +99,36 @@ export function getExplorerBaseUrl({ chainId, coin }: ExplorerContext = {}): str
   return null;
 }
 
+/**
+ * Resolves a canonical asset ID or coin symbol to a non-EVM explorer key (e.g. "BTC", "LTC").
+ */
+function resolveNonEvmKey(coin: string | undefined): string | null {
+  if (!coin) return null;
+  const upper = coin.toUpperCase();
+  if (NON_EVM_EXPLORERS[upper]) return upper;
+
+  // canonical bip122/bitcoincash/zcash → map to symbol
+  const parsed = parseCanonicalPaymentCoin(coin);
+  if (!parsed) return null;
+  const ns = parsed.namespace;
+  if (ns === 'bip122') {
+    const BIP122_EXPLORER_MAP: Record<string, string> = {
+      '000000000019d6689c085ae165831e93': 'BTC',
+      '12a765e31ffd4059bada1e25190f6e98': 'LTC',
+    };
+    return BIP122_EXPLORER_MAP[parsed.chainRef] ?? null;
+  }
+  return null;
+}
+
 export function getExplorerResourceUrl(
   value: string,
   resource: ExplorerResource,
   context: ExplorerContext = {}
 ): string | null {
-  const coinUpper = context.coin?.toUpperCase();
-  if (coinUpper && NON_EVM_EXPLORERS[coinUpper]) {
-    const explorer = NON_EVM_EXPLORERS[coinUpper];
+  const nonEvmKey = resolveNonEvmKey(context.coin);
+  if (nonEvmKey) {
+    const explorer = NON_EVM_EXPLORERS[nonEvmKey];
     if (resource === 'tx') return `${explorer.base}${explorer.txPath}${value}`;
     if (resource === 'address') return `${explorer.base}${explorer.addressPath}${value}`;
     return null;

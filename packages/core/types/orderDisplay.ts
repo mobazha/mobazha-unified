@@ -162,8 +162,10 @@ export interface DisplayOrder {
   shippingZoneName?: string;
   /** 配送方式名称（来自订单项 shippingOption.service） */
   shippingMethodName?: string;
-  /** 支付交易哈希 */
+  /** 支付交易哈希（买家 → Escrow） */
   paymentTx?: string;
+  /** 释放交易哈希（Escrow → 卖家，CANCELABLE 在 Confirm 时、MODERATED 在 Complete 时产生） */
+  releaseTx?: string;
   /** 支付交易确认数 */
   txConfirmations?: number;
   /** 托管交易哈希 */

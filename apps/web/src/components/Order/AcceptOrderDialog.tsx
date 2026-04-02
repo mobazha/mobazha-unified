@@ -137,6 +137,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
           {/* 收款账户选择器 */}
           <ReceivingAccountSelector
             blockchain={blockchain}
+            paymentCoin={paymentCoin}
             onAccountChange={handleAccountChange}
             disabled={isLoading}
             required

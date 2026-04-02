@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useI18n, walletApi } from '@mobazha/core';
+import { parseCanonicalPaymentCoin } from '@mobazha/core/data/tokens';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 
 export interface ReceivingAccountSelectorProps {
-  /** 区块链类型，用于筛选匹配的收款账户 */
+  /** 区块链类型，用于筛选匹配的收款账户 (legacy fallback) */
   blockchain?: string;
+  /** 支付币种 canonical asset ID，优先用于判断兼容链 */
+  paymentCoin?: string;
   /** 默认选中的账户 ID */
   defaultAccountId?: number;
   /** 选中账户变化回调 */
@@ -17,12 +20,49 @@ export interface ReceivingAccountSelectorProps {
   required?: boolean;
 }
 
+const NAMESPACE_TO_CHAIN_TYPES: Record<string, string[]> = {
+  eip155: ['ethereum', 'eth', 'evm'],
+  solana: ['solana', 'sol'],
+  bip122: ['bitcoin', 'btc'],
+  bitcoincash: ['bitcoincash', 'bch'],
+  zcash: ['zcash', 'zec'],
+  tron: ['tron', 'trx'],
+};
+
+const BLOCKCHAIN_MAPPING: Record<string, string[]> = {
+  ethereum: ['ethereum', 'eth', 'evm'],
+  solana: ['solana', 'sol'],
+  bitcoin: ['bitcoin', 'btc'],
+};
+
+function getCompatibleChainTypes(paymentCoin?: string, blockchain?: string): string[] | null {
+  if (paymentCoin) {
+    if (paymentCoin.toLowerCase().startsWith('fiat:')) return null;
+    const parsed = parseCanonicalPaymentCoin(paymentCoin);
+    if (parsed) {
+      return NAMESPACE_TO_CHAIN_TYPES[parsed.namespace] ?? null;
+    }
+  }
+  if (blockchain) {
+    const lower = blockchain.toLowerCase();
+    for (const aliases of Object.values(NAMESPACE_TO_CHAIN_TYPES)) {
+      if (aliases.some(a => a === lower)) return aliases;
+    }
+    for (const aliases of Object.values(BLOCKCHAIN_MAPPING)) {
+      if (aliases.some(a => a === lower)) return aliases;
+    }
+    return [lower];
+  }
+  return null;
+}
+
 /**
  * 收款账户选择器组件
- * 用于在发货时选择收款地址
+ * 用于在接受订单或发货时选择收款地址
  */
 export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> = ({
   blockchain,
+  paymentCoin,
   defaultAccountId,
   onAccountChange,
   disabled = false,
@@ -33,39 +73,20 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
   const [selectedAccountId, setSelectedAccountId] = useState<number | undefined>(defaultAccountId);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 格式化地址显示
   const formatAddress = useCallback((address: string) => {
     if (address.length <= 16) return address;
     return `${address.slice(0, 8)}...${address.slice(-6)}`;
   }, []);
 
-  // 加载收款账户列表
   useEffect(() => {
     const loadAccounts = async () => {
       setIsLoading(true);
       try {
         const allAccounts = await walletApi.getReceivingAccounts();
-        // 只显示激活的账户
         let activeAccounts = allAccounts.filter(acc => acc.isActive);
 
-        // 如果指定了区块链类型，进一步筛选
-        if (blockchain) {
-          const blockchainLower = blockchain.toLowerCase();
-          // 定义区块链类型映射（参考桌面端 BLOCKCHAIN_MAPPING）
-          const blockchainMapping: Record<string, string[]> = {
-            ethereum: ['ethereum', 'eth', 'evm'],
-            solana: ['solana', 'sol'],
-          };
-
-          // 找到匹配的链类型列表
-          let validChainTypes: string[] = [blockchainLower];
-          for (const [, aliases] of Object.entries(blockchainMapping)) {
-            if (aliases.some(alias => alias.toLowerCase() === blockchainLower)) {
-              validChainTypes = aliases;
-              break;
-            }
-          }
-
+        const validChainTypes = getCompatibleChainTypes(paymentCoin, blockchain);
+        if (validChainTypes) {
           activeAccounts = activeAccounts.filter(acc =>
             validChainTypes.some(type => acc.chainType.toLowerCase() === type.toLowerCase())
           );
@@ -73,22 +94,17 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
 
         setAccounts(activeAccounts);
 
-        // 检查当前选中的账户是否在新的账户列表中
-        // 如果不在，重置为第一个账户或清空
         setSelectedAccountId(prevId => {
           const isCurrentSelectionValid =
             prevId !== undefined && activeAccounts.some(acc => acc.id === prevId);
 
           if (isCurrentSelectionValid) {
-            // 当前选择仍然有效，保持不变
             return prevId;
           } else if (activeAccounts.length > 0) {
-            // 选择第一个账户
             const firstAccount = activeAccounts[0];
             onAccountChange?.(firstAccount);
             return firstAccount.id;
           } else {
-            // 没有可用账户
             onAccountChange?.(null);
             return undefined;
           }
@@ -104,8 +120,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
     };
 
     loadAccounts();
-    // 注意：不将 selectedAccountId 放入依赖数组，避免循环更新
-  }, [blockchain, onAccountChange]);
+  }, [blockchain, paymentCoin, onAccountChange]);
 
   // 处理账户选择变化
   const handleChange = useCallback(

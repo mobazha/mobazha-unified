@@ -35,9 +35,21 @@ export interface FulfillOrderDialogProps {
   onSuccess?: () => void;
 }
 
-const shouldShowReceivingAccountSelector = (contractType?: string): boolean => {
-  return contractType === CONTRACT_TYPES.RWA_TOKEN;
-};
+type DeliveryMode = 'physical' | 'digital' | 'service' | 'rwa';
+
+function getDeliveryMode(contractType?: string): DeliveryMode {
+  switch (contractType) {
+    case CONTRACT_TYPES.DIGITAL_GOOD:
+      return 'digital';
+    case CONTRACT_TYPES.SERVICE:
+      return 'service';
+    case CONTRACT_TYPES.RWA_TOKEN:
+      return 'rwa';
+    case CONTRACT_TYPES.PHYSICAL_GOOD:
+    default:
+      return 'physical';
+  }
+}
 
 export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   open,
@@ -52,13 +64,19 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const lastCarrier = useMemo(() => {
-    try { return localStorage.getItem('mbz_last_carrier') ?? ''; } catch { return ''; }
+    try {
+      return localStorage.getItem('mbz_last_carrier') ?? '';
+    } catch {
+      return '';
+    }
   }, []);
 
   const [trackingInfo, setTrackingInfo] = useState({
     shipper: lastCarrier,
     trackingNumber: '',
     note: '',
+    fileUrl: '',
+    filePassword: '',
   });
 
   // Carrier dropdown state
@@ -73,18 +91,12 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const carrierGroups = useMemo(
-    () => filterCarriersGrouped(carrierQuery),
-    [carrierQuery]
-  );
+  const carrierGroups = useMemo(() => filterCarriersGrouped(carrierQuery), [carrierQuery]);
 
-  const filteredCarriers = useMemo(
-    () => carrierGroups.flatMap(g => g.carriers),
-    [carrierGroups]
-  );
+  const filteredCarriers = useMemo(() => carrierGroups.flatMap(g => g.carriers), [carrierGroups]);
 
   const selectedAccountRef = useRef<ReceivingAccount | null>(null);
-  const showReceivingAccountSelector = shouldShowReceivingAccountSelector(contractType);
+  const deliveryMode = getDeliveryMode(contractType);
 
   const handleAccountChange = useCallback((account: ReceivingAccount | null) => {
     selectedAccountRef.current = account;
@@ -113,49 +125,54 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   }, []);
 
   const hasCustomOption = useMemo(
-    () => carrierQuery.trim() !== '' && !filteredCarriers.some(c => c.name.toLowerCase() === carrierQuery.toLowerCase()),
+    () =>
+      carrierQuery.trim() !== '' &&
+      !filteredCarriers.some(c => c.name.toLowerCase() === carrierQuery.toLowerCase()),
     [carrierQuery, filteredCarriers]
   );
 
   const totalOptions = filteredCarriers.length + (hasCustomOption ? 1 : 0);
 
-  const handleCarrierKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!carrierDropdownOpen) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        setCarrierDropdownOpen(true);
-        setHighlightedIdx(0);
-        e.preventDefault();
+  const handleCarrierKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!carrierDropdownOpen) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          setCarrierDropdownOpen(true);
+          setHighlightedIdx(0);
+          e.preventDefault();
+        }
+        return;
       }
-      return;
-    }
-    if (totalOptions === 0) return;
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setHighlightedIdx(prev => (prev + 1) % totalOptions);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setHighlightedIdx(prev => (prev <= 0 ? totalOptions - 1 : prev - 1));
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (highlightedIdx >= 0 && highlightedIdx < filteredCarriers.length) {
-          handleCarrierSelect(filteredCarriers[highlightedIdx]);
-        } else {
+      if (totalOptions === 0) return;
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setHighlightedIdx(prev => (prev + 1) % totalOptions);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setHighlightedIdx(prev => (prev <= 0 ? totalOptions - 1 : prev - 1));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (highlightedIdx >= 0 && highlightedIdx < filteredCarriers.length) {
+            handleCarrierSelect(filteredCarriers[highlightedIdx]);
+          } else {
+            setCarrierDropdownOpen(false);
+            setHighlightedIdx(-1);
+          }
+          break;
+        case 'Escape':
           setCarrierDropdownOpen(false);
           setHighlightedIdx(-1);
-        }
-        break;
-      case 'Escape':
-        setCarrierDropdownOpen(false);
-        setHighlightedIdx(-1);
-        break;
-    }
-  }, [carrierDropdownOpen, filteredCarriers, totalOptions, highlightedIdx, handleCarrierSelect]);
+          break;
+      }
+    },
+    [carrierDropdownOpen, filteredCarriers, totalOptions, highlightedIdx, handleCarrierSelect]
+  );
 
   const handleSubmit = useCallback(async () => {
-    if (contractType !== CONTRACT_TYPES.RWA_TOKEN && !trackingInfo.trackingNumber.trim()) {
+    if (deliveryMode === 'physical' && !trackingInfo.trackingNumber.trim()) {
       toast({
         title: t('order.actions.error'),
         description: t('order.fulfill.trackingRequired'),
@@ -164,7 +181,16 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
       return;
     }
 
-    if (showReceivingAccountSelector && !selectedAccountRef.current) {
+    if (deliveryMode === 'digital' && !trackingInfo.fileUrl.trim()) {
+      toast({
+        title: t('order.actions.error'),
+        description: t('order.fulfill.urlRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (deliveryMode === 'rwa' && !selectedAccountRef.current) {
       toast({
         title: t('order.actions.error'),
         description: t('order.fulfill.receivingAccountRequired'),
@@ -180,28 +206,45 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         note: trackingInfo.note || '',
       };
 
-      if (contractType !== CONTRACT_TYPES.RWA_TOKEN) {
+      if (deliveryMode === 'physical') {
         payload.physicalDelivery = {
           shipper: trackingInfo.shipper || '',
           trackingNumber: trackingInfo.trackingNumber,
         };
       }
 
-      if (showReceivingAccountSelector && selectedAccountRef.current) {
+      if (deliveryMode === 'digital') {
+        payload.digitalDelivery = {
+          url: trackingInfo.fileUrl,
+          password: trackingInfo.filePassword || undefined,
+        };
+      }
+
+      if (deliveryMode === 'rwa' && selectedAccountRef.current) {
         payload.receivingAccountID = selectedAccountRef.current.id;
       }
 
       const result = await ordersApi.fulfillOrder(payload);
 
       if (result.success) {
-        if (trackingInfo.shipper) {
-          try { localStorage.setItem('mbz_last_carrier', trackingInfo.shipper); } catch { /* noop */ }
+        if (deliveryMode === 'physical' && trackingInfo.shipper) {
+          try {
+            localStorage.setItem('mbz_last_carrier', trackingInfo.shipper);
+          } catch {
+            /* noop */
+          }
         }
         toast({
           title: t('order.actions.fulfillSuccess'),
           description: t('order.actions.fulfillSuccessDesc'),
         });
-        setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
+        setTrackingInfo({
+          shipper: '',
+          trackingNumber: '',
+          note: '',
+          fileUrl: '',
+          filePassword: '',
+        });
         setCarrierQuery('');
         selectedAccountRef.current = null;
         onOpenChange(false);
@@ -220,21 +263,18 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [
-    orderId,
-    contractType,
-    trackingInfo,
-    showReceivingAccountSelector,
-    onOpenChange,
-    onSuccess,
-    t,
-    toast,
-  ]);
+  }, [orderId, trackingInfo, deliveryMode, onOpenChange, onSuccess, t, toast]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
       if (!newOpen) {
-        setTrackingInfo({ shipper: '', trackingNumber: '', note: '' });
+        setTrackingInfo({
+          shipper: '',
+          trackingNumber: '',
+          note: '',
+          fileUrl: '',
+          filePassword: '',
+        });
         setCarrierQuery('');
         selectedAccountRef.current = null;
       }
@@ -247,14 +287,22 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('order.fulfill.shipOrder')}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {deliveryMode === 'physical' && t('order.dialogs.fulfillOrder.title')}
+            {deliveryMode === 'digital' && t('order.dialogs.fulfillOrder.digitalTitle')}
+            {deliveryMode === 'service' && t('order.dialogs.fulfillOrder.serviceTitle')}
+            {deliveryMode === 'rwa' && t('order.dialogs.fulfillOrder.title')}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            {t('order.dialogs.fulfillOrder.description')}
+            {deliveryMode === 'physical' && t('order.dialogs.fulfillOrder.description')}
+            {deliveryMode === 'digital' && t('order.dialogs.fulfillOrder.digitalDescription')}
+            {deliveryMode === 'service' && t('order.dialogs.fulfillOrder.serviceDescription')}
+            {deliveryMode === 'rwa' && t('order.dialogs.fulfillOrder.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="space-y-4 py-4">
-          {showReceivingAccountSelector && (
+          {deliveryMode === 'rwa' && (
             <ReceivingAccountSelector
               blockchain={blockchain}
               onAccountChange={handleAccountChange}
@@ -263,11 +311,14 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
             />
           )}
 
-          {contractType !== CONTRACT_TYPES.RWA_TOKEN && (
+          {deliveryMode === 'physical' && (
             <>
               {/* Carrier selector with autocomplete */}
               <div className="relative" ref={dropdownRef}>
-                <label className="text-sm font-medium text-foreground mb-1.5 block" id="carrier-label">
+                <label
+                  className="text-sm font-medium text-foreground mb-1.5 block"
+                  id="carrier-label"
+                >
                   {t('order.fulfill.carrier')}
                 </label>
                 <div className="relative">
@@ -278,7 +329,9 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                     aria-expanded={carrierDropdownOpen}
                     aria-controls="carrier-listbox"
                     aria-labelledby="carrier-label"
-                    aria-activedescendant={highlightedIdx >= 0 ? `carrier-option-${highlightedIdx}` : undefined}
+                    aria-activedescendant={
+                      highlightedIdx >= 0 ? `carrier-option-${highlightedIdx}` : undefined
+                    }
                     value={carrierQuery}
                     onChange={e => handleCarrierInputChange(e.target.value)}
                     onFocus={() => setCarrierDropdownOpen(true)}
@@ -289,9 +342,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                     disabled={isLoading}
                     autoComplete="off"
                   />
-                  <ChevronDown
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
-                  />
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>
 
                 {carrierDropdownOpen && (filteredCarriers.length > 0 || carrierQuery.trim()) && (
@@ -306,10 +357,12 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                       return carrierGroups.map((group, gi) => (
                         <div key={group.region}>
                           {carrierGroups.length > 1 && (
-                            <div className={cn(
-                              'px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50 sticky top-0',
-                              gi > 0 && 'border-t border-border'
-                            )}>
+                            <div
+                              className={cn(
+                                'px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/50 sticky top-0',
+                                gi > 0 && 'border-t border-border'
+                              )}
+                            >
                               {group.label}
                             </div>
                           )}
@@ -346,7 +399,9 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                         aria-selected={highlightedIdx === filteredCarriers.length}
                         className={cn(
                           'w-full px-3 py-1.5 text-left text-sm transition-colors border-t border-border italic text-muted-foreground',
-                          highlightedIdx === filteredCarriers.length ? 'bg-muted' : 'hover:bg-muted',
+                          highlightedIdx === filteredCarriers.length
+                            ? 'bg-muted'
+                            : 'hover:bg-muted',
                           filteredCarriers.length === 0 && 'border-t-0'
                         )}
                         onMouseDown={e => {
@@ -375,7 +430,11 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                     if (!trackingInfo.shipper.trim() && val.trim().length >= 8) {
                       const detected = detectCarrier(val);
                       if (detected) {
-                        setTrackingInfo(prev => ({ ...prev, shipper: detected.id, trackingNumber: val }));
+                        setTrackingInfo(prev => ({
+                          ...prev,
+                          shipper: detected.id,
+                          trackingNumber: val,
+                        }));
                         setCarrierQuery(detected.name);
                       }
                     }
@@ -391,6 +450,43 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                 )}
               </div>
             </>
+          )}
+
+          {deliveryMode === 'digital' && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  {t('order.fulfill.fileUrl')} *
+                </label>
+                <input
+                  type="url"
+                  value={trackingInfo.fileUrl}
+                  onChange={e => setTrackingInfo(prev => ({ ...prev, fileUrl: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder={t('order.fulfill.fileUrlPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  {t('order.fulfill.password')}
+                </label>
+                <input
+                  type="text"
+                  value={trackingInfo.filePassword}
+                  onChange={e =>
+                    setTrackingInfo(prev => ({ ...prev, filePassword: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  placeholder={t('order.fulfill.passwordPlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+            </>
+          )}
+
+          {deliveryMode === 'service' && (
+            <p className="text-sm text-muted-foreground">{t('order.fulfill.serviceHint')}</p>
           )}
 
           <div>

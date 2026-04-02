@@ -916,6 +916,12 @@ export const ja: TranslationResource = {
       fulfillOrder: {
         title: '発送する',
         description: 'この注文の配送情報を入力してください。確認後、購入者に通知されます。',
+        digitalTitle: 'デジタル商品を配信',
+        digitalDescription:
+          '購入者にダウンロードリンクを提供してください。パスワードとメモを追加できます。',
+        serviceTitle: 'サービス完了を確認',
+        serviceDescription:
+          'サービスが完了したことを確認してください。購入者へのメモを追加できます。',
       },
       completeOrder: {
         title: '受取確認',
@@ -955,6 +961,9 @@ export const ja: TranslationResource = {
       inviteTitle: 'ご利用の感想はいかがでしたか？',
       inviteDesc: '30秒でフィードバックを共有 — 他の購入者と出品者の助けになります。',
       writeReview: 'レビューを書く',
+      photos: '写真（任意）',
+      addPhoto: '写真を追加',
+      photosHint: '最大{{max}}枚、各{{size}}MBまで',
     },
     accept: {
       title: '注文を承認',
@@ -1879,6 +1888,7 @@ export const ja: TranslationResource = {
     protection: {
       escrowed: '資金を保護中',
       escrowedDesc: 'お支払いは安全に預かられています',
+      escrowedSellerDesc: '購入者の支払いは安全に保管されています。納品確認後に資金が送金されます',
       shipping: '発送',
       shippingDesc: '出品者が注文を発送しました',
       protectionPeriod: '保護期間',
@@ -1906,6 +1916,8 @@ export const ja: TranslationResource = {
       levelPlatform: 'プラットフォーム保護',
       cancelablePeriodDesc: '確認は{{days}}日以内 — 受取確認または必要ならキャンセル',
       cancelableEscrowedDesc: 'お支払いは安全な共同口座に預かっています',
+      cancelableEscrowedSellerDesc:
+        '購入者の支払いは安全に保管されています — 納品後に資金が送金されます',
       cancelableSellerCountdown: '購入者の確認期限 {{days}}日',
     },
   },

@@ -70,10 +70,15 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
 
   const escrowText = useMemo(() => {
     if (stage !== 'ESCROWED') return null;
+    if (userRole === 'seller') {
+      return isCancelable
+        ? t('trust.protection.cancelableEscrowedSellerDesc')
+        : t('trust.protection.escrowedSellerDesc');
+    }
     return isCancelable
       ? t('trust.protection.cancelableEscrowedDesc')
       : t('trust.protection.escrowedDesc');
-  }, [stage, isCancelable, t]);
+  }, [stage, isCancelable, userRole, t]);
 
   const autoCompleteText = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' || !autoCompleteAt) return null;
