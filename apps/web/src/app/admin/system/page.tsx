@@ -247,7 +247,7 @@ export default function SystemPage() {
           onClick={fetchHealth}
           disabled={loading}
           className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-          title="Refresh"
+          title={t('system.refresh')}
         >
           <RefreshCw className={`w-4 h-4 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -262,8 +262,14 @@ export default function SystemPage() {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-500" />
             <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <div className="font-medium text-foreground capitalize">{health!.status}</div>
+              <div className="text-sm text-muted-foreground">{t('system.status.label')}</div>
+              <div className="font-medium text-foreground capitalize">
+                {health!.status === 'healthy'
+                  ? t('system.status.healthy')
+                  : health!.status === 'degraded'
+                    ? t('system.status.degraded')
+                    : health!.status}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -548,12 +554,18 @@ export default function SystemPage() {
           {doctorResult && (
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
               <div className="flex items-center gap-4 text-sm font-medium">
-                <span className="text-green-500">{doctorResult.pass} passed</span>
+                <span className="text-green-500">
+                  {doctorResult.pass} {t('system.doctor.passed')}
+                </span>
                 {doctorResult.warn > 0 && (
-                  <span className="text-yellow-500">{doctorResult.warn} warnings</span>
+                  <span className="text-yellow-500">
+                    {doctorResult.warn} {t('system.doctor.warnings')}
+                  </span>
                 )}
                 {doctorResult.fail > 0 && (
-                  <span className="text-destructive">{doctorResult.fail} failed</span>
+                  <span className="text-destructive">
+                    {doctorResult.fail} {t('system.doctor.failed')}
+                  </span>
                 )}
               </div>
               <div className="space-y-1">

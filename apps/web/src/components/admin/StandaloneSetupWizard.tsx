@@ -701,7 +701,7 @@ export default function StandaloneSetupWizard({
           <div className="space-y-3 text-left">
             <button
               onClick={() => handleFinish('/admin/settings/payments')}
-              className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent/50 transition-colors group"
+              className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent transition-colors group"
             >
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
                 <Wallet className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -710,12 +710,12 @@ export default function StandaloneSetupWizard({
                 <p className="text-sm font-medium text-foreground">
                   {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
                   {t('admin.onboarding.setupPaymentsDesc') ||
                     'Add crypto wallets, connect Stripe or PayPal'}
                 </p>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
             </button>
 
             <button
@@ -729,12 +729,12 @@ export default function StandaloneSetupWizard({
                 <p className="text-sm font-medium text-foreground">
                   {t('admin.onboarding.designWithAi') || 'Design your store with AI'}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
                   {t('admin.onboarding.designWithAiDesc') ||
                     'Customize branding, colors, and layout with AI assistance'}
                 </p>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
             </button>
           </div>
 
