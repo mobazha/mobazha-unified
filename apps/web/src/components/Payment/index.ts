@@ -10,6 +10,7 @@ export { PaymentCryptoSelector } from './PaymentCryptoSelector';
 export { ModeratorSelector } from './ModeratorSelector';
 export { ModeratorCard } from './ModeratorCard';
 export { CryptoTokenCard } from './CryptoTokenCard';
+export { MultiChainTokenCard } from './MultiChainTokenCard';
 export { TokenIcon } from './TokenIcon';
 export { PaymentProtectionCard } from './PaymentProtectionCard';
 export { PaymentMethodSummary } from './PaymentMethodSummary';

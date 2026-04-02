@@ -3453,6 +3453,12 @@ export interface TranslationResource {
     paypal?: string;
     notConnected?: string;
     cryptoSection?: string;
+    stablecoins?: string;
+    stablecoinsRecommended?: string;
+    nativeCoins?: string;
+    otherTokens?: string;
+    selectNetwork?: string;
+    chainsAvailable?: string;
     configureApiKeys?: string;
     saveAndVerify?: string;
     verifySuccess?: string;
