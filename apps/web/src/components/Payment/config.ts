@@ -197,3 +197,50 @@ export function getBlockchains(): ChainConfig[] {
 export function getAllChains(): ChainConfig[] {
   return CHAINS;
 }
+
+/**
+ * 稳定币符号集合 — 同一 symbol 跨多链的代币归入 "Stablecoins" 分组
+ */
+const STABLECOIN_SYMBOLS = new Set(['USDT', 'USDC', 'DAI', 'BUSD']);
+
+/**
+ * 币种分组项：同一 symbol 下可能有多条链
+ */
+export interface CurrencyGroup {
+  symbol: string;
+  tokens: TokenConfig[];
+  category: 'stablecoin' | 'native' | 'other';
+}
+
+/**
+ * 将可用代币列表按币种符号分组，并按类别排序。
+ * - stablecoin: USDT / USDC / DAI / BUSD（同一 symbol 多链共享一张卡片）
+ * - native: BTC / ETH / BNB 等链原生币（单链，直接选中）
+ * - other: 其余
+ */
+export function groupTokensByCurrency(tokens: TokenConfig[]): CurrencyGroup[] {
+  const map = new Map<string, TokenConfig[]>();
+
+  for (const t of tokens) {
+    const key = t.token;
+    if (!map.has(key)) {
+      map.set(key, []);
+    }
+    map.get(key)!.push(t);
+  }
+
+  const groups: CurrencyGroup[] = [];
+  for (const [symbol, items] of map) {
+    const category: CurrencyGroup['category'] = STABLECOIN_SYMBOLS.has(symbol)
+      ? 'stablecoin'
+      : items.length === 1 && items[0].isNative
+        ? 'native'
+        : 'other';
+    groups.push({ symbol, tokens: items, category });
+  }
+
+  const ORDER: Record<CurrencyGroup['category'], number> = { stablecoin: 0, native: 1, other: 2 };
+  groups.sort((a, b) => ORDER[a.category] - ORDER[b.category]);
+
+  return groups;
+}

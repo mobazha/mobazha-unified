@@ -1,24 +1,16 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { ChevronDown, ChevronUp, CreditCard, Check, ExternalLink } from 'lucide-react';
+import React, { useMemo, useCallback } from 'react';
+import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
-import { TOKENS, CHAINS, FIAT_METHODS } from './config';
+import { TOKENS, CHAINS, FIAT_METHODS, groupTokensByCurrency, getChainById } from './config';
+import type { CurrencyGroup } from './config';
 import { CryptoTokenCard } from './CryptoTokenCard';
-
-const CHAIN_COLORS: Record<string, string> = {
-  all: 'bg-muted text-muted-foreground',
-  BTC: 'bg-warning/15 text-warning',
-  LTC: 'bg-muted text-muted-foreground',
-  ETH: 'bg-primary/15 text-primary',
-  SOL: 'bg-primary/15 text-primary',
-  BSC: 'bg-warning/15 text-warning',
-  BASE: 'bg-info/15 text-info',
-  MATIC: 'bg-primary/15 text-primary',
-};
+import { MultiChainTokenCard } from './MultiChainTokenCard';
+import { TokenIcon } from './TokenIcon';
 
 export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   selectedTokenId,
@@ -35,9 +27,6 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
 }) => {
   const { t } = useI18n();
   const { isEmbedded } = useMiniAppPayment();
-  const [activeChain, setActiveChain] = useState<string>('all');
-  const [showAllTokens, setShowAllTokens] = useState(false);
-  const maxVisibleTokens = 8;
 
   const hasFiat = useMemo(
     () => showFiatMethods && availableFiatProviders && availableFiatProviders.length > 0,
@@ -49,10 +38,6 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     return FIAT_METHODS.filter(m => availableFiatProviders.includes(m.providerID));
   }, [hasFiat, availableFiatProviders]);
 
-  const availableChains = useMemo(() => {
-    return CHAINS.filter(chain => chain.type === 'filter' || !chain.comingSoon);
-  }, []);
-
   const availableTokens = useMemo(() => {
     if (isRwaTokenPurchase && rwaBlockchain) {
       return TOKENS.filter(
@@ -60,7 +45,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
       );
     }
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
-    let tokens = TOKENS.filter(t => !comingSoonChains.includes(t.chain) && !t.disabled);
+    let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain) && !tok.disabled);
     if (acceptedCurrencies) {
       const accepted = new Set(
         acceptedCurrencies
@@ -76,27 +61,25 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     return tokens;
   }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
 
-  const filteredTokens = useMemo(() => {
-    if (activeChain === 'all') return availableTokens;
-    return availableTokens.filter(token => token.chain === activeChain);
-  }, [activeChain, availableTokens]);
+  const currencyGroups = useMemo(() => groupTokensByCurrency(availableTokens), [availableTokens]);
 
-  const visibleTokens = useMemo(() => {
-    if (showAllTokens) return filteredTokens;
-    return filteredTokens.slice(0, maxVisibleTokens);
-  }, [filteredTokens, showAllTokens]);
-
-  const hasMoreTokens = filteredTokens.length > maxVisibleTokens;
-
-  const handleChainClick = useCallback((chainId: string) => {
-    setActiveChain(chainId);
-    setShowAllTokens(false);
-  }, []);
+  const stablecoins = useMemo(
+    () => currencyGroups.filter(g => g.category === 'stablecoin'),
+    [currencyGroups]
+  );
+  const nativeCoins = useMemo(
+    () => currencyGroups.filter(g => g.category === 'native'),
+    [currencyGroups]
+  );
+  const otherTokens = useMemo(
+    () => currencyGroups.filter(g => g.category === 'other'),
+    [currencyGroups]
+  );
 
   const handleTokenSelect = useCallback(
-    (token: TokenConfig) => {
+    (tokenId: string) => {
       if (disabled) return;
-      onSelect(token.id);
+      onSelect(tokenId);
     },
     [disabled, onSelect]
   );
@@ -133,8 +116,8 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
-      {/* Fiat methods — shown first when seller has providers */}
+    <div className={cn('space-y-5', className)}>
+      {/* Fiat methods */}
       {activeFiatMethods.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
@@ -179,9 +162,9 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
         </div>
       )}
 
-      {/* Crypto section — hidden entirely when seller accepts no crypto */}
+      {/* Crypto section */}
       {availableTokens.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {activeFiatMethods.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
@@ -189,79 +172,164 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
               </span>
               {isEmbedded && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                  Recommended
+                  {t('fiat.stablecoinsRecommended')}
                 </span>
               )}
             </div>
           )}
 
-          {/* Chain tabs */}
-          {!isRwaTokenPurchase && (
+          {/* RWA mode: flat grid, no grouping */}
+          {isRwaTokenPurchase ? (
             <div className="flex flex-wrap gap-2">
-              {availableChains.map(chain => (
-                <button
-                  key={chain.id}
-                  type="button"
-                  onClick={() => handleChainClick(chain.id)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
-                    'hover:opacity-80 active:scale-95',
-                    activeChain === chain.id
-                      ? cn(
-                          CHAIN_COLORS[chain.id] || CHAIN_COLORS['all'],
-                          'ring-1 ring-inset ring-current/20'
-                        )
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                  )}
-                >
-                  {chain.name}
-                </button>
+              {availableTokens.map(token => (
+                <CryptoTokenCard
+                  key={token.id}
+                  token={token}
+                  selected={selectedTokenId === token.id && !selectedFiatProvider}
+                  onClick={() => handleTokenSelect(token.id)}
+                  disabled={disabled}
+                />
               ))}
             </div>
+          ) : (
+            <>
+              {/* Stablecoins section */}
+              {stablecoins.length > 0 && (
+                <CurrencySection
+                  label={t('fiat.stablecoins')}
+                  badge={t('fiat.stablecoinsRecommended')}
+                  groups={stablecoins}
+                  selectedTokenId={selectedTokenId}
+                  selectedFiatProvider={selectedFiatProvider}
+                  onSelect={handleTokenSelect}
+                  disabled={disabled}
+                />
+              )}
+
+              {/* Native coins section */}
+              {nativeCoins.length > 0 && (
+                <CurrencySection
+                  label={t('fiat.nativeCoins')}
+                  groups={nativeCoins}
+                  selectedTokenId={selectedTokenId}
+                  selectedFiatProvider={selectedFiatProvider}
+                  onSelect={handleTokenSelect}
+                  disabled={disabled}
+                />
+              )}
+
+              {/* Other tokens section */}
+              {otherTokens.length > 0 && (
+                <CurrencySection
+                  label={t('fiat.otherTokens')}
+                  groups={otherTokens}
+                  selectedTokenId={selectedTokenId}
+                  selectedFiatProvider={selectedFiatProvider}
+                  onSelect={handleTokenSelect}
+                  disabled={disabled}
+                />
+              )}
+            </>
           )}
-
-          {/* Token grid */}
-          <div className="flex flex-wrap gap-2">
-            {visibleTokens.map(token => (
-              <CryptoTokenCard
-                key={token.id}
-                token={token}
-                selected={selectedTokenId === token.id && !selectedFiatProvider}
-                onClick={() => handleTokenSelect(token)}
-                disabled={disabled}
-              />
-            ))}
-
-            {hasMoreTokens && (
-              <button
-                type="button"
-                onClick={() => setShowAllTokens(!showAllTokens)}
-                className={cn(
-                  'flex items-center gap-1 min-w-[100px] h-11 px-3 rounded-lg',
-                  'border border-border bg-muted/30',
-                  'text-sm text-muted-foreground',
-                  'hover:bg-muted/50 transition-colors'
-                )}
-              >
-                {showAllTokens ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    <span>{t('payment.showLess')}</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    <span>
-                      {t('payment.showMore')} ({filteredTokens.length - maxVisibleTokens})
-                    </span>
-                  </>
-                )}
-              </button>
-            )}
-          </div>
         </div>
       )}
     </div>
+  );
+};
+
+/* ─── Section renderer ─── */
+
+interface CurrencySectionProps {
+  label: string;
+  badge?: string;
+  groups: CurrencyGroup[];
+  selectedTokenId?: string;
+  selectedFiatProvider?: string;
+  onSelect: (tokenId: string) => void;
+  disabled: boolean;
+}
+
+const CurrencySection: React.FC<CurrencySectionProps> = ({
+  label,
+  badge,
+  groups,
+  selectedTokenId,
+  selectedFiatProvider,
+  onSelect,
+  disabled,
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+        {label}
+      </span>
+      {badge && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+          {badge}
+        </span>
+      )}
+    </div>
+
+    <div className="flex flex-col gap-1.5">
+      {groups.map(group =>
+        group.tokens.length > 1 ? (
+          <MultiChainTokenCard
+            key={group.symbol}
+            symbol={group.symbol}
+            tokens={group.tokens}
+            selectedTokenId={!selectedFiatProvider ? selectedTokenId : undefined}
+            onSelect={onSelect}
+            disabled={disabled}
+          />
+        ) : (
+          <SingleTokenRow
+            key={group.tokens[0].id}
+            token={group.tokens[0]}
+            selected={selectedTokenId === group.tokens[0].id && !selectedFiatProvider}
+            onSelect={onSelect}
+            disabled={disabled}
+          />
+        )
+      )}
+    </div>
+  </div>
+);
+
+/* ─── Single-chain token row (same visual weight as MultiChainTokenCard) ─── */
+
+interface SingleTokenRowProps {
+  token: TokenConfig;
+  selected: boolean;
+  onSelect: (tokenId: string) => void;
+  disabled: boolean;
+}
+
+const SingleTokenRow: React.FC<SingleTokenRowProps> = ({ token, selected, onSelect, disabled }) => {
+  const chain = getChainById(token.chain);
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(token.id)}
+      disabled={disabled}
+      className={cn(
+        'flex items-center gap-2.5 w-full min-h-[52px] px-3.5 py-2.5 rounded-xl',
+        'border transition-all duration-200',
+        'hover:bg-muted/50 active:scale-[0.98]',
+        selected
+          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+          : 'border-border bg-surface hover:border-muted-foreground/30',
+        disabled && 'opacity-50 cursor-not-allowed'
+      )}
+    >
+      <TokenIcon token={token.id} size={28} />
+
+      <div className="flex flex-col items-start flex-1 min-w-0">
+        <span className="text-sm font-semibold text-foreground">{token.token}</span>
+        <span className="text-xs text-muted-foreground">{chain?.name ?? token.chain}</span>
+      </div>
+
+      {selected && <Check className="w-4 h-4 text-primary shrink-0" />}
+    </button>
   );
 };
 
