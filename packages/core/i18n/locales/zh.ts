@@ -960,6 +960,7 @@ export const zh: TranslationResource = {
     accept: {
       title: '接受订单',
       description: '请选择您希望接收此订单付款的收款账户。',
+      fiatDescription: '付款已收到，确认接受此订单并准备发货。',
       receivingAccountRequired: '请选择收款账户',
     },
     fulfill: {

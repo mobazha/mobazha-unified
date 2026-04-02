@@ -1063,6 +1063,7 @@ export const en: TranslationResource = {
     accept: {
       title: 'Accept Order',
       description: 'Select the receiving account where you want to receive payment for this order.',
+      fiatDescription: 'Payment has been received. Accept this order and prepare for fulfillment.',
       receivingAccountRequired: 'Please select a receiving account',
     },
     // Fulfill modal
