@@ -1620,8 +1620,7 @@ export const ru: TranslationResource = {
     badge: 'Децентрализованный & P2P',
     titleLine1: 'Торгуйте свободно.',
     titleLine2: 'Торгуйте безопасно.',
-    subtitle:
-      'По-настоящему децентрализованный маркетплейс для товаров, услуг и цифровых активов. Без посредников. Без цензуры.',
+    subtitle: 'Без комиссий. Ваши данные — у вас. Криптоплатежи с защитой покупателей.',
     exploreMarket: 'Исследовать рынок',
     startSelling: 'Начать продавать',
     activeStores: 'Активные магазины',
@@ -1631,7 +1630,7 @@ export const ru: TranslationResource = {
   saasHome: {
     hero: {
       title: 'Запустите свой Web3-магазин',
-      subtitle: 'Без комиссий платформы. Ваши данные у вас. Криптоплатежи с защитой покупателя.',
+      subtitle: 'Без комиссий. Ваши данные — у вас. Криптоплатежи с защитой покупателей.',
       ctaCreate: 'Создать магазин',
       ctaExplore: 'Смотреть магазины',
       welcomeBack: 'С возвращением, {{storeName}}',
@@ -1650,8 +1649,8 @@ export const ru: TranslationResource = {
         description: 'Размещайте магазин на своём оборудовании или используйте наш хостинг',
       },
       lowFees: {
-        title: 'Без комиссий платформы',
-        description: 'Без ежемесячных подписок и комиссий с транзакций',
+        title: 'Без комиссий',
+        description: 'Без комиссий на все транзакции',
       },
       cryptoNative: {
         title: 'Нативная крипта',
@@ -4164,8 +4163,8 @@ export const ru: TranslationResource = {
       landingTitle: 'Запустите интернет-магазин',
       landingSubtitle:
         'Присоединяйтесь к тысячам продавцов на Mobazha. Настройка за минуты — продажи по всему миру.',
-      landingFeature1: 'Без комиссий платформы',
-      landingFeature1Desc: '100% выручки остаётся у вас',
+      landingFeature1: 'Без комиссий',
+      landingFeature1Desc: 'Мы не берём процент с ваших продаж',
       landingFeature2: 'Защита покупателя',
       landingFeature2Desc: 'Встроенный эскроу для безопасных сделок',
       landingFeature3: 'Продажи по всему миру',

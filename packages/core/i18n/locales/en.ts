@@ -1810,7 +1810,7 @@ export const en: TranslationResource = {
     badge: 'Web3 Store Builder',
     titleLine1: 'Launch Your',
     titleLine2: 'Web3 Store',
-    subtitle: 'Zero platform fees. Own your data. Accept crypto payments with buyer protection.',
+    subtitle: 'Zero commissions. Own your data. Accept crypto payments with buyer protection.',
     exploreMarket: 'Explore Market',
     startSelling: 'Start Selling',
     activeStores: 'Active Stores',
@@ -1821,7 +1821,7 @@ export const en: TranslationResource = {
   saasHome: {
     hero: {
       title: 'Launch Your Web3 Store',
-      subtitle: 'Zero platform fees. Own your data. Accept crypto payments with buyer protection.',
+      subtitle: 'Zero commissions. Own your data. Accept crypto payments with buyer protection.',
       ctaCreate: 'Create Your Store',
       ctaExplore: 'Explore Stores',
       welcomeBack: 'Welcome back, {{storeName}}',
@@ -1840,8 +1840,8 @@ export const en: TranslationResource = {
         description: 'Run your store on your own hardware or use our hosted service',
       },
       lowFees: {
-        title: 'Zero Platform Fees',
-        description: 'No monthly subscriptions, no transaction commissions',
+        title: 'Zero Commissions',
+        description: 'No platform commissions on any transaction',
       },
       cryptoNative: {
         title: 'Crypto Native',
@@ -4558,8 +4558,8 @@ export const en: TranslationResource = {
     onboarding: {
       landingTitle: 'Start Your Online Store',
       landingSubtitle: 'Join thousands of sellers on Mobazha. Set up in minutes, sell globally.',
-      landingFeature1: 'Zero Platform Fees',
-      landingFeature1Desc: 'Keep 100% of your revenue',
+      landingFeature1: 'Zero Commissions',
+      landingFeature1Desc: 'No platform cut on your sales',
       landingFeature2: 'Buyer Protection',
       landingFeature2Desc: 'Built-in escrow for secure transactions',
       landingFeature3: 'Sell Globally',
@@ -5468,6 +5468,15 @@ export const en: TranslationResource = {
       used: 'used',
       free: 'free',
       goroutines: 'Goroutines',
+    },
+    updates: {
+      title: 'Software Updates',
+      autoUpdate: 'Auto-update',
+      enabled: 'Enabled',
+      disabled: 'Disabled',
+      autoUpdateDesc: 'New versions are automatically applied via Watchtower',
+      currentVersion: 'Current Version',
+      devBuild: 'Development Build',
     },
     actions: {
       title: 'Actions',

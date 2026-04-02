@@ -1646,8 +1646,7 @@ export const de: TranslationResource = {
     badge: 'Dezentral & Peer-to-Peer',
     titleLine1: 'Handeln Sie frei.',
     titleLine2: 'Handeln Sie sicher.',
-    subtitle:
-      'Ein wirklich dezentraler Marktplatz für Güter, Dienstleistungen und digitale Vermögenswerte. Keine Vermittler. Keine Zensur.',
+    subtitle: 'Keine Verkaufsprovision. Volle Datenkontrolle. Kryptozahlungen mit Käuferschutz.',
     exploreMarket: 'Markt erkunden',
     startSelling: 'Verkaufen starten',
     activeStores: 'Aktive Shops',
@@ -1657,8 +1656,7 @@ export const de: TranslationResource = {
   saasHome: {
     hero: {
       title: 'Starten Sie Ihren Web3-Shop',
-      subtitle:
-        'Keine Plattformgebühren. Daten gehören Ihnen. Krypto-Zahlungen mit Käuferschutz akzeptieren.',
+      subtitle: 'Keine Verkaufsprovision. Volle Datenkontrolle. Kryptozahlungen mit Käuferschutz.',
       ctaCreate: 'Shop erstellen',
       ctaExplore: 'Shops entdecken',
       welcomeBack: 'Willkommen zurück, {{storeName}}',
@@ -1677,8 +1675,8 @@ export const de: TranslationResource = {
         description: 'Betreiben Sie Ihren Shop auf eigener Hardware oder nutzen Sie unser Hosting',
       },
       lowFees: {
-        title: 'Keine Plattformgebühren',
-        description: 'Keine monatlichen Abos, keine Transaktionsprovisionen',
+        title: 'Keine Verkaufsprovision',
+        description: 'Keine Verkaufsprovision auf Transaktionen',
       },
       cryptoNative: {
         title: 'Krypto-nativ',
@@ -4249,8 +4247,8 @@ export const de: TranslationResource = {
       landingTitle: 'Starten Sie Ihren Onlineshop',
       landingSubtitle:
         'Schließen Sie sich Tausenden Verkäufern auf Mobazha an. In Minuten eingerichtet, weltweit verkaufen.',
-      landingFeature1: 'Keine Plattformgebühren',
-      landingFeature1Desc: 'Behalten Sie 100 % Ihres Umsatzes',
+      landingFeature1: 'Keine Verkaufsprovision',
+      landingFeature1Desc: 'Keine Abgabe auf Ihre Verkäufe',
       landingFeature2: 'Käuferschutz',
       landingFeature2Desc: 'Integrierte Treuhand für sichere Transaktionen',
       landingFeature3: 'Weltweit verkaufen',

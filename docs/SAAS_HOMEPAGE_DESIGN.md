@@ -347,7 +347,7 @@ const { data: products } = useQuery({
 saasHome: {
   hero: {
     title: 'Launch Your Web3 Store',
-    subtitle: 'Zero platform fees. Own your data. Accept crypto payments with buyer protection.',
+    subtitle: 'Zero commissions. Own your data. Accept crypto payments with buyer protection.',
     ctaCreate: 'Create Your Store',
     ctaExplore: 'Explore Stores',
     // 已登录卖家态

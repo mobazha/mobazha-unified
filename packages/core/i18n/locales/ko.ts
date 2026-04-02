@@ -1601,8 +1601,7 @@ export const ko: TranslationResource = {
     badge: '탈중앙화 & P2P',
     titleLine1: '자유롭게 거래하세요.',
     titleLine2: '안전하게 거래하세요.',
-    subtitle:
-      '상품, 서비스, 디지털 자산을 위한 진정한 탈중앙화 마켓플레이스. 중개자 없음. 검열 없음.',
+    subtitle: '판매 수수료 없음. 데이터를 직접 관리. 암호화폐 결제와 구매자 보호.',
     exploreMarket: '마켓 탐색',
     startSelling: '판매 시작',
     activeStores: '활성 스토어',
@@ -1612,7 +1611,7 @@ export const ko: TranslationResource = {
   saasHome: {
     hero: {
       title: 'Web3 스토어를 시작하세요',
-      subtitle: '플랫폼 수수료 없음. 데이터는 내 것. 암호화폐 결제와 구매자 보호.',
+      subtitle: '판매 수수료 없음. 데이터를 직접 관리. 암호화폐 결제와 구매자 보호.',
       ctaCreate: '스토어 만들기',
       ctaExplore: '스토어 둘러보기',
       welcomeBack: '다시 오신 것을 환영합니다, {{storeName}}',
@@ -1631,8 +1630,8 @@ export const ko: TranslationResource = {
         description: '직접 하드웨어에서 운영하거나 호스팅 서비스를 이용하세요',
       },
       lowFees: {
-        title: '플랫폼 수수료 없음',
-        description: '월 구독 없음, 거래 수수료 없음',
+        title: '판매 수수료 없음',
+        description: '모든 거래에서 판매 수수료 없음',
       },
       cryptoNative: {
         title: '크립토 네이티브',
@@ -4130,8 +4129,8 @@ export const ko: TranslationResource = {
       landingTitle: '온라인 스토어 시작하기',
       landingSubtitle:
         'Mobazha의 수많은 판매자와 함께하세요. 몇 분 만에 설정하고 전 세계에 판매하세요.',
-      landingFeature1: '플랫폼 수수료 없음',
-      landingFeature1Desc: '매출 100%를 유지',
+      landingFeature1: '판매 수수료 없음',
+      landingFeature1Desc: '판매액에서 수수료를 받지 않습니다',
       landingFeature2: '구매자 보호',
       landingFeature2Desc: '안전한 거래를 위한 내장 에스크로',
       landingFeature3: '전 세계 판매',

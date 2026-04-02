@@ -1613,8 +1613,7 @@ export const ja: TranslationResource = {
     badge: '分散型 & P2P',
     titleLine1: '自由に取引。',
     titleLine2: '安全に取引。',
-    subtitle:
-      '商品、サービス、デジタル資産のための真の分散型マーケットプレイス。仲介者なし。検閲なし。',
+    subtitle: '販売手数料ゼロ。データは自分で管理。暗号通貨決済と購入者保護。',
     exploreMarket: 'マーケットを探索',
     startSelling: '販売を開始',
     activeStores: 'アクティブストア',
@@ -1624,7 +1623,7 @@ export const ja: TranslationResource = {
   saasHome: {
     hero: {
       title: 'Web3ストアを始めよう',
-      subtitle: 'プラットフォーム手数料ゼロ。データはあなたのもの。暗号資産決済と購入者保護。',
+      subtitle: '販売手数料ゼロ。データは自分で管理。暗号通貨決済と購入者保護。',
       ctaCreate: 'ストアを作成',
       ctaExplore: 'ストアを探す',
       welcomeBack: 'おかえりなさい、{{storeName}}',
@@ -1643,8 +1642,8 @@ export const ja: TranslationResource = {
         description: '自前のハードウェアで運用するか、当社のホスティングを利用',
       },
       lowFees: {
-        title: 'プラットフォーム手数料ゼロ',
-        description: '月額課金なし、取引手数料なし',
+        title: '販売手数料ゼロ',
+        description: 'すべての取引で販売手数料ゼロ',
       },
       cryptoNative: {
         title: '暗号資産ネイティブ',
@@ -4149,8 +4148,8 @@ export const ja: TranslationResource = {
     onboarding: {
       landingTitle: 'オンラインストアを始める',
       landingSubtitle: 'Mobazhaの出品者に参加。数分で設定、世界中に販売。',
-      landingFeature1: 'プラットフォーム手数料ゼロ',
-      landingFeature1Desc: '売上の100%をあなたのものに',
+      landingFeature1: '販売手数料ゼロ',
+      landingFeature1Desc: '売上から手数料を取りません',
       landingFeature2: '購入者保護',
       landingFeature2Desc: '安全な取引のためのエスクロー内蔵',
       landingFeature3: '世界中に販売',

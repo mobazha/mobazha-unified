@@ -1632,7 +1632,7 @@ export const pt: TranslationResource = {
     titleLine1: 'Negocie livremente.',
     titleLine2: 'Negocie com segurança.',
     subtitle:
-      'Um marketplace verdadeiramente descentralizado para bens, serviços e ativos digitais. Sem intermediários. Sem censura.',
+      'Zero comissões. Seus dados, seu controle. Pagamentos cripto com proteção ao comprador.',
     exploreMarket: 'Explorar Mercado',
     startSelling: 'Começar a Vender',
     activeStores: 'Lojas Ativas',
@@ -1643,7 +1643,7 @@ export const pt: TranslationResource = {
     hero: {
       title: 'Lance sua loja Web3',
       subtitle:
-        'Sem taxas de plataforma. Seus dados são seus. Aceite cripto com Proteção ao Comprador.',
+        'Zero comissões. Seus dados, seu controle. Pagamentos cripto com proteção ao comprador.',
       ctaCreate: 'Criar sua loja',
       ctaExplore: 'Explorar lojas',
       welcomeBack: 'Bem-vindo de volta, {{storeName}}',
@@ -1662,8 +1662,8 @@ export const pt: TranslationResource = {
         description: 'Rode sua loja no seu próprio hardware ou use nosso serviço hospedado',
       },
       lowFees: {
-        title: 'Sem taxas de plataforma',
-        description: 'Sem assinaturas mensais, sem comissões por transação',
+        title: 'Zero comissões',
+        description: 'Zero comissões em todas as transações',
       },
       cryptoNative: {
         title: 'Nativo em cripto',
@@ -4208,8 +4208,8 @@ export const pt: TranslationResource = {
       landingTitle: 'Comece sua loja online',
       landingSubtitle:
         'Junte-se a milhares de vendedores na Mobazha. Configure em minutos, venda no mundo todo.',
-      landingFeature1: 'Sem taxas de plataforma',
-      landingFeature1Desc: 'Fique com 100% da sua receita',
+      landingFeature1: 'Zero comissões',
+      landingFeature1Desc: 'Sem comissões sobre suas vendas',
       landingFeature2: 'Proteção ao Comprador',
       landingFeature2Desc: 'Proteção ao Comprador integrada para transações seguras',
       landingFeature3: 'Venda globalmente',
