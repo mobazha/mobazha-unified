@@ -24,7 +24,6 @@ import {
   formatTokenAmount,
   getTokenByPaymentCoin,
   getPaymentCoinDisplayLabel,
-  resolveTokenIdForDisplay,
 } from '../../data/tokens';
 import { formatUserName } from '../identity';
 

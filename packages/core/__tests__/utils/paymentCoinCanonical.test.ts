@@ -32,11 +32,7 @@ describe('mustCanonicalCoin', () => {
   });
 
   it('resolves canonical native coins to chain symbols', () => {
-    expect(
-      getChainFromCoin(
-        'crypto:bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f:native'
-      )
-    ).toBe('BTC');
+    expect(getChainFromCoin('crypto:bip122:000000000019d6689c085ae165831e93:native')).toBe('BTC');
     expect(getChainFromCoin('crypto:tron:mainnet:native')).toBe('TRON');
   });
 

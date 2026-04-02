@@ -7,7 +7,7 @@
  */
 
 import type { CurrencyInfo } from '../types/currency';
-import { TOKENS, CHAINS } from './tokens';
+import { TOKENS, CHAINS, getPaymentCoinDisplayLabel, parseCanonicalPaymentCoin } from './tokens';
 
 /**
  * 基础加密货币列表
@@ -627,8 +627,49 @@ function resolveTokenCurrency(code: string): CurrencyInfo | undefined {
 }
 
 /**
+ * Resolve canonical asset IDs (e.g., "crypto:eip155:1:native") to a short
+ * currency code ("ETH") that the currency map recognises.
+ * Returns undefined when the input is already a short code or unrecognised.
+ */
+function resolveCanonicalToShortCode(code: string): string | undefined {
+  if (!code.includes(':')) return undefined;
+  const label = getPaymentCoinDisplayLabel(code);
+  return label && label !== code ? label : undefined;
+}
+
+/**
+ * Namespace-aware default decimals for canonical asset IDs.
+ * Used as last-resort fallback when TOKENS sync is stale or incomplete.
+ */
+const NAMESPACE_NATIVE_DECIMALS: Record<string, number> = {
+  eip155: 18,
+  bip122: 8,
+  solana: 9,
+  tron: 6,
+  bitcoincash: 8,
+  zcash: 8,
+};
+
+const NAMESPACE_TOKEN_DECIMALS: Record<string, number> = {
+  erc20: 18,
+  trc20: 6,
+  spl: 6,
+};
+
+function getDecimalsFromCanonical(code: string): number | undefined {
+  const parsed = parseCanonicalPaymentCoin(code);
+  if (!parsed) return undefined;
+
+  if (parsed.standard === 'native') {
+    return NAMESPACE_NATIVE_DECIMALS[parsed.namespace];
+  }
+  return NAMESPACE_TOKEN_DECIMALS[parsed.standard];
+}
+
+/**
  * 获取货币符号
- * 支持复合代币码（如 ETHUSDT → ₮, BSCUSDC → USDC）
+ * 支持复合代币码（如 ETHUSDT → ₮, BSCUSDC → USDC）和
+ * canonical asset IDs（如 crypto:eip155:1:native → Ξ）
  */
 export function getCurrencySymbol(code: string): string {
   const currency = getCurrencyByCode(code);
@@ -638,12 +679,20 @@ export function getCurrencySymbol(code: string): string {
   const baseCurrency = resolveTokenCurrency(code);
   if (baseCurrency) return baseCurrency.symbol;
 
+  // 尝试解析 canonical asset ID（如 crypto:eip155:1:native → ETH）
+  const shortCode = resolveCanonicalToShortCode(code);
+  if (shortCode) {
+    const resolved = getCurrencyByCode(shortCode);
+    if (resolved) return resolved.symbol;
+    return shortCode;
+  }
+
   return code;
 }
 
 /**
  * 获取货币精度
- * 支持复合代币码（如 ETHUSDT → 6, BSCUSDT → 18）
+ * 支持复合代币码（如 ETHUSDT → 6, BSCUSDT → 18）和 canonical asset IDs
  */
 export function getCurrencyDecimals(code: string): number {
   const currency = getCurrencyByCode(code);
@@ -653,13 +702,24 @@ export function getCurrencyDecimals(code: string): number {
   const baseCurrency = resolveTokenCurrency(code);
   if (baseCurrency) return baseCurrency.decimals;
 
+  // 尝试解析 canonical asset ID
+  const shortCode = resolveCanonicalToShortCode(code);
+  if (shortCode) {
+    const resolved = getCurrencyByCode(shortCode);
+    if (resolved) return resolved.decimals;
+  }
+
+  // Namespace-aware fallback for canonical IDs not yet in TOKENS
+  const nsDecimals = getDecimalsFromCanonical(code);
+  if (nsDecimals !== undefined) return nsDecimals;
+
   // 默认精度
   return isCryptoCurrency(code) ? 8 : 2;
 }
 
 /**
  * 判断是否为加密货币
- * 支持复合代币码（如 ETHUSDT → true）
+ * 支持复合代币码（如 ETHUSDT → true）和 canonical asset IDs
  */
 export function isCryptoCurrency(code: string): boolean {
   const currency = getCurrencyByCode(code);
@@ -667,6 +727,9 @@ export function isCryptoCurrency(code: string): boolean {
 
   // 复合代币码都是加密货币
   if (TOKEN_TO_BASE_RATE[code.toUpperCase()]) return true;
+
+  // canonical crypto asset IDs
+  if (code.startsWith('crypto:')) return true;
 
   return false;
 }
