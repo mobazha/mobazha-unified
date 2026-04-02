@@ -354,10 +354,12 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {t('order.orderIdLabel')}
               </h1>
               <span
-                className="text-sm font-mono text-foreground break-all leading-relaxed"
+                className="text-sm font-mono text-foreground leading-relaxed"
                 title={displayOrder.orderId}
               >
-                {displayOrder.orderId}
+                {displayOrder.orderId.length > 16
+                  ? `${displayOrder.orderId.slice(0, 8)}...${displayOrder.orderId.slice(-6)}`
+                  : displayOrder.orderId}
               </span>
               <button
                 onClick={copyOrderId}

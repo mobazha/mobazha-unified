@@ -398,6 +398,22 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     });
   }
 
+  // Cancel
+  if (
+    contract.orderCancel ||
+    data.state === 'CANCELED' ||
+    data.state === 'CANCELLED' ||
+    data.state === 'DECLINED'
+  ) {
+    timeline.push({
+      status: 'cancelled',
+      timestamp: contract.orderCancel?.timestamp || new Date().toISOString(),
+      description: 'Order cancelled',
+      descriptionKey: 'order.timeline.orderCancelled',
+      actor: 'system',
+    });
+  }
+
   // Refund (order state is REFUNDED)
   if (data.state === 'REFUNDED') {
     timeline.push({
@@ -809,6 +825,7 @@ export function transformCoreOrder(
     paymentCoin: paymentCoin,
     paymentAmount: formattedPaymentAmount,
     createdAt: timestamp,
+    cancelledAt: contract.orderCancel?.timestamp || undefined,
     vendor: {
       id: vendorPeerID,
       name: formatUserName({ name: vendorName, peerID: vendorPeerID }, { fallback: 'Seller' }),

@@ -172,9 +172,14 @@ export const OrderStatusCard = memo(function OrderStatusCard({
       case 'cancelled':
         return {
           icon: XCircle,
-          message: t('order.statusCard.cancelled'),
-          color: 'text-muted-foreground',
-          bgColor: 'bg-muted/50 border-border/50',
+          message: isBuyer
+            ? t('order.statusCard.cancelledBuyer')
+            : t('order.statusCard.cancelledSeller'),
+          hint: isBuyer
+            ? t('order.statusCard.cancelledHintBuyer')
+            : t('order.statusCard.cancelledHintSeller'),
+          color: 'text-amber-600 dark:text-amber-400',
+          bgColor: 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/40',
           progress: -1,
         };
       case 'refunded':
@@ -234,6 +239,21 @@ export const OrderStatusCard = memo(function OrderStatusCard({
             <p className="text-xs text-muted-foreground mt-1">
               {t('order.statusCard.reason')}: {cancelReason}
             </p>
+          )}
+          {isTerminal && order.status === 'cancelled' && (order.createdAt || order.cancelledAt) && (
+            <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-2">
+              {order.createdAt && (
+                <span>
+                  {t('order.statusCard.orderedAt')}: {new Date(order.createdAt).toLocaleString()}
+                </span>
+              )}
+              {order.cancelledAt && (
+                <span>
+                  {t('order.statusCard.cancelledAt')}:{' '}
+                  {new Date(order.cancelledAt).toLocaleString()}
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>
