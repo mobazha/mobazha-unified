@@ -1007,6 +1007,12 @@ export const en: TranslationResource = {
         title: 'Ship Order',
         description:
           'Enter the shipping information for this order. The buyer will be notified once you confirm.',
+        digitalTitle: 'Deliver Digital Product',
+        digitalDescription:
+          'Provide the download link for the buyer. You can also add an optional password and note.',
+        serviceTitle: 'Confirm Service Completion',
+        serviceDescription:
+          'Confirm that the service has been completed. You may include a note for the buyer.',
       },
       completeOrder: {
         title: 'Confirm Receipt',
@@ -1049,6 +1055,9 @@ export const en: TranslationResource = {
       inviteTitle: 'How was your experience?',
       inviteDesc: 'Share your feedback in 30 seconds — it helps other buyers and the seller.',
       writeReview: 'Write a Review',
+      photos: 'Photos (optional)',
+      addPhoto: 'Add photo',
+      photosHint: 'Up to {{max}} images, {{size}}MB each',
     },
     // Accept modal
     accept: {
@@ -2085,6 +2094,7 @@ export const en: TranslationResource = {
     protection: {
       escrowed: 'Funds Secured',
       escrowedDesc: 'Your funds are held securely',
+      escrowedSellerDesc: "The buyer's payment is held securely until delivery is confirmed",
       shipping: 'Shipping',
       shippingDesc: 'Seller has shipped your order',
       protectionPeriod: 'Protection Period',
@@ -2112,6 +2122,8 @@ export const en: TranslationResource = {
       levelPlatform: 'Platform Protected',
       cancelablePeriodDesc: '{{days}} days to verify — confirm receipt or cancel if needed',
       cancelableEscrowedDesc: 'Your payment is held in a secure shared account',
+      cancelableEscrowedSellerDesc:
+        "The buyer's payment is held securely — funds will be released after delivery",
       cancelableSellerCountdown: '{{days}} days for buyer to verify',
     },
   },

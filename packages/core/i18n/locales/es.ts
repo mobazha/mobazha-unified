@@ -923,6 +923,12 @@ export const es: TranslationResource = {
         title: 'Enviar pedido',
         description:
           'Ingresa la información de envío. El comprador será notificado cuando confirmes.',
+        digitalTitle: 'Entregar Producto Digital',
+        digitalDescription:
+          'Proporcione el enlace de descarga para el comprador. Puede agregar una contraseña y una nota opcionales.',
+        serviceTitle: 'Confirmar Servicio Completado',
+        serviceDescription:
+          'Confirme que el servicio ha sido completado. Puede incluir una nota para el comprador.',
       },
       completeOrder: {
         title: 'Confirmar recepción',
@@ -963,6 +969,9 @@ export const es: TranslationResource = {
       inviteTitle: '¿Cómo fue tu experiencia?',
       inviteDesc: 'Comparte tu opinión en 30 segundos: ayuda a otros compradores y al vendedor.',
       writeReview: 'Escribir una reseña',
+      photos: 'Fotos (opcional)',
+      addPhoto: 'Agregar foto',
+      photosHint: 'Hasta {{max}} imágenes, {{size}}MB cada una',
     },
     accept: {
       title: 'Aceptar pedido',
@@ -1902,6 +1911,7 @@ export const es: TranslationResource = {
     protection: {
       escrowed: 'Fondos asegurados',
       escrowedDesc: 'Tus fondos están retenidos de forma segura',
+      escrowedSellerDesc: 'El pago del comprador está seguro y se liberará tras la entrega',
       shipping: 'Envío',
       shippingDesc: 'El vendedor envió tu pedido',
       protectionPeriod: 'Período de protección',
@@ -1930,6 +1940,8 @@ export const es: TranslationResource = {
       cancelablePeriodDesc:
         '{{days}} días para verificar: confirma la recepción o cancela si hace falta',
       cancelableEscrowedDesc: 'Tu pago está retenido en una cuenta compartida segura',
+      cancelableEscrowedSellerDesc:
+        'El pago del comprador está seguro — los fondos se liberarán tras la entrega',
       cancelableSellerCountdown: '{{days}} días para que el comprador verifique',
     },
   },

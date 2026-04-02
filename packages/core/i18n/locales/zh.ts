@@ -911,6 +911,10 @@ export const zh: TranslationResource = {
       fulfillOrder: {
         title: '发货',
         description: '请输入此订单的物流信息，确认后买家将收到通知。',
+        digitalTitle: '交付数字商品',
+        digitalDescription: '提供买家的下载链接，可选择添加密码保护和备注。',
+        serviceTitle: '确认服务完成',
+        serviceDescription: '确认服务已完成，可附上给买家的备注。',
       },
       completeOrder: {
         title: '确认收货',
@@ -949,6 +953,9 @@ export const zh: TranslationResource = {
       inviteTitle: '体验如何？',
       inviteDesc: '花约 30 秒分享反馈，帮助其他买家与卖家。',
       writeReview: '写评价',
+      photos: '图片（可选）',
+      addPhoto: '添加图片',
+      photosHint: '最多 {{max}} 张图片，每张不超过 {{size}}MB',
     },
     accept: {
       title: '接受订单',
@@ -979,7 +986,7 @@ export const zh: TranslationResource = {
       serviceHint: '添加备注以确认服务完成',
       note: '备注',
       notePlaceholder: '给买家留言...',
-      confirm: '确认发货',
+      confirm: '确认交付',
       receivingAccount: '收款账户',
       selectReceivingAccount: '选择收款账户',
       receivingAccountHint: '选择您希望接收付款的地址',
@@ -1887,6 +1894,7 @@ export const zh: TranslationResource = {
     protection: {
       escrowed: '资金已托管',
       escrowedDesc: '您的资金已安全托管',
+      escrowedSellerDesc: '买家的付款已安全托管，确认交付后资金将释放给您',
       shipping: '运输中',
       shippingDesc: '卖家已发货',
       protectionPeriod: '保障期',
@@ -1914,6 +1922,7 @@ export const zh: TranslationResource = {
       levelPlatform: '平台保障',
       cancelablePeriodDesc: '验证剩余 {{days}} 天 — 确认收货或取消订单',
       cancelableEscrowedDesc: '您的付款已托管在安全共享账户中',
+      cancelableEscrowedSellerDesc: '买家的付款已安全托管，交付后资金将释放给您',
       cancelableSellerCountdown: '买家验证剩余 {{days}} 天',
     },
   },

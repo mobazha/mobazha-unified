@@ -923,6 +923,12 @@ export const ru: TranslationResource = {
         title: 'Отправить заказ',
         description:
           'Введите информацию о доставке. Покупатель получит уведомление после подтверждения.',
+        digitalTitle: 'Доставить цифровой товар',
+        digitalDescription:
+          'Укажите ссылку для скачивания. Вы можете добавить пароль и примечание.',
+        serviceTitle: 'Подтвердить выполнение услуги',
+        serviceDescription:
+          'Подтвердите, что услуга была выполнена. Вы можете добавить примечание для покупателя.',
       },
       completeOrder: {
         title: 'Подтвердить получение',
@@ -963,6 +969,9 @@ export const ru: TranslationResource = {
       inviteTitle: 'Как прошла покупка?',
       inviteDesc: 'Поделитесь мнением за 30 секунд — это поможет другим покупателям и продавцу.',
       writeReview: 'Написать отзыв',
+      photos: 'Фотографии (необязательно)',
+      addPhoto: 'Добавить фото',
+      photosHint: 'До {{max}} изображений, до {{size}}МБ каждое',
     },
     accept: {
       title: 'Принять заказ',
@@ -1890,6 +1899,8 @@ export const ru: TranslationResource = {
     protection: {
       escrowed: 'Средства защищены',
       escrowedDesc: 'Ваши средства надёжно удерживаются',
+      escrowedSellerDesc:
+        'Оплата покупателя надёжно защищена и будет переведена после подтверждения доставки',
       shipping: 'Доставка',
       shippingDesc: 'Продавец отправил ваш заказ',
       protectionPeriod: 'Период защиты',
@@ -1918,6 +1929,8 @@ export const ru: TranslationResource = {
       cancelablePeriodDesc:
         '{{days}} дн. на проверку — подтвердите получение или отмените при необходимости',
       cancelableEscrowedDesc: 'Оплата удерживается на защищённом совместном счёте',
+      cancelableEscrowedSellerDesc:
+        'Оплата покупателя надёжно защищена — средства будут переведены после доставки',
       cancelableSellerCountdown: '{{days}} дн. на проверку покупателем',
     },
   },

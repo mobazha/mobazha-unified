@@ -480,6 +480,7 @@ export interface OrderCompleteCardProps {
   timestamp?: string;
   amount?: string;
   currency?: string;
+  txHash?: string;
   txUrl?: string;
   description?: string;
   className?: string;
@@ -489,11 +490,18 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   timestamp,
   amount,
   currency,
+  txHash,
+  txUrl,
   description,
   className,
   showDivider = true,
 }: OrderCompleteCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
+
+  const formatTxHash = (hash: string) => {
+    if (hash.length <= 16) return hash;
+    return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
+  };
 
   return (
     <OrderStageCard
@@ -516,6 +524,25 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
             <p className="text-xs text-muted-foreground">
               {description || t('order.fundsReleased')}
             </p>
+            {txHash && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {txUrl ? (
+                  <a
+                    href={txUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-mono text-primary hover:underline"
+                    title={txHash}
+                  >
+                    {formatTxHash(txHash)}
+                  </a>
+                ) : (
+                  <span className="text-xs font-mono text-muted-foreground" title={txHash}>
+                    {formatTxHash(txHash)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </Card>

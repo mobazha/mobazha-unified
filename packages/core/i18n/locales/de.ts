@@ -934,6 +934,12 @@ export const de: TranslationResource = {
         title: 'Bestellung versenden',
         description:
           'Geben Sie die Versandinformationen für diese Bestellung ein. Der Käufer wird nach Ihrer Bestätigung benachrichtigt.',
+        digitalTitle: 'Digitales Produkt liefern',
+        digitalDescription:
+          'Geben Sie den Download-Link für den Käufer an. Optional können Sie ein Passwort und eine Notiz hinzufügen.',
+        serviceTitle: 'Dienstleistung bestätigen',
+        serviceDescription:
+          'Bestätigen Sie, dass die Dienstleistung abgeschlossen wurde. Sie können eine Notiz für den Käufer hinzufügen.',
       },
       completeOrder: {
         title: 'Empfang bestätigen',
@@ -975,6 +981,9 @@ export const de: TranslationResource = {
       inviteDesc:
         'Teilen Sie Ihr Feedback in 30 Sekunden — es hilft anderen Käufern und dem Verkäufer.',
       writeReview: 'Bewertung schreiben',
+      photos: 'Fotos (optional)',
+      addPhoto: 'Foto hinzufügen',
+      photosHint: 'Bis zu {{max}} Bilder, je {{size}}MB',
     },
     accept: {
       title: 'Bestellung annehmen',
@@ -1917,6 +1926,8 @@ export const de: TranslationResource = {
     protection: {
       escrowed: 'Mittel gesichert',
       escrowedDesc: 'Ihre Mittel werden sicher verwahrt',
+      escrowedSellerDesc:
+        'Die Zahlung des Käufers wird sicher verwahrt und nach der Lieferung freigegeben',
       shipping: 'Versand',
       shippingDesc: 'Verkäufer hat Ihre Bestellung versendet',
       protectionPeriod: 'Schutzfrist',
@@ -1945,6 +1956,8 @@ export const de: TranslationResource = {
       cancelablePeriodDesc:
         '{{days}} Tage zur Prüfung — Empfang bestätigen oder bei Bedarf stornieren',
       cancelableEscrowedDesc: 'Ihre Zahlung liegt auf einem sicheren gemeinsamen Konto',
+      cancelableEscrowedSellerDesc:
+        'Die Zahlung des Käufers wird sicher verwahrt — Freigabe nach der Lieferung',
       cancelableSellerCountdown: '{{days}} Tage für die Prüfung durch den Käufer',
     },
   },

@@ -4,6 +4,7 @@ import React, { memo, useMemo } from 'react';
 import { useI18n, type DisplayOrder } from '@mobazha/core';
 import type { Order as CoreOrder } from '@mobazha/core';
 import { OrderCompleteCard, FulfillmentCard, AcceptedCard } from '@/components/Order';
+import { getBlockExplorerUrl } from '@/components/Order/utils';
 
 export interface OrderTimelineCardProps {
   displayOrder: DisplayOrder;
@@ -27,6 +28,11 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
 
   if (!hasHistory) return null;
 
+  const releaseTxHash = order.releaseTx || order.paymentTx;
+  const completeTxUrl = releaseTxHash
+    ? getBlockExplorerUrl(releaseTxHash, order.currency || '', order.chainId) || undefined
+    : undefined;
+
   return (
     <div className={className}>
       <div className="space-y-2">
@@ -36,6 +42,8 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
               timestamp={order.timeline.find(e => e.status === 'completed')?.timestamp}
               amount={order.total}
               currency={order.currency}
+              txHash={releaseTxHash}
+              txUrl={completeTxUrl}
               description={t('order.fundsReleased')}
               showDivider={false}
             />

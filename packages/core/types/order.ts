@@ -158,6 +158,7 @@ export interface OrderComplete {
   timestamp?: string;
   ratings?: OrderRating[];
   payoutSigs?: { inputIndex: number; signature: string }[];
+  releaseInfo?: EscrowRelease;
 }
 
 /**
@@ -261,6 +262,7 @@ export interface EscrowRelease {
   outpoints?: { fromID: string; value: string }[];
   toAddress?: string;
   toAmount?: string;
+  txid?: string;
 }
 
 /**

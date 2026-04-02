@@ -166,7 +166,7 @@ function ReviewForm({
 
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          {t('order.review.photos', { fallback: 'Photos (optional)' })}
+          {t('order.review.photos')}
         </label>
         <div className="flex flex-wrap gap-2">
           {images.map((img, idx) => (
@@ -204,7 +204,7 @@ function ReviewForm({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-              aria-label={t('order.review.addPhoto', { fallback: 'Add photo' })}
+              aria-label={t('order.review.addPhoto')}
             >
               <ImagePlus className="w-5 h-5" />
             </button>
@@ -220,7 +220,8 @@ function ReviewForm({
         />
         <p className="text-xs text-muted-foreground mt-1">
           {t('order.review.photosHint', {
-            fallback: `Up to ${MAX_REVIEW_IMAGES} images, ${MAX_FILE_SIZE_MB}MB each`,
+            max: String(MAX_REVIEW_IMAGES),
+            size: String(MAX_FILE_SIZE_MB),
           })}
         </p>
       </div>

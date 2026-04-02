@@ -909,6 +909,11 @@ export const ko: TranslationResource = {
       fulfillOrder: {
         title: '발송하기',
         description: '이 주문의 배송 정보를 입력해 주세요. 확인 후 구매자에게 알림이 전송됩니다.',
+        digitalTitle: '디지털 상품 전달',
+        digitalDescription:
+          '구매자에게 다운로드 링크를 제공하세요. 비밀번호와 메모를 추가할 수 있습니다.',
+        serviceTitle: '서비스 완료 확인',
+        serviceDescription: '서비스가 완료되었음을 확인합니다. 구매자에게 메모를 남길 수 있습니다.',
       },
       completeOrder: {
         title: '수령 확인',
@@ -948,6 +953,9 @@ export const ko: TranslationResource = {
       inviteTitle: '경험이 어떠셨나요?',
       inviteDesc: '30초 안에 의견을 남겨 주세요 — 다른 구매자와 판매자에게 도움이 됩니다.',
       writeReview: '리뷰 작성',
+      photos: '사진 (선택)',
+      addPhoto: '사진 추가',
+      photosHint: '최대 {{max}}장, 각 {{size}}MB',
     },
     accept: {
       title: '주문 수락',
@@ -1869,6 +1877,7 @@ export const ko: TranslationResource = {
     protection: {
       escrowed: '대금 보관됨',
       escrowedDesc: '대금이 안전하게 보관되어 있습니다',
+      escrowedSellerDesc: '구매자의 결제가 안전하게 보관되어 있으며, 배송 확인 후 지급됩니다',
       shipping: '배송',
       shippingDesc: '판매자가 주문을 발송했습니다',
       protectionPeriod: '보호 기간',
@@ -1896,6 +1905,7 @@ export const ko: TranslationResource = {
       levelPlatform: '플랫폼 보호',
       cancelablePeriodDesc: '확인 기간 {{days}}일 — 수령 확인 또는 필요 시 취소',
       cancelableEscrowedDesc: '결제 대금은 안전한 공동 계정에 보관됩니다',
+      cancelableEscrowedSellerDesc: '구매자의 결제가 안전하게 보관 중입니다 — 배송 후 지급됩니다',
       cancelableSellerCountdown: '구매자 확인까지 {{days}}일',
     },
   },

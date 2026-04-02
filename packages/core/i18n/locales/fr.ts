@@ -929,6 +929,12 @@ export const fr: TranslationResource = {
         title: 'Expédier la commande',
         description:
           "Entrez les informations d'expédition pour cette commande. L'acheteur sera notifié une fois confirmé.",
+        digitalTitle: 'Livrer le Produit Numérique',
+        digitalDescription:
+          "Fournissez le lien de téléchargement pour l'acheteur. Vous pouvez ajouter un mot de passe et une note optionnels.",
+        serviceTitle: 'Confirmer la Prestation',
+        serviceDescription:
+          "Confirmez que le service a été effectué. Vous pouvez inclure une note pour l'acheteur.",
       },
       completeOrder: {
         title: 'Confirmer la réception',
@@ -970,6 +976,9 @@ export const fr: TranslationResource = {
       inviteDesc:
         'Partagez votre avis en 30 secondes — cela aide les autres acheteurs et le vendeur.',
       writeReview: 'Rédiger un avis',
+      photos: 'Photos (facultatif)',
+      addPhoto: 'Ajouter une photo',
+      photosHint: "Jusqu'à {{max}} images, {{size}}Mo chacune",
     },
     accept: {
       title: 'Accepter la commande',
@@ -1917,6 +1926,8 @@ export const fr: TranslationResource = {
     protection: {
       escrowed: 'Fonds sécurisés',
       escrowedDesc: 'Vos fonds sont conservés en sécurité',
+      escrowedSellerDesc:
+        "Le paiement de l'acheteur est sécurisé et sera libéré après la livraison",
       shipping: 'Expédition',
       shippingDesc: 'Le vendeur a expédié votre commande',
       protectionPeriod: 'Période de protection',
@@ -1945,6 +1956,8 @@ export const fr: TranslationResource = {
       cancelablePeriodDesc:
         '{{days}} jours pour vérifier — confirmez la réception ou annulez si besoin',
       cancelableEscrowedDesc: 'Votre paiement est conservé sur un compte partagé sécurisé',
+      cancelableEscrowedSellerDesc:
+        "Le paiement de l'acheteur est sécurisé — les fonds seront libérés après la livraison",
       cancelableSellerCountdown: "{{days}} jours pour que l'acheteur vérifie",
     },
   },

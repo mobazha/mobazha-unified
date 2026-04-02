@@ -111,7 +111,8 @@ interface RealOrderData {
     };
     orderConfirmation?: {
       timestamp?: string;
-      paymentAddress?: string;
+      transactionID?: string;
+      payoutAddress?: string;
     };
     orderFulfillments?: Array<{
       timestamp?: string;
@@ -121,7 +122,9 @@ interface RealOrderData {
     orderComplete?: {
       timestamp?: string;
       ratingSignatures?: unknown[];
+      releaseInfo?: { txid?: string };
     };
+    transactions?: Array<{ txid?: string; fromID?: string; value?: string; timestamp?: string }>;
     disputeOpen?: {
       timestamp?: string;
       evidenceHashes?: string[];
@@ -469,6 +472,31 @@ function resolveFiatProviderFromCoin(
   return normalizeFiatProvider(parts[1]);
 }
 
+/**
+ * 提取释放交易哈希（Escrow → 卖家）
+ * 优先级：
+ *  1. orderConfirmation.transactionID（CANCELABLE 订单，Confirm 时释放）
+ *  2. orderComplete.releaseInfo.txid（MODERATED 订单，Complete 时释放）
+ *  3. contract.transactions 中与付款 tx 不同的 tx（fallback）
+ */
+function extractReleaseTx(
+  contract: RealOrderData['contract'],
+  paymentTxid?: string
+): string | undefined {
+  // CANCELABLE orders: release tx is stored in OrderConfirmation
+  const fromConfirmation = contract.orderConfirmation?.transactionID;
+  if (fromConfirmation && fromConfirmation !== paymentTxid) return fromConfirmation;
+
+  // MODERATED orders: release tx is stored in OrderComplete.releaseInfo
+  const fromReleaseInfo = contract.orderComplete?.releaseInfo?.txid;
+  if (fromReleaseInfo) return fromReleaseInfo;
+
+  const txs = contract.transactions;
+  if (!txs || txs.length < 2 || !paymentTxid) return undefined;
+  const releaseTx = txs.find(t => t.txid && t.txid !== paymentTxid);
+  return releaseTx?.txid || undefined;
+}
+
 // ============ Main Transform Function ============
 
 /**
@@ -550,7 +578,7 @@ export function transformCoreOrder(
   const trackingInfo = fulfillments?.[0]?.physicalDelivery?.[0];
   const shipping = orderOpen?.shipping;
 
-  const paymentAddress = paymentSent?.address || contract.orderConfirmation?.paymentAddress;
+  const paymentAddress = paymentSent?.address || contract.orderConfirmation?.payoutAddress;
 
   const orderOpenItems = orderOpen?.items || [];
   // memo 来自第一个 item 的 memo 字段
@@ -808,6 +836,7 @@ export function transformCoreOrder(
     shippingMethodName: shippingMethodName || undefined,
     // 支持 RWA 模式和传统交易
     paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
+    releaseTx: extractReleaseTx(contract, paymentSent?.transactionID),
     txConfirmations,
     // RWA 标识
     isRwaInstant,
