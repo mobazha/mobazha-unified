@@ -61,11 +61,11 @@ VERCEL_PROJECT_ID - Vercel 项目 ID
 
 在 Vercel 项目设置中添加以下环境变量：
 
-| 变量名                          | 说明                  | 示例值                          |
-| ------------------------------- | --------------------- | ------------------------------- |
-| `NEXT_PUBLIC_API_URL`           | Mobazha 节点 API 地址 | `https://api.store.mobazha.org` |
-| `NEXT_PUBLIC_MATRIX_HOMESERVER` | Matrix 服务器地址     | `https://matrix.mobazha.org`    |
-| `NEXT_PUBLIC_USE_MOCK_DATA`     | 是否使用 Mock 数据    | `false`                         |
+| 变量名                          | 说明                  | 示例值                        |
+| ------------------------------- | --------------------- | ----------------------------- |
+| `NEXT_PUBLIC_API_URL`           | Mobazha 节点 API 地址 | `https://api.app.mobazha.org` |
+| `NEXT_PUBLIC_MATRIX_HOMESERVER` | Matrix 服务器地址     | `https://matrix.mobazha.org`  |
+| `NEXT_PUBLIC_USE_MOCK_DATA`     | 是否使用 Mock 数据    | `false`                       |
 
 ## 部署流程
 

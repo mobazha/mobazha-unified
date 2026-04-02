@@ -94,7 +94,7 @@ pnpm install
 
 ```env
 # API 配置
-NEXT_PUBLIC_API_URL=https://api.store.mobazha.org
+NEXT_PUBLIC_API_URL=https://api.app.mobazha.org
 NEXT_PUBLIC_USE_MOCK_DATA=false
 
 # Matrix 配置
