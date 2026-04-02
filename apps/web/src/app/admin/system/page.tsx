@@ -3,7 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { isBasicAuthMode, isStandaloneMode } from '@mobazha/core/config/env';
-import { getSystemHealth, type SystemHealthResponse } from '@mobazha/core/services/api/system';
+import {
+  getSystemHealth,
+  getNetworkConfig,
+  updateNetworkConfig,
+  type SystemHealthResponse,
+  type NetworkConfigResponse,
+} from '@mobazha/core/services/api/system';
 import {
   Server,
   Cpu,
@@ -18,6 +24,11 @@ import {
   Clock,
   Copy,
   Check,
+  ArrowDownCircle,
+  Tag,
+  Shield,
+  Globe,
+  Wifi,
 } from 'lucide-react';
 
 function formatUptime(seconds: number, t: (key: string) => string): string {
@@ -49,6 +60,11 @@ export default function SystemPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedPeerID, setCopiedPeerID] = useState(false);
 
+  const [networkConfig, setNetworkConfig] = useState<NetworkConfigResponse | null>(null);
+  const [selectedOverlay, setSelectedOverlay] = useState('');
+  const [networkSaving, setNetworkSaving] = useState(false);
+  const [networkMessage, setNetworkMessage] = useState<string | null>(null);
+
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
   const fetchHealth = useCallback(async () => {
@@ -64,13 +80,41 @@ export default function SystemPage() {
     }
   }, [t]);
 
+  const fetchNetworkConfig = useCallback(async () => {
+    try {
+      const cfg = await getNetworkConfig();
+      setNetworkConfig(cfg);
+      setSelectedOverlay(cfg.overlayType || '');
+    } catch {
+      // Network endpoint may not be available in SaaS mode
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin) {
       fetchHealth();
+      fetchNetworkConfig();
       const interval = setInterval(fetchHealth, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAdmin, fetchHealth]);
+  }, [isAdmin, fetchHealth, fetchNetworkConfig]);
+
+  const handleApplyNetwork = async () => {
+    setNetworkSaving(true);
+    setNetworkMessage(null);
+    try {
+      const result = await updateNetworkConfig(selectedOverlay);
+      setNetworkMessage(result.message);
+      setTimeout(() => setNetworkMessage(null), 8000);
+      await fetchNetworkConfig();
+    } catch (err) {
+      setNetworkMessage(
+        err instanceof Error ? err.message : t('system.network.error'),
+      );
+    } finally {
+      setNetworkSaving(false);
+    }
+  };
 
   const handleCopyPeerID = async () => {
     if (health?.node.peerID) {
@@ -187,6 +231,120 @@ export default function SystemPage() {
         </div>
       </div>
 
+      {/* Software Updates */}
+      <div className="border border-border rounded-lg p-5">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+          {t('system.updates.title')}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-center gap-3">
+            <Tag className="w-5 h-5 text-primary" />
+            <div>
+              <div className="text-sm text-muted-foreground">{t('system.updates.currentVersion')}</div>
+              <div className="font-medium font-mono text-foreground">
+                {health!.version && health!.version !== 'dev'
+                  ? health!.version
+                  : t('system.updates.devBuild')}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <ArrowDownCircle className="w-5 h-5 text-green-500" />
+            <div>
+              <div className="text-sm text-muted-foreground">{t('system.updates.autoUpdate')}</div>
+              <div className="font-medium text-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  {t('system.updates.enabled')}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {t('system.updates.autoUpdateDesc')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Network & Privacy */}
+      {networkConfig && (
+        <div className="border border-border rounded-lg p-5">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            {t('system.network.title')}
+          </h2>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Globe className="w-5 h-5 text-blue-500 mt-0.5" />
+              <div>
+                <div className="text-sm text-muted-foreground">{t('system.network.connectivity')}</div>
+                <div className="font-medium text-foreground capitalize">
+                  {networkConfig.connectivity === 'overlay'
+                    ? `${t('system.network.overlay')} (${networkConfig.overlayType})`
+                    : networkConfig.connectivity}
+                </div>
+                {networkConfig.overlayDomain && (
+                  <div className="text-xs text-muted-foreground font-mono mt-1">
+                    {networkConfig.overlayDomain}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">{t('system.network.overlayNetwork')}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: '', label: t('system.network.none'), icon: Wifi, desc: t('system.network.noneDesc') },
+                  { value: 'tor', label: 'Tor', icon: Shield, desc: '.onion' },
+                  { value: 'lokinet', label: 'Lokinet', icon: Shield, desc: '.loki' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSelectedOverlay(opt.value)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors text-center ${
+                      selectedOverlay === opt.value
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
+                    }`}
+                  >
+                    <opt.icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{opt.label}</span>
+                    <span className="text-[10px] opacity-70">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+              {selectedOverlay !== (networkConfig.overlayType || '') && (
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    onClick={handleApplyNetwork}
+                    disabled={networkSaving}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {networkSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {t('system.network.apply')}
+                  </button>
+                  <span className="text-xs text-muted-foreground">{t('system.network.applyHint')}</span>
+                </div>
+              )}
+              {networkMessage && (
+                <div className="mt-3 p-3 rounded-lg bg-muted text-sm text-foreground">
+                  {networkMessage}
+                </div>
+              )}
+            </div>
+
+            {!networkConfig.dockerManaged && (
+              <div className="mt-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-700 dark:text-yellow-400">
+                {t('system.network.noDocker')}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Resources */}
       <div className="border border-border rounded-lg p-5">
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
@@ -263,6 +421,7 @@ export default function SystemPage() {
 
       {/* System info footer */}
       <div className="text-xs text-muted-foreground/50 text-center">
+        {health!.version && health!.version !== 'dev' ? `v${health!.version} · ` : ''}
         {sys.goVersion} · {sys.numGoroutine} {t('system.resources.goroutines')}
       </div>
     </div>

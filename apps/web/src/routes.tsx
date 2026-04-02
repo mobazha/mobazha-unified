@@ -57,9 +57,6 @@ const routes: RouteObject[] = [
   // 新用户引导（需登录但不需要 profile）
   { path: '/onboarding', element: protectedPage(() => import('./app/onboarding/page')) },
 
-  // 独立站部署向导（需登录）
-  { path: '/deploy', element: protectedPage(() => import('./app/deploy/page')) },
-
   // 搜索
   { path: '/search', element: lazyPage(() => import('./app/search/page')) },
 

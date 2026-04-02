@@ -5478,6 +5478,18 @@ export const en: TranslationResource = {
       currentVersion: 'Current Version',
       devBuild: 'Development Build',
     },
+    network: {
+      title: 'Network & Privacy',
+      connectivity: 'Connectivity',
+      overlay: 'Overlay Network',
+      overlayNetwork: 'Overlay Network',
+      none: 'Direct',
+      noneDesc: 'Public IP',
+      apply: 'Apply Changes',
+      applyHint: 'Store will restart to apply network changes',
+      error: 'Failed to update network configuration',
+      noDocker: 'Docker socket not available. Use the CLI command "mobazha-ctl overlay enable tor" or "mobazha-ctl overlay enable lokinet" on the host to manage overlay networks.',
+    },
     actions: {
       title: 'Actions',
       downloadLogs: 'Download Logs',
