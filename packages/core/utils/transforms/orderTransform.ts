@@ -643,7 +643,6 @@ export function transformCoreOrder(
   // 原始定价信息（从 orderOpen 获取，pricingCoin 已在上方定义）
   const pricingAmount = orderOpen?.amount !== undefined ? orderOpen.amount : itemPrice;
 
-  // 实际支付信息（从 paymentSent 获取）
   const paymentCoin = paymentSent?.coin || pricingCoin;
   const paymentAmount = paymentSent?.amount;
 

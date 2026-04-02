@@ -35,9 +35,9 @@ export function convertProductToFormData(
 
   // 获取 acceptedCurrencies，兼容 string[] 和 { code: string }[] 两种格式
   const acceptedCurrencies =
-    metadata?.acceptedCurrencies?.map((c: string | { code: string }) =>
-      mustCanonicalCoin(typeof c === 'string' ? c : c.code)
-    ) || [];
+    metadata?.acceptedCurrencies
+      ?.map((c: string | { code: string }) => mustCanonicalCoin(typeof c === 'string' ? c : c.code))
+      .filter(Boolean) || [];
 
   const pricingCurrency = metadata?.pricingCurrency?.code || DEFAULT_LOCAL_CURRENCY;
 

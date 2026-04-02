@@ -327,7 +327,7 @@ export interface ContractListing {
   metadata: {
     contractType: string;
     format: string;
-    acceptedCurrencies: CryptoType[];
+    acceptedCurrencies: string[];
     pricingCurrency: {
       code: string;
       divisibility: number;
