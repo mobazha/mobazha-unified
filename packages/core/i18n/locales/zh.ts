@@ -4809,7 +4809,21 @@ export const zh: TranslationResource = {
       apply: '应用更改',
       applyHint: '应用后店铺将重启以使网络配置生效',
       error: '更新网络配置失败',
-      noDocker: 'Docker socket 不可用。请在主机上使用命令 "mobazha-ctl overlay enable tor" 或 "mobazha-ctl overlay enable lokinet" 管理隐私网络。',
+      noDocker:
+        'Docker socket 不可用。请在主机上使用命令 "mobazha-ctl overlay enable tor" 或 "mobazha-ctl overlay enable lokinet" 管理隐私网络。',
+    },
+    domain: {
+      title: '域名设置',
+      label: '店铺域名',
+      save: '保存',
+      hint: "留空为仅 IP 模式（自签名 TLS）。设置域名后将自动通过 Let's Encrypt 获取 HTTPS 证书。",
+      error: '更新域名失败',
+    },
+    actions: {
+      runDoctor: '运行健康检查',
+      runDoctorDesc: '检查系统健康状态、网络连接和配置',
+      exportDiag: '导出诊断包',
+      exportDiagDesc: '下载包含日志、配置和健康检查结果的诊断包',
     },
   },
 };
