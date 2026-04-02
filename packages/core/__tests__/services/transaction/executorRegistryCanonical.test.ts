@@ -5,11 +5,9 @@ import { resolveChainCategory } from '../../../services/transaction/executorRegi
 describe('resolveChainCategory (canonical payment coin)', () => {
   it('resolves canonical EVM and UTXO coins', () => {
     expect(resolveChainCategory('crypto:eip155:56:native')).toBe('evm');
-    expect(
-      resolveChainCategory(
-        'crypto:bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f:native'
-      )
-    ).toBe('utxo');
+    expect(resolveChainCategory('crypto:bip122:000000000019d6689c085ae165831e93:native')).toBe(
+      'utxo'
+    );
   });
 
   it('resolves canonical Solana and TRON coins', () => {

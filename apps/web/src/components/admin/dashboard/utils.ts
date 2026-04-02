@@ -1,13 +1,14 @@
 import type { OrderListItem, ProductListItem } from '@mobazha/core';
+import { getPaymentCoinDisplayLabel } from '@mobazha/core/data/tokens';
 
 export function getOrderCurrencyCode(order: OrderListItem): string {
   const total = order.total as unknown as Record<string, unknown> | undefined;
-  return (
+  const raw =
     (total?.currencyCode as string) ||
     (total?.currency as Record<string, string>)?.code ||
     order.coinType ||
-    'USD'
-  );
+    'USD';
+  return getPaymentCoinDisplayLabel(raw) || raw;
 }
 
 export function getProductCurrencyCode(product: ProductListItem): string {

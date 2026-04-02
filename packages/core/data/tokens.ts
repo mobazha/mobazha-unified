@@ -59,8 +59,7 @@ export interface PaymentChainConfig {
 export const TOKENS: TokenConfig[] = [
   {
     id: 'BTC',
-    assetId:
-      'crypto:bip122:000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f:native',
+    assetId: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
     token: 'BTC',
     chain: 'BTC',
     isNative: true,
@@ -76,8 +75,7 @@ export const TOKENS: TokenConfig[] = [
   },
   {
     id: 'LTC',
-    assetId:
-      'crypto:bip122:12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2:native',
+    assetId: 'crypto:bip122:12a765e31ffd4059bada1e25190f6e98:native',
     token: 'LTC',
     chain: 'LTC',
     isNative: true,
@@ -281,8 +279,8 @@ for (const token of TOKENS) {
 }
 
 const BIP122_CHAIN_REF_TO_CHAIN: Record<string, string> = {
-  '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f': 'BTC',
-  '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2': 'LTC',
+  '000000000019d6689c085ae165831e93': 'BTC',
+  '12a765e31ffd4059bada1e25190f6e98': 'LTC',
 };
 
 export interface CanonicalPaymentCoinParts {
