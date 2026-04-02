@@ -727,7 +727,7 @@ function makeMockProduct(
       format: 'FIXED_PRICE',
       pricingCurrency: { code: 'USD', divisibility: 2 },
       expiry: '2030-12-31T23:59:59Z',
-      acceptedCurrencies: ['ETH', 'BTC'],
+      acceptedCurrencies: [mustAssetIdFromTokenId('ETH'), mustAssetIdFromTokenId('BTC')],
     },
     item: {
       title,

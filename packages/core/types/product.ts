@@ -1,4 +1,4 @@
-import type { Image, Price, CryptoType } from './common';
+import type { Image, Price } from './common';
 import type { ShippingProfile } from './shippingConfig';
 
 /**
@@ -94,7 +94,7 @@ export interface ProductMetadata {
   contractType: ContractType;
   format: ListingFormat;
   expiry: string;
-  acceptedCurrencies: CryptoType[];
+  acceptedCurrencies: string[];
   pricingCurrency: {
     code: string;
     divisibility: number;

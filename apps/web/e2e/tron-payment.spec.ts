@@ -20,6 +20,7 @@
 import { test, expect } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
 import { mockImageRoutes, mockPreferencesAPI } from './fixtures/mock-api-routes';
+import { mustAssetIdFromTokenId } from '@mobazha/core/data';
 
 const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const TRON_ORDER_ID = 'QmTronOrder001';
@@ -45,7 +46,11 @@ async function mockTronOrderAPI(page: import('@playwright/test').Page) {
                   metadata: {
                     contractType: 'PHYSICAL_GOOD',
                     pricingCurrency: { code: 'USD', divisibility: 2 },
-                    acceptedCurrencies: ['TRXUSDT', 'TRX', 'ETH'],
+                    acceptedCurrencies: [
+                      mustAssetIdFromTokenId('TRXUSDT'),
+                      mustAssetIdFromTokenId('TRX'),
+                      mustAssetIdFromTokenId('ETH'),
+                    ],
                   },
                   vendorID: { peerID: MOCK_PEER_ID, handle: 'TechStore' },
                   item: {
