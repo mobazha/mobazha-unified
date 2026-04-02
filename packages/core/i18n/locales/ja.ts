@@ -4733,4 +4733,19 @@ export const ja: TranslationResource = {
     offlineBanner: 'このストアは現在オフラインです。キャッシュされたデータを表示しています。',
     offlinePriceDisclaimer: '価格が変更されている場合があります',
   },
+
+  system: {
+    network: {
+      title: 'ネットワークとプライバシー',
+      connectivity: '接続方式',
+      overlay: 'オーバーレイネットワーク',
+      overlayNetwork: 'オーバーレイネットワーク',
+      none: 'ダイレクト',
+      noneDesc: 'パブリック IP',
+      apply: '変更を適用',
+      applyHint: 'ネットワーク設定の変更を適用するとストアが再起動します',
+      error: 'ネットワーク設定の更新に失敗しました',
+      noDocker: 'Docker socket が利用できません。ホスト上で "mobazha-ctl overlay enable tor" または "mobazha-ctl overlay enable lokinet" コマンドを使用してください。',
+    },
+  },
 };

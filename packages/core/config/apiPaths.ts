@@ -249,6 +249,7 @@ export const NODE_API = {
   SYSTEM_HEALTH: '/system/health',
   SYSTEM_LOGS: '/system/logs',
   SYSTEM_INFO: '/system/info',
+  SYSTEM_NETWORK: '/system/network',
 
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
@@ -406,14 +407,6 @@ export const HOSTING_API = {
 
   // --- Sales Channels: Store Bots ---
   STORE_BOTS: '/platform/v1/store-bots',
-
-  // --- Deploy Wizard ---
-  DEPLOY_PREPARE: '/platform/v1/deploy/prepare',
-  DEPLOY_CONFIG: (token: string) => `/platform/v1/deploy/config/${token}`,
-  DEPLOY_PROGRESS: (token: string) => `/platform/v1/deploy/progress/${token}`,
-  DEPLOY_PROGRESS_STREAM: (token: string) => `/platform/v1/deploy/progress/${token}/stream`,
-  DEPLOY_SUBDOMAIN_CHECK: '/platform/v1/deploy/subdomain/check',
-  DEPLOY_SUBDOMAIN_CREATE: '/platform/v1/deploy/subdomain/create',
 
   // --- Standalone Store Registry ---
   STORES_MY_STORES: '/platform/v1/stores/my-stores',

@@ -4804,4 +4804,19 @@ export const es: TranslationResource = {
     offlineBanner: 'Esta tienda está fuera de línea en este momento. Mostrando datos en caché.',
     offlinePriceDisclaimer: 'Los precios pueden haber cambiado',
   },
+
+  system: {
+    network: {
+      title: 'Red y privacidad',
+      connectivity: 'Conectividad',
+      overlay: 'Red overlay',
+      overlayNetwork: 'Red overlay',
+      none: 'Directo',
+      noneDesc: 'IP pública',
+      apply: 'Aplicar cambios',
+      applyHint: 'La tienda se reiniciará para aplicar los cambios de red',
+      error: 'Error al actualizar la configuración de red',
+      noDocker: 'Socket Docker no disponible. Use el comando "mobazha-ctl overlay enable tor" o "mobazha-ctl overlay enable lokinet" en el host.',
+    },
+  },
 };

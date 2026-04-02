@@ -4802,4 +4802,19 @@ export const pt: TranslationResource = {
     offlineBanner: 'Esta loja está offline no momento. Exibindo dados em cache.',
     offlinePriceDisclaimer: 'Os preços podem ter mudado',
   },
+
+  system: {
+    network: {
+      title: 'Rede e Privacidade',
+      connectivity: 'Conectividade',
+      overlay: 'Rede Overlay',
+      overlayNetwork: 'Rede Overlay',
+      none: 'Direto',
+      noneDesc: 'IP público',
+      apply: 'Aplicar Alterações',
+      applyHint: 'A loja será reiniciada para aplicar as alterações de rede',
+      error: 'Falha ao atualizar a configuração de rede',
+      noDocker: 'Socket Docker não disponível. Use o comando "mobazha-ctl overlay enable tor" ou "mobazha-ctl overlay enable lokinet" no host para gerenciar redes overlay.',
+    },
+  },
 };

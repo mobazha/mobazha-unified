@@ -4840,4 +4840,19 @@ export const de: TranslationResource = {
       'Dieser Shop ist derzeit offline. Es werden zwischengespeicherte Daten angezeigt.',
     offlinePriceDisclaimer: 'Preise können sich geändert haben',
   },
+
+  system: {
+    network: {
+      title: 'Netzwerk & Datenschutz',
+      connectivity: 'Verbindung',
+      overlay: 'Overlay-Netzwerk',
+      overlayNetwork: 'Overlay-Netzwerk',
+      none: 'Direkt',
+      noneDesc: 'Öffentliche IP',
+      apply: 'Änderungen anwenden',
+      applyHint: 'Der Shop wird neu gestartet, um die Netzwerkänderungen anzuwenden',
+      error: 'Netzwerkkonfiguration konnte nicht aktualisiert werden',
+      noDocker: 'Docker-Socket nicht verfügbar. Verwenden Sie den Befehl "mobazha-ctl overlay enable tor" oder "mobazha-ctl overlay enable lokinet" auf dem Host.',
+    },
+  },
 };

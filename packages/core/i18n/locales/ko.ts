@@ -4713,4 +4713,19 @@ export const ko: TranslationResource = {
     offlineBanner: '이 스토어는 현재 오프라인입니다. 캐시된 데이터를 표시합니다.',
     offlinePriceDisclaimer: '가격이 변경되었을 수 있습니다',
   },
+
+  system: {
+    network: {
+      title: '네트워크 및 개인정보',
+      connectivity: '연결 방식',
+      overlay: '오버레이 네트워크',
+      overlayNetwork: '오버레이 네트워크',
+      none: '직접 연결',
+      noneDesc: '공개 IP',
+      apply: '변경 적용',
+      applyHint: '네트워크 변경을 적용하면 스토어가 재시작됩니다',
+      error: '네트워크 설정 업데이트에 실패했습니다',
+      noDocker: 'Docker 소켓을 사용할 수 없습니다. 호스트에서 "mobazha-ctl overlay enable tor" 또는 "mobazha-ctl overlay enable lokinet" 명령을 사용하세요.',
+    },
+  },
 };

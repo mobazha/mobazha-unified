@@ -4745,4 +4745,19 @@ export const ru: TranslationResource = {
     offlineBanner: 'Магазин сейчас недоступен. Показаны кэшированные данные.',
     offlinePriceDisclaimer: 'Цены могли измениться',
   },
+
+  system: {
+    network: {
+      title: 'Сеть и конфиденциальность',
+      connectivity: 'Подключение',
+      overlay: 'Оверлейная сеть',
+      overlayNetwork: 'Оверлейная сеть',
+      none: 'Прямое',
+      noneDesc: 'Публичный IP',
+      apply: 'Применить изменения',
+      applyHint: 'Магазин будет перезапущен для применения сетевых изменений',
+      error: 'Не удалось обновить конфигурацию сети',
+      noDocker: 'Docker-сокет недоступен. Используйте команду "mobazha-ctl overlay enable tor" или "mobazha-ctl overlay enable lokinet" на хосте.',
+    },
+  },
 };

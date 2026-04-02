@@ -4761,4 +4761,19 @@ export const zh: TranslationResource = {
     statusActive: '营业中',
     statusPaused: '已暂停',
   },
+
+  system: {
+    network: {
+      title: '网络与隐私',
+      connectivity: '连接方式',
+      overlay: '隐私网络',
+      overlayNetwork: '隐私网络',
+      none: '直连',
+      noneDesc: '公网 IP',
+      apply: '应用更改',
+      applyHint: '应用后店铺将重启以使网络配置生效',
+      error: '更新网络配置失败',
+      noDocker: 'Docker socket 不可用。请在主机上使用命令 "mobazha-ctl overlay enable tor" 或 "mobazha-ctl overlay enable lokinet" 管理隐私网络。',
+    },
+  },
 };

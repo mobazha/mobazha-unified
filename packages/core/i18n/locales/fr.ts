@@ -4824,4 +4824,19 @@ export const fr: TranslationResource = {
     offlineBanner: 'Cette boutique est hors ligne. Affichage des données en cache.',
     offlinePriceDisclaimer: 'Les prix ont pu changer',
   },
+
+  system: {
+    network: {
+      title: 'Réseau et confidentialité',
+      connectivity: 'Connectivité',
+      overlay: 'Réseau overlay',
+      overlayNetwork: 'Réseau overlay',
+      none: 'Direct',
+      noneDesc: 'IP publique',
+      apply: 'Appliquer les modifications',
+      applyHint: 'La boutique redémarrera pour appliquer les modifications réseau',
+      error: 'Échec de la mise à jour de la configuration réseau',
+      noDocker: 'Socket Docker non disponible. Utilisez la commande "mobazha-ctl overlay enable tor" ou "mobazha-ctl overlay enable lokinet" sur l\'hôte.',
+    },
+  },
 };

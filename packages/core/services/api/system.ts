@@ -5,7 +5,7 @@
  *          mobazha3.0/internal/api/system_admin_handlers.go
  */
 
-import { publicGet, publicPost, authGet } from './helpers';
+import { publicGet, publicPost, authGet, authPost } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
 // --- Setup types ---
@@ -48,6 +48,7 @@ export interface NodeHealthInfo {
 
 export interface SystemHealthResponse {
   status: string;
+  version: string;
   uptimeSeconds: number;
   timestamp: number;
   system: SystemResourceInfo;
@@ -72,4 +73,27 @@ export async function getSystemHealth(): Promise<SystemHealthResponse> {
 
 export async function getSystemLogs(): Promise<string> {
   return authGet<string>(NODE_API.SYSTEM_LOGS);
+}
+
+// --- Network config API (standalone overlay management) ---
+
+export interface NetworkConfigResponse {
+  connectivity: string;
+  overlayType: string;
+  overlayDomain?: string;
+  dockerManaged: boolean;
+}
+
+export interface NetworkConfigUpdateResponse {
+  connectivity: string;
+  overlayType: string;
+  message: string;
+}
+
+export async function getNetworkConfig(): Promise<NetworkConfigResponse> {
+  return authGet<NetworkConfigResponse>(NODE_API.SYSTEM_NETWORK);
+}
+
+export async function updateNetworkConfig(overlayType: string): Promise<NetworkConfigUpdateResponse> {
+  return authPost<NetworkConfigUpdateResponse>(NODE_API.SYSTEM_NETWORK, { overlayType });
 }
