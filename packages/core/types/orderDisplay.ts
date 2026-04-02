@@ -132,6 +132,8 @@ export interface DisplayOrder {
   paymentAmount?: string;
   /** 创建时间 */
   createdAt: string;
+  /** 取消时间（仅 cancelled 状态） */
+  cancelledAt?: string;
   /** 卖家信息 */
   vendor: DisplayOrderParticipant;
   /** 买家信息 */
