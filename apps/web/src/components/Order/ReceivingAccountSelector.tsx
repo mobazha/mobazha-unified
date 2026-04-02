@@ -37,7 +37,12 @@ const BLOCKCHAIN_MAPPING: Record<string, string[]> = {
 
 function getCompatibleChainTypes(paymentCoin?: string, blockchain?: string): string[] | null {
   if (paymentCoin) {
-    if (paymentCoin.toLowerCase().startsWith('fiat:')) return null;
+    const lower = paymentCoin.toLowerCase();
+    if (lower.startsWith('fiat:')) {
+      const provider = lower.split(':')[1];
+      if (provider) return [`fiat:${provider}`];
+      return ['fiat'];
+    }
     const parsed = parseCanonicalPaymentCoin(paymentCoin);
     if (parsed) {
       return NAMESPACE_TO_CHAIN_TYPES[parsed.namespace] ?? null;
