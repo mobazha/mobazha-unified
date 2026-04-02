@@ -53,6 +53,7 @@
     "lucide-react": "^0.562.0",
     "multicoin-address-validator": "^0.5.26",
     "next": "^16.1.1",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-easy-crop": "^5.5.6",

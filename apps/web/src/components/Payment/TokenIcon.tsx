@@ -127,11 +127,11 @@ const getLocalIconUrl = (symbol: string): string => {
 /**
  * 获取标准符号
  */
-const getSymbol = (tokenId: string): string => {
+const getSymbol = (tokenId: string | undefined | null): string => {
+  if (!tokenId) return '';
   if (TOKEN_SYMBOL_MAP[tokenId]) {
     return TOKEN_SYMBOL_MAP[tokenId];
   }
-  // 尝试提取代币符号
   const lowerToken = tokenId.toLowerCase();
   if (lowerToken.includes('usdt')) return 'usdt';
   if (lowerToken.includes('usdc')) return 'usdc';
