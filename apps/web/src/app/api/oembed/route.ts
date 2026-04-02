@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://store.mobazha.org';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
 
 interface OEmbedResponse {
@@ -45,7 +45,11 @@ function corsHeaders() {
 }
 
 const ALLOWED_HOSTNAMES = new Set(
-  (SITE_URL ? [new URL(SITE_URL).hostname] : []).concat(['store.mobazha.org', 'localhost'])
+  (SITE_URL ? [new URL(SITE_URL).hostname] : []).concat([
+    'app.mobazha.org',
+    'store.mobazha.org',
+    'localhost',
+  ])
 );
 
 function parseUrl(raw: string): { type: 'product' | 'store'; id: string; peerID?: string } | null {
