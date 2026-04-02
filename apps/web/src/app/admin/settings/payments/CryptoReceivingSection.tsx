@@ -858,15 +858,16 @@ export const CryptoReceivingSection: React.FC = () => {
       setTogglingId(acc.id);
       try {
         const chain = chainMeta(acc.chainType);
+        const normalizedActive = normalizeTokenSymbols(chain, acc.activeTokens ?? []);
         const allTokens = chain?.tokens.map(tok => tok.symbol) ?? [];
-        const inactive = allTokens.filter(tok => !(acc.activeTokens ?? []).includes(tok));
+        const inactive = allTokens.filter(tok => !normalizedActive.includes(tok));
         await updateMutation.mutateAsync({
           id: acc.id,
           input: {
             name: acc.name,
             chainType: acc.chainType,
             address: acc.address,
-            activeTokens: acc.activeTokens ?? [],
+            activeTokens: normalizedActive,
             inactiveTokens: inactive,
             isActive: !acc.isActive,
           },
