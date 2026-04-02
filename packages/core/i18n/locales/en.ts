@@ -5498,6 +5498,7 @@ export const en: TranslationResource = {
       peerID: 'Peer ID',
       dataDir: 'Data Directory',
       version: 'Version',
+      label: 'Status',
     },
     resources: {
       title: 'Resources',
@@ -5551,9 +5552,15 @@ export const en: TranslationResource = {
     error: 'Failed to load system information',
     retry: 'Retry',
     notAvailable: 'System panel is only available on standalone stores',
+    doctor: {
+      passed: 'passed',
+      warnings: 'warnings',
+      failed: 'failed',
+    },
     days: 'days',
     hours: 'hours',
     minutes: 'minutes',
+    refresh: 'Refresh',
   },
 };
 
