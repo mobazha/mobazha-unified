@@ -250,6 +250,9 @@ export const NODE_API = {
   SYSTEM_LOGS: '/system/logs',
   SYSTEM_INFO: '/system/info',
   SYSTEM_NETWORK: '/system/network',
+  SYSTEM_DOCTOR: '/system/doctor',
+  SYSTEM_DIAGNOSTICS: '/system/diagnostics',
+  SYSTEM_DOMAIN: '/system/domain',
 
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
