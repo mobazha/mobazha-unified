@@ -408,6 +408,10 @@ export const HOSTING_API = {
   STORE_LINKS_RESOLVE: (shortCode: string) => `/platform/v1/store-links/resolve/${shortCode}`,
   STORE_LINKS_REGENERATE: '/platform/v1/store-links/regenerate',
 
+  // --- Store Branded Domains ---
+  STORE_DOMAIN: (peerID: string) => `/platform/v1/stores/${peerID}/domain`,
+  STORE_DOMAIN_CHECK: '/platform/v1/store-domains/check',
+
   // --- Sales Channels: Store Bots ---
   STORE_BOTS: '/platform/v1/store-bots',
 
