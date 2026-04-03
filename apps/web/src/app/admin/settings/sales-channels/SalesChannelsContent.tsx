@@ -5,6 +5,7 @@ import { useI18n, useUserStore } from '@mobazha/core';
 import { useSalesChannels } from '@mobazha/core/hooks/useSalesChannels';
 import type { UseSalesChannelsReturn } from '@mobazha/core/hooks/useSalesChannels';
 import { useStoreDomain } from '@mobazha/core/hooks/useStoreDomain';
+import { getStoreSubdomainBase } from '@mobazha/core/config/env';
 import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,7 @@ function StoreHandleSection({
   const [saving, setSaving] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const prevHandle = useRef(domain?.handle);
 
   if (domain?.handle !== prevHandle.current) {
@@ -214,7 +215,7 @@ function StoreHandleSection({
             maxLength={32}
           />
           <div className="flex items-center px-3 h-9 bg-muted border border-input rounded-r-md text-sm text-muted-foreground whitespace-nowrap">
-            {t('admin.salesChannels.handleSuffix')}
+            .{getStoreSubdomainBase()}
           </div>
         </div>
         <p className="text-xs text-muted-foreground">{t('admin.salesChannels.handleHint')}</p>
@@ -239,7 +240,9 @@ function StoreHandleSection({
       <div className="flex items-center gap-2 pt-1">
         <Button
           onClick={handleSave}
-          disabled={!isChanged || !isValid || saving || (availability && !availability.available)}
+          disabled={
+            !isChanged || !isValid || saving || (availability != null && !availability.available)
+          }
           className="gap-1.5"
           size="sm"
         >

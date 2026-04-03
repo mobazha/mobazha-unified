@@ -15,6 +15,16 @@
  */
 export const DEFAULT_SITE_URL = 'https://app.mobazha.org';
 
+/**
+ * Store subdomain base domain (e.g. "mymbz.org" → {handle}.mymbz.org).
+ * Override via NEXT_PUBLIC_STORE_SUBDOMAIN_BASE for test environments (e.g. "mobaza.org").
+ */
+export function getStoreSubdomainBase(): string {
+  return (
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE) || 'mymbz.org'
+  );
+}
+
 export type AuthMode = 'hosted' | 'basic' | 'standalone';
 
 /**
