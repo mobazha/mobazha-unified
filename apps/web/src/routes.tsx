@@ -321,6 +321,7 @@ const routes: RouteObject[] = [
         path: 'settings/access-control/requests',
         element: lazyPage(() => import('./app/admin/settings/access-control/requests/page')),
       },
+      { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
     ],
   },
 

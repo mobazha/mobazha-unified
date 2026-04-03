@@ -94,6 +94,62 @@ export async function getNetworkConfig(): Promise<NetworkConfigResponse> {
   return authGet<NetworkConfigResponse>(NODE_API.SYSTEM_NETWORK);
 }
 
-export async function updateNetworkConfig(overlayType: string): Promise<NetworkConfigUpdateResponse> {
+export async function updateNetworkConfig(
+  overlayType: string
+): Promise<NetworkConfigUpdateResponse> {
   return authPost<NetworkConfigUpdateResponse>(NODE_API.SYSTEM_NETWORK, { overlayType });
+}
+
+// --- Doctor API (standalone health checks) ---
+
+export type DoctorStatus = 'PASS' | 'WARN' | 'FAIL';
+
+export interface DoctorCheckResult {
+  name: string;
+  status: DoctorStatus;
+  detail?: string;
+}
+
+export interface DoctorSummary {
+  pass: number;
+  warn: number;
+  fail: number;
+  results: DoctorCheckResult[];
+}
+
+export async function runDoctor(): Promise<DoctorSummary> {
+  return authGet<DoctorSummary>(NODE_API.SYSTEM_DOCTOR);
+}
+
+export async function downloadDiagnostics(): Promise<Blob> {
+  const { getGatewayUrl, getAuthHeaders } = await import('./config');
+  const resp = await fetch(`${getGatewayUrl()}${NODE_API.SYSTEM_DIAGNOSTICS}`, {
+    headers: getAuthHeaders(),
+  });
+  if (!resp.ok) throw new Error(`Diagnostics export failed: ${resp.status}`);
+  return resp.blob();
+}
+
+// --- Domain config API (standalone domain + TLS management) ---
+
+export interface DomainConfigResponse {
+  domain: string;
+  connectivity: string;
+  overlayType: string;
+  overlayDomain?: string;
+  tlsMode: string;
+}
+
+export interface DomainUpdateResponse {
+  domain: string;
+  tlsMode: string;
+  message: string;
+}
+
+export async function getDomainConfig(): Promise<DomainConfigResponse> {
+  return authGet<DomainConfigResponse>(NODE_API.SYSTEM_DOMAIN);
+}
+
+export async function updateDomain(domain: string): Promise<DomainUpdateResponse> {
+  return authPost<DomainUpdateResponse>(NODE_API.SYSTEM_DOMAIN, { domain });
 }
