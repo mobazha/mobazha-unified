@@ -4957,6 +4957,25 @@ export const en: TranslationResource = {
       regenerateConfirmDesc:
         'This will permanently invalidate your current store link. Anyone using the old link will no longer be able to access your store. This action cannot be undone.',
       linkRegenerated: 'Store link regenerated',
+
+      storeHandleTitle: 'Store URL',
+      storeHandleDesc: 'Set a unique handle to get a branded subdomain for your store',
+      handleLabel: 'Store Handle',
+      handlePlaceholder: 'my-store',
+      handleSuffix: '.stores.mobazha.org',
+      handleHint: 'Lowercase letters, numbers, and hyphens. 3-32 characters.',
+      handleAvailable: 'Handle is available',
+      handleTaken: 'Handle is already taken',
+      handleInvalid: 'Invalid handle format',
+      handleSaved: 'Store handle saved',
+      handleRemoved: 'Store handle removed',
+      handleSaveButton: 'Save Handle',
+      handleRemoveButton: 'Remove',
+      handleRemoveConfirmTitle: 'Remove Store Handle?',
+      handleRemoveConfirmDesc:
+        'Your branded URL will stop working immediately. Visitors using this URL will no longer reach your store.',
+      handleCurrentUrl: 'Your store URL',
+
       telegramBotTitle: 'Telegram Bot',
       telegramBotDesc: 'Connect your own Bot for a branded store experience',
       connected: 'Connected',
