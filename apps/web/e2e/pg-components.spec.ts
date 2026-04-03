@@ -7,7 +7,7 @@
  *   - SellerTrustBadge (compact/full modes)
  *   - WriteReviewDialog (star rating, text, anonymous)
  *   - SEO metadata (canonical URLs, OG tags)
- *   - Site URL correctness (store.mobazha.org)
+ *   - Site URL correctness (app.mobazha.org)
  *
  * Prerequisites:
  *   - Standalone Docker container running (port 15104 backend, 3002 frontend)
@@ -173,7 +173,7 @@ standaloneTest.describe('WriteReviewDialog', () => {
 base.describe('SEO Metadata', () => {
   base.use({ baseURL: 'http://localhost:3002' });
 
-  base('product page has canonical URL with store.mobazha.org', async ({ page }) => {
+  base('product page has canonical URL with app.mobazha.org', async ({ page }) => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
     await page.waitForLoadState('domcontentloaded');
 
@@ -218,7 +218,7 @@ base.describe('SEO Metadata', () => {
     const body = await resp.text();
     expect(body.toLowerCase()).toContain('user-agent');
     expect(body).toContain('Sitemap');
-    // Should reference store.mobazha.org (or localhost for dev)
+    // Should reference app.mobazha.org (or localhost for dev)
     expect(body).not.toContain('mobazha.com');
   });
 

@@ -5577,6 +5577,7 @@ export const en: TranslationResource = {
       peerID: 'Peer ID',
       dataDir: 'Data Directory',
       version: 'Version',
+      label: 'Status',
     },
     resources: {
       title: 'Resources',
@@ -5610,8 +5611,19 @@ export const en: TranslationResource = {
       noDocker:
         'Docker socket not available. Use the CLI command "mobazha-ctl overlay enable tor" or "mobazha-ctl overlay enable lokinet" on the host to manage overlay networks.',
     },
+    domain: {
+      title: 'Domain Settings',
+      label: 'Store Domain',
+      save: 'Save',
+      hint: "Leave empty for IP-only mode (self-signed TLS). Set a domain for automatic HTTPS via Let's Encrypt.",
+      error: 'Failed to update domain',
+    },
     actions: {
       title: 'Actions',
+      runDoctor: 'Run Health Check',
+      runDoctorDesc: 'Check system health, connectivity, and configuration',
+      exportDiag: 'Export Diagnostics',
+      exportDiagDesc: 'Download a diagnostic bundle with logs, config, and health results',
       downloadLogs: 'Download Logs',
       downloadLogsDesc: 'Download recent server logs for debugging',
     },
@@ -5619,9 +5631,15 @@ export const en: TranslationResource = {
     error: 'Failed to load system information',
     retry: 'Retry',
     notAvailable: 'System panel is only available on standalone stores',
+    doctor: {
+      passed: 'passed',
+      warnings: 'warnings',
+      failed: 'failed',
+    },
     days: 'days',
     hours: 'hours',
     minutes: 'minutes',
+    refresh: 'Refresh',
   },
 
   auth: {

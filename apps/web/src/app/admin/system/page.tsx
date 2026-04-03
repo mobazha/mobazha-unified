@@ -7,8 +7,13 @@ import {
   getSystemHealth,
   getNetworkConfig,
   updateNetworkConfig,
+  runDoctor,
+  downloadDiagnostics,
+  getDomainConfig,
+  updateDomain,
   type SystemHealthResponse,
   type NetworkConfigResponse,
+  type DoctorSummary,
 } from '@mobazha/core/services/api/system';
 import {
   Server,
@@ -29,6 +34,10 @@ import {
   Shield,
   Globe,
   Wifi,
+  Stethoscope,
+  Download,
+  Link,
+  Save,
 } from 'lucide-react';
 
 function formatUptime(seconds: number, t: (key: string) => string): string {
@@ -65,6 +74,14 @@ export default function SystemPage() {
   const [networkSaving, setNetworkSaving] = useState(false);
   const [networkMessage, setNetworkMessage] = useState<string | null>(null);
 
+  const [doctorResult, setDoctorResult] = useState<DoctorSummary | null>(null);
+  const [doctorRunning, setDoctorRunning] = useState(false);
+  const [diagExporting, setDiagExporting] = useState(false);
+
+  const [domainInput, setDomainInput] = useState('');
+  const [domainSaving, setDomainSaving] = useState(false);
+  const [domainMessage, setDomainMessage] = useState<string | null>(null);
+
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
   const fetchHealth = useCallback(async () => {
@@ -90,14 +107,24 @@ export default function SystemPage() {
     }
   }, []);
 
+  const fetchDomainConfig = useCallback(async () => {
+    try {
+      const cfg = await getDomainConfig();
+      setDomainInput(cfg.domain || '');
+    } catch {
+      // Domain endpoint may not be available
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin) {
       fetchHealth();
       fetchNetworkConfig();
+      fetchDomainConfig();
       const interval = setInterval(fetchHealth, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAdmin, fetchHealth, fetchNetworkConfig]);
+  }, [isAdmin, fetchHealth, fetchNetworkConfig, fetchDomainConfig]);
 
   const handleApplyNetwork = async () => {
     setNetworkSaving(true);
@@ -108,11 +135,52 @@ export default function SystemPage() {
       setTimeout(() => setNetworkMessage(null), 8000);
       await fetchNetworkConfig();
     } catch (err) {
-      setNetworkMessage(
-        err instanceof Error ? err.message : t('system.network.error'),
-      );
+      setNetworkMessage(err instanceof Error ? err.message : t('system.network.error'));
     } finally {
       setNetworkSaving(false);
+    }
+  };
+
+  const handleRunDoctor = async () => {
+    setDoctorRunning(true);
+    try {
+      const result = await runDoctor();
+      setDoctorResult(result);
+    } catch {
+      setDoctorResult(null);
+    } finally {
+      setDoctorRunning(false);
+    }
+  };
+
+  const handleExportDiagnostics = async () => {
+    setDiagExporting(true);
+    try {
+      const blob = await downloadDiagnostics();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mobazha-diag-${new Date().toISOString().slice(0, 10)}.tar.gz`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silent fail
+    } finally {
+      setDiagExporting(false);
+    }
+  };
+
+  const handleSaveDomain = async () => {
+    setDomainSaving(true);
+    setDomainMessage(null);
+    try {
+      const result = await updateDomain(domainInput.trim());
+      setDomainMessage(result.message);
+      setTimeout(() => setDomainMessage(null), 8000);
+    } catch (err) {
+      setDomainMessage(err instanceof Error ? err.message : t('system.domain.error'));
+    } finally {
+      setDomainSaving(false);
     }
   };
 
@@ -179,7 +247,7 @@ export default function SystemPage() {
           onClick={fetchHealth}
           disabled={loading}
           className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-          title="Refresh"
+          title={t('system.refresh')}
         >
           <RefreshCw className={`w-4 h-4 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -194,8 +262,14 @@ export default function SystemPage() {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-500" />
             <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <div className="font-medium text-foreground capitalize">{health!.status}</div>
+              <div className="text-sm text-muted-foreground">{t('system.status.label')}</div>
+              <div className="font-medium text-foreground capitalize">
+                {health!.status === 'healthy'
+                  ? t('system.status.healthy')
+                  : health!.status === 'degraded'
+                    ? t('system.status.degraded')
+                    : health!.status}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -240,7 +314,9 @@ export default function SystemPage() {
           <div className="flex items-center gap-3">
             <Tag className="w-5 h-5 text-primary" />
             <div>
-              <div className="text-sm text-muted-foreground">{t('system.updates.currentVersion')}</div>
+              <div className="text-sm text-muted-foreground">
+                {t('system.updates.currentVersion')}
+              </div>
               <div className="font-medium font-mono text-foreground">
                 {health!.version && health!.version !== 'dev'
                   ? health!.version
@@ -276,7 +352,9 @@ export default function SystemPage() {
             <div className="flex items-start gap-3">
               <Globe className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <div className="text-sm text-muted-foreground">{t('system.network.connectivity')}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t('system.network.connectivity')}
+                </div>
                 <div className="font-medium text-foreground capitalize">
                   {networkConfig.connectivity === 'overlay'
                     ? `${t('system.network.overlay')} (${networkConfig.overlayType})`
@@ -293,14 +371,21 @@ export default function SystemPage() {
             <div className="border-t border-border pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <Shield className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">{t('system.network.overlayNetwork')}</span>
+                <span className="text-sm font-medium text-foreground">
+                  {t('system.network.overlayNetwork')}
+                </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { value: '', label: t('system.network.none'), icon: Wifi, desc: t('system.network.noneDesc') },
+                  {
+                    value: '',
+                    label: t('system.network.none'),
+                    icon: Wifi,
+                    desc: t('system.network.noneDesc'),
+                  },
                   { value: 'tor', label: 'Tor', icon: Shield, desc: '.onion' },
                   { value: 'lokinet', label: 'Lokinet', icon: Shield, desc: '.loki' },
-                ].map((opt) => (
+                ].map(opt => (
                   <button
                     key={opt.value}
                     onClick={() => setSelectedOverlay(opt.value)}
@@ -326,7 +411,9 @@ export default function SystemPage() {
                     {networkSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     {t('system.network.apply')}
                   </button>
-                  <span className="text-xs text-muted-foreground">{t('system.network.applyHint')}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t('system.network.applyHint')}
+                  </span>
                 </div>
               )}
               {networkMessage && (
@@ -340,6 +427,48 @@ export default function SystemPage() {
               <div className="mt-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-700 dark:text-yellow-400">
                 {t('system.network.noDocker')}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Domain Settings (standalone only) */}
+      {isStandaloneMode() && (
+        <div className="border border-border rounded-lg p-5">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            {t('system.domain.title')}
+          </h2>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Link className="w-5 h-5 text-blue-500 mt-2" />
+              <div className="flex-1 space-y-2">
+                <label className="text-sm text-muted-foreground">{t('system.domain.label')}</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={domainInput}
+                    onChange={e => setDomainInput(e.target.value)}
+                    placeholder="store.example.com"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <button
+                    onClick={handleSaveDomain}
+                    disabled={domainSaving}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {domainSaving ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
+                    )}
+                    {t('system.domain.save')}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">{t('system.domain.hint')}</p>
+              </div>
+            </div>
+            {domainMessage && (
+              <div className="p-3 rounded-lg bg-muted text-sm text-foreground">{domainMessage}</div>
             )}
           </div>
         </div>
@@ -400,6 +529,89 @@ export default function SystemPage() {
           {t('system.actions.title')}
         </h2>
         <div className="space-y-3">
+          {isStandaloneMode() && (
+            <button
+              onClick={handleRunDoctor}
+              disabled={doctorRunning}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+            >
+              {doctorRunning ? (
+                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+              ) : (
+                <Stethoscope className="w-5 h-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <div className="font-medium text-foreground text-sm">
+                  {t('system.actions.runDoctor')}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {t('system.actions.runDoctorDesc')}
+                </div>
+              </div>
+            </button>
+          )}
+
+          {doctorResult && (
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center gap-4 text-sm font-medium">
+                <span className="text-green-500">
+                  {doctorResult.pass} {t('system.doctor.passed')}
+                </span>
+                {doctorResult.warn > 0 && (
+                  <span className="text-yellow-500">
+                    {doctorResult.warn} {t('system.doctor.warnings')}
+                  </span>
+                )}
+                {doctorResult.fail > 0 && (
+                  <span className="text-destructive">
+                    {doctorResult.fail} {t('system.doctor.failed')}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1">
+                {doctorResult.results.map(r => (
+                  <div key={r.name} className="flex items-center gap-2 text-sm">
+                    {r.status === 'PASS' && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                    )}
+                    {r.status === 'WARN' && (
+                      <AlertCircle className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                    )}
+                    {r.status === 'FAIL' && (
+                      <AlertCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                    )}
+                    <span className="text-foreground">{r.name}</span>
+                    {r.detail && (
+                      <span className="text-muted-foreground truncate">— {r.detail}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isStandaloneMode() && (
+            <button
+              onClick={handleExportDiagnostics}
+              disabled={diagExporting}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+            >
+              {diagExporting ? (
+                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+              ) : (
+                <Download className="w-5 h-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <div className="font-medium text-foreground text-sm">
+                  {t('system.actions.exportDiag')}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {t('system.actions.exportDiagDesc')}
+                </div>
+              </div>
+            </button>
+          )}
+
           <a
             href={`${window.location.origin}/v1/system/logs`}
             target="_blank"

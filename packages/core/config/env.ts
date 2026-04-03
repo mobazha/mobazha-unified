@@ -11,7 +11,7 @@
  */
 /**
  * SaaS 前端默认域名 — 当 NEXT_PUBLIC_SITE_URL 未设置时的终极回退值。
- * 域名迁移（如 store.mobazha.org → app.mobazha.org）只需改这一处。
+ * 域名迁移（如 app.mobazha.org → app.mobazha.org）只需改这一处。
  */
 export const DEFAULT_SITE_URL = 'https://app.mobazha.org';
 
