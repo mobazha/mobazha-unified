@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import React from 'react';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
 const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 
 interface ProductData {
   slug: string;
@@ -52,7 +52,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await fetchProduct(slug);
+  const [product, siteUrl] = await Promise.all([fetchProduct(slug), getSiteUrl()]);
 
   if (!product?.item) {
     return { title: 'Product Not Found' };
@@ -61,8 +61,8 @@ export async function generateMetadata({
   const title = product.item.title || slug;
   const rawDescription = product.item.description || '';
   const description = stripHtml(rawDescription).slice(0, 160) || `Buy ${title} on Mobazha`;
-  const canonicalUrl = `${SITE_URL}/product/${slug}`;
-  const ogImageUrl = `${SITE_URL}/product/${slug}/opengraph-image`;
+  const canonicalUrl = `${siteUrl}/product/${slug}`;
+  const ogImageUrl = `${siteUrl}/product/${slug}/opengraph-image`;
 
   return {
     title,
@@ -84,7 +84,7 @@ export async function generateMetadata({
   };
 }
 
-function buildJsonLd(product: ProductData | null) {
+function buildJsonLd(product: ProductData | null, siteUrl: string) {
   if (!product?.item) return null;
   const title = product.item.title || product.slug;
   const description = stripHtml(product.item.description || '').slice(0, 500);
@@ -114,18 +114,18 @@ function buildJsonLd(product: ProductData | null) {
         price: String(price),
         priceCurrency: currency,
         availability: 'https://schema.org/InStock',
-        url: `${SITE_URL}/product/${product.slug}`,
+        url: `${siteUrl}/product/${product.slug}`,
       },
     }),
   };
 }
 
-function buildBreadcrumbLd(product: ProductData | null) {
+function buildBreadcrumbLd(product: ProductData | null, siteUrl: string) {
   if (!product?.item) return null;
   const title = product.item.title || product.slug;
   const items: Array<{ '@type': string; position: number; name: string; item?: string }> = [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-    { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${SITE_URL}/marketplace` },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${siteUrl}/marketplace` },
   ];
 
   if (product.vendorID?.peerID) {
@@ -133,7 +133,7 @@ function buildBreadcrumbLd(product: ProductData | null) {
       '@type': 'ListItem',
       position: 3,
       name: product.vendorID.handle || 'Store',
-      item: `${SITE_URL}/store/${product.vendorID.peerID}`,
+      item: `${siteUrl}/store/${product.vendorID.peerID}`,
     });
     items.push({ '@type': 'ListItem', position: 4, name: title });
   } else {
@@ -155,11 +155,11 @@ export default async function ProductLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await fetchProduct(slug);
-  const jsonLd = buildJsonLd(product);
-  const breadcrumbLd = buildBreadcrumbLd(product);
-  const canonicalUrl = `${SITE_URL}/product/${slug}`;
-  const oembedUrl = `${SITE_URL}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
+  const [product, siteUrl] = await Promise.all([fetchProduct(slug), getSiteUrl()]);
+  const jsonLd = buildJsonLd(product, siteUrl);
+  const breadcrumbLd = buildBreadcrumbLd(product, siteUrl);
+  const canonicalUrl = `${siteUrl}/product/${slug}`;
+  const oembedUrl = `${siteUrl}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
 
   return (
     <>

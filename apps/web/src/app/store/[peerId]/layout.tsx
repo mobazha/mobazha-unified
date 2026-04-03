@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import React from 'react';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
 const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 
 interface ProfileData {
   peerID?: string;
@@ -84,9 +84,10 @@ export async function generateMetadata({
   params: Promise<{ peerId: string }>;
 }): Promise<Metadata> {
   const { peerId } = await params;
-  const [profile, storefront] = await Promise.all([
+  const [profile, storefront, siteUrl] = await Promise.all([
     fetchProfile(peerId),
     fetchStorefrontConfig(peerId),
+    getSiteUrl(),
   ]);
 
   if (!profile) {
@@ -100,9 +101,9 @@ export async function generateMetadata({
     heroMeta.description ||
     (profile.about ? profile.about.slice(0, 160) : `Browse products from ${name} on Mobazha`);
 
-  const canonicalUrl = `${SITE_URL}/store/${peerId}`;
+  const canonicalUrl = `${siteUrl}/store/${peerId}`;
   const themeColor = storefront?.theme?.primaryColor;
-  const ogImageUrl = `${SITE_URL}/store/${peerId}/opengraph-image`;
+  const ogImageUrl = `${siteUrl}/store/${peerId}/opengraph-image`;
 
   return {
     title,
@@ -125,7 +126,7 @@ export async function generateMetadata({
   };
 }
 
-function buildOrganizationLd(profile: ProfileData | null, peerId: string) {
+function buildOrganizationLd(profile: ProfileData | null, peerId: string, siteUrl: string) {
   if (!profile) return null;
   const name = profile.name || profile.handle || peerId.slice(0, 12);
   const avatarUrl = getImageUrl(
@@ -137,7 +138,7 @@ function buildOrganizationLd(profile: ProfileData | null, peerId: string) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
-    url: `${SITE_URL}/store/${peerId}`,
+    url: `${siteUrl}/store/${peerId}`,
     ...(avatarUrl && { logo: avatarUrl }),
     ...(profile.about && { description: profile.about.slice(0, 200) }),
   };
@@ -151,10 +152,10 @@ export default async function StoreLayout({
   params: Promise<{ peerId: string }>;
 }) {
   const { peerId } = await params;
-  const profile = await fetchProfile(peerId);
-  const orgLd = buildOrganizationLd(profile, peerId);
-  const canonicalUrl = `${SITE_URL}/store/${peerId}`;
-  const oembedUrl = `${SITE_URL}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
+  const [profile, siteUrl] = await Promise.all([fetchProfile(peerId), getSiteUrl()]);
+  const orgLd = buildOrganizationLd(profile, peerId, siteUrl);
+  const canonicalUrl = `${siteUrl}/store/${peerId}`;
+  const oembedUrl = `${siteUrl}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
   const storeName = profile?.name || profile?.handle || peerId.slice(0, 12);
 
   return (
