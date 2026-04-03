@@ -114,6 +114,16 @@ export const en: TranslationResource = {
     new: 'New',
     moveUp: 'Move up',
     moveDown: 'Move down',
+    actions: 'Actions',
+    anonymous: 'Anonymous',
+    goBack: 'Go back',
+    login: 'Log in',
+    moreActions: 'More actions',
+    private: 'Private',
+    saved: 'Saved',
+    scan: 'Scan',
+    unknown: 'Unknown',
+    unknownError: 'Unknown error',
   },
 
   share: {
@@ -168,6 +178,7 @@ export const en: TranslationResource = {
     openMessages: 'Open messages',
     viewCart: 'View shopping cart',
     openUserMenu: 'Open user menu',
+    productGroupsDesc: 'Organize products into groups for your storefront.',
   },
 
   login: {
@@ -272,6 +283,8 @@ export const en: TranslationResource = {
     startSellingDesc: 'Set up your store and start selling today',
     support: 'Help & Support',
     supportDesc: 'Get help and FAQ',
+    registrationFailedTitle: 'Registration failed',
+    registrationFailedDesc: 'Please check your network and try again.',
     language: 'Language',
     profileDesc: 'Edit your public profile',
     linkedAccountsDesc: 'Manage linked social accounts',
@@ -385,6 +398,7 @@ export const en: TranslationResource = {
     noReviews: 'No reviews yet',
     viewAllReviews: 'View All Reviews',
     anonymous: 'Anonymous',
+    rwaToken: 'RWA Token',
     // Rating labels
     overall: 'Overall',
     overallRating: 'overall rating',
@@ -440,6 +454,7 @@ export const en: TranslationResource = {
     users: 'Users',
     category: 'Category',
     allCategories: 'All Categories',
+    browseByType: 'Browse by type',
   },
 
   cart: {
@@ -605,6 +620,7 @@ export const en: TranslationResource = {
     countryRequired: 'Country is required',
     addressNotes: 'Delivery Notes (Optional)',
     addressNotesPlaceholder: 'Special delivery instructions...',
+    noName: 'Unnamed',
   },
 
   order: {
@@ -960,6 +976,9 @@ export const en: TranslationResource = {
       copyOrderId: 'Copy Order ID',
       viewContract: 'View Contract',
       copyToClipboard: 'Copy to Clipboard',
+      acceptFailed: 'Failed to accept order',
+      operationFailed: 'Operation failed',
+      walletConnectionRequired: 'Wallet connection required',
     },
     // Table headers
     table: {
@@ -1072,6 +1091,8 @@ export const en: TranslationResource = {
       description: 'Select the receiving account where you want to receive payment for this order.',
       fiatDescription: 'Payment has been received. Accept this order and prepare for fulfillment.',
       receivingAccountRequired: 'Please select a receiving account',
+      accept: 'Accept',
+      decline: 'Decline',
     },
     // Fulfill modal
     fulfill: {
@@ -1138,6 +1159,9 @@ export const en: TranslationResource = {
         qualityIssue: 'Quality issue',
         other: 'Other',
       },
+      addEvidence: 'Add evidence image',
+      evidence: 'Evidence (optional)',
+      evidenceHint: 'Up to {{maxImages}} images, {{maxSizeMb}} MB each',
     },
     afterSaleDispute: {
       buyerTitle: 'You reported an issue with this order',
@@ -1234,6 +1258,7 @@ export const en: TranslationResource = {
       moderatorFee: 'Moderator fee',
       moderatorHint:
         'As the moderator, you can help resolve this dispute by reviewing the evidence and making a fair decision.',
+      evidence: 'Evidence',
     },
     // Payment display
     payment: {
@@ -1750,6 +1775,7 @@ export const en: TranslationResource = {
       reviewNote: 'Note (optional)',
       reviewNotePlaceholder: 'Add a note for the user...',
     },
+    storePolicies: 'Store policies',
   },
 
   moderatorSettings: {
@@ -2204,6 +2230,7 @@ export const en: TranslationResource = {
       step2: "You'll receive a notification when approved",
       step3: 'Start listing and selling your products!',
     },
+    allTypes: 'All types',
   },
 
   moderator: {
@@ -2225,6 +2252,7 @@ export const en: TranslationResource = {
     success: '{{rate}}% success',
     fee: 'fee',
     noModeratorsFound: 'No moderators found matching your criteria',
+    disputes: 'disputes',
   },
 
   payment: {
@@ -2257,6 +2285,15 @@ export const en: TranslationResource = {
     changeModerator: 'Change',
     enableProtection: 'Enable Protection',
     disableProtection: 'Disable Protection',
+    confirmed: 'Confirmed',
+    confirming: 'Confirming',
+    remaining: 'remaining',
+    tron: {
+      insufficientGas:
+        'Insufficient TRX for network fees (required: {{required}}, balance: {{balance}})',
+      gasExplanation:
+        'TRX is used to pay network fees (energy) on TRON. Top up your wallet and try again.',
+    },
     fee: 'Fee',
     verified: 'Verified',
     // Payment page
@@ -2602,6 +2639,12 @@ export const en: TranslationResource = {
     deny: 'Deny',
     accessMgmt: 'Access Management',
     accessMgmtDesc: 'Manage user groups and product group permissions',
+    deleteConfirmTitle: 'Delete account?',
+    deleteConfirmDesc:
+      'This action cannot be undone. Your account and data will be permanently removed.',
+    installApp: 'Install app',
+    installAppDesc: 'Add Mobazha to your home screen for faster access.',
+    unsavedChanges: 'You have unsaved changes',
   },
 
   userMenu: {
@@ -2794,6 +2837,8 @@ export const en: TranslationResource = {
     termsPlaceholder: 'Enter your terms and conditions...',
     resyncComplete: 'Transaction sync completed',
     resyncFailed: 'Failed to sync transactions',
+    alreadyBlocked: 'This user is already blocked.',
+    loadBlockedFailed: 'Failed to load blocked users.',
   },
 
   // OTC Private Trading
@@ -2977,6 +3022,8 @@ export const en: TranslationResource = {
       moderatorRemoved: 'Moderator Removed',
       orderExpired: 'Order Expired',
       orderStaleWarning: 'Order Warning',
+      paymentCancelled: 'Payment cancelled',
+      paymentExpired: 'Payment expired',
     },
     // Notification list messages (for API-fetched notifications)
     messages: {
@@ -3021,6 +3068,10 @@ export const en: TranslationResource = {
       orderStaleWarningWithId: 'Order #{{orderId}} may need attention',
       orderStaleWarningNoId: 'An order may need attention',
       defaultNotification: 'Notification',
+    },
+    payment: {
+      cancelled: 'Payment was cancelled',
+      expired: 'Payment has expired',
     },
     // TTS (Text-to-Speech) announcements
     tts: {
@@ -3580,6 +3631,13 @@ export const en: TranslationResource = {
       collection: 'Collection',
       rarity: 'Rarity',
       mintedAt: 'Minted At',
+      availableShares: 'Available shares',
+      confirmRequired: 'Confirmation required',
+      onChainData: 'On-chain data',
+      sharesInfo: 'Share information',
+      soldPercentage: 'Sold',
+      soldShares: 'Sold shares',
+      totalSharesOnChain: 'Total shares (on-chain)',
     },
 
     // Preview
@@ -3715,6 +3773,12 @@ export const en: TranslationResource = {
     deleteConfirmTitle: 'Delete Listing?',
     deleteConfirmDesc: 'This action cannot be undone. This will permanently delete your listing.',
     notFound: 'Listing not found',
+    descriptionPlaceholderShort: 'Describe your listing...',
+    productImage: 'Product image',
+    productTypeHint: 'Choose from suggestions or type your own',
+    save: 'Save',
+    tokenAddress: 'Token address',
+    uploadFailed: 'One or more images failed to upload.',
   },
 
   // RWA Digital Assets Tab
@@ -3731,6 +3795,14 @@ export const en: TranslationResource = {
     noRwaYet: 'No digital assets yet',
     noRwaInStore: 'This store has no digital assets',
     createFirstRwa: 'Create a digital asset listing to start selling',
+    // Confirm flow (seller)
+    confirm: {
+      approveFailed: 'Token approval failed',
+      confirmFailed: 'Failed to confirm order on-chain',
+      missingTokenInfo: 'Token information is missing',
+      missingWalletAddress: 'Wallet address is required',
+      serviceNotReady: 'Service is not ready. Try again later.',
+    },
     // Atomic swap purchase flow
     purchase: {
       connectWallet: 'Connect Wallet',
@@ -3768,6 +3840,12 @@ export const en: TranslationResource = {
       confirmPurchase: 'Confirm Purchase',
       confirmPurchaseDesc:
         'Your payment will be exchanged for RWA token shares immediately. This action cannot be undone.',
+      approveFailed: 'Token approval failed',
+      claimFailed: 'Failed to claim',
+      missingBuyerAddress: 'Buyer address is missing',
+      missingSellerAddress: 'Seller address is missing',
+      sellerNotOwner: 'Seller is not the token owner',
+      sellerTokenNotApproved: 'Seller has not approved the token',
     },
     fulfill: {
       waitingBuyer: 'Waiting for Buyer Authorization',
@@ -4260,6 +4338,7 @@ export const en: TranslationResource = {
       system: 'System',
       viewStore: 'View Store',
       backToShopping: 'Back to Shopping',
+      mainNavigation: 'Main navigation',
       help: 'Help & Docs',
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
@@ -5528,7 +5607,8 @@ export const en: TranslationResource = {
       apply: 'Apply Changes',
       applyHint: 'Store will restart to apply network changes',
       error: 'Failed to update network configuration',
-      noDocker: 'Docker socket not available. Use the CLI command "mobazha-ctl overlay enable tor" or "mobazha-ctl overlay enable lokinet" on the host to manage overlay networks.',
+      noDocker:
+        'Docker socket not available. Use the CLI command "mobazha-ctl overlay enable tor" or "mobazha-ctl overlay enable lokinet" on the host to manage overlay networks.',
     },
     actions: {
       title: 'Actions',
@@ -5542,6 +5622,19 @@ export const en: TranslationResource = {
     days: 'days',
     hours: 'hours',
     minutes: 'minutes',
+  },
+
+  auth: {
+    accountRequired: 'Account required',
+    createAccount: 'Create account',
+    createAccountPrompt: 'Create a free account to access this feature.',
+  },
+
+  collections: {
+    browseAll: 'Browse all collections',
+    empty: 'No collections yet',
+    noProducts: 'No products in this collection',
+    notFound: 'Collection not found',
   },
 };
 

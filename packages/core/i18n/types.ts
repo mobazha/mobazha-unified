@@ -115,6 +115,16 @@ export interface TranslationResource {
     dismiss?: string;
     selectAll?: string;
     selected?: string;
+    actions?: string;
+    anonymous?: string;
+    goBack?: string;
+    login?: string;
+    moreActions?: string;
+    private?: string;
+    saved?: string;
+    scan?: string;
+    unknown?: string;
+    unknownError?: string;
   };
 
   // 导航
@@ -131,6 +141,7 @@ export interface TranslationResource {
     notifications: string;
     login: string;
     logout: string;
+    productGroupsDesc?: string;
   };
 
   // 登录页面（可选，fallback 到英文）
@@ -201,6 +212,8 @@ export interface TranslationResource {
     support?: string;
     supportDesc?: string;
     logout?: string;
+    registrationFailedTitle?: string;
+    registrationFailedDesc?: string;
   };
 
   // 商品
@@ -258,6 +271,7 @@ export interface TranslationResource {
     noReviews: string;
     viewAllReviews: string;
     anonymous: string;
+    rwaToken?: string;
   };
 
   // 搜索
@@ -276,6 +290,7 @@ export interface TranslationResource {
     users: string;
     category: string;
     allCategories: string;
+    browseByType?: string;
   };
 
   // 购物车
@@ -358,6 +373,7 @@ export interface TranslationResource {
     countryRequired: string;
     addressNotes: string;
     addressNotesPlaceholder: string;
+    noName?: string;
   };
 
   // 订单
@@ -439,6 +455,10 @@ export interface TranslationResource {
     initiatedBy: string;
     disputeStatus: string;
     favorBuyer: string;
+    accept?: TranslationSection;
+    actions?: TranslationSection;
+    dispute?: TranslationSection;
+    disputeDisplay?: TranslationSection;
   };
 
   // 聊天
@@ -671,6 +691,7 @@ export interface TranslationResource {
       keepOneDesc: string;
       standaloneStore: string;
     };
+    storePolicies?: string;
   };
 
   moderatorSettings?: {
@@ -806,6 +827,7 @@ export interface TranslationResource {
     sortByProducts: string;
     sortByName: string;
     allCategories: string;
+    allTypes?: string;
   };
 
   // 调解员
@@ -828,6 +850,7 @@ export interface TranslationResource {
     success: string;
     fee: string;
     noModeratorsFound: string;
+    disputes?: string;
   };
 
   // 支付选择
@@ -846,6 +869,13 @@ export interface TranslationResource {
     changeModerator: string;
     enableProtection: string;
     disableProtection: string;
+    confirmed?: string;
+    confirming?: string;
+    remaining?: string;
+    tron?: {
+      insufficientGas?: string;
+      gasExplanation?: string;
+    };
   };
 
   // 筛选器
@@ -1087,6 +1117,11 @@ export interface TranslationResource {
     deny?: string;
     accessMgmt?: string;
     accessMgmtDesc?: string;
+    deleteConfirmTitle?: string;
+    deleteConfirmDesc?: string;
+    installApp?: string;
+    installAppDesc?: string;
+    unsavedChanges?: string;
   };
 
   // 用户菜单
@@ -1274,6 +1309,8 @@ export interface TranslationResource {
     termsPlaceholder: string;
     resyncComplete: string;
     resyncFailed: string;
+    alreadyBlocked?: string;
+    loadBlockedFailed?: string;
   };
 
   // OTC 私密交易
@@ -1420,6 +1457,13 @@ export interface TranslationResource {
       addedAsModerator: string;
       removedAsModerator: string;
     };
+    // 支付通知
+    payment?: {
+      cancelled?: string;
+      expired?: string;
+    };
+    // 通知标题
+    titles?: TranslationSection;
     // TTS (语音播报)
     tts: {
       newMessage: string;
@@ -1853,6 +1897,13 @@ export interface TranslationResource {
       collection?: string;
       rarity?: string;
       mintedAt?: string;
+      availableShares?: string;
+      confirmRequired?: string;
+      onChainData?: string;
+      sharesInfo?: string;
+      soldPercentage?: string;
+      soldShares?: string;
+      totalSharesOnChain?: string;
     };
     // Publish
     publish: string;
@@ -1987,6 +2038,12 @@ export interface TranslationResource {
     basedOn: string;
     showMore: string;
     showLess: string;
+    descriptionPlaceholderShort?: string;
+    productImage?: string;
+    productTypeHint?: string;
+    save?: string;
+    tokenAddress?: string;
+    uploadFailed?: string;
   };
 
   // Validation messages
@@ -2010,12 +2067,26 @@ export interface TranslationResource {
     noRwaYet?: string;
     noRwaInStore?: string;
     createFirstRwa?: string;
+    // Confirm flow (seller)
+    confirm?: {
+      approveFailed?: string;
+      confirmFailed?: string;
+      missingTokenInfo?: string;
+      missingWalletAddress?: string;
+      serviceNotReady?: string;
+    };
     // Purchase flow
     purchase: {
       connectWallet: string;
       connectDesc: string;
       connectFailed?: string;
       serviceNotReady?: string;
+      approveFailed?: string;
+      claimFailed?: string;
+      missingBuyerAddress?: string;
+      missingSellerAddress?: string;
+      sellerNotOwner?: string;
+      sellerTokenNotApproved?: string;
       authorize: string;
       approving: string;
       approvingDesc: string;
@@ -2487,6 +2558,7 @@ export interface TranslationResource {
       collections?: string;
       backToMarketplace?: string;
       backToShopping?: string;
+      mainNavigation?: string;
     };
     dashboard?: {
       welcome?: string;
@@ -3573,6 +3645,10 @@ export interface TranslationResource {
   deploy?: TranslationSection;
 
   system?: TranslationSection;
+
+  auth?: TranslationSection;
+
+  collections?: TranslationSection;
 }
 
 // i18n 上下文类型
