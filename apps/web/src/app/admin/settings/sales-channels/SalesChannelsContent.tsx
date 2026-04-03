@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n, useUserStore } from '@mobazha/core';
 import { useSalesChannels } from '@mobazha/core/hooks/useSalesChannels';
 import type { UseSalesChannelsReturn } from '@mobazha/core/hooks/useSalesChannels';
+import { useStoreDomain } from '@mobazha/core/hooks/useStoreDomain';
+import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +32,7 @@ import {
   Trash2,
   Send,
   Smartphone,
+  Globe,
 } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
@@ -85,6 +88,198 @@ function LinkRow({
           </a>
         )}
       </div>
+    </div>
+  );
+}
+
+function StoreHandleSection({
+  domain,
+  loading,
+  availability,
+  checking,
+  setHandle,
+  removeDomain,
+  checkAvailability,
+}: Pick<
+  UseStoreDomainReturn,
+  | 'domain'
+  | 'loading'
+  | 'availability'
+  | 'checking'
+  | 'setHandle'
+  | 'removeDomain'
+  | 'checkAvailability'
+>) {
+  const { t } = useI18n();
+  const { toast } = useToast();
+
+  const [inputValue, setInputValue] = useState(domain?.handle || '');
+  const [saving, setSaving] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const prevHandle = useRef(domain?.handle);
+
+  if (domain?.handle !== prevHandle.current) {
+    prevHandle.current = domain?.handle;
+    if (domain?.handle && domain.handle !== inputValue) {
+      setInputValue(domain.handle);
+    }
+  }
+
+  const handleInputChange = useCallback(
+    (value: string) => {
+      const normalized = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+      setInputValue(normalized);
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      if (normalized.length >= 3 && normalized !== domain?.handle) {
+        debounceRef.current = setTimeout(() => {
+          checkAvailability(normalized);
+        }, 500);
+      }
+    },
+    [domain?.handle, checkAvailability]
+  );
+
+  const handleSave = useCallback(async () => {
+    if (!inputValue || inputValue.length < 3) return;
+    setSaving(true);
+    const result = await setHandle(inputValue);
+    setSaving(false);
+    if (result) {
+      toast({ variant: 'success', title: t('admin.salesChannels.handleSaved') });
+    }
+  }, [inputValue, setHandle, toast, t]);
+
+  const handleRemove = useCallback(async () => {
+    setRemoving(true);
+    const success = await removeDomain();
+    setRemoving(false);
+    setShowRemoveConfirm(false);
+    if (success) {
+      setInputValue('');
+      toast({ variant: 'success', title: t('admin.salesChannels.handleRemoved') });
+    }
+  }, [removeDomain, toast, t]);
+
+  if (loading && !domain) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+        {t('common.loading')}
+      </div>
+    );
+  }
+
+  const isChanged = inputValue !== (domain?.handle || '');
+  const isValid = inputValue.length >= 3 && inputValue.length <= 32;
+
+  return (
+    <div className="space-y-4">
+      {domain?.subdomainUrl && (
+        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+          <Globe className="w-5 h-5 text-primary shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="text-xs text-muted-foreground mb-0.5">
+              {t('admin.salesChannels.handleCurrentUrl')}
+            </div>
+            <div className="text-sm font-mono text-foreground truncate">{domain.subdomainUrl}</div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <CopyButton text={domain.subdomainUrl} />
+            <a
+              href={domain.subdomainUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">
+          {t('admin.salesChannels.handleLabel')}
+        </label>
+        <div className="flex items-center gap-0">
+          <Input
+            value={inputValue}
+            onChange={e => handleInputChange(e.target.value)}
+            placeholder={t('admin.salesChannels.handlePlaceholder')}
+            className="rounded-r-none border-r-0"
+            maxLength={32}
+          />
+          <div className="flex items-center px-3 h-9 bg-muted border border-input rounded-r-md text-sm text-muted-foreground whitespace-nowrap">
+            {t('admin.salesChannels.handleSuffix')}
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">{t('admin.salesChannels.handleHint')}</p>
+
+        {isChanged && isValid && !checking && availability && (
+          <p
+            className={`text-xs ${availability.available ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+          >
+            {availability.available
+              ? t('admin.salesChannels.handleAvailable')
+              : availability.reason || t('admin.salesChannels.handleTaken')}
+          </p>
+        )}
+        {checking && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Checking...
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 pt-1">
+        <Button
+          onClick={handleSave}
+          disabled={!isChanged || !isValid || saving || (availability && !availability.available)}
+          className="gap-1.5"
+          size="sm"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          {t('admin.salesChannels.handleSaveButton')}
+        </Button>
+        {domain?.handle && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowRemoveConfirm(true)}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            {t('admin.salesChannels.handleRemoveButton')}
+          </Button>
+        )}
+      </div>
+
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('admin.salesChannels.handleRemoveConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('admin.salesChannels.handleRemoveConfirmDesc')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemove}
+              disabled={removing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removing && <Loader2 className="w-4 h-4 animate-spin mr-1.5" />}
+              {t('common.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -360,18 +555,43 @@ export default function SalesChannelsContent() {
   const peerID = profile?.peerID || '';
 
   const salesChannels = useSalesChannels({ peerID, autoLoad: true });
+  const storeDomain = useStoreDomain({ peerID, autoLoad: true });
 
-  // Surface hook-level errors via toast
-  const prevErrorRef = React.useRef<string | null>(null);
-  React.useEffect(() => {
-    if (salesChannels.error && salesChannels.error !== prevErrorRef.current) {
+  const prevSCErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (salesChannels.error && salesChannels.error !== prevSCErrorRef.current) {
       toast({ variant: 'destructive', title: salesChannels.error });
     }
-    prevErrorRef.current = salesChannels.error;
+    prevSCErrorRef.current = salesChannels.error;
   }, [salesChannels.error, toast]);
+
+  const prevDomainErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (storeDomain.error && storeDomain.error !== prevDomainErrorRef.current) {
+      toast({ variant: 'destructive', title: storeDomain.error });
+    }
+    prevDomainErrorRef.current = storeDomain.error;
+  }, [storeDomain.error, toast]);
 
   return (
     <div className="space-y-8">
+      <SettingsSection
+        title={t('admin.salesChannels.storeHandleTitle')}
+        description={t('admin.salesChannels.storeHandleDesc')}
+      >
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+          <StoreHandleSection
+            domain={storeDomain.domain}
+            loading={storeDomain.loading}
+            availability={storeDomain.availability}
+            checking={storeDomain.checking}
+            setHandle={storeDomain.setHandle}
+            removeDomain={storeDomain.removeDomain}
+            checkAvailability={storeDomain.checkAvailability}
+          />
+        </div>
+      </SettingsSection>
+
       <SettingsSection
         title={t('admin.salesChannels.storeLinksTitle')}
         description={t('admin.salesChannels.storeLinksDesc')}
