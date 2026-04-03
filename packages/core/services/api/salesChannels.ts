@@ -129,6 +129,69 @@ export async function unbindStoreBot(peerID: string): Promise<void> {
   }
 }
 
+// ============ Store Branded Domains ============
+
+export interface StoreDomainInfo {
+  handle: string;
+  subdomainUrl?: string;
+  customDomain?: string | null;
+  verified: boolean;
+}
+
+export interface HandleAvailability {
+  available: boolean;
+  reason?: string;
+}
+
+export async function getStoreDomain(peerID: string): Promise<StoreDomainInfo | null> {
+  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  const raw = await response.json();
+  if (!response.ok) return null;
+  return unwrapData<StoreDomainInfo>(raw);
+}
+
+export async function setStoreDomainHandle(
+  peerID: string,
+  handle: string
+): Promise<StoreDomainInfo> {
+  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ handle }),
+  });
+  const raw = await response.json();
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<StoreDomainInfo>(raw);
+}
+
+export async function deleteStoreDomain(peerID: string): Promise<void> {
+  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const raw = await response.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(raw));
+  }
+}
+
+export async function checkHandleAvailability(handle: string): Promise<HandleAvailability> {
+  const response = await fetch(
+    `${getBaseUrl()}${HOSTING_API.STORE_DOMAIN_CHECK}?handle=${encodeURIComponent(handle)}`,
+    { method: 'GET', headers: getAuthHeaders() }
+  );
+  const raw = await response.json();
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<HandleAvailability>(raw);
+}
+
 export const salesChannelsApi = {
   resolveStoreShortCode,
   getStoreLink,
@@ -136,4 +199,8 @@ export const salesChannelsApi = {
   getStoreBot,
   bindStoreBot,
   unbindStoreBot,
+  getStoreDomain,
+  setStoreDomainHandle,
+  deleteStoreDomain,
+  checkHandleAvailability,
 };
