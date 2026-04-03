@@ -150,6 +150,16 @@ function hasAuthCookie(request: NextRequest): boolean {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Branded subdomain root rewrite:
+  // When Gateway routes {handle}.mymbz.org, it injects X-Store-PeerID.
+  // Rewrite `/` to `/store/{peerID}` so the storefront renders.
+  const storePeerID = request.headers.get('x-store-peerid');
+  if (storePeerID && pathname === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = `/store/${storePeerID}`;
+    return NextResponse.rewrite(url);
+  }
+
   // API 代理：/v1/*, /api/*, /info/* → 后端（剥离 WWW-Authenticate）
   if (shouldProxyToBackend(pathname)) {
     return proxyToBackend(request);

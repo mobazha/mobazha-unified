@@ -5249,7 +5249,7 @@ export const es: TranslationResource = {
       subtitle: 'How would you like customers to reach your store?',
       options: {
         subdomain: 'Free Mobazha Subdomain',
-        subdomainDesc: 'Get a free subdomain like yourstore.stores.mobazha.org',
+        subdomainDesc: 'Get a free subdomain like yourstore.mymbz.org',
         custom: 'Custom Domain',
         customDesc: 'Use your own domain (e.g. shop.example.com)',
         ip: 'IP Address Only',
@@ -5277,7 +5277,7 @@ export const es: TranslationResource = {
         serverNote: 'Your VPS IP is used only for SSH installation — it is never exposed publicly',
       },
       subdomainInput: 'Choose your subdomain',
-      subdomainSuffix: '.stores.mobazha.org',
+      subdomainSuffix: '.mymbz.org',
       checking: 'Checking availability...',
       available: 'This subdomain is available!',
       unavailable: 'This subdomain is taken',

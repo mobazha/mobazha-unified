@@ -54,7 +54,8 @@ const ALLOWED_HOSTNAMES = new Set(
 
 function isAllowedHost(hostname: string): boolean {
   if (ALLOWED_HOSTNAMES.has(hostname)) return true;
-  return hostname.endsWith('.stores.mobazha.org');
+  const base = process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE || 'mymbz.org';
+  return hostname.endsWith(`.${base}`);
 }
 
 function parseUrl(raw: string): { type: 'product' | 'store'; id: string; peerID?: string } | null {
