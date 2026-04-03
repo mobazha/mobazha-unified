@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { EmbedResizer } from '../../_components/EmbedResizer';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
 
@@ -29,21 +29,6 @@ function unwrapEnvelope<T>(json: unknown): T {
     return (json as { data: T }).data;
   }
   return json as T;
-}
-
-async function getSiteUrl(): Promise<string> {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  try {
-    const h = await headers();
-    const host = h.get('x-forwarded-host') || h.get('host');
-    if (host) {
-      const proto = h.get('x-forwarded-proto') || 'https';
-      return `${proto}://${host}`;
-    }
-  } catch {
-    /* fallback below */
-  }
-  return 'https://app.mobazha.org';
 }
 
 async function fetchProfile(peerId: string): Promise<ProfileData | null> {

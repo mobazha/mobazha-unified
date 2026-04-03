@@ -52,10 +52,15 @@ const ALLOWED_HOSTNAMES = new Set(
   ])
 );
 
+function isAllowedHost(hostname: string): boolean {
+  if (ALLOWED_HOSTNAMES.has(hostname)) return true;
+  return hostname.endsWith('.stores.mobazha.org');
+}
+
 function parseUrl(raw: string): { type: 'product' | 'store'; id: string; peerID?: string } | null {
   try {
     const u = new URL(raw);
-    if (!ALLOWED_HOSTNAMES.has(u.hostname)) return null;
+    if (!isAllowedHost(u.hostname)) return null;
 
     const productMatch = u.pathname.match(/^\/product\/([^/]+)/);
     if (productMatch) {
