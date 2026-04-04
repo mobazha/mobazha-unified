@@ -30,45 +30,46 @@
 
 ### mobazha_hosting API
 
-| 端点                         | 方法 | 描述                         |
-| ---------------------------- | ---- | ---------------------------- |
-| `/api/account/linked`        | GET  | 获取当前用户已绑定的账号列表 |
-| `/api/account/link-url`      | GET  | 获取 OAuth 绑定链接 URL      |
-| `/api/account/link-callback` | GET  | 处理 OAuth 绑定回调          |
-| `/api/account/unlink`        | POST | 解绑指定 OAuth Provider      |
+> **路径前缀**：所有 Hosting 平台 API 使用 `/platform/v1/` 前缀（Phase R1 完成迁移）。
+
+| 端点                                  | 方法 | 描述                                              |
+| ------------------------------------- | ---- | ------------------------------------------------- |
+| `/platform/v1/accounts/linked`        | GET  | 获取当前用户已绑定的账号列表                      |
+| `/platform/v1/accounts/link-url`      | GET  | 获取 OAuth 绑定链接 URL（备用，前端通常直接构建） |
+| `/platform/v1/accounts/link-callback` | GET  | 处理 OAuth 绑定回调                               |
+| `/platform/v1/accounts/unlink`        | POST | 解绑指定 OAuth Provider                           |
 
 ### 响应格式
 
-#### GET /api/account/linked
+#### GET /platform/v1/accounts/linked
 
 ```json
 {
-  "status": "ok",
   "data": {
     "accounts": [
       {
         "provider": "discord",
         "providerId": "123456789",
-        "linkedAt": "2026-01-15T10:30:00Z",
+        "displayName": "",
+        "avatar": "",
         "canUnlink": true
       }
-    ]
+    ],
+    "totalCount": 1,
+    "minRequired": 1
   }
 }
 ```
 
-#### GET /api/account/link-url?provider=telegram
+#### GET /platform/v1/accounts/link-callback?code=xxx&state=link:uuid:telegram
 
 ```json
 {
-  "status": "ok",
-  "data": {
-    "url": "https://casdoor.example.com/login/oauth/authorize?..."
-  }
+  "data": { "success": true }
 }
 ```
 
-#### POST /api/account/unlink
+#### POST /platform/v1/accounts/unlink
 
 ```json
 // Request
@@ -76,7 +77,6 @@
 
 // Response
 {
-  "status": "ok",
   "data": { "success": true }
 }
 ```
@@ -122,19 +122,20 @@ const SIMPLE_ICONS_CDN = 'https://cdn.simpleicons.org';
 startLinkAccount(provider)
      │
      ├── 保存 redirectPath 到 sessionStorage
-     ├── 生成 state = `link_${provider}_${timestamp}`
-     ├── 请求 /api/account/link-url
+     ├── 生成 state = `link:<tenantID>:<provider>`
+     ├── 前端直接构建 Casdoor OAuth URL（不经后端）
      │
      ▼
-跳转到 Casdoor OAuth
+跳转到 Casdoor OAuth（用户完成第三方认证）
      │
      ▼
-OAuth 完成，回调到 /settings/account?code=xxx&state=link_telegram_xxx
+Casdoor 回调到 /settings/account?code=xxx&state=link:<tenantID>:<provider>
      │
      ▼
 handleLinkCallback(code, state)
      │
-     ├── 请求 /api/account/link-callback
+     ├── 请求 GET /platform/v1/accounts/link-callback?code=xxx&state=xxx
+     │   （hosting 后端：换 token → 获取 OAuth 用户 provider ID → 通过 Casdoor Admin API 更新当前用户）
      ├── 清除 URL 参数
      ├── 刷新已绑定账号列表
      │
@@ -227,24 +228,27 @@ settings.accountBinding: {
 
 ### 后端实现说明
 
-后端 API 需要在 `mobazha_hosting` 中实现以下逻辑：
+后端 API 已在 `mobazha_hosting/api/account_handlers.go` 中实现：
 
-1. **获取已绑定账号** (`/api/account/linked`)
-   - 从 Casdoor 获取用户信息
+1. **获取已绑定账号** (`/platform/v1/accounts/linked`)
+   - 从 Casdoor 获取用户信息（`casdoorsdk.GetUser`）
    - 遍历 `discord`, `telegram`, `google`, `github`, `apple`, `wechat` 字段
    - 返回非空字段作为已绑定账号
 
-2. **生成绑定 URL** (`/api/account/link-url`)
-   - 构造 Casdoor OAuth URL
-   - state 参数包含 `link:` 前缀标识绑定操作
+2. **生成绑定 URL** (`/platform/v1/accounts/link-url`)
+   - 构造 Casdoor OAuth URL，state 格式为 `link:<tenantID>:<provider>`
+   - **注意**：前端通常直接构建 OAuth URL（`getLinkUrl()`），此端点为备用
 
-3. **处理绑定回调** (`/api/account/link-callback`)
-   - 验证 state 参数
-   - 调用 Casdoor API 完成账号绑定
+3. **处理绑定回调** (`/platform/v1/accounts/link-callback`)
+   - 解析 state → 提取 tenantID + provider，验证与当前 JWT 用户一致
+   - `casdoorsdk.GetOAuthToken()` 换取 OAuth 用户 JWT
+   - `casdoorsdk.ParseJwtToken()` + `casdoorsdk.GetUser()` 获取 OAuth 用户的 provider ID
+   - `casdoorsdk.UpdateUserForColumns(currentUser, []string{provider})` 将 provider ID 写入当前用户
+   - Casdoor 不会自动绑定，需要 hosting 主动调用 Admin API
 
-4. **解绑账号** (`/api/account/unlink`)
+4. **解绑账号** (`/platform/v1/accounts/unlink`)
    - 检查是否为最后一个账号
-   - 调用 Casdoor `/api/unlink` 接口
+   - 通过 Casdoor Admin API 清除用户的 provider 字段
 
 ### 已知限制
 

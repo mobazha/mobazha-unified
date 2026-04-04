@@ -69,25 +69,31 @@ export function getLinkUrl(
   }
 
   const claims = parseJwtToken(token);
-  if (!claims || !claims.name) {
-    throw new Error('Invalid token: missing user name');
+  if (!claims || !claims.sub) {
+    throw new Error('Invalid token: missing user identifier');
   }
 
   const env = getEnvConfig();
   const { serverUrl, clientId } = env.casdoor;
 
-  const state = `link:${claims.name}${stateSuffix || ''}`;
+  // State format: link:<userUUID>:<provider>[::sf=<origin>]
+  // Backend extracts provider from state to know which field to update on the user
+  const state = `link:${claims.sub}:${provider}${stateSuffix || ''}`;
 
   const casdoorProviderName = CASDOOR_PROVIDER_NAMES[provider];
 
   // provider_hint triggers Casdoor auto-redirect; must match the provider name in Casdoor DB.
+  // Telegram uses widget-based auth (not OAuth redirect), so provider_hint would skip the
+  // login page and land on the callback without auth data — causing "hash not found" errors.
+  const WIDGET_BASED_PROVIDERS: OAuthProvider[] = ['telegram'];
+
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid profile email',
     state,
-    provider_hint: casdoorProviderName,
+    ...(!WIDGET_BASED_PROVIDERS.includes(provider) && { provider_hint: casdoorProviderName }),
   });
 
   const url = `${serverUrl}/login/oauth/authorize?${params.toString()}`;

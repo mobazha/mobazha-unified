@@ -255,12 +255,17 @@ export function startCasdoorLogin(): void {
 }
 
 /**
- * 检查 URL 是否有 OAuth 回调参数
+ * 检查 URL 是否有 OAuth **登录** 回调参数。
+ * 绑定回调 (state 以 "link:" 开头) 由 accountBinding 模块处理，
+ * 不应被 AuthProvider 当作登录流程。
  */
 export function hasOAuthCallback(): boolean {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
-  return params.has('code') && params.has('state');
+  if (!params.has('code') || !params.has('state')) return false;
+  const state = params.get('state');
+  if (state && state.startsWith('link:')) return false;
+  return true;
 }
 
 /**
