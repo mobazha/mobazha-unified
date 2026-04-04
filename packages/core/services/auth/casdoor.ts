@@ -8,7 +8,7 @@ import { getHostingUrl } from '../api/config';
 import { HOSTING_API } from '../../config/apiPaths';
 import { getCasdoorThemeParams } from '../../theme/casdoorTheme';
 
-const SF_RETURN_SEPARATOR = '::sf=';
+export const SF_RETURN_SEPARATOR = '::sf=';
 
 export interface CasdoorUser {
   id: string;
@@ -66,7 +66,7 @@ function generateState(): string {
  * Get the main SaaS domain origin (e.g. "https://test-new.mobazha.org").
  * Derived from the API base URL which always points to the SaaS gateway.
  */
-function getSaaSMainOrigin(): string | null {
+export function getSaaSMainOrigin(): string | null {
   const baseUrl = getEnvConfig().api.baseUrl;
   if (!baseUrl) return null;
   try {
@@ -82,7 +82,7 @@ function getSaaSMainOrigin(): string | null {
  * that differs from the main SaaS domain.  Returns the current origin
  * if so, otherwise null.
  */
-function getStorefrontReturnOrigin(): string | null {
+export function getStorefrontReturnOrigin(): string | null {
   if (typeof window === 'undefined') return null;
 
   const subdomainBase = getStoreSubdomainBase();

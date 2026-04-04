@@ -19,7 +19,12 @@ export * from './routeConfig';
 export * from './productTypes';
 
 // 导出 API 路径常量（按后端服务分组：NODE_API / HOSTING_API / SEARCH_API）
-export { NODE_API, HOSTING_API, SEARCH_API } from './apiPaths';
+export {
+  NODE_API,
+  HOSTING_API,
+  SEARCH_API,
+  HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY,
+} from './apiPaths';
 
 export interface AppConfig {
   /** Use mock data instead of real API */

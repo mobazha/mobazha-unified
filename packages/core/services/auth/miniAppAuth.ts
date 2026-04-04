@@ -10,7 +10,7 @@
  * - start_param detection for binding deep link returns
  */
 
-import { HOSTING_API } from '../../config/apiPaths';
+import { HOSTING_API, HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY } from '../../config/apiPaths';
 import { request, ApiError } from '../api/client';
 import { getHostingUrl } from '../api/config';
 import { getStorePeerID } from '../storeContext';
@@ -49,9 +49,10 @@ export function appendTelegramMiniAppStoreParams(
   const peer = ctx.storePeerId?.trim();
   const host = ctx.storeHost?.trim();
   if (!peer && !host) return initData;
+  const q = HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY;
   const extra: string[] = [];
-  if (peer) extra.push(`store_peer_id=${encodeURIComponent(peer)}`);
-  if (host) extra.push(`store_host=${encodeURIComponent(host)}`);
+  if (peer) extra.push(`${q.STORE_PEER_ID}=${encodeURIComponent(peer)}`);
+  if (host) extra.push(`${q.STORE_HOST}=${encodeURIComponent(host)}`);
   if (!initData) return extra.join('&');
   return `${initData}&${extra.join('&')}`;
 }
