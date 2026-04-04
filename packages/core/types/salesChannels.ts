@@ -17,6 +17,8 @@ export interface StoreBotInfo {
   botUsername: string;
   isActive: boolean;
   directLink: string;
+  /** Hosting：子域名 / 已验证自定义域等推荐根 URL（与 BotFather Web App URL 对齐） */
+  recommendedWebAppUrls?: string[];
 }
 
 export interface BindStoreBotRequest {

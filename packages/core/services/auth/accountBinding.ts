@@ -5,7 +5,13 @@
 
 import { getHostingUrl } from '../api/config';
 import { getStoredToken } from './token';
-import { parseJwtToken } from './casdoor';
+import {
+  parseJwtToken,
+  SF_RETURN_SEPARATOR,
+  getStorefrontReturnOrigin,
+  getSaaSMainOrigin,
+  isAllowedStorefrontReturn,
+} from './casdoor';
 import { getEnvConfig } from '../../config/env';
 import type {
   LinkedAccountsResponse,
@@ -51,31 +57,30 @@ export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
  * @param provider 要绑定的 provider 类型
  * @param redirectUri 绑定完成后的回调 URL
  */
-export function getLinkUrl(provider: OAuthProvider, redirectUri: string): LinkUrlResponse {
+export function getLinkUrl(
+  provider: OAuthProvider,
+  redirectUri: string,
+  stateSuffix?: string
+): LinkUrlResponse {
   const token = getStoredToken();
 
   if (!token) {
     throw new Error('Not authenticated');
   }
 
-  // 从 token 中获取用户名
   const claims = parseJwtToken(token);
   if (!claims || !claims.name) {
     throw new Error('Invalid token: missing user name');
   }
 
-  // 使用前端的 Casdoor 配置
   const env = getEnvConfig();
   const { serverUrl, clientId } = env.casdoor;
 
-  // 构建 state: link:<username>
-  const state = `link:${claims.name}`;
+  const state = `link:${claims.name}${stateSuffix || ''}`;
 
   const casdoorProviderName = CASDOOR_PROVIDER_NAMES[provider];
 
-  // provider_hint 是 Casdoor 的自动跳转参数，值必须是 Casdoor 数据库中的 provider name。
-  // 注意：不能用 "provider" 参数，否则会与 Casdoor 内部追加的 provider 参数冲突，
-  // 导致 state 中出现两个 provider 值，回调时取到错误的那个。
+  // provider_hint triggers Casdoor auto-redirect; must match the provider name in Casdoor DB.
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -102,13 +107,23 @@ export function startLinkAccount(provider: OAuthProvider, redirectUri?: string):
     throw new Error('startLinkAccount can only be called in browser');
   }
 
-  const callbackUrl = redirectUri || `${window.location.origin}/settings/account?link_callback=1`;
+  const sfReturnOrigin = getStorefrontReturnOrigin();
+  const mainOrigin = getSaaSMainOrigin();
 
-  // 保存当前状态，回调后恢复
+  let callbackUrl: string;
+  let storefrontSuffix = '';
+
+  if (!redirectUri && sfReturnOrigin && mainOrigin) {
+    callbackUrl = `${mainOrigin}/settings/account?link_callback=1`;
+    storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin)}`;
+  } else {
+    callbackUrl = redirectUri || `${window.location.origin}/settings/account?link_callback=1`;
+  }
+
   sessionStorage.setItem('link_provider', provider);
   sessionStorage.setItem('link_redirect', window.location.pathname);
 
-  const { url } = getLinkUrl(provider, callbackUrl);
+  const { url } = getLinkUrl(provider, callbackUrl, storefrontSuffix);
   window.location.href = url;
 }
 
@@ -130,7 +145,10 @@ export async function handleLinkCallback(
     return { success: false, error: 'Not authenticated' };
   }
 
-  const params = new URLSearchParams({ code, state });
+  const sfIdx = state.indexOf(SF_RETURN_SEPARATOR);
+  const cleanState = sfIdx === -1 ? state : state.substring(0, sfIdx);
+
+  const params = new URLSearchParams({ code, state: cleanState });
 
   const response = await fetch(`${baseUrl}/platform/v1/accounts/link-callback?${params}`, {
     method: 'GET',
@@ -178,6 +196,21 @@ export async function unlinkAccount(provider: OAuthProvider): Promise<UnlinkResp
 
   const data = await response.json();
   return data.data as UnlinkResponse;
+}
+
+/**
+ * Extract storefront return origin from link callback state.
+ * Returns validated origin or null.
+ */
+export function getLinkCallbackStorefrontReturn(): string | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const state = params.get('state');
+  if (!state) return null;
+  const idx = state.indexOf(SF_RETURN_SEPARATOR);
+  if (idx === -1) return null;
+  const origin = decodeURIComponent(state.substring(idx + SF_RETURN_SEPARATOR.length));
+  return isAllowedStorefrontReturn(origin) ? origin : null;
 }
 
 /**

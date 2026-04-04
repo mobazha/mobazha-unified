@@ -266,6 +266,14 @@ export const NODE_API = {
 // 与 getPlatformUrl() 或 getBaseUrl() 拼接
 // 后端注册：mobazha_hosting/api/gateway.go → newHostingRouter()
 // ============================================================
+/** `POST .../mini-app-signin` 查询串中与 initData 并列的可选参数（选择卖家 Bot Token 验签），勿与 Telegram 内置字段混淆 */
+export const HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY = {
+  STORE_PEER_ID: 'store_peer_id',
+  PEER_ID: 'peer_id',
+  STORE_HOST: 'store_host',
+  STORE_SHORT_CODE: 'store_short_code',
+} as const;
+
 export const HOSTING_API = {
   // --- Auth ---
   AUTH_SIGNIN: '/platform/v1/auth/signin',

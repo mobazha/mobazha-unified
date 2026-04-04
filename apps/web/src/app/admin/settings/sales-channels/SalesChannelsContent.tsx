@@ -7,6 +7,7 @@ import type { UseSalesChannelsReturn } from '@mobazha/core/hooks/useSalesChannel
 import { useStoreDomain } from '@mobazha/core/hooks/useStoreDomain';
 import { getStoreSubdomainBase } from '@mobazha/core/config/env';
 import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
+import type { StoreBotInfo } from '@mobazha/core/types/salesChannels';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -397,16 +398,54 @@ function StoreLinkSection({
   );
 }
 
+function normalizeStorefrontRootUrl(raw: string): string {
+  return raw.trim().replace(/\/$/, '');
+}
+
+/** 合并 Hosting `recommendedWebAppUrls` 与店铺域名（去重），供 BotFather 根 URL 展示 */
+function collectRecommendedWebAppRoots(
+  storeBot: StoreBotInfo,
+  domain: {
+    subdomainUrl?: string;
+    customDomain?: string | null;
+    verified?: boolean;
+  } | null
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (raw?: string | null) => {
+    if (!raw?.trim()) return;
+    const n = normalizeStorefrontRootUrl(raw);
+    if (seen.has(n)) return;
+    seen.add(n);
+    out.push(n);
+  };
+  for (const u of storeBot.recommendedWebAppUrls ?? []) push(u);
+  if (domain) {
+    push(domain.subdomainUrl);
+    if (domain.verified && domain.customDomain) {
+      const d = domain.customDomain.trim();
+      push(d.startsWith('http') ? d : `https://${d}`);
+    }
+  }
+  return out;
+}
+
 function TelegramBotSection({
   storeBot,
   storeBotLoading,
   storeBotNotFound,
   bindBot,
   unbindBot,
+  domain,
+  platformTelegramLink,
 }: Pick<
   UseSalesChannelsReturn,
   'storeBot' | 'storeBotLoading' | 'storeBotNotFound' | 'bindBot' | 'unbindBot'
->) {
+> & {
+  domain: UseStoreDomainReturn['domain'];
+  platformTelegramLink?: string;
+}) {
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -446,6 +485,7 @@ function TelegramBotSection({
   }
 
   if (storeBot && !storeBotNotFound) {
+    const recommendedRoots = collectRecommendedWebAppRoots(storeBot, domain);
     return (
       <>
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -474,10 +514,41 @@ function TelegramBotSection({
           </div>
         </div>
 
+        {recommendedRoots.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.salesChannels.recommendedWebAppUrlsTitle')}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.salesChannels.recommendedWebAppUrlsBody')}
+            </p>
+            <div className="space-y-0 divide-y divide-border rounded-md border border-border overflow-hidden">
+              {recommendedRoots.map(url => (
+                <LinkRow
+                  key={url}
+                  icon={Globe}
+                  label={t('admin.salesChannels.recommendedWebAppUrlRow')}
+                  value={url}
+                  href={url}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.salesChannels.botFatherHttpsExactNote')}
+            </p>
+          </div>
+        )}
+
+        {platformTelegramLink && (
+          <p className="text-xs text-muted-foreground mt-3">
+            {t('admin.salesChannels.platformTelegramContrast')}
+          </p>
+        )}
+
         {storeBot.directLink && (
           <div className="mt-3">
             <p className="text-xs text-muted-foreground mb-1.5">
-              {t('admin.salesChannels.botWebAppUrl')}
+              {t('admin.salesChannels.sellerBotOpenLinkLabel')}
             </p>
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md">
               <code className="text-xs font-mono text-foreground flex-1 truncate">
@@ -528,6 +599,9 @@ function TelegramBotSection({
           <li>{t('admin.salesChannels.setupStep3')}</li>
           <li>{t('admin.salesChannels.setupStep4')}</li>
         </ol>
+        <p className="text-xs text-muted-foreground pt-1 border-t border-border/60">
+          {t('admin.salesChannels.emptyStartappRolloutNote')}
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -620,6 +694,8 @@ export default function SalesChannelsContent() {
             storeBotNotFound={salesChannels.storeBotNotFound}
             bindBot={salesChannels.bindBot}
             unbindBot={salesChannels.unbindBot}
+            domain={storeDomain.domain}
+            platformTelegramLink={salesChannels.storeLink?.telegramLink}
           />
         </div>
       </SettingsSection>

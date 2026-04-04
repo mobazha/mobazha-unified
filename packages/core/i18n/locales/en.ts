@@ -4995,6 +4995,17 @@ export const en: TranslationResource = {
       botWebAppUrl: 'Web App URL',
       botWebAppUrlHint:
         "Set this URL as your Bot's Web App URL in @BotFather (Menu Button or /setmenubutton)",
+      recommendedWebAppUrlsTitle: 'Recommended Web App URL (BotFather)',
+      recommendedWebAppUrlsBody:
+        'Use one of these HTTPS roots as your Bot Menu Button / Web App URL. They match your store handle or verified custom domain.',
+      recommendedWebAppUrlRow: 'Brand storefront URL',
+      botFatherHttpsExactNote:
+        'The URL must match exactly (HTTPS, no extra path unless your storefront uses a fixed path).',
+      platformTelegramContrast:
+        'The «Telegram link» in Store links above uses the platform bot with a short code; your own bot uses the brand URLs listed here.',
+      sellerBotOpenLinkLabel: 'Open link (includes shop short code for Telegram)',
+      emptyStartappRolloutNote:
+        'Opening your branded storefront from your own bot with an empty startapp requires the current platform (Hosting + app). If sign-in fails, update or use the platform Telegram link with startapp until your environment is on the latest release.',
     },
     storeBranding: {
       pageTitle: 'Store Branding',

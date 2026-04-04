@@ -3196,6 +3196,13 @@ export interface TranslationResource {
       unbindConfirmDesc?: string;
       botWebAppUrl?: string;
       botWebAppUrlHint?: string;
+      recommendedWebAppUrlsTitle?: string;
+      recommendedWebAppUrlsBody?: string;
+      recommendedWebAppUrlRow?: string;
+      botFatherHttpsExactNote?: string;
+      platformTelegramContrast?: string;
+      sellerBotOpenLinkLabel?: string;
+      emptyStartappRolloutNote?: string;
     };
     storeBranding?: {
       pageTitle?: string;

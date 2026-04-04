@@ -112,6 +112,7 @@ export {
   unlinkAccount,
   hasLinkCallback,
   getLinkCallbackParams,
+  getLinkCallbackStorefrontReturn,
   clearLinkCallbackParams,
   getLinkRedirectPath,
 } from './accountBinding';

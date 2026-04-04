@@ -22,6 +22,7 @@ import {
   startLinkAccount,
   hasLinkCallback,
   getLinkCallbackParams,
+  getLinkCallbackStorefrontReturn,
   handleLinkCallback,
   clearLinkCallbackParams,
   SUPPORTED_PROVIDERS,
@@ -77,11 +78,16 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     const processLinkCallback = async () => {
       if (hasLinkCallback()) {
+        const sfReturn = getLinkCallbackStorefrontReturn();
         const { code, state } = getLinkCallbackParams();
         if (code && state) {
           try {
             const result = await handleLinkCallback(code, state);
             if (result.success) {
+              if (sfReturn) {
+                window.location.href = `${sfReturn}/settings/account`;
+                return;
+              }
               toast({
                 title: t('common.success'),
                 description: t('settings.accountBinding.linkSuccess'),

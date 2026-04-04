@@ -4463,6 +4463,16 @@ export const zh: TranslationResource = {
       botWebAppUrl: 'Web App 网址',
       botWebAppUrlHint:
         '在 @BotFather 中将此网址设置为你 Bot 的 Web App URL（Menu Button 或 /setmenubutton）',
+      recommendedWebAppUrlsTitle: '推荐 Web App 根地址（BotFather）',
+      recommendedWebAppUrlsBody:
+        '将以下任一 HTTPS 根地址配置为 Bot 的 Menu Button / Web App URL，与店铺子域名或已验证自定义域一致。',
+      recommendedWebAppUrlRow: '品牌店铺根地址',
+      botFatherHttpsExactNote: '地址须完全一致（HTTPS、路径策略与线上一致，勿多空格或错误协议）。',
+      platformTelegramContrast:
+        '上方「店铺链接」里的 Telegram 链接使用平台 Bot + 短码；自有 Bot 请使用此处列出的品牌根地址。',
+      sellerBotOpenLinkLabel: '打开链接（含店铺短码，供 Telegram 跳转）',
+      emptyStartappRolloutNote:
+        '从自有 Bot 以空 startapp 打开品牌店需当前平台版本（Hosting + 前端）。若登录失败，请先升级环境，或暂时使用带 startapp 的平台 Telegram 链接。',
     },
     storeBranding: {
       pageTitle: '店铺品牌',
