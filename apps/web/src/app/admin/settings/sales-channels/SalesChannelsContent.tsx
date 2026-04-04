@@ -8,6 +8,7 @@ import { useStoreDomain } from '@mobazha/core/hooks/useStoreDomain';
 import { getStoreSubdomainBase } from '@mobazha/core/config/env';
 import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
 import type { StoreBotInfo } from '@mobazha/core/types/salesChannels';
+import { getLinkedAccounts } from '@mobazha/core/services/auth';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,10 +32,11 @@ import {
   Check,
   ExternalLink,
   Loader2,
-  Trash2,
   Send,
   Smartphone,
   Globe,
+  ChevronDown,
+  AlertTriangle,
 } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
@@ -70,14 +72,18 @@ function LinkRow({
   value: string;
   href?: string;
 }) {
+  const { t } = useI18n();
+  const openLabel = t('admin.salesChannels.linkOpenInNewTab');
   return (
-    <div className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+    <div className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+      <Icon className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
       <div className="min-w-0 flex-1">
-        <div className="text-xs text-muted-foreground mb-0.5">{label}</div>
-        <div className="text-sm text-foreground font-mono truncate">{value}</div>
+        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+          <span className="text-xs text-muted-foreground">{label}</span>
+        </div>
+        <div className="text-sm text-foreground font-mono break-all sm:break-words">{value}</div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 self-center">
         <CopyButton text={value} />
         {href && (
           <a
@@ -85,6 +91,8 @@ function LinkRow({
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title={openLabel}
+            aria-label={openLabel}
           >
             <ExternalLink className="w-4 h-4" />
           </a>
@@ -93,6 +101,34 @@ function LinkRow({
     </div>
   );
 }
+
+function CollapsibleSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details
+      className="group rounded-lg border border-border bg-muted/20 open:bg-muted/30"
+      open={defaultOpen}
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+        <span>{title}</span>
+        <ChevronDown
+          className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <div className="border-t border-border px-3 pb-2">{children}</div>
+    </details>
+  );
+}
+
+// --- Section 1: Store Address ---
 
 function StoreHandleSection({
   domain,
@@ -181,23 +217,26 @@ function StoreHandleSection({
   return (
     <div className="space-y-4">
       {domain?.subdomainUrl && (
-        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-          <Globe className="w-5 h-5 text-primary shrink-0" />
+        <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg sm:flex-row sm:items-center sm:gap-3">
+          <Globe className="w-5 h-5 text-primary shrink-0 hidden sm:block" aria-hidden />
           <div className="min-w-0 flex-1">
             <div className="text-xs text-muted-foreground mb-0.5">
               {t('admin.salesChannels.handleCurrentUrl')}
             </div>
-            <div className="text-sm font-mono text-foreground truncate">{domain.subdomainUrl}</div>
+            <div className="text-sm font-mono text-foreground break-all sm:truncate">
+              {domain.subdomainUrl}
+            </div>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <CopyButton text={domain.subdomainUrl} />
             <a
               href={domain.subdomainUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
             >
-              <ExternalLink className="w-4 h-4" />
+              {t('admin.salesChannels.viewStorefront')}
+              <ExternalLink className="w-3.5 h-3.5" aria-hidden />
             </a>
           </div>
         </div>
@@ -231,14 +270,14 @@ function StoreHandleSection({
           </p>
         )}
         {checking && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Checking...
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground" role="status">
+            <Loader2 className="w-3 h-3 animate-spin" aria-hidden />
+            {t('admin.salesChannels.checkingAvailability')}
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 pt-1">
+      <div className="space-y-2 pt-1">
         <Button
           onClick={handleSave}
           disabled={
@@ -251,15 +290,17 @@ function StoreHandleSection({
           {t('admin.salesChannels.handleSaveButton')}
         </Button>
         {domain?.handle && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowRemoveConfirm(true)}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            {t('admin.salesChannels.handleRemoveButton')}
-          </Button>
+          <div className="space-y-1">
+            <button
+              onClick={() => setShowRemoveConfirm(true)}
+              className="text-xs text-muted-foreground hover:text-destructive transition-colors underline-offset-2 hover:underline"
+            >
+              {t('admin.salesChannels.handleRemoveButton')}
+            </button>
+            <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
+              {t('admin.salesChannels.handleRemoveHint')}
+            </p>
+          </div>
         )}
       </div>
 
@@ -288,15 +329,36 @@ function StoreHandleSection({
   );
 }
 
+// --- Section 2: Share Links (brand-priority) ---
+
+function hasBrandDomain(
+  subdomainUrl: string | null | undefined,
+  directLink: string | undefined
+): boolean {
+  if (!subdomainUrl?.trim() || !directLink?.trim()) return false;
+  try {
+    const sub = new URL(subdomainUrl.includes('://') ? subdomainUrl : `https://${subdomainUrl}`);
+    const dir = new URL(directLink);
+    return sub.hostname !== dir.hostname;
+  } catch {
+    return Boolean(subdomainUrl.trim());
+  }
+}
+
 function StoreLinkSection({
   storeLink,
   storeLinkLoading,
   loadStoreLink,
   regenerateLink,
+  subdomainUrl,
+  brandBotLink,
 }: Pick<
   UseSalesChannelsReturn,
   'storeLink' | 'storeLinkLoading' | 'loadStoreLink' | 'regenerateLink'
->) {
+> & {
+  subdomainUrl?: string | null;
+  brandBotLink?: string;
+}) {
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -333,48 +395,124 @@ function StoreLinkSection({
     );
   }
 
+  const hasBrand = hasBrandDomain(subdomainUrl, storeLink.directLink);
+  const hasBrandBot = Boolean(brandBotLink);
+  const hasTelegram = Boolean(storeLink.telegramLink);
+  const hasDeepLink = Boolean(storeLink.deepLink);
+
+  const primaryWebLink = hasBrand ? subdomainUrl! : storeLink.directLink;
+  const primaryWebLabel = hasBrand
+    ? t('admin.salesChannels.brandWebLink')
+    : t('admin.salesChannels.webLink');
+
+  const primaryTelegramLink = hasBrandBot ? brandBotLink : storeLink.telegramLink;
+  const primaryTelegramLabel = hasBrandBot
+    ? t('admin.salesChannels.yourTelegramBot')
+    : t('admin.salesChannels.telegramLink');
+
+  const hasPlatformFallbackLinks = hasBrand || (hasBrandBot && hasTelegram);
+
   return (
     <>
-      <div className="space-y-0 divide-y divide-border">
-        {storeLink.telegramLink && (
-          <LinkRow
-            icon={Send}
-            label={t('admin.salesChannels.telegramLink')}
-            value={storeLink.telegramLink}
-            href={storeLink.telegramLink}
-          />
-        )}
-        {storeLink.directLink && (
-          <LinkRow
-            icon={Link2}
-            label={t('admin.salesChannels.directLink')}
-            value={storeLink.directLink}
-            href={storeLink.directLink}
-          />
-        )}
-        {storeLink.deepLink && (
-          <LinkRow
-            icon={Smartphone}
-            label={t('admin.salesChannels.mobileDeepLink')}
-            value={storeLink.deepLink}
-          />
-        )}
-      </div>
+      <div className="space-y-4">
+        {/* Primary links */}
+        <div className="divide-y divide-border rounded-lg border border-border">
+          {primaryWebLink && (
+            <div className="px-3">
+              <LinkRow
+                icon={Globe}
+                label={primaryWebLabel}
+                value={primaryWebLink}
+                href={
+                  primaryWebLink.startsWith('http') ? primaryWebLink : `https://${primaryWebLink}`
+                }
+              />
+            </div>
+          )}
+          {primaryTelegramLink && (
+            <div className="px-3">
+              <LinkRow
+                icon={Send}
+                label={primaryTelegramLabel}
+                value={primaryTelegramLink}
+                href={primaryTelegramLink}
+              />
+            </div>
+          )}
+        </div>
 
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-        <p className="text-xs text-muted-foreground">
-          {t('admin.salesChannels.shortCode')}:{' '}
-          <span className="font-mono">{storeLink.shortCode}</span>
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowRegenConfirm(true)}
-          className="gap-1.5"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          {t('admin.salesChannels.regenerate')}
-        </Button>
+        {/* Platform fallback links (only when brand links exist) */}
+        {hasPlatformFallbackLinks && (
+          <CollapsibleSection title={t('admin.salesChannels.platformCompatLinks')}>
+            {hasBrand && storeLink.directLink && (
+              <LinkRow
+                icon={Link2}
+                label={t('admin.salesChannels.platformWebLink')}
+                value={storeLink.directLink}
+                href={storeLink.directLink}
+              />
+            )}
+            {hasBrandBot && hasTelegram && (
+              <LinkRow
+                icon={Send}
+                label={t('admin.salesChannels.platformTelegramLink')}
+                value={storeLink.telegramLink!}
+                href={storeLink.telegramLink}
+              />
+            )}
+          </CollapsibleSection>
+        )}
+
+        {/* Advanced options */}
+        <CollapsibleSection title={t('admin.salesChannels.advancedOptions')}>
+          {hasDeepLink && (
+            <div className="pb-2 border-b border-border mb-2">
+              <LinkRow
+                icon={Smartphone}
+                label={t('admin.salesChannels.appDirectLink')}
+                value={storeLink.deepLink!}
+              />
+              <p className="text-xs text-muted-foreground mt-1 ml-7">
+                {t('admin.salesChannels.appDirectLinkHint')}
+              </p>
+            </div>
+          )}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between py-2">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {t('admin.salesChannels.shortCode')}
+                </span>
+                {': '}
+                <span className="font-mono">{storeLink.shortCode}</span>
+              </p>
+              <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
+                {t('admin.salesChannels.shortCodeHint')}
+              </p>
+            </div>
+            <div className="flex flex-col items-stretch gap-1 sm:items-end shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRegenConfirm(true)}
+                className="gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                {t('admin.salesChannels.regenerate')}
+              </Button>
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 text-right max-w-[220px]">
+                {t('admin.salesChannels.regenerateHelper')}
+              </p>
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        {/* Upgrade hint when no brand domain */}
+        {!hasBrand && (
+          <p className="text-xs text-muted-foreground italic">
+            {t('admin.salesChannels.brandUpgradeHint')}
+          </p>
+        )}
       </div>
 
       <AlertDialog open={showRegenConfirm} onOpenChange={setShowRegenConfirm}>
@@ -398,11 +536,12 @@ function StoreLinkSection({
   );
 }
 
+// --- Section 3: Telegram Bot ---
+
 function normalizeStorefrontRootUrl(raw: string): string {
   return raw.trim().replace(/\/$/, '');
 }
 
-/** 合并 Hosting `recommendedWebAppUrls` 与店铺域名（去重），供 BotFather 根 URL 展示 */
 function collectRecommendedWebAppRoots(
   storeBot: StoreBotInfo,
   domain: {
@@ -438,13 +577,15 @@ function TelegramBotSection({
   bindBot,
   unbindBot,
   domain,
-  platformTelegramLink,
+  telegramLinked,
+  telegramLinkChecking,
 }: Pick<
   UseSalesChannelsReturn,
   'storeBot' | 'storeBotLoading' | 'storeBotNotFound' | 'bindBot' | 'unbindBot'
 > & {
   domain: UseStoreDomainReturn['domain'];
-  platformTelegramLink?: string;
+  telegramLinked: boolean;
+  telegramLinkChecking: boolean;
 }) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -484,6 +625,8 @@ function TelegramBotSection({
     );
   }
 
+  const hasStoreHandle = Boolean(domain?.handle);
+
   if (storeBot && !storeBotNotFound) {
     const recommendedRoots = collectRecommendedWebAppRoots(storeBot, domain);
     return (
@@ -509,7 +652,7 @@ function TelegramBotSection({
               onClick={() => setShowUnbindConfirm(true)}
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
-              <Trash2 className="w-4 h-4" />
+              {t('admin.salesChannels.unbind')}
             </Button>
           </div>
         </div>
@@ -535,29 +678,6 @@ function TelegramBotSection({
             </div>
             <p className="text-xs text-muted-foreground">
               {t('admin.salesChannels.botFatherHttpsExactNote')}
-            </p>
-          </div>
-        )}
-
-        {platformTelegramLink && (
-          <p className="text-xs text-muted-foreground mt-3">
-            {t('admin.salesChannels.platformTelegramContrast')}
-          </p>
-        )}
-
-        {storeBot.directLink && (
-          <div className="mt-3">
-            <p className="text-xs text-muted-foreground mb-1.5">
-              {t('admin.salesChannels.sellerBotOpenLinkLabel')}
-            </p>
-            <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md">
-              <code className="text-xs font-mono text-foreground flex-1 truncate">
-                {storeBot.directLink}
-              </code>
-              <CopyButton text={storeBot.directLink} />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1.5">
-              {t('admin.salesChannels.botWebAppUrlHint')}
             </p>
           </div>
         )}
@@ -589,6 +709,45 @@ function TelegramBotSection({
 
   return (
     <div className="space-y-4">
+      {/* Telegram binding guard */}
+      {!telegramLinkChecking && !telegramLinked && (
+        <div
+          className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5"
+          role="status"
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.salesChannels.telegramBindingRequired')}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.salesChannels.telegramBindingRequiredDesc')}
+            </p>
+            <a
+              href="/settings/account"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-1"
+            >
+              {t('admin.salesChannels.telegramBindingAction')}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Store address prerequisite */}
+      {!hasStoreHandle && (
+        <div
+          className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5"
+          role="status"
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground">
+            {t('admin.salesChannels.setupPrerequisiteNoHandle')}
+          </p>
+        </div>
+      )}
+
+      {/* Setup guide */}
       <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
         <p className="text-sm font-medium text-foreground">
           {t('admin.salesChannels.setupGuideTitle')}
@@ -599,11 +758,9 @@ function TelegramBotSection({
           <li>{t('admin.salesChannels.setupStep3')}</li>
           <li>{t('admin.salesChannels.setupStep4')}</li>
         </ol>
-        <p className="text-xs text-muted-foreground pt-1 border-t border-border/60">
-          {t('admin.salesChannels.emptyStartappRolloutNote')}
-        </p>
       </div>
 
+      {/* Token input */}
       <div className="space-y-2">
         <Input
           type="password"
@@ -625,6 +782,8 @@ function TelegramBotSection({
   );
 }
 
+// --- Main Component ---
+
 export default function SalesChannelsContent() {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -633,6 +792,28 @@ export default function SalesChannelsContent() {
 
   const salesChannels = useSalesChannels({ peerID, autoLoad: true });
   const storeDomain = useStoreDomain({ peerID, autoLoad: true });
+
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [telegramLinkChecking, setTelegramLinkChecking] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const accounts = await getLinkedAccounts();
+        if (cancelled) return;
+        const linked = accounts.accounts?.some(a => a.provider?.toLowerCase() === 'telegram');
+        setTelegramLinked(Boolean(linked));
+      } catch {
+        if (!cancelled) setTelegramLinked(false);
+      } finally {
+        if (!cancelled) setTelegramLinkChecking(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const prevSCErrorRef = useRef<string | null>(null);
   useEffect(() => {
@@ -649,6 +830,11 @@ export default function SalesChannelsContent() {
     }
     prevDomainErrorRef.current = storeDomain.error;
   }, [storeDomain.error, toast]);
+
+  const brandBotLink =
+    salesChannels.storeBot && !salesChannels.storeBotNotFound
+      ? `https://t.me/${salesChannels.storeBot.botUsername}`
+      : undefined;
 
   return (
     <div className="space-y-8">
@@ -679,6 +865,8 @@ export default function SalesChannelsContent() {
             storeLinkLoading={salesChannels.storeLinkLoading}
             loadStoreLink={salesChannels.loadStoreLink}
             regenerateLink={salesChannels.regenerateLink}
+            subdomainUrl={storeDomain.domain?.subdomainUrl}
+            brandBotLink={brandBotLink}
           />
         </div>
       </SettingsSection>
@@ -695,7 +883,8 @@ export default function SalesChannelsContent() {
             bindBot={salesChannels.bindBot}
             unbindBot={salesChannels.unbindBot}
             domain={storeDomain.domain}
-            platformTelegramLink={salesChannels.storeLink?.telegramLink}
+            telegramLinked={telegramLinked}
+            telegramLinkChecking={telegramLinkChecking}
           />
         </div>
       </SettingsSection>

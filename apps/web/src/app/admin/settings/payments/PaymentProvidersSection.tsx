@@ -44,8 +44,8 @@ interface ProviderSnapshot {
 
 type SaaSConnectMode = 'connected' | 'direct';
 
-let providerSnapshotInFlight: Promise<ProviderSnapshot> | null = null;
-let providerSnapshotStandaloneMode: boolean | null = null;
+/** In-flight fetches keyed by standalone mode — avoids cross-mode races from a single global promise. */
+const providerSnapshotInflightByMode = new Map<boolean, Promise<ProviderSnapshot>>();
 
 const PROVIDERS = [
   {
@@ -256,16 +256,14 @@ async function fetchProviderSnapshot(standalone: boolean): Promise<ProviderSnaps
 }
 
 function loadProviderSnapshot(standalone: boolean): Promise<ProviderSnapshot> {
-  if (providerSnapshotInFlight && providerSnapshotStandaloneMode === standalone) {
-    return providerSnapshotInFlight;
-  }
+  const existing = providerSnapshotInflightByMode.get(standalone);
+  if (existing) return existing;
 
-  providerSnapshotStandaloneMode = standalone;
-  providerSnapshotInFlight = fetchProviderSnapshot(standalone).finally(() => {
-    providerSnapshotInFlight = null;
-    providerSnapshotStandaloneMode = null;
+  const pending = fetchProviderSnapshot(standalone).finally(() => {
+    providerSnapshotInflightByMode.delete(standalone);
   });
-  return providerSnapshotInFlight;
+  providerSnapshotInflightByMode.set(standalone, pending);
+  return pending;
 }
 
 function truncateAccountID(id?: string) {
