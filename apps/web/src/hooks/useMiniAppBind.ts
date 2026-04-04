@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { startTelegramBind } from '@mobazha/core';
+import { startTelegramBind, buildTelegramMiniAppStoreContextFromWindow } from '@mobazha/core';
 import { useTGMiniApp } from '../components/TGMiniAppProvider/TGMiniAppProvider';
 
 /**
@@ -30,7 +30,10 @@ export function useMiniAppBind() {
     setError(null);
 
     try {
-      const result = await startTelegramBind(tg.initData);
+      const result = await startTelegramBind(
+        tg.initData,
+        buildTelegramMiniAppStoreContextFromWindow()
+      );
       // Open the OAuth URL in an external browser
       tg.openLink(result.oauthUrl);
     } catch (e) {
