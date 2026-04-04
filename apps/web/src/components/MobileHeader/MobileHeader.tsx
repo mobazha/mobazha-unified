@@ -23,7 +23,7 @@ export const MobileHeader: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
-  const displayProfile = profile || storefrontProfile;
+  const brandProfile = standaloneMode ? storefrontProfile || profile : profile;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +44,15 @@ export const MobileHeader: React.FC = () => {
           {standaloneMode ? (
             <>
               <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
-                {displayProfile ? (
+                {brandProfile ? (
                   <>
                     <Avatar
-                      src={getImageUrl(displayProfile.avatarHashes?.small)}
-                      name={displayProfile.name || ''}
+                      src={getImageUrl(brandProfile.avatarHashes?.small)}
+                      name={brandProfile.name || ''}
                       size="sm"
                     />
                     <span className="font-bold text-base text-foreground truncate">
-                      {displayProfile.name}
+                      {brandProfile.name}
                     </span>
                   </>
                 ) : (

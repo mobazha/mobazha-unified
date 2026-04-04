@@ -112,7 +112,7 @@ export const Footer: React.FC = () => {
   const { profile, isAuthenticated } = useUserStore();
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
-  const displayProfile = profile || storefrontProfile;
+  const brandProfile = standaloneMode ? storefrontProfile || profile : profile;
 
   const startSellingHref = standaloneMode
     ? '/listing/new'
@@ -186,19 +186,19 @@ export const Footer: React.FC = () => {
           >
             {/* Brand */}
             <div className="col-span-2">
-              {standaloneMode && displayProfile ? (
+              {standaloneMode && brandProfile ? (
                 <>
                   <Link href="/" className="flex items-center gap-2 mb-3">
                     <Avatar
-                      src={getImageUrl(displayProfile.avatarHashes?.small)}
-                      name={displayProfile.name || ''}
+                      src={getImageUrl(brandProfile.avatarHashes?.small)}
+                      name={brandProfile.name || ''}
                       size="sm"
                     />
-                    <span className="font-bold text-xl text-foreground">{displayProfile.name}</span>
+                    <span className="font-bold text-xl text-foreground">{brandProfile.name}</span>
                   </Link>
-                  {displayProfile.shortDescription && (
+                  {brandProfile.shortDescription && (
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                      {stripHtmlTags(displayProfile.shortDescription)}
+                      {stripHtmlTags(brandProfile.shortDescription)}
                     </p>
                   )}
                   <HStack gap="sm">
@@ -343,9 +343,9 @@ export const Footer: React.FC = () => {
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              {standaloneMode && displayProfile ? (
+              {standaloneMode && brandProfile ? (
                 <>
-                  © {new Date().getFullYear()} {displayProfile.name}.{' '}
+                  © {new Date().getFullYear()} {brandProfile.name}.{' '}
                   <a
                     href="https://mobazha.com"
                     target="_blank"
