@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +20,8 @@ import {
   getLinkedAccounts,
   unlinkAccount,
   startLinkAccount,
+  getLinkConfig,
+  directLinkTelegram,
   hasLinkCallback,
   getLinkCallbackParams,
   getLinkCallbackStorefrontReturn,
@@ -28,7 +30,14 @@ import {
   SUPPORTED_PROVIDERS,
   standaloneStoresApi,
 } from '@mobazha/core';
-import type { LinkedAccount, OAuthProvider, ProviderInfo, StandaloneStore } from '@mobazha/core';
+import type {
+  LinkedAccount,
+  OAuthProvider,
+  ProviderInfo,
+  StandaloneStore,
+  LinkConfigResponse,
+  TelegramAuthData,
+} from '@mobazha/core';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 import {
   Link2,
@@ -41,6 +50,35 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
+
+const TELEGRAM_WIDGET_CALLBACK = '__mbz_telegram_link_cb';
+
+/**
+ * Telegram Login Widget — renders the official Telegram login button.
+ * When user authenticates, fires the global callback which triggers directLinkTelegram.
+ */
+function TelegramLoginWidget({ botUsername }: { botUsername: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.innerHTML = '';
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.setAttribute('data-telegram-login', botUsername);
+    script.setAttribute('data-size', 'medium');
+    script.setAttribute('data-onauth', `${TELEGRAM_WIDGET_CALLBACK}(user)`);
+    script.setAttribute('data-request-access', 'write');
+    script.async = true;
+    container.appendChild(script);
+    return () => {
+      container.innerHTML = '';
+    };
+  }, [botUsername]);
+
+  return <div ref={containerRef} />;
+}
 
 export default function AccountSettingsPage() {
   const { t } = useI18n();
@@ -59,6 +97,9 @@ export default function AccountSettingsPage() {
   const [standaloneStore, setStandaloneStore] = useState<StandaloneStore | null>(null);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
 
+  // Provider config for direct linking (Telegram botUsername, Discord clientId)
+  const [linkConfig, setLinkConfig] = useState<LinkConfigResponse | null>(null);
+
   // 加载已绑定账号
   const loadLinkedAccounts = useCallback(async () => {
     try {
@@ -74,15 +115,55 @@ export default function AccountSettingsPage() {
     }
   }, [t]);
 
-  // 处理绑定回调
+  // 加载绑定配置
+  useEffect(() => {
+    getLinkConfig()
+      .then(setLinkConfig)
+      .catch(() => {});
+  }, []);
+
+  // Telegram Login Widget 全局回调
+  const handleTelegramAuth = useCallback(
+    async (authData: TelegramAuthData) => {
+      try {
+        setLinkingProvider('telegram');
+        await directLinkTelegram(authData);
+        toast({
+          title: t('common.success'),
+          description: t('settings.accountBinding.linkSuccess'),
+        });
+        loadLinkedAccounts();
+      } catch (err) {
+        toast({
+          title: t('common.error'),
+          description: err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
+          variant: 'destructive',
+        });
+      } finally {
+        setLinkingProvider(null);
+      }
+    },
+    [toast, t, loadLinkedAccounts]
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any)[TELEGRAM_WIDGET_CALLBACK] = handleTelegramAuth;
+    return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any)[TELEGRAM_WIDGET_CALLBACK];
+    };
+  }, [handleTelegramAuth]);
+
+  // Casdoor link mode 绑定回调（Discord/Google/GitHub 等标准 OAuth provider）
   useEffect(() => {
     const processLinkCallback = async () => {
       if (hasLinkCallback()) {
         const sfReturn = getLinkCallbackStorefrontReturn();
-        const { code, state } = getLinkCallbackParams();
-        if (code && state) {
+        const { code, state, providerId } = getLinkCallbackParams();
+        if (state && (code || providerId)) {
           try {
-            const result = await handleLinkCallback(code, state);
+            const result = await handleLinkCallback(code, state, providerId);
             if (result.success) {
               if (sfReturn) {
                 window.location.href = `${sfReturn}/settings/account`;
@@ -148,7 +229,7 @@ export default function AccountSettingsPage() {
     return SUPPORTED_PROVIDERS.find(p => p.id === providerId);
   };
 
-  // 绑定账号
+  // 绑定账号 — Telegram 由 widget 处理, 其他 provider 走 Casdoor link mode
   const handleLink = async (provider: OAuthProvider) => {
     try {
       setLinkingProvider(provider);
@@ -235,31 +316,42 @@ export default function AccountSettingsPage() {
   };
 
   // 可绑定账号卡片
-  const renderAvailableProviderCard = (provider: ProviderInfo) => (
-    <div
-      key={provider.id}
-      className="flex items-center justify-between p-3 border-b border-border last:border-0"
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-          <ProviderIcon provider={provider.id} />
-        </div>
-        <div>
-          <p className="font-medium text-sm">{provider.name}</p>
-          <p className="text-xs text-muted-foreground">{t('settings.accountBinding.notLinked')}</p>
-        </div>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => handleLink(provider.id)}
-        disabled={linkingProvider === provider.id}
+  const renderAvailableProviderCard = (provider: ProviderInfo) => {
+    const telegramBot = linkConfig?.providers?.telegram?.botUsername;
+    const isTelegram = provider.id === 'telegram' && telegramBot;
+
+    return (
+      <div
+        key={provider.id}
+        className="flex items-center justify-between p-3 border-b border-border last:border-0"
       >
-        <Link2 className="w-4 h-4 mr-1" />
-        {linkingProvider === provider.id ? '...' : t('settings.accountBinding.link')}
-      </Button>
-    </div>
-  );
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+            <ProviderIcon provider={provider.id} />
+          </div>
+          <div>
+            <p className="font-medium text-sm">{provider.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {t('settings.accountBinding.notLinked')}
+            </p>
+          </div>
+        </div>
+        {isTelegram ? (
+          <TelegramLoginWidget botUsername={telegramBot} />
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleLink(provider.id)}
+            disabled={linkingProvider === provider.id}
+          >
+            <Link2 className="w-4 h-4 mr-1" />
+            {linkingProvider === provider.id ? '...' : t('settings.accountBinding.link')}
+          </Button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div>

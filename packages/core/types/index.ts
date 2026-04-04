@@ -250,6 +250,9 @@ export type {
   UnlinkRequest,
   UnlinkResponse,
   LinkCallbackResponse,
+  DirectLinkResponse,
+  LinkConfigResponse,
+  TelegramAuthData,
   ProviderInfo,
 } from './account';
 

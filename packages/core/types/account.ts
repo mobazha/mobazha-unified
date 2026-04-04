@@ -83,6 +83,38 @@ export interface LinkCallbackResponse {
 }
 
 /**
+ * 直接绑定响应（Telegram/Discord 等 Hosting-side 绑定）
+ */
+export interface DirectLinkResponse {
+  success: boolean;
+  message?: string;
+}
+
+/**
+ * 绑定配置响应（后端返回的 provider 配置）
+ */
+export interface LinkConfigResponse {
+  providers: {
+    telegram?: { botUsername: string };
+    discord?: { clientId: string };
+    [key: string]: { botUsername?: string; clientId?: string; oauthUrl?: string } | undefined;
+  };
+}
+
+/**
+ * Telegram Login Widget 认证数据
+ */
+export interface TelegramAuthData {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+}
+
+/**
  * Provider 信息（用于 UI 显示）
  */
 export interface ProviderInfo {
