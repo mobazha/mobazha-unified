@@ -1,6 +1,8 @@
 /**
  * Playwright E2E Test Configuration
  *
+ * Env: PLAYWRIGHT_HOST, PLAYWRIGHT_PORT (override PORT for this config only), PORT, PLAYWRIGHT_WEBSERVER_TIMEOUT_MS.
+ *
  * Project scoping:
  *   - chromium:           desktop-visual + general E2E (excludes mobile-visual & standalone)
  *   - Mobile Chrome:      mobile-visual  + general E2E (excludes desktop-visual & standalone)
@@ -10,8 +12,12 @@
 
 import { defineConfig, devices } from '@playwright/test';
 
+/** Default dev server port when neither PLAYWRIGHT_PORT nor PORT is set. */
+const DEFAULT_PLAYWRIGHT_PORT = '3001';
+
 const baseHost = process.env.PLAYWRIGHT_HOST || '127.0.0.1';
-const basePort = process.env.PORT || '3001';
+// Single source of truth: explicit E2E port overrides generic PORT (e.g. CI may set PORT for another process).
+const basePort = process.env.PLAYWRIGHT_PORT || process.env.PORT || DEFAULT_PLAYWRIGHT_PORT;
 const webServerTimeoutMs = Number(process.env.PLAYWRIGHT_WEBSERVER_TIMEOUT_MS || 120000);
 
 export default defineConfig({
@@ -89,6 +95,8 @@ export default defineConfig({
   webServer: {
     command: `pnpm dev --host ${baseHost} --port ${basePort} --strictPort`,
     url: `http://${baseHost}:${basePort}`,
+    // Keep dev server env aligned with baseURL/cli (avoids .env PORT vs Playwright mismatch).
+    env: { ...process.env, PORT: basePort },
     reuseExistingServer: true,
     timeout: webServerTimeoutMs,
   },
