@@ -77,7 +77,7 @@ export const Header: React.FC = () => {
 
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
-  const displayProfile = profile || storefrontProfile;
+  const brandProfile = standaloneMode ? storefrontProfile || profile : profile;
   const isSearchPage = pathname === '/search';
 
   const handleSearch = (e: React.FormEvent) => {
@@ -102,14 +102,14 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            {standaloneMode && displayProfile ? (
+            {standaloneMode && brandProfile ? (
               <>
                 <Avatar
-                  src={getImageUrl(displayProfile.avatarHashes?.small)}
-                  name={displayProfile.name || ''}
+                  src={getImageUrl(brandProfile.avatarHashes?.small)}
+                  name={brandProfile.name || ''}
                   size="sm"
                 />
-                <span className="font-bold text-xl text-foreground">{displayProfile.name}</span>
+                <span className="font-bold text-xl text-foreground">{brandProfile.name}</span>
               </>
             ) : (
               <>

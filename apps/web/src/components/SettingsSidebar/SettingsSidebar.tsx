@@ -16,16 +16,16 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   {
-    id: 'general',
-    labelKey: 'settings.sidebar.general',
-    href: '/settings/general',
-    icon: <Settings className="w-4 h-4" />,
-  },
-  {
     id: 'page-profile',
     labelKey: 'settings.sidebar.profile',
     href: '/settings/page-profile',
     icon: <User className="w-4 h-4" />,
+  },
+  {
+    id: 'general',
+    labelKey: 'settings.sidebar.general',
+    href: '/settings/general',
+    icon: <Settings className="w-4 h-4" />,
   },
   {
     id: 'account',
