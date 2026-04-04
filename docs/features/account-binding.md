@@ -56,7 +56,8 @@
       }
     ],
     "totalCount": 1,
-    "minRequired": 1
+    "minRequired": 1,
+    "hasPassword": true
   }
 }
 ```
@@ -247,7 +248,8 @@ settings.accountBinding: {
    - Casdoor 不会自动绑定，需要 hosting 主动调用 Admin API
 
 4. **解绑账号** (`/platform/v1/accounts/unlink`)
-   - 检查是否为最后一个账号
+   - 计算总登录方式 = OAuth 绑定数 + 是否有密码（`user.Password != ""`）
+   - 总登录方式 <= 1 时拒绝解绑（必须保留至少一种登录方式）
    - 通过 Casdoor Admin API 清除用户的 provider 字段
 
 ### 已知限制
