@@ -105,6 +105,10 @@ export {
 // ============ 账号绑定服务 ============
 
 export {
+  // Telegram direct linking (via Login Widget)
+  getLinkConfig,
+  directLinkTelegram,
+  // Casdoor link mode (Discord, Google, GitHub, etc.)
   getLinkedAccounts,
   getLinkUrl,
   startLinkAccount,

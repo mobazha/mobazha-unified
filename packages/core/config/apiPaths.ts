@@ -293,6 +293,8 @@ export const HOSTING_API = {
   ACCOUNTS_ME: '/platform/v1/accounts/me',
   ACCOUNTS_LINKED: '/platform/v1/accounts/linked',
   ACCOUNTS_UNLINK: '/platform/v1/accounts/unlink',
+  ACCOUNTS_LINK_CONFIG: '/platform/v1/accounts/link/config',
+  ACCOUNTS_LINK_TELEGRAM: '/platform/v1/accounts/link/telegram',
   ACCOUNTS_LINK_URL: '/platform/v1/accounts/link-url',
   ACCOUNTS_LINK_CALLBACK: '/platform/v1/accounts/link-callback',
 

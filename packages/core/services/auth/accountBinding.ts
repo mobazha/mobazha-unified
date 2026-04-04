@@ -1,6 +1,11 @@
 /**
  * 账号绑定服务
  * 支持查询已绑定账号、绑定新账号、解绑账号等功能
+ *
+ * Architecture:
+ * - Telegram: 通过 Login Widget 直接验证 (Hosting-side)，绕过 Casdoor OAuth
+ * - Discord/Google/GitHub 等标准 OAuth: 通过 Casdoor link mode（method="link"），
+ *   Casdoor 仅返回 provider 身份，不创建用户；Hosting 后端负责绑定到当前用户
  */
 
 import { getHostingUrl } from '../api/config';
@@ -18,6 +23,9 @@ import type {
   LinkUrlResponse,
   UnlinkResponse,
   LinkCallbackResponse,
+  DirectLinkResponse,
+  LinkConfigResponse,
+  TelegramAuthData,
   OAuthProvider,
 } from '../../types/account';
 import { CASDOOR_PROVIDER_NAMES } from '../../types/account';
@@ -135,14 +143,18 @@ export function startLinkAccount(provider: OAuthProvider, redirectUri?: string):
 
 /**
  * 处理绑定回调
- * 在 OAuth 回调页面调用此函数完成绑定流程
+ * 支持两种模式:
+ *   - code 模式: Casdoor OAuth 返回已有用户 (标准 code 交换)
+ *   - provider_id 模式: Casdoor link_only 返回 provider info (无用户创建)
  *
- * @param code OAuth 授权码
+ * @param code OAuth 授权码 (可选)
  * @param state OAuth state 参数
+ * @param providerId Provider ID 直传 (可选, 来自 Casdoor link_only 模式)
  */
 export async function handleLinkCallback(
-  code: string,
-  state: string
+  code: string | null,
+  state: string,
+  providerId?: string | null
 ): Promise<LinkCallbackResponse> {
   const baseUrl = getHostingUrl();
   const token = getStoredToken();
@@ -154,7 +166,9 @@ export async function handleLinkCallback(
   const sfIdx = state.indexOf(SF_RETURN_SEPARATOR);
   const cleanState = sfIdx === -1 ? state : state.substring(0, sfIdx);
 
-  const params = new URLSearchParams({ code, state: cleanState });
+  const params = new URLSearchParams({ state: cleanState });
+  if (code) params.set('code', code);
+  if (providerId) params.set('provider_id', providerId);
 
   const response = await fetch(`${baseUrl}/platform/v1/accounts/link-callback?${params}`, {
     method: 'GET',
@@ -171,6 +185,63 @@ export async function handleLinkCallback(
 
   const data = await response.json();
   return data.data as LinkCallbackResponse;
+}
+
+// ---------------------------------------------------------------------------
+// Direct Linking: Telegram via Login Widget (Hosting-side verification)
+// ---------------------------------------------------------------------------
+
+/**
+ * 获取绑定配置（public endpoint，无需认证）
+ * 返回各 provider 的前端配置（Telegram botUsername, Discord clientId 等）
+ */
+export async function getLinkConfig(): Promise<LinkConfigResponse> {
+  const baseUrl = getHostingUrl();
+
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/link/config`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get link config');
+  }
+
+  const data = await response.json();
+  return data.data as LinkConfigResponse;
+}
+
+/**
+ * 直接绑定 Telegram（通过 Login Widget auth data）
+ * 后端验证 HMAC-SHA256 签名后更新 Casdoor user.Telegram 字段
+ */
+export async function directLinkTelegram(authData: TelegramAuthData): Promise<DirectLinkResponse> {
+  const baseUrl = getHostingUrl();
+  const token = getStoredToken();
+
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(authData)) {
+    if (v !== undefined && v !== null) params.set(k, String(v));
+  }
+
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/link/telegram?${params}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error?.message || 'Failed to link Telegram');
+  }
+
+  return { success: true };
 }
 
 /**
@@ -221,25 +292,34 @@ export function getLinkCallbackStorefrontReturn(): string | null {
 
 /**
  * 检查是否有绑定回调参数
+ * 支持两种模式:
+ *   - code 模式: state + code (标准 OAuth)
+ *   - provider_id 模式: state + provider_id (Casdoor link_only)
  */
 export function hasLinkCallback(): boolean {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
   const state = params.get('state');
-  return params.has('code') && params.has('state') && state !== null && state.startsWith('link:');
+  if (!state || !state.startsWith('link:')) return false;
+  return params.has('code') || params.has('provider_id');
 }
 
 /**
  * 获取绑定回调参数
  */
-export function getLinkCallbackParams(): { code: string | null; state: string | null } {
+export function getLinkCallbackParams(): {
+  code: string | null;
+  state: string | null;
+  providerId: string | null;
+} {
   if (typeof window === 'undefined') {
-    return { code: null, state: null };
+    return { code: null, state: null, providerId: null };
   }
   const params = new URLSearchParams(window.location.search);
   return {
     code: params.get('code'),
     state: params.get('state'),
+    providerId: params.get('provider_id'),
   };
 }
 
@@ -252,6 +332,8 @@ export function clearLinkCallbackParams(): void {
   url.searchParams.delete('code');
   url.searchParams.delete('state');
   url.searchParams.delete('link_callback');
+  url.searchParams.delete('provider_id');
+  url.searchParams.delete('provider_type');
   window.history.replaceState({}, '', url.toString());
 }
 
