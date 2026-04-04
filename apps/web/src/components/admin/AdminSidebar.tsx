@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useI18n, useUserStore, isStandalone } from '@mobazha/core';
+import { useI18n, useUserStore, isStandalone, useStorefrontMode } from '@mobazha/core';
 import {
   LayoutDashboard,
   Package,
@@ -70,6 +70,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   const pathname = usePathname();
   const { t } = useI18n();
   const { profile } = useUserStore();
+  const standaloneMode = useStorefrontMode();
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
@@ -77,7 +78,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   };
 
   const storePeerID = profile?.peerID;
-  const storeUrl = storePeerID ? (isStandalone() ? '/' : `/store/${storePeerID}`) : '/';
+  const storeUrl = storePeerID ? (standaloneMode ? '/' : `/store/${storePeerID}`) : '/';
 
   return (
     <div
@@ -155,7 +156,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
           <Eye className="w-4 h-4 shrink-0" />
           {!collapsed && <span>{t('admin.nav.viewStore')}</span>}
         </Link>
-        {!isStandalone() && (
+        {!standaloneMode && (
           <Link
             href="/"
             className={cn(

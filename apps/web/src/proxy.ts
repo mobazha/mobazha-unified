@@ -150,19 +150,28 @@ function hasAuthCookie(request: NextRequest): boolean {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Branded subdomain root rewrite:
-  // When Gateway routes {handle}.mymbz.org, it injects X-Store-PeerID.
-  // Rewrite `/` to `/store/{peerID}` so the storefront renders.
-  const storePeerID = request.headers.get('x-store-peerid');
-  if (storePeerID && pathname === '/') {
-    const url = request.nextUrl.clone();
-    url.pathname = `/store/${storePeerID}`;
-    return NextResponse.rewrite(url);
-  }
-
-  // API 代理：/v1/*, /api/*, /info/* → 后端（剥离 WWW-Authenticate）
+  // API 代理必须在所有其他逻辑之前处理，
+  // 否则 storefront cookie 设置会提前返回导致 API 请求变成 404。
   if (shouldProxyToBackend(pathname)) {
     return proxyToBackend(request);
+  }
+
+  // Branded subdomain / custom domain: Gateway sets X-Store-PeerID.
+  // We forward it as x-storefront-peerid for Server Components and set a
+  // client-readable cookie. NO URL rewriting — page.tsx renders the
+  // standalone-style homepage directly when it detects storefront mode.
+  const storePeerID = request.headers.get('x-store-peerid');
+  if (storePeerID) {
+    const reqHeaders = new Headers(request.headers);
+    reqHeaders.set('x-storefront-peerid', storePeerID);
+
+    const response = NextResponse.next({ request: { headers: reqHeaders } });
+    response.cookies.set('mbz-storefront', storePeerID, {
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 86400,
+    });
+    return response;
   }
 
   // 跳过静态资源和 Next.js 内部路由

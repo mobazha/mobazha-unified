@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { useI18n, isStandalone } from '@mobazha/core';
+import { useI18n, useStorefrontMode } from '@mobazha/core';
 import { VStack } from '@/components/layouts';
 import { Eye, Database, Users, Lock } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
   const { t } = useI18n();
-  const standalone = isStandalone();
+  const standalone = useStorefrontMode();
 
   const sections = [
     {

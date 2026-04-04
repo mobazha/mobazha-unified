@@ -5,7 +5,14 @@ import Link from 'next/link';
 import { Container, Grid, HStack, VStack } from '@/components/layouts';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { useI18n, useUserStore, getImageUrl, isStandalone, stripHtmlTags } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  getImageUrl,
+  useStorefrontMode,
+  useStorefrontProfile,
+  stripHtmlTags,
+} from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 const FOOTER_CRYPTO_TOKENS = [
@@ -103,7 +110,9 @@ const socialLinks = [
 export const Footer: React.FC = () => {
   const { t } = useI18n();
   const { profile, isAuthenticated } = useUserStore();
-  const standaloneMode = isStandalone();
+  const standaloneMode = useStorefrontMode();
+  const storefrontProfile = useStorefrontProfile();
+  const displayProfile = profile || storefrontProfile;
 
   const startSellingHref = standaloneMode
     ? '/listing/new'
@@ -177,19 +186,19 @@ export const Footer: React.FC = () => {
           >
             {/* Brand */}
             <div className="col-span-2">
-              {standaloneMode && profile ? (
+              {standaloneMode && displayProfile ? (
                 <>
                   <Link href="/" className="flex items-center gap-2 mb-3">
                     <Avatar
-                      src={getImageUrl(profile.avatarHashes?.small)}
-                      name={profile.name || ''}
+                      src={getImageUrl(displayProfile.avatarHashes?.small)}
+                      name={displayProfile.name || ''}
                       size="sm"
                     />
-                    <span className="font-bold text-xl text-foreground">{profile.name}</span>
+                    <span className="font-bold text-xl text-foreground">{displayProfile.name}</span>
                   </Link>
-                  {profile.shortDescription && (
+                  {displayProfile.shortDescription && (
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                      {stripHtmlTags(profile.shortDescription)}
+                      {stripHtmlTags(displayProfile.shortDescription)}
                     </p>
                   )}
                   <HStack gap="sm">
@@ -334,9 +343,9 @@ export const Footer: React.FC = () => {
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              {standaloneMode && profile ? (
+              {standaloneMode && displayProfile ? (
                 <>
-                  © {new Date().getFullYear()} {profile.name}.{' '}
+                  © {new Date().getFullYear()} {displayProfile.name}.{' '}
                   <a
                     href="https://mobazha.com"
                     target="_blank"

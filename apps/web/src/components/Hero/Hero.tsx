@@ -4,12 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Container, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, useUserStore, isStandalone } from '@mobazha/core';
+import { useI18n, useUserStore, useStorefrontMode } from '@mobazha/core';
 
 export const Hero: React.FC = () => {
-  const { t } = useI18n();
   const { isAuthenticated, profile } = useUserStore();
-  const standalone = isStandalone();
+  const standalone = useStorefrontMode();
 
   const isAnonymous = !isAuthenticated;
   const isSeller = isAuthenticated && (profile?.stats?.listingCount ?? 0) > 0;

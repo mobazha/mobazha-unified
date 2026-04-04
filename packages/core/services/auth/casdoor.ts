@@ -3,10 +3,12 @@
  * 支持 OAuth2 授权码流程
  */
 
-import { getEnvConfig } from '../../config/env';
+import { getEnvConfig, getStoreSubdomainBase } from '../../config/env';
 import { getHostingUrl } from '../api/config';
 import { HOSTING_API } from '../../config/apiPaths';
 import { getCasdoorThemeParams } from '../../theme/casdoorTheme';
+
+const SF_RETURN_SEPARATOR = '::sf=';
 
 export interface CasdoorUser {
   id: string;
@@ -61,22 +63,110 @@ function generateState(): string {
 }
 
 /**
+ * Get the main SaaS domain origin (e.g. "https://test-new.mobazha.org").
+ * Derived from the API base URL which always points to the SaaS gateway.
+ */
+function getSaaSMainOrigin(): string | null {
+  const baseUrl = getEnvConfig().api.baseUrl;
+  if (!baseUrl) return null;
+  try {
+    const u = new URL(baseUrl);
+    return u.origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Detect whether the current window is on a branded storefront subdomain
+ * that differs from the main SaaS domain.  Returns the current origin
+ * if so, otherwise null.
+ */
+function getStorefrontReturnOrigin(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const subdomainBase = getStoreSubdomainBase();
+  const host = window.location.hostname;
+
+  if (host.endsWith(`.${subdomainBase}`)) {
+    return window.location.origin;
+  }
+  return null;
+}
+
+/**
+ * Validate that a return URL belongs to a trusted storefront domain.
+ */
+export function isAllowedStorefrontReturn(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const subdomainBase = getStoreSubdomainBase();
+    return u.hostname.endsWith(`.${subdomainBase}`) && u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Extract storefront return URL from an OAuth state parameter.
+ * Returns [cleanState, returnOrigin | null].
+ */
+export function extractStorefrontReturn(state: string): [string, string | null] {
+  const idx = state.indexOf(SF_RETURN_SEPARATOR);
+  if (idx === -1) return [state, null];
+  const cleanState = state.substring(0, idx);
+  const returnOrigin = decodeURIComponent(state.substring(idx + SF_RETURN_SEPARATOR.length));
+  if (!isAllowedStorefrontReturn(returnOrigin)) {
+    return [cleanState, null];
+  }
+  return [cleanState, returnOrigin];
+}
+
+/**
+ * Build the redirect_uri and state pair, handling storefront subdomains.
+ *
+ * When the user is on a branded storefront subdomain (e.g.
+ * alice-digital-shop.mobaza.org), redirect_uri always points to the main
+ * SaaS domain (registered in Casdoor) and the storefront origin is
+ * appended to state so the callback can bounce the token back.
+ */
+function buildOAuthCallbackParams(
+  appName: string,
+  redirectPath: string,
+  explicitRedirectUri?: string
+): { callbackUrl: string; state: string } {
+  let state = `${appName}_${generateState()}`;
+
+  if (explicitRedirectUri) {
+    return { callbackUrl: explicitRedirectUri, state };
+  }
+
+  const sfReturnOrigin = getStorefrontReturnOrigin();
+  if (sfReturnOrigin) {
+    const mainOrigin = getSaaSMainOrigin();
+    if (mainOrigin) {
+      state += `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin)}`;
+      return { callbackUrl: `${mainOrigin}${redirectPath}`, state };
+    }
+  }
+
+  const callbackUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}${redirectPath}` : redirectPath;
+  return { callbackUrl, state };
+}
+
+/**
  * 获取 Casdoor 登录页面 URL（OAuth2 授权码流程）
  */
 export function getSigninUrl(redirectUri?: string): string {
   const env = getEnvConfig();
   const { serverUrl, clientId, appName, redirectPath } = env.casdoor;
 
-  // 生成并保存 state
-  const state = `${appName}_${generateState()}`;
+  const { callbackUrl, state } = buildOAuthCallbackParams(appName, redirectPath, redirectUri);
+
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('casdoor_state', state);
   }
-
-  // 构建回调 URL
-  const callbackUrl =
-    redirectUri ||
-    (typeof window !== 'undefined' ? `${window.location.origin}${redirectPath}` : redirectPath);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -104,14 +194,11 @@ export function getSignupUrl(redirectUri?: string): string {
   const env = getEnvConfig();
   const { serverUrl, clientId, appName, redirectPath } = env.casdoor;
 
-  const state = `${appName}_${generateState()}`;
+  const { callbackUrl, state } = buildOAuthCallbackParams(appName, redirectPath, redirectUri);
+
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('casdoor_state', state);
   }
-
-  const callbackUrl =
-    redirectUri ||
-    (typeof window !== 'undefined' ? `${window.location.origin}${redirectPath}` : redirectPath);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -233,24 +320,24 @@ export function setLoginRedirectPath(path: string): void {
  * 调用后端 /api/signin 接口（不需要 /v1 前缀）
  */
 export async function handleOAuthCallback(code: string, state: string): Promise<LoginResult> {
-  // 使用 getHostingUrl() 获取基础 URL（不含 /v1）
-  // /api/signin 是 hosting 服务接口，不是节点代理接口
   const baseUrl = getHostingUrl();
 
+  const [cleanState] = extractStorefrontReturn(state);
+
   try {
-    // 验证 state（防止 CSRF）
     if (typeof sessionStorage !== 'undefined') {
       const savedState = sessionStorage.getItem('casdoor_state');
-      if (savedState && savedState !== state) {
-        console.warn('OAuth state mismatch, possible CSRF attack');
-        // 不强制失败，因为某些情况下 state 可能不匹配但仍然有效
+      if (savedState) {
+        const [savedClean] = extractStorefrontReturn(savedState);
+        if (savedClean !== cleanState) {
+          console.warn('OAuth state mismatch, possible CSRF attack');
+        }
       }
       sessionStorage.removeItem('casdoor_state');
     }
 
-    const url = `${baseUrl}${HOSTING_API.AUTH_SIGNIN}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+    const url = `${baseUrl}${HOSTING_API.AUTH_SIGNIN}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(cleanState)}`;
 
-    console.log('🔑 Exchanging code for token...');
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -268,7 +355,6 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
     const data = await response.json();
 
     if (data.data) {
-      console.log('✅ Login successful');
       return {
         success: true,
         token: data.data,

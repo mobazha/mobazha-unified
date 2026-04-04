@@ -4,14 +4,21 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, Grid } from '@/components/layouts';
-import { collectionsApi, getImageUrl, useI18n, useUserStore, isStandalone } from '@mobazha/core';
+import {
+  collectionsApi,
+  getImageUrl,
+  useI18n,
+  useUserStore,
+  useStorefrontMode,
+  getStorefrontPeerID,
+} from '@mobazha/core';
 import type { Collection } from '@mobazha/core';
 
 export default function CollectionsPage() {
   const { t } = useI18n();
   const { profile } = useUserStore();
-  const standalone = isStandalone();
-  const peerId = standalone ? profile?.peerID : null;
+  const standalone = useStorefrontMode();
+  const peerId = standalone ? getStorefrontPeerID() || profile?.peerID || null : null;
 
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);

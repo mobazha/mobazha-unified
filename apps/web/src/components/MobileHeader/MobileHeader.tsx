@@ -5,7 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { useI18n, useUserStore, getImageUrl, isStandalone, useUserContext } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  getImageUrl,
+  useStorefrontMode,
+  useStorefrontProfile,
+  useUserContext,
+} from '@mobazha/core';
 import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
 
 export const MobileHeader: React.FC = () => {
@@ -14,7 +21,9 @@ export const MobileHeader: React.FC = () => {
   const { profile, isAuthenticated } = useUserStore();
   const { hasStore } = useUserContext();
   const [searchQuery, setSearchQuery] = useState('');
-  const standaloneMode = isStandalone();
+  const standaloneMode = useStorefrontMode();
+  const storefrontProfile = useStorefrontProfile();
+  const displayProfile = profile || storefrontProfile;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,15 +44,15 @@ export const MobileHeader: React.FC = () => {
           {standaloneMode ? (
             <>
               <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
-                {profile ? (
+                {displayProfile ? (
                   <>
                     <Avatar
-                      src={getImageUrl(profile.avatarHashes?.small)}
-                      name={profile.name || ''}
+                      src={getImageUrl(displayProfile.avatarHashes?.small)}
+                      name={displayProfile.name || ''}
                       size="sm"
                     />
                     <span className="font-bold text-base text-foreground truncate">
-                      {profile.name}
+                      {displayProfile.name}
                     </span>
                   </>
                 ) : (

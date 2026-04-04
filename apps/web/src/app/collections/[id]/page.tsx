@@ -14,7 +14,8 @@ import {
   getImageUrl,
   useI18n,
   useUserStore,
-  isStandalone,
+  useStorefrontMode,
+  getStorefrontPeerID,
 } from '@mobazha/core';
 import type { Collection, ProductListItem } from '@mobazha/core';
 import { useProductModal } from '@/hooks';
@@ -24,8 +25,8 @@ export default function CollectionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { profile } = useUserStore();
-  const standalone = isStandalone();
-  const peerId = standalone ? (profile?.peerID ?? null) : null;
+  const standalone = useStorefrontMode();
+  const peerId = standalone ? getStorefrontPeerID() || profile?.peerID || null : null;
   const { openProduct } = useProductModal();
 
   const [collection, setCollection] = useState<Collection | null>(null);

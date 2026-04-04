@@ -14,6 +14,7 @@ import {
   storeContextService,
   standaloneStoresApi,
   resolveStoreShortCode,
+  extractStorefrontReturn,
 } from '@mobazha/core';
 import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
 import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
@@ -78,15 +79,22 @@ export function AuthProvider({
   const tg = useTGMiniApp();
   const discord = useDiscordActivity();
 
-  // HMR 保护：使用 ref 避免热更新导致的重复执行
-  const hasRestoredSession = useRef(false);
+  // Cross-domain token: detect _auth_token in hash before initializing refs.
+  const hasHashToken =
+    typeof window !== 'undefined' && window.location.hash.includes('_auth_token=');
 
-  // 登出时重置 hasRestoredSession，确保重新登录时能正确恢复会话
+  // Initialize as `true` when a hash token is present so the session-restore
+  // effect is blocked from the very first render (prevents race condition).
+  const hasRestoredSession = useRef(hasHashToken);
+  const hashTokenHandled = useRef(false);
+
+  // 登出时重置 hasRestoredSession，确保重新登录时能正确恢复会话。
+  // 但不在 hash token 待处理期间重置，防止 restoreSession 竞态。
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !hasHashToken) {
       hasRestoredSession.current = false;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, hasHashToken]);
 
   // 初始化 Matrix（在用户登录后自动连接）
   useMatrixInit({
@@ -212,6 +220,34 @@ export function AuthProvider({
     enterAnonymousMode,
   ]);
 
+  // Cross-domain token handler: process _auth_token from URL hash.
+  // Wrapped in async IIFE to satisfy react-hooks/set-state-in-effect.
+  useEffect(() => {
+    if (hashTokenHandled.current || !hasHashToken) return;
+    hashTokenHandled.current = true;
+
+    (async () => {
+      const params = new URLSearchParams(window.location.hash.replace('#', ''));
+      const token = params.get('_auth_token');
+      if (!token) {
+        setIsInitialized(true);
+        return;
+      }
+
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+
+      const { loginWithToken } = useUserStore.getState();
+      const success = await loginWithToken(token);
+      if (success) {
+        const currentState = useUserStore.getState();
+        if (currentState.needsOnboarding) {
+          router.push('/onboarding');
+        }
+      }
+      setIsInitialized(true);
+    })();
+  }, [router, hasHashToken]);
+
   // 处理 OAuth 回调（在任何页面都可能发生）
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -220,8 +256,18 @@ export function AuthProvider({
         const { code, state } = getOAuthParams();
 
         if (code && state) {
+          const [, sfReturnOrigin] = extractStorefrontReturn(state);
+
           const success = await loginWithOAuth(code, state);
           clearOAuthParams();
+
+          if (success && sfReturnOrigin) {
+            const token = useUserStore.getState().token;
+            if (token) {
+              window.location.href = `${sfReturnOrigin}/#_auth_token=${encodeURIComponent(token)}`;
+              return;
+            }
+          }
 
           if (success) {
             hasRestoredSession.current = true;

@@ -20,7 +20,9 @@ import {
   useStorefrontConfigPublic,
   productDataService,
   getImageUrl,
-  isStandalone,
+  useStorefrontMode,
+  useStorefrontPeerID,
+  useStorefrontProfile,
   parsePriceFields,
 } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
@@ -82,10 +84,11 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
 }
 
 export default function HomePage() {
-  const standalone = isStandalone();
+  const storefrontMode = useStorefrontMode();
+  const storefrontPeerID = useStorefrontPeerID();
 
-  if (standalone) {
-    return <StandaloneHomePage />;
+  if (storefrontMode) {
+    return <StandaloneHomePage overridePeerID={storefrontPeerID} />;
   }
 
   return <SaaSHomePage />;
@@ -281,14 +284,20 @@ function SaaSHomePage() {
 
 // ===================== Standalone Home Page =====================
 
-function StandaloneHomePage() {
+function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null }) {
   const { t } = useI18n();
   const [trendingProducts, setTrendingProducts] = useState<DisplayProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { profile } = useUserStore();
-  const standalonePeerId = profile?.peerID ?? null;
-  const { config: storefrontConfig } = useStorefrontConfigPublic(standalonePeerId);
+  const { profile: userProfile, isAuthenticated } = useUserStore();
+  const storefrontProfile = useStorefrontProfile();
+
+  const effectivePeerID = overridePeerID || userProfile?.peerID || null;
+  const isOwnStore =
+    !overridePeerID || (!!userProfile?.peerID && userProfile.peerID === overridePeerID);
+  const displayProfile = overridePeerID ? storefrontProfile : userProfile;
+
+  const { config: storefrontConfig } = useStorefrontConfigPublic(effectivePeerID);
   const hasSections = !!storefrontConfig?.sections?.length;
   const hasHeroSection = !!storefrontConfig?.sections?.some(
     s => s.type === 'hero' && s.visible !== false
@@ -302,13 +311,20 @@ function StandaloneHomePage() {
     };
   }, [storefrontConfig]);
 
+  // Fetch products: public API for SaaS storefronts, authenticated for own standalone
   useEffect(() => {
+    if (!effectivePeerID) return;
     let cancelled = false;
 
     async function fetchProducts() {
       try {
-        const localListings = (await getListingsWithDedup('local-store', () =>
-          productDataService.getMyListings()
+        const fetcher = overridePeerID
+          ? () => productDataService.getStoreListings(overridePeerID)
+          : () => productDataService.getMyListings();
+
+        const localListings = (await getListingsWithDedup(
+          `store-${effectivePeerID}`,
+          fetcher
         )) as ProductListItem[];
 
         if (!cancelled) {
@@ -325,7 +341,7 @@ function StandaloneHomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [effectivePeerID, overridePeerID]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -333,13 +349,13 @@ function StandaloneHomePage() {
       <Header />
 
       <main>
-        {hasSections && hasHeroSection && profile ? (
+        {hasSections && hasHeroSection && displayProfile ? (
           <>
             <BrandedHeroHeader
-              store={profile}
-              peerId={standalonePeerId!}
+              store={displayProfile}
+              peerId={effectivePeerID!}
               stats={
-                profile.stats ?? {
+                displayProfile.stats ?? {
                   followerCount: 0,
                   followingCount: 0,
                   listingCount: trendingProducts.length,
@@ -347,8 +363,8 @@ function StandaloneHomePage() {
                   averageRating: 0,
                 }
               }
-              isOwnStore
-              isAuthenticated
+              isOwnStore={isOwnStore}
+              isAuthenticated={isAuthenticated}
               storefrontConfig={storefrontConfig}
               isFollowing={false}
               followLoading={false}
@@ -361,16 +377,16 @@ function StandaloneHomePage() {
             />
             {sectionsForHomepage?.sections?.length ? (
               <StoreSections
-                peerId={standalonePeerId!}
-                profile={profile ?? undefined}
+                peerId={effectivePeerID!}
+                profile={displayProfile ?? undefined}
                 ownerConfig={sectionsForHomepage}
               />
             ) : null}
           </>
         ) : hasSections ? (
           <StoreSections
-            peerId={standalonePeerId!}
-            profile={profile ?? undefined}
+            peerId={effectivePeerID!}
+            profile={displayProfile ?? undefined}
             ownerConfig={storefrontConfig}
           />
         ) : (
@@ -386,7 +402,7 @@ function StandaloneHomePage() {
             products={trendingProducts.slice(0, 8)}
             isLoading={isLoading}
             showViewAll
-            viewAllHref={standalonePeerId ? `/store/${standalonePeerId}` : '/'}
+            viewAllHref={effectivePeerID ? `/store/${effectivePeerID}` : '/'}
           />
         </div>
       </main>

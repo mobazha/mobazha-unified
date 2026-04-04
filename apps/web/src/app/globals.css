@@ -884,6 +884,14 @@ body {
   }
 }
 
+/* ===== Storefront mode: hide marketplace-only elements on first paint ===== */
+html[data-storefront] .marketplace-only {
+  display: none !important;
+}
+html:not([data-storefront]) .storefront-only {
+  display: none !important;
+}
+
 /* ===== 减弱动画支持 (prefers-reduced-motion) ===== */
 @media (prefers-reduced-motion: reduce) {
   *,

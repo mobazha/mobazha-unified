@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import React from 'react';
 import { getSiteUrl } from '@/lib/siteUrl';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
+import { SSR_API_BASE } from '@/lib/ssrApiBase';
+
+const API_BASE = SSR_API_BASE;
 const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 interface ProductData {

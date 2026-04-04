@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useI18n, useUserStore, getImageUrl, isStandalone } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, useStorefrontMode } from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import {
@@ -28,7 +28,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const router = useRouter();
   const { t } = useI18n();
   const { profile, logout } = useUserStore();
-  const standaloneMode = isStandalone();
+  const standaloneMode = useStorefrontMode();
   const toggleAIChat = useAIChatStore(s => s.toggle);
 
   const handleLogout = () => {

@@ -17,7 +17,7 @@ import {
   useMiniAppRole,
   getImageUrl,
   isHosted,
-  isStandalone,
+  useStorefrontMode,
   startCasdoorLogin,
   NODE_API,
   useUserContext,
@@ -464,7 +464,7 @@ export default function MePage() {
   const { promptRegister } = useMiniAppRegister();
 
   const { toast } = useToast();
-  const standaloneMode = isStandalone();
+  const standaloneMode = useStorefrontMode();
 
   const handleLogout = () => {
     logout();
