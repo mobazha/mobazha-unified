@@ -71,7 +71,6 @@ export function AuthProvider({
     loginWithOAuth,
     loginMiniApp,
     enterAnonymousMode,
-    isLoading,
     needsOnboarding,
   } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -386,14 +385,13 @@ export function AuthProvider({
     });
   }, [isInitialized, isTGMiniApp, tg.initDataUnsafe, searchParams, router]);
 
-  // 正在处理 OAuth 回调 or Mini App auth
-  if (isProcessingOAuth || (!isInitialized && (isLoading || loadingMessage))) {
-    const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : 'Loading…');
+  if (!isInitialized || isProcessingOAuth) {
+    const message = loadingMessage || (isProcessingOAuth ? 'Signing in…' : undefined);
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">{message}</p>
+          {message && <p className="text-muted-foreground">{message}</p>}
         </div>
       </div>
     );
