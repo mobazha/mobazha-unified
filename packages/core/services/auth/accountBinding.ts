@@ -90,9 +90,9 @@ export function getLinkUrl(
 
   const casdoorProviderName = CASDOOR_PROVIDER_NAMES[provider];
 
-  // provider_hint triggers Casdoor auto-redirect; must match the provider name in Casdoor DB.
-  // Telegram uses widget-based auth (not OAuth redirect), so provider_hint would skip the
-  // login page and land on the callback without auth data — causing "hash not found" errors.
+  // provider_hint triggers Casdoor auto-redirect to the provider's OAuth flow.
+  // Widget-based providers (e.g., Telegram) require the user to interact with a widget
+  // on Casdoor's login page. Adding provider_hint would skip the page, causing auth errors.
   const WIDGET_BASED_PROVIDERS: OAuthProvider[] = ['telegram'];
 
   const params = new URLSearchParams({

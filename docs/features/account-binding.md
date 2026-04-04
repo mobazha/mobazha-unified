@@ -32,12 +32,14 @@
 
 > **路径前缀**：所有 Hosting 平台 API 使用 `/platform/v1/` 前缀（Phase R1 完成迁移）。
 
-| 端点                                  | 方法 | 描述                                              |
-| ------------------------------------- | ---- | ------------------------------------------------- |
-| `/platform/v1/accounts/linked`        | GET  | 获取当前用户已绑定的账号列表                      |
-| `/platform/v1/accounts/link-url`      | GET  | 获取 OAuth 绑定链接 URL（备用，前端通常直接构建） |
-| `/platform/v1/accounts/link-callback` | GET  | 处理 OAuth 绑定回调                               |
-| `/platform/v1/accounts/unlink`        | POST | 解绑指定 OAuth Provider                           |
+| 端点                                  | 方法 | 描述                                                       |
+| ------------------------------------- | ---- | ---------------------------------------------------------- |
+| `/platform/v1/accounts/linked`        | GET  | 获取当前用户已绑定的账号列表                               |
+| `/platform/v1/accounts/link-url`      | GET  | 生成 Casdoor link mode OAuth URL（state=link:uuid:type）   |
+| `/platform/v1/accounts/link-callback` | GET  | 处理 Casdoor link mode 回调（provider_id + provider_type） |
+| `/platform/v1/accounts/link/config`   | GET  | 获取可用 provider 配置（Telegram bot、Discord clientId）   |
+| `/platform/v1/accounts/link/telegram` | GET  | Telegram 直接绑定（Login Widget HMAC 验证）                |
+| `/platform/v1/accounts/unlink`        | POST | 解绑指定 OAuth Provider                                    |
 
 ### 响应格式
 
@@ -114,30 +116,64 @@ const SIMPLE_ICONS_CDN = 'https://cdn.simpleicons.org';
 // 示例: https://cdn.simpleicons.org/discord/5865F2
 ```
 
-### 数据流
+### 绑定架构
+
+采用**双路径**架构，Telegram 特殊处理，其余走 Casdoor 通用 link mode：
+
+| Provider                     | 路径              | 说明                                                                      |
+| ---------------------------- | ----------------- | ------------------------------------------------------------------------- |
+| Telegram                     | 直接验证          | Login Widget → HMAC-SHA256 验证 → Hosting Admin API 绑定                  |
+| Discord / Google / GitHub 等 | Casdoor link mode | Casdoor OAuth（method=link）→ 返回 provider 身份 → Hosting Admin API 绑定 |
+
+### 数据流：标准 OAuth Provider（Casdoor Link Mode）
 
 ```
-用户点击绑定
+用户点击绑定（Discord / Google / GitHub 等）
      │
      ▼
 startLinkAccount(provider)
      │
-     ├── 保存 redirectPath 到 sessionStorage
-     ├── 生成 state = `link:<tenantID>:<provider>`
-     ├── 前端直接构建 Casdoor OAuth URL（不经后端）
+     ├── 请求 GET /platform/v1/accounts/link-url?provider=discord
+     │   （hosting 生成 Casdoor OAuth URL，state=link:<uuid>:<provider>）
      │
      ▼
-跳转到 Casdoor OAuth（用户完成第三方认证）
+跳转到 Casdoor OAuth（method=link，用户完成第三方认证）
      │
      ▼
-Casdoor 回调到 /settings/account?code=xxx&state=link:<tenantID>:<provider>
+Casdoor 后端检测 method=link → 不创建/登录用户
+     │   返回 link_provider_info:<type>:<id>
      │
      ▼
-handleLinkCallback(code, state)
+Casdoor 前端（AuthCallback.js）带 provider_id + provider_type 重定向回前端
      │
-     ├── 请求 GET /platform/v1/accounts/link-callback?code=xxx&state=xxx
-     │   （hosting 后端：换 token → 获取 OAuth 用户 provider ID → 通过 Casdoor Admin API 更新当前用户）
+     ▼
+前端检测 URL 含 provider_id → 调用 handleLinkCallback()
+     │
+     ├── 请求 GET /platform/v1/accounts/link-callback?provider_id=xxx&provider_type=discord&state=link:...
+     │   （hosting 后端：验证 state → Casdoor Admin API 绑定 provider ID 到当前用户）
      ├── 清除 URL 参数
+     ├── 刷新已绑定账号列表
+     │
+     ▼
+显示绑定成功
+```
+
+### 数据流：Telegram（直接验证）
+
+```
+用户点击 Telegram 绑定
+     │
+     ▼
+Telegram Login Widget 弹出 → 用户授权
+     │
+     ▼
+Widget 返回 auth_data（id, first_name, hash 等）
+     │
+     ▼
+directLinkTelegram(authData)
+     │
+     ├── 请求 GET /platform/v1/accounts/link/telegram?id=xxx&hash=xxx&...
+     │   （hosting 后端：HMAC-SHA256 验证 → Casdoor Admin API 绑定 telegram ID）
      ├── 刷新已绑定账号列表
      │
      ▼
@@ -236,21 +272,38 @@ settings.accountBinding: {
    - 遍历 `discord`, `telegram`, `google`, `github`, `apple`, `wechat` 字段
    - 返回非空字段作为已绑定账号
 
-2. **生成绑定 URL** (`/platform/v1/accounts/link-url`)
-   - 构造 Casdoor OAuth URL，state 格式为 `link:<tenantID>:<provider>`
-   - **注意**：前端通常直接构建 OAuth URL（`getLinkUrl()`），此端点为备用
+2. **获取 Provider 配置** (`/platform/v1/accounts/link/config`)
+   - 返回可用 provider 配置（Telegram bot username、Discord client ID 等）
+   - 前端据此渲染绑定按钮（如 Telegram Login Widget 需要 bot username）
 
-3. **处理绑定回调** (`/platform/v1/accounts/link-callback`)
-   - 解析 state → 提取 tenantID + provider，验证与当前 JWT 用户一致
-   - `casdoorsdk.GetOAuthToken()` 换取 OAuth 用户 JWT
-   - `casdoorsdk.ParseJwtToken()` + `casdoorsdk.GetUser()` 获取 OAuth 用户的 provider ID
-   - `casdoorsdk.UpdateUserForColumns(currentUser, []string{provider})` 将 provider ID 写入当前用户
-   - Casdoor 不会自动绑定，需要 hosting 主动调用 Admin API
+3. **生成 Casdoor Link URL** (`/platform/v1/accounts/link-url`)
+   - 构造 Casdoor OAuth URL，state 格式为 `link:<uuid>:<provider>`
+   - Casdoor 检测 `link:` state → 设置 `method=link` → 不创建/登录用户
+   - Casdoor 返回 `link_provider_info:<type>:<id>`，前端 AuthCallback.js 解析后重定向回来
 
-4. **解绑账号** (`/platform/v1/accounts/unlink`)
+4. **处理 Casdoor Link 回调** (`/platform/v1/accounts/link-callback`)
+   - 接收 `provider_id` + `provider_type` + `state`（来自 Casdoor link mode 重定向）
+   - 验证 state 中的 UUID 与当前 JWT 用户一致
+   - 冲突检测：检查该 provider ID 是否已被其他用户绑定
+   - 通过 `casdoorsdk.UpdateUserForColumns()` 将 provider ID 写入当前用户
+
+5. **Telegram 直接绑定** (`/platform/v1/accounts/link/telegram`)
+   - 接收 Telegram Login Widget auth_data 参数
+   - HMAC-SHA256 验证签名（使用 Bot Token）
+   - 验证数据时效性（5 分钟内）
+   - 通过 Casdoor Admin API 绑定 telegram ID 到当前用户
+
+6. **解绑账号** (`/platform/v1/accounts/unlink`)
    - 计算总登录方式 = OAuth 绑定数 + 是否有密码（`user.Password != ""`）
    - 总登录方式 <= 1 时拒绝解绑（必须保留至少一种登录方式）
    - 通过 Casdoor Admin API 清除用户的 provider 字段
+
+### Casdoor 改动
+
+Casdoor 新增了通用 **link mode** 支持（`controllers/auth.go` + `web/src/auth/AuthCallback.js`）：
+
+- 后端：`authForm.Method == "link"` 时，只提取 provider 身份信息，返回 `link_provider_info:<type>:<id>`，不执行用户创建或登录
+- 前端：AuthCallback.js 检测 `link:` state → 设置 method=link → 解析响应 → 带 provider_id/provider_type 重定向回调用方
 
 ### 已知限制
 
