@@ -2,7 +2,11 @@
 
 import { useCallback, useRef } from 'react';
 import { useUserStore } from '@mobazha/core';
-import { registerTelegram, registerDiscord } from '@mobazha/core';
+import {
+  registerTelegram,
+  registerDiscord,
+  buildTelegramMiniAppStoreContextFromWindow,
+} from '@mobazha/core';
 import { useTGMiniApp } from '../components/TGMiniAppProvider/TGMiniAppProvider';
 
 export type RegisterAction = 'register' | 'bind' | 'cancel' | 'error';
@@ -32,7 +36,10 @@ export function useMiniAppRegister(options?: UseMiniAppRegisterOptions) {
     try {
       const platform = authSource as 'telegram' | 'discord';
       if (platform === 'telegram' && tg.initData) {
-        const token = await registerTelegram(tg.initData);
+        const token = await registerTelegram(
+          tg.initData,
+          buildTelegramMiniAppStoreContextFromWindow()
+        );
         return await loginMiniApp(token, 'telegram');
       }
       if (platform === 'discord') {

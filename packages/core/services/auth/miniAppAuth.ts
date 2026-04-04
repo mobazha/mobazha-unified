@@ -13,6 +13,7 @@
 import { HOSTING_API } from '../../config/apiPaths';
 import { request, ApiError } from '../api/client';
 import { getHostingUrl } from '../api/config';
+import { getStorePeerID } from '../storeContext';
 
 export type MiniAppPlatform = 'telegram' | 'discord';
 
@@ -29,7 +30,52 @@ export interface MiniAppBindStartResult {
   sessionId: string;
 }
 
+/** 传给 Hosting 的额外 query，用于选择卖家 Bot Token 验签 initData（与 Telegram 签名字段分离）。 */
+export interface TelegramMiniAppStoreContext {
+  storePeerId?: string;
+  storeHost?: string;
+}
+
 const INITDATA_MAX_AGE_MS = 23 * 60 * 60 * 1000; // 23 hours (1h safety margin from 24h server limit)
+
+/**
+ * 在 initData 查询串末尾追加 store 上下文参数，保持 Telegram 字段顺序不变。
+ */
+export function appendTelegramMiniAppStoreParams(
+  initData: string,
+  ctx?: TelegramMiniAppStoreContext
+): string {
+  if (!ctx) return initData;
+  const peer = ctx.storePeerId?.trim();
+  const host = ctx.storeHost?.trim();
+  if (!peer && !host) return initData;
+  const extra: string[] = [];
+  if (peer) extra.push(`store_peer_id=${encodeURIComponent(peer)}`);
+  if (host) extra.push(`store_host=${encodeURIComponent(host)}`);
+  if (!initData) return extra.join('&');
+  return `${initData}&${extra.join('&')}`;
+}
+
+/**
+ * 浏览器内从 Mini App / 品牌店上下文组装 store 参数（deep link、cookie、子域）。
+ */
+export function buildTelegramMiniAppStoreContextFromWindow():
+  | TelegramMiniAppStoreContext
+  | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const fromGlobal = (window as unknown as Record<string, unknown>).__STOREFRONT_PEERID__ as
+    | string
+    | undefined;
+  let fromCookie: string | undefined;
+  if (typeof document !== 'undefined') {
+    const m = document.cookie.match(/mbz-storefront=([^;]+)/);
+    if (m) fromCookie = m[1];
+  }
+  const storePeerId = getStorePeerID() ?? fromGlobal ?? fromCookie ?? undefined;
+  const storeHost = window.location.hostname || undefined;
+  if (!storePeerId && !storeHost) return undefined;
+  return { storePeerId, storeHost };
+}
 
 /**
  * Check if initData is close to expiry.
@@ -68,8 +114,12 @@ function hostingUrl(path: string): string {
  * Backend: POST /platform/v1/auth/telegram/check-mini-app-user
  * initData is sent as query string (backend reads r.URL.RawQuery).
  */
-export async function checkTelegramUser(initData: string): Promise<MiniAppCheckResult> {
-  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_CHECK_MINI_APP_USER}?${initData}`);
+export async function checkTelegramUser(
+  initData: string,
+  storeContext?: TelegramMiniAppStoreContext
+): Promise<MiniAppCheckResult> {
+  const q = appendTelegramMiniAppStoreParams(initData, storeContext);
+  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_CHECK_MINI_APP_USER}?${q}`);
   const result = await request<boolean>(url, {
     method: 'POST',
   });
@@ -83,8 +133,12 @@ export async function checkTelegramUser(initData: string): Promise<MiniAppCheckR
  *
  * Backend: POST /platform/v1/auth/telegram/mini-app-signin?{initData}
  */
-export async function signinTelegram(initData: string): Promise<string> {
-  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_MINI_APP_SIGNIN}?${initData}`);
+export async function signinTelegram(
+  initData: string,
+  storeContext?: TelegramMiniAppStoreContext
+): Promise<string> {
+  const q = appendTelegramMiniAppStoreParams(initData, storeContext);
+  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_MINI_APP_SIGNIN}?${q}`);
   return request<string>(url, {
     method: 'POST',
   });
@@ -93,8 +147,11 @@ export async function signinTelegram(initData: string): Promise<string> {
 /**
  * Alias for signinTelegram (kept for semantic clarity in registration flows).
  */
-export async function registerTelegram(initData: string): Promise<string> {
-  return signinTelegram(initData);
+export async function registerTelegram(
+  initData: string,
+  storeContext?: TelegramMiniAppStoreContext
+): Promise<string> {
+  return signinTelegram(initData, storeContext);
 }
 
 /**
@@ -138,8 +195,12 @@ export async function registerDiscord(accessToken: string): Promise<string> {
  *
  * Backend: POST /platform/v1/auth/telegram/bind-start
  */
-export async function startTelegramBind(initData: string): Promise<MiniAppBindStartResult> {
-  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_BIND_START}?${initData}`);
+export async function startTelegramBind(
+  initData: string,
+  storeContext?: TelegramMiniAppStoreContext
+): Promise<MiniAppBindStartResult> {
+  const q = appendTelegramMiniAppStoreParams(initData, storeContext);
+  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_BIND_START}?${q}`);
   return request<MiniAppBindStartResult>(url, {
     method: 'POST',
   });
@@ -152,8 +213,13 @@ export async function startTelegramBind(initData: string): Promise<MiniAppBindSt
  * Backend: POST /platform/v1/auth/telegram/bind-result
  * Expects initData as query string + JSON body with sessionId.
  */
-export async function completeTelegramBind(initData: string, sessionId: string): Promise<string> {
-  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_BIND_RESULT}?${initData}`);
+export async function completeTelegramBind(
+  initData: string,
+  sessionId: string,
+  storeContext?: TelegramMiniAppStoreContext
+): Promise<string> {
+  const q = appendTelegramMiniAppStoreParams(initData, storeContext);
+  const url = hostingUrl(`${HOSTING_API.AUTH_TELEGRAM_BIND_RESULT}?${q}`);
   return request<string>(url, {
     method: 'POST',
     body: { sessionId },
@@ -167,15 +233,19 @@ export async function completeTelegramBind(initData: string, sessionId: string):
  */
 export async function attemptSilentAuth(
   platform: MiniAppPlatform,
-  platformCredential: string
+  platformCredential: string,
+  telegramStoreContext?: TelegramMiniAppStoreContext
 ): Promise<string | null> {
   try {
-    const checkFn = platform === 'telegram' ? checkTelegramUser : checkDiscordUser;
-    const { exists } = await checkFn(platformCredential);
-    if (!exists) return null;
+    if (platform === 'telegram') {
+      const { exists } = await checkTelegramUser(platformCredential, telegramStoreContext);
+      if (!exists) return null;
+      return await signinTelegram(platformCredential, telegramStoreContext);
+    }
 
-    const signinFn = platform === 'telegram' ? signinTelegram : signinDiscord;
-    return await signinFn(platformCredential);
+    const { exists } = await checkDiscordUser(platformCredential);
+    if (!exists) return null;
+    return await signinDiscord(platformCredential);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       return null;

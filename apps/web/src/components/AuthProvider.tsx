@@ -15,6 +15,7 @@ import {
   standaloneStoresApi,
   resolveStoreShortCode,
   extractStorefrontReturn,
+  buildTelegramMiniAppStoreContextFromWindow,
 } from '@mobazha/core';
 import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
 import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
@@ -176,13 +177,21 @@ export function AuthProvider({
       return true;
     }
 
+    const telegramStoreContext = isTGMiniApp
+      ? buildTelegramMiniAppStoreContextFromWindow()
+      : undefined;
+
     // Check for binding deep link return (TG only)
     if (isTGMiniApp && tg.initDataUnsafe?.start_param) {
       const bindSessionId = parseBindSessionFromStartParam(tg.initDataUnsafe.start_param);
       if (bindSessionId && tg.initData) {
         setLoadingMessage('Linking account…');
         try {
-          const token = await completeTelegramBind(tg.initData, bindSessionId);
+          const token = await completeTelegramBind(
+            tg.initData,
+            bindSessionId,
+            telegramStoreContext
+          );
           if (token) {
             await loginMiniApp(token, 'telegram');
             return true;
@@ -196,7 +205,11 @@ export function AuthProvider({
     // Attempt silent sign-in
     setLoadingMessage(isTGMiniApp ? 'Connecting…' : 'Signing in…');
     try {
-      const token = await attemptSilentAuth(platform as 'telegram' | 'discord', credential);
+      const token = await attemptSilentAuth(
+        platform as 'telegram' | 'discord',
+        credential,
+        telegramStoreContext
+      );
 
       if (token) {
         await loginMiniApp(token, platform as 'telegram' | 'discord');

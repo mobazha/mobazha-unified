@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isInitDataFresh,
   parseBindSessionFromStartParam,
+  appendTelegramMiniAppStoreParams,
 } from '../../../services/auth/miniAppAuth';
 
 describe('isInitDataFresh', () => {
@@ -79,5 +80,23 @@ describe('parseBindSessionFromStartParam', () => {
   it('is case-sensitive', () => {
     expect(parseBindSessionFromStartParam('BIND_abc')).toBeNull();
     expect(parseBindSessionFromStartParam('Bind_abc')).toBeNull();
+  });
+});
+
+describe('appendTelegramMiniAppStoreParams', () => {
+  it('appends store_peer_id and store_host after initData', () => {
+    const base = 'user=x&auth_date=1&hash=h';
+    const out = appendTelegramMiniAppStoreParams(base, {
+      storePeerId: 'QmA',
+      storeHost: 'shop.example.com',
+    });
+    expect(out.startsWith('user=x&auth_date=1&hash=h&')).toBe(true);
+    expect(out).toContain('store_peer_id=QmA');
+    expect(out).toMatch(/store_host=shop/);
+  });
+
+  it('returns initData unchanged when context empty', () => {
+    expect(appendTelegramMiniAppStoreParams('a=1', undefined)).toBe('a=1');
+    expect(appendTelegramMiniAppStoreParams('a=1', {})).toBe('a=1');
   });
 });

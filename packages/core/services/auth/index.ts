@@ -93,10 +93,13 @@ export {
   attemptSilentAuth,
   isInitDataFresh,
   parseBindSessionFromStartParam,
+  appendTelegramMiniAppStoreParams,
+  buildTelegramMiniAppStoreContextFromWindow,
   type MiniAppPlatform,
   type MiniAppSigninResult,
   type MiniAppCheckResult,
   type MiniAppBindStartResult,
+  type TelegramMiniAppStoreContext,
 } from './miniAppAuth';
 
 // ============ 账号绑定服务 ============

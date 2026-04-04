@@ -946,8 +946,12 @@ const handleUnauthorized = async (): Promise<boolean> => {
           | undefined;
         const initData = tgWebApp?.WebApp?.initData;
         if (initData) {
-          const { signinTelegram } = await import('../services/auth/miniAppAuth');
-          const token = await signinTelegram(initData);
+          const { signinTelegram, buildTelegramMiniAppStoreContextFromWindow } =
+            await import('../services/auth/miniAppAuth');
+          const token = await signinTelegram(
+            initData,
+            buildTelegramMiniAppStoreContextFromWindow()
+          );
           if (token) {
             await state.loginMiniApp(token, 'telegram');
             return true;
