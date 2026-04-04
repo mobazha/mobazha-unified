@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import type { CollectionsSectionProps } from '@mobazha/core';
 import type { Collection } from '@mobazha/core';
-import { collectionsApi, getImageUrl, useI18n, isStandalone } from '@mobazha/core';
+import { collectionsApi, getImageUrl, useI18n, useStorefrontMode } from '@mobazha/core';
 import Link from 'next/link';
 
 const COLS_CLASS = {
@@ -28,7 +28,7 @@ export function CollectionsSection({
   peerId,
 }: CollectionsSectionProps & { peerId: string }) {
   const { t } = useI18n();
-  const standalone = isStandalone();
+  const standalone = useStorefrontMode();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -128,6 +128,9 @@ export * from './useStoreActivity';
 // Sales Channels (Store Links + Store Bot)
 export * from './useSalesChannels';
 
+// Storefront Mode (SSR-safe branded-subdomain detection)
+export * from './useStorefrontMode';
+
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
 export { formatQueryError } from './queryUtils';

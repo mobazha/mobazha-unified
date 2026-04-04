@@ -3,17 +3,18 @@
 /**
  * StandaloneThemeWrapper
  *
- * In standalone mode, bridges the store's --store-* CSS variables to the global
- * --theme-* design system so that Header, Footer, Buttons, Tabs, Product Cards
- * and all other Tailwind-powered components reflect the store's branding.
+ * In standalone / storefront mode, bridges the store's --store-* CSS variables
+ * to the global --theme-* design system so that Header, Footer, Buttons, Tabs,
+ * Product Cards and all other Tailwind-powered components reflect the store's branding.
  *
- * In SaaS mode, this is a pass-through that renders children directly.
+ * In SaaS marketplace mode, this is a pass-through that renders children directly.
  */
 
 import { useEffect, useMemo, type ReactNode } from 'react';
 import type { StoreTheme } from '@mobazha/core';
 import {
-  isStandalone,
+  useStorefrontMode,
+  getStorefrontPeerID,
   useUserStore,
   useStorefrontConfigPublic,
   getContrastText,
@@ -52,12 +53,13 @@ function buildThemeBridgeVars(theme: StoreTheme): Record<string, string> {
 }
 
 export function StandaloneThemeWrapper({ children }: Props) {
-  const standalone = isStandalone();
+  const storeLike = useStorefrontMode();
   const { profile } = useUserStore();
-  const peerId = standalone ? (profile?.peerID ?? null) : null;
+  const storefrontPeerID = getStorefrontPeerID();
+  const peerId = storeLike ? storefrontPeerID || profile?.peerID || null : null;
   const { config } = useStorefrontConfigPublic(peerId);
 
-  const theme = standalone ? config?.theme : undefined;
+  const theme = storeLike ? config?.theme : undefined;
 
   useEffect(() => {
     if (theme) loadStoreFont(theme.fontFamily);
@@ -65,7 +67,7 @@ export function StandaloneThemeWrapper({ children }: Props) {
 
   const bridgeVars = useMemo(() => (theme ? buildThemeBridgeVars(theme) : undefined), [theme]);
 
-  if (standalone && theme) {
+  if (storeLike && theme) {
     return (
       <StoreThemeProvider theme={theme}>
         <div style={bridgeVars}>{children}</div>

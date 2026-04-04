@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { useI18n, isStandalone } from '@mobazha/core';
+import { useI18n, useStorefrontMode } from '@mobazha/core';
 import { VStack } from '@/components/layouts';
 import { Timer, Lock, RotateCcw, Scale, Clock, CalendarPlus } from 'lucide-react';
 
 export default function BuyerProtectionPolicyPage() {
   const { t } = useI18n();
-  const standalone = isStandalone();
+  const standalone = useStorefrontMode();
 
   const intro = standalone
     ? t('policies.buyerProtectionIntro')

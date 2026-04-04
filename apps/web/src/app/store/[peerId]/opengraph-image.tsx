@@ -5,7 +5,9 @@ export const alt = 'Store on Mobazha';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:15104';
+import { SSR_API_BASE } from '@/lib/ssrApiBase';
+
+const API_BASE = SSR_API_BASE;
 const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 interface ProfileData {

@@ -27,7 +27,8 @@ import {
   selectTotalUnreadCount,
   getImageUrl,
   isHosted,
-  isStandalone,
+  useStorefrontMode,
+  useStorefrontProfile,
   startCasdoorLogin,
   useUserContext,
 } from '@mobazha/core';
@@ -74,7 +75,9 @@ export const Header: React.FC = () => {
   const setCartOpen = useCartDrawerStore(state => state.setOpen);
   const cartItemCount = useCartStore(state => state.getItemCount());
 
-  const standaloneMode = isStandalone();
+  const standaloneMode = useStorefrontMode();
+  const storefrontProfile = useStorefrontProfile();
+  const displayProfile = profile || storefrontProfile;
   const isSearchPage = pathname === '/search';
 
   const handleSearch = (e: React.FormEvent) => {
@@ -99,14 +102,14 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            {standaloneMode && profile ? (
+            {standaloneMode && displayProfile ? (
               <>
                 <Avatar
-                  src={getImageUrl(profile.avatarHashes?.small)}
-                  name={profile.name || ''}
+                  src={getImageUrl(displayProfile.avatarHashes?.small)}
+                  name={displayProfile.name || ''}
                   size="sm"
                 />
-                <span className="font-bold text-xl text-foreground">{profile.name}</span>
+                <span className="font-bold text-xl text-foreground">{displayProfile.name}</span>
               </>
             ) : (
               <>

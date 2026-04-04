@@ -140,8 +140,35 @@ export function isBasic(): boolean {
 }
 
 /**
- * 同步判断是否为独立站模式
+ * 同步判断是否为独立站模式（build-time flag: auth.mode === 'standalone'）
  */
 export function isStandalone(): boolean {
   return isStandaloneMode();
+}
+
+/**
+ * Runtime detection: SaaS store accessed via branded subdomain / custom domain.
+ * Signal comes from Gateway → Next.js middleware → `mbz-storefront` cookie.
+ * Domain-agnostic: works with subdomains, custom domains, redirects.
+ */
+export function isStorefrontMode(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.split('; ').some(c => c.startsWith('mbz-storefront='));
+}
+
+/**
+ * Returns the storefront peerID (from the mbz-storefront cookie), or null.
+ */
+export function getStorefrontPeerID(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.split('; ').find(c => c.startsWith('mbz-storefront='));
+  return match ? match.split('=')[1] : null;
+}
+
+/**
+ * UI layout decision: true when the page should render like an independent store.
+ * Covers both real standalone deployments and SaaS branded subdomains.
+ */
+export function isStorefrontLike(): boolean {
+  return isStandaloneMode() || isStorefrontMode();
 }

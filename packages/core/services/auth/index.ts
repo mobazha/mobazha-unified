@@ -17,6 +17,9 @@ export {
   isHosted,
   isBasic,
   isStandalone,
+  isStorefrontMode,
+  getStorefrontPeerID,
+  isStorefrontLike,
   // 类型
   type IAuthService,
   type LoginCredentials,
@@ -51,6 +54,9 @@ export {
   getTelegramUserId,
   isTelegramUser,
   getCasdoorUserId,
+  // Storefront cross-domain auth
+  extractStorefrontReturn,
+  isAllowedStorefrontReturn,
   // 类型
   type CasdoorUser,
   type CasdoorTokenResponse,

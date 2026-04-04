@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import {
   AuthProvider,
@@ -13,6 +14,7 @@ import {
 import { OuterProviders } from '@/components/OuterProviders';
 import { ChatSystemLazy } from '@/components/ChatSystem';
 import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
+import { StorefrontProvider } from '@/components/StorefrontProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
@@ -87,10 +89,25 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const hdrs = await headers();
+  const storefrontPeerID = hdrs.get('x-storefront-peerid') || hdrs.get('x-store-peerid') || null;
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      {...(storefrontPeerID ? { 'data-storefront': storefrontPeerID } : {})}
+      suppressHydrationWarning
+    >
       <head>
+        {/* Storefront peerID — synchronous global for client hooks (SSR-injected) */}
+        {storefrontPeerID && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.__STOREFRONT_PEERID__="${storefrontPeerID.replace(/[^a-zA-Z0-9]/g, '')}";`,
+            }}
+          />
+        )}
         {/* Telegram Mini App SDK — must load SYNCHRONOUSLY before React hydration.
             Inside Telegram WebView, window.Telegram is pre-injected by the native app.
             We detect its presence and use document.write to load the full SDK script
@@ -133,28 +150,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${defaultFont.className} ${storeFontVariableClasses}`}>
         <QueryProvider>
           <OuterProviders>
-            <Suspense fallback={<AuthProviderLoading />}>
-              <TGBackButtonManager />
-              <AuthProvider>
-                <ProductModalProvider>
-                  <PaymentSelectorProvider>
-                    <StandaloneThemeWrapper>
-                      <MainContent>{children}</MainContent>
+            <StorefrontProvider peerID={storefrontPeerID}>
+              <Suspense fallback={<AuthProviderLoading />}>
+                <TGBackButtonManager />
+                <AuthProvider>
+                  <ProductModalProvider>
+                    <PaymentSelectorProvider>
+                      <StandaloneThemeWrapper>
+                        <MainContent>{children}</MainContent>
 
-                      <NonEmbedUI>
-                        <MobileNav />
-                        <ChatSystemLazy />
-                        <PWAInstall />
-                        <SessionExpiredDialog />
-                      </NonEmbedUI>
+                        <NonEmbedUI>
+                          <MobileNav />
+                          <ChatSystemLazy />
+                          <PWAInstall />
+                          <SessionExpiredDialog />
+                        </NonEmbedUI>
 
-                      {/* Toast notifications */}
-                      <Toaster />
-                    </StandaloneThemeWrapper>
-                  </PaymentSelectorProvider>
-                </ProductModalProvider>
-              </AuthProvider>
-            </Suspense>
+                        {/* Toast notifications */}
+                        <Toaster />
+                      </StandaloneThemeWrapper>
+                    </PaymentSelectorProvider>
+                  </ProductModalProvider>
+                </AuthProvider>
+              </Suspense>
+            </StorefrontProvider>
           </OuterProviders>
         </QueryProvider>
       </body>
