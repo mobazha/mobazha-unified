@@ -151,19 +151,16 @@ function StoreHandleSection({
   const { t } = useI18n();
   const { toast } = useToast();
 
-  const [inputValue, setInputValue] = useState(domain?.handle || '');
+  const serverHandle = domain?.handle ?? '';
+  const [inputValue, setInputValue] = useState(() => serverHandle);
   const [saving, setSaving] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [removing, setRemoving] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const prevHandle = useRef(domain?.handle);
 
-  if (domain?.handle !== prevHandle.current) {
-    prevHandle.current = domain?.handle;
-    if (domain?.handle && domain.handle !== inputValue) {
-      setInputValue(domain.handle);
-    }
-  }
+  useEffect(() => {
+    setInputValue(serverHandle);
+  }, [serverHandle]);
 
   const handleInputChange = useCallback(
     (value: string) => {
@@ -172,13 +169,13 @@ function StoreHandleSection({
 
       if (debounceRef.current) clearTimeout(debounceRef.current);
 
-      if (normalized.length >= 3 && normalized !== domain?.handle) {
+      if (normalized.length >= 3 && normalized !== serverHandle) {
         debounceRef.current = setTimeout(() => {
           checkAvailability(normalized);
         }, 500);
       }
     },
-    [domain?.handle, checkAvailability]
+    [serverHandle, checkAvailability]
   );
 
   const handleSave = useCallback(async () => {
@@ -211,7 +208,7 @@ function StoreHandleSection({
     );
   }
 
-  const isChanged = inputValue !== (domain?.handle || '');
+  const isChanged = inputValue !== serverHandle;
   const isValid = inputValue.length >= 3 && inputValue.length <= 32;
 
   return (

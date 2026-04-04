@@ -61,13 +61,20 @@ async function mockReceivingAccountsAPI(page: Page): Promise<void> {
         isActive: boolean;
       };
       const index = accounts.findIndex(acc => acc.id === Number(input.id));
-      if (index >= 0) {
-        accounts[index] = {
-          ...accounts[index],
-          ...input,
-          updatedAt: NOW,
-        };
+      if (index < 0) {
+        return route.fulfill({
+          status: 404,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            error: { code: 'NOT_FOUND', message: 'Receiving account not found' },
+          }),
+        });
       }
+      accounts[index] = {
+        ...accounts[index],
+        ...input,
+        updatedAt: NOW,
+      };
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
