@@ -377,7 +377,7 @@ try {
  */
 function applyRuntimeConfig(): void {
   if (typeof window === 'undefined') return;
-  const rc = (window as Record<string, unknown>).__RUNTIME_CONFIG__ as
+  const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
     | { saasUrl?: string }
     | undefined;
   if (!rc) return;
