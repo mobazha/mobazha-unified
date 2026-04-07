@@ -31,6 +31,7 @@ import {
   useStorefrontProfile,
   startCasdoorLogin,
   isStandalone,
+  isStandaloneBuyerAuth,
   useUserContext,
 } from '@mobazha/core';
 import {
@@ -89,8 +90,7 @@ export const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    window.location.href = '/';
+    logout('/');
   };
 
   // 移动端隐藏顶部 Header，使用底部 MobileNav 导航
@@ -396,8 +396,15 @@ export const Header: React.FC = () => {
                   } else if (isHosted()) {
                     startCasdoorLogin();
                   } else if (isStandalone()) {
-                    const { loginStandalone } = useUserStore.getState();
-                    await loginStandalone();
+                    try {
+                      const { loginStandalone } = useUserStore.getState();
+                      const success = await loginStandalone();
+                      if (success && !isStandaloneBuyerAuth()) {
+                        router.push('/admin');
+                      }
+                    } catch {
+                      router.push('/login');
+                    }
                   } else {
                     router.push('/login');
                   }

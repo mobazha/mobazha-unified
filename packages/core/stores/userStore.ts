@@ -10,7 +10,7 @@
 import { create } from 'zustand';
 import { persist, devtools } from 'zustand/middleware';
 import type { UserProfile, UserSettings, AuthCredentials } from '../types';
-import { profileApi, authGet, ApiError } from '../services/api';
+import { profileApi, authGet, publicGet, ApiError } from '../services/api';
 import { NODE_API } from '../config/apiPaths';
 import { getTranslation } from '../i18n/i18n';
 import {
@@ -142,7 +142,7 @@ interface UserState {
   loginMiniApp: (token: string, source: 'telegram' | 'discord') => Promise<boolean>;
   /** Enter anonymous browsing mode inside a Mini App */
   enterAnonymousMode: (source: 'telegram' | 'discord') => void;
-  logout: () => void;
+  logout: (redirectTo?: string) => void;
   /** 因 401 错误强制登出（token 无效/过期） */
   forceLogout: () => void;
   restoreSession: () => Promise<boolean>;
@@ -309,6 +309,8 @@ export const useUserStore = create<UserState>()(
         },
 
         // 独立站 Popup OAuth 登录（买家通过 Casdoor 认证）
+        // 获取 JWT 后先检测是否是店主（admin），是则走本地 admin 路径，
+        // 否则走 SaaS 买家路径。
         loginStandalone: async () => {
           set({ isLoading: true, error: null });
 
@@ -330,7 +332,50 @@ export const useUserStore = create<UserState>()(
             const claims = parseJwtToken(result.token);
             const casdoorId = claims?.sub || claims?.name;
 
-            // 从 SaaS 获取买家 profile（含 peerID），用于 isOwnStore 判断
+            // --- Admin detection ---
+            // Compare the JWT's user ID with the ownerUserId from the public
+            // setup endpoint. This avoids hitting authenticated endpoints (which
+            // would trigger 401 / forceLogout for non-admin users).
+            let isStoreOwner = false;
+            try {
+              const jwtUserId = claims?.id;
+              if (jwtUserId) {
+                const setup = await publicGet<{
+                  ownerUserId?: string;
+                }>(NODE_API.SYSTEM_SETUP);
+                isStoreOwner = !!setup?.ownerUserId && setup.ownerUserId === jwtUserId;
+              }
+            } catch {
+              // Network error or parse failure — not admin
+            }
+
+            if (isStoreOwner) {
+              const adminProfile = await profileApi.getMyProfile();
+              if (adminProfile) {
+                saveUser({
+                  id: adminProfile.peerID,
+                  name: adminProfile.name || adminProfile.peerID,
+                  casdoorId,
+                });
+              }
+              set({
+                profile: adminProfile,
+                token: result.token,
+                isAuthenticated: true,
+                isLoading: false,
+                authMode: 'standalone',
+                isSessionRestored: true,
+                needsOnboarding: false,
+              });
+
+              if (isStandaloneMode()) {
+                setWebSocketBaseUrl(getSellerWebSocketUrl());
+              }
+              connectWebSocket();
+              return true;
+            }
+
+            // --- Buyer flow (not the store owner) ---
             const buyerProfile = await profileApi.getBuyerProfile();
 
             setStandaloneBuyerAuth(true);
@@ -351,7 +396,6 @@ export const useUserStore = create<UserState>()(
                 needsOnboarding: false,
               });
             } else {
-              // Profile 不可用（首次用户或 SaaS 不可达），用 casdoorId 作为降级
               if (casdoorId) {
                 saveUser({ id: casdoorId, name: casdoorId, casdoorId });
               }
@@ -590,14 +634,26 @@ export const useUserStore = create<UserState>()(
         },
 
         // 登出
-        logout: () => {
+        logout: (redirectTo?: string) => {
           disconnectWebSocket();
           setWebSocketBaseUrl(null);
           setStandaloneBuyerAuth(false);
-
           clearProfileCache();
-
           clearAuth();
+
+          if (redirectTo) {
+            // Full-page navigation: clear zustand's persisted store directly
+            // so the reloaded page starts with clean state, then navigate
+            // BEFORE set() to prevent flash of intermediate UI (e.g. login form).
+            try {
+              localStorage.removeItem('mobazha-user-storage');
+            } catch {
+              /* SSR */
+            }
+            window.location.href = redirectTo;
+            return;
+          }
+
           set({
             profile: null,
             settings: null,
@@ -654,12 +710,47 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true, token, isAuthenticated: true });
 
           const effectiveMode = resolveAuthMode(token);
-          const isStandaloneBuyer = effectiveMode === 'standalone';
+          let isStandaloneBuyer = effectiveMode === 'standalone';
           const isBasicSeller = effectiveMode === 'basic';
 
           if (get().authMode !== effectiveMode) {
             set({ authMode: effectiveMode });
           }
+
+          // For standalone JWT tokens (non-basic), compare the JWT's user ID
+          // with the ownerUserId from the setup endpoint. If they match, this
+          // is the store owner logging in via social auth — use admin context.
+          if (isStandaloneBuyer) {
+            try {
+              const jwtPayload = parseJwtToken(token);
+              const jwtUserId = jwtPayload?.id;
+              if (jwtUserId) {
+                const setup = await publicGet<{
+                  ownerUserId?: string;
+                }>(NODE_API.SYSTEM_SETUP);
+                if (setup?.ownerUserId && setup.ownerUserId === jwtUserId) {
+                  isStandaloneBuyer = false;
+                  setStandaloneBuyerAuth(false);
+                  const adminProfile = await profileApi.getMyProfile();
+                  if (adminProfile) {
+                    set({
+                      profile: adminProfile,
+                      isAuthenticated: true,
+                      isLoading: false,
+                      isSessionRestored: true,
+                      needsOnboarding: false,
+                    });
+                    setWebSocketBaseUrl(getSellerWebSocketUrl());
+                    connectWebSocket();
+                    return true;
+                  }
+                }
+              }
+            } catch {
+              // Network error — not admin, continue as buyer
+            }
+          }
+
           setStandaloneBuyerAuth(isStandaloneBuyer);
 
           try {
@@ -686,8 +777,6 @@ export const useUserStore = create<UserState>()(
               return true;
             }
 
-            // API 返回空但没有抛出错误 — 用户已认证但无 profile
-            // 标记需要 onboarding
             console.warn('⚠️ No profile found, needs onboarding');
             set({
               isLoading: false,
@@ -696,16 +785,12 @@ export const useUserStore = create<UserState>()(
             });
             return true;
           } catch (error) {
-            // 区分 401 认证错误和网络错误
             const is401 =
               error instanceof Error &&
               'status' in error &&
               (error as { status?: number }).status === 401;
 
             if (is401) {
-              // 401: token 无效（RSA 验证错误、证书不匹配等）
-              // forceLogout 已由 API client 的 onUnauthorized 回调触发
-              // 这里只需设置 session 已恢复，Dialog 会处理后续流程
               console.warn('⚠️ Session restore failed: token invalid (401)');
               set({
                 isLoading: false,
@@ -714,8 +799,6 @@ export const useUserStore = create<UserState>()(
               return false;
             }
 
-            // 网络错误时不清除认证，保持当前登录状态
-            // 这样 HMR 或临时网络问题不会导致用户被登出
             console.warn('⚠️ Network error during session restore, keeping session:', error);
             set({
               isLoading: false,

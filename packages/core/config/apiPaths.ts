@@ -245,6 +245,7 @@ export const NODE_API = {
 
   // --- System ---
   SYSTEM_SETUP: '/system/setup',
+  SYSTEM_CONNECT_PLATFORM: '/system/connect-platform',
   SYSTEM_CLAIM_STORE: '/system/claim-store',
   SYSTEM_HEALTH: '/system/health',
   SYSTEM_LOGS: '/system/logs',

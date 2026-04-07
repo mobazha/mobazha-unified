@@ -364,3 +364,39 @@ try {
 } catch {
   // Node.js 环境中如果缺少 env var 也能安全降级
 }
+
+/**
+ * Apply runtime config injected by the container init script.
+ *
+ * Standalone Docker containers generate /srv/www/runtime-config.js at startup,
+ * which sets window.__RUNTIME_CONFIG__ with values from Docker env vars
+ * (e.g. SAAS_API_URL). This allows a single generic image to be configured
+ * at deploy time without rebuilding the frontend.
+ *
+ * Runtime values override compile-time defaults set by initEnvFromProcess().
+ */
+function applyRuntimeConfig(): void {
+  if (typeof window === 'undefined') return;
+  const rc = (window as Record<string, unknown>).__RUNTIME_CONFIG__ as
+    | { saasUrl?: string }
+    | undefined;
+  if (!rc) return;
+
+  if (rc.saasUrl) {
+    currentEnv = {
+      ...currentEnv,
+      auth: {
+        ...currentEnv.auth,
+        standalone: {
+          saasUrl: rc.saasUrl,
+        },
+      },
+    };
+  }
+}
+
+try {
+  applyRuntimeConfig();
+} catch {
+  // Non-browser or missing runtime config — no-op
+}

@@ -32,6 +32,7 @@ import {
   standaloneStoresApi,
   acquireSaaSToken,
   hasSaaSToken,
+  systemApi,
 } from '@mobazha/core';
 import type {
   LinkedAccount,
@@ -370,18 +371,26 @@ export default function AccountSettingsPage() {
     );
   };
 
-  // Standalone: require SaaS platform connection before showing binding UI.
+  // Standalone: acquire SaaS JWT, then call connect-platform to persist
+  // the Casdoor certificate and ownerUserID on this node (enables social login).
   const handleConnectSaaS = useCallback(async () => {
     setSaasConnecting(true);
     setSaasError(null);
     try {
       const result = await acquireSaaSToken();
-      if (result.success) {
-        setSaasConnected(true);
-        loadLinkedAccounts();
-      } else {
+      if (!result.success || !result.token) {
         setSaasError(result.error || 'Failed to connect');
+        return;
       }
+
+      try {
+        await systemApi.connectPlatform(result.token);
+      } catch (err) {
+        console.warn('connect-platform call failed (binding still works):', err);
+      }
+
+      setSaasConnected(true);
+      loadLinkedAccounts();
     } catch (err) {
       setSaasError(err instanceof Error ? err.message : 'Failed to connect');
     } finally {
