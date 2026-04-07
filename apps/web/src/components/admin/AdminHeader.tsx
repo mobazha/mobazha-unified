@@ -32,8 +32,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const toggleAIChat = useAIChatStore(s => s.toggle);
 
   const handleLogout = () => {
-    logout();
-    window.location.href = '/';
+    logout('/');
   };
 
   const handleViewStore = () => {

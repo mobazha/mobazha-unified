@@ -35,6 +35,11 @@
       }
     </script>
     
+    <!-- Runtime config — injected by container init at startup (standalone mode).
+         Sets window.__RUNTIME_CONFIG__ with SAAS_API_URL and other env-specific values.
+         Not present during local dev or SaaS deployments; onerror is a silent no-op. -->
+    <script src="/runtime-config.js" onerror=""></script>
+    
     <!-- 防闪烁脚本 - 在页面加载前立即应用主题 -->
     <script>
       (function() {

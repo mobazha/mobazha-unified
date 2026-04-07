@@ -233,7 +233,7 @@ function LoginPageContent() {
         <div className="flex justify-end p-4">
           <LanguageSwitcher
             compact
-            className="[&_button]:bg-white/10 [&_button]:text-white [&_button]:hover:bg-white/20"
+            className="[&>button]:bg-white/10 [&>button]:text-white [&>button]:hover:bg-white/20"
           />
         </div>
 

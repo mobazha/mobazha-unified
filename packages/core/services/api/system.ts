@@ -66,6 +66,17 @@ export async function completeInitialSetup(password: string): Promise<InitialSet
   return publicPost<InitialSetupResponse>(NODE_API.SYSTEM_SETUP, { password });
 }
 
+// --- Platform connection (standalone only, requires auth) ---
+
+export interface ConnectPlatformResponse {
+  casdoorAvailable: boolean;
+  ownerUserId: string;
+}
+
+export async function connectPlatform(token: string): Promise<ConnectPlatformResponse> {
+  return authPost<ConnectPlatformResponse>(NODE_API.SYSTEM_CONNECT_PLATFORM, { token });
+}
+
 // --- System admin API (standalone only, requires auth) ---
 
 export async function getSystemHealth(): Promise<SystemHealthResponse> {

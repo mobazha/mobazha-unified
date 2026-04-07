@@ -36,6 +36,7 @@ export interface CasdoorClaims {
   iat: number;
   name: string;
   preferred_username: string;
+  id?: string;
 }
 
 export interface LoginResult {
