@@ -30,6 +30,7 @@ import {
   useStorefrontMode,
   useStorefrontProfile,
   startCasdoorLogin,
+  isStandalone,
   useUserContext,
 } from '@mobazha/core';
 import {
@@ -389,11 +390,14 @@ export const Header: React.FC = () => {
                 size="sm"
                 className="gap-2"
                 data-testid="header-login-btn"
-                onClick={() => {
+                onClick={async () => {
                   if (isEmbeddedApp) {
                     router.push('/');
                   } else if (isHosted()) {
                     startCasdoorLogin();
+                  } else if (isStandalone()) {
+                    const { loginStandalone } = useUserStore.getState();
+                    await loginStandalone();
                   } else {
                     router.push('/login');
                   }

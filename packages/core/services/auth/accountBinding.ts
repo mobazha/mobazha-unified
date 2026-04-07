@@ -6,10 +6,17 @@
  * - Telegram: 通过 Login Widget 直接验证 (Hosting-side)，绕过 Casdoor OAuth
  * - Discord/Google/GitHub 等标准 OAuth: 通过 Casdoor link mode（method="link"），
  *   Casdoor 仅返回 provider 身份，不创建用户；Hosting 后端负责绑定到当前用户
+ *
+ * Standalone mode:
+ * - Binding APIs live on the SaaS platform, not on the standalone node.
+ * - The admin acquires a Casdoor JWT via SaaSBridge popup, then calls
+ *   SaaS APIs directly with that JWT. See saasBridge.ts.
  */
 
 import { getHostingUrl } from '../api/config';
 import { getStoredToken } from './token';
+import { isStandaloneMode } from '../../config/env';
+import { getSaaSBaseUrl, getCachedSaaSToken } from './saasBridge';
 import {
   parseJwtToken,
   SF_RETURN_SEPARATOR,
@@ -31,11 +38,28 @@ import type {
 import { CASDOOR_PROVIDER_NAMES } from '../../types/account';
 
 /**
+ * Get the correct base URL and Bearer token for account binding APIs.
+ * - SaaS mode: local hosting URL + Casdoor JWT from localStorage
+ * - Standalone mode: SaaS platform URL + Casdoor JWT from SaaSBridge
+ */
+function getBindingEndpoint(): { baseUrl: string; token: string | null } {
+  if (isStandaloneMode()) {
+    return {
+      baseUrl: getSaaSBaseUrl(),
+      token: getCachedSaaSToken(),
+    };
+  }
+  return {
+    baseUrl: getHostingUrl(),
+    token: getStoredToken(),
+  };
+}
+
+/**
  * 获取已绑定的账号列表
  */
 export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
-  const baseUrl = getHostingUrl();
-  const token = getStoredToken();
+  const { baseUrl, token } = getBindingEndpoint();
 
   if (!token) {
     throw new Error('Not authenticated');
@@ -70,7 +94,7 @@ export function getLinkUrl(
   redirectUri: string,
   stateSuffix?: string
 ): LinkUrlResponse {
-  const token = getStoredToken();
+  const { token } = getBindingEndpoint();
 
   if (!token) {
     throw new Error('Not authenticated');
@@ -127,7 +151,13 @@ export function startLinkAccount(provider: OAuthProvider, redirectUri?: string):
   let callbackUrl: string;
   let storefrontSuffix = '';
 
-  if (!redirectUri && sfReturnOrigin && mainOrigin) {
+  if (isStandaloneMode() && !redirectUri) {
+    // Standalone: callback must land on SaaS, which then returns the result
+    // to the standalone store via the storefront-return mechanism.
+    const saasBase = getSaaSBaseUrl();
+    callbackUrl = `${saasBase}/settings/account?link_callback=1`;
+    storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(window.location.origin)}`;
+  } else if (!redirectUri && sfReturnOrigin && mainOrigin) {
     callbackUrl = `${mainOrigin}/settings/account?link_callback=1`;
     storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin)}`;
   } else {
@@ -156,8 +186,7 @@ export async function handleLinkCallback(
   state: string,
   providerId?: string | null
 ): Promise<LinkCallbackResponse> {
-  const baseUrl = getHostingUrl();
-  const token = getStoredToken();
+  const { baseUrl, token } = getBindingEndpoint();
 
   if (!token) {
     return { success: false, error: 'Not authenticated' };
@@ -196,7 +225,7 @@ export async function handleLinkCallback(
  * 返回各 provider 的前端配置（Telegram botUsername, Discord clientId 等）
  */
 export async function getLinkConfig(): Promise<LinkConfigResponse> {
-  const baseUrl = getHostingUrl();
+  const { baseUrl } = getBindingEndpoint();
 
   const response = await fetch(`${baseUrl}/platform/v1/accounts/link/config`, {
     method: 'GET',
@@ -216,8 +245,7 @@ export async function getLinkConfig(): Promise<LinkConfigResponse> {
  * 后端验证 HMAC-SHA256 签名后更新 Casdoor user.Telegram 字段
  */
 export async function directLinkTelegram(authData: TelegramAuthData): Promise<DirectLinkResponse> {
-  const baseUrl = getHostingUrl();
-  const token = getStoredToken();
+  const { baseUrl, token } = getBindingEndpoint();
 
   if (!token) {
     throw new Error('Not authenticated');
@@ -250,8 +278,7 @@ export async function directLinkTelegram(authData: TelegramAuthData): Promise<Di
  * @param provider 要解绑的 provider 类型
  */
 export async function unlinkAccount(provider: OAuthProvider): Promise<UnlinkResponse> {
-  const baseUrl = getHostingUrl();
-  const token = getStoredToken();
+  const { baseUrl, token } = getBindingEndpoint();
 
   if (!token) {
     throw new Error('Not authenticated');

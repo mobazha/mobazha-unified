@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useI18n } from '@mobazha/core';
+import { useI18n, isStandalone } from '@mobazha/core';
 import { Settings, User, MapPin, Link2, Ban, Key, Wrench, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ interface SidebarItem {
   labelKey: string;
   href: string;
   icon: React.ReactNode;
+  saasOnly?: boolean;
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -68,11 +69,16 @@ const sidebarItems: SidebarItem[] = [
 export const SettingsSidebar: React.FC = () => {
   const { t } = useI18n();
   const pathname = usePathname();
+  const standaloneMode = useMemo(() => isStandalone(), []);
+  const visibleItems = useMemo(
+    () => (standaloneMode ? sidebarItems.filter(item => !item.saasOnly) : sidebarItems),
+    [standaloneMode]
+  );
 
   return (
     <nav className="p-4 pb-8 space-y-1" data-testid="settings-sidebar">
       <h2 className="text-lg font-semibold mb-4 px-3">{t('settings.title')}</h2>
-      {sidebarItems.map(item => {
+      {visibleItems.map(item => {
         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
         return (
           <Link

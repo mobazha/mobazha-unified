@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { Container } from '@/components/layouts';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -24,7 +25,9 @@ import {
   useStorefrontPeerID,
   useStorefrontProfile,
   parsePriceFields,
+  isStandalone,
 } from '@mobazha/core';
+import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { ProductListItem } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
 import { getListingsWithDedup } from '@/utils/requestDedup';
@@ -286,13 +289,34 @@ function SaaSHomePage() {
 
 function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [trendingProducts, setTrendingProducts] = useState<DisplayProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [setupChecked, setSetupChecked] = useState(!isStandalone());
 
   const { profile: userProfile, isAuthenticated } = useUserStore();
   const storefrontProfile = useStorefrontProfile();
 
   const effectivePeerID = overridePeerID || userProfile?.peerID || null;
+
+  useEffect(() => {
+    if (!isStandalone()) return;
+    let cancelled = false;
+    getSetupStatus()
+      .then(status => {
+        if (!cancelled && !status.setupComplete) {
+          router.replace('/admin');
+          return;
+        }
+        if (!cancelled) setSetupChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setSetupChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
   const isOwnStore =
     !overridePeerID || (!!userProfile?.peerID && userProfile.peerID === overridePeerID);
   const displayProfile = overridePeerID ? storefrontProfile : userProfile;
@@ -342,6 +366,8 @@ function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null
       cancelled = true;
     };
   }, [effectivePeerID, overridePeerID]);
+
+  if (!setupChecked) return null;
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import {
   useI18n,
+  isStandalone,
   getLinkedAccounts,
   unlinkAccount,
   startLinkAccount,
@@ -29,6 +30,8 @@ import {
   clearLinkCallbackParams,
   SUPPORTED_PROVIDERS,
   standaloneStoresApi,
+  acquireSaaSToken,
+  hasSaaSToken,
 } from '@mobazha/core';
 import type {
   LinkedAccount,
@@ -83,8 +86,9 @@ function TelegramLoginWidget({ botUsername }: { botUsername: string }) {
 export default function AccountSettingsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const standaloneMode = useMemo(() => isStandalone(), []);
 
-  // State
+  // State — all hooks must be called unconditionally (React rules of hooks)
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +103,13 @@ export default function AccountSettingsPage() {
 
   // Provider config for direct linking (Telegram botUsername, Discord clientId)
   const [linkConfig, setLinkConfig] = useState<LinkConfigResponse | null>(null);
+
+  // Standalone SaaS bridge state
+  const [saasConnected, setSaasConnected] = useState(() =>
+    standaloneMode ? hasSaaSToken() : true
+  );
+  const [saasConnecting, setSaasConnecting] = useState(false);
+  const [saasError, setSaasError] = useState<string | null>(null);
 
   // 加载已绑定账号
   const loadLinkedAccounts = useCallback(async () => {
@@ -115,12 +126,13 @@ export default function AccountSettingsPage() {
     }
   }, [t]);
 
-  // 加载绑定配置
+  // 加载绑定配置 — skip when standalone admin hasn't connected to SaaS yet
   useEffect(() => {
+    if (standaloneMode && !saasConnected) return;
     getLinkConfig()
       .then(setLinkConfig)
       .catch(() => {});
-  }, []);
+  }, [standaloneMode, saasConnected]);
 
   // Telegram Login Widget 全局回调
   const handleTelegramAuth = useCallback(
@@ -198,13 +210,18 @@ export default function AccountSettingsPage() {
     processLinkCallback();
   }, [toast, loadLinkedAccounts, t]);
 
-  // 初始加载
+  // 初始加载 — skip when standalone admin hasn't connected to SaaS yet
   useEffect(() => {
+    if (standaloneMode && !saasConnected) return;
     loadLinkedAccounts();
-  }, [loadLinkedAccounts]);
+  }, [loadLinkedAccounts, standaloneMode, saasConnected]);
 
-  // Load standalone store
+  // Load standalone store — skip when standalone admin hasn't connected to SaaS yet
   useEffect(() => {
+    if (standaloneMode && !saasConnected) {
+      setIsLoadingStores(false);
+      return;
+    }
     async function loadStore() {
       try {
         const store = await standaloneStoresApi.getMyStandaloneStore();
@@ -216,7 +233,7 @@ export default function AccountSettingsPage() {
       }
     }
     loadStore();
-  }, []);
+  }, [standaloneMode, saasConnected]);
 
   // 获取未绑定的 Provider
   const getAvailableProviders = () => {
@@ -352,6 +369,74 @@ export default function AccountSettingsPage() {
       </div>
     );
   };
+
+  // Standalone: require SaaS platform connection before showing binding UI.
+  const handleConnectSaaS = useCallback(async () => {
+    setSaasConnecting(true);
+    setSaasError(null);
+    try {
+      const result = await acquireSaaSToken();
+      if (result.success) {
+        setSaasConnected(true);
+        loadLinkedAccounts();
+      } else {
+        setSaasError(result.error || 'Failed to connect');
+      }
+    } catch (err) {
+      setSaasError(err instanceof Error ? err.message : 'Failed to connect');
+    } finally {
+      setSaasConnecting(false);
+    }
+  }, [loadLinkedAccounts]);
+
+  if (standaloneMode && !saasConnected) {
+    return (
+      <div>
+        <SettingsPageHeader
+          title={t('settings.sidebar.account')}
+          description={t('settings.accountBinding.description')}
+        />
+        <Card className="p-6 md:p-8">
+          <div className="text-center py-8">
+            <Link2 className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {t('settings.accountBinding.standaloneSocialTitle', {
+                defaultValue: 'Social Account Binding',
+              })}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+              {t('settings.accountBinding.standaloneConnectDesc', {
+                defaultValue:
+                  'Connect your Telegram, Discord, or Google account to enable quick social login. Sign in to Mobazha Platform first to manage your linked accounts.',
+              })}
+            </p>
+            {saasError && (
+              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                <p className="text-sm text-destructive">{saasError}</p>
+              </div>
+            )}
+            <Button onClick={handleConnectSaaS} disabled={saasConnecting} className="mx-auto">
+              {saasConnecting
+                ? t('common.connecting', { defaultValue: 'Connecting...' })
+                : t('settings.accountBinding.connectPlatform', {
+                    defaultValue: 'Connect to Mobazha Platform',
+                  })}
+            </Button>
+            <div className="flex items-center justify-center gap-4 mt-6 text-muted-foreground/50">
+              {SUPPORTED_PROVIDERS.map(p => (
+                <div key={p.id} className="flex flex-col items-center gap-1">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <ProviderIcon provider={p.id} />
+                  </div>
+                  <span className="text-xs">{p.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>

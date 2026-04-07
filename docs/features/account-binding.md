@@ -244,6 +244,24 @@ settings.accountBinding: {
 }
 ```
 
+## 独立站支持（Phase SA-Auth）
+
+独立站管理员通过 **SaaS Bridge** 机制访问账号绑定功能：
+
+1. 管理员点击"连接 Mobazha 平台" → 打开 SaaS Casdoor Popup → 获取 JWT
+2. 使用 JWT 直接调用 SaaS `/platform/v1/accounts/*` API
+3. 绑定/解绑操作与 SaaS 模式一致
+
+**新增前端文件**:
+
+| 文件路径                                        | 描述                             |
+| ----------------------------------------------- | -------------------------------- |
+| `packages/core/services/auth/saasBridge.ts`     | SaaS Bridge Token 获取与缓存     |
+| `packages/core/services/auth/accountBinding.ts` | 自动分发 SaaS/本地端点（已扩展） |
+
+> **完整设计**: `mobazha_hosting/docs/product/STANDALONE_AUTH_UX_DESIGN.md`
+> **认证索引**: `mobazha_hosting/docs/auth/README.md`
+
 ## 迁移状态
 
 - [x] Core types 完成
@@ -251,13 +269,16 @@ settings.accountBinding: {
 - [x] UI 组件完成 (ProviderIcon)
 - [x] 页面集成完成
 - [x] i18n 翻译完成 (9 种语言)
-- [ ] 单元测试
-- [ ] E2E 测试
+- [x] 单元测试（saasBridge + accountBinding standalone）
+- [x] E2E 测试（standalone-auth.spec.ts）
+- [x] 独立站 SaaS Bridge 支持
 - [x] 迁移状态文档更新
 
 ## 相关文档
 
-- [登录管理文档](/LOGIN_MANAGEMENT.md)
+- [认证文档索引](https://github.com/mobazha/mobazha_hosting/blob/main/docs/auth/README.md) — 全域认证知识导航
+- [登录管理文档](https://github.com/mobazha/mobazha_hosting/blob/main/docs/LOGIN_MANAGEMENT.md) — SaaS + 独立站认证
+- [独立站认证 UX 设计](https://github.com/mobazha/mobazha_hosting/blob/main/docs/product/STANDALONE_AUTH_UX_DESIGN.md) — Admin/买家分离
 - [Casdoor 官方文档](https://casdoor.org/docs/overview)
 - [Simple Icons](https://simpleicons.org/)
 
