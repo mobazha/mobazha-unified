@@ -6,7 +6,8 @@ import { AdminSidebar, AdminHeader } from '@/components/admin';
 import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
-import { isStandalone, useUserContext } from '@mobazha/core';
+import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
+import { isStandalone, useUserStore, useUserContext } from '@mobazha/core';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 
 interface AdminLayoutProps {
@@ -49,10 +50,12 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const { isAuthenticated, isLoading: authLoading } = useUserStore();
 
   // Standalone first-run: bypass AuthGuard + AdminLayoutShell when setup is incomplete.
   // The StandaloneSetupWizard renders its own full-page layout.
   const [setupBypass, setSetupBypass] = useState<boolean | null>(standaloneMode ? null : false);
+  const [casdoorAvailable, setCasdoorAvailable] = useState(false);
 
   useEffect(() => {
     if (!standaloneMode) return;
@@ -60,7 +63,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     (async () => {
       try {
         const status = await getSetupStatus();
-        if (!cancelled) setSetupBypass(!status.setupComplete);
+        if (!cancelled) {
+          setSetupBypass(!status.setupComplete);
+          setCasdoorAvailable(!!status.casdoorAvailable);
+        }
       } catch {
         if (!cancelled) setSetupBypass(false);
       }
@@ -80,6 +86,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   if (setupBypass) {
     return <>{children}</>;
+  }
+
+  // Standalone mode: render inline admin login instead of redirecting to /login.
+  // This keeps admin auth entirely within /admin, separated from buyer flows.
+  if (standaloneMode && !authLoading && !isAuthenticated) {
+    return <AdminLoginForm casdoorAvailable={casdoorAvailable} />;
   }
 
   return (

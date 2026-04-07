@@ -16,7 +16,17 @@ vi.mock('../../../config/env', () => ({
       serverUrl: 'https://casdoor.test',
       clientId: 'test-client-id',
     },
+    auth: {
+      mode: 'hosted',
+      standalone: { saasUrl: 'https://saas.test' },
+    },
   })),
+  isStandaloneMode: vi.fn(() => false),
+}));
+
+vi.mock('../../../services/auth/saasBridge', () => ({
+  getSaaSBaseUrl: vi.fn(() => 'https://saas.test'),
+  getCachedSaaSToken: vi.fn(() => null),
 }));
 
 vi.mock('../../../services/auth/casdoor', () => ({
@@ -28,6 +38,8 @@ vi.mock('../../../services/auth/casdoor', () => ({
 }));
 
 import { getStoredToken } from '../../../services/auth/token';
+import { isStandaloneMode } from '../../../config/env';
+import { getCachedSaaSToken } from '../../../services/auth/saasBridge';
 import {
   getLinkedAccounts,
   getLinkUrl,
@@ -523,6 +535,110 @@ describe('accountBinding', () => {
         writable: true,
       });
       expect(getLinkCallbackStorefrontReturn()).toBeNull();
+    });
+  });
+
+  // =========================================================================
+  // Standalone mode: getBindingEndpoint dispatches to SaaS
+  // =========================================================================
+  describe('standalone mode — getBindingEndpoint dispatch', () => {
+    beforeEach(() => {
+      vi.mocked(isStandaloneMode).mockReturnValue(true);
+      vi.mocked(getCachedSaaSToken).mockReturnValue('saas-bridge-jwt');
+    });
+
+    afterEach(() => {
+      vi.mocked(isStandaloneMode).mockReturnValue(false);
+      vi.mocked(getCachedSaaSToken).mockReturnValue(null);
+    });
+
+    it('getLinkedAccounts calls SaaS URL with SaaS bridge token', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(
+        jsonResponse({
+          data: {
+            accounts: [{ provider: 'telegram', providerId: '99', canUnlink: true }],
+            totalCount: 1,
+            minRequired: 1,
+          },
+        })
+      );
+
+      await getLinkedAccounts();
+
+      expect(window.fetch).toHaveBeenCalledWith(
+        'https://saas.test/platform/v1/accounts/linked',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer saas-bridge-jwt',
+          }),
+        })
+      );
+    });
+
+    it('getLinkConfig calls SaaS URL', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(
+        jsonResponse({ data: { providers: { telegram: { botUsername: 'bot' } } } })
+      );
+
+      await getLinkConfig();
+
+      const calledUrl = vi.mocked(window.fetch).mock.calls[0][0] as string;
+      expect(calledUrl).toBe('https://saas.test/platform/v1/accounts/link/config');
+    });
+
+    it('directLinkTelegram calls SaaS URL with SaaS bridge token', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(jsonResponse({ data: { success: true } }));
+
+      const authData = { id: 123, first_name: 'Test', auth_date: 1700000000, hash: 'abc' };
+      await directLinkTelegram(authData);
+
+      const calledUrl = vi.mocked(window.fetch).mock.calls[0][0] as string;
+      expect(calledUrl).toContain('https://saas.test/platform/v1/accounts/link/telegram');
+      expect(window.fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer saas-bridge-jwt',
+          }),
+        })
+      );
+    });
+
+    it('unlinkAccount calls SaaS URL with SaaS bridge token', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(
+        jsonResponse({ data: { success: true, message: 'Unlinked' } })
+      );
+
+      await unlinkAccount('discord');
+
+      expect(window.fetch).toHaveBeenCalledWith(
+        'https://saas.test/platform/v1/accounts/unlink',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer saas-bridge-jwt',
+          }),
+        })
+      );
+    });
+
+    it('handleLinkCallback calls SaaS URL with SaaS bridge token', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(jsonResponse({ data: { success: true } }));
+
+      await handleLinkCallback('code-123', 'link:user1:discord');
+
+      const calledUrl = vi.mocked(window.fetch).mock.calls[0][0] as string;
+      expect(calledUrl).toContain('https://saas.test/platform/v1/accounts/link-callback');
+    });
+
+    it('throws when SaaS bridge token is not available', async () => {
+      vi.mocked(getCachedSaaSToken).mockReturnValue(null);
+
+      await expect(getLinkedAccounts()).rejects.toThrow('Not authenticated');
+    });
+
+    it('getLinkUrl uses SaaS bridge token for state generation', () => {
+      const result = getLinkUrl('discord', 'https://callback.test');
+      expect(result.url).toContain('state=link%3Auser-uuid-123%3Adiscord');
     });
   });
 });

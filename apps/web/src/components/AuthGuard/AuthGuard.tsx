@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useUserStore, useI18n, isMockMode } from '@mobazha/core';
+import { useUserStore, useI18n, isMockMode, isStandalone } from '@mobazha/core';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -17,6 +17,9 @@ interface AuthGuardProps {
  * 保护需要登录才能访问的页面
  * 未登录用户将被重定向到登录页面
  *
+ * Standalone 模式下（非 /admin 路径），触发 Casdoor Popup 而非跳转到 /login，
+ * 让买家不离开当前页面即可完成登录。Popup 被阻止时 fallback 到 /login。
+ *
  * Mock 模式（NEXT_PUBLIC_USE_MOCK_DATA=true）下跳过认证，
  * 允许在无后端的情况下开发和视觉验证 admin 页面。
  */
@@ -26,6 +29,7 @@ export function AuthGuard({ children, redirectTo = '/login', fallback }: AuthGua
   const pathname = usePathname();
   const { t } = useI18n();
   const hasRedirected = useRef(false);
+  const popupTriggeredRef = useRef(false);
   const mockMode = isMockMode();
 
   useEffect(() => {
@@ -33,6 +37,17 @@ export function AuthGuard({ children, redirectTo = '/login', fallback }: AuthGua
     if (isLoading) return;
 
     if (!isAuthenticated && !hasRedirected.current) {
+      if (isStandalone() && !pathname.startsWith('/admin')) {
+        if (popupTriggeredRef.current) return;
+        popupTriggeredRef.current = true;
+        const { loginStandalone } = useUserStore.getState();
+        loginStandalone().catch(() => {
+          const fullPath = window.location.pathname + window.location.search;
+          router.replace(`/login?redirect=${encodeURIComponent(fullPath)}`);
+        });
+        return;
+      }
+
       hasRedirected.current = true;
       const fullPath = window.location.pathname + window.location.search;
       const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(fullPath)}`;

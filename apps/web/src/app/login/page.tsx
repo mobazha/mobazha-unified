@@ -16,7 +16,7 @@ import {
 } from '@mobazha/core';
 import { usePlatform, isEmbeddedRuntime } from '@mobazha/ui/hooks';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
-import { Lock, User } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher';
 
 /**
  * 获取重定向路径（优先从 URL 参数获取）
@@ -215,7 +215,8 @@ function LoginPageContent() {
     );
   }
 
-  // 独立站模式：同时显示卖家 BasicAuth 和买家 Casdoor 入口
+  // Standalone mode: buyer-only login page.
+  // Admin login is handled inline at /admin (AdminLoginForm).
   if (isStandalone()) {
     const handleStandaloneBuyerLogin = async () => {
       setLocalError('');
@@ -227,103 +228,59 @@ function LoginPageContent() {
     };
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
-        <div className="w-full max-w-md mx-4 sm:mx-auto px-5 sm:px-8 py-8 sm:py-10 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
-          <div className="text-center mb-6 sm:mb-8">
-            <MobazhaLogo size={56} className="text-white mx-auto mb-3" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t('login.title')}</h1>
-            <p className="text-white/70 text-sm sm:text-base">{t('login.subtitle')}</p>
-          </div>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
+        {/* Top bar with language switcher */}
+        <div className="flex justify-end p-4">
+          <LanguageSwitcher
+            compact
+            className="[&_button]:bg-white/10 [&_button]:text-white [&_button]:hover:bg-white/20"
+          />
+        </div>
 
-          {hasRedirectParam && !error && !localError && (
-            <div className="mb-6 p-3 bg-white/10 border border-white/20 rounded-lg">
-              <p className="text-sm text-white/80">{t('login.signInToContinue')}</p>
-            </div>
-          )}
+        <div className="flex-1 flex items-center justify-center px-4 pb-16">
+          <div className="w-full max-w-sm">
+            <div className="px-6 py-8 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+              <div className="text-center mb-6">
+                <MobazhaLogo size={48} className="text-white mx-auto mb-3" />
+                <h1 className="text-xl font-bold text-white mb-1">{t('login.title')}</h1>
+                <p className="text-white/60 text-sm">{t('login.subtitle')}</p>
+              </div>
 
-          {(error || localError) && (
-            <div className="mb-6 p-3 bg-error/20 border border-error/30 rounded-lg">
-              <p className="text-sm text-error">{error || localError}</p>
-            </div>
-          )}
+              {hasRedirectParam && !error && !localError && (
+                <div className="mb-5 p-3 bg-white/10 border border-white/20 rounded-lg">
+                  <p className="text-sm text-white/80">{t('login.signInToContinue')}</p>
+                </div>
+              )}
 
-          {/* Seller: BasicAuth login */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Lock className="w-4 h-4 text-white/70" />
-              <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider">
-                {t('login.sellerAdmin', { defaultValue: 'Store Admin' })}
-              </h3>
-            </div>
-            <form onSubmit={handleBasicLogin} className="space-y-3">
-              <input
-                id="username"
-                data-testid="login-username"
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder={t('login.username')}
-                autoComplete="username"
-              />
-              <input
-                id="password"
-                data-testid="login-password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder={t('login.password')}
-                autoComplete="current-password"
-              />
+              {(error || localError) && (
+                <div className="mb-5 p-3 bg-error/20 border border-error/30 rounded-lg">
+                  <p className="text-sm text-error">{error || localError}</p>
+                </div>
+              )}
+
+              {/* Single buyer login button */}
               <button
-                type="submit"
-                data-testid="login-submit"
+                type="button"
+                data-testid="login-standalone-buyer"
+                onClick={handleStandaloneBuyerLogin}
                 disabled={isLoading}
                 className="w-full py-3 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
               >
                 {isLoading
                   ? t('login.loggingIn')
-                  : t('login.loginAsAdmin', { defaultValue: 'Login as Admin' })}
+                  : t('login.loginWithMobazha', { defaultValue: 'Login with Mobazha Account' })}
               </button>
-            </form>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-white/15" />
-            <span className="px-4 text-white/50 text-sm">
-              {t('login.or', { defaultValue: 'or' })}
-            </span>
-            <div className="flex-1 border-t border-white/15" />
-          </div>
-
-          {/* Buyer: Casdoor popup login */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <User className="w-4 h-4 text-white/70" />
-              <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider">
-                {t('login.buyerLogin', { defaultValue: 'Buyer' })}
-              </h3>
+              <p className="text-xs text-white/50 mt-3 text-center">
+                {t('login.buyerLoginHint', {
+                  defaultValue: 'Login to place orders and chat with the seller',
+                })}
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={handleStandaloneBuyerLogin}
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-            >
-              {t('login.loginWithMobazha', { defaultValue: 'Login with Mobazha Account' })}
-            </button>
-            <p className="text-xs text-white/50 mt-2 text-center">
-              {t('login.buyerLoginHint', {
-                defaultValue: 'Login to place orders and chat with the seller',
-              })}
-            </p>
-          </div>
 
-          {/* Brand Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-white/40">{t('login.brandFooter')}</p>
+            {/* Brand Footer */}
+            <div className="mt-6 text-center">
+              <p className="text-xs text-white/30">{t('login.brandFooter')}</p>
+            </div>
           </div>
         </div>
       </div>

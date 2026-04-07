@@ -120,3 +120,13 @@ export {
   clearLinkCallbackParams,
   getLinkRedirectPath,
 } from './accountBinding';
+
+// ============ SaaS Bridge (Standalone admin → SaaS Casdoor JWT) ============
+
+export {
+  acquireSaaSToken,
+  hasSaaSToken,
+  clearSaaSToken,
+  getCachedSaaSToken,
+  type SaaSBridgeResult,
+} from './saasBridge';

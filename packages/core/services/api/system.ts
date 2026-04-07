@@ -20,6 +20,7 @@ export interface SetupCompletedSteps {
 export interface SetupStatusResponse {
   setupComplete: boolean;
   completedSteps: SetupCompletedSteps;
+  casdoorAvailable?: boolean;
 }
 
 export interface InitialSetupResponse {
