@@ -3,7 +3,7 @@
  */
 
 import type { UserProfile, UserSettings } from '../../types';
-import { get, post, ApiError, isStoreUnavailableError } from './client';
+import { get, post, put, ApiError, isStoreUnavailableError } from './client';
 import { getGatewayUrl, getBuyerGatewayUrl, getSearchUrl, getAuthHeaders } from './config';
 import { isStandaloneMode } from '../../config/env';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
@@ -64,13 +64,20 @@ export async function getMyProfile(): Promise<UserProfile | null> {
  * 独立站买家通过 Casdoor 登录后，需要从 SaaS 平台获取自己的 profile（含 peerID）。
  * 使用 getBuyerGatewayUrl() 路由到 SaaS → /buyer-api/v1/profile。
  * JWT Bearer token 由 getAuthHeaders() 自动附加。
+ *
+ * Returns null only when the profile genuinely does not exist (HTTP 404).
+ * Throws for all other errors (network, 403, 500, …) so the caller can
+ * distinguish "needs onboarding" from "SaaS unreachable".
  */
 export async function getBuyerProfile(): Promise<UserProfile | null> {
   const url = `${getBuyerGatewayUrl()}${NODE_API.PROFILES}`;
   try {
     return await get<UserProfile>(url, getAuthHeaders());
-  } catch {
-    return null;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) {
+      return null;
+    }
+    throw err;
   }
 }
 
@@ -109,6 +116,19 @@ export async function createBuyerProfile(
     await post(url, profile, getAuthHeaders());
     return { success: true };
   } catch (err) {
+    // 409 = profile already exists on SaaS (e.g. node auto-init or previous attempt).
+    // Fall back to PUT update so buyer onboarding always succeeds.
+    if (err instanceof ApiError && err.status === 409) {
+      try {
+        await put(url, profile, getAuthHeaders());
+        return { success: true };
+      } catch (putErr) {
+        return {
+          success: false,
+          error: putErr instanceof Error ? putErr.message : 'Failed to update profile',
+        };
+      }
+    }
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Failed to create profile',
