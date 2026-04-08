@@ -5,13 +5,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { productsApi } from '../../services/api';
 import { switchRole, logoutCurrentRole } from '../../testing/roleManager';
-import { skipIfNoIntegration } from './setup';
+import { isIntegrationTestEnabled } from './setup';
 
-describe('Products API Integration Tests', () => {
-  beforeAll(() => {
-    if (skipIfNoIntegration()) return;
-  });
-
+describe.skipIf(!isIntegrationTestEnabled())('Products API Integration Tests', () => {
   afterAll(() => {
     logoutCurrentRole();
   });

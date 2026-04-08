@@ -6,17 +6,13 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ordersApi, productsApi, profileApi } from '../../../services/api';
 import { switchRole, logoutCurrentRole } from '../../../testing/roleManager';
 import { simulatePaymentComplete } from '../../../testing/mockPayment';
-import { skipIfNoIntegration } from '../setup';
+import { isIntegrationTestEnabled } from '../setup';
 
-describe('Purchase Flow E2E Tests', () => {
+describe.skipIf(!isIntegrationTestEnabled())('Purchase Flow E2E Tests', () => {
   // 测试数据
   let sellerPeerID: string;
   let sellerListing: Awaited<ReturnType<typeof productsApi.getListingIndex>>[0] | null = null;
   let orderId: string;
-
-  beforeAll(async () => {
-    if (skipIfNoIntegration()) return;
-  });
 
   afterAll(() => {
     logoutCurrentRole();
@@ -24,11 +20,6 @@ describe('Purchase Flow E2E Tests', () => {
 
   describe('Step 1: Seller Preparation', () => {
     it('should login as seller and have listings', async () => {
-      if (skipIfNoIntegration()) {
-        console.log('⏭️ Skipping: integration tests disabled');
-        return;
-      }
-
       await switchRole('seller');
 
       const profile = await profileApi.getMyProfile();

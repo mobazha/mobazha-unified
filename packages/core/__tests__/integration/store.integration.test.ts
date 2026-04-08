@@ -12,13 +12,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { profileApi, socialApi, imagesApi } from '../../services/api';
 import { productDataService } from '../../services/dataService';
 import { switchRole, logoutCurrentRole } from '../../testing/roleManager';
-import { skipIfNoIntegration } from './setup';
+import { isIntegrationTestEnabled } from './setup';
 
-describe('Store Module Integration Tests', () => {
-  beforeAll(() => {
-    if (skipIfNoIntegration()) return;
-  });
-
+describe.skipIf(!isIntegrationTestEnabled())('Store Module Integration Tests', () => {
   afterAll(() => {
     logoutCurrentRole();
   });

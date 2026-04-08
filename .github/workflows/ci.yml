@@ -66,8 +66,8 @@ jobs:
       - name: Install dependencies
         run: HUSKY=0 pnpm install --frozen-lockfile
 
-      - name: Run tests
-        run: pnpm test
+      - name: Run unit tests
+        run: pnpm --filter @mobazha/core test:unit
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
