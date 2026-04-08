@@ -118,14 +118,20 @@ export default function AccountSettingsPage() {
       setIsLoading(true);
       setError(null);
       const response = await getLinkedAccounts();
-      setLinkedAccounts(response.accounts);
+      let accounts = response.accounts;
+      // Standalone admin always has local password, so SaaS-side canUnlink
+      // underestimates total login methods. Override to allow unbinding.
+      if (standaloneMode) {
+        accounts = accounts.map(a => ({ ...a, canUnlink: true }));
+      }
+      setLinkedAccounts(accounts);
     } catch (err) {
       console.error('Failed to load linked accounts:', err);
       setError(err instanceof Error ? err.message : t('common.error'));
     } finally {
       setIsLoading(false);
     }
-  }, [t]);
+  }, [t, standaloneMode]);
 
   // 加载绑定配置 — skip when standalone admin hasn't connected to SaaS yet
   useEffect(() => {
