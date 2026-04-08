@@ -20,12 +20,12 @@ import {
   logoutCurrentRole,
   clearRoleCache,
 } from '../../testing/roleManager';
-import { skipIfNoIntegration, isFetchAvailable } from './setup';
+import { isIntegrationTestEnabled, isFetchAvailable } from './setup';
 
-// 是否跳过需要网络的测试
-const shouldSkipNetworkTests = () => skipIfNoIntegration() || !isFetchAvailable();
+// 是否跳过需要网络的测试（集成已启用但无 fetch，例如部分环境）
+const shouldSkipNetworkTests = () => !isFetchAvailable();
 
-describe('Authentication Integration Tests', () => {
+describe.skipIf(!isIntegrationTestEnabled())('Authentication Integration Tests', () => {
   beforeAll(() => {
     // 清理之前的状态
     clearRoleCache();

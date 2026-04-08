@@ -2,26 +2,11 @@
  * API 健康检查测试
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { runFullHealthCheck, quickPing } from '../../testing/healthCheck';
-import { switchToTestEnv, getEnvConfig } from '../../config/env';
-import { setApiConfig } from '../../services/api/config';
-import { skipIfNoIntegration } from './setup';
+import { isIntegrationTestEnabled } from './setup';
 
-describe('API Health Check', () => {
-  beforeAll(() => {
-    if (skipIfNoIntegration()) return;
-
-    // 确保使用测试环境
-    switchToTestEnv();
-    const env = getEnvConfig();
-    setApiConfig({
-      gatewayUrl: env.api.gateway,
-      searchUrl: env.api.search,
-      mbzGatewayUrl: env.api.mbzGateway,
-    });
-  });
-
+describe.skipIf(!isIntegrationTestEnabled())('API Health Check', () => {
   it('should quick ping the API server', async () => {
     const isAvailable = await quickPing();
 

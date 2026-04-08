@@ -7,15 +7,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ordersApi, disputesApi, profileApi } from '../../../services/api';
 import { switchRole, logoutCurrentRole } from '../../../testing/roleManager';
-import { skipIfNoIntegration } from '../setup';
+import { isIntegrationTestEnabled } from '../setup';
 
-describe('Dispute Flow E2E Tests', () => {
+describe.skipIf(!isIntegrationTestEnabled())('Dispute Flow E2E Tests', () => {
   // 测试数据
   let disputeOrderId: string | null = null;
-
-  beforeAll(async () => {
-    if (skipIfNoIntegration()) return;
-  });
 
   afterAll(() => {
     logoutCurrentRole();
@@ -72,11 +68,6 @@ describe('Dispute Flow E2E Tests', () => {
     });
 
     it('should get moderator profile', async () => {
-      if (skipIfNoIntegration()) {
-        console.log('⏭️ Skipping: integration tests disabled');
-        return;
-      }
-
       const profile = await profileApi.getMyProfile();
 
       if (!profile) {
