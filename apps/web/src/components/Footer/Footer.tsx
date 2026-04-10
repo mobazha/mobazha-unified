@@ -112,7 +112,7 @@ export const Footer: React.FC = () => {
   const { profile, isAuthenticated } = useUserStore();
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
-  const brandProfile = standaloneMode ? storefrontProfile || profile : profile;
+  const brandProfile = standaloneMode ? storefrontProfile : profile;
 
   const startSellingHref = standaloneMode
     ? '/listing/new'

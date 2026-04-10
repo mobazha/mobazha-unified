@@ -79,7 +79,7 @@ export const Header: React.FC = () => {
 
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
-  const brandProfile = standaloneMode ? storefrontProfile || profile : profile;
+  const brandProfile = standaloneMode ? storefrontProfile : profile;
   const isSearchPage = pathname === '/search';
 
   const handleSearch = (e: React.FormEvent) => {

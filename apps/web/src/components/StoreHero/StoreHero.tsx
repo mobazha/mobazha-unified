@@ -1,35 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { profileDataService, useI18n, getImageUrl } from '@mobazha/core';
-import type { UserProfile } from '@mobazha/core';
+import { useI18n, getImageUrl, useStorefrontProfile } from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { Store, MapPin, Star, Package, Search } from 'lucide-react';
 
 export function StoreHero() {
   const router = useRouter();
   const { t } = useI18n();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const profile = useStorefrontProfile();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const p = await profileDataService.getCurrentUser();
-        if (!cancelled) setProfile(p);
-      } catch {
-        // profile may not be set up yet
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
+  const isLoading = !profile;
   const avatarUrl = profile?.avatarHashes?.medium ? getImageUrl(profile.avatarHashes.medium) : null;
 
   const headerUrl = profile?.headerHashes?.large ? getImageUrl(profile.headerHashes.large) : null;
