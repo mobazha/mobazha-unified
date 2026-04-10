@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useI18n, aiSettingsApi } from '@mobazha/core';
-import type { AIConfig, AIConfigInput, AIProviderInfo } from '@mobazha/core';
+import type { AIConfig, AIConfigInput, AIProviderInfo, AIStatus } from '@mobazha/core';
 import {
   Sparkles,
   Check,
@@ -15,6 +15,8 @@ import {
   FileText,
   Palette,
   ExternalLink,
+  Zap,
+  Key,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +39,7 @@ export function AIConfigSection() {
 
   const [providers, setProviders] = useState<AIProviderInfo[]>([]);
   const [config, setConfig] = useState<AIConfig | null>(null);
+  const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -115,11 +118,13 @@ export function AIConfigSection() {
     setLoading(true);
     setLoadError(false);
     try {
-      const [cfg, providerList] = await Promise.all([
+      const [cfg, providerList, status] = await Promise.all([
         aiSettingsApi.getAIConfig().catch(() => null),
         aiSettingsApi.getAIProviders().catch(() => []),
+        aiSettingsApi.getAIStatus().catch(() => null),
       ]);
       setProviders(providerList);
+      setAiStatus(status);
       if (providerList.length === 0) {
         setLoadError(true);
       }
@@ -246,6 +251,16 @@ export function AIConfigSection() {
     : false;
   const canTest = !!selectedProvider && (!!apiKey || hasExistingKey);
 
+  const isPlatformAI = aiStatus?.source === 'platform';
+  const isByokAI = aiStatus?.source === 'byok';
+
+  const statusBadgeVariant = isByokAI ? 'default' : isPlatformAI ? 'secondary' : 'outline';
+  const statusBadgeText = isByokAI
+    ? t('admin.integrations.aiConfigured')
+    : isPlatformAI
+      ? t('admin.integrations.aiPlatformActive')
+      : t('admin.integrations.aiNotConfigured');
+
   return (
     <div className="space-y-6">
       {/* Header card with enable toggle */}
@@ -256,10 +271,8 @@ export function AIConfigSection() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-foreground">{t('admin.integrations.aiTitle')}</h3>
-            <Badge variant={anyProviderConfigured ? 'default' : 'outline'} className="text-xs">
-              {anyProviderConfigured
-                ? t('admin.integrations.aiConfigured')
-                : t('admin.integrations.aiNotConfigured')}
+            <Badge variant={statusBadgeVariant} className="text-xs">
+              {statusBadgeText}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.aiDesc')}</p>
@@ -273,6 +286,54 @@ export function AIConfigSection() {
           />
         </div>
       </div>
+
+      {/* Platform AI status banner */}
+      {isPlatformAI && aiStatus && (
+        <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+          <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+            <Zap className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {t('admin.integrations.aiPlatformTitle')}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('admin.integrations.aiPlatformDesc')}
+              </p>
+            </div>
+            {aiStatus.daily_limit > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {t('admin.integrations.aiDailyUsage')}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {aiStatus.daily_used} / {aiStatus.daily_limit}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      aiStatus.daily_used / aiStatus.daily_limit > 0.8
+                        ? 'bg-amber-500'
+                        : 'bg-primary'
+                    )}
+                    style={{
+                      width: `${Math.min((aiStatus.daily_used / aiStatus.daily_limit) * 100, 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Key className="w-3 h-3" />
+              <span>{t('admin.integrations.aiPlatformUpgrade')}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Feature showcase */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

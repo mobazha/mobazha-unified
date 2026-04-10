@@ -125,6 +125,8 @@ export interface TranslationResource {
     scan?: string;
     unknown?: string;
     unknownError?: string;
+    enabled?: string;
+    disabled?: string;
   };
 
   // 导航
@@ -3118,6 +3120,11 @@ export interface TranslationResource {
       aiSaveActivate?: string;
       aiProviderActive?: string;
       aiApiKeySaved?: string;
+      aiPlatformActive?: string;
+      aiPlatformTitle?: string;
+      aiPlatformDesc?: string;
+      aiDailyUsage?: string;
+      aiPlatformUpgrade?: string;
       unsavedChanges?: string;
 
       paymentProviders?: { title?: string; subtitle?: string };

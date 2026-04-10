@@ -42,6 +42,18 @@ export interface AITestConnectionResult {
   error?: string;
 }
 
+export interface AIStatus {
+  available: boolean;
+  source: 'byok' | 'platform' | 'none';
+  daily_limit: number;
+  daily_used: number;
+  byok_configured: boolean;
+}
+
+export async function getAIStatus(): Promise<AIStatus> {
+  return authGet<AIStatus>(NODE_API.AI_STATUS);
+}
+
 export async function getAIConfig(): Promise<AIConfig> {
   return authGet<AIConfig>(NODE_API.AI_CONFIG);
 }
