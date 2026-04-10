@@ -12,6 +12,7 @@ import './app/globals.css';
 // 导入 Provider 组件
 import { AuthProvider, MobileNav, ChatSystem, PWAInstall } from '@/components';
 import { OuterProviders } from '@/components/OuterProviders';
+import { StorefrontProvider } from '@/components/StorefrontProvider';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
@@ -83,7 +84,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <OuterProviders>
-        <RouterProvider router={router} />
+        <StorefrontProvider peerID={null}>
+          <RouterProvider router={router} />
+        </StorefrontProvider>
       </OuterProviders>
     </QueryClientProvider>
   );

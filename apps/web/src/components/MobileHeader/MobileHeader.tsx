@@ -23,7 +23,7 @@ export const MobileHeader: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
-  const brandProfile = standaloneMode ? storefrontProfile || profile : profile;
+  const brandProfile = standaloneMode ? storefrontProfile : profile;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
