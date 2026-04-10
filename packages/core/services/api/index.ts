@@ -171,6 +171,7 @@ export type {
   AIConfigInput,
   AIProviderInfo,
   AIProviderState,
+  AIStatus,
   AITestConnectionResult,
 } from './aiSettings';
 export type {

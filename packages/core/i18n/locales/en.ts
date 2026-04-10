@@ -45,6 +45,8 @@ export const en: TranslationResource = {
     copied: 'Copied!',
     use: 'Use',
     seller: 'Seller',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
     days: 'days',
     hours: 'hours',
     minutes: 'minutes',
@@ -4907,6 +4909,11 @@ export const en: TranslationResource = {
       aiSaveActivate: 'Save & Activate',
       aiProviderActive: 'Active',
       aiApiKeySaved: 'API key saved',
+      aiPlatformActive: 'Platform AI',
+      aiPlatformTitle: 'AI is ready to use',
+      aiPlatformDesc: 'Your store has AI features enabled through the platform. No setup needed.',
+      aiDailyUsage: 'Daily usage',
+      aiPlatformUpgrade: 'Add your own API key below for unlimited usage',
       unsavedChanges: 'Unsaved changes',
 
       // Payment Providers

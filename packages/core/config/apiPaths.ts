@@ -104,6 +104,7 @@ export const NODE_API = {
 
   // --- AI ---
   AI_GENERATE: '/ai/generate',
+  AI_STATUS: '/ai/status',
   AI_CONFIG: '/settings/ai',
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',
