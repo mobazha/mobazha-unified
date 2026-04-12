@@ -378,9 +378,35 @@ try {
 function applyRuntimeConfig(): void {
   if (typeof window === 'undefined') return;
   const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
-    | { saasUrl?: string }
+    | { saasUrl?: string; authMode?: string }
     | undefined;
   if (!rc) return;
+
+  if (rc.authMode === 'standalone' || rc.authMode === 'basic' || rc.authMode === 'hosted') {
+    currentEnv = {
+      ...currentEnv,
+      auth: {
+        ...currentEnv.auth,
+        mode: rc.authMode,
+      },
+    };
+
+    // Native binary: API served from the same origin as the SPA.
+    if (typeof window !== 'undefined' && rc.authMode !== 'hosted') {
+      const origin = window.location.origin;
+      const wsProtocol = origin.startsWith('https') ? 'wss' : 'ws';
+      const wsHost = origin.replace(/^https?:\/\//, '');
+      currentEnv = {
+        ...currentEnv,
+        api: {
+          ...currentEnv.api,
+          baseUrl: origin,
+          gateway: `${origin}/v1`,
+          websocket: `${wsProtocol}://${wsHost}/ws`,
+        },
+      };
+    }
+  }
 
   if (rc.saasUrl) {
     currentEnv = {
