@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:standalone-local": "NEXT_PUBLIC_ENV_MODE=standalone NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:4002 NEXT_PUBLIC_SAAS_URL=https://app.mobazha.org vite --port 5173 --host 127.0.0.1",
     "dev:next": "next dev --turbopack",
     "build": "vite build",
     "build:next": "next build",
