@@ -586,6 +586,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     setShowRoomSettings(false);
   }, []);
 
+  const handleLeaveRoom = useCallback(async (roomId: string) => {
+    const success = await matrixClient.leaveRoom(roomId);
+    if (success) {
+      const { removeRoom, setCurrentRoom } = useChatStore.getState();
+      removeRoom(roomId);
+      setCurrentRoom(null);
+      setShowRoomSettings(false);
+    }
+  }, []);
+
   const handleAvatarClick = useCallback(
     (userId: string, displayName?: string, avatarUrl?: string) => {
       const member = currentRoom?.members?.find(m => m.userId === userId);
@@ -1030,6 +1040,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             currentUserId={effectiveCurrentUserId}
             onClose={handleCloseRoomSettings}
             onMemberClick={handleAvatarClick}
+            onLeaveRoom={handleLeaveRoom}
             t={t}
           />
         )}

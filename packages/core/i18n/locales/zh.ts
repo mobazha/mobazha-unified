@@ -1285,6 +1285,22 @@ export const zh: TranslationResource = {
     groupChat: '群聊',
     viewStore: '查看店铺',
     sendMessage: '发送消息',
+    leaveRoom: '离开房间',
+    leaveRoomConfirm: '确定要离开这个房间吗？离开后将不再收到此对话的消息。',
+
+    group: {
+      name: '群组名称',
+      namePlaceholder: '输入群组名称...',
+      members: '成员',
+      searchMembers: '搜索要添加的用户...',
+      create: '创建群组',
+    },
+
+    inviteUser: '邀请用户',
+    inviteSearchPlaceholder: '搜索要邀请的用户...',
+    inviteSuccess: '邀请已发送',
+    inviteFailed: '发送邀请失败',
+
     unknownUser: '未知用户',
     externalUser: '外部 Matrix 用户',
     peerId: 'Peer ID',

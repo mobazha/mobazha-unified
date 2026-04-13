@@ -1,15 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { getMemberPresentation, getRoomPresentation, type MatrixRoom } from '@mobazha/core';
+import {
+  getMemberPresentation,
+  getRoomPresentation,
+  matrixClient,
+  type MatrixRoom,
+} from '@mobazha/core';
+import { searchProfiles, type SearchedUser } from '@mobazha/core/services/api/products';
+import { Search, Loader2, UserPlus, User } from 'lucide-react';
 
 interface RoomSettingsPanelProps {
   room: MatrixRoom;
   currentUserId?: string | null;
   onClose: () => void;
   onMemberClick: (userId: string, displayName?: string, avatarUrl?: string) => void;
+  onLeaveRoom?: (roomId: string) => Promise<void>;
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
@@ -18,8 +27,88 @@ export const RoomSettingsPanel: React.FC<RoomSettingsPanelProps> = ({
   currentUserId,
   onClose,
   onMemberClick,
+  onLeaveRoom,
   t,
 }) => {
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [inviteResults, setInviteResults] = useState<SearchedUser[]>([]);
+  const [isInviteSearching, setIsInviteSearching] = useState(false);
+  const [invitingPeerID, setInvitingPeerID] = useState<string | null>(null);
+  const [inviteStatus, setInviteStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const inviteDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inviteSeqRef = useRef(0);
+
+  const existingMemberPeerIDs = new Set(
+    room.members.map(m => {
+      const colonIdx = m.userId.indexOf(':');
+      if (m.userId.startsWith('@') && colonIdx > 1) return m.userId.slice(1, colonIdx);
+      return m.userId;
+    })
+  );
+
+  useEffect(() => {
+    if (!showInvite) return;
+
+    if (inviteDebounceRef.current) {
+      clearTimeout(inviteDebounceRef.current);
+      inviteDebounceRef.current = null;
+    }
+
+    const trimmed = inviteQuery.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setInviteResults([]);
+      setIsInviteSearching(false);
+      return;
+    }
+
+    setIsInviteSearching(true);
+    const seq = ++inviteSeqRef.current;
+    inviteDebounceRef.current = setTimeout(async () => {
+      try {
+        const result = await searchProfiles({ query: trimmed, pageSize: 10 });
+        if (seq === inviteSeqRef.current) {
+          setInviteResults(result.users.filter(u => !existingMemberPeerIDs.has(u.peerID)));
+        }
+      } catch {
+        if (seq === inviteSeqRef.current) setInviteResults([]);
+      } finally {
+        if (seq === inviteSeqRef.current) setIsInviteSearching(false);
+      }
+    }, 400);
+
+    return () => {
+      if (inviteDebounceRef.current) clearTimeout(inviteDebounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteQuery, showInvite]);
+
+  const handleInvite = useCallback(
+    async (peerID: string) => {
+      setInvitingPeerID(peerID);
+      setInviteStatus(null);
+      try {
+        const success = await matrixClient.inviteToRoom(room.roomId, peerID);
+        if (success) {
+          setInviteStatus({ type: 'success', message: t('chat.inviteSuccess') });
+          setInviteResults(prev => prev.filter(u => u.peerID !== peerID));
+        } else {
+          setInviteStatus({ type: 'error', message: t('chat.inviteFailed') });
+        }
+      } catch {
+        setInviteStatus({ type: 'error', message: t('chat.inviteFailed') });
+      } finally {
+        setInvitingPeerID(null);
+      }
+    },
+    [room.roomId, t]
+  );
+
   const roomPresentation = getRoomPresentation(room, currentUserId, t('chat.defaultRoom'));
   const memberPresentations = room.members.map(member => ({
     member,
@@ -171,6 +260,178 @@ export const RoomSettingsPanel: React.FC<RoomSettingsPanelProps> = ({
             </Button>
           </div>
         </div>
+
+        {/* Invite User */}
+        <div className="mb-6">
+          {!showInvite ? (
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-12 text-foreground hover:bg-muted/60"
+              onClick={() => setShowInvite(true)}
+            >
+              <UserPlus className="w-5 h-5 text-muted-foreground" />
+              {t('chat.inviteUser')}
+            </Button>
+          ) : (
+            <div className="space-y-3 p-3 bg-muted/30 rounded-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t('chat.inviteUser')}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => {
+                    setShowInvite(false);
+                    setInviteQuery('');
+                    setInviteResults([]);
+                    setInviteStatus(null);
+                  }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </Button>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={inviteQuery}
+                  onChange={e => {
+                    setInviteQuery(e.target.value);
+                    setInviteStatus(null);
+                  }}
+                  placeholder={t('chat.inviteSearchPlaceholder')}
+                  className="pl-9 text-sm"
+                  autoFocus
+                />
+              </div>
+
+              {inviteStatus && (
+                <p
+                  className={`text-xs ${inviteStatus.type === 'success' ? 'text-primary' : 'text-destructive'}`}
+                >
+                  {inviteStatus.message}
+                </p>
+              )}
+
+              {isInviteSearching && (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
+
+              {!isInviteSearching && inviteResults.length > 0 && (
+                <div className="max-h-[200px] overflow-y-auto space-y-1">
+                  {inviteResults.map(user => (
+                    <div
+                      key={user.peerID}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/60 transition-colors"
+                    >
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt=""
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-medium truncate block">
+                          {user.name || user.handle}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs flex-shrink-0"
+                        disabled={invitingPeerID === user.peerID}
+                        onClick={() => handleInvite(user.peerID)}
+                      >
+                        {invitingPeerID === user.peerID ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          t('chat.inviteUser')
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!isInviteSearching &&
+                inviteQuery.trim().length >= 2 &&
+                inviteResults.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    {t('chat.newChat.noResults')}
+                  </p>
+                )}
+            </div>
+          )}
+        </div>
+
+        {/* Leave Room */}
+        {onLeaveRoom && (
+          <div className="pt-4 border-t border-border/50">
+            {!showLeaveConfirm ? (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 h-12"
+                onClick={() => setShowLeaveConfirm(true)}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                {t('chat.leaveRoom')}
+              </Button>
+            ) : (
+              <div className="space-y-3 p-3 bg-destructive/5 rounded-xl">
+                <p className="text-sm text-muted-foreground">{t('chat.leaveRoomConfirm')}</p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setShowLeaveConfirm(false)}
+                    disabled={isLeaving}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    disabled={isLeaving}
+                    onClick={async () => {
+                      setIsLeaving(true);
+                      try {
+                        await onLeaveRoom(room.roomId);
+                      } finally {
+                        setIsLeaving(false);
+                        setShowLeaveConfirm(false);
+                      }
+                    }}
+                  >
+                    {isLeaving ? t('common.loading') : t('chat.leaveRoom')}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

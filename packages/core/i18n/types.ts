@@ -504,6 +504,21 @@ export interface TranslationResource {
     groupChat: string;
     viewStore: string;
     sendMessage: string;
+    leaveRoom: string;
+    leaveRoomConfirm: string;
+    // Group chat
+    group: {
+      name: string;
+      namePlaceholder: string;
+      members: string;
+      searchMembers: string;
+      create: string;
+    };
+    // Room invite
+    inviteUser: string;
+    inviteSearchPlaceholder: string;
+    inviteSuccess: string;
+    inviteFailed: string;
     // User info
     unknownUser: string;
     externalUser: string;
