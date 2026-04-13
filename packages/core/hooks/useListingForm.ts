@@ -503,6 +503,9 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         (data.item as Record<string, unknown>).brand = formData.brand;
       }
       data.shippingProfile = formData.shippingProfile;
+      if (formData.shippingProfile?.profileId) {
+        data.shippingProfileId = formData.shippingProfile.profileId;
+      }
       (data.item as Record<string, unknown>).options = formData.options.map(opt => ({
         name: opt.name,
         description: opt.description,
