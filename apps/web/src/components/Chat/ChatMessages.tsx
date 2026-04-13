@@ -216,20 +216,24 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               </svg>
             )}
             {isEncrypted && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-primary/15 text-primary rounded-md">
-                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {t('chat.encrypted')}
-              </span>
+              <svg
+                className="w-3.5 h-3.5 text-primary flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                aria-label={t('chat.encrypted')}
+              >
+                <title>{t('chat.encrypted')}</title>
+                <path
+                  fillRule="evenodd"
+                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
             )}
           </HStack>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5 truncate">
             {isDirect ? t('chat.directMessage') : t('chat.groupChat')}
+            {isEncrypted && <span className="text-primary/70"> · {t('chat.encrypted')}</span>}
           </p>
         </div>
 
