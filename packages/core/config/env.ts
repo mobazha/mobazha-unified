@@ -164,6 +164,28 @@ export const LOCAL_ENV: EnvConfig = {
   },
 };
 
+/**
+ * Standalone (native binary / VPS) — API on the same origin,
+ * URLs are overridden at runtime by /runtime-config.js.
+ */
+export const STANDALONE_ENV: EnvConfig = {
+  isDevelopment: false,
+  isTestEnv: false,
+  auth: {
+    mode: 'standalone',
+  },
+  casdoor: {
+    ...PROD_ENV.casdoor,
+  },
+  api: {
+    baseUrl: '',
+    gateway: '/v1',
+    search: '',
+    mbzGateway: '',
+    websocket: '',
+  },
+};
+
 // 当前环境配置
 let currentEnv: EnvConfig = TEST_ENV;
 
@@ -252,6 +274,9 @@ export function initEnvFromProcess(): void {
   switch (envMode) {
     case 'production':
       switchToProdEnv();
+      break;
+    case 'standalone':
+      currentEnv = STANDALONE_ENV;
       break;
     case 'local':
       switchToLocalEnv();
