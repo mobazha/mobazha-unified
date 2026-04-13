@@ -1317,6 +1317,22 @@ export const ja: TranslationResource = {
     groupChat: 'グループチャット',
     viewStore: 'ストアを見る',
     sendMessage: 'メッセージを送信',
+    leaveRoom: 'ルームを退出',
+    leaveRoomConfirm:
+      'このルームを退出してもよろしいですか？この会話のメッセージは受信できなくなります。',
+
+    group: {
+      name: 'グループ名',
+      namePlaceholder: 'グループ名を入力...',
+      members: 'メンバー',
+      searchMembers: '追加するユーザーを検索...',
+      create: 'グループを作成',
+    },
+
+    inviteUser: 'ユーザーを招待',
+    inviteSearchPlaceholder: '招待するユーザーを検索...',
+    inviteSuccess: '招待を送信しました',
+    inviteFailed: '招待の送信に失敗しました',
     unknownUser: '不明なユーザー',
     externalUser: '外部Matrixユーザー',
     peerId: 'ピアID',

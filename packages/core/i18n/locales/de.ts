@@ -1347,6 +1347,22 @@ export const de: TranslationResource = {
     groupChat: 'Gruppenchat',
     viewStore: 'Shop ansehen',
     sendMessage: 'Nachricht senden',
+    leaveRoom: 'Raum verlassen',
+    leaveRoomConfirm:
+      'Möchten Sie diesen Raum wirklich verlassen? Sie erhalten keine Nachrichten mehr aus dieser Unterhaltung.',
+
+    group: {
+      name: 'Gruppenname',
+      namePlaceholder: 'Gruppenname eingeben...',
+      members: 'Mitglieder',
+      searchMembers: 'Benutzer zum Hinzufügen suchen...',
+      create: 'Gruppe erstellen',
+    },
+
+    inviteUser: 'Benutzer einladen',
+    inviteSearchPlaceholder: 'Benutzer zum Einladen suchen...',
+    inviteSuccess: 'Einladung gesendet',
+    inviteFailed: 'Einladung konnte nicht gesendet werden',
     unknownUser: 'Unbekannter Benutzer',
     externalUser: 'Externer Matrix-Benutzer',
     peerId: 'Peer-ID',

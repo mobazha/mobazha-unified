@@ -1331,6 +1331,22 @@ export const es: TranslationResource = {
     groupChat: 'Chat grupal',
     viewStore: 'Ver tienda',
     sendMessage: 'Enviar mensaje',
+    leaveRoom: 'Salir de la sala',
+    leaveRoomConfirm:
+      '¿Estás seguro de que quieres salir de esta sala? Ya no recibirás mensajes de esta conversación.',
+
+    group: {
+      name: 'Nombre del grupo',
+      namePlaceholder: 'Ingrese el nombre del grupo...',
+      members: 'Miembros',
+      searchMembers: 'Buscar usuarios para agregar...',
+      create: 'Crear grupo',
+    },
+
+    inviteUser: 'Invitar usuario',
+    inviteSearchPlaceholder: 'Buscar usuarios para invitar...',
+    inviteSuccess: 'Invitación enviada',
+    inviteFailed: 'Error al enviar la invitación',
     unknownUser: 'Usuario desconocido',
     externalUser: 'Usuario Matrix externo',
     peerId: 'Peer ID',
