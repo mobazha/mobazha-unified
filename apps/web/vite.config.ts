@@ -106,7 +106,7 @@ export default defineConfig(({ mode }) => {
         env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org'
       ),
       'process.env.NEXT_PUBLIC_MATRIX_ENABLED': JSON.stringify(
-        env.NEXT_PUBLIC_MATRIX_ENABLED || 'false'
+        env.NEXT_PUBLIC_MATRIX_ENABLED || 'true'
       ),
       'process.env.NEXT_PUBLIC_USE_MOCK_DATA': JSON.stringify(
         env.NEXT_PUBLIC_USE_MOCK_DATA || 'false'
@@ -150,6 +150,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve(__dirname, './src/compat/navigation.tsx'),
         },
         { find: 'next/image', replacement: path.resolve(__dirname, './src/compat/image.tsx') },
+        {
+          find: 'next/dynamic',
+          replacement: path.resolve(__dirname, './src/compat/dynamic.tsx'),
+        },
         {
           find: 'next/font/google',
           replacement: path.resolve(__dirname, './src/compat/font-google.ts'),
