@@ -31,6 +31,38 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 /**
+ * Serves `/runtime-config.js` in dev when `NEXT_PUBLIC_ENV_MODE=standalone`, matching
+ * mobazha3.0 embedded `internal/embedded/frontend/server.go` so `packages/core/config/env.ts`
+ * `applyRuntimeConfig()` runs and sets `auth.mode` + API base URLs before React mounts.
+ * Without this, Vite returns 404 for the script in index.html and the app can fall back to
+ * SaaS homepage even when the shell passes standalone env vars.
+ */
+function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
+  return {
+    name: 'standalone-runtime-config',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url?.split('?')[0];
+        if (url !== '/runtime-config.js') {
+          next();
+          return;
+        }
+        if (env.NEXT_PUBLIC_ENV_MODE !== 'standalone') {
+          next();
+          return;
+        }
+        const saasUrl = env.NEXT_PUBLIC_SAAS_URL || 'https://app.mobazha.org';
+        res.setHeader('Content-Type', 'application/javascript');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.end(
+          `window.__RUNTIME_CONFIG__={saasUrl:${JSON.stringify(saasUrl)},authMode:"standalone"};`
+        );
+      });
+    },
+  };
+}
+
+/**
  * Vite plugin: AI proxy endpoint at /internal/ai/generate.
  * Mirrors the Next.js API route, sharing core logic from src/server/aiHandler.ts.
  */
@@ -94,7 +126,7 @@ export default defineConfig(({ mode }) => {
   if (env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL;
 
   return {
-    plugins: [react(), aiProxyPlugin()],
+    plugins: [react(), standaloneRuntimeConfigPlugin(env), aiProxyPlugin()],
     // 定义全局变量，兼容 Next.js 环境变量
     // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
     // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined
