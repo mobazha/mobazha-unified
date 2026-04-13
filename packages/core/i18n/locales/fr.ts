@@ -1339,6 +1339,22 @@ export const fr: TranslationResource = {
     groupChat: 'Chat de groupe',
     viewStore: 'Voir la boutique',
     sendMessage: 'Envoyer un message',
+    leaveRoom: 'Quitter la salle',
+    leaveRoomConfirm:
+      'Êtes-vous sûr de vouloir quitter cette salle ? Vous ne recevrez plus de messages de cette conversation.',
+
+    group: {
+      name: 'Nom du groupe',
+      namePlaceholder: 'Entrez le nom du groupe...',
+      members: 'Membres',
+      searchMembers: 'Rechercher des utilisateurs à ajouter...',
+      create: 'Créer un groupe',
+    },
+
+    inviteUser: 'Inviter un utilisateur',
+    inviteSearchPlaceholder: 'Rechercher des utilisateurs à inviter...',
+    inviteSuccess: 'Invitation envoyée',
+    inviteFailed: "Échec de l'envoi de l'invitation",
     unknownUser: 'Utilisateur inconnu',
     externalUser: 'Utilisateur Matrix externe',
     peerId: 'Peer ID',

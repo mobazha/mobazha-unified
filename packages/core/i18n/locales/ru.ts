@@ -1324,6 +1324,22 @@ export const ru: TranslationResource = {
     groupChat: 'Групповой чат',
     viewStore: 'Посмотреть магазин',
     sendMessage: 'Отправить сообщение',
+    leaveRoom: 'Покинуть комнату',
+    leaveRoomConfirm:
+      'Вы уверены, что хотите покинуть эту комнату? Вы больше не будете получать сообщения из этой беседы.',
+
+    group: {
+      name: 'Название группы',
+      namePlaceholder: 'Введите название группы...',
+      members: 'Участники',
+      searchMembers: 'Поиск пользователей для добавления...',
+      create: 'Создать группу',
+    },
+
+    inviteUser: 'Пригласить пользователя',
+    inviteSearchPlaceholder: 'Поиск пользователей для приглашения...',
+    inviteSuccess: 'Приглашение отправлено',
+    inviteFailed: 'Не удалось отправить приглашение',
     unknownUser: 'Неизвестный пользователь',
     externalUser: 'Внешний пользователь Matrix',
     peerId: 'Peer ID',

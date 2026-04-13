@@ -1306,6 +1306,21 @@ export const ko: TranslationResource = {
     groupChat: '그룹 채팅',
     viewStore: '상점 보기',
     sendMessage: '메시지 보내기',
+    leaveRoom: '방 나가기',
+    leaveRoomConfirm: '이 방을 나가시겠습니까? 더 이상 이 대화의 메시지를 받을 수 없습니다.',
+
+    group: {
+      name: '그룹 이름',
+      namePlaceholder: '그룹 이름 입력...',
+      members: '멤버',
+      searchMembers: '추가할 사용자 검색...',
+      create: '그룹 만들기',
+    },
+
+    inviteUser: '사용자 초대',
+    inviteSearchPlaceholder: '초대할 사용자 검색...',
+    inviteSuccess: '초대가 전송되었습니다',
+    inviteFailed: '초대 전송에 실패했습니다',
     unknownUser: '알 수 없는 사용자',
     externalUser: '외부 Matrix 사용자',
     peerId: '피어 ID',
