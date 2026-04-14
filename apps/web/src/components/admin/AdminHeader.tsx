@@ -1,10 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useI18n, useUserStore, getImageUrl, useStorefrontMode } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  getImageUrl,
+  useStorefrontMode,
+  useChatStore,
+  selectTotalUnreadCount,
+} from '@mobazha/core';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { Button } from '@/components/ui/button';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import {
   DropdownMenu,
@@ -17,7 +25,7 @@ import {
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { NotificationDropdown } from '../Notification';
-import { ArrowLeft, Eye, User, LogOut, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Eye, User, LogOut, MessageSquare, MessageCircle } from 'lucide-react';
 import { useAIChatStore } from '@mobazha/core/stores';
 
 interface AdminHeaderProps {
@@ -30,6 +38,20 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const { profile, logout } = useUserStore();
   const standaloneMode = useStorefrontMode();
   const toggleAIChat = useAIChatStore(s => s.toggle);
+  const openChatDrawer = useChatStore(state => state.openDrawer);
+  const totalUnread = useChatStore(selectTotalUnreadCount);
+  const [peerIdCopied, setPeerIdCopied] = useState(false);
+  const peerID = profile?.peerID;
+  const handleCopyPeerID = useCallback(() => {
+    if (!peerID) return;
+    navigator.clipboard
+      .writeText(peerID)
+      .then(() => {
+        setPeerIdCopied(true);
+        setTimeout(() => setPeerIdCopied(false), 2000);
+      })
+      .catch(() => {});
+  }, [peerID]);
 
   const handleLogout = () => {
     logout('/');
@@ -95,6 +117,21 @@ export function AdminHeader({ title }: AdminHeaderProps) {
         >
           <MessageSquare className="w-4 h-4" />
         </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-primary/10 hover:text-primary transition-colors relative"
+          onClick={openChatDrawer}
+          aria-label={t('nav.openMessages')}
+          data-testid="admin-header-chat"
+        >
+          <MessageCircle className="h-5 w-5" />
+          {totalUnread > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-error-foreground text-xs font-bold rounded-full">
+              {totalUnread > 99 ? '99+' : totalUnread}
+            </span>
+          )}
+        </Button>
         <NotificationDropdown />
         <LanguageSwitcher compact />
         <ThemeSwitcher compact />
@@ -122,9 +159,44 @@ export function AdminHeader({ title }: AdminHeaderProps) {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{profile.name || 'User'}</p>
-                    <p className="text-xs leading-none text-muted-foreground truncate">
-                      {profile.peerID?.slice(0, 8)}...{profile.peerID?.slice(-4)}
-                    </p>
+                    <button
+                      onClick={handleCopyPeerID}
+                      className="text-xs leading-none text-muted-foreground truncate hover:text-foreground transition-colors text-left flex items-center gap-1 group"
+                      title={profile.peerID}
+                    >
+                      <span>
+                        {profile.peerID?.slice(0, 8)}...{profile.peerID?.slice(-4)}
+                      </span>
+                      {peerIdCopied ? (
+                        <svg
+                          className="w-3 h-3 text-primary flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
