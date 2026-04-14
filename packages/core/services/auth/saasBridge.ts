@@ -113,7 +113,7 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
   const saasOrigin = getSaasOrigin();
   const storeOrigin = window.location.origin;
 
-  const loginUrl = `${saasUrl}/auth/standalone-login?store_origin=${encodeURIComponent(storeOrigin)}`;
+  const loginUrl = `${saasUrl}/auth/standalone-login?store_origin=${encodeURIComponent(storeOrigin)}&mode=bridge`;
 
   const left = Math.max(0, (window.screen.width - POPUP_WIDTH) / 2);
   const top = Math.max(0, (window.screen.height - POPUP_HEIGHT) / 2);
@@ -125,14 +125,17 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
   }
 
   return new Promise<SaaSBridgeResult>(resolve => {
+    let settled = false;
+
     const cleanup = () => {
+      settled = true;
       window.removeEventListener('message', onMessage);
       clearTimeout(timeoutId);
       clearInterval(pollId);
       try {
         if (popup && !popup.closed) popup.close();
       } catch {
-        // cross-origin close may fail
+        // COOP may block cross-origin close
       }
     };
 
@@ -159,14 +162,20 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
       resolve({ success: false, error: 'Authentication timed out' });
     }, POPUP_TIMEOUT_MS);
 
+    // Poll popup.closed to detect user-dismissed popups.
+    // Google OAuth sets COOP headers that block cross-origin access to
+    // popup.closed, producing browser console warnings. The postMessage
+    // path above is the primary token delivery mechanism; this poll is
+    // only a fallback for detecting manual popup dismissal.
     const pollId = setInterval(() => {
+      if (settled) return;
       try {
         if (popup.closed) {
           cleanup();
           resolve({ success: false, error: 'Login window was closed' });
         }
       } catch {
-        // cross-origin access may throw
+        // COOP blocks popup.closed — rely on postMessage instead
       }
     }, 500);
   });
