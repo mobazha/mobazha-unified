@@ -339,7 +339,10 @@ export default function AccountSettingsPage() {
   // 可绑定账号卡片
   const renderAvailableProviderCard = (provider: ProviderInfo) => {
     const telegramBot = linkConfig?.providers?.telegram?.botUsername;
-    const isTelegram = provider.id === 'telegram' && telegramBot;
+    // Standalone stores run on localhost / custom domains not whitelisted in
+    // BotFather, so the Telegram Login Widget shows "Bot domain invalid".
+    // Fall back to Casdoor OAuth redirect which runs on the SaaS domain.
+    const isTelegram = provider.id === 'telegram' && telegramBot && !standaloneMode;
 
     return (
       <div

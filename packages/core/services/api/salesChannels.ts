@@ -5,8 +5,9 @@
  * Backend: mobazha_hosting /platform/v1/store-links and /platform/v1/store-bots
  */
 
-import { getEnvConfig } from '../../config/env';
+import { getEnvConfig, isStandaloneMode } from '../../config/env';
 import { getStoredToken } from '../auth/token';
+import { getCachedSaaSToken } from '../auth/saasBridge';
 import type { StoreLinkInfo, StoreBotInfo, BindStoreBotRequest } from '../../types/salesChannels';
 import { HOSTING_API } from '../../config/apiPaths';
 
@@ -14,10 +15,26 @@ function getBaseUrl(): string {
   return getEnvConfig().api.baseUrl;
 }
 
+/**
+ * Platform API calls (/platform/v1/*) require a Casdoor JWT for tenant
+ * identification. In standalone mode the normal stored token is Basic Auth
+ * (local admin), which is meaningless to the SaaS platform.  Prefer the
+ * SaaS Bridge JWT obtained via the Connect popup; fall back to the local
+ * token for SaaS deployments where it already is a Casdoor JWT.
+ */
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+
+  if (isStandaloneMode()) {
+    const saasJwt = getCachedSaaSToken();
+    if (saasJwt) {
+      headers.Authorization = `Bearer ${saasJwt}`;
+      return headers;
+    }
+  }
+
   const token = getStoredToken();
   if (token) {
     if (token.startsWith('basic:')) {

@@ -28,7 +28,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Link2,
   Copy,
   RefreshCw,
   Bot,
@@ -294,7 +293,7 @@ function StoreHandleSection({
           <div className="space-y-1">
             <button
               onClick={() => setShowRemoveConfirm(true)}
-              className="text-xs text-muted-foreground hover:text-destructive transition-colors underline-offset-2 hover:underline"
+              className="text-xs text-destructive/80 hover:text-destructive transition-colors underline-offset-2 hover:underline"
             >
               {t('admin.salesChannels.handleRemoveButton')}
             </button>
@@ -331,20 +330,6 @@ function StoreHandleSection({
 }
 
 // --- Section 2: Share Links (brand-priority) ---
-
-function hasBrandDomain(
-  subdomainUrl: string | null | undefined,
-  directLink: string | undefined
-): boolean {
-  if (!subdomainUrl?.trim() || !directLink?.trim()) return false;
-  try {
-    const sub = new URL(subdomainUrl.includes('://') ? subdomainUrl : `https://${subdomainUrl}`);
-    const dir = new URL(directLink);
-    return sub.hostname !== dir.hostname;
-  } catch {
-    return Boolean(subdomainUrl.trim());
-  }
-}
 
 function StoreLinkSection({
   storeLink,
@@ -396,13 +381,13 @@ function StoreLinkSection({
     );
   }
 
-  const hasBrand = hasBrandDomain(subdomainUrl, storeLink.directLink);
+  const webLink = subdomainUrl || undefined;
   const hasBrandBot = Boolean(brandBotLink);
   const hasTelegram = Boolean(storeLink.telegramLink);
   const hasDeepLink = Boolean(storeLink.deepLink);
 
-  const primaryWebLink = hasBrand ? subdomainUrl! : storeLink.directLink;
-  const primaryWebLabel = hasBrand
+  const primaryWebLink = webLink;
+  const primaryWebLabel = webLink
     ? t('admin.salesChannels.brandWebLink')
     : t('admin.salesChannels.webLink');
 
@@ -411,7 +396,7 @@ function StoreLinkSection({
     ? t('admin.salesChannels.yourTelegramBot')
     : t('admin.salesChannels.telegramLink');
 
-  const hasPlatformFallbackLinks = hasBrand || (hasBrandBot && hasTelegram);
+  const hasPlatformFallbackLinks = webLink && hasBrandBot && hasTelegram;
 
   return (
     <>
@@ -445,14 +430,6 @@ function StoreLinkSection({
         {/* Platform fallback links (only when brand links exist) */}
         {hasPlatformFallbackLinks && (
           <CollapsibleSection title={t('admin.salesChannels.platformCompatLinks')}>
-            {hasBrand && storeLink.directLink && (
-              <LinkRow
-                icon={Link2}
-                label={t('admin.salesChannels.platformWebLink')}
-                value={storeLink.directLink}
-                href={storeLink.directLink}
-              />
-            )}
             {hasBrandBot && hasTelegram && (
               <LinkRow
                 icon={Send}
@@ -509,7 +486,7 @@ function StoreLinkSection({
         </CollapsibleSection>
 
         {/* Upgrade hint when no brand domain */}
-        {!hasBrand && (
+        {!webLink && (
           <p className="text-xs text-muted-foreground italic">
             {t('admin.salesChannels.brandUpgradeHint')}
           </p>
@@ -708,33 +685,34 @@ function TelegramBotSection({
     );
   }
 
+  if (!telegramLinkChecking && !telegramLinked) {
+    return (
+      <div
+        className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5"
+        role="status"
+      >
+        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {t('admin.salesChannels.telegramBindingRequired')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('admin.salesChannels.telegramBindingRequiredDesc')}
+          </p>
+          <a
+            href="/settings/account"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-1"
+          >
+            {t('admin.salesChannels.telegramBindingAction')}
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {/* Telegram binding guard */}
-      {!telegramLinkChecking && !telegramLinked && (
-        <div
-          className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5"
-          role="status"
-        >
-          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">
-              {t('admin.salesChannels.telegramBindingRequired')}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t('admin.salesChannels.telegramBindingRequiredDesc')}
-            </p>
-            <a
-              href="/settings/account"
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-1"
-            >
-              {t('admin.salesChannels.telegramBindingAction')}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        </div>
-      )}
-
       {/* Store address prerequisite */}
       {!hasStoreHandle && (
         <div
@@ -1054,17 +1032,27 @@ export default function SalesChannelsContent() {
     };
   }, [platformConnected]);
 
+  // Suppress error toasts briefly after platform connect — the SaaS-side
+  // claim is async and the first load attempt may fail transiently.
+  const suppressErrorToastRef = useRef(false);
+
   const handlePlatformConnected = useCallback(() => {
     setPlatformConnected(true);
+    suppressErrorToastRef.current = true;
     salesChannels.loadStoreLink();
     if (peerID) salesChannels.loadStoreBot();
     storeDomain.loadDomain();
+    setTimeout(() => {
+      suppressErrorToastRef.current = false;
+    }, 5000);
   }, [salesChannels, storeDomain, peerID]);
 
   const prevSCErrorRef = useRef<string | null>(null);
   useEffect(() => {
     if (salesChannels.error && salesChannels.error !== prevSCErrorRef.current) {
-      toast({ variant: 'destructive', title: salesChannels.error });
+      if (!suppressErrorToastRef.current) {
+        toast({ variant: 'destructive', title: salesChannels.error });
+      }
     }
     prevSCErrorRef.current = salesChannels.error;
   }, [salesChannels.error, toast]);
