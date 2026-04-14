@@ -1,10 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 # 取消之前的运行
 concurrency:
