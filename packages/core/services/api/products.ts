@@ -19,6 +19,7 @@ import {
   searchRawGet,
   searchPost,
 } from './helpers';
+import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
 
 // API 返回的搜索结果格式
 interface SearchResultItem {
@@ -284,14 +285,19 @@ export interface StoreListingsResult {
 /**
  * Fetch store listings with automatic fallback.
  *
- * 1. Try the Node API (routes through cross-store proxy for standalone stores).
- * 2. On 503 STORE_UNAVAILABLE, fall back to the Search API cached index.
- * 3. Returns an `isOffline` flag so the UI can display an offline banner.
+ * Uses the shared storeStatusCache: if the store is already known offline,
+ * skips the Node API attempt entirely and goes straight to Search.
+ * On successful Node API response, marks the store as online.
  */
 export async function getStoreListingsWithFallback(
   peerID: string,
   pageSize = 12
 ): Promise<StoreListingsResult> {
+  if (isStoreKnownOffline(peerID)) {
+    const fallback = await fetchStoreListings(peerID, pageSize);
+    return { listings: fallback, isOffline: true };
+  }
+
   try {
     const data = await publicGet<ProductListItem[] | { success: false }>(
       NODE_API.LISTINGS_INDEX_PEER(peerID)
@@ -299,9 +305,11 @@ export async function getStoreListingsWithFallback(
     if (!data || (data as { success: false }).success === false) {
       return { listings: [], isOffline: false };
     }
+    markStoreOnline(peerID);
     return { listings: data as ProductListItem[], isOffline: false };
   } catch (err) {
     if (isStoreUnavailableError(err)) {
+      markStoreOffline(peerID);
       const fallback = await fetchStoreListings(peerID, pageSize);
       return { listings: fallback, isOffline: true };
     }
@@ -327,11 +335,26 @@ export async function getListing(slug: string, peerID?: string): Promise<Product
   }
 }
 
+export interface PublicListingResult {
+  listing: Product | null;
+  isOffline: boolean;
+}
+
 /**
  * 获取公开商品详情（无需认证）
- * 注意：移除了时间戳参数以支持请求去重缓存
+ *
+ * Uses the shared storeStatusCache: if the store is known offline and we
+ * have a peerID, returns immediately with isOffline=true so the UI can
+ * display an appropriate message instead of silently showing nothing.
  */
-export async function getPublicListing(slug: string, peerID?: string): Promise<Product | null> {
+export async function getPublicListing(
+  slug: string,
+  peerID?: string
+): Promise<PublicListingResult> {
+  if (peerID && isStoreKnownOffline(peerID)) {
+    return { listing: null, isOffline: true };
+  }
+
   const path = !peerID
     ? NODE_API.LISTING(slug)
     : `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
@@ -339,20 +362,27 @@ export async function getPublicListing(slug: string, peerID?: string): Promise<P
   try {
     const data = await publicGet<{ listing?: Product } & Product>(path);
     const listing = data.listing ?? data;
+    if (peerID) markStoreOnline(peerID);
 
-    // 转换数据格式以适配前端
     if (listing?.item?.images?.length) {
       return {
-        ...listing,
-        thumbnail: listing.item.images[0],
-        title: listing.item.title,
-        slug: listing.slug ?? slug,
-        vendorPeerID: listing.vendorID?.peerID ?? peerID,
-      } as Product;
+        listing: {
+          ...listing,
+          thumbnail: listing.item.images[0],
+          title: listing.item.title,
+          slug: listing.slug ?? slug,
+          vendorPeerID: listing.vendorID?.peerID ?? peerID,
+        } as Product,
+        isOffline: false,
+      };
     }
-    return listing;
-  } catch {
-    return null;
+    return { listing, isOffline: false };
+  } catch (err) {
+    if (peerID && isStoreUnavailableError(err)) {
+      markStoreOffline(peerID);
+      return { listing: null, isOffline: true };
+    }
+    return { listing: null, isOffline: false };
   }
 }
 

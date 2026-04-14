@@ -8,12 +8,17 @@ import { getGatewayUrl, getBuyerGatewayUrl, getSearchUrl, getAuthHeaders } from 
 import { isStandaloneMode } from '../../config/env';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
 import { authGet, authPost, authPut, publicGet, searchPost } from './helpers';
+import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
 
 /**
  * 获取用户资料
  *
- * SaaS 模式优先从 search 服务获取（索引更快），失败时回退到 node 直连 API。
- * 独立站模式直接使用 node API。
+ * Unified strategy: Node API first, Search service fallback.
+ *
+ * For SaaS tenants the Node API responds via the local bridge (fast).
+ * For online standalone stores it proxies via LibP2P (real-time data).
+ * On 503 (store offline), falls back to the search service index and
+ * caches the offline status so parallel requests skip the proxy attempt.
  */
 export async function getProfile(peerID?: string): Promise<UserProfile | null> {
   try {
@@ -23,26 +28,38 @@ export async function getProfile(peerID?: string): Promise<UserProfile | null> {
     if (isStandaloneMode()) {
       return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
     }
-    // SaaS: search service first, node API fallback
+
+    // SaaS: if store is known offline, go straight to search
+    if (isStoreKnownOffline(peerID)) {
+      return await fetchProfileFromSearch(peerID);
+    }
+
+    // Node API first (works for both SaaS tenants and online standalone stores)
     try {
-      const timestamp = Date.now();
-      const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}?${timestamp}`;
-      return await get<UserProfile>(url, getAuthHeaders());
-    } catch {
-      try {
-        return await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
-      } catch (nodeErr) {
-        if (isStoreUnavailableError(nodeErr)) {
-          const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}`;
-          return await get<UserProfile>(url, getAuthHeaders()).catch(() => null);
-        }
-        throw nodeErr;
+      const profile = await publicGet<UserProfile>(`${NODE_API.PROFILES}/${peerID}`);
+      markStoreOnline(peerID);
+      return profile;
+    } catch (nodeErr) {
+      if (isStoreUnavailableError(nodeErr)) {
+        markStoreOffline(peerID);
+        return await fetchProfileFromSearch(peerID);
       }
+      // Other errors (network, 500): try search as best-effort fallback
+      return await fetchProfileFromSearch(peerID);
     }
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       return null;
     }
+    return null;
+  }
+}
+
+async function fetchProfileFromSearch(peerID: string): Promise<UserProfile | null> {
+  try {
+    const url = `${getSearchUrl()}${SEARCH_API.PROFILE_RAW(peerID)}`;
+    return await get<UserProfile>(url, getAuthHeaders());
+  } catch {
     return null;
   }
 }

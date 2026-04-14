@@ -62,9 +62,9 @@ describe.skipIf(!isIntegrationTestEnabled())('Purchase Flow E2E Tests', () => {
         return;
       }
 
-      const detail = await productsApi.getPublicListing(sellerListing.slug, sellerPeerID);
-      expect(detail).toBeTruthy();
-      expect(detail?.slug).toBe(sellerListing.slug);
+      const result = await productsApi.getPublicListing(sellerListing.slug, sellerPeerID);
+      expect(result.listing).toBeTruthy();
+      expect(result.listing?.slug).toBe(sellerListing.slug);
     });
 
     it('should estimate order total', async () => {
