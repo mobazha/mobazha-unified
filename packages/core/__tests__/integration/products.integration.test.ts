@@ -84,9 +84,9 @@ describe.skipIf(!isIntegrationTestEnabled())('Products API Integration Tests', (
       }
 
       const firstListing = sellerListings[0];
-      const detail = await productsApi.getPublicListing(firstListing.slug, sellerPeerID);
+      const result = await productsApi.getPublicListing(firstListing.slug, sellerPeerID);
 
-      expect(detail).toBeTruthy();
+      expect(result.listing).toBeTruthy();
     });
   });
 

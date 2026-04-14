@@ -87,7 +87,8 @@ export function useListing(slug: string | null, peerID?: string) {
   });
 
   return {
-    listing: data ?? null,
+    listing: data?.listing ?? null,
+    isOffline: data?.isOffline ?? false,
     isLoading,
     error: formatQueryError(error),
     refetch,

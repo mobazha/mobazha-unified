@@ -73,8 +73,8 @@ export const productDataService = {
     if (isMockMode()) {
       return mockServices.products.getProduct(slug);
     }
-    // 优先使用公开 API
-    return await productsApi.getPublicListing(slug, peerID);
+    const result = await productsApi.getPublicListing(slug, peerID);
+    return result.listing;
   },
 
   /**
