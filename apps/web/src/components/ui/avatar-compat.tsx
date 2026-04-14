@@ -30,8 +30,7 @@ function needsAuthentication(url: string | undefined): boolean {
   return (
     url.includes('/_matrix/client/v1/media/') ||
     url.includes('/chat/media/') ||
-    url.startsWith('mxc://') ||
-    url.includes('/media/images/')
+    url.startsWith('mxc://')
   );
 }
 
