@@ -94,6 +94,7 @@ export interface NetworkConfigResponse {
   overlayType: string;
   overlayDomain?: string;
   dockerManaged: boolean;
+  gatewayPort: number;
 }
 
 export interface NetworkConfigUpdateResponse {

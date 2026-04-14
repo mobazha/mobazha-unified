@@ -5047,6 +5047,43 @@ export const en: TranslationResource = {
         'Set one of these HTTPS URLs as your Bot Menu Button / Web App URL in @BotFather.',
       recommendedWebAppUrlRow: 'Brand storefront URL',
       botFatherHttpsExactNote: 'The URL must match exactly (HTTPS, no extra path).',
+
+      standalone: {
+        connectTitle: 'Connect to Mobazha Platform',
+        connectDesc:
+          'Get a branded subdomain ({handle}.mymbz.org), share links, and Telegram Bot — works even behind NAT.',
+        featureBrandedDomain: 'Branded subdomain ({handle}.mymbz.org)',
+        featureShortLinks: 'Short links for sharing',
+        featureTelegramBot: 'Telegram Bot binding',
+        quickPathTitle: 'Quick: Connect to Platform',
+        quickPathDesc:
+          'Connect above to get a branded {handle}.mymbz.org link and short URLs instantly.',
+        natQuickPathDesc:
+          'Connect to the Mobazha Platform above to get a branded share link ({handle}.mymbz.org) that works even behind NAT.',
+        advancedNat: 'Advanced: Make your store publicly accessible',
+        tunnelHint:
+          'Set up a Cloudflare Tunnel or similar service to expose your store to the internet, then configure a domain in System Settings.',
+        customDomainTitle: 'Custom Domain',
+        customDomainDockerDesc:
+          'Use your own domain for a professional storefront with automatic HTTPS.',
+        customDomainNativeDesc:
+          'Set up a reverse proxy (Nginx/Caddy) pointing to your store, then register your domain.',
+        configureDomain: 'Configure Domain',
+        goToSystem: 'System Settings',
+        localDomain: 'Store URL',
+        natBotTitle: 'Connect to Platform for Telegram Bot',
+        natBotDesc:
+          'Use @MbzBridgeBot to let buyers access your store via Telegram even behind NAT. Connect to the Mobazha Platform above to set this up.',
+        botNeedsDomain: 'Domain Required',
+        botNeedsDomainDesc:
+          'Connect to the Platform above for a branded bot, or configure a custom domain first to create your own Telegram Bot.',
+        selfBotGuideTitle: 'Create Your Own Telegram Bot',
+        selfBotStep1: 'Open @BotFather in Telegram and send /newbot',
+        selfBotStep2: 'Follow the prompts to name your bot',
+        selfBotStep3: 'Send /newapp to create a Web App, then set the URL to:',
+        selfBotNote:
+          'After creating the bot, you can come back here to bind it once connected to the platform, or manage it directly via BotFather.',
+      },
     },
     storeBranding: {
       pageTitle: 'Store Branding',
@@ -5683,11 +5720,34 @@ export const en: TranslationResource = {
         'Docker socket not available. Use the CLI command "mobazha-ctl overlay enable tor" or "mobazha-ctl overlay enable lokinet" on the host to manage overlay networks.',
     },
     domain: {
-      title: 'Domain Settings',
-      label: 'Store Domain',
+      title: 'Custom Domain',
+      label: 'Domain',
       save: 'Save',
-      hint: "Leave empty for IP-only mode (self-signed TLS). Set a domain for automatic HTTPS via Let's Encrypt.",
+      hint: 'Enter the domain pointing to this server (without http/https).',
       error: 'Failed to update domain',
+      natWarning: 'Your store is behind NAT and not directly reachable from the internet.',
+      natDesc:
+        'You need a tunnel service to expose your local store to the internet before setting up a custom domain.',
+      natStep1: 'Set up a tunnel to expose your store to the internet',
+      natStep2: 'Point your domain to the tunnel (or use the tunnel-provided domain)',
+      natStep3: 'Enter your domain below and save',
+      tunnelOptions: 'Recommended tunnel services',
+      cfTunnelDesc: 'Free, supports custom domains with automatic SSL. Best for long-term use.',
+      ngrokDesc: 'Quick setup for testing. Paid plans support custom domains.',
+      tunnelAlt:
+        'Alternatively, connect to the Mobazha Platform in Sales Channels for a zero-config branded subdomain without setting up tunnels.',
+      dockerGuide: 'Your Docker environment supports automatic HTTPS. Follow these steps:',
+      dockerStep1: "Point your domain's DNS A record to this server's IP address",
+      dockerStep2: 'Enter your domain below and save',
+      dockerStep3: 'Caddy will automatically obtain an SSL certificate',
+      nativeGuide: 'Set up a reverse proxy on this server to serve your store over HTTPS:',
+      nativeStep1: "Point your domain's DNS A record to this server's public IP",
+      nativeStep2:
+        'Install a reverse proxy and proxy your domain to this store (see example below)',
+      nativeStep3:
+        "Set up SSL (Caddy does this automatically; for Nginx use Let's Encrypt / certbot)",
+      nativeStep4: 'Enter your domain below and save',
+      configExample: 'Show example proxy configuration',
     },
     actions: {
       title: 'Actions',

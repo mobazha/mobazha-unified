@@ -128,6 +128,9 @@ export * from './useStoreActivity';
 // Sales Channels (Store Links + Store Bot)
 export * from './useSalesChannels';
 
+// Standalone Store Info (local connectivity + domain)
+export * from './useStandaloneStoreInfo';
+
 // Storefront Mode (SSR-safe branded-subdomain detection)
 export * from './useStorefrontMode';
 

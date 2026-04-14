@@ -30,9 +30,7 @@ import {
   clearLinkCallbackParams,
   SUPPORTED_PROVIDERS,
   standaloneStoresApi,
-  acquireSaaSToken,
   hasSaaSToken,
-  systemApi,
 } from '@mobazha/core';
 import type {
   LinkedAccount,
@@ -54,6 +52,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
+import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
 
 const TELEGRAM_WIDGET_CALLBACK = '__mbz_telegram_link_cb';
 
@@ -109,8 +108,6 @@ export default function AccountSettingsPage() {
   const [saasConnected, setSaasConnected] = useState(() =>
     standaloneMode ? hasSaaSToken() : true
   );
-  const [saasConnecting, setSaasConnecting] = useState(false);
-  const [saasError, setSaasError] = useState<string | null>(null);
 
   // 加载已绑定账号
   const loadLinkedAccounts = useCallback(async () => {
@@ -377,33 +374,6 @@ export default function AccountSettingsPage() {
     );
   };
 
-  // Standalone: acquire SaaS JWT, then call connect-platform to persist
-  // the Casdoor certificate and ownerUserID on this node (enables social login).
-  const handleConnectSaaS = useCallback(async () => {
-    setSaasConnecting(true);
-    setSaasError(null);
-    try {
-      const result = await acquireSaaSToken();
-      if (!result.success || !result.token) {
-        setSaasError(result.error || 'Failed to connect');
-        return;
-      }
-
-      try {
-        await systemApi.connectPlatform(result.token);
-      } catch (err) {
-        console.warn('connect-platform call failed (binding still works):', err);
-      }
-
-      setSaasConnected(true);
-      loadLinkedAccounts();
-    } catch (err) {
-      setSaasError(err instanceof Error ? err.message : 'Failed to connect');
-    } finally {
-      setSaasConnecting(false);
-    }
-  }, [loadLinkedAccounts]);
-
   if (standaloneMode && !saasConnected) {
     return (
       <div>
@@ -411,44 +381,30 @@ export default function AccountSettingsPage() {
           title={t('settings.sidebar.account')}
           description={t('settings.accountBinding.description')}
         />
-        <Card className="p-6 md:p-8">
-          <div className="text-center py-8">
-            <Link2 className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              {t('settings.accountBinding.standaloneSocialTitle', {
-                defaultValue: 'Social Account Binding',
-              })}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-              {t('settings.accountBinding.standaloneConnectDesc', {
-                defaultValue:
-                  'Connect your Telegram, Discord, or Google account to enable quick social login. Sign in to Mobazha Platform first to manage your linked accounts.',
-              })}
-            </p>
-            {saasError && (
-              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
-                <p className="text-sm text-destructive">{saasError}</p>
-              </div>
-            )}
-            <Button onClick={handleConnectSaaS} disabled={saasConnecting} className="mx-auto">
-              {saasConnecting
-                ? t('common.connecting', { defaultValue: 'Connecting...' })
-                : t('settings.accountBinding.connectPlatform', {
-                    defaultValue: 'Connect to Mobazha Platform',
-                  })}
-            </Button>
-            <div className="flex items-center justify-center gap-4 mt-6 text-muted-foreground/50">
-              {SUPPORTED_PROVIDERS.map(p => (
-                <div key={p.id} className="flex flex-col items-center gap-1">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    <ProviderIcon provider={p.id} />
-                  </div>
-                  <span className="text-xs">{p.name}</span>
+        <ConnectPlatformCard
+          title={t('settings.accountBinding.standaloneSocialTitle', {
+            defaultValue: 'Social Account Binding',
+          })}
+          description={t('settings.accountBinding.standaloneConnectDesc', {
+            defaultValue:
+              'Connect your Telegram, Discord, or Google account to enable quick social login. Sign in to Mobazha Platform first to manage your linked accounts.',
+          })}
+          onConnected={() => {
+            setSaasConnected(true);
+            loadLinkedAccounts();
+          }}
+        >
+          <div className="flex items-center justify-center gap-4 mt-6 text-muted-foreground/50">
+            {SUPPORTED_PROVIDERS.map(p => (
+              <div key={p.id} className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <ProviderIcon provider={p.id} />
                 </div>
-              ))}
-            </div>
+                <span className="text-xs">{p.name}</span>
+              </div>
+            ))}
           </div>
-        </Card>
+        </ConnectPlatformCard>
       </div>
     );
   }
