@@ -3239,6 +3239,33 @@ export interface TranslationResource {
       recommendedWebAppUrlsBody?: string;
       recommendedWebAppUrlRow?: string;
       botFatherHttpsExactNote?: string;
+      standalone?: {
+        connectTitle?: string;
+        connectDesc?: string;
+        featureBrandedDomain?: string;
+        featureShortLinks?: string;
+        featureTelegramBot?: string;
+        quickPathTitle?: string;
+        quickPathDesc?: string;
+        natQuickPathDesc?: string;
+        advancedNat?: string;
+        tunnelHint?: string;
+        customDomainTitle?: string;
+        customDomainDockerDesc?: string;
+        customDomainNativeDesc?: string;
+        configureDomain?: string;
+        goToSystem?: string;
+        localDomain?: string;
+        natBotTitle?: string;
+        natBotDesc?: string;
+        botNeedsDomain?: string;
+        botNeedsDomainDesc?: string;
+        selfBotGuideTitle?: string;
+        selfBotStep1?: string;
+        selfBotStep2?: string;
+        selfBotStep3?: string;
+        selfBotNote?: string;
+      };
     };
     storeBranding?: {
       pageTitle?: string;

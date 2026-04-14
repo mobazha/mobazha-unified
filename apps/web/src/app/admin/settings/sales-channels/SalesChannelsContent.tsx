@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useI18n, useUserStore } from '@mobazha/core';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useI18n, useUserStore, hasSaaSToken } from '@mobazha/core';
+import { isStandaloneMode } from '@mobazha/core/config/env';
 import { useSalesChannels } from '@mobazha/core/hooks/useSalesChannels';
 import type { UseSalesChannelsReturn } from '@mobazha/core/hooks/useSalesChannels';
 import { useStoreDomain } from '@mobazha/core/hooks/useStoreDomain';
 import { getStoreSubdomainBase } from '@mobazha/core/config/env';
 import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
+import { useStandaloneStoreInfo } from '@mobazha/core/hooks/useStandaloneStoreInfo';
 import type { StoreBotInfo } from '@mobazha/core/types/salesChannels';
 import { getLinkedAccounts } from '@mobazha/core/services/auth';
 import { SettingsSection } from '@/components/SettingsLayout';
+import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +40,7 @@ import {
   Globe,
   ChevronDown,
   AlertTriangle,
+  Settings,
 } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
@@ -779,6 +783,233 @@ function TelegramBotSection({
   );
 }
 
+// --- Standalone: Unconnected Share Links (dual-path design) ---
+
+function UnconnectedShareSection({
+  connectivity,
+  domain,
+  dockerManaged,
+}: {
+  connectivity: string;
+  domain: string;
+  dockerManaged: boolean;
+}) {
+  const { t } = useI18n();
+
+  if (domain) {
+    const fullUrl = domain.startsWith('http') ? domain : `https://${domain}`;
+    return (
+      <div className="divide-y divide-border rounded-lg border border-border">
+        <div className="px-3">
+          <LinkRow
+            icon={Globe}
+            label={t('admin.salesChannels.standalone.localDomain', { defaultValue: 'Store URL' })}
+            value={fullUrl}
+            href={fullUrl}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (connectivity === 'nat') {
+    return (
+      <div className="space-y-4 py-2">
+        <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <Globe className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.salesChannels.standalone.quickPathTitle', {
+                defaultValue: 'Quick: Connect to Platform',
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.salesChannels.standalone.natQuickPathDesc', {
+                defaultValue:
+                  'Connect to the Mobazha Platform above to get a branded share link ({handle}.mymbz.org) that works even behind NAT.',
+              })}
+            </p>
+          </div>
+        </div>
+
+        <details className="group text-sm">
+          <summary className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden list-none">
+            <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+            {t('admin.salesChannels.standalone.advancedNat', {
+              defaultValue: 'Advanced: Make your store publicly accessible',
+            })}
+          </summary>
+          <div className="mt-2 ml-5 space-y-1.5 text-xs text-muted-foreground">
+            <p>
+              {t('admin.salesChannels.standalone.tunnelHint', {
+                defaultValue:
+                  'Set up a Cloudflare Tunnel or similar service to expose your store to the internet, then configure a domain in System Settings.',
+              })}
+            </p>
+            <a
+              href="/admin/system#domain"
+              className="inline-flex items-center gap-1 text-primary hover:underline"
+            >
+              <Settings className="w-3 h-3" />
+              {t('admin.salesChannels.standalone.goToSystem', { defaultValue: 'System Settings' })}
+            </a>
+          </div>
+        </details>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 py-2">
+      <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+        <Globe className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {t('admin.salesChannels.standalone.quickPathTitle', {
+              defaultValue: 'Quick: Connect to Platform',
+            })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('admin.salesChannels.standalone.quickPathDesc', {
+              defaultValue:
+                'Connect above to get a branded {handle}.mymbz.org link and short URLs instantly.',
+            })}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex-1 border-t border-border" />
+        <span>{t('common.or', { defaultValue: 'or' })}</span>
+        <div className="flex-1 border-t border-border" />
+      </div>
+
+      <div className="flex items-start gap-3">
+        <Settings className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-foreground">
+            {t('admin.salesChannels.standalone.customDomainTitle', {
+              defaultValue: 'Custom Domain',
+            })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {dockerManaged
+              ? t('admin.salesChannels.standalone.customDomainDockerDesc', {
+                  defaultValue:
+                    'Use your own domain for a professional storefront with automatic HTTPS.',
+                })
+              : t('admin.salesChannels.standalone.customDomainNativeDesc', {
+                  defaultValue:
+                    'Set up a reverse proxy (Nginx/Caddy) pointing to your store, then register your domain.',
+                })}
+          </p>
+          <a
+            href="/admin/system#domain"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            {t('admin.salesChannels.standalone.configureDomain', {
+              defaultValue: 'Configure Domain',
+            })}
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Standalone: Unconnected Telegram Bot (dual-path design) ---
+
+function UnconnectedBotSection({ connectivity, domain }: { connectivity: string; domain: string }) {
+  const { t } = useI18n();
+
+  if (connectivity === 'nat') {
+    return (
+      <div className="space-y-3 py-2">
+        <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <Bot className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.salesChannels.standalone.natBotTitle', {
+                defaultValue: 'Connect to Platform for Telegram Bot',
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.salesChannels.standalone.natBotDesc', {
+                defaultValue:
+                  'Use @MbzBridgeBot to let buyers access your store via Telegram even behind NAT. Connect to the Mobazha Platform above to set this up.',
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!domain) {
+    return (
+      <div className="space-y-3 py-2">
+        <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <Bot className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.salesChannels.standalone.botNeedsDomain', {
+                defaultValue: 'Domain Required',
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.salesChannels.standalone.botNeedsDomainDesc', {
+                defaultValue:
+                  'Connect to the Platform above for a branded bot, or configure a custom domain first to create your own Telegram Bot.',
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const fullUrl = domain.startsWith('http') ? domain : `https://${domain}`;
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+        <p className="text-sm font-medium text-foreground">
+          {t('admin.salesChannels.standalone.selfBotGuideTitle', {
+            defaultValue: 'Create Your Own Telegram Bot',
+          })}
+        </p>
+        <ol className="space-y-1.5 text-sm text-muted-foreground list-decimal list-inside">
+          <li>
+            {t('admin.salesChannels.standalone.selfBotStep1', {
+              defaultValue: 'Open @BotFather in Telegram and send /newbot',
+            })}
+          </li>
+          <li>
+            {t('admin.salesChannels.standalone.selfBotStep2', {
+              defaultValue: 'Follow the prompts to name your bot',
+            })}
+          </li>
+          <li>
+            {t('admin.salesChannels.standalone.selfBotStep3', {
+              defaultValue: 'Send /newapp to create a Web App, then set the URL to:',
+            })}
+          </li>
+        </ol>
+        <div className="rounded-md border border-border bg-muted/50 px-3 py-2 flex items-center gap-2">
+          <code className="text-sm font-mono text-foreground flex-1 break-all">{fullUrl}</code>
+          <CopyButton text={fullUrl} />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t('admin.salesChannels.standalone.selfBotNote', {
+            defaultValue:
+              'After creating the bot, you can come back here to bind it once connected to the platform, or manage it directly via BotFather.',
+          })}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // --- Main Component ---
 
 export default function SalesChannelsContent() {
@@ -787,13 +1018,24 @@ export default function SalesChannelsContent() {
   const profile = useUserStore(s => s.profile);
   const peerID = profile?.peerID || '';
 
-  const salesChannels = useSalesChannels({ peerID, autoLoad: true });
-  const storeDomain = useStoreDomain({ peerID, autoLoad: true });
+  const standalone = useMemo(() => isStandaloneMode(), []);
+  const [platformConnected, setPlatformConnected] = useState(() =>
+    standalone ? hasSaaSToken() : true
+  );
+
+  const storeInfo = useStandaloneStoreInfo({ enabled: standalone });
+
+  const salesChannels = useSalesChannels({ peerID, autoLoad: platformConnected });
+  const storeDomain = useStoreDomain({ peerID, autoLoad: platformConnected });
 
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [telegramLinkChecking, setTelegramLinkChecking] = useState(true);
 
   useEffect(() => {
+    if (!platformConnected) {
+      setTelegramLinkChecking(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -810,7 +1052,14 @@ export default function SalesChannelsContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [platformConnected]);
+
+  const handlePlatformConnected = useCallback(() => {
+    setPlatformConnected(true);
+    salesChannels.loadStoreLink();
+    if (peerID) salesChannels.loadStoreBot();
+    storeDomain.loadDomain();
+  }, [salesChannels, storeDomain, peerID]);
 
   const prevSCErrorRef = useRef<string | null>(null);
   useEffect(() => {
@@ -833,56 +1082,99 @@ export default function SalesChannelsContent() {
       ? `https://t.me/${salesChannels.storeBot.botUsername}`
       : undefined;
 
+  const connectivity = storeInfo.info?.connectivity ?? 'public';
+  const localDomain = storeInfo.info?.domain ?? '';
+  const dockerManaged = storeInfo.info?.dockerManaged ?? false;
+
   return (
     <div className="space-y-8">
+      {/* Section 1: Store Handle — unconnected standalone shows ConnectPlatformCard */}
       <SettingsSection
         title={t('admin.salesChannels.storeHandleTitle')}
         description={t('admin.salesChannels.storeHandleDesc')}
       >
-        <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
-          <StoreHandleSection
-            domain={storeDomain.domain}
-            loading={storeDomain.loading}
-            availability={storeDomain.availability}
-            checking={storeDomain.checking}
-            setHandle={storeDomain.setHandle}
-            removeDomain={storeDomain.removeDomain}
-            checkAvailability={storeDomain.checkAvailability}
-          />
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
+          {standalone && !platformConnected ? (
+            <ConnectPlatformCard
+              onConnected={handlePlatformConnected}
+              title={t('admin.salesChannels.standalone.connectTitle', {
+                defaultValue: 'Connect to Mobazha Platform',
+              })}
+              description={t('admin.salesChannels.standalone.connectDesc', {
+                defaultValue:
+                  'Get a branded subdomain ({handle}.mymbz.org), share links, and Telegram Bot — works even behind NAT.',
+              })}
+              featureList={[
+                t('admin.salesChannels.standalone.featureBrandedDomain', {
+                  defaultValue: 'Branded subdomain ({handle}.mymbz.org)',
+                }),
+                t('admin.salesChannels.standalone.featureShortLinks', {
+                  defaultValue: 'Short links for sharing',
+                }),
+                t('admin.salesChannels.standalone.featureTelegramBot', {
+                  defaultValue: 'Telegram Bot binding',
+                }),
+              ]}
+            />
+          ) : (
+            <StoreHandleSection
+              domain={storeDomain.domain}
+              loading={storeDomain.loading}
+              availability={storeDomain.availability}
+              checking={storeDomain.checking}
+              setHandle={storeDomain.setHandle}
+              removeDomain={storeDomain.removeDomain}
+              checkAvailability={storeDomain.checkAvailability}
+            />
+          )}
         </div>
       </SettingsSection>
 
+      {/* Section 2: Share Links */}
       <SettingsSection
         title={t('admin.salesChannels.storeLinksTitle')}
         description={t('admin.salesChannels.storeLinksDesc')}
       >
-        <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
-          <StoreLinkSection
-            storeLink={salesChannels.storeLink}
-            storeLinkLoading={salesChannels.storeLinkLoading}
-            loadStoreLink={salesChannels.loadStoreLink}
-            regenerateLink={salesChannels.regenerateLink}
-            subdomainUrl={storeDomain.domain?.subdomainUrl}
-            brandBotLink={brandBotLink}
-          />
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
+          {standalone && !platformConnected ? (
+            <UnconnectedShareSection
+              connectivity={connectivity}
+              domain={localDomain}
+              dockerManaged={dockerManaged}
+            />
+          ) : (
+            <StoreLinkSection
+              storeLink={salesChannels.storeLink}
+              storeLinkLoading={salesChannels.storeLinkLoading}
+              loadStoreLink={salesChannels.loadStoreLink}
+              regenerateLink={salesChannels.regenerateLink}
+              subdomainUrl={storeDomain.domain?.subdomainUrl}
+              brandBotLink={brandBotLink}
+            />
+          )}
         </div>
       </SettingsSection>
 
+      {/* Section 3: Telegram Bot */}
       <SettingsSection
         title={t('admin.salesChannels.telegramBotTitle')}
         description={t('admin.salesChannels.telegramBotDesc')}
       >
-        <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
-          <TelegramBotSection
-            storeBot={salesChannels.storeBot}
-            storeBotLoading={salesChannels.storeBotLoading}
-            storeBotNotFound={salesChannels.storeBotNotFound}
-            bindBot={salesChannels.bindBot}
-            unbindBot={salesChannels.unbindBot}
-            domain={storeDomain.domain}
-            telegramLinked={telegramLinked}
-            telegramLinkChecking={telegramLinkChecking}
-          />
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
+          {standalone && !platformConnected ? (
+            <UnconnectedBotSection connectivity={connectivity} domain={localDomain} />
+          ) : (
+            <TelegramBotSection
+              storeBot={salesChannels.storeBot}
+              storeBotLoading={salesChannels.storeBotLoading}
+              storeBotNotFound={salesChannels.storeBotNotFound}
+              bindBot={salesChannels.bindBot}
+              unbindBot={salesChannels.unbindBot}
+              domain={storeDomain.domain}
+              telegramLinked={telegramLinked}
+              telegramLinkChecking={telegramLinkChecking}
+            />
+          )}
         </div>
       </SettingsSection>
     </div>

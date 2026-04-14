@@ -231,6 +231,7 @@ export default function SystemPage() {
 
   const sys = health!.system;
   const diskUsedGB = sys.diskTotalGB - sys.diskFreeGB;
+  const storePort = networkConfig?.gatewayPort || 5102;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -368,64 +369,60 @@ export default function SystemPage() {
               </div>
             </div>
 
-            <div className="border-t border-border pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">
-                  {t('system.network.overlayNetwork')}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  {
-                    value: '',
-                    label: t('system.network.none'),
-                    icon: Wifi,
-                    desc: t('system.network.noneDesc'),
-                  },
-                  { value: 'tor', label: 'Tor', icon: Shield, desc: '.onion' },
-                  { value: 'lokinet', label: 'Lokinet', icon: Shield, desc: '.loki' },
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSelectedOverlay(opt.value)}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors text-center ${
-                      selectedOverlay === opt.value
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
-                    }`}
-                  >
-                    <opt.icon className="w-5 h-5" />
-                    <span className="text-sm font-medium">{opt.label}</span>
-                    <span className="text-[10px] opacity-70">{opt.desc}</span>
-                  </button>
-                ))}
-              </div>
-              {selectedOverlay !== (networkConfig.overlayType || '') && (
-                <div className="mt-3 flex items-center gap-3">
-                  <button
-                    onClick={handleApplyNetwork}
-                    disabled={networkSaving}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {networkSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    {t('system.network.apply')}
-                  </button>
-                  <span className="text-xs text-muted-foreground">
-                    {t('system.network.applyHint')}
+            {networkConfig.dockerManaged && (
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">
+                    {t('system.network.overlayNetwork')}
                   </span>
                 </div>
-              )}
-              {networkMessage && (
-                <div className="mt-3 p-3 rounded-lg bg-muted text-sm text-foreground">
-                  {networkMessage}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    {
+                      value: '',
+                      label: t('system.network.none'),
+                      icon: Wifi,
+                      desc: t('system.network.noneDesc'),
+                    },
+                    { value: 'tor', label: 'Tor', icon: Shield, desc: '.onion' },
+                    { value: 'lokinet', label: 'Lokinet', icon: Shield, desc: '.loki' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSelectedOverlay(opt.value)}
+                      className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors text-center ${
+                        selectedOverlay === opt.value
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
+                      }`}
+                    >
+                      <opt.icon className="w-5 h-5" />
+                      <span className="text-sm font-medium">{opt.label}</span>
+                      <span className="text-[10px] opacity-70">{opt.desc}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-
-            {!networkConfig.dockerManaged && (
-              <div className="mt-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-700 dark:text-yellow-400">
-                {t('system.network.noDocker')}
+                {selectedOverlay !== (networkConfig.overlayType || '') && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      onClick={handleApplyNetwork}
+                      disabled={networkSaving}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {networkSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      {t('system.network.apply')}
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      {t('system.network.applyHint')}
+                    </span>
+                  </div>
+                )}
+                {networkMessage && (
+                  <div className="mt-3 p-3 rounded-lg bg-muted text-sm text-foreground">
+                    {networkMessage}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -434,15 +431,206 @@ export default function SystemPage() {
 
       {/* Domain Settings (standalone only) */}
       {isStandaloneMode() && (
-        <div className="border border-border rounded-lg p-5">
+        <div id="domain" className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
-            {t('system.domain.title')}
+            {t('system.domain.title', { defaultValue: 'Custom Domain' })}
           </h2>
           <div className="space-y-4">
+            {/* Setup guide — varies by connectivity + deployment mode */}
+            {networkConfig && (
+              <div className="space-y-3 text-sm">
+                {networkConfig.connectivity === 'nat' ? (
+                  /* ── NAT mode: tunnel-first approach ── */
+                  <>
+                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 dark:text-yellow-400 space-y-1">
+                      <p className="font-medium">
+                        {t('system.domain.natWarning', {
+                          defaultValue:
+                            'Your store is behind NAT and not directly reachable from the internet.',
+                        })}
+                      </p>
+                      <p className="text-xs opacity-80">
+                        {t('system.domain.natDesc', {
+                          defaultValue:
+                            'You need a tunnel service to expose your local store to the internet before setting up a custom domain.',
+                        })}
+                      </p>
+                    </div>
+
+                    <ol className="space-y-2 text-muted-foreground list-decimal list-inside">
+                      <li>
+                        {t('system.domain.natStep1', {
+                          defaultValue: 'Set up a tunnel to expose your store to the internet',
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.natStep2', {
+                          defaultValue:
+                            'Point your domain to the tunnel (or use the tunnel-provided domain)',
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.natStep3', {
+                          defaultValue: 'Enter your domain below and save',
+                        })}
+                      </li>
+                    </ol>
+
+                    <details className="mt-2 text-xs">
+                      <summary className="cursor-pointer text-primary hover:underline">
+                        {t('system.domain.tunnelOptions', {
+                          defaultValue: 'Recommended tunnel services',
+                        })}
+                      </summary>
+                      <div className="mt-2 space-y-3 text-muted-foreground">
+                        <div className="p-2 rounded bg-muted space-y-1.5">
+                          <p className="font-medium text-foreground">
+                            Cloudflare Tunnel (recommended)
+                          </p>
+                          <p>
+                            {t('system.domain.cfTunnelDesc', {
+                              defaultValue:
+                                'Free, supports custom domains with automatic SSL. Best for long-term use.',
+                            })}
+                          </p>
+                          <pre className="p-2 rounded bg-background font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre">
+                            {`# Install cloudflared, then:
+cloudflared tunnel create my-store
+cloudflared tunnel route dns my-store store.example.com
+cloudflared tunnel run --url localhost:${storePort} my-store`}
+                          </pre>
+                        </div>
+                        <div className="p-2 rounded bg-muted space-y-1.5">
+                          <p className="font-medium text-foreground">ngrok</p>
+                          <p>
+                            {t('system.domain.ngrokDesc', {
+                              defaultValue:
+                                'Quick setup for testing. Paid plans support custom domains.',
+                            })}
+                          </p>
+                          <pre className="p-2 rounded bg-background font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre">
+                            {`ngrok http ${storePort}`}
+                          </pre>
+                        </div>
+                        <p className="text-xs opacity-70 mt-1">
+                          {t('system.domain.tunnelAlt', {
+                            defaultValue:
+                              'Alternatively, connect to the Mobazha Platform in Sales Channels for a zero-config branded subdomain without setting up tunnels.',
+                          })}
+                        </p>
+                      </div>
+                    </details>
+                  </>
+                ) : networkConfig.dockerManaged ? (
+                  /* ── Docker + public IP: auto HTTPS via Caddy ── */
+                  <>
+                    <p className="text-muted-foreground">
+                      {t('system.domain.dockerGuide', {
+                        defaultValue:
+                          'Your Docker environment supports automatic HTTPS. Follow these steps:',
+                      })}
+                    </p>
+                    <ol className="space-y-2 text-muted-foreground list-decimal list-inside">
+                      <li>
+                        {t('system.domain.dockerStep1', {
+                          defaultValue:
+                            "Point your domain's DNS A record to this server's IP address",
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.dockerStep2', {
+                          defaultValue: 'Enter your domain below and save',
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.dockerStep3', {
+                          defaultValue: 'Caddy will automatically obtain an SSL certificate',
+                        })}
+                      </li>
+                    </ol>
+                  </>
+                ) : (
+                  /* ── Native binary + public IP: manual reverse proxy ── */
+                  <>
+                    <p className="text-muted-foreground">
+                      {t('system.domain.nativeGuide', {
+                        defaultValue:
+                          'Set up a reverse proxy on this server to serve your store over HTTPS:',
+                      })}
+                    </p>
+                    <ol className="space-y-2 text-muted-foreground list-decimal list-inside">
+                      <li>
+                        {t('system.domain.nativeStep1', {
+                          defaultValue:
+                            "Point your domain's DNS A record to this server's public IP",
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.nativeStep2', {
+                          defaultValue: `Install a reverse proxy (Nginx or Caddy) and proxy your domain to localhost:${storePort}`,
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.nativeStep3', {
+                          defaultValue:
+                            "Set up SSL (Caddy does this automatically; for Nginx use Let's Encrypt / certbot)",
+                        })}
+                      </li>
+                      <li>
+                        {t('system.domain.nativeStep4', {
+                          defaultValue: 'Enter your domain below and save',
+                        })}
+                      </li>
+                    </ol>
+
+                    <details className="mt-2 text-xs">
+                      <summary className="cursor-pointer text-primary hover:underline">
+                        {t('system.domain.configExample', {
+                          defaultValue: 'Show example proxy configuration',
+                        })}
+                      </summary>
+                      <div className="mt-2 space-y-3">
+                        <div>
+                          <p className="font-medium text-muted-foreground mb-1">Caddy</p>
+                          <pre className="p-2 rounded bg-muted font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre">
+                            {`store.example.com {
+  reverse_proxy localhost:${storePort}
+}`}
+                          </pre>
+                        </div>
+                        <div>
+                          <p className="font-medium text-muted-foreground mb-1">Nginx</p>
+                          <pre className="p-2 rounded bg-muted font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre">
+                            {`server {
+  listen 443 ssl;
+  server_name store.example.com;
+
+  ssl_certificate     /etc/letsencrypt/live/store.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/store.example.com/privkey.pem;
+
+  location / {
+    proxy_pass http://127.0.0.1:${storePort};
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}`}
+                          </pre>
+                        </div>
+                      </div>
+                    </details>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Domain input */}
             <div className="flex items-start gap-3">
               <Link className="w-5 h-5 text-blue-500 mt-2" />
               <div className="flex-1 space-y-2">
-                <label className="text-sm text-muted-foreground">{t('system.domain.label')}</label>
+                <label className="text-sm text-muted-foreground">
+                  {t('system.domain.label', { defaultValue: 'Domain' })}
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -453,7 +641,7 @@ export default function SystemPage() {
                   />
                   <button
                     onClick={handleSaveDomain}
-                    disabled={domainSaving}
+                    disabled={domainSaving || !domainInput.trim()}
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
                   >
                     {domainSaving ? (
@@ -461,14 +649,27 @@ export default function SystemPage() {
                     ) : (
                       <Save className="w-3.5 h-3.5" />
                     )}
-                    {t('system.domain.save')}
+                    {t('system.domain.save', { defaultValue: 'Save' })}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">{t('system.domain.hint')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('system.domain.hint', {
+                    defaultValue: 'Enter the domain pointing to this server (without http/https).',
+                  })}
+                </p>
               </div>
             </div>
             {domainMessage && (
-              <div className="p-3 rounded-lg bg-muted text-sm text-foreground">{domainMessage}</div>
+              <div
+                className={`p-3 rounded-lg text-sm ${
+                  domainMessage.toLowerCase().includes('error') ||
+                  domainMessage.toLowerCase().includes('fail')
+                    ? 'bg-destructive/10 text-destructive'
+                    : 'bg-green-500/10 text-green-700 dark:text-green-400'
+                }`}
+              >
+                {domainMessage}
+              </div>
             )}
           </div>
         </div>
