@@ -11,6 +11,7 @@ import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
 import { useStandaloneStoreInfo } from '@mobazha/core/hooks/useStandaloneStoreInfo';
 import type { StoreBotInfo } from '@mobazha/core/types/salesChannels';
 import { getLinkedAccounts } from '@mobazha/core/services/auth';
+import { getSetupStatus } from '@mobazha/core/services/api/system';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
 import { Button } from '@/components/ui/button';
@@ -997,14 +998,34 @@ export default function SalesChannelsContent() {
   const peerID = profile?.peerID || '';
 
   const standalone = useMemo(() => isStandaloneMode(), []);
-  const [platformConnected, setPlatformConnected] = useState(() =>
-    standalone ? hasSaaSToken() : true
+  const [platformConnected, setPlatformConnected] = useState<boolean | null>(() =>
+    standalone ? null : true
   );
+
+  // Standalone: check persistent binding (owner_user_id) from the node.
+  // The SaaS backend supports API Key-only auth (X-Standalone-Store-Key),
+  // so platform API calls work without a SaaS JWT in the browser session.
+  useEffect(() => {
+    if (!standalone) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const status = await getSetupStatus();
+        if (cancelled) return;
+        setPlatformConnected(!!status.ownerUserId?.trim());
+      } catch {
+        setPlatformConnected(hasSaaSToken());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [standalone]);
 
   const storeInfo = useStandaloneStoreInfo({ enabled: standalone });
 
-  const salesChannels = useSalesChannels({ peerID, autoLoad: platformConnected });
-  const storeDomain = useStoreDomain({ peerID, autoLoad: platformConnected });
+  const salesChannels = useSalesChannels({ peerID, autoLoad: platformConnected === true });
+  const storeDomain = useStoreDomain({ peerID, autoLoad: platformConnected === true });
 
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [telegramLinkChecking, setTelegramLinkChecking] = useState(true);
@@ -1082,7 +1103,11 @@ export default function SalesChannelsContent() {
         description={t('admin.salesChannels.storeHandleDesc')}
       >
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
-          {standalone && !platformConnected ? (
+          {standalone && platformConnected === null ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : standalone && platformConnected === false ? (
             <ConnectPlatformCard
               onConnected={handlePlatformConnected}
               title={t('admin.salesChannels.standalone.connectTitle', {
@@ -1124,7 +1149,7 @@ export default function SalesChannelsContent() {
         description={t('admin.salesChannels.storeLinksDesc')}
       >
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
-          {standalone && !platformConnected ? (
+          {standalone && platformConnected !== true ? (
             <UnconnectedShareSection
               connectivity={connectivity}
               domain={localDomain}

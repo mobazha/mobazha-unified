@@ -16,11 +16,14 @@ function getBaseUrl(): string {
 }
 
 /**
- * Platform API calls (/platform/v1/*) require a Casdoor JWT for tenant
- * identification. In standalone mode the normal stored token is Basic Auth
- * (local admin), which is meaningless to the SaaS platform.  Prefer the
- * SaaS Bridge JWT obtained via the Connect popup; fall back to the local
- * token for SaaS deployments where it already is a Casdoor JWT.
+ * Platform API calls (/platform/v1/*) are proxied to the SaaS backend.
+ * In standalone mode the node proxy injects X-Standalone-Store-Key which
+ * is sufficient for tenant identification on the SaaS side (API Key-only
+ * auth path). If a SaaS JWT is cached we send it as well (gives the SaaS
+ * more context), but it is not required.
+ *
+ * The local Basic Auth token is never forwarded — it is meaningless to
+ * the SaaS platform and would be ignored.
  */
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -31,8 +34,8 @@ function getAuthHeaders(): Record<string, string> {
     const saasJwt = getCachedSaaSToken();
     if (saasJwt) {
       headers.Authorization = `Bearer ${saasJwt}`;
-      return headers;
     }
+    return headers;
   }
 
   const token = getStoredToken();

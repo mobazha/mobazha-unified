@@ -21,6 +21,8 @@ export interface SetupStatusResponse {
   setupComplete: boolean;
   completedSteps: SetupCompletedSteps;
   casdoorAvailable?: boolean;
+  /** Casdoor owner id when standalone has completed connect-platform (persisted on node). */
+  ownerUserId?: string;
 }
 
 export interface InitialSetupResponse {
