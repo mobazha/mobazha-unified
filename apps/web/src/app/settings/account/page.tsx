@@ -32,6 +32,7 @@ import {
   standaloneStoresApi,
   hasSaaSToken,
 } from '@mobazha/core';
+import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type {
   LinkedAccount,
   OAuthProvider,
@@ -104,10 +105,28 @@ export default function AccountSettingsPage() {
   // Provider config for direct linking (Telegram botUsername, Discord clientId)
   const [linkConfig, setLinkConfig] = useState<LinkConfigResponse | null>(null);
 
-  // Standalone SaaS bridge state
-  const [saasConnected, setSaasConnected] = useState(() =>
-    standaloneMode ? hasSaaSToken() : true
+  // Standalone: null = loading, true = platform bound, false = not bound.
+  // Based on persistent ownerUserId from the backend, not ephemeral JWT.
+  const [platformBound, setPlatformBound] = useState<boolean | null>(() =>
+    standaloneMode ? null : true
   );
+
+  useEffect(() => {
+    if (!standaloneMode) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const status = await getSetupStatus();
+        if (cancelled) return;
+        setPlatformBound(!!status.ownerUserId?.trim());
+      } catch {
+        if (!cancelled) setPlatformBound(hasSaaSToken());
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [standaloneMode]);
 
   // 加载已绑定账号
   const loadLinkedAccounts = useCallback(async () => {
@@ -130,13 +149,13 @@ export default function AccountSettingsPage() {
     }
   }, [t, standaloneMode]);
 
-  // 加载绑定配置 — skip when standalone admin hasn't connected to SaaS yet
+  // 加载绑定配置 — skip when standalone admin hasn't connected to platform
   useEffect(() => {
-    if (standaloneMode && !saasConnected) return;
+    if (standaloneMode && !platformBound) return;
     getLinkConfig()
       .then(setLinkConfig)
       .catch(() => {});
-  }, [standaloneMode, saasConnected]);
+  }, [standaloneMode, platformBound]);
 
   // Telegram Login Widget 全局回调
   const handleTelegramAuth = useCallback(
@@ -214,15 +233,15 @@ export default function AccountSettingsPage() {
     processLinkCallback();
   }, [toast, loadLinkedAccounts, t]);
 
-  // 初始加载 — skip when standalone admin hasn't connected to SaaS yet
+  // 初始加载 — skip when standalone admin hasn't connected to platform
   useEffect(() => {
-    if (standaloneMode && !saasConnected) return;
+    if (standaloneMode && !platformBound) return;
     loadLinkedAccounts();
-  }, [loadLinkedAccounts, standaloneMode, saasConnected]);
+  }, [loadLinkedAccounts, standaloneMode, platformBound]);
 
-  // Load standalone store — skip when standalone admin hasn't connected to SaaS yet
+  // Load standalone store — skip when standalone admin hasn't connected to platform
   useEffect(() => {
-    if (standaloneMode && !saasConnected) {
+    if (standaloneMode && !platformBound) {
       setIsLoadingStores(false);
       return;
     }
@@ -237,7 +256,7 @@ export default function AccountSettingsPage() {
       }
     }
     loadStore();
-  }, [standaloneMode, saasConnected]);
+  }, [standaloneMode, platformBound]);
 
   // 获取未绑定的 Provider
   const getAvailableProviders = () => {
@@ -377,37 +396,43 @@ export default function AccountSettingsPage() {
     );
   };
 
-  if (standaloneMode && !saasConnected) {
+  if (standaloneMode && platformBound !== true) {
     return (
       <div>
         <SettingsPageHeader
           title={t('settings.sidebar.account')}
           description={t('settings.accountBinding.description')}
         />
-        <ConnectPlatformCard
-          title={t('settings.accountBinding.standaloneSocialTitle', {
-            defaultValue: 'Social Account Binding',
-          })}
-          description={t('settings.accountBinding.standaloneConnectDesc', {
-            defaultValue:
-              'Connect your Telegram, Discord, or Google account to enable quick social login. Sign in to Mobazha Platform first to manage your linked accounts.',
-          })}
-          onConnected={() => {
-            setSaasConnected(true);
-            loadLinkedAccounts();
-          }}
-        >
-          <div className="flex items-center justify-center gap-4 mt-6 text-muted-foreground/50">
-            {SUPPORTED_PROVIDERS.map(p => (
-              <div key={p.id} className="flex flex-col items-center gap-1">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <ProviderIcon provider={p.id} />
+        {platformBound === null ? (
+          <Card className="p-8 flex items-center justify-center">
+            <Skeleton className="h-6 w-48" />
+          </Card>
+        ) : (
+          <ConnectPlatformCard
+            title={t('settings.accountBinding.standaloneSocialTitle', {
+              defaultValue: 'Social Account Binding',
+            })}
+            description={t('settings.accountBinding.standaloneConnectDesc', {
+              defaultValue:
+                'Connect your Telegram, Discord, or Google account to enable quick social login. Sign in to Mobazha Platform first to manage your linked accounts.',
+            })}
+            onConnected={() => {
+              setPlatformBound(true);
+              loadLinkedAccounts();
+            }}
+          >
+            <div className="flex items-center justify-center gap-4 mt-6 text-muted-foreground/50">
+              {SUPPORTED_PROVIDERS.map(p => (
+                <div key={p.id} className="flex flex-col items-center gap-1">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <ProviderIcon provider={p.id} />
+                  </div>
+                  <span className="text-xs">{p.name}</span>
                 </div>
-                <span className="text-xs">{p.name}</span>
-              </div>
-            ))}
-          </div>
-        </ConnectPlatformCard>
+              ))}
+            </div>
+          </ConnectPlatformCard>
+        )}
       </div>
     );
   }

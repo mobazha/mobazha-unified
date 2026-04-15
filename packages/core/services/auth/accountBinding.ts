@@ -57,21 +57,32 @@ function getBindingEndpoint(): { baseUrl: string; token: string | null } {
 
 /**
  * 获取已绑定的账号列表
+ *
+ * Standalone mode: routes through the local node's /platform/ reverse proxy
+ * which adds X-Standalone-Store-Key automatically. The SaaS backend resolves
+ * the user from the API key's owner_user_id, so no JWT is needed for reads.
  */
 export async function getLinkedAccounts(): Promise<LinkedAccountsResponse> {
-  const { baseUrl, token } = getBindingEndpoint();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  let apiUrl: string;
 
-  if (!token) {
-    throw new Error('Not authenticated');
+  if (isStandaloneMode()) {
+    // Route through the local node proxy — API key auth, no JWT required.
+    apiUrl = `${getHostingUrl()}/platform/v1/accounts/linked`;
+    const token = getCachedSaaSToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } else {
+    const token = getStoredToken();
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    headers['Authorization'] = `Bearer ${token}`;
+    apiUrl = `${getHostingUrl()}/platform/v1/accounts/linked`;
   }
 
-  const response = await fetch(`${baseUrl}/platform/v1/accounts/linked`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await fetch(apiUrl, { method: 'GET', headers });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
