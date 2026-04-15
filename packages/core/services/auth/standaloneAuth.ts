@@ -15,6 +15,11 @@
 import type { IAuthService, AuthResult } from './authService';
 import type { AuthMode } from '../../config/env';
 import { getEnvConfig } from '../../config/env';
+import {
+  STANDALONE_OAUTH_BROADCAST_CHANNEL,
+  STANDALONE_OAUTH_POPUP_CLOSED_GRACE_MS,
+  parseStandaloneOauthBroadcastMessage,
+} from './oauthBroadcast';
 
 const POPUP_WIDTH = 500;
 const POPUP_HEIGHT = 650;
@@ -85,11 +90,18 @@ class StandaloneAuthService implements IAuthService {
       return { success: false, error: 'Popup was blocked. Please allow popups for this site.' };
     }
 
+    const popupOpenedAt = Date.now();
+
     return new Promise<AuthResult>(resolve => {
+      let settled = false;
+      let detachBroadcast: (() => void) | undefined;
+
       const cleanup = () => {
+        settled = true;
         window.removeEventListener('message', onMessage);
         clearTimeout(timeoutId);
         clearInterval(pollId);
+        detachBroadcast?.();
         this.pending = null;
         try {
           if (popup && !popup.closed) popup.close();
@@ -98,7 +110,29 @@ class StandaloneAuthService implements IAuthService {
         }
       };
 
+      if (typeof globalThis.BroadcastChannel !== 'undefined') {
+        const bc = new globalThis.BroadcastChannel(STANDALONE_OAUTH_BROADCAST_CHANNEL);
+        const onBc = (ev: globalThis.MessageEvent) => {
+          if (settled) return;
+          const msg = parseStandaloneOauthBroadcastMessage(ev.data);
+          if (!msg) return;
+          if (msg.type === 'buyer-token') {
+            cleanup();
+            resolve({ success: true, token: msg.token });
+          } else if (msg.type === 'buyer-error') {
+            cleanup();
+            resolve({ success: false, error: msg.error || 'Authentication failed' });
+          }
+        };
+        bc.addEventListener('message', onBc);
+        detachBroadcast = () => {
+          bc.removeEventListener('message', onBc);
+          bc.close();
+        };
+      }
+
       const onMessage = (event: MessageEvent) => {
+        if (settled) return;
         if (event.origin !== saasOrigin) return;
         const data = event.data;
         if (!data) return;
@@ -121,7 +155,10 @@ class StandaloneAuthService implements IAuthService {
 
       const pollId = setInterval(() => {
         try {
-          if (popup.closed) {
+          if (
+            popup.closed &&
+            Date.now() - popupOpenedAt >= STANDALONE_OAUTH_POPUP_CLOSED_GRACE_MS
+          ) {
             cleanup();
             resolve({ success: false, error: 'Login window was closed' });
           }

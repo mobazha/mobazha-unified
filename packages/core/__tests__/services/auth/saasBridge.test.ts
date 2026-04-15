@@ -190,18 +190,33 @@ describe('saasBridge', () => {
     });
 
     it('resolves with error when popup is closed by user', async () => {
+      vi.useFakeTimers();
+      const mockPopup = { closed: true, close: vi.fn() };
+      vi.spyOn(window, 'open').mockReturnValue(mockPopup as unknown as Window);
+
+      const resultPromise = acquireSaaSToken(true);
+
+      await vi.advanceTimersByTimeAsync(2100);
+
+      const result = await resultPromise;
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Login window was closed');
+      vi.useRealTimers();
+    });
+
+    it('resolves with token via BroadcastChannel when opener path is unavailable', async () => {
       const mockPopup = { closed: false, close: vi.fn() };
       vi.spyOn(window, 'open').mockReturnValue(mockPopup as unknown as Window);
 
       const resultPromise = acquireSaaSToken(true);
 
-      // Simulate popup being closed
-      await new Promise(r => setTimeout(r, 100));
-      Object.defineProperty(mockPopup, 'closed', { value: true });
+      const bc = new globalThis.BroadcastChannel('mbz-standalone-oauth');
+      bc.postMessage({ type: 'saas-bridge-token', token: 'bc-jwt' });
+      bc.close();
 
       const result = await resultPromise;
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Login window was closed');
+      expect(result).toEqual({ success: true, token: 'bc-jwt' });
+      expect(sessionStorage.getItem(SAAS_JWT_KEY)).toBe('bc-jwt');
     });
   });
 });

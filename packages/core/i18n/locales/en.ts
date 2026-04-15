@@ -5792,6 +5792,7 @@ export const en: TranslationResource = {
     accountRequired: 'Account required',
     createAccount: 'Create account',
     createAccountPrompt: 'Create a free account to access this feature.',
+    oauthBridgeFinishing: 'Finishing sign-in…',
   },
 
   collections: {
