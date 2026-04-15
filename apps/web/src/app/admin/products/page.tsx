@@ -316,12 +316,14 @@ export default function AdminProductsPage() {
             {t('admin.products.count', { count: products.length })}
           </p>
         </div>
-        <Link href="/listing/new?from=admin" className="hidden md:block">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            {t('admin.products.addProduct')}
-          </Button>
-        </Link>
+        {products.length > 0 && (
+          <Link href="/listing/new?from=admin" className="hidden md:block">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              {t('admin.products.addProduct')}
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Status filter tabs */}
@@ -635,13 +637,15 @@ export default function AdminProductsPage() {
       )}
 
       {/* Mobile FAB */}
-      <Link
-        href="/listing/new?from=admin"
-        className="md:hidden fixed right-4 bottom-24 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
-        aria-label={t('admin.products.addProduct')}
-      >
-        <Plus className="w-6 h-6" />
-      </Link>
+      {products.length > 0 && (
+        <Link
+          href="/listing/new?from=admin"
+          className="md:hidden fixed right-4 bottom-24 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          aria-label={t('admin.products.addProduct')}
+        >
+          <Plus className="w-6 h-6" />
+        </Link>
+      )}
     </div>
   );
 }
