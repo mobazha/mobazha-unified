@@ -1651,6 +1651,17 @@ export const en: TranslationResource = {
     dragOrClickCover: 'Drag an image here or click to change cover',
     adjustCover: 'Adjust Cover Image',
     adjustAvatar: 'Adjust Avatar',
+    // Store visibility options
+    visibility: {
+      title: 'Store Visibility',
+      description: 'Control how your store can be discovered and accessed',
+      public: 'Public',
+      publicDesc: 'Visible in marketplace search and recommendations',
+      unlisted: 'Unlisted',
+      unlistedDesc: 'Hidden from search, accessible via direct link',
+      private: 'Private',
+      privateDesc: 'Requires authorization to access',
+    },
     // Sidebar navigation
     sidebar: {
       general: 'General',
@@ -2647,6 +2658,10 @@ export const en: TranslationResource = {
     privacyDesc: 'Control who can access your store and products',
     storePrivacySection: 'Store Privacy',
     storePrivacySectionDesc: 'Configure visibility and access settings for your store',
+    storeVisibility: 'Store Visibility',
+    visibilityPublicDesc: 'Visible in marketplace search and recommendations',
+    visibilityUnlistedDesc: 'Hidden from search, accessible via direct link',
+    visibilityPrivateDesc: 'Requires authorization to access',
     privateStoreToggle: 'Private Store',
     privateStoreToggleDesc: 'When enabled, only approved users can view your store and products.',
     requireApproval: 'Require Approval',

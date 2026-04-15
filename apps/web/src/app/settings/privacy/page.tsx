@@ -12,8 +12,10 @@ import { SettingsSection } from '@/components/SettingsLayout';
 import { Users, Package, ChevronRight, Check, X, Loader2, ShieldCheck } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
+type StoreVisibility = 'public' | 'unlisted' | 'private';
+
 interface PrivacySettings {
-  isPrivate: boolean;
+  visibility: StoreVisibility;
   requireApproval: boolean;
   welcomeMessage: string;
 }
@@ -28,7 +30,7 @@ interface AccessRequest {
 }
 
 const mockSettings: PrivacySettings = {
-  isPrivate: false,
+  visibility: 'public',
   requireApproval: false,
   welcomeMessage: 'Welcome to my store! Browse our exclusive products.',
 };
@@ -103,22 +105,61 @@ export default function PrivacySettingsPage() {
           description={t('settingsExtended.storePrivacySectionDesc')}
         >
           <Card className="p-4 md:p-6 space-y-5">
-            {/* Private Store Toggle */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{t('settingsExtended.privateStoreToggle')}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('settingsExtended.privateStoreToggleDesc')}
-                </p>
+            {/* Store Visibility */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium">
+                {t('settingsExtended.storeVisibility') || 'Store Visibility'}
+              </p>
+              <div className="space-y-2">
+                {(['public', 'unlisted', 'private'] as const).map(option => (
+                  <label
+                    key={option}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      settings.visibility === option
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:bg-surface-hover'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="visibility"
+                      value={option}
+                      checked={settings.visibility === option}
+                      onChange={() => setSettings(prev => ({ ...prev, visibility: option }))}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        settings.visibility === option
+                          ? 'border-primary'
+                          : 'border-muted-foreground/40'
+                      }`}
+                    >
+                      {settings.visibility === option && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium capitalize">{option}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {option === 'public' &&
+                          (t('settingsExtended.visibilityPublicDesc') ||
+                            'Visible in marketplace search and recommendations')}
+                        {option === 'unlisted' &&
+                          (t('settingsExtended.visibilityUnlistedDesc') ||
+                            'Hidden from search, accessible via direct link')}
+                        {option === 'private' &&
+                          (t('settingsExtended.visibilityPrivateDesc') ||
+                            'Requires authorization to access')}
+                      </p>
+                    </div>
+                  </label>
+                ))}
               </div>
-              <Switch
-                checked={settings.isPrivate}
-                onCheckedChange={checked => setSettings(prev => ({ ...prev, isPrivate: checked }))}
-              />
             </div>
 
             {/* Require Approval */}
-            {settings.isPrivate && (
+            {settings.visibility === 'private' && (
               <div className="flex items-start justify-between gap-4 pt-4 border-t border-border">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{t('settingsExtended.requireApproval')}</p>
@@ -136,7 +177,7 @@ export default function PrivacySettingsPage() {
             )}
 
             {/* Welcome Message */}
-            {settings.isPrivate && (
+            {settings.visibility === 'private' && (
               <div className="pt-4 border-t border-border">
                 <label className="block text-sm font-medium mb-1.5">
                   {t('settingsExtended.welcomeMessage')}
@@ -160,7 +201,7 @@ export default function PrivacySettingsPage() {
         </SettingsSection>
 
         {/* Access Requests */}
-        {settings.isPrivate && settings.requireApproval && (
+        {settings.visibility === 'private' && settings.requireApproval && (
           <SettingsSection
             title={t('settingsExtended.accessRequests')}
             description={t('settingsExtended.accessRequestsDesc')}

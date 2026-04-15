@@ -253,13 +253,21 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
               {profile.name || peerID.slice(0, 12)}
             </h3>
             {/* 隐私店铺徽标 */}
-            {profile.private && (
+            {profile.visibility === 'private' && (
               <span
                 className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning shrink-0"
                 title={t('storeAccess.privateStore')}
               >
                 <Lock className="h-2.5 w-2.5" />
                 {t('storeAccess.privateStoreBadge') || t('common.private')}
+              </span>
+            )}
+            {profile.visibility === 'unlisted' && (
+              <span
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground shrink-0"
+                title={t('settings.visibility.unlisted') || 'Unlisted'}
+              >
+                {t('settings.visibility.unlisted') || 'Unlisted'}
               </span>
             )}
           </div>

@@ -187,7 +187,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
 
   const stepLabels = [
     t('admin.onboarding.step1Label') || 'Store',
@@ -219,7 +219,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
         name: storeName.trim(),
         shortDescription: shortDescription.trim(),
         vendor: true,
-        private: isPrivate,
+        visibility,
       };
 
       const created = await apiCreateProfile(profileData);
@@ -483,7 +483,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </h3>
             <div className="flex items-start gap-3 rounded-lg border p-3 sm:p-4">
               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                {isPrivate ? (
+                {visibility === 'private' ? (
                   <EyeOff className="w-4.5 h-4.5 text-primary" />
                 ) : (
                   <Eye className="w-4.5 h-4.5 text-primary" />
@@ -495,7 +495,11 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                   {t('admin.onboarding.privateStoreDesc')}
                 </p>
               </div>
-              <Switch checked={isPrivate} onCheckedChange={setIsPrivate} disabled={saving} />
+              <Switch
+                checked={visibility === 'private'}
+                onCheckedChange={checked => setVisibility(checked ? 'private' : 'public')}
+                disabled={saving}
+              />
             </div>
             <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
           </div>
@@ -691,7 +695,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </p>
           </div>
 
-          {isPrivate && (
+          {visibility === 'private' && (
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <EyeOff className="w-4 h-4 shrink-0" />
               <span>{t('admin.onboarding.storeIsPrivate')}</span>

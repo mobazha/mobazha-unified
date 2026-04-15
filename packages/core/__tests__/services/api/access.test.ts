@@ -86,7 +86,7 @@ describe('Access Control Type Validation', () => {
         peerID: 'QmStore123',
         allowExternalApplications: true,
         autoApprove: false,
-        isPrivateStore: true,
+        visibility: 'private',
         allowAccessRequests: true,
         autoApproveRequests: false,
         welcomeMessage: 'Welcome to our store!',
@@ -94,7 +94,7 @@ describe('Access Control Type Validation', () => {
 
       expect(settings.peerID).toBe('QmStore123');
       expect(settings.allowExternalApplications).toBe(true);
-      expect(settings.isPrivateStore).toBe(true);
+      expect(settings.visibility).toBe('private');
       expect(settings.welcomeMessage).toBe('Welcome to our store!');
     });
 
@@ -105,7 +105,7 @@ describe('Access Control Type Validation', () => {
       };
 
       expect(minimalSettings.peerID).toBe('QmStore456');
-      expect(minimalSettings.isPrivateStore).toBeUndefined();
+      expect(minimalSettings.visibility).toBeUndefined();
     });
   });
 

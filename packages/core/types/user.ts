@@ -20,8 +20,8 @@ export interface UserProfile {
   vendor?: boolean;
   moderator?: boolean;
   moderatorInfo?: ModeratorInfo;
-  /** 是否为私密店铺（仅授权用户可访问） */
-  private?: boolean;
+  /** 店铺可见性：public=公开搜索, unlisted=仅直链, private=需授权 */
+  visibility?: 'public' | 'unlisted' | 'private';
   /** 店铺是否处于暂停状态（度假模式） */
   storePaused?: boolean;
   avatarHashes?: Image;
