@@ -1031,7 +1031,8 @@ export default function SalesChannelsContent() {
   const [telegramLinkChecking, setTelegramLinkChecking] = useState(true);
 
   useEffect(() => {
-    if (!platformConnected) {
+    if (platformConnected === null) return;
+    if (platformConnected === false) {
       setTelegramLinkChecking(false);
       return;
     }
@@ -1174,7 +1175,7 @@ export default function SalesChannelsContent() {
         description={t('admin.salesChannels.telegramBotDesc')}
       >
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
-          {standalone && !platformConnected ? (
+          {standalone && platformConnected === false ? (
             <UnconnectedBotSection connectivity={connectivity} domain={localDomain} />
           ) : (
             <TelegramBotSection
