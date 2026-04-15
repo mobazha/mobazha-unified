@@ -10,6 +10,11 @@
  */
 
 import { getEnvConfig } from '../../config/env';
+import {
+  STANDALONE_OAUTH_BROADCAST_CHANNEL,
+  STANDALONE_OAUTH_POPUP_CLOSED_GRACE_MS,
+  parseStandaloneOauthBroadcastMessage,
+} from './oauthBroadcast';
 
 const POPUP_WIDTH = 500;
 const POPUP_HEIGHT = 650;
@@ -73,6 +78,13 @@ function cacheSaaSToken(token: string): void {
 }
 
 /**
+ * /auth/saas-bridge 落地页在 hash 回传后写入 sessionStorage（与 popup postMessage 等价）。
+ */
+export function persistSaaSTokenFromOAuthFallback(token: string): void {
+  cacheSaaSToken(token);
+}
+
+/**
  * Clear cached Casdoor JWT.
  */
 export function clearSaaSToken(): void {
@@ -124,14 +136,18 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
     return { success: false, error: 'Popup was blocked. Please allow popups for this site.' };
   }
 
+  const popupOpenedAt = Date.now();
+
   return new Promise<SaaSBridgeResult>(resolve => {
     let settled = false;
+    let detachBroadcast: (() => void) | undefined;
 
     const cleanup = () => {
       settled = true;
       window.removeEventListener('message', onMessage);
       clearTimeout(timeoutId);
       clearInterval(pollId);
+      detachBroadcast?.();
       try {
         if (popup && !popup.closed) popup.close();
       } catch {
@@ -139,7 +155,30 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
       }
     };
 
+    if (typeof globalThis.BroadcastChannel !== 'undefined') {
+      const bc = new globalThis.BroadcastChannel(STANDALONE_OAUTH_BROADCAST_CHANNEL);
+      const onBc = (ev: globalThis.MessageEvent) => {
+        if (settled) return;
+        const msg = parseStandaloneOauthBroadcastMessage(ev.data);
+        if (!msg) return;
+        if (msg.type === 'saas-bridge-token') {
+          cleanup();
+          cacheSaaSToken(msg.token);
+          resolve({ success: true, token: msg.token });
+        } else if (msg.type === 'saas-bridge-error') {
+          cleanup();
+          resolve({ success: false, error: msg.error || 'Authentication failed' });
+        }
+      };
+      bc.addEventListener('message', onBc);
+      detachBroadcast = () => {
+        bc.removeEventListener('message', onBc);
+        bc.close();
+      };
+    }
+
     const onMessage = (event: globalThis.MessageEvent) => {
+      if (settled) return;
       if (event.origin !== saasOrigin) return;
       const data = event.data;
       if (!data) return;
@@ -170,7 +209,7 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
     const pollId = setInterval(() => {
       if (settled) return;
       try {
-        if (popup.closed) {
+        if (popup.closed && Date.now() - popupOpenedAt >= STANDALONE_OAUTH_POPUP_CLOSED_GRACE_MS) {
           cleanup();
           resolve({ success: false, error: 'Login window was closed' });
         }

@@ -52,6 +52,7 @@ const routes: RouteObject[] = [
 
   // 认证相关
   { path: '/login', element: lazyPage(() => import('./app/login/page')) },
+  { path: '/auth/saas-bridge', element: lazyPage(() => import('./app/auth/saas-bridge/page')) },
   { path: '/offline', element: lazyPage(() => import('./app/offline/page')) },
 
   // 新用户引导（需登录但不需要 profile）

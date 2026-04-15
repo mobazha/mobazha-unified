@@ -128,5 +128,13 @@ export {
   hasSaaSToken,
   clearSaaSToken,
   getCachedSaaSToken,
+  persistSaaSTokenFromOAuthFallback,
   type SaaSBridgeResult,
 } from './saasBridge';
+
+export {
+  STANDALONE_OAUTH_BROADCAST_CHANNEL,
+  STANDALONE_OAUTH_POPUP_CLOSED_GRACE_MS,
+  parseStandaloneOauthBroadcastMessage,
+  type StandaloneOauthBroadcastMessage,
+} from './oauthBroadcast';
