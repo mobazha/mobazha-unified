@@ -92,7 +92,7 @@ export interface StoreSpaceCreateResponse {
 export async function createStoreSpace(data: {
   storePeerID: string;
   storeName: string;
-  isPrivate?: boolean;
+  visibility?: 'public' | 'unlisted' | 'private';
 }): Promise<StoreSpaceCreateResponse> {
   const hostingUrl = getHostingUrl();
   const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_CREATE_SPACE}`, {

@@ -158,7 +158,7 @@ export default function StandaloneSetupWizard({
   const [shortDescription, setShortDescription] = useState(profile?.shortDescription || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
 
   // Step 3: Location & Currency
   const [country, setCountry] = useState('');
@@ -274,7 +274,7 @@ export default function StandaloneSetupWizard({
         name: storeName.trim(),
         shortDescription: shortDescription.trim(),
         vendor: true,
-        private: isPrivate,
+        visibility,
       };
 
       const createResult = await apiCreateProfile(profileData);
@@ -587,7 +587,7 @@ export default function StandaloneSetupWizard({
             </h3>
             <div className="flex items-start gap-3 rounded-lg border p-3 sm:p-4">
               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                {isPrivate ? (
+                {visibility === 'private' ? (
                   <EyeOff className="w-4.5 h-4.5 text-primary" />
                 ) : (
                   <Eye className="w-4.5 h-4.5 text-primary" />
@@ -599,7 +599,11 @@ export default function StandaloneSetupWizard({
                   {t('admin.onboarding.privateStoreDesc')}
                 </p>
               </div>
-              <Switch checked={isPrivate} onCheckedChange={setIsPrivate} disabled={saving} />
+              <Switch
+                checked={visibility === 'private'}
+                onCheckedChange={checked => setVisibility(checked ? 'private' : 'public')}
+                disabled={saving}
+              />
             </div>
             <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
           </div>

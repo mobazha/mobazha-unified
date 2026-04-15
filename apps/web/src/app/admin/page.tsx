@@ -284,7 +284,7 @@ export default function AdminDashboardPage() {
       <div data-testid="admin-dashboard">
         <DashboardHeader name={displayName} />
         <SetupChecklist hasProducts={false} productsLoading={false} />
-        {profile?.private && (
+        {profile?.visibility === 'private' && (
           <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
             <Lock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
@@ -316,7 +316,7 @@ export default function AdminDashboardPage() {
 
       <MnemonicBackupBanner />
 
-      {profile?.private && (
+      {profile?.visibility === 'private' && (
         <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
           <Lock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">

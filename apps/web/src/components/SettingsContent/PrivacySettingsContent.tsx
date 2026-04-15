@@ -6,8 +6,55 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch, useToast } from '@/components/ui';
 import { useI18n, useAccessControl, useUserStore } from '@mobazha/core';
-import { Shield, Eye, EyeOff, UserCheck, Zap, Loader2 } from 'lucide-react';
+import { Globe, Link2, Lock, UserCheck, Zap, Loader2 } from 'lucide-react';
 import { SettingsSection } from '@/components/SettingsLayout';
+
+type StoreVisibility = 'public' | 'unlisted' | 'private';
+
+interface VisibilityOptionProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  value: StoreVisibility;
+  selected: boolean;
+  onSelect: (value: StoreVisibility) => void;
+}
+
+const VisibilityOption: React.FC<VisibilityOptionProps> = ({
+  icon,
+  title,
+  description,
+  value,
+  selected,
+  onSelect,
+}) => (
+  <button
+    type="button"
+    onClick={() => onSelect(value)}
+    className={`flex items-start gap-4 p-4 rounded-lg border-2 transition-colors text-left w-full ${
+      selected ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'
+    }`}
+  >
+    <div
+      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+        selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+      }`}
+    >
+      {icon}
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-sm">{title}</p>
+      <p className="text-xs text-muted-foreground mt-1">{description}</p>
+    </div>
+    <div
+      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+        selected ? 'border-primary' : 'border-muted-foreground/40'
+      }`}
+    >
+      {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+    </div>
+  </button>
+);
 
 interface SettingToggleProps {
   icon: React.ReactNode;
@@ -38,13 +85,6 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
   </div>
 );
 
-/**
- * 隐私设置内容组件
- * 可在独立页面和 Modal 中复用
- *
- * 注意：isPrivateStore（私密店铺）值从 profile.private 获取，与老版移动端一致
- * 其他访问控制设置（allowAccessRequests, autoApproveRequests 等）从 store-access-settings 获取
- */
 export const PrivacySettingsContent: React.FC = () => {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -58,35 +98,28 @@ export const PrivacySettingsContent: React.FC = () => {
     loadSettings: refreshPrivacySettings,
   } = useAccessControl({ storePeerID });
 
-  // Local state for form
-  // 从 profile.private 获取私密店铺状态（与老版移动端一致）
-  const [isPrivateStore, setIsPrivateStore] = useState(profile?.private ?? false);
+  const [visibility, setVisibility] = useState<StoreVisibility>(profile?.visibility || 'public');
   const [allowAccessRequests, setAllowAccessRequests] = useState(true);
   const [autoApproveRequests, setAutoApproveRequests] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // 追踪初始值，用于判断是否有变更
-  const initialPrivateRef = useRef(profile?.private ?? false);
+  const initialVisibilityRef = useRef<StoreVisibility>(profile?.visibility || 'public');
 
-  // 当 profile 更新时同步私密店铺状态
   useEffect(() => {
-    const profilePrivate = profile?.private ?? false;
-    setIsPrivateStore(profilePrivate);
-    initialPrivateRef.current = profilePrivate;
-  }, [profile?.private]);
+    const vis = profile?.visibility || 'public';
+    setVisibility(vis);
+    initialVisibilityRef.current = vis;
+  }, [profile?.visibility]);
 
-  // Sync with fetched settings (access control settings only)
   useEffect(() => {
     if (privacySettings) {
-      // 注意：不再从 privacySettings 获取 isPrivateStore，而是从 profile.private 获取
       setAllowAccessRequests(privacySettings.allowAccessRequests !== false);
       setAutoApproveRequests(privacySettings.autoApproveRequests || false);
       setWelcomeMessage(privacySettings.welcomeMessage || '');
     }
   }, [privacySettings]);
 
-  // Refresh on mount
   useEffect(() => {
     refreshPrivacySettings();
   }, [refreshPrivacySettings]);
@@ -94,18 +127,15 @@ export const PrivacySettingsContent: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // 1. 如果私密店铺状态有变化，通过 updateProfile 更新 profile.private
-      const privateChanged = isPrivateStore !== initialPrivateRef.current;
-      if (privateChanged) {
-        const profileUpdateSuccess = await updateProfile({ private: isPrivateStore });
+      const visibilityChanged = visibility !== initialVisibilityRef.current;
+      if (visibilityChanged) {
+        const profileUpdateSuccess = await updateProfile({ visibility });
         if (!profileUpdateSuccess) {
           throw new Error('Failed to update profile');
         }
-        // 更新初始值引用
-        initialPrivateRef.current = isPrivateStore;
+        initialVisibilityRef.current = visibility;
       }
 
-      // 2. 更新访问控制设置（不包含 isPrivateStore）
       await updateSettings({
         allowAccessRequests,
         autoApproveRequests,
@@ -127,9 +157,10 @@ export const PrivacySettingsContent: React.FC = () => {
     }
   };
 
-  // 检查是否有变更
+  const isPrivate = visibility === 'private';
+
   const hasChanges =
-    isPrivateStore !== initialPrivateRef.current ||
+    visibility !== initialVisibilityRef.current ||
     (privacySettings &&
       (allowAccessRequests !== (privacySettings.allowAccessRequests !== false) ||
         autoApproveRequests !== (privacySettings.autoApproveRequests || false) ||
@@ -145,23 +176,53 @@ export const PrivacySettingsContent: React.FC = () => {
 
   return (
     <div className="divide-y divide-border">
-      {/* Privacy Settings */}
       <SettingsSection
         className="pt-0 pb-5 md:pb-8"
-        title={t('settings.accessControl.privateStore')}
-        description={t('settings.accessControl.privacyDescription')}
+        title={t('settings.visibility.title') || 'Store Visibility'}
+        description={
+          t('settings.visibility.description') ||
+          'Control how your store is discovered and accessed'
+        }
       >
-        <Card className="p-4 md:p-6 overflow-hidden">
-          <SettingToggle
-            icon={isPrivateStore ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            title={t('settings.accessControl.privateStore')}
-            description={t('settings.accessControl.privateStoreDesc')}
-            checked={isPrivateStore}
-            onCheckedChange={setIsPrivateStore}
-          />
+        <Card className="p-4 md:p-6">
+          <div className="space-y-3">
+            <VisibilityOption
+              icon={<Globe className="w-5 h-5" />}
+              title={t('settings.visibility.public') || 'Public'}
+              description={
+                t('settings.visibility.publicDesc') ||
+                'Visible in marketplace search and recommendations'
+              }
+              value="public"
+              selected={visibility === 'public'}
+              onSelect={setVisibility}
+            />
+            <VisibilityOption
+              icon={<Link2 className="w-5 h-5" />}
+              title={t('settings.visibility.unlisted') || 'Unlisted'}
+              description={
+                t('settings.visibility.unlistedDesc') ||
+                'Hidden from search, accessible via direct link or custom domain'
+              }
+              value="unlisted"
+              selected={visibility === 'unlisted'}
+              onSelect={setVisibility}
+            />
+            <VisibilityOption
+              icon={<Lock className="w-5 h-5" />}
+              title={t('settings.visibility.private') || 'Private'}
+              description={
+                t('settings.visibility.privateDesc') ||
+                'Only authorized users can access your store'
+              }
+              value="private"
+              selected={visibility === 'private'}
+              onSelect={setVisibility}
+            />
+          </div>
 
-          {isPrivateStore && (
-            <>
+          {isPrivate && (
+            <div className="mt-4 pt-4 border-t border-border space-y-0">
               <SettingToggle
                 icon={<UserCheck className="w-5 h-5" />}
                 title={t('settings.accessControl.allowRequests')}
@@ -169,7 +230,6 @@ export const PrivacySettingsContent: React.FC = () => {
                 checked={allowAccessRequests}
                 onCheckedChange={setAllowAccessRequests}
               />
-
               {allowAccessRequests && (
                 <SettingToggle
                   icon={<Zap className="w-5 h-5" />}
@@ -179,10 +239,10 @@ export const PrivacySettingsContent: React.FC = () => {
                   onCheckedChange={setAutoApproveRequests}
                 />
               )}
-            </>
+            </div>
           )}
 
-          <div className="pt-4 border-t border-border">
+          <div className="pt-4 border-t border-border mt-4">
             <Button
               onClick={handleSave}
               disabled={isSaving || !hasChanges}
@@ -201,8 +261,7 @@ export const PrivacySettingsContent: React.FC = () => {
         </Card>
       </SettingsSection>
 
-      {/* Welcome Message */}
-      {isPrivateStore && allowAccessRequests && (
+      {isPrivate && allowAccessRequests && (
         <SettingsSection
           className="py-5 md:py-8"
           title={t('settings.accessControl.welcomeMessage')}

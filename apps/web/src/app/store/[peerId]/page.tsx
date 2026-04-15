@@ -802,7 +802,7 @@ export default function StorePage() {
       {(isOwnStore ? currentUserProfile?.storePaused : store.storePaused) && (
         <StorePausedBanner variant={isOwnStore ? 'admin' : 'buyer'} />
       )}
-      {store.private && isOwnStore && <StorePrivateBanner variant="admin" />}
+      {store.visibility === 'private' && isOwnStore && <StorePrivateBanner variant="admin" />}
 
       <main>
         {/* ── Unified Hero Header ── */}
@@ -915,7 +915,7 @@ export default function StorePage() {
                     <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md">
                       {store.name || peerId.slice(0, 8)}
                     </h1>
-                    {store.private && (
+                    {store.visibility === 'private' && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-black/40 text-white backdrop-blur-sm border border-white/20 shrink-0">
                         <Lock className="h-3 w-3" />
                         {t('storeAccess.privateStoreBadge') || t('common.private')}
@@ -1151,7 +1151,7 @@ export default function StorePage() {
         </div>
 
         {/* Private store access notice */}
-        {store.private && accessCheck?.hasFullAccess && !isOwnStore && (
+        {store.visibility === 'private' && accessCheck?.hasFullAccess && !isOwnStore && (
           <Container size="xl">
             <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-success/15 text-success text-sm border border-success/20">
               <ShieldCheck className="h-4 w-4 shrink-0" />

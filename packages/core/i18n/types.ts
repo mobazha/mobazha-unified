@@ -661,6 +661,16 @@ export interface TranslationResource {
     dragOrClickCover?: string;
     adjustCover?: string;
     adjustAvatar?: string;
+    visibility?: {
+      title: string;
+      description: string;
+      public: string;
+      publicDesc: string;
+      unlisted: string;
+      unlistedDesc: string;
+      private: string;
+      privateDesc: string;
+    };
     // 侧边栏导航
     sidebar?: {
       general: string;
@@ -1122,6 +1132,10 @@ export interface TranslationResource {
     privacyDesc?: string;
     storePrivacySection?: string;
     storePrivacySectionDesc?: string;
+    storeVisibility?: string;
+    visibilityPublicDesc?: string;
+    visibilityUnlistedDesc?: string;
+    visibilityPrivateDesc?: string;
     privateStoreToggle?: string;
     privateStoreToggleDesc?: string;
     requireApproval?: string;

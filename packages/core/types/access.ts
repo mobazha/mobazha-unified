@@ -205,8 +205,8 @@ export interface StoreAccessSettings {
   peerID: string;
   allowExternalApplications: boolean;
   autoApprove?: boolean;
-  /** 是否为私密店铺 */
-  isPrivateStore?: boolean;
+  /** 店铺可见性 */
+  visibility?: 'public' | 'unlisted' | 'private';
   /** 是否允许访问申请 */
   allowAccessRequests?: boolean;
   /** 是否自动批准申请 */
@@ -341,7 +341,7 @@ export interface GroupPermissions {
  */
 export interface StorePrivacySettings {
   storeId: string;
-  isPrivate: boolean;
+  visibility: 'public' | 'unlisted' | 'private';
   requireApproval: boolean;
   defaultUserGroup?: string;
   welcomeMessage?: string;
