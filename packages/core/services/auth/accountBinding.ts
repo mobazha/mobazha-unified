@@ -150,29 +150,36 @@ export function getLinkUrl(
  *
  * @param provider 要绑定的 provider 类型
  * @param redirectUri 绑定完成后的回调 URL（可选，默认使用当前页面）
+ * @param options.returnTo 绑定成功后重定向到的路径（相对路径），而非停留在 /settings/account
  */
-export function startLinkAccount(provider: OAuthProvider, redirectUri?: string): void {
+export function startLinkAccount(
+  provider: OAuthProvider,
+  redirectUri?: string,
+  options?: { returnTo?: string }
+): void {
   if (typeof window === 'undefined') {
     throw new Error('startLinkAccount can only be called in browser');
   }
 
   const sfReturnOrigin = getStorefrontReturnOrigin();
   const mainOrigin = getSaaSMainOrigin();
+  const returnToParam = options?.returnTo
+    ? `&returnTo=${encodeURIComponent(options.returnTo)}`
+    : '';
 
   let callbackUrl: string;
   let storefrontSuffix = '';
 
   if (isStandaloneMode() && !redirectUri) {
-    // Standalone: callback must land on SaaS, which then returns the result
-    // to the standalone store via the storefront-return mechanism.
     const saasBase = getSaaSBaseUrl();
-    callbackUrl = `${saasBase}/settings/account?link_callback=1`;
+    callbackUrl = `${saasBase}/settings/account?link_callback=1${returnToParam}`;
     storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(window.location.origin)}`;
   } else if (!redirectUri && sfReturnOrigin && mainOrigin) {
-    callbackUrl = `${mainOrigin}/settings/account?link_callback=1`;
+    callbackUrl = `${mainOrigin}/settings/account?link_callback=1${returnToParam}`;
     storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin)}`;
   } else {
-    callbackUrl = redirectUri || `${window.location.origin}/settings/account?link_callback=1`;
+    callbackUrl =
+      redirectUri || `${window.location.origin}/settings/account?link_callback=1${returnToParam}`;
   }
 
   sessionStorage.setItem('link_provider', provider);
