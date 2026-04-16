@@ -677,6 +677,7 @@ export const en: TranslationResource = {
       processing: 'Processing',
       partialShipped: 'Partial Shipped',
       shipped: 'Shipped',
+      delivered: 'Delivered',
       completed: 'Completed',
       cancelled: 'Cancelled',
       declined: 'Declined',
