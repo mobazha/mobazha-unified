@@ -91,7 +91,7 @@ export default function GuestCheckoutPage() {
   useEffect(() => {
     getGuestCheckoutSettings()
       .then(res => {
-        const coins = res.data.acceptedCoins;
+        const coins = res.acceptedCoins;
         if (Array.isArray(coins) && coins.length > 0) setAcceptedCoins(coins);
       })
       .catch(() => {});
@@ -128,7 +128,7 @@ export default function GuestCheckoutPage() {
         const req = buildOrderRequest(items, addressData, contactEmail, selectedCoin);
         const res = await createGuestOrder(req);
         if (!cancelled) {
-          setPaymentState({ status: 'awaiting', data: res.data });
+          setPaymentState({ status: 'awaiting', data: res });
           clearCart();
         }
       } catch (err) {
