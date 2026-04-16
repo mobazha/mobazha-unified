@@ -6,7 +6,7 @@
  */
 
 import { NODE_API } from '../../config/apiPaths';
-import { publicGet, publicPost, authGet, authPut } from './helpers';
+import { publicGet, publicPost, authGet, authPut, authPost } from './helpers';
 
 // ========== Types ==========
 
@@ -73,9 +73,26 @@ export interface GuestOrderStatus {
 
 export interface GuestCheckoutSettings {
   enabled: boolean;
-  acceptedCoins: string;
-  maxOrderAmount: string;
-  paymentTimeout: number;
+  acceptedCoins: string[];
+  maxOrderAmount?: string;
+  paymentTimeoutMinutes: number;
+}
+
+export interface GuestOrderSummary {
+  orderToken: string;
+  state: string;
+  paymentCoin: string;
+  paymentAmount: string;
+  priceCurrency: string;
+  items: GuestOrderItemResponse[];
+  contactEmail?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GuestOrderListResponse {
+  data: GuestOrderSummary[];
+  meta: { total: number; limit: number; offset: number };
 }
 
 // ========== Buyer-facing APIs (public, no auth) ==========
@@ -100,4 +117,28 @@ export function updateGuestCheckoutSettings(
   settings: GuestCheckoutSettings,
 ): Promise<{ data: GuestCheckoutSettings }> {
   return authPut(NODE_API.GUEST_CHECKOUT_SETTINGS, settings);
+}
+
+export function listGuestOrders(params?: {
+  limit?: number;
+  offset?: number;
+  state?: string;
+}): Promise<GuestOrderListResponse> {
+  const query = new URLSearchParams();
+  if (params?.limit) query.set('limit', String(params.limit));
+  if (params?.offset) query.set('offset', String(params.offset));
+  if (params?.state) query.set('state', params.state);
+  const qs = query.toString();
+  return authGet(`${NODE_API.GUEST_ORDERS}${qs ? `?${qs}` : ''}`);
+}
+
+export function fulfillGuestOrder(
+  token: string,
+  data: { trackingNumber?: string; carrier?: string },
+): Promise<{ data: GuestOrderStatus }> {
+  return authPost(NODE_API.GUEST_ORDER_FULFILL(token), data);
+}
+
+export function completeGuestOrder(token: string): Promise<{ data: GuestOrderStatus }> {
+  return authPost(NODE_API.GUEST_ORDER_COMPLETE(token), {});
 }
