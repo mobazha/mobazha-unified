@@ -2736,6 +2736,13 @@ export interface TranslationResource {
       batchConfirmSuccess?: string;
       noPendingSelected?: string;
       showingCount?: string;
+      standardOrders?: string;
+      guestOrders?: string;
+      guestBadge?: string;
+      guestOrderTitle?: string;
+      guestItemCount?: string;
+      guestItemCountPlural?: string;
+      noGuestOrders?: string;
     };
     analytics?: {
       title?: string;
@@ -3003,6 +3010,24 @@ export interface TranslationResource {
       paymentsDesc?: string;
       integrations?: string;
       integrationsDesc?: string;
+      guestCheckout?: string;
+      guestCheckoutDesc?: string;
+    };
+    guestCheckout?: {
+      title?: string;
+      description?: string;
+      loadError?: string;
+      saveError?: string;
+      saveSuccess?: string;
+      enableToggle?: string;
+      enableDescription?: string;
+      acceptedCoins?: string;
+      acceptedCoinsDescription?: string;
+      paymentTimeout?: string;
+      paymentTimeoutDescription?: string;
+      minutes?: string;
+      saving?: string;
+      saveSettings?: string;
     };
     integrations?: {
       title?: string;
@@ -3749,6 +3774,76 @@ export interface TranslationResource {
   auth?: TranslationSection;
 
   collections?: TranslationSection;
+
+  guestCheckout?: {
+    cartEmpty?: string;
+    cartEmptyHint?: string;
+    reviewCart?: string;
+    itemSingular?: string;
+    itemPlural?: string;
+    total?: string;
+    continueToShipping?: string;
+    shippingInfo?: string;
+    fullName?: string;
+    emailLabel?: string;
+    address?: string;
+    city?: string;
+    stateProvince?: string;
+    postalCode?: string;
+    country?: string;
+    deliveryNotes?: string;
+    deliveryNotesPlaceholder?: string;
+    back?: string;
+    continueToPayment?: string;
+    choosePayment?: string;
+    choosePaymentHint?: string;
+    sendPayment?: string;
+    sendExactAmount?: string;
+    paymentAddress?: string;
+    copyAddress?: string;
+    timeRemaining?: string;
+    expired?: string;
+    creatingOrder?: string;
+    orderFailed?: string;
+    goBack?: string;
+    directPaymentDisclaimer?: string;
+    trackOrderStatus?: string;
+    stepCart?: string;
+    stepShipping?: string;
+    stepCoin?: string;
+    stepPay?: string;
+  };
+
+  guestOrder?: {
+    title?: string;
+    tokenLabel?: string;
+    notFoundTitle?: string;
+    paymentAddress?: string;
+    copyAddress?: string;
+    timeRemaining?: string;
+    confirmations?: string;
+    txLabel?: string;
+    trackingInfo?: string;
+    items?: string;
+    total?: string;
+    autoRefreshNote?: string;
+    stateAwaitingPayment?: string;
+    stateAwaitingPaymentDesc?: string;
+    statePendingConfirmation?: string;
+    statePendingConfirmationDesc?: string;
+    stateFunded?: string;
+    stateFundedDesc?: string;
+    stateProcessing?: string;
+    stateProcessingDesc?: string;
+    stateFulfilled?: string;
+    stateFulfilledDesc?: string;
+    stateCompleted?: string;
+    stateCompletedDesc?: string;
+    stateExpired?: string;
+    stateExpiredDesc?: string;
+    stateCancelled?: string;
+    stateCancelledDesc?: string;
+  };
 }
 
 // i18n 上下文类型
