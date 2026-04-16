@@ -255,6 +255,8 @@ export const NODE_API = {
   SYSTEM_DOCTOR: '/system/doctor',
   SYSTEM_DIAGNOSTICS: '/system/diagnostics',
   SYSTEM_DOMAIN: '/system/domain',
+  SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
+  SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */

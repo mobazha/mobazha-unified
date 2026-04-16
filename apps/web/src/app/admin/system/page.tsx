@@ -11,9 +11,14 @@ import {
   downloadDiagnostics,
   getDomainConfig,
   updateDomain,
+  triggerUpdate,
+  getUpdateConfig,
+  updateUpdateConfig,
   type SystemHealthResponse,
   type NetworkConfigResponse,
   type DoctorSummary,
+  type UpdateInfo,
+  type UpdateConfigResponse,
 } from '@mobazha/core/services/api/system';
 import {
   Server,
@@ -38,6 +43,7 @@ import {
   Download,
   Link,
   Save,
+  Settings,
 } from 'lucide-react';
 
 function formatUptime(seconds: number, t: (key: string) => string): string {
@@ -82,6 +88,11 @@ export default function SystemPage() {
   const [domainSaving, setDomainSaving] = useState(false);
   const [domainMessage, setDomainMessage] = useState<string | null>(null);
 
+  const [updateTriggering, setUpdateTriggering] = useState(false);
+  const [updateConfig, setUpdateConfig] = useState<UpdateConfigResponse | null>(null);
+  const [updateConfigSaving, setUpdateConfigSaving] = useState(false);
+  const [showUpdateSettings, setShowUpdateSettings] = useState(false);
+
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
   const fetchHealth = useCallback(async () => {
@@ -116,15 +127,25 @@ export default function SystemPage() {
     }
   }, []);
 
+  const fetchUpdateConfig = useCallback(async () => {
+    try {
+      const cfg = await getUpdateConfig();
+      setUpdateConfig(cfg);
+    } catch {
+      // Update config endpoint may not be available (Docker/SaaS mode)
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin) {
       fetchHealth();
       fetchNetworkConfig();
       fetchDomainConfig();
+      fetchUpdateConfig();
       const interval = setInterval(fetchHealth, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAdmin, fetchHealth, fetchNetworkConfig, fetchDomainConfig]);
+  }, [isAdmin, fetchHealth, fetchNetworkConfig, fetchDomainConfig, fetchUpdateConfig]);
 
   const handleApplyNetwork = async () => {
     setNetworkSaving(true);
@@ -181,6 +202,43 @@ export default function SystemPage() {
       setDomainMessage(err instanceof Error ? err.message : t('system.domain.error'));
     } finally {
       setDomainSaving(false);
+    }
+  };
+
+  const handleCheckUpdate = async () => {
+    setUpdateTriggering(true);
+    try {
+      await triggerUpdate('check');
+      setTimeout(fetchHealth, 3000);
+    } catch {
+      // silent
+    } finally {
+      setUpdateTriggering(false);
+    }
+  };
+
+  const handleSaveUpdateConfig = async () => {
+    if (!updateConfig) return;
+    setUpdateConfigSaving(true);
+    try {
+      const saved = await updateUpdateConfig(updateConfig);
+      setUpdateConfig(saved);
+    } catch {
+      // silent
+    } finally {
+      setUpdateConfigSaving(false);
+    }
+  };
+
+  const handleApplyUpdate = async () => {
+    setUpdateTriggering(true);
+    try {
+      await triggerUpdate('apply');
+      setTimeout(fetchHealth, 3000);
+    } catch {
+      // silent
+    } finally {
+      setUpdateTriggering(false);
     }
   };
 
@@ -311,7 +369,8 @@ export default function SystemPage() {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
           {t('system.updates.title')}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          {/* Current version */}
           <div className="flex items-center gap-3">
             <Tag className="w-5 h-5 text-primary" />
             <div>
@@ -325,21 +384,111 @@ export default function SystemPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <ArrowDownCircle className="w-5 h-5 text-green-500" />
-            <div>
-              <div className="text-sm text-muted-foreground">{t('system.updates.autoUpdate')}</div>
-              <div className="font-medium text-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
-                  {t('system.updates.enabled')}
+
+          {/* Dynamic update status */}
+          {renderUpdateStatus(health!, updateTriggering, handleCheckUpdate, handleApplyUpdate, t)}
+
+          {/* Update Settings (native mode with launcher only) */}
+          {health!.deploymentMode === 'native' && updateConfig && (
+            <div className="border-t border-border pt-4 mt-4">
+              <button
+                onClick={() => setShowUpdateSettings(!showUpdateSettings)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                {t('system.updates.settings.title')}
+                <span className={`transition-transform ${showUpdateSettings ? 'rotate-180' : ''}`}>
+                  ▾
                 </span>
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {t('system.updates.autoUpdateDesc')}
-              </div>
+              </button>
+
+              {showUpdateSettings && (
+                <div className="mt-3 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">
+                        {t('system.updates.settings.autoUpdate')}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {t('system.updates.settings.autoUpdateDesc')}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setUpdateConfig({
+                          ...updateConfig,
+                          autoUpdateEnabled: !updateConfig.autoUpdateEnabled,
+                        })
+                      }
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        updateConfig.autoUpdateEnabled ? 'bg-primary' : 'bg-muted'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                          updateConfig.autoUpdateEnabled ? 'translate-x-5' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-1.5">
+                      {t('system.updates.settings.checkInterval')}
+                    </label>
+                    <select
+                      value={updateConfig.checkIntervalMinutes}
+                      onChange={e =>
+                        setUpdateConfig({
+                          ...updateConfig,
+                          checkIntervalMinutes: Number(e.target.value),
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
+                    >
+                      <option value={60}>{t('system.updates.settings.every1h')}</option>
+                      <option value={180}>{t('system.updates.settings.every3h')}</option>
+                      <option value={360}>{t('system.updates.settings.every6h')}</option>
+                      <option value={720}>{t('system.updates.settings.every12h')}</option>
+                      <option value={1440}>{t('system.updates.settings.every24h')}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-1.5">
+                      {t('system.updates.settings.channel')}
+                    </label>
+                    <select
+                      value={updateConfig.updateChannel}
+                      onChange={e =>
+                        setUpdateConfig({
+                          ...updateConfig,
+                          updateChannel: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
+                    >
+                      <option value="stable">{t('system.updates.settings.stable')}</option>
+                      <option value="beta">{t('system.updates.settings.beta')}</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={handleSaveUpdateConfig}
+                    disabled={updateConfigSaving}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {updateConfigSaving ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
+                    )}
+                    {t('system.updates.settings.save')}
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -837,6 +986,197 @@ cloudflared tunnel run --url localhost:${storePort} my-store`}
         {health!.version && health!.version !== 'dev' ? `v${health!.version} · ` : ''}
         {sys.goVersion} · {sys.numGoroutine} {t('system.resources.goroutines')}
       </div>
+    </div>
+  );
+}
+
+function renderUpdateStatus(
+  health: SystemHealthResponse,
+  triggering: boolean,
+  onCheck: () => void,
+  onApply: () => void,
+  t: (key: string, opts?: Record<string, string>) => string
+) {
+  const mode = health.deploymentMode;
+  const update = health.update;
+
+  // Docker mode — managed by Watchtower/platform
+  if (mode === 'docker' || mode === 'saas') {
+    return (
+      <div className="flex items-center gap-3">
+        <ArrowDownCircle className="w-5 h-5 text-green-500" />
+        <div>
+          <div className="text-sm text-muted-foreground">{t('system.updates.autoUpdate')}</div>
+          <div className="font-medium text-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              {t('system.updates.enabled')}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {t('system.updates.managedByPlatform')}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Native mode without launcher — manual updates
+  if (!update) {
+    return (
+      <div className="flex items-center gap-3">
+        <ArrowDownCircle className="w-5 h-5 text-muted-foreground" />
+        <div>
+          <div className="text-sm text-muted-foreground">{t('system.updates.autoUpdate')}</div>
+          <div className="font-medium text-foreground text-sm">
+            {t('system.updates.noLauncher')}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {t('system.updates.noLauncherDesc')}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Native mode with launcher — dynamic status
+  const status = update.updateStatus;
+
+  if (status === 'downloading') {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-5 h-5 text-primary animate-spin" />
+          <div>
+            <div className="text-sm text-muted-foreground">{t('system.updates.downloading')}</div>
+            <div className="font-medium text-foreground text-sm">
+              {update.latestVersion} — {update.downloadProgress}%
+            </div>
+          </div>
+        </div>
+        <div className="w-full bg-muted rounded-full h-2">
+          <div
+            className="h-2 rounded-full bg-primary transition-all"
+            style={{ width: `${update.downloadProgress}%` }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'applying') {
+    return (
+      <div className="flex items-center gap-3">
+        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+        <div>
+          <div className="text-sm text-muted-foreground">{t('system.updates.applying')}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            {t('system.updates.applyingDesc')}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'available' || status === 'ready') {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <ArrowDownCircle className="w-5 h-5 text-primary" />
+          <div>
+            <div className="text-sm text-muted-foreground">{t('system.updates.newVersion')}</div>
+            <div className="font-medium text-foreground font-mono">{update.latestVersion}</div>
+            {update.releaseNotes && (
+              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                {update.releaseNotes}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onApply}
+            disabled={triggering}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
+          >
+            {triggering && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {t('system.updates.updateNow')}
+          </button>
+          {update.latestReleaseURL && (
+            <a
+              href={update.latestReleaseURL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 text-sm text-primary hover:underline"
+            >
+              {t('system.updates.viewRelease')}
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-destructive" />
+          <div>
+            <div className="text-sm text-destructive font-medium">{t('system.updates.failed')}</div>
+            {update.lastError && (
+              <div className="text-xs text-muted-foreground mt-0.5">{update.lastError}</div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={onCheck}
+          disabled={triggering}
+          className="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-muted transition-colors disabled:opacity-50 flex items-center gap-2"
+        >
+          {triggering && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {t('system.updates.retry')}
+        </button>
+      </div>
+    );
+  }
+
+  // up-to-date
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <CheckCircle2 className="w-5 h-5 text-green-500" />
+        <div>
+          <div className="text-sm text-muted-foreground">{t('system.updates.upToDate')}</div>
+          {update.autoUpdateEnabled && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              <span className="inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                {t('system.updates.autoUpdateActive')}
+              </span>
+            </div>
+          )}
+          {update.lastCheckTime && (
+            <div className="text-xs text-muted-foreground/60 mt-0.5">
+              {t('system.updates.lastChecked', {
+                time: new Date(update.lastCheckTime).toLocaleString(),
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+      <button
+        onClick={onCheck}
+        disabled={triggering}
+        className="px-3 py-1.5 border border-border rounded-lg text-sm hover:bg-muted transition-colors disabled:opacity-50 flex items-center gap-2"
+      >
+        {triggering ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <RefreshCw className="w-3.5 h-3.5" />
+        )}
+        {t('system.updates.checkNow')}
+      </button>
     </div>
   );
 }

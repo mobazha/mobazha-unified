@@ -5,7 +5,7 @@
  *          mobazha3.0/internal/api/system_admin_handlers.go
  */
 
-import { publicGet, publicPost, authGet, authPost } from './helpers';
+import { publicGet, publicPost, authGet, authPost, authPut } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
 // --- Setup types ---
@@ -49,13 +49,37 @@ export interface NodeHealthInfo {
   dataDir: string;
 }
 
+export type DeploymentMode = 'docker' | 'native' | 'saas';
+
+export type UpdateStatus =
+  | 'up-to-date'
+  | 'available'
+  | 'downloading'
+  | 'ready'
+  | 'applying'
+  | 'failed';
+
+export interface UpdateInfo {
+  launcherVersion?: string;
+  autoUpdateEnabled: boolean;
+  updateStatus: UpdateStatus;
+  latestVersion?: string;
+  latestReleaseURL?: string;
+  releaseNotes?: string;
+  downloadProgress: number;
+  lastCheckTime?: string;
+  lastError?: string;
+}
+
 export interface SystemHealthResponse {
   status: string;
   version: string;
   uptimeSeconds: number;
   timestamp: number;
+  deploymentMode: DeploymentMode;
   system: SystemResourceInfo;
   node: NodeHealthInfo;
+  update?: UpdateInfo;
 }
 
 // --- Setup API ---
@@ -167,4 +191,26 @@ export async function getDomainConfig(): Promise<DomainConfigResponse> {
 
 export async function updateDomain(domain: string): Promise<DomainUpdateResponse> {
   return authPost<DomainUpdateResponse>(NODE_API.SYSTEM_DOMAIN, { domain });
+}
+
+// --- Update management API (native deployment only) ---
+
+export interface UpdateConfigResponse {
+  autoUpdateEnabled: boolean;
+  checkIntervalMinutes: number;
+  updateChannel: string;
+}
+
+export async function triggerUpdate(action: 'check' | 'apply'): Promise<void> {
+  await authPost(NODE_API.SYSTEM_UPDATE_TRIGGER, { action });
+}
+
+export async function getUpdateConfig(): Promise<UpdateConfigResponse> {
+  return authGet<UpdateConfigResponse>(NODE_API.SYSTEM_UPDATE_CONFIG);
+}
+
+export async function updateUpdateConfig(
+  config: UpdateConfigResponse
+): Promise<UpdateConfigResponse> {
+  return authPut<UpdateConfigResponse>(NODE_API.SYSTEM_UPDATE_CONFIG, config);
 }
