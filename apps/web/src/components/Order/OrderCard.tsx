@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { ProductImage } from '@/components/ui/product-image';
 import { useCurrency, useI18n } from '@mobazha/core';
 import { CreditCard } from 'lucide-react';
+import { getStandardStatusConfig, resolveStatusDisplay } from './orderStatusConfig';
 
 export interface OrderItem {
   id: string;
@@ -55,120 +56,11 @@ export interface OrderCardProps {
   onContact?: () => void;
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  awaiting_payment: {
-    label: 'Awaiting Payment',
-    color: 'bg-warning/15 text-warning',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-  },
-  pending: {
-    label: 'Pending',
-    color: 'bg-warning/15 text-warning',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-  },
-  processing: {
-    label: 'Processing',
-    color: 'bg-info/15 text-info',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-        />
-      </svg>
-    ),
-  },
-  shipped: {
-    label: 'Shipped',
-    color: 'bg-primary/15 text-primary',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-        />
-      </svg>
-    ),
-  },
-  delivered: {
-    label: 'Delivered',
-    color: 'bg-success/15 text-success',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-  },
-  disputed: {
-    label: 'Disputed',
-    color: 'bg-error/15 text-error',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      </svg>
-    ),
-  },
-  completed: {
-    label: 'Completed',
-    color: 'bg-success/15 text-success',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
-    ),
-  },
-  cancelled: {
-    label: 'Cancelled',
-    color: 'bg-muted text-muted-foreground',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    ),
-  },
-};
-
 export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails, onContact }) => {
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { t } = useI18n();
-  const status = statusConfig[order.status];
+  const statusCfg = useMemo(() => getStandardStatusConfig(t), [t]);
+  const status = resolveStatusDisplay(order.status, statusCfg);
   const isAwaitingPayment = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
 
   const formatDate = (dateString: string) => {
@@ -201,7 +93,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
             <span
               className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-medium ${status.color}`}
             >
-              {status.icon}
+              {status.icon && React.createElement(status.icon, { className: 'w-3.5 h-3.5' })}
               {status.label}
             </span>
           </HStack>

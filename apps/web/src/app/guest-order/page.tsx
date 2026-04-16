@@ -6,58 +6,8 @@ import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
 import { getGuestOrderStatus, type GuestOrderStatus } from '@mobazha/core/services/api/guestCheckout';
 import { ExternalWalletPayment, type ExternalWalletPaymentInfo } from '@/components/Payment/ExternalWalletPayment';
+import { getGuestStatusConfig, resolveStatusDisplay } from '@/components/Order/orderStatusConfig';
 import { cn } from '@/lib/utils';
-
-interface StateDisplay {
-  label: string;
-  color: string;
-  description: string;
-}
-
-function useStateDisplay(t: (key: string) => string): Record<string, StateDisplay> {
-  return useMemo(() => ({
-    AWAITING_PAYMENT: {
-      label: t('guestOrder.stateAwaitingPayment'),
-      color: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20',
-      description: t('guestOrder.stateAwaitingPaymentDesc'),
-    },
-    PENDING_CONFIRMATION: {
-      label: t('guestOrder.statePendingConfirmation'),
-      color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
-      description: t('guestOrder.statePendingConfirmationDesc'),
-    },
-    FUNDED: {
-      label: t('guestOrder.stateFunded'),
-      color: 'text-green-600 bg-green-50 dark:bg-green-900/20',
-      description: t('guestOrder.stateFundedDesc'),
-    },
-    PROCESSING: {
-      label: t('guestOrder.stateProcessing'),
-      color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20',
-      description: t('guestOrder.stateProcessingDesc'),
-    },
-    FULFILLED: {
-      label: t('guestOrder.stateFulfilled'),
-      color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20',
-      description: t('guestOrder.stateFulfilledDesc'),
-    },
-    COMPLETED: {
-      label: t('guestOrder.stateCompleted'),
-      color: 'text-green-700 bg-green-50 dark:bg-green-900/20',
-      description: t('guestOrder.stateCompletedDesc'),
-    },
-    EXPIRED: {
-      label: t('guestOrder.stateExpired'),
-      color: 'text-red-600 bg-red-50 dark:bg-red-900/20',
-      description: t('guestOrder.stateExpiredDesc'),
-    },
-    CANCELLED: {
-      label: t('guestOrder.stateCancelled'),
-      color: 'text-gray-600 bg-gray-50 dark:bg-gray-900/20',
-      description: t('guestOrder.stateCancelledDesc'),
-    },
-  }), [t]);
-}
 
 function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
   return {
@@ -74,7 +24,7 @@ export default function GuestOrderPage() {
   const { t } = useI18n();
   const [order, setOrder] = useState<GuestOrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const stateDisplay = useStateDisplay(t);
+  const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,11 +63,7 @@ export default function GuestOrderPage() {
     );
   }
 
-  const display = stateDisplay[order.state] ?? {
-    label: order.state,
-    color: 'text-gray-600 bg-gray-50 dark:bg-gray-900/20',
-    description: '',
-  };
+  const display = resolveStatusDisplay(order.state, guestStatusCfg);
 
   const showPaymentInfo = order.state === 'AWAITING_PAYMENT';
   const showConfirmations = order.state === 'PENDING_CONFIRMATION';
@@ -135,8 +81,11 @@ export default function GuestOrderPage() {
         </div>
 
         <div className={cn('p-4 rounded-lg text-center', display.color)}>
-          <p className="font-semibold text-lg">{display.label}</p>
-          <p className="text-sm mt-1 opacity-80">{display.description}</p>
+          <div className="flex items-center justify-center gap-2">
+            {display.icon && React.createElement(display.icon, { className: 'w-5 h-5' })}
+            <p className="font-semibold text-lg">{display.label}</p>
+          </div>
+          {display.description && <p className="text-sm mt-1 opacity-80">{display.description}</p>}
         </div>
 
         {showPaymentInfo && (
