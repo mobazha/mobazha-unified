@@ -1611,6 +1611,14 @@ export interface TranslationResource {
     startImport: string;
     importing: string;
     uploadingProgress: string;
+    processingOnServer: string;
+    analyzing: string;
+    formatJson: string;
+    formatExcel: string;
+    formatUnknown: string;
+    willBatch: string;
+    batchProgress: string;
+    processedCount: string;
     resultsTitle: string;
     total: string;
     created: string;
