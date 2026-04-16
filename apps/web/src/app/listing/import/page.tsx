@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Loader2,
   Package,
+  User,
 } from 'lucide-react';
 
 const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300MB
@@ -33,6 +34,8 @@ interface ImportResult {
   errors?: { row: number; title: string; error: string }[];
   createdItems?: { slug: string; title: string }[];
   updatedItems?: { slug: string; title: string }[];
+  profileImported?: boolean;
+  profileError?: string;
 }
 
 interface BatchProgress {
@@ -52,6 +55,10 @@ interface ZipAnalysis {
   imageCount: number;
   hasShippingProfiles: boolean;
   hasCollections: boolean;
+  hasProfile: boolean;
+  hasAvatar: boolean;
+  hasHeader: boolean;
+  profileName: string;
 }
 
 function aggregateResults(results: ImportResult[]): ImportResult {
@@ -72,6 +79,8 @@ function aggregateResults(results: ImportResult[]): ImportResult {
     if (r.errors) aggregate.errors!.push(...r.errors);
     if (r.createdItems) aggregate.createdItems!.push(...r.createdItems);
     if (r.updatedItems) aggregate.updatedItems!.push(...r.updatedItems);
+    if (r.profileImported) aggregate.profileImported = true;
+    if (r.profileError) aggregate.profileError = r.profileError;
   }
   return aggregate;
 }
@@ -94,6 +103,34 @@ function findListingsJsonPath(zip: JSZip): string | null {
   );
 }
 
+const profileImageExts = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+
+function isProfileImage(path: string): 'avatar' | 'header' | null {
+  if (path.endsWith('/')) return null;
+  const lower = path.toLowerCase();
+  if (lower.includes('__macosx')) return null;
+  if (lower.includes('/images/') || lower.startsWith('images/')) return null;
+  if (lower.includes('/videos/') || lower.startsWith('videos/')) return null;
+  const basename = path.split('/').pop() ?? '';
+  const ext =
+    basename.lastIndexOf('.') >= 0 ? basename.slice(basename.lastIndexOf('.')).toLowerCase() : '';
+  if (!profileImageExts.has(ext)) return null;
+  const nameNoExt = basename.slice(0, basename.lastIndexOf('.')).toLowerCase();
+  if (nameNoExt === 'avatar') return 'avatar';
+  if (nameNoExt === 'header') return 'header';
+  return null;
+}
+
+function findProfileJsonPath(zip: JSZip): string | null {
+  for (const [path, entry] of Object.entries(zip.files)) {
+    if (entry.dir) continue;
+    const lower = path.toLowerCase();
+    if (lower.includes('__macosx')) continue;
+    if (lower.endsWith('/profile.json') || lower === 'profile.json') return path;
+  }
+  return null;
+}
+
 function isImageEntry(path: string): boolean {
   if (path.endsWith('/')) return false;
   const lower = path.toLowerCase();
@@ -113,8 +150,11 @@ async function analyzeZip(file: File): Promise<{ zip: JSZip; analysis: ZipAnalys
   let imageCount = 0;
   let hasShippingProfiles = false;
   let hasCollections = false;
+  let hasAvatar = false;
+  let hasHeader = false;
 
   const jsonPath = findListingsJsonPath(zip);
+  const profileJsonPath = findProfileJsonPath(zip);
   let hasExcel = false;
 
   for (const [path, entry] of Object.entries(zip.files)) {
@@ -124,8 +164,15 @@ async function analyzeZip(file: File): Promise<{ zip: JSZip; analysis: ZipAnalys
       hasExcel = true;
     } else if (isImageEntry(path)) {
       imageCount++;
+    } else {
+      const slot = isProfileImage(path);
+      if (slot === 'avatar') hasAvatar = true;
+      else if (slot === 'header') hasHeader = true;
     }
   }
+
+  let hasProfile = false;
+  let profileName = '';
 
   if (jsonPath) {
     format = 'json';
@@ -135,6 +182,10 @@ async function analyzeZip(file: File): Promise<{ zip: JSZip; analysis: ZipAnalys
       listingCount = data.listings?.length ?? 0;
       hasShippingProfiles = (data.shippingProfiles?.length ?? 0) > 0;
       hasCollections = (data.collections?.length ?? 0) > 0;
+      if (data.profile?.name) {
+        hasProfile = true;
+        profileName = data.profile.name;
+      }
     } catch {
       /* invalid JSON will be caught by server */
     }
@@ -142,9 +193,32 @@ async function analyzeZip(file: File): Promise<{ zip: JSZip; analysis: ZipAnalys
     format = 'excel';
   }
 
+  if (!hasProfile && profileJsonPath) {
+    try {
+      const text = await zip.file(profileJsonPath)!.async('string');
+      const data = JSON.parse(text);
+      if (data.name) {
+        hasProfile = true;
+        profileName = data.name;
+      }
+    } catch {
+      /* ignore parse errors */
+    }
+  }
+
   return {
     zip,
-    analysis: { format, listingCount, imageCount, hasShippingProfiles, hasCollections },
+    analysis: {
+      format,
+      listingCount,
+      imageCount,
+      hasShippingProfiles,
+      hasCollections,
+      hasProfile,
+      hasAvatar,
+      hasHeader,
+      profileName,
+    },
   };
 }
 
@@ -152,7 +226,8 @@ async function buildBatchZip(
   zip: JSZip,
   jsonContent: Record<string, unknown>,
   batchListings: Record<string, unknown>[],
-  isFirstBatch: boolean
+  isFirstBatch: boolean,
+  profileData?: Record<string, unknown> | null
 ): Promise<Blob> {
   const batchZip = new JSZip();
 
@@ -160,6 +235,7 @@ async function buildBatchZip(
   if (isFirstBatch) {
     if (jsonContent.shippingProfiles) payload.shippingProfiles = jsonContent.shippingProfiles;
     if (jsonContent.collections) payload.collections = jsonContent.collections;
+    if (profileData) payload.profile = profileData;
   }
 
   batchZip.file('listings.json', JSON.stringify(payload));
@@ -173,12 +249,22 @@ async function buildBatchZip(
   }
 
   for (const [path, entry] of Object.entries(zip.files)) {
-    if (entry.dir || !isImageEntry(path)) continue;
-    const basename = getImageBasename(path);
-    if (!basename || !neededImages.has(basename)) continue;
+    if (entry.dir) continue;
 
-    const data = await entry.async('uint8array');
-    batchZip.file(`images/${basename}`, data);
+    if (isImageEntry(path)) {
+      const basename = getImageBasename(path);
+      if (basename && neededImages.has(basename)) {
+        const data = await entry.async('uint8array');
+        batchZip.file(`images/${basename}`, data);
+      }
+    } else if (isFirstBatch) {
+      const slot = isProfileImage(path);
+      if (slot) {
+        const basename = path.split('/').pop() ?? '';
+        const data = await entry.async('uint8array');
+        batchZip.file(basename, data);
+      }
+    }
   }
 
   return batchZip.generateAsync({
@@ -372,6 +458,34 @@ export default function ImportListingsPage() {
           jsonContent = JSON.parse(text);
         }
 
+        let profileData: Record<string, unknown> | null = null;
+        if (jsonContent.profile) {
+          profileData = jsonContent.profile as Record<string, unknown>;
+        } else {
+          const profilePath = findProfileJsonPath(zip);
+          if (profilePath) {
+            try {
+              const profText = await zip.file(profilePath)!.async('string');
+              const profParsed = JSON.parse(profText);
+              const {
+                peerID,
+                publicKey,
+                stats,
+                avatarHashes,
+                headerHashes,
+                storeAndForwardServers,
+                lastModified,
+                currencies,
+                handle,
+                ...writable
+              } = profParsed;
+              profileData = writable;
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+
         const allListings = (jsonContent.listings ?? []) as Record<string, unknown>[];
         const totalBatches = Math.ceil(allListings.length / BATCH_SIZE);
         const batchResults: ImportResult[] = [];
@@ -389,7 +503,13 @@ export default function ImportListingsPage() {
             totalListings: allListings.length,
           });
 
-          const batchBlob = await buildBatchZip(zip, jsonContent, batchListings, i === 0);
+          const batchBlob = await buildBatchZip(
+            zip,
+            jsonContent,
+            batchListings,
+            i === 0,
+            profileData
+          );
 
           setBatchProgress(prev =>
             prev ? { ...prev, phase: 'uploading', uploadPercent: 0 } : null
@@ -609,6 +729,18 @@ export default function ImportListingsPage() {
                             })}
                           </p>
                         )}
+                        {(zipAnalysis.hasProfile ||
+                          zipAnalysis.hasAvatar ||
+                          zipAnalysis.hasHeader) && (
+                          <p className="flex items-center justify-center gap-1">
+                            <User className="h-3 w-3" />
+                            {t('importListings.hasProfile', {
+                              name: zipAnalysis.profileName || t('importListings.storeProfile'),
+                              avatar: zipAnalysis.hasAvatar ? '+ avatar' : '',
+                              header: zipAnalysis.hasHeader ? '+ header' : '',
+                            })}
+                          </p>
+                        )}
                       </div>
                     )}
 
@@ -696,6 +828,25 @@ export default function ImportListingsPage() {
                     </div>
                   )}
                 </div>
+
+                {importResult.profileImported && (
+                  <div className="bg-success/15 rounded-lg p-3 mb-4 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-success" />
+                    <span className="text-sm text-success">
+                      {t('importListings.profileImported')}
+                    </span>
+                  </div>
+                )}
+                {importResult.profileError && (
+                  <div className="bg-warning/15 rounded-lg p-3 mb-4 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <span className="text-sm text-warning">
+                      {t('importListings.profileImportFailed', {
+                        error: importResult.profileError,
+                      })}
+                    </span>
+                  </div>
+                )}
 
                 {importResult.errors && importResult.errors.length > 0 && (
                   <div className="bg-error/15 rounded-lg p-4 mb-4">

@@ -3249,6 +3249,10 @@ export const en: TranslationResource = {
     success: 'Success',
     importComplete: 'Import completed successfully',
     error: 'Error',
+    hasProfile: 'Includes store profile: {{name}} {{avatar}} {{header}}',
+    storeProfile: 'Store Profile',
+    profileImported: 'Store profile imported successfully',
+    profileImportFailed: 'Profile import failed: {{error}}',
   },
 
   imageCrop: {

@@ -2994,6 +2994,10 @@ export const ko: TranslationResource = {
     success: '성공',
     importComplete: '가져오기 완료',
     error: '오류',
+    hasProfile: '스토어 프로필 포함: {{name}} {{avatar}} {{header}}',
+    storeProfile: '스토어 프로필',
+    profileImported: '스토어 프로필을 성공적으로 가져왔습니다',
+    profileImportFailed: '프로필 가져오기 실패: {{error}}',
   },
   imageCrop: {
     adjustImage: '이미지 조정',

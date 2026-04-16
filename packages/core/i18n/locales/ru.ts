@@ -3028,6 +3028,10 @@ export const ru: TranslationResource = {
     success: 'Успешно',
     importComplete: 'Импорт завершён',
     error: 'Ошибка',
+    hasProfile: 'Включает профиль магазина: {{name}} {{avatar}} {{header}}',
+    storeProfile: 'Профиль магазина',
+    profileImported: 'Профиль магазина успешно импортирован',
+    profileImportFailed: 'Ошибка импорта профиля: {{error}}',
   },
   imageCrop: {
     adjustImage: 'Настроить изображение',

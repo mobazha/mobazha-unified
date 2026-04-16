@@ -3052,6 +3052,10 @@ export const pt: TranslationResource = {
     success: 'Sucesso',
     importComplete: 'Importação concluída',
     error: 'Erro',
+    hasProfile: 'Inclui perfil da loja: {{name}} {{avatar}} {{header}}',
+    storeProfile: 'Perfil da loja',
+    profileImported: 'Perfil da loja importado com sucesso',
+    profileImportFailed: 'Falha ao importar perfil: {{error}}',
   },
   imageCrop: {
     adjustImage: 'Ajustar imagem',
