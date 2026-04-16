@@ -104,8 +104,8 @@ export default function GuestCheckoutPage() {
   const stepLabels: Record<string, string> = {
     cart: t('guestCheckout.stepCart'),
     shipping: t('guestCheckout.stepShipping'),
-    coin: t('guestCheckout.stepPaymentMethod'),
-    payment: t('guestCheckout.stepPayment'),
+    coin: t('guestCheckout.stepCoin'),
+    payment: t('guestCheckout.stepPay'),
   };
 
   const total = getTotal();
@@ -294,7 +294,8 @@ export default function GuestCheckoutPage() {
           {/* Step 3: Coin Selection — reuses PaymentCryptoSelector */}
           {step === 'coin' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold">{t('guestCheckout.selectPaymentMethod')}</h2>
+              <h2 className="text-lg font-semibold">{t('guestCheckout.choosePayment')}</h2>
+              <p className="text-sm text-muted-foreground">{t('guestCheckout.choosePaymentHint')}</p>
               <PaymentCryptoSelector
                 acceptedCurrencies={acceptedCoins}
                 selectedTokenId={selectedCoin}
