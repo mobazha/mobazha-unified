@@ -171,6 +171,8 @@ export type {
   CreateGuestOrderRequest,
   GuestOrderResponse,
   GuestOrderStatus,
+  GuestOrderSummary,
+  GuestOrderListResponse,
   GuestCheckoutSettings,
 } from './guestCheckout';
 

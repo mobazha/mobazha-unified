@@ -158,23 +158,6 @@ export const POPULAR_FIAT_CURRENCIES = [
 ] as const;
 
 /**
- * 支持的加密货币代码
- */
-export const SUPPORTED_CRYPTO_CURRENCIES = [
-  'BTC',
-  'ETH',
-  'BCH',
-  'LTC',
-  'ZEC',
-  'USDT',
-  'USDC',
-  'MATICUSDT',
-  'MATICUSDC',
-  'MATICMBZ',
-  'CFX',
-] as const;
-
-/**
  * 默认本地货币
  */
 export const DEFAULT_LOCAL_CURRENCY = 'USD';

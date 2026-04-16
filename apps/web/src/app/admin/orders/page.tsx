@@ -38,6 +38,11 @@ import {
   STATUS_FILTER_TO_STATES,
 } from '@/components/admin/orders/utils';
 import type { StatusFilter } from '@/components/admin/orders/utils';
+import {
+  listGuestOrders,
+  type GuestOrderSummary,
+} from '@mobazha/core/services/api/guestCheckout';
+import { isGuestCheckoutEnabled } from '@mobazha/core/config/env';
 
 function useAdminOrders() {
   const { t } = useI18n();
@@ -98,6 +103,52 @@ function useAdminOrders() {
   return { orders, salesOrders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch };
 }
 
+type OrderViewType = 'standard' | 'guest';
+
+function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: () => void }) {
+  const { t } = useI18n();
+  const title = order.items[0]?.title || t('admin.orders.guestOrderTitle');
+  const qty = order.items.reduce((sum, i) => sum + i.quantity, 0);
+  const itemLabel = qty === 1 ? t('admin.orders.guestItemCount', { count: qty }) : t('admin.orders.guestItemCountPlural', { count: qty });
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-b-0"
+    >
+      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 shrink-0">
+        <ShoppingCart className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium truncate">{title}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium shrink-0">
+            {t('admin.orders.guestBadge')}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+          <span>{itemLabel}</span>
+          <span>·</span>
+          <span>{order.paymentAmount} {order.paymentCoin}</span>
+          <span>·</span>
+          <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <span
+        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+          order.state === 'FUNDED' || order.state === 'COMPLETED'
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : order.state === 'EXPIRED' || order.state === 'CANCELLED'
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+        }`}
+      >
+        {order.state.replace(/_/g, ' ')}
+      </span>
+    </button>
+  );
+}
+
 export default function AdminOrdersPage() {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -106,6 +157,20 @@ export default function AdminOrdersPage() {
   const isDesktop = useIsDesktop();
 
   const { orders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch } = useAdminOrders();
+
+  const [orderView, setOrderView] = useState<OrderViewType>('standard');
+  const [guestOrders, setGuestOrders] = useState<GuestOrderSummary[]>([]);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const guestEnabled = isGuestCheckoutEnabled();
+
+  useEffect(() => {
+    if (orderView !== 'guest') return;
+    setGuestLoading(true);
+    listGuestOrders({ limit: 50 })
+      .then(res => setGuestOrders(res.data))
+      .catch(() => {})
+      .finally(() => setGuestLoading(false));
+  }, [orderView]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -420,6 +485,66 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {/* Order type toggle */}
+      {guestEnabled && (
+        <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
+          <button
+            type="button"
+            onClick={() => setOrderView('standard')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              orderView === 'standard'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t('admin.orders.standardOrders')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrderView('guest')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              orderView === 'guest'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t('admin.orders.guestOrders')}
+          </button>
+        </div>
+      )}
+
+      {orderView === 'guest' ? (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {guestLoading ? (
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 3 }, (_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="w-10 h-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : guestOrders.length === 0 ? (
+            <div className="text-center py-10">
+              <ShoppingCart className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">{t('admin.orders.noGuestOrders')}</p>
+            </div>
+          ) : (
+            guestOrders.map(go => (
+              <GuestOrderRow
+                key={go.orderToken}
+                order={go}
+                onClick={() => router.push(`/guest-order/${go.orderToken}`)}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+      <>
+
       {/* Batch action bar */}
       {isSomeSelected && (
         <div className="flex items-center gap-3 p-3 mb-4 rounded-lg bg-primary/5 border border-primary/20">
@@ -646,6 +771,8 @@ export default function AdminOrdersPage() {
             </p>
           )}
         </>
+      )}
+      </>
       )}
     </div>
   );
