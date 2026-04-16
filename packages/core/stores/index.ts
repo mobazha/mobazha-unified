@@ -32,6 +32,9 @@ export * from './wishlistStore';
 // AI 聊天状态
 export * from './aiChatStore';
 
+// Guest 购物车状态（纯前端 localStorage，独立站匿名买家）
+export * from './guestCartStore';
+
 // TODO: 后续迁移
 // export * from './productStore';
 // export * from './orderStore';
