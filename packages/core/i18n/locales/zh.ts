@@ -2898,6 +2898,10 @@ export const zh: TranslationResource = {
     success: '成功',
     importComplete: '导入完成',
     error: '错误',
+    hasProfile: '包含店铺档案: {{name}} {{avatar}} {{header}}',
+    storeProfile: '店铺档案',
+    profileImported: '店铺档案导入成功',
+    profileImportFailed: '档案导入失败: {{error}}',
   },
   imageCrop: {
     adjustImage: '调整图片',

@@ -3074,6 +3074,10 @@ export const fr: TranslationResource = {
     success: 'Succès',
     importComplete: 'Importation terminée',
     error: 'Erreur',
+    hasProfile: 'Inclut le profil boutique : {{name}} {{avatar}} {{header}}',
+    storeProfile: 'Profil boutique',
+    profileImported: 'Profil boutique importé avec succès',
+    profileImportFailed: "Échec de l'import du profil : {{error}}",
   },
   imageCrop: {
     adjustImage: "Ajuster l'image",

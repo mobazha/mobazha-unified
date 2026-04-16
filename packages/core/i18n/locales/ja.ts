@@ -3010,6 +3010,10 @@ export const ja: TranslationResource = {
     success: '成功',
     importComplete: 'インポートが完了しました',
     error: 'エラー',
+    hasProfile: 'ストアプロフィールを含む: {{name}} {{avatar}} {{header}}',
+    storeProfile: 'ストアプロフィール',
+    profileImported: 'ストアプロフィールのインポートに成功しました',
+    profileImportFailed: 'プロフィールのインポートに失敗: {{error}}',
   },
   imageCrop: {
     adjustImage: '画像を調整',

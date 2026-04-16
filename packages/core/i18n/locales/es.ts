@@ -3053,6 +3053,10 @@ export const es: TranslationResource = {
     success: 'Éxito',
     importComplete: 'Importación completada',
     error: 'Error',
+    hasProfile: 'Incluye perfil de tienda: {{name}} {{avatar}} {{header}}',
+    storeProfile: 'Perfil de tienda',
+    profileImported: 'Perfil de tienda importado con éxito',
+    profileImportFailed: 'Error al importar el perfil: {{error}}',
   },
   imageCrop: {
     adjustImage: 'Ajustar imagen',

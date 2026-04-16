@@ -1633,6 +1633,10 @@ export interface TranslationResource {
     success: string;
     importComplete: string;
     error: string;
+    hasProfile: string;
+    storeProfile: string;
+    profileImported: string;
+    profileImportFailed: string;
   };
 
   imageCrop?: {
