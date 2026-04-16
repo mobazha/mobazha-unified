@@ -21,7 +21,7 @@ export default function GuestCheckoutSettingsPage() {
 
   useEffect(() => {
     getGuestCheckoutSettings()
-      .then(res => setSettings(res.data))
+      .then(res => setSettings(res))
       .catch(() => setError(t('admin.guestCheckout.loadError')));
   }, [t]);
 
@@ -54,7 +54,7 @@ export default function GuestCheckoutSettingsPage() {
     setSuccess(false);
     try {
       const res = await updateGuestCheckoutSettings(settings);
-      setSettings(res.data);
+      setSettings(res);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {

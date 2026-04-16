@@ -31,7 +31,7 @@ export default function GuestOrderPage() {
     const poll = () => {
       if (!orderToken || cancelled) return;
       getGuestOrderStatus(orderToken)
-        .then(res => { if (!cancelled) { setOrder(res.data); setError(null); } })
+        .then(res => { if (!cancelled) { setOrder(res); setError(null); } })
         .catch(err => { if (!cancelled && !order) setError(err instanceof Error ? err.message : t('guestOrder.notFoundTitle')); });
     };
     poll();

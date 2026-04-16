@@ -90,32 +90,27 @@ export interface GuestOrderSummary {
   updatedAt: string;
 }
 
-export interface GuestOrderListResponse {
-  data: GuestOrderSummary[];
-  meta: { total: number; limit: number; offset: number };
-}
-
 // ========== Buyer-facing APIs (public, no auth) ==========
 
 export function createGuestOrder(
   data: CreateGuestOrderRequest,
-): Promise<{ data: GuestOrderResponse }> {
+): Promise<GuestOrderResponse> {
   return publicPost(NODE_API.GUEST_ORDERS, data);
 }
 
-export function getGuestOrderStatus(token: string): Promise<{ data: GuestOrderStatus }> {
+export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
   return publicGet(NODE_API.GUEST_ORDER(token));
 }
 
 // ========== Seller-facing APIs (require auth) ==========
 
-export function getGuestCheckoutSettings(): Promise<{ data: GuestCheckoutSettings }> {
+export function getGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
   return authGet(NODE_API.GUEST_CHECKOUT_SETTINGS);
 }
 
 export function updateGuestCheckoutSettings(
   settings: GuestCheckoutSettings,
-): Promise<{ data: GuestCheckoutSettings }> {
+): Promise<GuestCheckoutSettings> {
   return authPut(NODE_API.GUEST_CHECKOUT_SETTINGS, settings);
 }
 
@@ -123,7 +118,7 @@ export function listGuestOrders(params?: {
   limit?: number;
   offset?: number;
   state?: string;
-}): Promise<GuestOrderListResponse> {
+}): Promise<GuestOrderSummary[]> {
   const query = new URLSearchParams();
   if (params?.limit) query.set('limit', String(params.limit));
   if (params?.offset) query.set('offset', String(params.offset));
@@ -135,10 +130,10 @@ export function listGuestOrders(params?: {
 export function fulfillGuestOrder(
   token: string,
   data: { trackingNumber?: string; carrier?: string },
-): Promise<{ data: GuestOrderStatus }> {
+): Promise<GuestOrderStatus> {
   return authPost(NODE_API.GUEST_ORDER_FULFILL(token), data);
 }
 
-export function completeGuestOrder(token: string): Promise<{ data: GuestOrderStatus }> {
+export function completeGuestOrder(token: string): Promise<GuestOrderStatus> {
   return authPost(NODE_API.GUEST_ORDER_COMPLETE(token), {});
 }
