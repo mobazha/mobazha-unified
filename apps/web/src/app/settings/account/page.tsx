@@ -102,6 +102,10 @@ export default function AccountSettingsPage() {
   const [standaloneStore, setStandaloneStore] = useState<StandaloneStore | null>(null);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
 
+  // When popup mode callback completes but window.close() is blocked by the browser,
+  // show a "you can close this tab" hint instead of leaving the user stranded.
+  const [showCloseTabHint, setShowCloseTabHint] = useState(false);
+
   // Provider config for direct linking (Telegram botUsername, Discord clientId)
   const [linkConfig, setLinkConfig] = useState<LinkConfigResponse | null>(null);
 
@@ -201,9 +205,25 @@ export default function AccountSettingsPage() {
           rawReturnTo?.startsWith('/') && !rawReturnTo.startsWith('//') ? rawReturnTo : null;
         const { code, state, providerId } = getLinkCallbackParams();
         if (state && (code || providerId)) {
+          const isPopup = params.get('popup') === '1';
+          // Try to close the popup/tab; if the browser blocks it, show a hint.
+          const tryClosePopup = (delay = 0) => {
+            const doClose = () => {
+              window.close();
+              // If still open after a tick, browser refused — show fallback hint
+              setTimeout(() => setShowCloseTabHint(true), 300);
+            };
+            if (delay > 0) setTimeout(doClose, delay);
+            else doClose();
+          };
+
           try {
             const result = await handleLinkCallback(code, state, providerId);
             if (result.success) {
+              if (isPopup) {
+                tryClosePopup();
+                return;
+              }
               if (sfReturn) {
                 window.location.href = `${sfReturn}${returnTo || '/settings/account'}`;
                 return;
@@ -223,6 +243,7 @@ export default function AccountSettingsPage() {
                 description: result.error || t('settings.accountBinding.linkFailed'),
                 variant: 'destructive',
               });
+              if (isPopup) tryClosePopup(2000);
             }
           } catch (err) {
             toast({
@@ -231,6 +252,7 @@ export default function AccountSettingsPage() {
                 err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
               variant: 'destructive',
             });
+            if (isPopup) tryClosePopup(2000);
           } finally {
             clearLinkCallbackParams();
           }
@@ -282,12 +304,15 @@ export default function AccountSettingsPage() {
     try {
       setLinkingProvider(provider);
       await startLinkAccount(provider);
+      // Popup closed (standalone) — refresh accounts to pick up new binding
+      loadLinkedAccounts();
     } catch (err) {
       toast({
         title: t('common.error'),
         description: err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
         variant: 'destructive',
       });
+    } finally {
       setLinkingProvider(null);
     }
   };
@@ -403,6 +428,23 @@ export default function AccountSettingsPage() {
       </div>
     );
   };
+
+  // Popup callback completed but window.close() was blocked by the browser.
+  // Show a simple hint so the user knows to close the tab manually.
+  if (showCloseTabHint) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center px-4">
+        <Check className="w-12 h-12 text-green-500" />
+        <h2 className="text-lg font-semibold">{t('settings.accountBinding.linkSuccess')}</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          {t('settings.accountBinding.closeTabHint', {
+            defaultValue:
+              'Account linked successfully. You can close this tab and return to your store.',
+          })}
+        </p>
+      </div>
+    );
+  }
 
   if (standaloneMode && platformBound !== true) {
     return (
