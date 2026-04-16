@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import JSZip from 'jszip';
 import { Header, Footer } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -18,9 +19,11 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Package,
 } from 'lucide-react';
 
 const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300MB
+const BATCH_SIZE = 50;
 
 interface ImportResult {
   total: number;
@@ -32,6 +35,208 @@ interface ImportResult {
   updatedItems?: { slug: string; title: string }[];
 }
 
+interface BatchProgress {
+  currentBatch: number;
+  totalBatches: number;
+  phase: 'uploading' | 'processing';
+  uploadPercent: number;
+  processedListings: number;
+  totalListings: number;
+}
+
+type ImportFormat = 'json' | 'excel' | 'unknown';
+
+interface ZipAnalysis {
+  format: ImportFormat;
+  listingCount: number;
+  imageCount: number;
+  hasShippingProfiles: boolean;
+  hasCollections: boolean;
+}
+
+function aggregateResults(results: ImportResult[]): ImportResult {
+  const aggregate: ImportResult = {
+    total: 0,
+    created: 0,
+    updated: 0,
+    failed: 0,
+    errors: [],
+    createdItems: [],
+    updatedItems: [],
+  };
+  for (const r of results) {
+    aggregate.total += r.total;
+    aggregate.created += r.created;
+    aggregate.updated += r.updated;
+    aggregate.failed += r.failed;
+    if (r.errors) aggregate.errors!.push(...r.errors);
+    if (r.createdItems) aggregate.createdItems!.push(...r.createdItems);
+    if (r.updatedItems) aggregate.updatedItems!.push(...r.updatedItems);
+  }
+  return aggregate;
+}
+
+function findListingsJsonPath(zip: JSZip): string | null {
+  const jsonPaths: string[] = [];
+  for (const [path, entry] of Object.entries(zip.files)) {
+    if (entry.dir) continue;
+    const lower = path.toLowerCase();
+    if (lower.endsWith('.json') && !lower.includes('__macosx')) {
+      jsonPaths.push(path);
+    }
+  }
+  return (
+    jsonPaths.find(
+      p => p.toLowerCase().endsWith('/listings.json') || p.toLowerCase() === 'listings.json'
+    ) ??
+    jsonPaths[0] ??
+    null
+  );
+}
+
+function isImageEntry(path: string): boolean {
+  if (path.endsWith('/')) return false;
+  const lower = path.toLowerCase();
+  if (lower.includes('__macosx')) return false;
+  const parts = lower.split('/');
+  return parts.includes('images');
+}
+
+function getImageBasename(path: string): string {
+  return path.split('/').pop() ?? '';
+}
+
+async function analyzeZip(file: File): Promise<{ zip: JSZip; analysis: ZipAnalysis }> {
+  const zip = await JSZip.loadAsync(file);
+  let format: ImportFormat = 'unknown';
+  let listingCount = 0;
+  let imageCount = 0;
+  let hasShippingProfiles = false;
+  let hasCollections = false;
+
+  const jsonPath = findListingsJsonPath(zip);
+  let hasExcel = false;
+
+  for (const [path, entry] of Object.entries(zip.files)) {
+    if (entry.dir) continue;
+    const lower = path.toLowerCase();
+    if (lower.endsWith('.xlsx') && !lower.includes('__macosx')) {
+      hasExcel = true;
+    } else if (isImageEntry(path)) {
+      imageCount++;
+    }
+  }
+
+  if (jsonPath) {
+    format = 'json';
+    try {
+      const text = await zip.file(jsonPath)!.async('string');
+      const data = JSON.parse(text);
+      listingCount = data.listings?.length ?? 0;
+      hasShippingProfiles = (data.shippingProfiles?.length ?? 0) > 0;
+      hasCollections = (data.collections?.length ?? 0) > 0;
+    } catch {
+      /* invalid JSON will be caught by server */
+    }
+  } else if (hasExcel) {
+    format = 'excel';
+  }
+
+  return {
+    zip,
+    analysis: { format, listingCount, imageCount, hasShippingProfiles, hasCollections },
+  };
+}
+
+async function buildBatchZip(
+  zip: JSZip,
+  jsonContent: Record<string, unknown>,
+  batchListings: Record<string, unknown>[],
+  isFirstBatch: boolean
+): Promise<Blob> {
+  const batchZip = new JSZip();
+
+  const payload: Record<string, unknown> = { listings: batchListings };
+  if (isFirstBatch) {
+    if (jsonContent.shippingProfiles) payload.shippingProfiles = jsonContent.shippingProfiles;
+    if (jsonContent.collections) payload.collections = jsonContent.collections;
+  }
+
+  batchZip.file('listings.json', JSON.stringify(payload));
+
+  const neededImages = new Set<string>();
+  for (const listing of batchListings) {
+    const images = (listing as { images?: string[] }).images;
+    if (images) {
+      for (const img of images) neededImages.add(img);
+    }
+  }
+
+  for (const [path, entry] of Object.entries(zip.files)) {
+    if (entry.dir || !isImageEntry(path)) continue;
+    const basename = getImageBasename(path);
+    if (!basename || !neededImages.has(basename)) continue;
+
+    const data = await entry.async('uint8array');
+    batchZip.file(`images/${basename}`, data);
+  }
+
+  return batchZip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 1 },
+  });
+}
+
+function uploadBatchZip(
+  blob: Blob,
+  gatewayUrl: string,
+  authHeaders: Record<string, string>,
+  onUploadProgress: (pct: number) => void
+): Promise<ImportResult> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', blob, 'batch.zip');
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', event => {
+      if (event.lengthComputable) {
+        onUploadProgress(Math.round((event.loaded * 100) / event.total));
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const resp = JSON.parse(xhr.responseText);
+          resolve(resp.data ?? resp);
+        } catch {
+          reject(new Error('Invalid JSON response'));
+        }
+      } else {
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          const msg = errorData.error?.message ?? errorData.error ?? `HTTP ${xhr.status}`;
+          reject(new Error(msg));
+        } catch {
+          reject(new Error(`Request failed with status ${xhr.status}`));
+        }
+      }
+    });
+
+    xhr.addEventListener('error', () => reject(new Error('Network error')));
+    xhr.addEventListener('timeout', () => reject(new Error('Request timed out')));
+    xhr.timeout = 600_000; // 10 min per batch
+
+    xhr.open('POST', `${gatewayUrl}/listings/import`);
+    if (authHeaders['Authorization']) {
+      xhr.setRequestHeader('Authorization', authHeaders['Authorization']);
+    }
+    xhr.send(formData);
+  });
+}
+
 export default function ImportListingsPage() {
   const { t, locale } = useI18n();
   const { toast } = useToast();
@@ -41,26 +246,23 @@ export default function ImportListingsPage() {
   const [fileSizeError, setFileSizeError] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [showSuccessDetails, setShowSuccessDetails] = useState(false);
+  const [zipAnalysis, setZipAnalysis] = useState<ZipAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
 
-  // Get template language based on current locale
   const templateLang = locale?.startsWith('zh') ? 'zh' : 'en';
 
-  // Download template via authenticated fetch + blob
   const handleDownloadTemplate = useCallback(async () => {
     if (downloading) return;
-
     setDownloading(true);
     try {
       const url = `${getMyGatewayUrl()}/listings/template?lang=${templateLang}`;
       const headers = getAuthHeaders();
       delete headers['Content-Type'];
       const resp = await fetch(url, { headers });
-      if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status}`);
-      }
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -82,12 +284,13 @@ export default function ImportListingsPage() {
     }
   }, [downloading, templateLang, t, toast]);
 
-  // Handle file selection
-  const handleFileSelect = useCallback((file: File | null) => {
+  const handleFileSelect = useCallback(async (file: File | null) => {
     if (!file) return;
 
     setFileSizeError(false);
     setImportResult(null);
+    setZipAnalysis(null);
+    setBatchProgress(null);
 
     if (file.size > MAX_FILE_SIZE) {
       setFileSizeError(true);
@@ -96,14 +299,22 @@ export default function ImportListingsPage() {
     }
 
     setSelectedFile(file);
+
+    setAnalyzing(true);
+    try {
+      const { analysis } = await analyzeZip(file);
+      setZipAnalysis(analysis);
+    } catch {
+      setZipAnalysis(null);
+    } finally {
+      setAnalyzing(false);
+    }
   }, []);
 
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
-        handleFileSelect(file);
-      }
+      if (file) handleFileSelect(file);
     },
     [handleFileSelect]
   );
@@ -127,12 +338,11 @@ export default function ImportListingsPage() {
     setSelectedFile(null);
     setFileSizeError(false);
     setImportResult(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    setZipAnalysis(null);
+    setBatchProgress(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
-  // Format file size
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -141,65 +351,103 @@ export default function ImportListingsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Start import
   const handleStartImport = useCallback(async () => {
     if (!selectedFile || importing) return;
 
     setImporting(true);
-    setUploadProgress(0);
     setImportResult(null);
+    setBatchProgress(null);
+
+    const gatewayUrl = getMyGatewayUrl();
+    const authHeaders = getAuthHeaders();
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+      if (zipAnalysis?.format === 'json' && zipAnalysis.listingCount > BATCH_SIZE) {
+        const zip = await JSZip.loadAsync(selectedFile);
 
-      // Use XMLHttpRequest for progress tracking
-      const result = await new Promise<ImportResult>((resolve, reject) => {
-        // eslint-disable-next-line no-undef
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener('progress', event => {
-          if (event.lengthComputable) {
-            setUploadProgress(Math.round((event.loaded * 100) / event.total));
-          }
-        });
-
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              resolve(JSON.parse(xhr.responseText));
-            } catch {
-              reject(new Error('Invalid JSON response'));
-            }
-          } else {
-            try {
-              const errorData = JSON.parse(xhr.responseText);
-              reject(new Error(errorData.error || `Request failed with status ${xhr.status}`));
-            } catch {
-              reject(new Error(`Request failed with status ${xhr.status}`));
-            }
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          reject(new Error('Network error'));
-        });
-
-        xhr.open('POST', `${getMyGatewayUrl()}/listings/import`);
-        const authHdrs = getAuthHeaders();
-        if (authHdrs['Authorization']) {
-          xhr.setRequestHeader('Authorization', authHdrs['Authorization']);
+        const jsonPath = findListingsJsonPath(zip);
+        let jsonContent: Record<string, unknown> = {};
+        if (jsonPath) {
+          const text = await zip.file(jsonPath)!.async('string');
+          jsonContent = JSON.parse(text);
         }
-        xhr.send(formData);
-      });
 
-      setImportResult(result);
+        const allListings = (jsonContent.listings ?? []) as Record<string, unknown>[];
+        const totalBatches = Math.ceil(allListings.length / BATCH_SIZE);
+        const batchResults: ImportResult[] = [];
 
-      if (result.created > 0 || result.updated > 0) {
-        toast({
-          title: t('importListings.success'),
-          description: t('importListings.importComplete'),
+        for (let i = 0; i < allListings.length; i += BATCH_SIZE) {
+          const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+          const batchListings = allListings.slice(i, i + BATCH_SIZE);
+
+          setBatchProgress({
+            currentBatch: batchNum,
+            totalBatches,
+            phase: 'uploading',
+            uploadPercent: 0,
+            processedListings: i,
+            totalListings: allListings.length,
+          });
+
+          const batchBlob = await buildBatchZip(zip, jsonContent, batchListings, i === 0);
+
+          setBatchProgress(prev =>
+            prev ? { ...prev, phase: 'uploading', uploadPercent: 0 } : null
+          );
+
+          const result = await uploadBatchZip(batchBlob, gatewayUrl, authHeaders, pct => {
+            setBatchProgress(prev => (prev ? { ...prev, uploadPercent: pct } : null));
+          });
+
+          setBatchProgress(prev =>
+            prev
+              ? {
+                  ...prev,
+                  phase: 'processing',
+                  uploadPercent: 100,
+                  processedListings: Math.min(i + BATCH_SIZE, allListings.length),
+                }
+              : null
+          );
+
+          batchResults.push(result);
+        }
+
+        const aggregated = aggregateResults(batchResults);
+        setImportResult(aggregated);
+
+        if (aggregated.created > 0 || aggregated.updated > 0) {
+          toast({
+            title: t('importListings.success'),
+            description: t('importListings.importComplete'),
+          });
+        }
+      } else {
+        setBatchProgress({
+          currentBatch: 1,
+          totalBatches: 1,
+          phase: 'uploading',
+          uploadPercent: 0,
+          processedListings: 0,
+          totalListings: zipAnalysis?.listingCount ?? 0,
         });
+
+        const result = await uploadBatchZip(selectedFile, gatewayUrl, authHeaders, pct => {
+          setBatchProgress(prev => (prev ? { ...prev, uploadPercent: pct } : null));
+        });
+
+        setBatchProgress(prev =>
+          prev ? { ...prev, phase: 'processing', uploadPercent: 100 } : null
+        );
+
+        setImportResult(result);
+
+        if (result.created > 0 || result.updated > 0) {
+          toast({
+            title: t('importListings.success'),
+            description: t('importListings.importComplete'),
+          });
+        }
       }
     } catch (error: unknown) {
       console.error('Import failed:', error);
@@ -213,11 +461,39 @@ export default function ImportListingsPage() {
       });
     } finally {
       setImporting(false);
-      setUploadProgress(100);
+      setBatchProgress(null);
     }
-  }, [selectedFile, importing, t, toast]);
+  }, [selectedFile, importing, zipAnalysis, t, toast]);
 
-  const canImport = selectedFile && !fileSizeError && !importing;
+  const canImport = selectedFile && !fileSizeError && !importing && !analyzing;
+
+  const progressText = (() => {
+    if (!batchProgress) return '';
+    const { currentBatch, totalBatches, phase, uploadPercent, processedListings, totalListings } =
+      batchProgress;
+
+    if (totalBatches <= 1) {
+      if (phase === 'uploading')
+        return t('importListings.uploadingProgress', { progress: uploadPercent });
+      return t('importListings.processingOnServer');
+    }
+
+    const batchLabel = t('importListings.batchProgress', {
+      current: currentBatch,
+      total: totalBatches,
+    });
+    if (phase === 'uploading') {
+      return `${batchLabel} — ${t('importListings.uploadingProgress', { progress: uploadPercent })}`;
+    }
+    return `${batchLabel} — ${t('importListings.processedCount', { done: processedListings, total: totalListings })}`;
+  })();
+
+  const overallPercent = (() => {
+    if (!batchProgress) return 0;
+    const { currentBatch, totalBatches, uploadPercent } = batchProgress;
+    const batchWeight = 100 / totalBatches;
+    return Math.round((currentBatch - 1) * batchWeight + (uploadPercent / 100) * batchWeight);
+  })();
 
   return (
     <div className="min-h-screen bg-background">
@@ -225,7 +501,6 @@ export default function ImportListingsPage() {
 
       <main className="py-4 sm:py-8">
         <Container size="md">
-          {/* Page Header */}
           <HStack gap="md" align="center" className="mb-4 sm:mb-8">
             <Link
               href="/profile"
@@ -305,6 +580,38 @@ export default function ImportListingsPage() {
                     <p className="text-sm text-muted-foreground">
                       {formatFileSize(selectedFile.size)}
                     </p>
+
+                    {/* ZIP analysis info */}
+                    {analyzing && (
+                      <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {t('importListings.analyzing')}
+                      </p>
+                    )}
+                    {zipAnalysis && (
+                      <div className="text-xs text-muted-foreground space-y-0.5">
+                        <p className="flex items-center justify-center gap-1">
+                          <Package className="h-3 w-3" />
+                          {zipAnalysis.format === 'json'
+                            ? t('importListings.formatJson', {
+                                listings: zipAnalysis.listingCount,
+                                images: zipAnalysis.imageCount,
+                              })
+                            : zipAnalysis.format === 'excel'
+                              ? t('importListings.formatExcel', { images: zipAnalysis.imageCount })
+                              : t('importListings.formatUnknown')}
+                        </p>
+                        {zipAnalysis.format === 'json' && zipAnalysis.listingCount > BATCH_SIZE && (
+                          <p className="text-primary/80">
+                            {t('importListings.willBatch', {
+                              batches: Math.ceil(zipAnalysis.listingCount / BATCH_SIZE),
+                              size: BATCH_SIZE,
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -350,17 +657,15 @@ export default function ImportListingsPage() {
             </Button>
 
             {/* Progress */}
-            {importing && (
+            {importing && batchProgress && (
               <Card className="p-4">
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
+                    style={{ width: `${overallPercent}%` }}
                   />
                 </div>
-                <p className="text-sm text-muted-foreground mt-2 text-center">
-                  {t('importListings.uploadingProgress', { progress: uploadProgress })}
-                </p>
+                <p className="text-sm text-muted-foreground mt-2 text-center">{progressText}</p>
               </Card>
             )}
 
@@ -392,7 +697,6 @@ export default function ImportListingsPage() {
                   )}
                 </div>
 
-                {/* Error List */}
                 {importResult.errors && importResult.errors.length > 0 && (
                   <div className="bg-error/15 rounded-lg p-4 mb-4">
                     <h3 className="text-sm font-medium mb-2 text-error">
@@ -412,7 +716,6 @@ export default function ImportListingsPage() {
                   </div>
                 )}
 
-                {/* Success Details Toggle */}
                 {((importResult.createdItems && importResult.createdItems.length > 0) ||
                   (importResult.updatedItems && importResult.updatedItems.length > 0)) && (
                   <>
