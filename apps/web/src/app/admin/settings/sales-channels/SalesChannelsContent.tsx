@@ -702,11 +702,11 @@ function TelegramBotSection({
           </p>
           <button
             type="button"
-            onClick={() =>
+            onClick={() => {
               startLinkAccount('telegram', undefined, {
                 returnTo: '/admin/settings/sales-channels',
-              })
-            }
+              }).catch(() => {});
+            }}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-1"
           >
             {t('admin.salesChannels.telegramBindingAction')}

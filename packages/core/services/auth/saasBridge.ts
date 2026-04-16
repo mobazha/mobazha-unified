@@ -145,6 +145,7 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
     const cleanup = () => {
       settled = true;
       window.removeEventListener('message', onMessage);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(timeoutId);
       clearInterval(pollId);
       detachBroadcast?.();
@@ -200,6 +201,21 @@ export async function acquireSaaSToken(forceRefresh = false): Promise<SaaSBridge
       cleanup();
       resolve({ success: false, error: 'Authentication timed out' });
     }, POPUP_TIMEOUT_MS);
+
+    // Mobile/Tor: the original tab is suspended while the popup tab is active.
+    // When the user switches back, visibilitychange fires and we check immediately.
+    const onVisibilityChange = () => {
+      if (settled || document.visibilityState !== 'visible') return;
+      try {
+        if (popup.closed && Date.now() - popupOpenedAt >= STANDALONE_OAUTH_POPUP_CLOSED_GRACE_MS) {
+          cleanup();
+          resolve({ success: false, error: 'Login window was closed' });
+        }
+      } catch {
+        // COOP blocks popup.closed
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     // Poll popup.closed to detect user-dismissed popups.
     // Google OAuth sets COOP headers that block cross-origin access to
