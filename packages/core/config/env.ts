@@ -83,6 +83,8 @@ export interface EnvConfig {
   api: ApiEndpoints;
   /** Discord Activity / Mini App 配置 */
   discord?: DiscordConfig;
+  /** Guest Checkout enabled (standalone nodes only, injected via runtime-config.js) */
+  guestCheckoutEnabled?: boolean;
 }
 
 /**
@@ -266,6 +268,13 @@ export function isStandaloneMode(): boolean {
 }
 
 /**
+ * Guest Checkout 是否启用（独立站通过 runtime-config.js 注入）
+ */
+export function isGuestCheckoutEnabled(): boolean {
+  return currentEnv.guestCheckoutEnabled === true;
+}
+
+/**
  * 从环境变量初始化配置
  */
 export function initEnvFromProcess(): void {
@@ -403,7 +412,7 @@ try {
 function applyRuntimeConfig(): void {
   if (typeof window === 'undefined') return;
   const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
-    | { saasUrl?: string; authMode?: string }
+    | { saasUrl?: string; authMode?: string; guestCheckoutEnabled?: boolean }
     | undefined;
   if (!rc) return;
 
@@ -442,6 +451,13 @@ function applyRuntimeConfig(): void {
           saasUrl: rc.saasUrl,
         },
       },
+    };
+  }
+
+  if (rc.guestCheckoutEnabled != null) {
+    currentEnv = {
+      ...currentEnv,
+      guestCheckoutEnabled: rc.guestCheckoutEnabled,
     };
   }
 }
