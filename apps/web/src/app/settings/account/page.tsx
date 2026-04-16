@@ -195,13 +195,21 @@ export default function AccountSettingsPage() {
     const processLinkCallback = async () => {
       if (hasLinkCallback()) {
         const sfReturn = getLinkCallbackStorefrontReturn();
+        const params = new URLSearchParams(window.location.search);
+        const rawReturnTo = params.get('returnTo');
+        const returnTo =
+          rawReturnTo?.startsWith('/') && !rawReturnTo.startsWith('//') ? rawReturnTo : null;
         const { code, state, providerId } = getLinkCallbackParams();
         if (state && (code || providerId)) {
           try {
             const result = await handleLinkCallback(code, state, providerId);
             if (result.success) {
               if (sfReturn) {
-                window.location.href = `${sfReturn}/settings/account`;
+                window.location.href = `${sfReturn}${returnTo || '/settings/account'}`;
+                return;
+              }
+              if (returnTo) {
+                window.location.href = returnTo;
                 return;
               }
               toast({

@@ -10,7 +10,7 @@ import { getStoreSubdomainBase } from '@mobazha/core/config/env';
 import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
 import { useStandaloneStoreInfo } from '@mobazha/core/hooks/useStandaloneStoreInfo';
 import type { StoreBotInfo } from '@mobazha/core/types/salesChannels';
-import { getLinkedAccounts } from '@mobazha/core/services/auth';
+import { getLinkedAccounts, startLinkAccount } from '@mobazha/core/services/auth';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
@@ -700,13 +700,18 @@ function TelegramBotSection({
           <p className="text-xs text-muted-foreground">
             {t('admin.salesChannels.telegramBindingRequiredDesc')}
           </p>
-          <a
-            href="/settings/account"
+          <button
+            type="button"
+            onClick={() =>
+              startLinkAccount('telegram', undefined, {
+                returnTo: '/admin/settings/sales-channels',
+              })
+            }
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-1"
           >
             {t('admin.salesChannels.telegramBindingAction')}
             <ExternalLink className="w-3 h-3" />
-          </a>
+          </button>
         </div>
       </div>
     );

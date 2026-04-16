@@ -150,6 +150,9 @@ export default defineConfig(({ mode }) => {
         env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || ''
       ),
       'process.env.NEXT_PUBLIC_SAAS_URL': JSON.stringify(env.NEXT_PUBLIC_SAAS_URL || ''),
+      'process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE': JSON.stringify(
+        env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE || ''
+      ),
       'process.env.NEXT_PUBLIC_BASIC_AUTH_USERNAME': JSON.stringify(
         env.NEXT_PUBLIC_BASIC_AUTH_USERNAME || ''
       ),
