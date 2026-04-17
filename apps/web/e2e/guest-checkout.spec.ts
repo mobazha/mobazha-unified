@@ -20,10 +20,12 @@ import { setupMockAuth } from './fixtures/mock-auth';
 
 const MOCK_ORDER_TOKEN = 'mock';
 
+// Note: paymentAmount is in minimal units (wei for ETH, satoshi for BTC), per backend contract.
+// See pkg/models/guest_order.go + internal/core/guest_order_app_service.go convertToPaymentCoin().
 const MOCK_GUEST_ORDER_RESPONSE = {
   orderToken: MOCK_ORDER_TOKEN,
   paymentAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38',
-  paymentAmount: '0.0285',
+  paymentAmount: '28500000000000000', // 0.0285 ETH in wei
   paymentCoin: 'ETH',
   priceCurrency: 'USD',
   priceDivisibility: 2,
@@ -42,7 +44,7 @@ const MOCK_GUEST_ORDER_STATUS = {
   orderToken: MOCK_ORDER_TOKEN,
   state: 'AWAITING_PAYMENT',
   paymentAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38',
-  paymentAmount: '0.0285',
+  paymentAmount: '28500000000000000', // 0.0285 ETH in wei
   paymentCoin: 'ETH',
   priceCurrency: 'USD',
   priceDivisibility: 2,
@@ -72,7 +74,7 @@ const MOCK_GUEST_ORDERS_LIST = [
     orderToken: MOCK_ORDER_TOKEN,
     state: 'AWAITING_PAYMENT',
     paymentCoin: 'ETH',
-    paymentAmount: '0.0285',
+    paymentAmount: '28500000000000000', // 0.0285 ETH in wei
     priceCurrency: 'USD',
     items: MOCK_GUEST_ORDER_STATUS.items,
     createdAt: new Date().toISOString(),
@@ -82,7 +84,7 @@ const MOCK_GUEST_ORDERS_LIST = [
     orderToken: 'mock',
     state: 'FUNDED',
     paymentCoin: 'BTC',
-    paymentAmount: '0.00045',
+    paymentAmount: '45000', // 0.00045 BTC in satoshi
     priceCurrency: 'USD',
     items: [
       {
