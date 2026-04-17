@@ -9,7 +9,7 @@ export type CheckoutStep = 'checkout' | 'payment' | 'confirmation';
 
 const STANDARD_STEPS: CheckoutStep[] = ['checkout', 'payment', 'confirmation'];
 
-const STANDARD_ROUTES: Record<CheckoutStep, string> = {
+const STANDARD_ROUTES: Record<string, string> = {
   checkout: '/checkout',
   payment: '/checkout/payment-method',
   confirmation: '/checkout/confirmation',

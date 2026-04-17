@@ -169,7 +169,7 @@ export default function AdminOrdersPage() {
     if (orderView !== 'guest') return;
     setGuestLoading(true);
     listGuestOrders({ limit: 50 })
-      .then(res => setGuestOrders(res.data))
+      .then(res => setGuestOrders(res))
       .catch(() => {})
       .finally(() => setGuestLoading(false));
   }, [orderView]);
