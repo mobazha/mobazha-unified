@@ -130,7 +130,7 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
           meta: { total: 2, limit: 20, offset: 0 },
         }),
       });
-    },
+    }
   );
 
   // Guest order detail / fulfill / complete (path with token segment after /guest/orders/)
@@ -152,7 +152,7 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
         contentType: 'application/json',
         body: JSON.stringify({ data: MOCK_GUEST_ORDER_STATUS }),
       });
-    },
+    }
   );
 
   // Guest checkout settings — only match /v1/settings/guest-checkout, NOT /admin/settings/guest-checkout
@@ -180,7 +180,7 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
         contentType: 'application/json',
         body: JSON.stringify({ data: MOCK_GUEST_CHECKOUT_SETTINGS }),
       });
-    },
+    }
   );
 
   // runtime-config.js to enable guest checkout in the frontend
@@ -191,7 +191,7 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
         status: 200,
         contentType: 'application/javascript',
         body: `window.__RUNTIME_CONFIG__ = { guestCheckoutEnabled: true };`,
-      }),
+      })
   );
 }
 
@@ -220,7 +220,7 @@ async function mockAppShellAPIs(page: Page): Promise<void> {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ data: {} }),
-      }),
+      })
   );
 
   // Specific routes registered AFTER catch-all (evaluated BEFORE catch-all in LIFO).
@@ -231,7 +231,7 @@ async function mockAppShellAPIs(page: Page): Promise<void> {
         status: 200,
         contentType: 'application/javascript',
         body: `window.__RUNTIME_CONFIG__ = { guestCheckoutEnabled: true };`,
-      }),
+      })
   );
 
   await page.route(
@@ -240,17 +240,25 @@ async function mockAppShellAPIs(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ data: { BTC: { last: 65000 }, ETH: { last: 3500 }, BNB: { last: 600 } } }),
-      }),
+        body: JSON.stringify({
+          data: { BTC: { last: 65000 }, ETH: { last: 3500 }, BNB: { last: 600 } },
+        }),
+      })
   );
 
-  await page.route(url => url.pathname === '/ws' || url.pathname === '/ws/', route => route.abort());
+  await page.route(
+    url => url.pathname === '/ws' || url.pathname === '/ws/',
+    route => route.abort()
+  );
 }
 
 /**
  * Mock a single guest order status response with a custom override.
  */
-async function mockGuestOrderStatus(page: Page, statusOverrides: Record<string, unknown> = {}): Promise<void> {
+async function mockGuestOrderStatus(
+  page: Page,
+  statusOverrides: Record<string, unknown> = {}
+): Promise<void> {
   const status = { ...MOCK_GUEST_ORDER_STATUS, ...statusOverrides };
   await page.route(
     url => isV1Api(url, '/guest/orders/'),
@@ -259,14 +267,13 @@ async function mockGuestOrderStatus(page: Page, statusOverrides: Record<string, 
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ data: status }),
-      }),
+      })
   );
 }
 
 // ── E-01: Guest can add item to local cart ───────────────────────────────────
 
 test.describe('Guest Checkout — Buyer Journey', () => {
-
   test('E-01: guest cart persists in localStorage', async ({ page }) => {
     await injectGuestCart(page);
     await mockAppShellAPIs(page);
@@ -371,7 +378,6 @@ test.describe('Guest Checkout — Buyer Journey', () => {
 // ── Seller Admin Tests ───────────────────────────────────────────────────────
 
 test.describe('Guest Checkout — Seller Admin', () => {
-
   test('E-06: seller sees guest orders in admin sales page', async ({ page }) => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
@@ -383,7 +389,7 @@ test.describe('Guest Checkout — Seller Admin', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({ data: [], meta: { total: 0, limit: 20, offset: 0 } }),
-        }),
+        })
     );
 
     await page.route(
@@ -393,7 +399,7 @@ test.describe('Guest Checkout — Seller Admin', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({ data: [], meta: { total: 0, limit: 20, offset: 0 } }),
-        }),
+        })
     );
 
     await page.goto('/orders');
@@ -488,7 +494,6 @@ test.describe('Guest Checkout — Seller Admin', () => {
 // ── Edge Cases ───────────────────────────────────────────────────────────────
 
 test.describe('Guest Checkout — Edge Cases', () => {
-
   test('guest order with invalid token shows error', async ({ page }) => {
     await mockAppShellAPIs(page);
 
@@ -499,7 +504,7 @@ test.describe('Guest Checkout — Edge Cases', () => {
           status: 404,
           contentType: 'application/json',
           body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Order not found' } }),
-        }),
+        })
     );
 
     await page.goto('/guest-order/invalid-token-12345');
@@ -580,12 +585,107 @@ test.describe('Guest Checkout — Edge Cases', () => {
 
     const body = await page.textContent('body');
     expect(body).toBeTruthy();
-    const hasContent = body!.includes('UPS1234567890') || body!.includes(MOCK_ORDER_TOKEN.slice(0, 8));
+    const hasContent =
+      body!.includes('UPS1234567890') || body!.includes(MOCK_ORDER_TOKEN.slice(0, 8));
     expect(hasContent).toBe(true);
 
     await page.screenshot({
       path: 'test-results/guest-edge-fulfilled-tracking.png',
       fullPage: true,
     });
+  });
+
+  test('multi-item cart renders all items and aggregate subtotal', async ({ page }) => {
+    // Guest carts must persist multiple items with independent quantities and
+    // surface all of them in step 1 review. Regressions here would silently
+    // drop items during anonymous checkout.
+    const items = [
+      {
+        ...SEED_CART_ITEM,
+        slug: 'item-a',
+        listingHash: 'QmItemA',
+        title: 'Item A — Headphones',
+        quantity: 2,
+      },
+      {
+        ...SEED_CART_ITEM,
+        slug: 'item-b',
+        listingHash: 'QmItemB',
+        title: 'Item B — Camera',
+        price: { amount: 24500, currency: 'USD', divisibility: 2 },
+        quantity: 1,
+      },
+      {
+        ...SEED_CART_ITEM,
+        slug: 'item-c',
+        listingHash: 'QmItemC',
+        title: 'Item C — Backpack',
+        price: { amount: 4500, currency: 'USD', divisibility: 2 },
+        quantity: 3,
+      },
+    ];
+    await injectGuestCart(page, items);
+    await mockAppShellAPIs(page);
+    await mockGuestCheckoutAPIs(page);
+
+    await page.goto('/guest-checkout');
+    await page.waitForLoadState('domcontentloaded');
+
+    // All three titles must render in step 1.
+    await expect(page.getByText('Item A — Headphones').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Item B — Camera').first()).toBeVisible();
+    await expect(page.getByText('Item C — Backpack').first()).toBeVisible();
+
+    // localStorage must preserve all three items + quantities.
+    const stored = await page.evaluate(() => localStorage.getItem('guest-cart-storage'));
+    expect(stored).toBeTruthy();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.state.items).toHaveLength(3);
+    const totalQty = parsed.state.items.reduce(
+      (acc: number, it: { quantity: number }) => acc + it.quantity,
+      0
+    );
+    expect(totalQty).toBe(6);
+
+    await page.screenshot({
+      path: 'test-results/guest-edge-multi-item-cart.png',
+      fullPage: true,
+    });
+  });
+
+  test('guest checkout does not open a /ws WebSocket (Tor-friendly)', async ({ page }) => {
+    // Privacy-mode contract: anonymous buyer flows must never initiate
+    // long-lived WebSocket connections — they leak timing + traffic signals
+    // through Tor exit nodes. Regression guard: fail if /ws is ever requested.
+    const wsAttempts: string[] = [];
+    // Only count the application /ws endpoint, not Vite HMR (ws://host/?token=...).
+    const isAppWs = (raw: string): boolean => {
+      try {
+        const u = new URL(raw);
+        return u.pathname === '/ws' || u.pathname === '/ws/' || u.pathname.startsWith('/ws/');
+      } catch {
+        return false;
+      }
+    };
+    page.on('websocket', ws => {
+      if (isAppWs(ws.url())) wsAttempts.push(ws.url());
+    });
+    page.on('request', req => {
+      if (isAppWs(req.url())) wsAttempts.push(req.url());
+    });
+
+    await injectGuestCart(page);
+    await mockAppShellAPIs(page);
+    await mockGuestCheckoutAPIs(page);
+
+    await page.goto('/guest-checkout');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    await page.goto(`/guest-order/${MOCK_ORDER_TOKEN}`);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    expect(wsAttempts, `Guest flow opened WebSocket(s): ${wsAttempts.join(', ')}`).toHaveLength(0);
   });
 });
