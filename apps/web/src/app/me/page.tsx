@@ -21,6 +21,7 @@ import {
   startCasdoorLogin,
   NODE_API,
   useUserContext,
+  useFeatureFlags,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
@@ -462,9 +463,14 @@ export default function MePage() {
     refetch: refetchRole,
   } = useMiniAppRole(isEmbeddedApp);
   const { promptRegister } = useMiniAppRegister();
+  const { isEnabled: isFeatureEnabled } = useFeatureFlags();
 
   const { toast } = useToast();
   const standaloneMode = useStorefrontMode();
+  const showMyStoresEntry =
+    isAuthenticated &&
+    !standaloneMode &&
+    isFeatureEnabled('multistoreMyStoresUI', 'killMultistoreReadsDisabled');
 
   const handleLogout = () => {
     logout();
@@ -691,6 +697,24 @@ export default function MePage() {
                 </div>
               </Link>
             )}
+
+          {/* Multi-Store console (Phase MS1) — gated by multistoreMyStoresUI flag */}
+          {showMyStoresEntry && (
+            <Link href="/my-stores" className="block">
+              <div className="bg-background border border-border rounded-xl p-3 flex items-center gap-3 hover:bg-muted/40 active:bg-muted/60 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Store className="w-5 h-5 text-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">{t('stores.console.title')}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {t('stores.console.subtitle')}
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              </div>
+            </Link>
+          )}
 
           <InlineSettings authenticated={isAuthenticated} />
 

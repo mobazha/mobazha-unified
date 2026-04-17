@@ -436,8 +436,16 @@ export const HOSTING_API = {
   // --- Sales Channels: Store Bots ---
   STORE_BOTS: '/platform/v1/store-bots',
 
-  // --- Standalone Store Registry ---
+  // --- Multi-Store (Phase MS1) ---
+  // Canonical MS1.1 endpoint: aggregates SaaS + standalone stores a user manages.
+  STORES_MY: '/platform/v1/stores/my',
+  // Legacy alias (keeps pre-MS callers compiling). Backend routes both to the
+  // same handler — remove after confirming no in-tree usage remains.
   STORES_MY_STORES: '/platform/v1/stores/my-stores',
+  // MS1.3 — user-initiated claim of a standalone store.
+  STORES_CLAIM: '/platform/v1/stores/claim',
+  // MS1.4 — public owner-reputation aggregate by peer_id.
+  STORES_OWNER_REPUTATION: '/platform/v1/stores/owner-reputation',
   STORES_BIND_START: '/platform/v1/stores/bind/start',
   STORES_BIND_STATUS: '/platform/v1/stores/bind/status',
   STORES_STATUS: (peerID: string) => `/platform/v1/stores/${peerID}/status`,

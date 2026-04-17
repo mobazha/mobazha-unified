@@ -134,6 +134,9 @@ export * from './useStandaloneStoreInfo';
 // Storefront Mode (SSR-safe branded-subdomain detection)
 export * from './useStorefrontMode';
 
+// Feature Flags (Phase MS — server-driven toggles + kill switches)
+export * from './useFeatureFlags';
+
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
 export { formatQueryError } from './queryUtils';

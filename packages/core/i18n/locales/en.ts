@@ -5985,6 +5985,49 @@ export const en: TranslationResource = {
     expiredHelpBody:
       "If you funded this order before it expired, contact the seller with your transaction hash (TX) below. They can manually verify and complete your order. Don't send new payment to the expired address.",
   },
+
+  stores: {
+    console: {
+      title: 'My Stores',
+      subtitle: 'Manage every store you operate — hosted on Mobazha or on your own VPS.',
+      loading: 'Loading your stores…',
+      loadError: 'Could not load your stores. Please try again.',
+      retry: 'Retry',
+      refresh: 'Refresh',
+      emptyTitle: 'No stores yet',
+      emptyDescription:
+        'Create a hosted store on Mobazha or connect a self-hosted node you already run.',
+      createHosted: 'Create a hosted store',
+      claimStandalone: 'Connect a self-hosted store',
+      totalCount: '{{count}} store',
+      totalCount_plural: '{{count}} stores',
+      manage: 'Manage',
+      open: 'Open storefront',
+      nodeType: {
+        saas: 'Hosted',
+        standalone: 'Self-hosted',
+      },
+      status: {
+        active: 'Active',
+        suspended: 'Suspended',
+        archived: 'Archived',
+      },
+      connectivity: {
+        public: 'Online',
+        tunnel: 'Online via tunnel',
+        nat: 'Reachable',
+        unknown: 'Status unknown',
+      },
+      online: 'Online',
+      offline: 'Offline',
+      lastActive: 'Last active {{when}}',
+      neverActive: 'Never connected',
+      role: {
+        owner: 'Owner',
+        member: 'Member',
+      },
+    },
+  },
 };
 
 export default en;

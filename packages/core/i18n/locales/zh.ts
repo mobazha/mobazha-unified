@@ -5096,4 +5096,46 @@ export const zh: TranslationResource = {
     minutes: '分钟',
     refresh: '刷新',
   },
+
+  stores: {
+    console: {
+      title: '我的店铺',
+      subtitle: '管理你在 Mobazha 托管或自建 VPS 上运行的所有店铺。',
+      loading: '正在加载你的店铺…',
+      loadError: '加载店铺失败，请稍后重试。',
+      retry: '重试',
+      refresh: '刷新',
+      emptyTitle: '还没有店铺',
+      emptyDescription: '在 Mobazha 创建托管店铺，或连接一个你已经运行的自建节点。',
+      createHosted: '创建托管店铺',
+      claimStandalone: '连接自建店铺',
+      totalCount: '共 {{count}} 个店铺',
+      totalCount_plural: '共 {{count}} 个店铺',
+      manage: '管理',
+      open: '打开店铺',
+      nodeType: {
+        saas: '托管',
+        standalone: '自建',
+      },
+      status: {
+        active: '运行中',
+        suspended: '已暂停',
+        archived: '已归档',
+      },
+      connectivity: {
+        public: '在线',
+        tunnel: '通过隧道在线',
+        nat: '可访问',
+        unknown: '状态未知',
+      },
+      online: '在线',
+      offline: '离线',
+      lastActive: '最近活跃：{{when}}',
+      neverActive: '尚未上线',
+      role: {
+        owner: '所有者',
+        member: '成员',
+      },
+    },
+  },
 };

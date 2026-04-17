@@ -3886,6 +3886,9 @@ export interface TranslationResource {
     expiredHelpTitle?: string;
     expiredHelpBody?: string;
   };
+
+  // Multi-Store (Phase MS) — My Stores console & claim flow
+  stores?: TranslationSection;
 }
 
 // i18n 上下文类型
