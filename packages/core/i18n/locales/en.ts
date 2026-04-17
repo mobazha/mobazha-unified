@@ -4805,16 +4805,25 @@ export const en: TranslationResource = {
       loadError: 'Failed to load settings',
       saveError: 'Failed to save',
       saveSuccess: 'Settings saved successfully.',
-      enableToggle: 'Enable Guest Checkout',
-      enableDescription: 'When enabled, buyers can purchase without signing in.',
-      acceptedCoins: 'Accepted Cryptocurrencies',
-      acceptedCoinsDescription: 'Select which coins buyers can use for guest checkout.',
-      paymentTimeout: 'Payment Timeout',
-      paymentTimeoutDescription: 'How long buyers have to complete payment before the order expires.',
-      minutes: 'minutes',
-      saving: 'Saving...',
-      saveSettings: 'Save Settings',
-    },
+    enableToggle: 'Enable Guest Checkout',
+    enableDescription: 'When enabled, buyers can purchase without signing in.',
+    enableHelpTitle: 'When should I enable this?',
+    enableHelpBody:
+      'Guest checkout lets buyers pay without creating an account — ideal for one-off sales, digital goods, or privacy-focused shops. Note: guest orders bypass escrow protection.',
+    acceptedCoins: 'Accepted Cryptocurrencies',
+    acceptedCoinsDescription: 'Select which coins buyers can use for guest checkout.',
+    acceptedCoinsHelpTitle: 'Choosing coins',
+    acceptedCoinsHelpBody:
+      'Only enable coins you actively monitor and can manage manually. Stablecoins (USDT, USDC) reduce price-volatility risk between order creation and payment.',
+    paymentTimeout: 'Payment Timeout',
+    paymentTimeoutDescription: 'How long buyers have to complete payment before the order expires.',
+    paymentTimeoutHelpTitle: 'Choosing a timeout',
+    paymentTimeoutHelpBody:
+      'Shorter timeouts reduce price-volatility risk; longer timeouts give buyers more time to fund their wallet. Typical range: 15–60 minutes.',
+    minutes: 'minutes',
+    saving: 'Saving...',
+    saveSettings: 'Save Settings',
+  },
     integrations: {
       title: 'Integrations',
       subtitle: 'Manage notification channels, AI assistant, and webhooks',
@@ -5865,6 +5874,27 @@ export const en: TranslationResource = {
     stepShipping: 'Shipping',
     stepCoin: 'Payment Method',
     stepPay: 'Pay',
+    anonymousBannerTitle: "You're checking out as a guest",
+    anonymousBannerSubtitle: 'No account needed — pay directly with cryptocurrency.',
+    anonymousLearnMore: 'What does this mean?',
+    anonymousPointNoAccount: 'No account or signup required.',
+    anonymousPointDirectPayment:
+      'Payment goes directly to the seller — there is no escrow or buyer protection.',
+    anonymousPointEmailOptional:
+      'Email is optional, but recommended to receive order updates.',
+    anonymousPointSaveLink:
+      'After you place the order, save the order link — it is the only way back.',
+    saveLinkTitle: 'Save your order link',
+    saveLinkDescription:
+      "Bookmark this link to check payment status, confirmations and shipping. It's the only way to find this order again.",
+    saveLinkCopy: 'Copy link',
+    saveLinkCopied: 'Link copied',
+    paymentAmountHelpTitle: 'Why this exact amount?',
+    paymentAmountHelpBody:
+      'The crypto amount is locked at the current exchange rate when the order was created. Send the exact amount — more or less may cause detection delays.',
+    expireTimeHelpTitle: 'Payment timer',
+    expireTimeHelpBody:
+      'Orders expire if payment is not received before the timer ends. Do not send payment after the order expires — funds may be lost or require manual recovery by the seller.',
   },
 
   guestOrder: {
@@ -5896,6 +5926,17 @@ export const en: TranslationResource = {
     stateExpiredDesc: 'The payment window has expired. Please create a new order.',
     stateCancelled: 'Cancelled',
     stateCancelledDesc: 'This order has been cancelled.',
+    tokenHelpTitle: 'Your order token',
+    tokenHelpBody:
+      'This unique token grants access to your order — no account or password required. Save the full URL to return to this page.',
+    saveLinkTitle: 'Save this link',
+    saveLinkDescription:
+      "Bookmark this URL to check order status anytime. Anyone with this link can view the order, so keep it private.",
+    saveLinkCopy: 'Copy link',
+    saveLinkCopied: 'Link copied',
+    expiredHelpTitle: 'Already sent payment?',
+    expiredHelpBody:
+      "If you funded this order before it expired, contact the seller with your transaction hash (TX) below. They can manually verify and complete your order. Don't send new payment to the expired address.",
   },
 };
 

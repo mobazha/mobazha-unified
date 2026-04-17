@@ -3028,6 +3028,12 @@ export interface TranslationResource {
       minutes?: string;
       saving?: string;
       saveSettings?: string;
+      enableHelpTitle?: string;
+      enableHelpBody?: string;
+      acceptedCoinsHelpTitle?: string;
+      acceptedCoinsHelpBody?: string;
+      paymentTimeoutHelpTitle?: string;
+      paymentTimeoutHelpBody?: string;
     };
     integrations?: {
       title?: string;
@@ -3812,6 +3818,21 @@ export interface TranslationResource {
     stepShipping?: string;
     stepCoin?: string;
     stepPay?: string;
+    anonymousBannerTitle?: string;
+    anonymousBannerSubtitle?: string;
+    anonymousLearnMore?: string;
+    anonymousPointNoAccount?: string;
+    anonymousPointDirectPayment?: string;
+    anonymousPointEmailOptional?: string;
+    anonymousPointSaveLink?: string;
+    saveLinkTitle?: string;
+    saveLinkDescription?: string;
+    saveLinkCopy?: string;
+    saveLinkCopied?: string;
+    paymentAmountHelpTitle?: string;
+    paymentAmountHelpBody?: string;
+    expireTimeHelpTitle?: string;
+    expireTimeHelpBody?: string;
   };
 
   guestOrder?: {
@@ -3843,6 +3864,14 @@ export interface TranslationResource {
     stateExpiredDesc?: string;
     stateCancelled?: string;
     stateCancelledDesc?: string;
+    tokenHelpTitle?: string;
+    tokenHelpBody?: string;
+    saveLinkTitle?: string;
+    saveLinkDescription?: string;
+    saveLinkCopy?: string;
+    saveLinkCopied?: string;
+    expiredHelpTitle?: string;
+    expiredHelpBody?: string;
   };
 }
 
