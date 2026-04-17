@@ -103,6 +103,14 @@ export function hostingPut<T>(path: string, body?: unknown): Promise<T> {
   return put<T>(`${getHostingUrl()}${path}`, body, getAuthHeaders());
 }
 
+export function hostingPatch<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(`${getHostingUrl()}${path}`, {
+    method: 'PATCH',
+    body,
+    headers: getAuthHeaders(),
+  });
+}
+
 export function hostingDel<T>(path: string): Promise<T> {
   return del<T>(`${getHostingUrl()}${path}`, getAuthHeaders());
 }

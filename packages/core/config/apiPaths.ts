@@ -449,6 +449,15 @@ export const HOSTING_API = {
   STORES_BIND_START: '/platform/v1/stores/bind/start',
   STORES_BIND_STATUS: '/platform/v1/stores/bind/status',
   STORES_STATUS: (peerID: string) => `/platform/v1/stores/${peerID}/status`,
+
+  // --- Storefront Lite (Phase MS2a) ---
+  // MS2a.2a: per-store storefront CRUD. Owner-only; backed by
+  // store_registry.storefronts JSONB.
+  STORES_STOREFRONTS: (peerID: string) => `/platform/v1/stores/${peerID}/storefronts`,
+  STORES_STOREFRONT: (peerID: string, sfID: string) =>
+    `/platform/v1/stores/${peerID}/storefronts/${sfID}`,
+  // MS2a.2b: public slug → (peerID, storefront) resolver.
+  STOREFRONTS_BY_SLUG: (slug: string) => `/platform/v1/storefronts/by-slug/${slug}`,
 } as const;
 
 // ============================================================

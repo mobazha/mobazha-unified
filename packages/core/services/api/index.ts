@@ -54,6 +54,11 @@ export {
   publicGet,
   publicPost,
   publicSafeGet,
+  hostingGet,
+  hostingPost,
+  hostingPut,
+  hostingPatch,
+  hostingDel,
   searchGet,
   searchPost,
   searchSafeGet,
@@ -144,6 +149,24 @@ export * as fiatApi from './fiat';
 
 // Storefront Config API (PG-201)
 export * as storefrontApi from './storefront';
+
+// Storefronts Lite API (Phase MS2a — per-store named storefront CRUD)
+export * as storefrontsLiteApi from './storefrontsLite';
+export { DEFAULT_STOREFRONT_ID } from './storefrontsLite';
+export type {
+  Storefront,
+  StorefrontFilter,
+  StorefrontPriceRule,
+  StorefrontPriceRuleType,
+  StorefrontAccessRule,
+  StorefrontAccessRuleType,
+  StorefrontTelegram,
+  StorefrontTheme,
+  StorefrontVisibility,
+  StorefrontCreateRequest,
+  StorefrontUpdateRequest,
+  PublicStorefrontBySlug,
+} from './storefrontsLite';
 
 // Store Metadata API (cross-store routing offline fallback)
 export * as storeMetadataApi from './storeMetadata';
