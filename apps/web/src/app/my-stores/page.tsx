@@ -37,7 +37,6 @@ import { EmptyState } from '@/components/ui/empty-state';
 import {
   Store,
   Plus,
-  Link2,
   ExternalLink,
   Wifi,
   WifiOff,
@@ -46,6 +45,8 @@ import {
   AlertCircle,
   ChevronRight,
   Server,
+  Link2,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -101,6 +102,12 @@ export default function MyStoresPage() {
 function AuthenticatedContent() {
   const { t } = useI18n();
   const router = useRouter();
+  const { isEnabled } = useFeatureFlags();
+
+  // Separate flag: the claim-flow hint is rendered only when binding is
+  // actually available on the backend. Still honors the global read kill
+  // switch so ops can hide the whole console in one flip.
+  const claimHintOn = isEnabled('multistoreClaimStore', 'killMultistoreReadsDisabled');
 
   const [stores, setStores] = useState<MyStoreItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,24 +161,23 @@ function AuthenticatedContent() {
 
   if (list.length === 0) {
     return (
-      <EmptyState
-        icon={Store}
-        title={t('stores.console.emptyTitle', { defaultValue: 'No stores yet' })}
-        description={t('stores.console.emptyDescription', {
-          defaultValue:
-            'Create a hosted store on Mobazha or connect a self-hosted node you already run.',
-        })}
-        action={{
-          label: t('stores.console.createHosted', { defaultValue: 'Create a hosted store' }),
-          onClick: () => router.push('/onboarding'),
-        }}
-        secondaryAction={{
-          label: t('stores.console.claimStandalone', {
-            defaultValue: 'Connect a self-hosted store',
-          }),
-          onClick: () => router.push('/settings/account'),
-        }}
-      />
+      <div className="space-y-6">
+        <EmptyState
+          icon={Store}
+          title={t('stores.console.emptyTitle', { defaultValue: 'No stores yet' })}
+          description={t('stores.console.emptyDescription', {
+            defaultValue:
+              'Create a hosted store on Mobazha or connect a self-hosted node you already run.',
+          })}
+          action={{
+            label: t('stores.console.createHosted', { defaultValue: 'Create a hosted store' }),
+            onClick: () => router.push('/onboarding'),
+          }}
+        />
+        {/* MS1.5: unbound-store prompt. Prominent on empty state so the user
+            can self-serve without leaving this page. */}
+        {claimHintOn && <ClaimHintCard variant="prominent" defaultOpen />}
+      </div>
     );
   }
 
@@ -196,17 +202,174 @@ function AuthenticatedContent() {
           <Plus className="w-4 h-4" />
           {t('stores.console.createHosted', { defaultValue: 'Create a hosted store' })}
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => router.push('/settings/account')}
-          className="gap-2"
-        >
-          <Link2 className="w-4 h-4" />
-          {t('stores.console.claimStandalone', { defaultValue: 'Connect a self-hosted store' })}
-        </Button>
       </div>
+
+      {/* MS1.5: secondary position — collapsed by default so existing stores
+          stay the focus, but remains discoverable. */}
+      {claimHintOn && <ClaimHintCard variant="muted" />}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// ClaimHintCard — MS1.5 "未绑定店铺提示"
+//
+// Guides users who already run their own Mobazha node but haven't bound it
+// to this Casdoor account yet. Binding is initiated from *inside* the
+// standalone store's admin panel (OAuth popup), so the card teaches the
+// steps rather than offering a button that wouldn't work from this origin.
+// ---------------------------------------------------------------------------
+
+function ClaimHintCard({
+  variant,
+  defaultOpen = false,
+}: {
+  variant: 'prominent' | 'muted';
+  defaultOpen?: boolean;
+}) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(defaultOpen);
+
+  const title = t('stores.console.claim.title', {
+    defaultValue: 'Already running your own Mobazha node?',
+  });
+  const subtitle = t('stores.console.claim.subtitle', {
+    defaultValue: 'Connect it to this account so it shows up here alongside your hosted stores.',
+  });
+
+  const steps: Array<{ title: string; body: string }> = [
+    {
+      title: t('stores.console.claim.step1Title', {
+        defaultValue: 'Open your store\u2019s admin panel',
+      }),
+      body: t('stores.console.claim.step1Body', {
+        defaultValue:
+          'Sign in to the admin dashboard on your own server (the URL where your node is running).',
+      }),
+    },
+    {
+      title: t('stores.console.claim.step2Title', {
+        defaultValue: 'Choose \u201cBind to Mobazha account\u201d',
+      }),
+      body: t('stores.console.claim.step2Body', {
+        defaultValue:
+          'Under Settings \u2192 Account, start the binding flow. A popup will open and bring you back here.',
+      }),
+    },
+    {
+      title: t('stores.console.claim.step3Title', {
+        defaultValue: 'Confirm the connection',
+      }),
+      body: t('stores.console.claim.step3Body', {
+        defaultValue:
+          'Sign in to Mobazha in the popup. Your store will appear here after a refresh.',
+      }),
+    },
+  ];
+
+  // Docs link — i18n so we can localize later. Validate scheme to keep the
+  // href from smuggling in a javascript:/data: URL via translation override.
+  const rawHref = t('stores.console.claim.learnMoreHref', {
+    defaultValue: 'https://docs.mobazha.com/self-host/bind-account',
+  });
+  const learnMoreHref = isSafeExternalUrl(rawHref) ? rawHref : null;
+  const learnMoreLabel = t('stores.console.claim.learnMore', { defaultValue: 'Learn more' });
+
+  return (
+    <section
+      aria-labelledby="claim-hint-title"
+      className={cn(
+        'rounded-xl border transition-colors',
+        variant === 'prominent' ? 'bg-primary/5 border-primary/20' : 'bg-card border-border'
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        aria-controls="claim-hint-body"
+        className={cn(
+          'w-full flex items-start gap-3 p-4 sm:p-5 text-left',
+          'rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+        )}
+      >
+        <div
+          className={cn(
+            'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+            variant === 'prominent'
+              ? 'bg-primary/10 text-primary'
+              : 'bg-muted text-muted-foreground'
+          )}
+        >
+          <Link2 className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 id="claim-hint-title" className="text-sm font-semibold">
+            {title}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+        </div>
+        <ChevronRight
+          className={cn(
+            'w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform',
+            open && 'rotate-90'
+          )}
+        />
+      </button>
+
+      {open && (
+        <div id="claim-hint-body" className="px-4 sm:px-5 pb-4 sm:pb-5 pt-1">
+          <ol className="space-y-3">
+            {steps.map((step, idx) => (
+              <li key={idx} className="flex gap-3">
+                <span
+                  className={cn(
+                    'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
+                    'text-xs font-semibold',
+                    variant === 'prominent'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                  aria-hidden="true"
+                >
+                  {idx + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{step.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          {learnMoreHref && (
+            <a
+              href={learnMoreHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-4"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              {learnMoreLabel}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Narrow allow-list for the docs link so a translation file can't slip in
+// a javascript: or data: URL.
+function isSafeExternalUrl(href: string): boolean {
+  if (!href) return false;
+  try {
+    const url = new URL(href);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------
