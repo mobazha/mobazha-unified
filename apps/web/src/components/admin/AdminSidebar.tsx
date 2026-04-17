@@ -3,7 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useI18n, useUserStore, isStandalone, useStorefrontMode } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  isStandalone,
+  useStorefrontMode,
+  useFeatureFlags,
+} from '@mobazha/core';
 import {
   LayoutDashboard,
   Package,
@@ -19,6 +25,7 @@ import {
   ChevronRight,
   ShoppingBag,
   Server,
+  Store,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -52,13 +59,26 @@ const baseNavItems: NavItem[] = [
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
 ];
 
+const storefrontsNavItem: NavItem = {
+  id: 'storefronts',
+  labelKey: 'admin.nav.storefronts',
+  href: '/admin/storefronts',
+  icon: Store,
+};
+
 const standaloneNavItems: NavItem[] = [
   ...baseNavItems,
   { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
 ];
 
-function getNavItems(): NavItem[] {
-  return isStandalone() ? standaloneNavItems : baseNavItems;
+function getNavItems(storefrontsEnabled: boolean): NavItem[] {
+  const base = isStandalone() ? standaloneNavItems : baseNavItems;
+  if (!storefrontsEnabled) return base;
+  // Inject "Storefronts" right after the single-storefront "Storefront"
+  // branding editor so both live together in the navigation.
+  const idx = base.findIndex(item => item.id === 'storefront');
+  if (idx < 0) return [...base, storefrontsNavItem];
+  return [...base.slice(0, idx + 1), storefrontsNavItem, ...base.slice(idx + 1)];
 }
 
 interface AdminSidebarProps {
@@ -71,10 +91,14 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   const { t } = useI18n();
   const { profile } = useUserStore();
   const standaloneMode = useStorefrontMode();
+  const { isEnabled } = useFeatureFlags();
+  const storefrontsEnabled = isEnabled('storefrontsEnabled', 'killStorefrontRoutingDisabled');
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
-    return pathname.startsWith(href);
+    // /admin/storefront must not match /admin/storefronts — enforce exact
+    // segment boundary rather than bare prefix.
+    return pathname === href || pathname.startsWith(href + '/');
   };
 
   const storePeerID = profile?.peerID;
@@ -114,7 +138,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-        {getNavItems().map(item => {
+        {getNavItems(storefrontsEnabled).map(item => {
           const Icon = item.icon;
           const active = isActive(item.href);
           return (

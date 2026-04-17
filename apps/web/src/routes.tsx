@@ -260,6 +260,18 @@ const routes: RouteObject[] = [
         element: lazyPage(() => import('./app/admin/collections/[id]/page')),
       },
       { path: 'storefront', element: lazyPage(() => import('./app/admin/storefront/page')) },
+      {
+        path: 'storefronts',
+        element: lazyPage(() => import('./app/admin/storefronts/page')),
+      },
+      {
+        path: 'storefronts/new',
+        element: lazyPage(() => import('./app/admin/storefronts/new/page')),
+      },
+      {
+        path: 'storefronts/:sfID',
+        element: lazyPage(() => import('./app/admin/storefronts/[sfID]/page')),
+      },
       { path: 'analytics', element: lazyPage(() => import('./app/admin/analytics/page')) },
       { path: 'settings', element: lazyPage(() => import('./app/admin/settings/page')) },
       {
