@@ -3847,6 +3847,7 @@ export interface TranslationResource {
     trackingInfo?: string;
     items?: string;
     total?: string;
+    quantityLabel?: string;
     autoRefreshNote?: string;
     stateAwaitingPayment?: string;
     stateAwaitingPaymentDesc?: string;

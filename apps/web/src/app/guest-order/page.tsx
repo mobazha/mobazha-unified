@@ -2,12 +2,24 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { Package } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
-import { getGuestOrderStatus, type GuestOrderStatus } from '@mobazha/core/services/api/guestCheckout';
-import { ExternalWalletPayment, type ExternalWalletPaymentInfo } from '@/components/Payment/ExternalWalletPayment';
+import {
+  getGuestOrderStatus,
+  type GuestOrderStatus,
+} from '@mobazha/core/services/api/guestCheckout';
+import {
+  ExternalWalletPayment,
+  type ExternalWalletPaymentInfo,
+} from '@/components/Payment/ExternalWalletPayment';
 import { getGuestStatusConfig, resolveStatusDisplay } from '@/components/Order/orderStatusConfig';
-import { renderPairedPrice } from '@mobazha/core/services/currencyService';
+import {
+  formatPrice,
+  fromMinimalUnit,
+  renderPairedPrice,
+} from '@mobazha/core/services/currencyService';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { cn } from '@/lib/utils';
@@ -34,12 +46,23 @@ export default function GuestOrderPage() {
     const poll = () => {
       if (!orderToken || cancelled) return;
       getGuestOrderStatus(orderToken)
-        .then(res => { if (!cancelled) { setOrder(res); setError(null); } })
-        .catch(err => { if (!cancelled && !order) setError(err instanceof Error ? err.message : t('guestOrder.notFoundTitle')); });
+        .then(res => {
+          if (!cancelled) {
+            setOrder(res);
+            setError(null);
+          }
+        })
+        .catch(err => {
+          if (!cancelled && !order)
+            setError(err instanceof Error ? err.message : t('guestOrder.notFoundTitle'));
+        });
     };
     poll();
     const interval = setInterval(poll, 15000);
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [orderToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error && !order) {
@@ -112,22 +135,20 @@ export default function GuestOrderPage() {
           </div>
         )}
 
-        {(order.state === 'AWAITING_PAYMENT' || order.state === 'PENDING_CONFIRMATION') && typeof window !== 'undefined' && (
-          <SaveOrderLinkCard
-            orderUrl={`${window.location.origin}/guest-order/${order.orderToken}`}
-            title={t('guestOrder.saveLinkTitle')}
-            description={t('guestOrder.saveLinkDescription')}
-            copyLabel={t('guestOrder.saveLinkCopy')}
-            copiedLabel={t('guestOrder.saveLinkCopied')}
-            testId="guest-order-save-link"
-          />
-        )}
+        {(order.state === 'AWAITING_PAYMENT' || order.state === 'PENDING_CONFIRMATION') &&
+          typeof window !== 'undefined' && (
+            <SaveOrderLinkCard
+              orderUrl={`${window.location.origin}/guest-order/${order.orderToken}`}
+              title={t('guestOrder.saveLinkTitle')}
+              description={t('guestOrder.saveLinkDescription')}
+              copyLabel={t('guestOrder.saveLinkCopy')}
+              copiedLabel={t('guestOrder.saveLinkCopied')}
+              testId="guest-order-save-link"
+            />
+          )}
 
         {showPaymentInfo && (
-          <ExternalWalletPayment
-            paymentInfo={toPaymentInfo(order)}
-            tokenId={order.paymentCoin}
-          />
+          <ExternalWalletPayment paymentInfo={toPaymentInfo(order)} tokenId={order.paymentCoin} />
         )}
 
         {showConfirmations && (
@@ -157,27 +178,40 @@ export default function GuestOrderPage() {
         <div className="rounded-lg border divide-y">
           <div className="p-4">
             <p className="text-sm font-medium mb-2">{t('guestOrder.items')}</p>
-            {order.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm py-1">
-                <span>
-                  {item.title} &times; {item.quantity}
-                </span>
-                <span className="text-muted-foreground font-mono">
-                  {renderPairedPrice(item.unitPrice, order.priceCurrency, order.priceCurrency, {
-                    isMinimalUnit: true,
-                    divisibility: order.priceDivisibility,
-                  })}
-                </span>
-              </div>
-            ))}
+            <div className="space-y-2">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3 py-1">
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                    <Package className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('guestOrder.quantityLabel')} {item.quantity}
+                    </p>
+                  </div>
+                  <span className="text-sm text-muted-foreground font-mono flex-shrink-0">
+                    {renderPairedPrice(item.unitPrice, order.priceCurrency, order.priceCurrency, {
+                      isMinimalUnit: true,
+                      divisibility: order.priceDivisibility,
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="p-4 flex justify-between font-medium">
+          <div className="p-4 flex justify-between items-center font-medium">
             <span>{t('guestOrder.total')}</span>
-            <span className="font-mono">
-              {renderPairedPrice(order.paymentAmount, order.paymentCoin, order.paymentCoin, {
-                isMinimalUnit: true,
-              })}
-            </span>
+            <div className="flex items-center gap-2">
+              <TokenIcon token={order.paymentCoin} size={20} />
+              <span className="font-mono">
+                {formatPrice(
+                  fromMinimalUnit(order.paymentAmount, order.paymentCoin),
+                  order.paymentCoin,
+                  { showSymbol: false, showCode: true }
+                )}
+              </span>
+            </div>
           </div>
         </div>
 

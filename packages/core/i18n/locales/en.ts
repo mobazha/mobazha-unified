@@ -4805,25 +4805,26 @@ export const en: TranslationResource = {
       loadError: 'Failed to load settings',
       saveError: 'Failed to save',
       saveSuccess: 'Settings saved successfully.',
-    enableToggle: 'Enable Guest Checkout',
-    enableDescription: 'When enabled, buyers can purchase without signing in.',
-    enableHelpTitle: 'When should I enable this?',
-    enableHelpBody:
-      'Guest checkout lets buyers pay without creating an account — ideal for one-off sales, digital goods, or privacy-focused shops. Note: guest orders bypass escrow protection.',
-    acceptedCoins: 'Accepted Cryptocurrencies',
-    acceptedCoinsDescription: 'Select which coins buyers can use for guest checkout.',
-    acceptedCoinsHelpTitle: 'Choosing coins',
-    acceptedCoinsHelpBody:
-      'Only enable coins you actively monitor and can manage manually. Stablecoins (USDT, USDC) reduce price-volatility risk between order creation and payment.',
-    paymentTimeout: 'Payment Timeout',
-    paymentTimeoutDescription: 'How long buyers have to complete payment before the order expires.',
-    paymentTimeoutHelpTitle: 'Choosing a timeout',
-    paymentTimeoutHelpBody:
-      'Shorter timeouts reduce price-volatility risk; longer timeouts give buyers more time to fund their wallet. Typical range: 15–60 minutes.',
-    minutes: 'minutes',
-    saving: 'Saving...',
-    saveSettings: 'Save Settings',
-  },
+      enableToggle: 'Enable Guest Checkout',
+      enableDescription: 'When enabled, buyers can purchase without signing in.',
+      enableHelpTitle: 'When should I enable this?',
+      enableHelpBody:
+        'Guest checkout lets buyers pay without creating an account — ideal for one-off sales, digital goods, or privacy-focused shops. Note: guest orders bypass escrow protection.',
+      acceptedCoins: 'Accepted Cryptocurrencies',
+      acceptedCoinsDescription: 'Select which coins buyers can use for guest checkout.',
+      acceptedCoinsHelpTitle: 'Choosing coins',
+      acceptedCoinsHelpBody:
+        'Only enable coins you actively monitor and can manage manually. Stablecoins (USDT, USDC) reduce price-volatility risk between order creation and payment.',
+      paymentTimeout: 'Payment Timeout',
+      paymentTimeoutDescription:
+        'How long buyers have to complete payment before the order expires.',
+      paymentTimeoutHelpTitle: 'Choosing a timeout',
+      paymentTimeoutHelpBody:
+        'Shorter timeouts reduce price-volatility risk; longer timeouts give buyers more time to fund their wallet. Typical range: 15–60 minutes.',
+      minutes: 'minutes',
+      saving: 'Saving...',
+      saveSettings: 'Save Settings',
+    },
     integrations: {
       title: 'Integrations',
       subtitle: 'Manage notification channels, AI assistant, and webhooks',
@@ -5858,7 +5859,8 @@ export const en: TranslationResource = {
     back: 'Back',
     continueToPayment: 'Continue to Payment',
     choosePayment: 'Choose Payment Method',
-    choosePaymentHint: 'Select a cryptocurrency to pay with. The exact amount will be calculated at current exchange rates.',
+    choosePaymentHint:
+      'Select a cryptocurrency to pay with. The exact amount will be calculated at current exchange rates.',
     sendPayment: 'Send Payment',
     sendExactAmount: 'Send exactly this amount to the address below:',
     paymentAddress: 'Payment Address',
@@ -5868,7 +5870,8 @@ export const en: TranslationResource = {
     creatingOrder: 'Creating your order...',
     orderFailed: 'Order Failed',
     goBack: 'Go Back',
-    directPaymentDisclaimer: 'After sending payment, you can track your order status using the link below. This is a direct payment — no escrow or buyer protection.',
+    directPaymentDisclaimer:
+      'After sending payment, you can track your order status using the link below. This is a direct payment — no escrow or buyer protection.',
     trackOrderStatus: 'Track Order Status',
     stepCart: 'Cart',
     stepShipping: 'Shipping',
@@ -5880,8 +5883,7 @@ export const en: TranslationResource = {
     anonymousPointNoAccount: 'No account or signup required.',
     anonymousPointDirectPayment:
       'Payment goes directly to the seller — there is no escrow or buyer protection.',
-    anonymousPointEmailOptional:
-      'Email is optional, but recommended to receive order updates.',
+    anonymousPointEmailOptional: 'Email is optional, but recommended to receive order updates.',
     anonymousPointSaveLink:
       'After you place the order, save the order link — it is the only way back.',
     saveLinkTitle: 'Save your order link',
@@ -5909,11 +5911,13 @@ export const en: TranslationResource = {
     trackingInfo: 'Tracking Information',
     items: 'Items',
     total: 'Total',
+    quantityLabel: 'Qty:',
     autoRefreshNote: 'This page auto-refreshes every 15 seconds. Bookmark this URL to check later.',
     stateAwaitingPayment: 'Awaiting Payment',
     stateAwaitingPaymentDesc: 'Send the exact amount to the payment address below.',
     statePendingConfirmation: 'Payment Detected',
-    statePendingConfirmationDesc: 'Your payment has been detected and is awaiting blockchain confirmations.',
+    statePendingConfirmationDesc:
+      'Your payment has been detected and is awaiting blockchain confirmations.',
     stateFunded: 'Payment Confirmed',
     stateFundedDesc: 'Your payment is confirmed. The seller will process your order.',
     stateProcessing: 'Processing',
@@ -5931,7 +5935,7 @@ export const en: TranslationResource = {
       'This unique token grants access to your order — no account or password required. Save the full URL to return to this page.',
     saveLinkTitle: 'Save this link',
     saveLinkDescription:
-      "Bookmark this URL to check order status anytime. Anyone with this link can view the order, so keep it private.",
+      'Bookmark this URL to check order status anytime. Anyone with this link can view the order, so keep it private.',
     saveLinkCopy: 'Copy link',
     saveLinkCopied: 'Link copied',
     expiredHelpTitle: 'Already sent payment?',
