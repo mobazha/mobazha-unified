@@ -30,7 +30,12 @@ const MOCK_GUEST_ORDER_RESPONSE = {
   priceDivisibility: 2,
   expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
   items: [
-    { listingHash: 'QmTestHash123', title: 'Premium Wireless Headphones', quantity: 1, unitPrice: '9900' },
+    {
+      listingHash: 'QmTestHash123',
+      title: 'Premium Wireless Headphones',
+      quantity: 1,
+      unitPrice: '9900',
+    },
   ],
 };
 
@@ -69,51 +74,92 @@ async function mockAppShell(page: Page): Promise<void> {
   // Catch-all first (LIFO → evaluated last)
   await page.route(
     url => url.pathname.startsWith('/v1/'),
-    route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: {} }) }),
+    route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: {} }),
+      })
   );
   await page.route(
     url => url.pathname.endsWith('runtime-config.js'),
-    route => route.fulfill({
-      status: 200,
-      contentType: 'application/javascript',
-      body: 'window.__RUNTIME_CONFIG__ = { guestCheckoutEnabled: true };',
-    }),
+    route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body:
+          'window.__RUNTIME_CONFIG__ = { ' +
+          'features: { guestCheckout: { effective: true, overridable: [] } }, ' +
+          'guestCheckoutEnabled: true ' +
+          '};',
+      })
   );
   await page.route(
     url => isV1Api(url, '/exchange-rates'),
-    route => route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: { BTC: { last: 65000 }, ETH: { last: 3500 }, BNB: { last: 600 }, USDT: { last: 1 } } }),
-    }),
+    route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            BTC: { last: 65000 },
+            ETH: { last: 3500 },
+            BNB: { last: 600 },
+            USDT: { last: 1 },
+          },
+        }),
+      })
   );
-  await page.route(url => url.pathname === '/ws' || url.pathname === '/ws/', route => route.abort());
+  await page.route(
+    url => url.pathname === '/ws' || url.pathname === '/ws/',
+    route => route.abort()
+  );
 }
 
-async function mockGuestAPIs(page: Page, statusState = 'AWAITING_PAYMENT', statusExtras: Record<string, unknown> = {}): Promise<void> {
+async function mockGuestAPIs(
+  page: Page,
+  statusState = 'AWAITING_PAYMENT',
+  statusExtras: Record<string, unknown> = {}
+): Promise<void> {
   // Settings (GET + PUT)
   await page.route(
     url => isV1Api(url, '/settings/guest-checkout'),
-    route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: MOCK_SETTINGS }) }),
+    route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: MOCK_SETTINGS }),
+      })
   );
   // Order creation (POST /v1/guest/orders)
   await page.route(
     url => url.pathname === '/v1/guest/orders',
     async (route, req) => {
       if (req.method() === 'POST') {
-        return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ data: MOCK_GUEST_ORDER_RESPONSE }) });
+        return route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: MOCK_GUEST_ORDER_RESPONSE }),
+        });
       }
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) });
-    },
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    }
   );
   // Order status (GET /v1/guest/orders/{token})
   await page.route(
     url => isV1Api(url, '/guest/orders/'),
-    route => route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: { ...MOCK_GUEST_ORDER_STATUS, state: statusState, ...statusExtras } }),
-    }),
+    route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: { ...MOCK_GUEST_ORDER_STATUS, state: statusState, ...statusExtras },
+        }),
+      })
   );
 }
 
@@ -133,7 +179,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     await mockGuestAPIs(page);
 
     await page.goto('/guest-checkout');
-    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({
+      timeout: 15000,
+    });
     await page.waitForTimeout(500);
 
     await page.screenshot({ path: `${OUT}/01-cart-review.png`, fullPage: true });
@@ -145,7 +193,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     await mockGuestAPIs(page);
 
     await page.goto('/guest-checkout');
-    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await page.getByRole('button', { name: /^Continue to Shipping$/i }).click();
     await page.waitForTimeout(800);
@@ -164,7 +214,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     if (await country.count()) {
       const tag = await country.evaluate(el => el.tagName.toLowerCase());
       if (tag === 'select') {
-        await country.selectOption({ label: 'United States' }).catch(() => country.selectOption('US'));
+        await country
+          .selectOption({ label: 'United States' })
+          .catch(() => country.selectOption('US'));
       } else {
         await country.fill('United States');
       }
@@ -179,7 +231,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     await mockGuestAPIs(page);
 
     await page.goto('/guest-checkout');
-    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await page.getByRole('button', { name: /^Continue to Shipping$/i }).click();
     await page.waitForTimeout(500);
@@ -195,7 +249,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     if (await country.count()) {
       const tag = await country.evaluate(el => el.tagName.toLowerCase());
       if (tag === 'select') {
-        await country.selectOption({ label: 'United States' }).catch(() => country.selectOption('US'));
+        await country
+          .selectOption({ label: 'United States' })
+          .catch(() => country.selectOption('US'));
       } else {
         await country.fill('United States');
       }
@@ -214,7 +270,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     await mockGuestAPIs(page);
 
     await page.goto('/guest-checkout');
-    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Premium Wireless Headphones').first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await page.getByRole('button', { name: /^Continue to Shipping$/i }).click();
     await page.waitForTimeout(500);
@@ -229,7 +287,9 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     if (await country.count()) {
       const tag = await country.evaluate(el => el.tagName.toLowerCase());
       if (tag === 'select') {
-        await country.selectOption({ label: 'United States' }).catch(() => country.selectOption('US'));
+        await country
+          .selectOption({ label: 'United States' })
+          .catch(() => country.selectOption('US'));
       } else {
         await country.fill('United States');
       }
@@ -241,7 +301,10 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
     const ethBtn = page.getByText(/^ETH$/).first();
     await ethBtn.click({ timeout: 5000 }).catch(async () => {
       // Fallback: click first crypto option card
-      const anyCrypto = page.locator('button').filter({ hasText: /BTC|ETH|BNB|USDT/ }).first();
+      const anyCrypto = page
+        .locator('button')
+        .filter({ hasText: /BTC|ETH|BNB|USDT/ })
+        .first();
       await anyCrypto.click();
     });
     await page.waitForTimeout(1500);
@@ -253,7 +316,6 @@ test.describe('Guest Checkout Screenshots — Buyer Journey', () => {
 // ── Order Status Pages ───────────────────────────────────────────────────────
 
 test.describe('Guest Checkout Screenshots — Order Status', () => {
-
   test('05 — Awaiting payment', async ({ page }) => {
     await mockAppShell(page);
     await mockGuestAPIs(page, 'AWAITING_PAYMENT');
@@ -321,11 +383,12 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
     await mockAppShell(page);
     await page.route(
       url => isV1Api(url, '/guest/orders/'),
-      route => route.fulfill({
-        status: 404,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Order not found' } }),
-      }),
+      route =>
+        route.fulfill({
+          status: 404,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Order not found' } }),
+        })
     );
 
     await page.goto('/guest-order/invalid-token-12345');
@@ -338,13 +401,14 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
 // ── Seller Admin ─────────────────────────────────────────────────────────────
 
 test.describe('Guest Checkout Screenshots — Seller Admin', () => {
-
   test('11 — Admin settings (enabled)', async ({ page }) => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
     await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+      timeout: 15000,
+    });
     await page.waitForTimeout(800);
 
     await page.screenshot({ path: `${OUT}/12-admin-settings-enabled.png`, fullPage: true });
@@ -355,7 +419,9 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await mockGuestAPIs(page);
 
     await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+      timeout: 15000,
+    });
     await page.waitForTimeout(500);
 
     await page.getByRole('switch').first().click();
@@ -369,7 +435,9 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await mockGuestAPIs(page);
 
     await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+      timeout: 15000,
+    });
     await page.waitForTimeout(500);
 
     const saveBtn = page.getByRole('button', { name: /save|保存/i }).first();
@@ -383,10 +451,9 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
 // ── Empty State ──────────────────────────────────────────────────────────────
 
 test.describe('Guest Checkout Screenshots — Edge Cases', () => {
-
   test('14 — Empty cart', async ({ page }) => {
     await page.addInitScript(
-      `localStorage.setItem('guest-cart-storage', JSON.stringify({ state: { items: [] }, version: 0 }));`,
+      `localStorage.setItem('guest-cart-storage', JSON.stringify({ state: { items: [] }, version: 0 }));`
     );
     await mockAppShell(page);
     await mockGuestAPIs(page);

@@ -38,11 +38,8 @@ import {
   STATUS_FILTER_TO_STATES,
 } from '@/components/admin/orders/utils';
 import type { StatusFilter } from '@/components/admin/orders/utils';
-import {
-  listGuestOrders,
-  type GuestOrderSummary,
-} from '@mobazha/core/services/api/guestCheckout';
-import { isGuestCheckoutEnabled } from '@mobazha/core/config/env';
+import { listGuestOrders, type GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
+import { useFeature } from '@mobazha/core/hooks/useFeature';
 
 function useAdminOrders() {
   const { t } = useI18n();
@@ -109,7 +106,10 @@ function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: 
   const { t } = useI18n();
   const title = order.items[0]?.title || t('admin.orders.guestOrderTitle');
   const qty = order.items.reduce((sum, i) => sum + i.quantity, 0);
-  const itemLabel = qty === 1 ? t('admin.orders.guestItemCount', { count: qty }) : t('admin.orders.guestItemCountPlural', { count: qty });
+  const itemLabel =
+    qty === 1
+      ? t('admin.orders.guestItemCount', { count: qty })
+      : t('admin.orders.guestItemCountPlural', { count: qty });
   return (
     <button
       type="button"
@@ -129,7 +129,9 @@ function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: 
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
           <span>{itemLabel}</span>
           <span>·</span>
-          <span>{order.paymentAmount} {order.paymentCoin}</span>
+          <span>
+            {order.paymentAmount} {order.paymentCoin}
+          </span>
           <span>·</span>
           <span>{new Date(order.createdAt).toLocaleDateString()}</span>
         </div>
@@ -161,7 +163,7 @@ export default function AdminOrdersPage() {
   const [orderView, setOrderView] = useState<OrderViewType>('standard');
   const [guestOrders, setGuestOrders] = useState<GuestOrderSummary[]>([]);
   const [guestLoading, setGuestLoading] = useState(false);
-  const guestEnabled = isGuestCheckoutEnabled();
+  const guestEnabled = useFeature('guestCheckout');
 
   useEffect(() => {
     if (orderView !== 'guest') return;
@@ -543,236 +545,240 @@ export default function AdminOrdersPage() {
           )}
         </div>
       ) : (
-      <>
-
-      {/* Batch action bar */}
-      {isSomeSelected && (
-        <div className="flex items-center gap-3 p-3 mb-4 rounded-lg bg-primary/5 border border-primary/20">
-          <Checkbox
-            checked={isAllSelected}
-            onCheckedChange={toggleSelectAll}
-            aria-label={t('admin.orders.selectAll')}
-          />
-          <span className="text-sm font-medium text-foreground">
-            {t('admin.orders.selectedCount', { count: selectedIds.size })}
-          </span>
-          <div className="flex-1" />
-          <Button size="sm" variant="outline" onClick={handleBatchConfirm} disabled={isProcessing}>
-            <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
-            {t('admin.orders.batchConfirm')}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={clearSelection}
-            aria-label={t('admin.orders.clearSelection')}
-          >
-            <X className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex flex-col gap-3 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex gap-2 flex-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('admin.orders.searchPlaceholder')}
-                className="pl-10"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
-            {/* Mobile: toggle date filter */}
-            <Button
-              variant={showDateFilter || dateFrom || dateTo ? 'default' : 'outline'}
-              size="icon"
-              className="sm:hidden h-9 w-9 shrink-0"
-              onClick={() => setShowDateFilter(prev => !prev)}
-              aria-label={t('admin.orders.dateFilter')}
-            >
-              <Calendar className="w-4 h-4" />
-            </Button>
-          </div>
-          {/* Desktop: always show date range */}
-          <div className="hidden sm:flex gap-2">
-            <div className="relative">
-              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
-                aria-label={t('admin.orders.dateFrom')}
-              />
-            </div>
-            <span className="self-center text-muted-foreground text-sm">–</span>
-            <div className="relative">
-              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
-                aria-label={t('admin.orders.dateTo')}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile: collapsible date range */}
-        {showDateFilter && (
-          <div className="flex gap-2 sm:hidden">
-            <div className="relative flex-1">
-              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
-                aria-label={t('admin.orders.dateFrom')}
-              />
-            </div>
-            <span className="self-center text-muted-foreground text-sm">–</span>
-            <div className="relative flex-1">
-              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
-                aria-label={t('admin.orders.dateTo')}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Status tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
-          {statusTabs.map(tab => (
-            <button
-              key={tab.value}
-              onClick={() => setStatusFilter(tab.value)}
-              className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] sm:min-h-0 snap-start ${
-                statusFilter === tab.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border'
-              }`}
-            >
-              {tab.label}
-              {tab.count != null && tab.count > 0 && (
-                <span className="ml-1.5 text-xs opacity-70">({tab.count})</span>
-              )}
-            </button>
-          ))}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0 snap-start"
-            >
-              {t('admin.orders.clearFilters')}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-destructive/10 text-destructive text-sm">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Content */}
-      {isLoading ? (
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-          {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <Skeleton className="w-10 h-10 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-              <Skeleton className="h-6 w-16 rounded-full" />
-            </div>
-          ))}
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-10 sm:py-16 border border-dashed border-border rounded-xl">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted mb-3 sm:mb-4">
-            <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
-            {hasActiveFilters ? t('admin.orders.noMatchTitle') : t('admin.orders.emptyTitle')}
-          </h3>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto">
-            {hasActiveFilters
-              ? t('admin.orders.noMatchDescription')
-              : t('admin.orders.emptyDescription')}
-          </p>
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" className="mt-4" onClick={clearFilters}>
-              {t('admin.orders.clearFilters')}
-            </Button>
-          )}
-        </div>
-      ) : (
         <>
-          {/* Select all checkbox (above table) */}
-          {isDesktop && (
-            <div className="flex items-center gap-2 mb-2 px-1">
+          {/* Batch action bar */}
+          {isSomeSelected && (
+            <div className="flex items-center gap-3 p-3 mb-4 rounded-lg bg-primary/5 border border-primary/20">
               <Checkbox
                 checked={isAllSelected}
                 onCheckedChange={toggleSelectAll}
                 aria-label={t('admin.orders.selectAll')}
               />
-              <span className="text-xs text-muted-foreground">
-                {t('admin.orders.selectAll')} ({filteredOrders.length})
+              <span className="text-sm font-medium text-foreground">
+                {t('admin.orders.selectedCount', { count: selectedIds.size })}
               </span>
-            </div>
-          )}
-
-          {isDesktop ? (
-            <OrderTable
-              orders={filteredOrders}
-              type="sale"
-              onViewDetails={handleViewDetails}
-              onContact={handleContact}
-              onAccept={handleAccept}
-              onReject={handleReject}
-            />
-          ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <OrderListCompact
-                orders={filteredOrders}
-                type="sale"
-                onViewDetails={handleViewDetails}
-                onAccept={handleAccept}
-                onReject={handleReject}
-              />
-            </div>
-          )}
-
-          {/* Load more */}
-          {hasMore && (
-            <div className="flex justify-center py-4">
-              <Button variant="outline" onClick={loadMore} disabled={isLoadingMore}>
-                {isLoadingMore ? t('common.loading') : t('common.loadMore')}
+              <div className="flex-1" />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleBatchConfirm}
+                disabled={isProcessing}
+              >
+                <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
+                {t('admin.orders.batchConfirm')}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={clearSelection}
+                aria-label={t('admin.orders.clearSelection')}
+              >
+                <X className="w-3.5 h-3.5" />
               </Button>
             </div>
           )}
 
-          {!hasMore && filteredOrders.length > 0 && (
-            <p className="text-center text-xs text-muted-foreground py-4">
-              {t('admin.orders.showingCount', { count: filteredOrders.length })}
-            </p>
+          {/* Filters */}
+          <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex gap-2 flex-1">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t('admin.orders.searchPlaceholder')}
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                {/* Mobile: toggle date filter */}
+                <Button
+                  variant={showDateFilter || dateFrom || dateTo ? 'default' : 'outline'}
+                  size="icon"
+                  className="sm:hidden h-9 w-9 shrink-0"
+                  onClick={() => setShowDateFilter(prev => !prev)}
+                  aria-label={t('admin.orders.dateFilter')}
+                >
+                  <Calendar className="w-4 h-4" />
+                </Button>
+              </div>
+              {/* Desktop: always show date range */}
+              <div className="hidden sm:flex gap-2">
+                <div className="relative">
+                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={e => setDateFrom(e.target.value)}
+                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    aria-label={t('admin.orders.dateFrom')}
+                  />
+                </div>
+                <span className="self-center text-muted-foreground text-sm">–</span>
+                <div className="relative">
+                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={e => setDateTo(e.target.value)}
+                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    aria-label={t('admin.orders.dateTo')}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: collapsible date range */}
+            {showDateFilter && (
+              <div className="flex gap-2 sm:hidden">
+                <div className="relative flex-1">
+                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={e => setDateFrom(e.target.value)}
+                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    aria-label={t('admin.orders.dateFrom')}
+                  />
+                </div>
+                <span className="self-center text-muted-foreground text-sm">–</span>
+                <div className="relative flex-1">
+                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={e => setDateTo(e.target.value)}
+                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    aria-label={t('admin.orders.dateTo')}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Status tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
+              {statusTabs.map(tab => (
+                <button
+                  key={tab.value}
+                  onClick={() => setStatusFilter(tab.value)}
+                  className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] sm:min-h-0 snap-start ${
+                    statusFilter === tab.value
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border'
+                  }`}
+                >
+                  {tab.label}
+                  {tab.count != null && tab.count > 0 && (
+                    <span className="ml-1.5 text-xs opacity-70">({tab.count})</span>
+                  )}
+                </button>
+              ))}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0 snap-start"
+                >
+                  {t('admin.orders.clearFilters')}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Content */}
+          {isLoading ? (
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+              {Array.from({ length: 5 }, (_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="w-10 h-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-10 sm:py-16 border border-dashed border-border rounded-xl">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted mb-3 sm:mb-4">
+                <ShoppingCart className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                {hasActiveFilters ? t('admin.orders.noMatchTitle') : t('admin.orders.emptyTitle')}
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto">
+                {hasActiveFilters
+                  ? t('admin.orders.noMatchDescription')
+                  : t('admin.orders.emptyDescription')}
+              </p>
+              {hasActiveFilters && (
+                <Button variant="outline" size="sm" className="mt-4" onClick={clearFilters}>
+                  {t('admin.orders.clearFilters')}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Select all checkbox (above table) */}
+              {isDesktop && (
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label={t('admin.orders.selectAll')}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {t('admin.orders.selectAll')} ({filteredOrders.length})
+                  </span>
+                </div>
+              )}
+
+              {isDesktop ? (
+                <OrderTable
+                  orders={filteredOrders}
+                  type="sale"
+                  onViewDetails={handleViewDetails}
+                  onContact={handleContact}
+                  onAccept={handleAccept}
+                  onReject={handleReject}
+                />
+              ) : (
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                  <OrderListCompact
+                    orders={filteredOrders}
+                    type="sale"
+                    onViewDetails={handleViewDetails}
+                    onAccept={handleAccept}
+                    onReject={handleReject}
+                  />
+                </div>
+              )}
+
+              {/* Load more */}
+              {hasMore && (
+                <div className="flex justify-center py-4">
+                  <Button variant="outline" onClick={loadMore} disabled={isLoadingMore}>
+                    {isLoadingMore ? t('common.loading') : t('common.loadMore')}
+                  </Button>
+                </div>
+              )}
+
+              {!hasMore && filteredOrders.length > 0 && (
+                <p className="text-center text-xs text-muted-foreground py-4">
+                  {t('admin.orders.showingCount', { count: filteredOrders.length })}
+                </p>
+              )}
+            </>
           )}
         </>
-      )}
-      </>
       )}
     </div>
   );

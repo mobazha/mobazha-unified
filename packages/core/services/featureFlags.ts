@@ -72,6 +72,15 @@ function normalizeSnapshot(raw: unknown): FeatureSnapshot {
 interface RuntimeConfigWindow {
   __RUNTIME_CONFIG__?: {
     features?: unknown;
+    /**
+     * Legacy single-flag field kept alive by the backend for backward
+     * compatibility (see mobazha3.0 `FEATURE_FLAG_ARCHITECTURE.md §4.3`
+     * "backward compatibility" note). When `features` is absent we synthesize a
+     * `guestCheckout` entry from this so old runtime-configs — and existing
+     * E2E mocks that only inject `{ guestCheckoutEnabled: true }` — keep
+     * working during the rollout.
+     */
+    guestCheckoutEnabled?: boolean;
   };
 }
 
@@ -79,7 +88,16 @@ function readFromRuntimeConfig(): FeatureSnapshot {
   if (typeof window === 'undefined') return {};
   const rc = (window as unknown as RuntimeConfigWindow).__RUNTIME_CONFIG__;
   if (!rc) return {};
-  return normalizeSnapshot(rc.features);
+  if (rc.features != null) {
+    return normalizeSnapshot(rc.features);
+  }
+  // Legacy fallback: synthesize a minimal snapshot from the flat field.
+  if (typeof rc.guestCheckoutEnabled === 'boolean') {
+    return normalizeSnapshot({
+      guestCheckout: { effective: rc.guestCheckoutEnabled, overridable: [] },
+    });
+  }
+  return {};
 }
 
 /**

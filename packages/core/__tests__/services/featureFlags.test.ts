@@ -188,6 +188,34 @@ describe('featureFlags', () => {
       expect(snap).toEqual({});
       expect(featureFlags.isInitialized()).toBe(true);
     });
+
+    it('synthesizes guestCheckout from the legacy flat field', () => {
+      // Simulates an older runtime-config (or the existing E2E mocks) that
+      // only set `guestCheckoutEnabled: true` without a `features` map.
+      (window as unknown as { __RUNTIME_CONFIG__: unknown }).__RUNTIME_CONFIG__ = {
+        guestCheckoutEnabled: true,
+      };
+
+      const snap = featureFlags.initializeFromRuntimeConfig();
+      expect(snap.guestCheckout).toEqual({ effective: true, overridable: [] });
+      expect(featureFlags.isEnabled('guestCheckout')).toBe(true);
+
+      delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
+    });
+
+    it('prefers the modern features map when both shapes are present', () => {
+      (window as unknown as { __RUNTIME_CONFIG__: unknown }).__RUNTIME_CONFIG__ = {
+        features: {
+          guestCheckout: { effective: false, overridable: [] },
+        },
+        guestCheckoutEnabled: true,
+      };
+
+      const snap = featureFlags.initializeFromRuntimeConfig();
+      expect(snap.guestCheckout?.effective).toBe(false);
+
+      delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
+    });
   });
 
   describe('reset', () => {
