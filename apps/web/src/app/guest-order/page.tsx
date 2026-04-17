@@ -8,6 +8,8 @@ import { getGuestOrderStatus, type GuestOrderStatus } from '@mobazha/core/servic
 import { ExternalWalletPayment, type ExternalWalletPaymentInfo } from '@/components/Payment/ExternalWalletPayment';
 import { getGuestStatusConfig, resolveStatusDisplay } from '@/components/Order/orderStatusConfig';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
+import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
+import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { cn } from '@/lib/utils';
 
 function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
@@ -76,9 +78,16 @@ export default function GuestOrderPage() {
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
         <div className="text-center">
           <h1 className="text-xl font-bold mb-2">{t('guestOrder.title')}</h1>
-          <p className="text-xs text-muted-foreground font-mono">
-            {t('guestOrder.tokenLabel')} {order.orderToken.slice(0, 12)}...
-          </p>
+          <div className="inline-flex items-center gap-1 text-xs text-muted-foreground font-mono">
+            <span>
+              {t('guestOrder.tokenLabel')} {order.orderToken.slice(0, 12)}...
+            </span>
+            <HelpPopover
+              title={t('guestOrder.tokenHelpTitle')}
+              body={t('guestOrder.tokenHelpBody')}
+              ariaLabel={t('guestOrder.tokenHelpTitle')}
+            />
+          </div>
         </div>
 
         <div className={cn('p-4 rounded-lg text-center', display.color)}>
@@ -88,6 +97,31 @@ export default function GuestOrderPage() {
           </div>
           {display.description && <p className="text-sm mt-1 opacity-80">{display.description}</p>}
         </div>
+
+        {order.state === 'EXPIRED' && (
+          <div
+            role="note"
+            className="rounded-lg border border-amber-300/60 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/30 p-4 text-sm"
+          >
+            <p className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+              {t('guestOrder.expiredHelpTitle')}
+            </p>
+            <p className="text-xs text-amber-800/90 dark:text-amber-200/80 leading-relaxed">
+              {t('guestOrder.expiredHelpBody')}
+            </p>
+          </div>
+        )}
+
+        {(order.state === 'AWAITING_PAYMENT' || order.state === 'PENDING_CONFIRMATION') && typeof window !== 'undefined' && (
+          <SaveOrderLinkCard
+            orderUrl={`${window.location.origin}/guest-order/${order.orderToken}`}
+            title={t('guestOrder.saveLinkTitle')}
+            description={t('guestOrder.saveLinkDescription')}
+            copyLabel={t('guestOrder.saveLinkCopy')}
+            copiedLabel={t('guestOrder.saveLinkCopied')}
+            testId="guest-order-save-link"
+          />
+        )}
 
         {showPaymentInfo && (
           <ExternalWalletPayment

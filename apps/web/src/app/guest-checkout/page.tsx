@@ -24,6 +24,9 @@ import { CartItemRow } from '@/components/Cart/CartItemRow';
 import { AddressFormFields } from '@/components/Address/AddressFormFields';
 import { PaymentCryptoSelector } from '@/components/Payment/PaymentCryptoSelector';
 import { ExternalWalletPayment, type ExternalWalletPaymentInfo } from '@/components/Payment/ExternalWalletPayment';
+import { AnonymousModeBanner } from '@/components/GuestCheckout/AnonymousModeBanner';
+import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
+import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -160,6 +163,8 @@ export default function GuestCheckoutPage() {
           {/* Step 1: Cart Review */}
           {step === 'cart' && (
             <div className="space-y-6">
+              <AnonymousModeBanner />
+
               <h2 className="text-lg font-semibold">
                 {t('guestCheckout.reviewCart', {
                   count: itemCount,
@@ -301,6 +306,39 @@ export default function GuestCheckoutPage() {
                     paymentInfo={toPaymentInfo(paymentState.data, selectedCoin)}
                     tokenId={selectedCoin}
                   />
+
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      {t('guestCheckout.paymentAmountHelpTitle')}
+                      <HelpPopover
+                        title={t('guestCheckout.paymentAmountHelpTitle')}
+                        body={t('guestCheckout.paymentAmountHelpBody')}
+                        ariaLabel={t('guestCheckout.paymentAmountHelpTitle')}
+                      />
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      {t('guestCheckout.expireTimeHelpTitle')}
+                      <HelpPopover
+                        title={t('guestCheckout.expireTimeHelpTitle')}
+                        body={t('guestCheckout.expireTimeHelpBody')}
+                        ariaLabel={t('guestCheckout.expireTimeHelpTitle')}
+                      />
+                    </span>
+                  </div>
+
+                  <SaveOrderLinkCard
+                    orderUrl={
+                      typeof window !== 'undefined'
+                        ? `${window.location.origin}/guest-order/${paymentState.data.orderToken}`
+                        : `/guest-order/${paymentState.data.orderToken}`
+                    }
+                    title={t('guestCheckout.saveLinkTitle')}
+                    description={t('guestCheckout.saveLinkDescription')}
+                    copyLabel={t('guestCheckout.saveLinkCopy')}
+                    copiedLabel={t('guestCheckout.saveLinkCopied')}
+                    testId="guest-checkout-save-link"
+                  />
+
                   <p className="text-xs text-muted-foreground text-center">
                     {t('guestCheckout.directPaymentDisclaimer')}
                   </p>

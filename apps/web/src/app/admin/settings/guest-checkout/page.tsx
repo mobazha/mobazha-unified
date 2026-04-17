@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { GUEST_CHECKOUT_COINS } from '@mobazha/core/config/guestCheckoutCoins';
+import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 
 export default function GuestCheckoutSettingsPage() {
   const { t } = useI18n();
@@ -105,7 +106,14 @@ export default function GuestCheckoutSettingsPage() {
             <div className="rounded-xl border border-border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{t('admin.guestCheckout.enableToggle')}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-medium">{t('admin.guestCheckout.enableToggle')}</p>
+                    <HelpPopover
+                      title={t('admin.guestCheckout.enableHelpTitle')}
+                      body={t('admin.guestCheckout.enableHelpBody')}
+                      ariaLabel={t('admin.guestCheckout.enableHelpTitle')}
+                    />
+                  </div>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     {t('admin.guestCheckout.enableDescription')}
                   </p>
@@ -132,7 +140,14 @@ export default function GuestCheckoutSettingsPage() {
 
             <div className="rounded-xl border border-border p-4 space-y-4">
               <div>
-                <p className="font-medium">{t('admin.guestCheckout.acceptedCoins')}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-medium">{t('admin.guestCheckout.acceptedCoins')}</p>
+                  <HelpPopover
+                    title={t('admin.guestCheckout.acceptedCoinsHelpTitle')}
+                    body={t('admin.guestCheckout.acceptedCoinsHelpBody')}
+                    ariaLabel={t('admin.guestCheckout.acceptedCoinsHelpTitle')}
+                  />
+                </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {t('admin.guestCheckout.acceptedCoinsDescription')}
                 </p>
@@ -165,7 +180,14 @@ export default function GuestCheckoutSettingsPage() {
 
             <div className="rounded-xl border border-border p-4 space-y-3">
               <div>
-                <p className="font-medium">{t('admin.guestCheckout.paymentTimeout')}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-medium">{t('admin.guestCheckout.paymentTimeout')}</p>
+                  <HelpPopover
+                    title={t('admin.guestCheckout.paymentTimeoutHelpTitle')}
+                    body={t('admin.guestCheckout.paymentTimeoutHelpBody')}
+                    ariaLabel={t('admin.guestCheckout.paymentTimeoutHelpTitle')}
+                  />
+                </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {t('admin.guestCheckout.paymentTimeoutDescription')}
                 </p>
