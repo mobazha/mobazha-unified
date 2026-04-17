@@ -5136,6 +5136,19 @@ export const zh: TranslationResource = {
         owner: '所有者',
         member: '成员',
       },
+      claim: {
+        title: '已经在自己的服务器上运行 Mobazha 节点？',
+        subtitle: '把它绑定到当前账号，就能在这里和你的托管店铺一起统一管理。',
+        step1Title: '打开你自建店铺的管理后台',
+        step1Body: '登录运行你节点的那台服务器的 Admin 页面（就是你自己的店铺地址）。',
+        step2Title: '选择「绑定到 Mobazha 账号」',
+        step2Body: '在「设置 → 账号」里启动绑定，会弹出一个窗口带你回到这里登录。',
+        step3Title: '确认连接',
+        step3Body:
+          '在弹窗里登录 Mobazha 后会自动回到你自建店铺的 Admin，稍后刷新本页就能看到这家店铺。',
+        learnMore: '查看完整指南',
+        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+      },
     },
   },
 };

@@ -6026,6 +6026,21 @@ export const en: TranslationResource = {
         owner: 'Owner',
         member: 'Member',
       },
+      claim: {
+        title: 'Already running your own Mobazha node?',
+        subtitle: 'Connect it to this account so it shows up here alongside your hosted stores.',
+        step1Title: 'Open your store\u2019s admin panel',
+        step1Body:
+          'Sign in to the admin dashboard on your own server (the URL where your node is running).',
+        step2Title: 'Choose \u201cBind to Mobazha account\u201d',
+        step2Body:
+          'Under Settings \u2192 Account, start the binding flow. A popup will open and bring you back here.',
+        step3Title: 'Confirm the connection',
+        step3Body:
+          'Sign in to Mobazha in the popup (you\u2019ll come back to your store\u2019s admin). Your store will appear here after a refresh.',
+        learnMore: 'Learn more',
+        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+      },
     },
   },
 };
