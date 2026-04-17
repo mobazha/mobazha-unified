@@ -9,7 +9,7 @@ import { useStoreDomain } from '@mobazha/core/hooks/useStoreDomain';
 import { getStoreSubdomainBase } from '@mobazha/core/config/env';
 import type { UseStoreDomainReturn } from '@mobazha/core/hooks/useStoreDomain';
 import { useStandaloneStoreInfo } from '@mobazha/core/hooks/useStandaloneStoreInfo';
-import type { StoreBotInfo } from '@mobazha/core/types/salesChannels';
+import type { StoreBotInfo, BotWebhookStatus } from '@mobazha/core/types/salesChannels';
 import { getLinkedAccounts, startLinkAccount } from '@mobazha/core/services/auth';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import { SettingsSection } from '@/components/SettingsLayout';
@@ -41,6 +41,8 @@ import {
   ChevronDown,
   AlertTriangle,
   Settings,
+  Wrench,
+  ShieldCheck,
 } from 'lucide-react';
 
 function CopyButton({ text }: { text: string }) {
@@ -549,18 +551,272 @@ function collectRecommendedWebAppRoots(
   return out;
 }
 
+// --- Bot Diagnostics Panel (MS2b.2 Wave 4) ---
+
+function formatDateShort(iso?: string): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
+}
+
+function formatUnixShort(sec?: number): string {
+  if (!sec || sec <= 0) return '';
+  try {
+    return new Date(sec * 1000).toLocaleString();
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * BotDiagnosticsPanel 展示自建 Bot 的健康状态：
+ * - Webhook in sync / stale / error
+ * - Telegram 最近错误（如 token 失效、SSL 问题）
+ * - setMyCommands / setChatMenuButton 时间戳
+ * - "修复 Webhook" / "重新同步菜单" 按钮
+ *
+ * 后端即便 Telegram 不可达仍返回 200 + telegramUnreachable=true，
+ * 这里据此区分展示。
+ */
+function BotDiagnosticsPanel({
+  status,
+  statusLoading,
+  repairLoading,
+  menuSyncLoading,
+  onLoad,
+  onRepair,
+  onSyncMenu,
+}: {
+  status: BotWebhookStatus | null;
+  statusLoading: boolean;
+  repairLoading: boolean;
+  menuSyncLoading: boolean;
+  onLoad: () => void;
+  onRepair: () => void;
+  onSyncMenu: () => void;
+}) {
+  const { t } = useI18n();
+
+  useEffect(() => {
+    onLoad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (statusLoading && !status) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        {t('admin.salesChannels.bot.diagnosticsLoading', {
+          defaultValue: 'Checking bot health…',
+        })}
+      </div>
+    );
+  }
+
+  if (!status) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 py-3">
+        <p className="text-sm text-muted-foreground">
+          {t('admin.salesChannels.bot.diagnosticsUnavailable', {
+            defaultValue: 'Bot health check is unavailable right now.',
+          })}
+        </p>
+        <Button variant="outline" size="sm" onClick={onLoad} className="gap-1.5">
+          <RefreshCw className="w-3.5 h-3.5" />
+          {t('common.retry', { defaultValue: 'Retry' })}
+        </Button>
+      </div>
+    );
+  }
+
+  // 整体健康度判定：
+  // - inSync=true → 健康（绿）
+  // - telegramUnreachable=true → 无法对账（黄）
+  // - lastErrorMessage 或 !configured → 需修复（红）
+  let tone: 'ok' | 'warn' | 'error';
+  let statusLabel: string;
+  let statusDesc: string;
+  if (status.telegramUnreachable) {
+    tone = 'warn';
+    statusLabel = t('admin.salesChannels.bot.healthUnverified', {
+      defaultValue: 'Cannot reach Telegram',
+    });
+    statusDesc =
+      status.telegramError ||
+      t('admin.salesChannels.bot.healthUnverifiedDesc', {
+        defaultValue: 'The local record looks fine but we could not verify with Telegram.',
+      });
+  } else if (status.inSync && status.configured) {
+    tone = 'ok';
+    statusLabel = t('admin.salesChannels.bot.healthOk', { defaultValue: 'Webhook is healthy' });
+    statusDesc = t('admin.salesChannels.bot.healthOkDesc', {
+      defaultValue: 'Orders and commands delivered to your store in real time.',
+    });
+  } else {
+    tone = 'error';
+    statusLabel = t('admin.salesChannels.bot.healthError', {
+      defaultValue: 'Webhook needs repair',
+    });
+    statusDesc =
+      status.lastErrorMessage ||
+      status.localLastError ||
+      t('admin.salesChannels.bot.healthErrorDesc', {
+        defaultValue: 'Telegram cannot reach your store. Click Repair to reconfigure.',
+      });
+  }
+
+  const toneClasses = {
+    ok: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+    warn: 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+    error: 'border-destructive/40 bg-destructive/10 text-destructive',
+  }[tone];
+
+  const StatusIcon = tone === 'ok' ? ShieldCheck : AlertTriangle;
+
+  return (
+    <div className="space-y-3">
+      <div className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 ${toneClasses}`}>
+        <StatusIcon className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <p className="text-sm font-medium">{statusLabel}</p>
+          <p className="text-xs opacity-90 break-words">{statusDesc}</p>
+          {status.lastErrorDate ? (
+            <p className="text-xs opacity-75">
+              {t('admin.salesChannels.bot.lastErrorAt', { defaultValue: 'Last failure' })}
+              {': '}
+              <span className="font-mono">{formatUnixShort(status.lastErrorDate)}</span>
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <CollapsibleSection
+        title={t('admin.salesChannels.bot.diagnosticsDetails', {
+          defaultValue: 'Diagnostic details',
+        })}
+      >
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-1.5 py-2 text-xs sm:grid-cols-[160px_1fr]">
+          <dt className="text-muted-foreground">
+            {t('admin.salesChannels.bot.expectedUrl', { defaultValue: 'Expected webhook' })}
+          </dt>
+          <dd className="font-mono text-foreground break-all">{status.expectedUrl || '—'}</dd>
+
+          <dt className="text-muted-foreground">
+            {t('admin.salesChannels.bot.telegramUrl', { defaultValue: 'Telegram reports' })}
+          </dt>
+          <dd className="font-mono text-foreground break-all">{status.telegramUrl || '—'}</dd>
+
+          <dt className="text-muted-foreground">
+            {t('admin.salesChannels.bot.pendingUpdates', { defaultValue: 'Pending updates' })}
+          </dt>
+          <dd className="text-foreground">{status.pendingUpdateCount}</dd>
+
+          <dt className="text-muted-foreground">
+            {t('admin.salesChannels.bot.commandsConfiguredAt', { defaultValue: 'Commands synced' })}
+          </dt>
+          <dd className="text-foreground">{formatDateShort(status.commandsConfiguredAt)}</dd>
+
+          <dt className="text-muted-foreground">
+            {t('admin.salesChannels.bot.menuButtonConfiguredAt', {
+              defaultValue: 'Menu button synced',
+            })}
+          </dt>
+          <dd className="text-foreground">{formatDateShort(status.menuButtonConfiguredAt)}</dd>
+
+          {status.localLastError ? (
+            <>
+              <dt className="text-muted-foreground">
+                {t('admin.salesChannels.bot.localLastError', {
+                  defaultValue: 'Provisioning error',
+                })}
+              </dt>
+              <dd className="text-destructive break-words">{status.localLastError}</dd>
+            </>
+          ) : null}
+        </dl>
+      </CollapsibleSection>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant={tone === 'error' ? 'default' : 'outline'}
+          size="sm"
+          onClick={onRepair}
+          disabled={repairLoading}
+          className="gap-1.5"
+        >
+          {repairLoading ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Wrench className="w-3.5 h-3.5" />
+          )}
+          {t('admin.salesChannels.bot.repairWebhook', { defaultValue: 'Repair webhook' })}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onSyncMenu}
+          disabled={menuSyncLoading}
+          className="gap-1.5"
+        >
+          {menuSyncLoading ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5" />
+          )}
+          {t('admin.salesChannels.bot.syncMenuButton', { defaultValue: 'Resync menu button' })}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onLoad}
+          disabled={statusLoading}
+          className="gap-1.5 text-muted-foreground"
+        >
+          {statusLoading ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5" />
+          )}
+          {t('common.refresh', { defaultValue: 'Refresh' })}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function TelegramBotSection({
   storeBot,
   storeBotLoading,
   storeBotNotFound,
   bindBot,
   unbindBot,
+  botWebhookStatus,
+  botWebhookStatusLoading,
+  botRepairLoading,
+  botMenuButtonSyncLoading,
+  loadBotWebhookStatus,
+  repairBot,
+  syncMenuButton,
   domain,
   telegramLinked,
   telegramLinkChecking,
 }: Pick<
   UseSalesChannelsReturn,
-  'storeBot' | 'storeBotLoading' | 'storeBotNotFound' | 'bindBot' | 'unbindBot'
+  | 'storeBot'
+  | 'storeBotLoading'
+  | 'storeBotNotFound'
+  | 'bindBot'
+  | 'unbindBot'
+  | 'botWebhookStatus'
+  | 'botWebhookStatusLoading'
+  | 'botRepairLoading'
+  | 'botMenuButtonSyncLoading'
+  | 'loadBotWebhookStatus'
+  | 'repairBot'
+  | 'syncMenuButton'
 > & {
   domain: UseStoreDomainReturn['domain'];
   telegramLinked: boolean;
@@ -594,6 +850,30 @@ function TelegramBotSection({
       toast({ variant: 'success', title: t('admin.salesChannels.botUnbound') });
     }
   }, [unbindBot, toast, t]);
+
+  const handleRepair = useCallback(async () => {
+    const result = await repairBot();
+    if (result) {
+      toast({
+        variant: 'success',
+        title: t('admin.salesChannels.bot.repairSuccess', {
+          defaultValue: 'Webhook repaired',
+        }),
+      });
+    }
+  }, [repairBot, toast, t]);
+
+  const handleSyncMenu = useCallback(async () => {
+    const result = await syncMenuButton();
+    if (result) {
+      toast({
+        variant: 'success',
+        title: t('admin.salesChannels.bot.menuSyncSuccess', {
+          defaultValue: 'Menu button resynced',
+        }),
+      });
+    }
+  }, [syncMenuButton, toast, t]);
 
   if (storeBotLoading) {
     return (
@@ -660,6 +940,23 @@ function TelegramBotSection({
             </p>
           </div>
         )}
+
+        <div className="mt-4 space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            {t('admin.salesChannels.bot.diagnosticsTitle', {
+              defaultValue: 'Bot health',
+            })}
+          </p>
+          <BotDiagnosticsPanel
+            status={botWebhookStatus}
+            statusLoading={botWebhookStatusLoading}
+            repairLoading={botRepairLoading}
+            menuSyncLoading={botMenuButtonSyncLoading}
+            onLoad={loadBotWebhookStatus}
+            onRepair={handleRepair}
+            onSyncMenu={handleSyncMenu}
+          />
+        </div>
 
         <AlertDialog open={showUnbindConfirm} onOpenChange={setShowUnbindConfirm}>
           <AlertDialogContent>
@@ -1189,6 +1486,13 @@ export default function SalesChannelsContent() {
               storeBotNotFound={salesChannels.storeBotNotFound}
               bindBot={salesChannels.bindBot}
               unbindBot={salesChannels.unbindBot}
+              botWebhookStatus={salesChannels.botWebhookStatus}
+              botWebhookStatusLoading={salesChannels.botWebhookStatusLoading}
+              botRepairLoading={salesChannels.botRepairLoading}
+              botMenuButtonSyncLoading={salesChannels.botMenuButtonSyncLoading}
+              loadBotWebhookStatus={salesChannels.loadBotWebhookStatus}
+              repairBot={salesChannels.repairBot}
+              syncMenuButton={salesChannels.syncMenuButton}
               domain={storeDomain.domain}
               telegramLinked={telegramLinked}
               telegramLinkChecking={telegramLinkChecking}

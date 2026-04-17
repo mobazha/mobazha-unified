@@ -4545,6 +4545,30 @@ export const zh: TranslationResource = {
       recommendedWebAppUrlRow: '品牌店铺根地址',
       botFatherHttpsExactNote: '地址须完全一致（HTTPS，无多余路径）。',
 
+      bot: {
+        diagnosticsTitle: 'Bot 运行状态',
+        diagnosticsLoading: '正在检测 Bot 状态…',
+        diagnosticsUnavailable: '暂时无法获取 Bot 状态。',
+        diagnosticsDetails: '诊断详情',
+        healthOk: 'Webhook 正常',
+        healthOkDesc: '订单和命令将实时推送到你的店铺。',
+        healthUnverified: '无法连接 Telegram',
+        healthUnverifiedDesc: '本地配置正常，但无法与 Telegram 对账校验。',
+        healthError: 'Webhook 需要修复',
+        healthErrorDesc: 'Telegram 无法访问你的店铺，点击“修复”以重新配置。',
+        expectedUrl: '应使用的 Webhook',
+        telegramUrl: 'Telegram 当前记录',
+        pendingUpdates: '待投递消息数',
+        commandsConfiguredAt: '命令同步时间',
+        menuButtonConfiguredAt: '菜单按钮同步时间',
+        lastErrorAt: '最近失败时间',
+        localLastError: '配置错误',
+        repairWebhook: '修复 Webhook',
+        syncMenuButton: '重新同步菜单',
+        repairSuccess: 'Webhook 已修复',
+        menuSyncSuccess: '菜单按钮已重新同步',
+      },
+
       standalone: {
         connectTitle: '连接 Mobazha 平台',
         connectDesc:
