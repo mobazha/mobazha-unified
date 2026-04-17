@@ -17,6 +17,7 @@ export * from './appkit';
 // 导出路由配置
 export * from './routeConfig';
 export * from './productTypes';
+export * from './guestCheckoutCoins';
 
 // 导出 API 路径常量（按后端服务分组：NODE_API / HOSTING_API / SEARCH_API）
 export {

@@ -137,3 +137,6 @@ export * from './useStorefrontMode';
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
 export { formatQueryError } from './queryUtils';
+
+// 统一 Feature Flag hook
+export * from './useFeature';

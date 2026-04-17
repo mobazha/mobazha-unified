@@ -107,6 +107,13 @@ const routes: RouteObject[] = [
   // 购物车（公开 — 数据在 localStorage，无需登录）
   { path: '/cart', element: lazyPage(() => import('./app/cart/page')) },
 
+  // Guest Checkout（公开 — 匿名买家直接加密货币支付）
+  { path: '/guest-checkout', element: lazyPage(() => import('./app/guest-checkout/page')) },
+  {
+    path: '/guest-order/:orderToken',
+    element: lazyPage(() => import('./app/guest-order/page')),
+  },
+
   // 结账流程
   { path: '/checkout', element: protectedPage(() => import('./app/checkout/page')) },
   {
@@ -278,6 +285,10 @@ const routes: RouteObject[] = [
       {
         path: 'settings/integrations',
         element: lazyPage(() => import('./app/admin/settings/integrations/page')),
+      },
+      {
+        path: 'settings/guest-checkout',
+        element: lazyPage(() => import('./app/admin/settings/guest-checkout/page')),
       },
       {
         path: 'settings/sales-channels',

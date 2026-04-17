@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { HStack, VStack } from '@/components/layouts';
 import { useCartStore, useUserStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
-import { ProductImageNative } from '@/components/ui/product-image';
+import { ShoppingBag } from 'lucide-react';
+import { CartItemRow } from '@/components/Cart/CartItemRow';
 import { ClearCartAlert } from '@/components/Cart/ClearCartAlert';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import { buildCheckoutUrl } from '@/hooks/useCart';
@@ -107,7 +106,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 const thumbUrl = getImageUrl(
                   item.listing.thumbnail?.medium || item.listing.thumbnail?.small
                 );
-                const lineTotal = item.listing.price.amount * item.quantity;
                 const itemKey = item.options?.length
                   ? `${item.listing.vendorPeerID}-${item.listing.slug}-${item.options
                       .map(o => `${o.name}:${o.value}`)
@@ -116,112 +114,24 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   : `${item.listing.vendorPeerID}-${item.listing.slug}`;
 
                 return (
-                  <div
+                  <CartItemRow
                     key={itemKey}
-                    className="flex gap-3 p-3 rounded-lg border border-border bg-card"
-                  >
-                    {/* Thumbnail */}
-                    <Link
-                      href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
-                      onClick={() => onOpenChange(false)}
-                      className="flex-shrink-0"
-                    >
-                      <div className="w-16 h-16 rounded-md overflow-hidden">
-                        <ProductImageNative src={thumbUrl} alt={item.listing.title} iconSize="sm" />
-                      </div>
-                    </Link>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <Link
-                          href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
-                          onClick={() => onOpenChange(false)}
-                          className="min-w-0 flex-1"
-                        >
-                          <p className="text-sm font-medium line-clamp-2 hover:text-primary transition-colors">
-                            {item.listing.title}
-                          </p>
-                        </Link>
-                        <button
-                          className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          onClick={() =>
-                            removeItem(item.listing.slug, item.listing.vendorPeerID, item.options)
-                          }
-                          data-testid="cart-item-remove"
-                          aria-label={t('cart.remove')}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {item.options && item.options.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-0.5">
-                          {item.options.map((opt, i) => (
-                            <span
-                              key={i}
-                              className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
-                            >
-                              {opt.name}: {opt.value}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {item.listing.vendorName && (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {item.listing.vendorName}
-                        </p>
-                      )}
-
-                      {/* Price + Quantity row */}
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center border border-border rounded-md overflow-hidden">
-                          <button
-                            data-testid="cart-item-qty-decrease"
-                            className="w-9 h-9 flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors disabled:opacity-40"
-                            disabled={item.quantity <= 1}
-                            onClick={() =>
-                              updateQuantity(
-                                item.listing.slug,
-                                item.listing.vendorPeerID,
-                                item.quantity - 1,
-                                item.options
-                              )
-                            }
-                            aria-label={t('cart.decreaseQuantity')}
-                          >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span
-                            className="w-8 text-center text-sm font-medium tabular-nums border-x border-border"
-                            data-testid="cart-item-qty"
-                          >
-                            {item.quantity}
-                          </span>
-                          <button
-                            className="w-9 h-9 flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors"
-                            onClick={() =>
-                              updateQuantity(
-                                item.listing.slug,
-                                item.listing.vendorPeerID,
-                                item.quantity + 1,
-                                item.options
-                              )
-                            }
-                            aria-label={t('cart.increaseQuantity')}
-                            data-testid="cart-item-qty-increase"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-
-                        <span className="text-sm font-semibold">
-                          {renderPairedPrice(lineTotal, currency)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                    thumbnailUrl={thumbUrl}
+                    title={item.listing.title}
+                    href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
+                    options={item.options}
+                    vendorName={item.listing.vendorName}
+                    unitPrice={item.listing.price.amount}
+                    currency={currency}
+                    quantity={item.quantity}
+                    onUpdateQuantity={(qty) =>
+                      updateQuantity(item.listing.slug, item.listing.vendorPeerID, qty, item.options)
+                    }
+                    onRemove={() =>
+                      removeItem(item.listing.slug, item.listing.vendorPeerID, item.options)
+                    }
+                    onNavigate={() => onOpenChange(false)}
+                  />
                 );
               })}
 

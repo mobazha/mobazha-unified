@@ -7,40 +7,58 @@ import { cn } from '@/lib/utils';
 
 export type CheckoutStep = 'checkout' | 'payment' | 'confirmation';
 
-interface CheckoutProgressBarProps {
-  currentStep: CheckoutStep;
-  className?: string;
-}
+const STANDARD_STEPS: CheckoutStep[] = ['checkout', 'payment', 'confirmation'];
 
-const STEPS: CheckoutStep[] = ['checkout', 'payment', 'confirmation'];
-
-const STEP_ROUTES: Record<CheckoutStep, string> = {
+const STANDARD_ROUTES: Record<CheckoutStep, string> = {
   checkout: '/checkout',
   payment: '/checkout/payment-method',
   confirmation: '/checkout/confirmation',
 };
 
-export function CheckoutProgressBar({ currentStep, className }: CheckoutProgressBarProps) {
+interface CheckoutProgressBarProps {
+  currentStep: string;
+  steps?: string[];
+  labels?: Record<string, string>;
+  routes?: Record<string, string>;
+  onStepClick?: (step: string, index: number) => void;
+  className?: string;
+}
+
+export function CheckoutProgressBar({
+  currentStep,
+  steps,
+  labels: labelsProp,
+  routes,
+  onStepClick,
+  className,
+}: CheckoutProgressBarProps) {
   const { t } = useI18n();
   const router = useRouter();
-  const currentIndex = STEPS.indexOf(currentStep);
 
-  const labels: Record<CheckoutStep, string> = {
+  const resolvedSteps = steps ?? STANDARD_STEPS;
+  const currentIndex = resolvedSteps.indexOf(currentStep);
+
+  const standardLabels: Record<string, string> = {
     checkout: t('checkout.stepCheckout'),
     payment: t('checkout.stepPayment'),
     confirmation: t('checkout.stepConfirmation'),
   };
+  const resolvedLabels = labelsProp ?? standardLabels;
+  const resolvedRoutes = routes ?? (steps ? undefined : STANDARD_ROUTES);
 
-  const handleStepClick = (step: CheckoutStep, idx: number) => {
-    if (idx < currentIndex) {
-      router.push(STEP_ROUTES[step]);
+  const handleStepClick = (step: string, idx: number) => {
+    if (idx >= currentIndex) return;
+    if (onStepClick) {
+      onStepClick(step, idx);
+    } else if (resolvedRoutes?.[step]) {
+      router.push(resolvedRoutes[step]);
     }
   };
 
   return (
     <div className={cn('w-full', className)}>
       <div className="flex items-center justify-between max-w-md mx-auto">
-        {STEPS.map((step, idx) => {
+        {resolvedSteps.map((step, idx) => {
           const isActive = idx === currentIndex;
           const isCompleted = idx < currentIndex;
           return (
@@ -97,7 +115,7 @@ export function CheckoutProgressBar({ currentStep, className }: CheckoutProgress
                     isCompleted && 'group-hover:text-primary'
                   )}
                 >
-                  {labels[step]}
+                  {resolvedLabels[step] ?? step}
                 </span>
               </button>
             </React.Fragment>
