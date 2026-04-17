@@ -8,7 +8,9 @@ import { VStack, HStack } from '@/components/layouts';
 import { TokenIcon } from './TokenIcon';
 import { useI18n } from '@mobazha/core';
 import { Copy, Check, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import BigNumber from 'bignumber.js';
 import { getChainById } from './config';
+import { getCurrencyDecimals } from '@mobazha/core/data/currencies';
 
 export interface ExternalWalletPaymentInfo {
   paymentAddress: string;
@@ -29,10 +31,10 @@ interface ExternalWalletPaymentProps {
 }
 
 function formatCryptoAmount(rawAmount: string, decimals: number): string {
-  const num = Number(rawAmount);
-  if (!num || !Number.isFinite(num)) return '0';
-  const divisor = Math.pow(10, decimals);
-  const result = num / divisor;
+  const bn = new BigNumber(rawAmount);
+  if (!bn.isFinite() || bn.isNaN() || bn.isZero()) return '0';
+  const result = bn.dividedBy(new BigNumber(10).pow(decimals));
+  // toFixed(decimals) 保留精度后再去除末尾的 0
   const formatted = result.toFixed(decimals);
   return formatted.replace(/\.?0+$/, '') || '0';
 }
@@ -109,7 +111,7 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
   );
 
   const qrValue = paymentInfo.qrCodeData || paymentInfo.paymentURI || paymentInfo.paymentAddress;
-  const decimals = paymentInfo.decimals ?? 8;
+  const decimals = paymentInfo.decimals ?? getCurrencyDecimals(paymentInfo.coin);
   const displayAmount = formatCryptoAmount(paymentInfo.amount, decimals);
 
   const coinSymbol = tokenId?.toUpperCase() || getReadableCoinName(paymentInfo.coin) || '';

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n, getImageUrl } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
-import { formatPrice } from '@mobazha/core/services/currencyService';
+import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
   getGuestCheckoutSettings,
   createGuestOrder,
@@ -198,7 +198,10 @@ export default function GuestCheckoutPage() {
                     <div className="flex justify-between items-center pt-4 border-t">
                       <span className="font-medium">{t('guestCheckout.total')}</span>
                       <span className="text-lg font-semibold">
-                        {formatPrice(total.amount, total.currency)}
+                        {renderPairedPrice(total.amount, total.currency, total.currency, {
+                          isMinimalUnit: true,
+                          divisibility: total.divisibility,
+                        })}
                       </span>
                     </div>
                   )}
