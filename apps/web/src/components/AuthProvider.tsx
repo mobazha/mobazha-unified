@@ -11,7 +11,9 @@ import {
   attemptSilentAuth,
   completeTelegramBind,
   parseBindSessionFromStartParam,
+  parseStartParam,
   storeContextService,
+  storefrontContextService,
   standaloneStoresApi,
   resolveStoreShortCode,
   extractStorefrontReturn,
@@ -128,16 +130,23 @@ export function AuthProvider({
   const handleMiniAppAuth = useCallback(async () => {
     if (!isMiniApp) return false;
 
-    // Detect standalone store context from deep link (e.g. startapp=store_QmPeerID).
-    // setStoreContext persists to localStorage; getHeadersWithContext() reads it dynamically.
+    // Detect standalone store + storefront context from a Telegram deep link.
+    // Deep link formats handled (MS-Phase-2b · MS2b.1):
+    //   store_<peerID>                          (legacy, still supported)
+    //   sf_<slug>                               (storefront-only on the default node)
+    //   store_<peerID>__sf_<slug>               (compound — standalone + storefront)
+    // Both writes are additive: setStoreContext/setStorefrontSlug each persist
+    // into localStorage, and getHeadersWithContext() reads them dynamically so
+    // X-Store-PeerID / X-Storefront-Slug are emitted on every subsequent request.
     let hasDeepLinkStore = false;
     if (isTGMiniApp && tg.initDataUnsafe?.start_param) {
-      const storePeerID = storeContextService.parseStoreFromStartParam(
-        tg.initDataUnsafe.start_param
-      );
-      if (storePeerID) {
-        storeContextService.setStoreContext(storePeerID);
+      const parsed = parseStartParam(tg.initDataUnsafe.start_param);
+      if (parsed.storePeerID) {
+        storeContextService.setStoreContext(parsed.storePeerID);
         hasDeepLinkStore = true;
+      }
+      if (parsed.storefrontSlug) {
+        storefrontContextService.setStorefrontSlug(parsed.storefrontSlug);
       }
     }
 
