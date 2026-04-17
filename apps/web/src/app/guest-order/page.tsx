@@ -7,6 +7,7 @@ import { Header } from '@/components';
 import { getGuestOrderStatus, type GuestOrderStatus } from '@mobazha/core/services/api/guestCheckout';
 import { ExternalWalletPayment, type ExternalWalletPaymentInfo } from '@/components/Payment/ExternalWalletPayment';
 import { getGuestStatusConfig, resolveStatusDisplay } from '@/components/Order/orderStatusConfig';
+import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import { cn } from '@/lib/utils';
 
 function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
@@ -127,14 +128,21 @@ export default function GuestOrderPage() {
                 <span>
                   {item.title} &times; {item.quantity}
                 </span>
-                <span className="text-muted-foreground font-mono">{item.unitPrice}</span>
+                <span className="text-muted-foreground font-mono">
+                  {renderPairedPrice(item.unitPrice, order.priceCurrency, order.priceCurrency, {
+                    isMinimalUnit: true,
+                    divisibility: order.priceDivisibility,
+                  })}
+                </span>
               </div>
             ))}
           </div>
           <div className="p-4 flex justify-between font-medium">
             <span>{t('guestOrder.total')}</span>
             <span className="font-mono">
-              {order.paymentAmount} {order.paymentCoin}
+              {renderPairedPrice(order.paymentAmount, order.paymentCoin, order.paymentCoin, {
+                isMinimalUnit: true,
+              })}
             </span>
           </div>
         </div>
