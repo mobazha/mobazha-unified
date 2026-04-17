@@ -192,7 +192,11 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body: `window.__RUNTIME_CONFIG__ = { guestCheckoutEnabled: true };`,
+        body:
+          `window.__RUNTIME_CONFIG__ = { ` +
+          `features: { guestCheckout: { effective: true, overridable: [] } }, ` +
+          `guestCheckoutEnabled: true ` +
+          `};`,
       })
   );
 }
@@ -232,7 +236,11 @@ async function mockAppShellAPIs(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body: `window.__RUNTIME_CONFIG__ = { guestCheckoutEnabled: true };`,
+        body:
+          `window.__RUNTIME_CONFIG__ = { ` +
+          `features: { guestCheckout: { effective: true, overridable: [] } }, ` +
+          `guestCheckoutEnabled: true ` +
+          `};`,
       })
   );
 
