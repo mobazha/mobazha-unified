@@ -435,6 +435,10 @@ export const HOSTING_API = {
 
   // --- Sales Channels: Store Bots ---
   STORE_BOTS: '/platform/v1/store-bots',
+  // MS2b.2 Wave 4 — 诊断 / 修复
+  STORE_BOTS_WEBHOOK_STATUS: '/platform/v1/store-bots/webhook-status',
+  STORE_BOTS_REPAIR_WEBHOOK: '/platform/v1/store-bots/repair-webhook',
+  STORE_BOTS_SYNC_MENU_BUTTON: '/platform/v1/store-bots/sync-menu-button',
 
   // --- Multi-Store (Phase MS1) ---
   // Canonical MS1.1 endpoint: aggregates SaaS + standalone stores a user manages.

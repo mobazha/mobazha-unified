@@ -8,7 +8,12 @@
 import { getEnvConfig, isStandaloneMode } from '../../config/env';
 import { getStoredToken } from '../auth/token';
 import { getCachedSaaSToken } from '../auth/saasBridge';
-import type { StoreLinkInfo, StoreBotInfo, BindStoreBotRequest } from '../../types/salesChannels';
+import type {
+  StoreLinkInfo,
+  StoreBotInfo,
+  BindStoreBotRequest,
+  BotWebhookStatus,
+} from '../../types/salesChannels';
 import { HOSTING_API } from '../../config/apiPaths';
 
 function getBaseUrl(): string {
@@ -149,6 +154,62 @@ export async function unbindStoreBot(peerID: string): Promise<void> {
   }
 }
 
+// ============ Store Bots — MS2b.2 Wave 4 诊断 / 修复 ============
+
+/**
+ * 获取 Bot Webhook 健康状态（用于向导展示 in-sync / stale / error）。
+ *
+ * 即便 Telegram 侧不可达，后端仍返回 200 + `telegramUnreachable=true`，
+ * 前端据此区分 "仅本地视图" 与 "与 Telegram 对账失败"。
+ */
+export async function getBotWebhookStatus(peerID: string): Promise<BotWebhookStatus> {
+  const response = await fetch(
+    `${getBaseUrl()}${HOSTING_API.STORE_BOTS_WEBHOOK_STATUS}?peerID=${encodeURIComponent(peerID)}`,
+    {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    }
+  );
+  const raw = await response.json();
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<BotWebhookStatus>(raw);
+}
+
+/**
+ * 重新执行 provision（setWebhook + setMyCommands + setChatMenuButton）。
+ * 用于修复 webhook 不同步、Telegram 报错或配置缺失的场景。
+ */
+export async function repairBotWebhook(peerID: string): Promise<StoreBotInfo> {
+  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS_REPAIR_WEBHOOK}`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ peerID }),
+  });
+  const raw = await response.json();
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<StoreBotInfo>(raw);
+}
+
+/**
+ * 仅重新同步 Chat Menu Button（店铺短码变更、品牌子域名变更后使用）。
+ */
+export async function syncBotMenuButton(peerID: string): Promise<StoreBotInfo> {
+  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS_SYNC_MENU_BUTTON}`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ peerID }),
+  });
+  const raw = await response.json();
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<StoreBotInfo>(raw);
+}
+
 // ============ Store Branded Domains ============
 
 export interface StoreDomainInfo {
@@ -219,6 +280,9 @@ export const salesChannelsApi = {
   getStoreBot,
   bindStoreBot,
   unbindStoreBot,
+  getBotWebhookStatus,
+  repairBotWebhook,
+  syncBotMenuButton,
   getStoreDomain,
   setStoreDomainHandle,
   deleteStoreDomain,

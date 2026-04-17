@@ -5205,6 +5205,30 @@ export const en: TranslationResource = {
       recommendedWebAppUrlRow: 'Brand storefront URL',
       botFatherHttpsExactNote: 'The URL must match exactly (HTTPS, no extra path).',
 
+      bot: {
+        diagnosticsTitle: 'Bot health',
+        diagnosticsLoading: 'Checking bot health…',
+        diagnosticsUnavailable: 'Bot health check is unavailable right now.',
+        diagnosticsDetails: 'Diagnostic details',
+        healthOk: 'Webhook is healthy',
+        healthOkDesc: 'Orders and commands delivered to your store in real time.',
+        healthUnverified: 'Cannot reach Telegram',
+        healthUnverifiedDesc: 'The local record looks fine but we could not verify with Telegram.',
+        healthError: 'Webhook needs repair',
+        healthErrorDesc: 'Telegram cannot reach your store. Click Repair to reconfigure.',
+        expectedUrl: 'Expected webhook',
+        telegramUrl: 'Telegram reports',
+        pendingUpdates: 'Pending updates',
+        commandsConfiguredAt: 'Commands synced',
+        menuButtonConfiguredAt: 'Menu button synced',
+        lastErrorAt: 'Last failure',
+        localLastError: 'Provisioning error',
+        repairWebhook: 'Repair webhook',
+        syncMenuButton: 'Resync menu button',
+        repairSuccess: 'Webhook repaired',
+        menuSyncSuccess: 'Menu button resynced',
+      },
+
       standalone: {
         connectTitle: 'Connect to Mobazha Platform',
         connectDesc:

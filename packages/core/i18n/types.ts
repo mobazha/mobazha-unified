@@ -3297,6 +3297,29 @@ export interface TranslationResource {
       recommendedWebAppUrlsBody?: string;
       recommendedWebAppUrlRow?: string;
       botFatherHttpsExactNote?: string;
+      bot?: {
+        diagnosticsTitle?: string;
+        diagnosticsLoading?: string;
+        diagnosticsUnavailable?: string;
+        diagnosticsDetails?: string;
+        healthOk?: string;
+        healthOkDesc?: string;
+        healthUnverified?: string;
+        healthUnverifiedDesc?: string;
+        healthError?: string;
+        healthErrorDesc?: string;
+        expectedUrl?: string;
+        telegramUrl?: string;
+        pendingUpdates?: string;
+        commandsConfiguredAt?: string;
+        menuButtonConfiguredAt?: string;
+        lastErrorAt?: string;
+        localLastError?: string;
+        repairWebhook?: string;
+        syncMenuButton?: string;
+        repairSuccess?: string;
+        menuSyncSuccess?: string;
+      };
       standalone?: {
         connectTitle?: string;
         connectDesc?: string;
