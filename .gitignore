@@ -17,6 +17,7 @@ build/
 .env
 .env.local
 .env.*.local
+*.bak
 
 # IDE
 .idea/

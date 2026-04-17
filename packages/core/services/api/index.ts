@@ -149,9 +149,27 @@ export * as storefrontApi from './storefront';
 export * as storeMetadataApi from './storeMetadata';
 export type { StoreMetadataType, StoreMetadataEntry, StoreMetadataResponse } from './storeMetadata';
 
-// Standalone Stores API
+// Standalone Stores API (legacy shim, kept for AuthProvider + settings page)
 export * as standaloneStoresApi from './standaloneStores';
 export type { StandaloneStore } from './standaloneStores';
+
+// Multi-Store (Phase MS1) — canonical multi-store surface
+export * as myStoresApi from './myStores';
+export type {
+  MyStoreItem,
+  StoreNodeType,
+  StoreConnectivity,
+  StoreLifecycleStatus,
+  ClaimStoreRequest,
+  ClaimStoreResponse,
+  OwnerReputationStore,
+  OwnerReputationResponse,
+} from './myStores';
+
+// Server Info + feature flags
+export * as serverInfoApi from './serverInfo';
+export type { ServerInfo, FeatureFlags } from './serverInfo';
+export { isFeatureEnabled } from './serverInfo';
 
 // Webhooks API
 export * as webhooksApi from './webhooks';
