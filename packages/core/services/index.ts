@@ -48,3 +48,6 @@ export * from './ai';
 
 // 访客分析追踪
 export * from './analyticsTracker';
+
+// 统一 Feature Flag 客户端
+export * from './featureFlags';
