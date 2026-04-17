@@ -10,7 +10,7 @@
  * Prefer getMyStandaloneStore() for UI consumption.
  */
 
-import { authGet } from './helpers';
+import { hostingGet } from './helpers';
 import { HOSTING_API } from '../../config/apiPaths';
 
 export interface StandaloneStore {
@@ -32,7 +32,7 @@ export interface StandaloneStore {
  * Requires JWT authentication.
  */
 export async function getMyStandaloneStores(): Promise<StandaloneStore[]> {
-  return authGet<StandaloneStore[]>(HOSTING_API.STORES_MY_STORES);
+  return hostingGet<StandaloneStore[]>(HOSTING_API.STORES_MY_STORES);
 }
 
 /**
