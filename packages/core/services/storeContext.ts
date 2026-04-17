@@ -8,6 +8,8 @@
  * the SaaS proxy routes them to the correct standalone store.
  */
 
+import { parseStartParam } from './startParam';
+
 const STORE_CONTEXT_KEY = 'standalone_store_peer_id';
 
 let currentStorePeerID: string | null = null;
@@ -20,16 +22,16 @@ function isValidPeerID(value: string): boolean {
 }
 
 /**
- * Parse store peer ID from Telegram start_param.
- * Format: start_param=store_{peerID}
+ * Parse store peer ID from a Telegram `start_param` payload.
+ *
+ * Delegates to the multi-segment parser (see `startParam.ts`) so legacy
+ * `store_<peerID>` single-segment inputs and new compound inputs such as
+ * `store_<peerID>__sf_<slug>` are both recognised.
  */
 export function parseStoreFromStartParam(startParam: string | undefined): string | null {
   if (!startParam) return null;
-  if (startParam.startsWith('store_')) {
-    const peerID = startParam.slice(6);
-    return peerID && isValidPeerID(peerID) ? peerID : null;
-  }
-  return null;
+  const parsed = parseStartParam(startParam);
+  return parsed.storePeerID ?? null;
 }
 
 /**

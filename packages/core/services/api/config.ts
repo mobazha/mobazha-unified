@@ -6,6 +6,7 @@ import { getEnvConfig, isStandaloneMode } from '../../config/env';
 import { NODE_API } from '../../config/apiPaths';
 import { getStoredToken } from '../auth/token';
 import { getStoreHeaders } from '../storeContext';
+import { getStorefrontHeaders } from '../storefrontContext';
 
 // API 端点配置
 export interface ApiConfig {
@@ -246,13 +247,19 @@ export function setStoreContextHeaders(_context: Record<string, string>): void {
 }
 
 /**
- * 获取包含群组上下文和店铺上下文的 Headers
+ * 获取包含群组上下文、店铺上下文和 Storefront 上下文的 Headers.
+ *
+ * Layering: `getStorefrontHeaders()` is feature-flag gated on
+ * `tgBridgeBotV2` (see `storefrontContext.ts`) so the header is only
+ * emitted once the backend route is rolled out. Order is preserved so
+ * an explicit setter can still override.
  */
 export function getHeadersWithContext(): Record<string, string> {
   return {
     ...getAuthHeaders(),
     ...groupContext,
     ...getStoreHeaders(),
+    ...getStorefrontHeaders(),
   };
 }
 
