@@ -539,9 +539,11 @@ describe('accountBinding', () => {
   });
 
   // =========================================================================
-  // Standalone mode: getBindingEndpoint dispatches to SaaS
+  // Standalone mode: binding APIs route through local node proxy
+  // (/platform/v1/* on getHostingUrl() — the node adds X-Standalone-Store-Key
+  // and reverse-proxies to SaaS. See accountBinding.ts architecture comment.)
   // =========================================================================
-  describe('standalone mode — getBindingEndpoint dispatch', () => {
+  describe('standalone mode — route via local node proxy', () => {
     beforeEach(() => {
       vi.mocked(isStandaloneMode).mockReturnValue(true);
       vi.mocked(getCachedSaaSToken).mockReturnValue('saas-bridge-jwt');
@@ -552,7 +554,7 @@ describe('accountBinding', () => {
       vi.mocked(getCachedSaaSToken).mockReturnValue(null);
     });
 
-    it('getLinkedAccounts calls SaaS URL with SaaS bridge token', async () => {
+    it('getLinkedAccounts calls local node proxy with optional SaaS bridge token', async () => {
       vi.mocked(window.fetch).mockResolvedValue(
         jsonResponse({
           data: {
@@ -566,7 +568,7 @@ describe('accountBinding', () => {
       await getLinkedAccounts();
 
       expect(window.fetch).toHaveBeenCalledWith(
-        'https://saas.test/platform/v1/accounts/linked',
+        'https://hosting.test/platform/v1/accounts/linked',
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: 'Bearer saas-bridge-jwt',
@@ -575,7 +577,7 @@ describe('accountBinding', () => {
       );
     });
 
-    it('getLinkConfig calls SaaS URL', async () => {
+    it('getLinkConfig calls local node proxy', async () => {
       vi.mocked(window.fetch).mockResolvedValue(
         jsonResponse({ data: { providers: { telegram: { botUsername: 'bot' } } } })
       );
@@ -583,17 +585,17 @@ describe('accountBinding', () => {
       await getLinkConfig();
 
       const calledUrl = vi.mocked(window.fetch).mock.calls[0][0] as string;
-      expect(calledUrl).toBe('https://saas.test/platform/v1/accounts/link/config');
+      expect(calledUrl).toBe('https://hosting.test/platform/v1/accounts/link/config');
     });
 
-    it('directLinkTelegram calls SaaS URL with SaaS bridge token', async () => {
+    it('directLinkTelegram calls local node proxy with optional SaaS bridge token', async () => {
       vi.mocked(window.fetch).mockResolvedValue(jsonResponse({ data: { success: true } }));
 
       const authData = { id: 123, first_name: 'Test', auth_date: 1700000000, hash: 'abc' };
       await directLinkTelegram(authData);
 
       const calledUrl = vi.mocked(window.fetch).mock.calls[0][0] as string;
-      expect(calledUrl).toContain('https://saas.test/platform/v1/accounts/link/telegram');
+      expect(calledUrl).toContain('https://hosting.test/platform/v1/accounts/link/telegram');
       expect(window.fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
@@ -604,7 +606,7 @@ describe('accountBinding', () => {
       );
     });
 
-    it('unlinkAccount calls SaaS URL with SaaS bridge token', async () => {
+    it('unlinkAccount calls local node proxy with optional SaaS bridge token', async () => {
       vi.mocked(window.fetch).mockResolvedValue(
         jsonResponse({ data: { success: true, message: 'Unlinked' } })
       );
@@ -612,7 +614,7 @@ describe('accountBinding', () => {
       await unlinkAccount('discord');
 
       expect(window.fetch).toHaveBeenCalledWith(
-        'https://saas.test/platform/v1/accounts/unlink',
+        'https://hosting.test/platform/v1/accounts/unlink',
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: 'Bearer saas-bridge-jwt',
@@ -621,22 +623,31 @@ describe('accountBinding', () => {
       );
     });
 
-    it('handleLinkCallback calls SaaS URL with SaaS bridge token', async () => {
+    it('handleLinkCallback calls local node proxy with optional SaaS bridge token', async () => {
       vi.mocked(window.fetch).mockResolvedValue(jsonResponse({ data: { success: true } }));
 
       await handleLinkCallback('code-123', 'link:user1:discord');
 
       const calledUrl = vi.mocked(window.fetch).mock.calls[0][0] as string;
-      expect(calledUrl).toContain('https://saas.test/platform/v1/accounts/link-callback');
+      expect(calledUrl).toContain('https://hosting.test/platform/v1/accounts/link-callback');
     });
 
-    it('throws when SaaS bridge token is not available', async () => {
+    it('getLinkedAccounts succeeds without SaaS bridge token (API key auth)', async () => {
       vi.mocked(getCachedSaaSToken).mockReturnValue(null);
+      vi.mocked(window.fetch).mockResolvedValue(
+        jsonResponse({
+          data: { accounts: [], totalCount: 0, minRequired: 1 },
+        })
+      );
 
-      await expect(getLinkedAccounts()).rejects.toThrow('Not authenticated');
+      const result = await getLinkedAccounts();
+      expect(result.accounts).toEqual([]);
+      // No Authorization header when token is null — relies on API key auth.
+      const callArgs = vi.mocked(window.fetch).mock.calls[0][1] as RequestInit;
+      expect((callArgs.headers as Record<string, string>).Authorization).toBeUndefined();
     });
 
-    it('getLinkUrl uses SaaS bridge token for state generation', () => {
+    it('getLinkUrl uses user UUID from token for state generation', () => {
       const result = getLinkUrl('discord', 'https://callback.test');
       expect(result.url).toContain('state=link%3Auser-uuid-123%3Adiscord');
     });

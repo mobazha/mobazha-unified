@@ -9,7 +9,12 @@ const mockHasSaaSToken = vi.fn(() => false);
 const mockGetLinkedAccounts = vi.fn();
 const mockGetLinkConfig = vi.fn();
 const mockGetMyStandaloneStore = vi.fn();
+const mockGetSetupStatus = vi.fn();
 const mockToast = vi.fn();
+
+vi.mock('@mobazha/core/services/api/system', () => ({
+  getSetupStatus: (...args: unknown[]) => mockGetSetupStatus(...args),
+}));
 
 vi.mock('@mobazha/core', () => ({
   useI18n: () => ({
@@ -33,6 +38,9 @@ vi.mock('@mobazha/core', () => ({
   ],
   standaloneStoresApi: {
     getMyStandaloneStore: (...args: unknown[]) => mockGetMyStandaloneStore(...args),
+  },
+  systemApi: {
+    connectPlatform: vi.fn().mockResolvedValue(undefined),
   },
   acquireSaaSToken: (...args: unknown[]) => mockAcquireSaaSToken(...args),
   hasSaaSToken: () => mockHasSaaSToken(),
@@ -84,6 +92,7 @@ vi.mock('@/components/ProviderIcon', () => ({
 
 vi.mock('lucide-react', () => ({
   Link2: ({ className }: MockProps) => <span className={className as string}>Link2</span>,
+  Loader2: ({ className }: MockProps) => <span className={className as string}>Loader2</span>,
   Unlink: () => <span>Unlink</span>,
   AlertCircle: () => <span>AlertCircle</span>,
   Check: () => <span>Check</span>,
@@ -99,6 +108,8 @@ describe('AccountSettingsPage — standalone mode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockHasSaaSToken.mockReturnValue(false);
+    // Default: platform not bound yet (empty ownerUserId)
+    mockGetSetupStatus.mockResolvedValue({ ownerUserId: '' });
     mockGetLinkedAccounts.mockRejectedValue(new Error('should not be called'));
     mockGetLinkConfig.mockRejectedValue(new Error('should not be called'));
     mockGetMyStandaloneStore.mockRejectedValue(new Error('not found'));
@@ -108,30 +119,33 @@ describe('AccountSettingsPage — standalone mode', () => {
   // Before SaaS connection: shows connect prompt
   // =========================================================================
   describe('before SaaS connection', () => {
-    it('renders "Connect to Mobazha Platform" button', () => {
+    it('renders "Connect to Mobazha Platform" button', async () => {
       render(<AccountSettingsPage />);
-      expect(screen.getByText('Connect to Mobazha Platform')).toBeInTheDocument();
+      expect(await screen.findByText('Connect to Mobazha Platform')).toBeInTheDocument();
     });
 
-    it('renders Social Account Binding heading', () => {
+    it('renders Social Account Binding heading', async () => {
       render(<AccountSettingsPage />);
-      expect(screen.getByText('Social Account Binding')).toBeInTheDocument();
+      expect(await screen.findByText('Social Account Binding')).toBeInTheDocument();
     });
 
-    it('shows provider icons as preview', () => {
+    it('shows provider icons as preview', async () => {
       render(<AccountSettingsPage />);
-      expect(screen.getByTestId('icon-telegram')).toBeInTheDocument();
+      expect(await screen.findByTestId('icon-telegram')).toBeInTheDocument();
       expect(screen.getByTestId('icon-discord')).toBeInTheDocument();
       expect(screen.getByTestId('icon-google')).toBeInTheDocument();
     });
 
-    it('does not call getLinkedAccounts before SaaS connection', () => {
+    it('does not call getLinkedAccounts before SaaS connection', async () => {
       render(<AccountSettingsPage />);
+      // Wait for platformBound to resolve so any post-effect fetches would fire
+      await screen.findByText('Connect to Mobazha Platform');
       expect(mockGetLinkedAccounts).not.toHaveBeenCalled();
     });
 
-    it('does not call getLinkConfig before SaaS connection', () => {
+    it('does not call getLinkConfig before SaaS connection', async () => {
       render(<AccountSettingsPage />);
+      await screen.findByText('Connect to Mobazha Platform');
       expect(mockGetLinkConfig).not.toHaveBeenCalled();
     });
   });
@@ -148,7 +162,8 @@ describe('AccountSettingsPage — standalone mode', () => {
 
       render(<AccountSettingsPage />);
 
-      fireEvent.click(screen.getByText('Connect to Mobazha Platform'));
+      const btn = await screen.findByText('Connect to Mobazha Platform');
+      fireEvent.click(btn);
 
       await waitFor(() => {
         expect(mockAcquireSaaSToken).toHaveBeenCalledTimes(1);
@@ -160,7 +175,8 @@ describe('AccountSettingsPage — standalone mode', () => {
 
       render(<AccountSettingsPage />);
 
-      fireEvent.click(screen.getByText('Connect to Mobazha Platform'));
+      const btn = await screen.findByText('Connect to Mobazha Platform');
+      fireEvent.click(btn);
 
       await waitFor(() => {
         expect(screen.getByText('Popup blocked')).toBeInTheDocument();
@@ -179,7 +195,8 @@ describe('AccountSettingsPage — standalone mode', () => {
 
       render(<AccountSettingsPage />);
 
-      fireEvent.click(screen.getByText('Connect to Mobazha Platform'));
+      const btn = await screen.findByText('Connect to Mobazha Platform');
+      fireEvent.click(btn);
 
       await waitFor(() => {
         expect(screen.queryByText('Connect to Mobazha Platform')).not.toBeInTheDocument();
@@ -190,9 +207,11 @@ describe('AccountSettingsPage — standalone mode', () => {
   // =========================================================================
   // After SaaS connection: shows binding UI
   // =========================================================================
-  describe('after SaaS connection (hasSaaSToken=true)', () => {
+  describe('after SaaS connection (platform bound)', () => {
     beforeEach(() => {
       mockHasSaaSToken.mockReturnValue(true);
+      // Platform bound: ownerUserId is non-empty
+      mockGetSetupStatus.mockResolvedValue({ ownerUserId: 'user-123' });
       mockGetLinkedAccounts.mockResolvedValue({
         accounts: [{ provider: 'telegram', providerId: '12345', canUnlink: true }],
         totalCount: 1,
@@ -220,8 +239,12 @@ describe('AccountSettingsPage — standalone mode', () => {
       });
     });
 
-    it('does not show connect button when already connected', () => {
+    it('does not show connect button when already connected', async () => {
       render(<AccountSettingsPage />);
+      // Wait for the binding UI to load, then assert connect button is not present
+      await waitFor(() => {
+        expect(mockGetLinkedAccounts).toHaveBeenCalled();
+      });
       expect(screen.queryByText('Connect to Mobazha Platform')).not.toBeInTheDocument();
     });
   });
