@@ -13,6 +13,7 @@ import {
   PauseCircle,
   PlayCircle,
   Megaphone,
+  ShoppingBag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -194,6 +195,12 @@ export default function AdminSettingsPage() {
             title={t('admin.settings.payments')}
             description={t('admin.settings.paymentsDesc')}
             href="/admin/settings/payments"
+          />
+          <SettingsCard
+            icon={ShoppingBag}
+            title={t('admin.settings.guestCheckout')}
+            description={t('admin.settings.guestCheckoutDesc')}
+            href="/admin/settings/guest-checkout"
           />
           <SettingsCard
             icon={Truck}

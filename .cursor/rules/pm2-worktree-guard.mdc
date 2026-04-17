@@ -1,0 +1,54 @@
+# PM-2 Guest Checkout Worktree 工作区约束
+
+## 强制规则
+
+**Phase PM-2 (Guest Checkout) 的所有实施工作必须在 git worktree 分支上执行**，禁止在主分支（main）上直接修改。
+
+## Worktree 路径映射
+
+| 仓库 | 主分支路径 | Worktree 路径 | 分支名 |
+|------|-----------|--------------|--------|
+| mobazha_hosting | `~/go/src/github.com/mobazha/mobazha_hosting` | `~/go/src/github.com/mobazha/mobazha_hosting-pm2` | `feat/pm2-guest-checkout` |
+| mobazha3.0 | `~/go/src/github.com/mobazha/mobazha3.0` | `~/go/src/github.com/mobazha/mobazha3.0-pm2` | `feat/pm2-guest-checkout` |
+| mobazha-unified | `~/dev/openbazaar/mobazha-unified` | `~/dev/openbazaar/mobazha-unified-pm2` | `feat/pm2-guest-checkout` |
+
+## 检查清单
+
+执行 PM-2 相关任务前，**必须**确认：
+
+- [ ] 当前工作目录在 `-pm2` 后缀的 worktree 路径下
+- [ ] `git branch --show-current` 输出 `feat/pm2-guest-checkout`
+- [ ] 不在主仓库路径下执行写操作
+
+## 禁止行为
+
+```bash
+# ❌ 禁止：在主分支路径下修改 PM-2 相关文件
+cd ~/go/src/github.com/mobazha/mobazha3.0
+vim internal/core/guest_order_app_service.go
+
+# ✅ 正确：在 worktree 路径下修改
+cd ~/go/src/github.com/mobazha/mobazha3.0-pm2
+vim internal/core/guest_order_app_service.go
+```
+
+## 编译与测试命令（使用 worktree 路径）
+
+```bash
+# 编译 mobazha3.0
+bash -c 'source ~/.gvm/scripts/gvm && gvm use go1.26.1 && cd ~/go/src/github.com/mobazha/mobazha3.0-pm2 && CGO_ENABLED=1 go build -tags goolm ./...'
+
+# 编译 hosting
+bash -c 'source ~/.gvm/scripts/gvm && gvm use go1.26.1 && cd ~/go/src/github.com/mobazha/mobazha_hosting-pm2 && CGO_ENABLED=1 go build -tags goolm -o /tmp/hosting .'
+
+# 前端
+cd ~/dev/openbazaar/mobazha-unified-pm2 && pnpm install && pnpm build
+```
+
+## 文档更新
+
+`docs/PROGRESS.md` 和 `docs/TECH_DEBT.md` 等进度追踪文档的更新**在 worktree 上进行**，合并到 main 时随 PR 一起合入。
+
+## 触发词
+
+当用户说 "PM-2"、"Guest Checkout"、"guest checkout"、"匿名支付"、"匿名下单" 时，AI 必须先确认是否在正确的 worktree 路径下再执行。

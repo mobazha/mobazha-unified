@@ -402,6 +402,10 @@ try {
  */
 function applyRuntimeConfig(): void {
   if (typeof window === 'undefined') return;
+  // Note: feature flags (`rc.features` and the legacy `rc.guestCheckoutEnabled`)
+  // are consumed by `services/featureFlags.ts`, not this function. Call sites
+  // use `featureFlags.isEnabled(key)` or `useFeature(key)` instead of reading
+  // env config.
   const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
     | { saasUrl?: string; authMode?: string }
     | undefined;

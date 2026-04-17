@@ -258,6 +258,13 @@ export const NODE_API = {
   SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
+  // --- Guest Checkout (anonymous direct-payment orders) ---
+  GUEST_ORDERS: '/guest/orders',
+  GUEST_ORDER: (token: string) => `/guest/orders/${token}`,
+  GUEST_ORDER_FULFILL: (token: string) => `/guest/orders/${token}/fulfill`,
+  GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${token}/complete`,
+  GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
+
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',

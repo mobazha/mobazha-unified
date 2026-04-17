@@ -164,6 +164,17 @@ export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } f
 // Sales Channels API (Store Links + Store Bot)
 export { resolveStoreShortCode } from './salesChannels';
 
+// Guest Checkout API
+export * as guestCheckoutApi from './guestCheckout';
+export type {
+  GuestCartItem as GuestCartItemApi,
+  CreateGuestOrderRequest,
+  GuestOrderResponse,
+  GuestOrderStatus,
+  GuestOrderSummary,
+  GuestCheckoutSettings,
+} from './guestCheckout';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type {
