@@ -1,9 +1,9 @@
 import type { MetadataRoute } from 'next';
 
+import { getSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
 
 const API_BASE = SSR_API_BASE;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 
 interface ListingIndexItem {
   slug: string;
@@ -23,17 +23,36 @@ async function fetchListingIndex(): Promise<ListingIndexItem[]> {
   }
 }
 
+/**
+ * MS-Phase-2a · MS2a.3 — SEO de-duplication.
+ *
+ * On named storefront subdomains we return an empty sitemap — crawlers should
+ * discover products through the canonical main-store sitemap (pointed at by
+ * `robots.ts`). Emitting product URLs under multiple hostnames would forfeit
+ * the SEO consolidation we achieve via rel=canonical.
+ *
+ * The main store / verified custom domain generates the full catalogue sitemap
+ * rooted at its own host — URLs there are already canonical.
+ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  if (await isNamedStorefrontRequest()) {
+    return [];
+  }
+
+  // Current host is canonical here (main store or verified custom domain), so
+  // we anchor sitemap URLs at getSiteUrl() to reflect whichever domain served
+  // this request rather than a build-time constant.
+  const siteUrl = await getSiteUrl();
   const listings = await fetchListingIndex();
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
-    { url: `${SITE_URL}/marketplace`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: siteUrl, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${siteUrl}/marketplace`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
   ];
 
   const productRoutes: MetadataRoute.Sitemap = listings.map(listing => ({
-    url: `${SITE_URL}/product/${listing.slug}`,
+    url: `${siteUrl}/product/${listing.slug}`,
     lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.9,
@@ -47,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
   const storeRoutes: MetadataRoute.Sitemap = Array.from(peerIds).map(peerId => ({
-    url: `${SITE_URL}/store/${peerId}`,
+    url: `${siteUrl}/store/${peerId}`,
     lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.7,

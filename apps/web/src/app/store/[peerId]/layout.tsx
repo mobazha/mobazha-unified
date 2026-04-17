@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import React from 'react';
-import { getSiteUrl } from '@/lib/siteUrl';
+import { getCanonicalSiteUrl, getSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
 
@@ -86,10 +86,11 @@ export async function generateMetadata({
   params: Promise<{ peerId: string }>;
 }): Promise<Metadata> {
   const { peerId } = await params;
-  const [profile, storefront, siteUrl] = await Promise.all([
+  const [profile, storefront, canonicalSiteUrl, namedStorefront] = await Promise.all([
     fetchProfile(peerId),
     fetchStorefrontConfig(peerId),
-    getSiteUrl(),
+    getCanonicalSiteUrl(),
+    isNamedStorefrontRequest(),
   ]);
 
   if (!profile) {
@@ -103,15 +104,21 @@ export async function generateMetadata({
     heroMeta.description ||
     (profile.about ? profile.about.slice(0, 160) : `Browse products from ${name} on Mobazha`);
 
-  const canonicalUrl = `${siteUrl}/store/${peerId}`;
+  // Canonical & OG URL always point at the main store host (MS2a.3).
+  // Named storefront subdomains share the underlying profile, so we
+  // consolidate SEO signals onto the canonical store URL.
+  const canonicalUrl = `${canonicalSiteUrl}/store/${peerId}`;
   const themeColor = storefront?.theme?.primaryColor;
-  const ogImageUrl = `${siteUrl}/store/${peerId}/opengraph-image`;
+  const ogImageUrl = `${canonicalSiteUrl}/store/${peerId}/opengraph-image`;
 
   return {
     title,
     description,
     ...(themeColor && { themeColor }),
     alternates: { canonical: canonicalUrl },
+    // Named storefronts: noindex to avoid duplicate-content with the main
+    // store, follow links so internal navigation signals still propagate.
+    ...(namedStorefront && { robots: { index: false, follow: true } }),
     openGraph: {
       type: 'profile',
       title,
@@ -154,10 +161,18 @@ export default async function StoreLayout({
   params: Promise<{ peerId: string }>;
 }) {
   const { peerId } = await params;
-  const [profile, siteUrl] = await Promise.all([fetchProfile(peerId), getSiteUrl()]);
-  const orgLd = buildOrganizationLd(profile, peerId, siteUrl);
-  const canonicalUrl = `${siteUrl}/store/${peerId}`;
-  const oembedUrl = `${siteUrl}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
+  const [profile, canonicalSiteUrl, currentSiteUrl] = await Promise.all([
+    fetchProfile(peerId),
+    getCanonicalSiteUrl(),
+    getSiteUrl(),
+  ]);
+  // Organization JSON-LD uses the canonical store URL so the graph node is
+  // stable across storefront subdomains (MS2a.3).
+  const orgLd = buildOrganizationLd(profile, peerId, canonicalSiteUrl);
+  const canonicalUrl = `${canonicalSiteUrl}/store/${peerId}`;
+  // oEmbed endpoint lives on the current host; the embedded `url` points
+  // at the canonical store URL.
+  const oembedUrl = `${currentSiteUrl}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
   const storeName = profile?.name || profile?.handle || peerId.slice(0, 12);
 
   return (
