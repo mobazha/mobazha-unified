@@ -34,6 +34,12 @@ export * from './groupContext';
 // 独立站店铺上下文服务
 export * from './storeContext';
 
+// Storefront（橱窗）上下文服务（MS-Phase-2b · MS2b.1）
+export * from './storefrontContext';
+
+// start_param 多段协议解析器（MS-Phase-2b · MS2b.1）
+export * from './startParam';
+
 // RWA 服务
 export * from './rwa';
 

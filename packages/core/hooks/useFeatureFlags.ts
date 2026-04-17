@@ -23,34 +23,27 @@ import {
   isFeatureEnabled as isFeatureEnabledFn,
   type FeatureFlags,
 } from '../services/api/serverInfo';
+import {
+  getCachedFeatureFlags,
+  setCachedFeatureFlags,
+  subscribeFeatureFlags,
+} from './featureFlagsCache';
 
-type Subscriber = (flags: FeatureFlags | null) => void;
-
-// Module-level cache — shared across every component that mounts the hook.
-let cachedFlags: FeatureFlags | null = null;
 let inflightFetch: Promise<FeatureFlags | null> | null = null;
-const subscribers = new Set<Subscriber>();
-
-function notify() {
-  for (const sub of subscribers) {
-    sub(cachedFlags);
-  }
-}
 
 async function fetchFlags(): Promise<FeatureFlags | null> {
   if (inflightFetch) return inflightFetch;
   inflightFetch = (async () => {
     try {
       const info = await getServerInfo();
-      cachedFlags = info.features ?? {};
-      notify();
-      return cachedFlags;
+      const next: FeatureFlags = info.features ?? {};
+      setCachedFeatureFlags(next);
+      return next;
     } catch {
       // Swallow: hook semantics are "off by default" when the call fails
       // (typically 401 for unauthenticated sessions). The caller can still
       // observe `loading=false, flags=null` and render accordingly.
-      cachedFlags = null;
-      notify();
+      setCachedFeatureFlags(null);
       return null;
     } finally {
       inflightFetch = null;
@@ -61,9 +54,8 @@ async function fetchFlags(): Promise<FeatureFlags | null> {
 
 /** Drop the cached snapshot (e.g. after admin toggle or user re-login). */
 export function invalidateFeatureFlags(): void {
-  cachedFlags = null;
+  setCachedFeatureFlags(null);
   inflightFetch = null;
-  notify();
 }
 
 export interface UseFeatureFlagsReturn {
@@ -80,14 +72,14 @@ export interface UseFeatureFlagsReturn {
 }
 
 export function useFeatureFlags(): UseFeatureFlagsReturn {
-  const [flags, setFlags] = useState<FeatureFlags | null>(cachedFlags);
-  const [loading, setLoading] = useState<boolean>(cachedFlags === null);
+  const [flags, setFlags] = useState<FeatureFlags | null>(getCachedFeatureFlags());
+  const [loading, setLoading] = useState<boolean>(getCachedFeatureFlags() === null);
 
   useEffect(() => {
-    const sub: Subscriber = next => setFlags(next);
-    subscribers.add(sub);
+    const unsubscribe = subscribeFeatureFlags(next => setFlags(next));
 
-    if (cachedFlags === null && !inflightFetch) {
+    const cached = getCachedFeatureFlags();
+    if (cached === null && !inflightFetch) {
       setLoading(true);
       void fetchFlags().finally(() => setLoading(false));
     } else if (inflightFetch) {
@@ -96,7 +88,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
     }
 
     return () => {
-      subscribers.delete(sub);
+      unsubscribe();
     };
   }, []);
 
