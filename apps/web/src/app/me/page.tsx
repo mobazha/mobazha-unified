@@ -470,7 +470,7 @@ export default function MePage() {
   const showMyStoresEntry =
     isAuthenticated &&
     !standaloneMode &&
-    isFeatureEnabled('multistoreMyStoresUI', 'killMultistoreReadsDisabled');
+    isFeatureEnabled('multistoreMyStoresUIEnabled', 'killMultistoreReadsDisabled');
 
   const handleLogout = () => {
     logout();
@@ -698,7 +698,7 @@ export default function MePage() {
               </Link>
             )}
 
-          {/* Multi-Store console (Phase MS1) — gated by multistoreMyStoresUI flag */}
+          {/* Multi-Store console (Phase MS1) — gated by multistoreMyStoresUIEnabled flag */}
           {showMyStoresEntry && (
             <Link href="/my-stores" className="block">
               <div className="bg-background border border-border rounded-xl p-3 flex items-center gap-3 hover:bg-muted/40 active:bg-muted/60 transition-colors">

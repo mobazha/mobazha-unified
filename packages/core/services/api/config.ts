@@ -250,7 +250,7 @@ export function setStoreContextHeaders(_context: Record<string, string>): void {
  * 获取包含群组上下文、店铺上下文和 Storefront 上下文的 Headers.
  *
  * Layering: `getStorefrontHeaders()` is feature-flag gated on
- * `tgBridgeBotV2` (see `storefrontContext.ts`) so the header is only
+ * `tgBridgeBotV2Enabled` (see `storefrontContext.ts`) so the header is only
  * emitted once the backend route is rolled out. Order is preserved so
  * an explicit setter can still override.
  */

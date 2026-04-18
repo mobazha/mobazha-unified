@@ -14,7 +14,7 @@
  *
  * Usage:
  *   const { flags, isEnabled, loading } = useFeatureFlags();
- *   if (isEnabled('multistoreMyStoresUI', 'killMultistoreReadsDisabled')) { ... }
+ *   if (isEnabled('multistoreMyStoresUIEnabled', 'killMultistoreReadsDisabled')) { ... }
  */
 
 import { useCallback, useEffect, useState } from 'react';
