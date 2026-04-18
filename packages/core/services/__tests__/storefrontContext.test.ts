@@ -92,22 +92,22 @@ describe('storefrontContext', () => {
       expect(getStorefrontHeaders()).toEqual({});
     });
 
-    it('returns empty when tgBridgeBotV2 is off', () => {
+    it('returns empty when tgBridgeBotV2Enabled is off', () => {
       setStorefrontSlug('deal');
-      setCachedFeatureFlags({ tgBridgeBotV2: false });
+      setCachedFeatureFlags({ tgBridgeBotV2Enabled: false });
       expect(getStorefrontHeaders()).toEqual({});
     });
 
-    it('returns header when tgBridgeBotV2 is on', () => {
+    it('returns header when tgBridgeBotV2Enabled is on', () => {
       setStorefrontSlug('deal');
-      setCachedFeatureFlags({ tgBridgeBotV2: true });
+      setCachedFeatureFlags({ tgBridgeBotV2Enabled: true });
       expect(getStorefrontHeaders()).toEqual({ 'X-Storefront-Slug': 'deal' });
     });
 
     it('honours kill switch even when flag is on', () => {
       setStorefrontSlug('deal');
       setCachedFeatureFlags({
-        tgBridgeBotV2: true,
+        tgBridgeBotV2Enabled: true,
         killStorefrontRoutingDisabled: true,
       });
       expect(getStorefrontHeaders()).toEqual({});

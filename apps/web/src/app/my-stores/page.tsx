@@ -10,7 +10,7 @@
  *   - Route requires authentication. Unauthenticated users see a sign-in prompt
  *     instead of a redirect, matching the /me pattern.
  *   - Visibility of this whole route in nav menus is gated by the
- *     `multistoreMyStoresUI` feature flag — that wiring lives in MS1.2c.
+ *     `multistoreMyStoresUIEnabled` feature flag — that wiring lives in MS1.2c.
  *
  * TECHDEBT(TD-049): inline empty-state + card markup. Extract a reusable
  * `StoreCard` when MS1.2b grows (e.g. MS-Phase-3 adds staff/role chips).
@@ -58,7 +58,7 @@ export default function MyStoresPage() {
 
   // Kill-switch honored server-side, but we short-circuit the UI too so we
   // don't show a stale "My Stores" page while the backend returns an empty list.
-  const featureOn = isEnabled('multistoreMyStoresUI', 'killMultistoreReadsDisabled');
+  const featureOn = isEnabled('multistoreMyStoresUIEnabled', 'killMultistoreReadsDisabled');
 
   const handleLogin = useCallback(() => {
     if (isHosted()) {
@@ -107,7 +107,7 @@ function AuthenticatedContent() {
   // Separate flag: the claim-flow hint is rendered only when binding is
   // actually available on the backend. Still honors the global read kill
   // switch so ops can hide the whole console in one flip.
-  const claimHintOn = isEnabled('multistoreClaimStore', 'killMultistoreReadsDisabled');
+  const claimHintOn = isEnabled('multistoreClaimStoreEnabled', 'killMultistoreReadsDisabled');
 
   const [stores, setStores] = useState<MyStoreItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);

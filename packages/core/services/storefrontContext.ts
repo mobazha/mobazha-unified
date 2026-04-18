@@ -11,7 +11,7 @@
  * Server is the authority — client never forges `peerID` / `storefrontID`.
  *
  * Gating: `getStorefrontHeaders()` consults the cached feature-flag snapshot
- * and only emits the header when `tgBridgeBotV2` is enabled (and the kill
+ * and only emits the header when `tgBridgeBotV2Enabled` is on (and the kill
  * switch `killStorefrontRoutingDisabled` is off). This matches the backend
  * gate so the client fails closed before the rollout.
  */
@@ -91,7 +91,7 @@ export function isStorefrontActive(): boolean {
  *
  * Returns an empty object unless all three preconditions hold:
  *   1. A valid slug is present in the context.
- *   2. `tgBridgeBotV2` feature flag is on.
+ *   2. `tgBridgeBotV2Enabled` feature flag is on.
  *   3. `killStorefrontRoutingDisabled` kill switch is off.
  *
  * This mirrors the backend gate in `hostRouterMiddleware`
@@ -105,7 +105,7 @@ export function getStorefrontHeaders(): Record<string, string> {
   const flags = getCachedFeatureFlags();
   if (!flags) return {};
   if (flags.killStorefrontRoutingDisabled === true) return {};
-  if (flags.tgBridgeBotV2 !== true) return {};
+  if (flags.tgBridgeBotV2Enabled !== true) return {};
 
   return { 'X-Storefront-Slug': slug };
 }

@@ -31,36 +31,36 @@ export interface FeatureFlags {
   groupMarketplaceEnabled?: boolean;
 
   // Phase MS1 — 1 user × N stores
-  multistoreMyStoresUI?: boolean;
-  multistoreClaimStore?: boolean;
-  multistoreOwnerReputationBadge?: boolean;
+  multistoreMyStoresUIEnabled?: boolean;
+  multistoreClaimStoreEnabled?: boolean;
+  multistoreOwnerReputationBadgeEnabled?: boolean;
 
   // Phase MS2a — Storefront Lite
   storefrontsEnabled?: boolean;
   storefrontsSubdomainRouting?: boolean;
-  storefrontsThemeEditor?: boolean;
+  storefrontsThemeEditorEnabled?: boolean;
   storefrontsProgressivePrice?: boolean;
 
   // Phase MS2b — Telegram distribution matrix
-  tgBridgeBotV2?: boolean;
-  tgSellerBotWizard?: boolean;
-  tgBotCluster?: boolean;
-  tgChannelEmbed?: boolean;
+  tgBridgeBotV2Enabled?: boolean;
+  tgSellerBotWizardEnabled?: boolean;
+  tgBotClusterEnabled?: boolean;
+  tgChannelEmbedEnabled?: boolean;
 
   // Phase MS3 — Staff accounts
   staffAccountsEnabled?: boolean;
-  staffAuditLog?: boolean;
-  staffStepUpAuth?: boolean;
+  staffAuditLogEnabled?: boolean;
+  staffStepUpAuthEnabled?: boolean;
 
   // Phase MS4 — SaaS multi-node
   saasMultiNodeEnabled?: boolean;
   saasPlanQuotaEnforced?: boolean;
 
   // Phase MS5 — Wallet-anchored identity
-  identityWalletAnchor?: boolean;
-  identityCrossStoreAnalytics?: boolean;
-  identityTaxAggregation?: boolean;
-  identityMatrixProxy?: boolean;
+  identityWalletAnchorEnabled?: boolean;
+  identityCrossStoreAnalyticsEnabled?: boolean;
+  identityTaxAggregationEnabled?: boolean;
+  identityMatrixProxyEnabled?: boolean;
 
   // Kill switches — `true` means the feature is emergency-disabled.
   killMultistoreReadsDisabled?: boolean;
@@ -84,7 +84,7 @@ export async function getServerInfo(): Promise<ServerInfo> {
  * Usage:
  *   const canSeeConsole = isFeatureEnabled(
  *     flags,
- *     'multistoreMyStoresUI',
+ *     'multistoreMyStoresUIEnabled',
  *     'killMultistoreReadsDisabled',
  *   );
  *
