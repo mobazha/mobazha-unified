@@ -5,7 +5,7 @@
  * Backend: mobazha_hosting /platform/v1/store-links and /platform/v1/store-bots
  */
 
-import { getEnvConfig, isStandaloneMode } from '../../config/env';
+import { isStandaloneMode } from '../../config/env';
 import { getStoredToken } from '../auth/token';
 import { getCachedSaaSToken } from '../auth/saasBridge';
 import type {
@@ -15,10 +15,7 @@ import type {
   BotWebhookStatus,
 } from '../../types/salesChannels';
 import { HOSTING_API } from '../../config/apiPaths';
-
-function getBaseUrl(): string {
-  return getEnvConfig().api.baseUrl;
-}
+import { getHostingUrl } from './config';
 
 /**
  * Platform API calls (/platform/v1/*) are proxied to the SaaS backend.
@@ -78,9 +75,12 @@ function extractErrorMessage(errBody: unknown): string {
 
 export async function resolveStoreShortCode(shortCode: string): Promise<string | null> {
   try {
-    const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_LINKS_RESOLVE(shortCode)}`, {
-      method: 'GET',
-    });
+    const response = await fetch(
+      `${getHostingUrl()}${HOSTING_API.STORE_LINKS_RESOLVE(shortCode)}`,
+      {
+        method: 'GET',
+      }
+    );
     if (!response.ok) return null;
     const raw = await response.json();
     const data = unwrapData<{ peerID: string }>(raw);
@@ -93,7 +93,7 @@ export async function resolveStoreShortCode(shortCode: string): Promise<string |
 // ============ Store Links ============
 
 export async function getStoreLink(): Promise<StoreLinkInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_LINKS}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_LINKS}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -105,7 +105,7 @@ export async function getStoreLink(): Promise<StoreLinkInfo> {
 }
 
 export async function regenerateStoreLink(): Promise<StoreLinkInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_LINKS_REGENERATE}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_LINKS_REGENERATE}`, {
     method: 'POST',
     headers: getAuthHeaders(),
   });
@@ -119,7 +119,7 @@ export async function regenerateStoreLink(): Promise<StoreLinkInfo> {
 // ============ Store Bots (Telegram) ============
 
 export async function getStoreBot(peerID: string): Promise<StoreBotInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS}?peerID=${peerID}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_BOTS}?peerID=${peerID}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -131,7 +131,7 @@ export async function getStoreBot(peerID: string): Promise<StoreBotInfo> {
 }
 
 export async function bindStoreBot(data: BindStoreBotRequest): Promise<StoreBotInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_BOTS}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -144,7 +144,7 @@ export async function bindStoreBot(data: BindStoreBotRequest): Promise<StoreBotI
 }
 
 export async function unbindStoreBot(peerID: string): Promise<void> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS}?peerID=${peerID}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_BOTS}?peerID=${peerID}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });
@@ -164,7 +164,7 @@ export async function unbindStoreBot(peerID: string): Promise<void> {
  */
 export async function getBotWebhookStatus(peerID: string): Promise<BotWebhookStatus> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.STORE_BOTS_WEBHOOK_STATUS}?peerID=${encodeURIComponent(peerID)}`,
+    `${getHostingUrl()}${HOSTING_API.STORE_BOTS_WEBHOOK_STATUS}?peerID=${encodeURIComponent(peerID)}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -182,7 +182,7 @@ export async function getBotWebhookStatus(peerID: string): Promise<BotWebhookSta
  * 用于修复 webhook 不同步、Telegram 报错或配置缺失的场景。
  */
 export async function repairBotWebhook(peerID: string): Promise<StoreBotInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS_REPAIR_WEBHOOK}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_BOTS_REPAIR_WEBHOOK}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ peerID }),
@@ -198,7 +198,7 @@ export async function repairBotWebhook(peerID: string): Promise<StoreBotInfo> {
  * 仅重新同步 Chat Menu Button（店铺短码变更、品牌子域名变更后使用）。
  */
 export async function syncBotMenuButton(peerID: string): Promise<StoreBotInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_BOTS_SYNC_MENU_BUTTON}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_BOTS_SYNC_MENU_BUTTON}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ peerID }),
@@ -225,7 +225,7 @@ export interface HandleAvailability {
 }
 
 export async function getStoreDomain(peerID: string): Promise<StoreDomainInfo | null> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -238,7 +238,7 @@ export async function setStoreDomainHandle(
   peerID: string,
   handle: string
 ): Promise<StoreDomainInfo> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ handle }),
@@ -251,7 +251,7 @@ export async function setStoreDomainHandle(
 }
 
 export async function deleteStoreDomain(peerID: string): Promise<void> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_DOMAIN(peerID)}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });
@@ -263,7 +263,7 @@ export async function deleteStoreDomain(peerID: string): Promise<void> {
 
 export async function checkHandleAvailability(handle: string): Promise<HandleAvailability> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.STORE_DOMAIN_CHECK}?handle=${encodeURIComponent(handle)}`,
+    `${getHostingUrl()}${HOSTING_API.STORE_DOMAIN_CHECK}?handle=${encodeURIComponent(handle)}`,
     { method: 'GET', headers: getAuthHeaders() }
   );
   const raw = await response.json();
