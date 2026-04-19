@@ -92,11 +92,33 @@ interface TGInitDataUnsafe {
   start_param?: string;
 }
 
+// Events emitted by the Telegram WebApp SDK that we subscribe to.
+// Full list: https://core.telegram.org/bots/webapps#events-available-for-mini-apps
+type TGWebAppEvent =
+  | 'viewportChanged'
+  | 'themeChanged'
+  | 'mainButtonClicked'
+  | 'backButtonClicked'
+  | 'popupClosed'
+  | 'settingsButtonClicked'
+  | 'invoiceClosed'
+  | 'writeAccessRequested'
+  | 'contactRequested'
+  | 'biometricManagerUpdated'
+  | 'biometricAuthRequested'
+  | 'biometricTokenUpdated';
+
 interface TGWebApp {
   initData: string;
   initDataUnsafe: TGInitDataUnsafe;
   version: string;
   themeParams: TGThemeParams;
+  // Viewport (A1): present since Bot API 6.1; guard with optional chaining.
+  viewportHeight?: number;
+  viewportStableHeight?: number;
+  isExpanded?: boolean;
+  // Closing confirmation (A5): present since Bot API 6.2.
+  isClosingConfirmationEnabled?: boolean;
   MainButton: TGMainButton;
   BackButton: TGBackButton;
   HapticFeedback: TGHapticFeedback;
@@ -109,6 +131,10 @@ interface TGWebApp {
   showAlert: (message: string, callback?: () => void) => void;
   setHeaderColor: (color: string) => void;
   setBackgroundColor: (color: string) => void;
+  enableClosingConfirmation?: () => void;
+  disableClosingConfirmation?: () => void;
+  onEvent?: (event: TGWebAppEvent, handler: (...args: unknown[]) => void) => void;
+  offEvent?: (event: TGWebAppEvent, handler: (...args: unknown[]) => void) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -132,6 +158,10 @@ interface TGMiniAppContextValue {
   showAlert: (message: string) => Promise<void>;
   setHeaderColor: (color: string) => void;
   setBackgroundColor: (color: string) => void;
+  // A5: expose closing-confirmation primitives so hooks (useCloseGuard) can
+  // call them from arbitrary screens without reading window.Telegram.WebApp.
+  enableClosingConfirmation: () => void;
+  disableClosingConfirmation: () => void;
 }
 
 const noop = () => {};
@@ -152,6 +182,8 @@ const TGMiniAppContext = createContext<TGMiniAppContextValue>({
   showAlert: () => Promise.resolve(),
   setHeaderColor: noop,
   setBackgroundColor: noop,
+  enableClosingConfirmation: noop,
+  disableClosingConfirmation: noop,
 });
 
 // ---------------------------------------------------------------------------
@@ -166,8 +198,10 @@ function initWebApp(): TGWebApp | null {
   if (typeof window === 'undefined') return null;
   const wa = (window as unknown as { Telegram?: { WebApp?: TGWebApp } }).Telegram?.WebApp ?? null;
   if (!wa) return null;
+  // Only signal readiness here; expand / headerColor / viewport listeners
+  // are intentionally set up in mount effects (see MVP-3 A1/A2/A3) so that
+  // HMR and provider-remount cases re-apply them deterministically.
   wa.ready?.();
-  wa.expand?.();
   return wa;
 }
 
@@ -227,6 +261,58 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
     (color: string) => webApp?.setBackgroundColor?.(color),
     [webApp]
   );
+  // A5: closing confirmation primitives. Guarded with optional chaining because
+  // Bot API < 6.2 / non-Telegram environments won't expose these APIs.
+  const enableClosingConfirmation = useCallback(
+    () => webApp?.enableClosingConfirmation?.(),
+    [webApp]
+  );
+  const disableClosingConfirmation = useCallback(
+    () => webApp?.disableClosingConfirmation?.(),
+    [webApp]
+  );
+
+  // A2 + A3 — One-shot native-feel bootstrap after the SDK object is available.
+  //   * expand()           → start full-screen (no half-screen drag).
+  //   * setHeaderColor     → Telegram header matches Mini App surface (no seam).
+  //   * setBackgroundColor → background color below the content area.
+  // Theme preset values ('secondary_bg_color' / 'bg_color') are preferred over
+  // hex for broadest client compatibility (Bot API ≥ 6.1 accepts presets;
+  // #rrggbb requires ≥ 6.9).
+  useEffect(() => {
+    if (!webApp) return;
+    webApp.expand?.();
+    webApp.setHeaderColor?.('secondary_bg_color');
+    webApp.setBackgroundColor?.('bg_color');
+  }, [webApp]);
+
+  // A1 — Publish Telegram viewport metrics to CSS custom properties so that
+  // bottom-docked CTAs (Checkout / Cart / ProductDetail) can size against
+  // `--tg-viewport-stable-h` instead of the unreliable `100vh`.
+  //
+  // * `--tg-viewport-h`         = current viewport (may animate with keyboard)
+  // * `--tg-viewport-stable-h`  = expanded, post-animation height (no keyboard)
+  //
+  // Non-Telegram environments never write these variables, so `100vh` fallback
+  // in consumer CSS (`var(--tg-viewport-stable-h, 100vh)`) remains intact.
+  useEffect(() => {
+    if (!webApp) return;
+    const root = document.documentElement;
+    const updateViewport = () => {
+      const { viewportHeight, viewportStableHeight } = webApp;
+      if (typeof viewportHeight === 'number' && viewportHeight > 0) {
+        root.style.setProperty('--tg-viewport-h', `${viewportHeight}px`);
+      }
+      if (typeof viewportStableHeight === 'number' && viewportStableHeight > 0) {
+        root.style.setProperty('--tg-viewport-stable-h', `${viewportStableHeight}px`);
+      }
+    };
+    updateViewport();
+    webApp.onEvent?.('viewportChanged', updateViewport);
+    return () => {
+      webApp.offEvent?.('viewportChanged', updateViewport);
+    };
+  }, [webApp]);
 
   // Sync TG theme colors → CSS custom properties
   useEffect(() => {
@@ -273,6 +359,8 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
       showAlert,
       setHeaderColor,
       setBackgroundColor,
+      enableClosingConfirmation,
+      disableClosingConfirmation,
     };
   }, [
     webApp,
@@ -284,6 +372,8 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
     showAlert,
     setHeaderColor,
     setBackgroundColor,
+    enableClosingConfirmation,
+    disableClosingConfirmation,
   ]);
 
   return <TGMiniAppContext.Provider value={value}>{children}</TGMiniAppContext.Provider>;

@@ -7,6 +7,7 @@ import { DiscordActivityProvider } from './DiscordActivityProvider';
 import { ServiceWorkerProvider } from './ServiceWorkerProvider';
 import { AppKitProvider } from './AppKitProvider';
 import { CurrencyProvider } from './CurrencyProvider';
+import { PlatformProvider } from '@/lib/platform';
 
 /**
  * Shared outer Provider tree used by BOTH entry points:
@@ -26,13 +27,23 @@ export function OuterProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <TGMiniAppProvider>
-        <DiscordActivityProvider>
-          <ServiceWorkerProvider>
-            <AppKitProvider>
-              <CurrencyProvider>{children}</CurrencyProvider>
-            </AppKitProvider>
-          </ServiceWorkerProvider>
-        </DiscordActivityProvider>
+        {/*
+          PlatformProvider (MVP-1) depends on useTGMiniApp() to detect the
+          Telegram SDK, so it must live INSIDE <TGMiniAppProvider>. It exposes
+          channel-neutral capabilities (usePrimaryCTA / useBackAction /
+          useConfirm / useHaptic / useShare) to every business component
+          beneath it. Placed outside Discord / AppKit / Currency so those
+          tree branches can consume platform hooks uniformly.
+        */}
+        <PlatformProvider>
+          <DiscordActivityProvider>
+            <ServiceWorkerProvider>
+              <AppKitProvider>
+                <CurrencyProvider>{children}</CurrencyProvider>
+              </AppKitProvider>
+            </ServiceWorkerProvider>
+          </DiscordActivityProvider>
+        </PlatformProvider>
       </TGMiniAppProvider>
     </ThemeProvider>
   );

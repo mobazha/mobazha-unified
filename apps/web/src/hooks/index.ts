@@ -26,6 +26,7 @@ export {
 } from './useRwaSellerConfirm';
 export { useTGBackButton } from './useTGBackButton';
 export { useTGMainButton } from './useTGMainButton';
+export { useCloseGuard } from './useCloseGuard';
 export { useShare } from './useShare';
 export { useMiniAppPayment } from './useMiniAppPayment';
 export type { MiniAppPaymentCapabilities } from './useMiniAppPayment';

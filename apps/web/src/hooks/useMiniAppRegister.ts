@@ -8,6 +8,7 @@ import {
   buildTelegramMiniAppStoreContextFromWindow,
 } from '@mobazha/core';
 import { useTGMiniApp } from '../components/TGMiniAppProvider/TGMiniAppProvider';
+import { useHaptic } from '@/lib/platform';
 
 export type RegisterAction = 'register' | 'bind' | 'cancel' | 'error';
 
@@ -25,7 +26,12 @@ interface UseMiniAppRegisterOptions {
  * Includes a concurrency lock to prevent duplicate registration.
  */
 export function useMiniAppRegister(options?: UseMiniAppRegisterOptions) {
+  // NOTE (MVP-1 partial migration): `showPopup` (3-button) and `showConfirm`
+  // still come from the Telegram-specific provider — `useConfirm` only abstracts
+  // the 2-choice case and `showPopup` has no generic fallback yet. Haptic calls,
+  // however, move to the platform-abstract `useHaptic()` below.
   const tg = useTGMiniApp();
+  const haptic = useHaptic();
   const { loginMiniApp, authSource } = useUserStore();
   const isRegistering = useRef(false);
 
@@ -81,7 +87,7 @@ export function useMiniAppRegister(options?: UseMiniAppRegisterOptions) {
       });
 
       if (buttonId === 'register') {
-        tg.haptic?.impactOccurred('medium');
+        haptic.impact('medium');
         const success = await doRegister();
         return success ? 'register' : 'error';
       }
@@ -100,13 +106,13 @@ export function useMiniAppRegister(options?: UseMiniAppRegisterOptions) {
     );
 
     if (confirmed) {
-      tg.haptic?.impactOccurred('medium');
+      haptic.impact('medium');
       const success = await doRegister();
       return success ? 'register' : 'error';
     }
 
     return 'cancel';
-  }, [tg, doRegister, options]);
+  }, [tg, doRegister, options, haptic]);
 
   return {
     promptRegister,
