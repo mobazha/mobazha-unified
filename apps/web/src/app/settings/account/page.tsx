@@ -780,6 +780,7 @@ export default function AccountSettingsPage() {
           if (!open) {
             setMergePreview(null);
             setMergeConfirmInput('');
+            setLinkConflict(null);
           }
         }}
       >
@@ -846,6 +847,7 @@ export default function AccountSettingsPage() {
               onClick={() => {
                 setMergePreview(null);
                 setMergeConfirmInput('');
+                setLinkConflict(null);
               }}
             >
               {t('common.cancel')}
