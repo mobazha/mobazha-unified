@@ -40,19 +40,67 @@
          Not present during local dev or SaaS deployments; onerror is a silent no-op. -->
     <script src="/runtime-config.js" onerror=""></script>
     
-    <!-- 防闪烁脚本 - 在页面加载前立即应用主题 -->
+    <!-- 防闪烁脚本 - 在页面加载前立即应用主题 + Telegram 嵌入态 (MVP-3 M2) -->
     <script>
       (function() {
         try {
-          const theme = localStorage.getItem('mobazha-theme') || 'classic';
-          const mode = localStorage.getItem('mobazha-theme-mode') || 'system';
-          let resolvedMode = mode;
+          var root = document.documentElement;
+
+          // 1) Mobazha 主题（既有逻辑）
+          var theme = localStorage.getItem('mobazha-theme') || 'classic';
+          var mode = localStorage.getItem('mobazha-theme-mode') || 'system';
+          var resolvedMode = mode;
           if (mode === 'system') {
             resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           }
-          document.documentElement.setAttribute('data-theme', theme);
+          root.setAttribute('data-theme', theme);
           if (resolvedMode === 'dark') {
-            document.documentElement.classList.add('dark');
+            root.classList.add('dark');
+          }
+
+          // 2) MVP-3 M2 — Telegram 嵌入态检测 + 主题色即刻预涂（防白屏）
+          //    与 line 28-36 的 SDK 检测条件保持一致：window.Telegram 存在 或 URL hash
+          //    含 tgWebAppData（Telegram 客户端始终会拼进来）。
+          var isTG = !!window.Telegram || (location.hash || '').indexOf('tgWebAppData') !== -1;
+          if (!isTG) return;
+
+          root.setAttribute('data-embedded', 'telegram');
+
+          // 从 URL hash 的 tgWebAppThemeParams 里解 bg_color，React mount 之前就把背景
+          // 刷成 TG 自身颜色，避免 Tailwind/Mobazha 默认主题的白底→TG 深底瞬闪。
+          var themeMatch = (location.hash || '').match(/tgWebAppThemeParams=([^&]+)/);
+          var appliedBg = null;
+          if (themeMatch) {
+            try {
+              var params = JSON.parse(decodeURIComponent(themeMatch[1]));
+              appliedBg = params.bg_color || params.secondary_bg_color || null;
+              if (appliedBg) {
+                // Normalize "ffffff" → "#ffffff" (Telegram 历史版本不带 # 前缀)
+                if (appliedBg.charAt(0) !== '#') appliedBg = '#' + appliedBg;
+                root.style.setProperty('--tg-bg', appliedBg);
+                // 同时设置 secondary/text 兜底，让 globals.css 的 var(--tg-*) 链路生效
+                if (params.secondary_bg_color) {
+                  var secBg = params.secondary_bg_color.charAt(0) === '#'
+                    ? params.secondary_bg_color
+                    : '#' + params.secondary_bg_color;
+                  root.style.setProperty('--tg-secondary-bg', secBg);
+                }
+                if (params.text_color) {
+                  var txt = params.text_color.charAt(0) === '#'
+                    ? params.text_color
+                    : '#' + params.text_color;
+                  root.style.setProperty('--tg-text', txt);
+                }
+                root.style.backgroundColor = appliedBg;
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', appliedBg);
+              }
+            } catch (e) { /* ignore parse error */ }
+          }
+
+          // 没拿到 themeParams 但系统是 dark：退化到 TG 深色默认，不让白底闪一下
+          if (!appliedBg && resolvedMode === 'dark') {
+            root.style.backgroundColor = '#17212b';
           }
         } catch (e) {}
       })();

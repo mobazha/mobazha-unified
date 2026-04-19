@@ -314,6 +314,27 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
     };
   }, [webApp]);
 
+  // MVP-3 M2 — Keep `<html data-embedded="telegram">` in sync for scoped CSS
+  // overrides (globals.css remaps --theme-* → var(--tg-*, <fallback>)). The
+  // inline anti-flash script in index.html sets this pre-paint; this effect
+  // guarantees sync across HMR / remounts / tests and cleans up on unmount.
+  useEffect(() => {
+    if (!webApp) return;
+    const root = document.documentElement;
+    const prev = root.dataset.embedded;
+    root.dataset.embedded = 'telegram';
+    return () => {
+      // Only clear if WE set it — don't stomp on a future Discord provider that
+      // might coexist temporarily during channel detection.
+      if (root.dataset.embedded !== 'telegram') return;
+      if (prev === undefined) {
+        delete root.dataset.embedded;
+      } else {
+        root.dataset.embedded = prev;
+      }
+    };
+  }, [webApp]);
+
   // Sync TG theme colors → CSS custom properties
   useEffect(() => {
     const tp = webApp?.themeParams;
