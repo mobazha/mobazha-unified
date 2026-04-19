@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,9 @@ import {
   SUPPORTED_PROVIDERS,
   standaloneStoresApi,
   hasSaaSToken,
+  AccountLinkConflictError,
+  getMergePreview,
+  mergeAccount,
 } from '@mobazha/core';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type {
@@ -40,6 +44,8 @@ import type {
   StandaloneStore,
   LinkConfigResponse,
   TelegramAuthData,
+  AccountLinkConflict,
+  MergePreviewResponse,
 } from '@mobazha/core';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 import {
@@ -51,6 +57,8 @@ import {
   ExternalLink,
   Wifi,
   WifiOff,
+  Loader2,
+  GitMerge,
 } from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
 import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
@@ -108,6 +116,15 @@ export default function AccountSettingsPage() {
 
   // Provider config for direct linking (Telegram botUsername, Discord clientId)
   const [linkConfig, setLinkConfig] = useState<LinkConfigResponse | null>(null);
+
+  // Account link conflict dialog state
+  const [linkConflict, setLinkConflict] = useState<AccountLinkConflict | null>(null);
+
+  // Account merge flow state (Phase 0.2)
+  const [mergePreview, setMergePreview] = useState<MergePreviewResponse | null>(null);
+  const [mergeConfirmInput, setMergeConfirmInput] = useState('');
+  const [isMerging, setIsMerging] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   // Standalone: null = loading, true = platform bound, false = not bound.
   // Based on persistent ownerUserId from the backend, not ephemeral JWT.
@@ -173,11 +190,16 @@ export default function AccountSettingsPage() {
         });
         loadLinkedAccounts();
       } catch (err) {
-        toast({
-          title: t('common.error'),
-          description: err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
-          variant: 'destructive',
-        });
+        if (err instanceof AccountLinkConflictError) {
+          setLinkConflict(err.conflict);
+        } else {
+          toast({
+            title: t('common.error'),
+            description:
+              err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
+            variant: 'destructive',
+          });
+        }
       } finally {
         setLinkingProvider(null);
       }
@@ -246,12 +268,16 @@ export default function AccountSettingsPage() {
               if (isPopup) tryClosePopup(2000);
             }
           } catch (err) {
-            toast({
-              title: t('common.error'),
-              description:
-                err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
-              variant: 'destructive',
-            });
+            if (err instanceof AccountLinkConflictError) {
+              setLinkConflict(err.conflict);
+            } else {
+              toast({
+                title: t('common.error'),
+                description:
+                  err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
+                variant: 'destructive',
+              });
+            }
             if (isPopup) tryClosePopup(2000);
           } finally {
             clearLinkCallbackParams();
@@ -646,6 +672,216 @@ export default function AccountSettingsPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('settings.accountBinding.unlink')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 绑定冲突对话框 */}
+      <AlertDialog
+        open={!!linkConflict && !mergePreview}
+        onOpenChange={open => !open && setLinkConflict(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              {t('settings.accountBinding.conflictTitle')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>
+                  {t('settings.accountBinding.conflictDesc', {
+                    provider:
+                      SUPPORTED_PROVIDERS.find(p => p.id === linkConflict?.provider)?.name ??
+                      linkConflict?.provider ??
+                      '',
+                  })}
+                </p>
+                <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t('settings.accountBinding.conflictOtherAccount')}
+                    </span>
+                    <span className="font-mono">
+                      {linkConflict?.otherAccountName
+                        ? `${linkConflict.otherAccountName.slice(0, 4)}****${linkConflict.otherAccountName.slice(-4)}`
+                        : ''}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t('settings.accountBinding.conflictProviderCount', {
+                        count: linkConflict?.otherAccountProviderCount ?? 0,
+                      })}
+                    </span>
+                  </div>
+                </div>
+                {linkConflict?.otherAccountProviderCount === 1 ? (
+                  <p className="text-muted-foreground">
+                    {t('settings.accountBinding.conflictMergeHint')}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {t('settings.accountBinding.conflictGuidance', {
+                      provider:
+                        SUPPORTED_PROVIDERS.find(p => p.id === linkConflict?.provider)?.name ??
+                        linkConflict?.provider ??
+                        '',
+                    })}
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setLinkConflict(null)}>
+              {t('settings.accountBinding.conflictClose')}
+            </AlertDialogCancel>
+            {linkConflict?.otherAccountProviderCount === 1 && (
+              <AlertDialogAction
+                disabled={isLoadingPreview}
+                onClick={async () => {
+                  if (!linkConflict) return;
+                  setIsLoadingPreview(true);
+                  try {
+                    const preview = await getMergePreview(linkConflict.otherAccountName);
+                    setMergePreview(preview);
+                  } catch (err) {
+                    toast({
+                      title: t('common.error'),
+                      description:
+                        err instanceof Error
+                          ? err.message
+                          : t('settings.accountBinding.mergeFailed'),
+                      variant: 'destructive',
+                    });
+                  } finally {
+                    setIsLoadingPreview(false);
+                  }
+                }}
+              >
+                {isLoadingPreview ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <GitMerge className="w-4 h-4 mr-1" />
+                )}
+                {t('settings.accountBinding.mergeButton')}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 合并预览对话框 */}
+      <AlertDialog
+        open={!!mergePreview}
+        onOpenChange={open => {
+          if (!open) {
+            setMergePreview(null);
+            setMergeConfirmInput('');
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <GitMerge className="w-5 h-5 text-primary" />
+              {t('settings.accountBinding.mergePreviewTitle')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>{t('settings.accountBinding.mergePreviewDesc')}</p>
+
+                <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {t('settings.accountBinding.mergePreviewStores')}
+                  </p>
+                  {mergePreview && mergePreview.peerIds.length > 0 ? (
+                    mergePreview.peerIds.map(s => (
+                      <div key={s.peerId} className="flex items-center gap-2 text-xs">
+                        <Server className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span>
+                          {s.domain ||
+                            s.storeName ||
+                            `${s.peerId.slice(0, 8)}...${s.peerId.slice(-6)}`}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">
+                      {t('settings.accountBinding.mergeNoStores')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-border p-3 bg-muted/50 space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {t('settings.accountBinding.mergePreviewProvider')}
+                  </p>
+                  {mergePreview?.providers.map(p => (
+                    <div key={p} className="flex items-center gap-2 text-xs">
+                      <ProviderIcon provider={p as OAuthProvider} />
+                      <span>{SUPPORTED_PROVIDERS.find(sp => sp.id === p)?.name ?? p}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {t('settings.accountBinding.mergeConfirmLabel')}
+                  </label>
+                  <Input
+                    value={mergeConfirmInput}
+                    onChange={e => setMergeConfirmInput(e.target.value)}
+                    placeholder={t('settings.accountBinding.mergeConfirmPlaceholder')}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setMergePreview(null);
+                setMergeConfirmInput('');
+              }}
+            >
+              {t('common.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={
+                isMerging || !mergePreview || mergeConfirmInput !== mergePreview.oldAccountName
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!mergePreview) return;
+                setIsMerging(true);
+                try {
+                  await mergeAccount(mergePreview.oldAccountName);
+                  toast({
+                    title: t('common.success'),
+                    description: t('settings.accountBinding.mergeSuccess'),
+                  });
+                  setMergePreview(null);
+                  setMergeConfirmInput('');
+                  setLinkConflict(null);
+                  loadLinkedAccounts();
+                } catch (err) {
+                  toast({
+                    title: t('common.error'),
+                    description:
+                      err instanceof Error ? err.message : t('settings.accountBinding.mergeFailed'),
+                    variant: 'destructive',
+                  });
+                } finally {
+                  setIsMerging(false);
+                }
+              }}
+            >
+              {isMerging && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              {t('settings.accountBinding.mergeExecute')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

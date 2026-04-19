@@ -119,6 +119,12 @@ export {
   getLinkCallbackStorefrontReturn,
   clearLinkCallbackParams,
   getLinkRedirectPath,
+  AccountLinkConflictError,
+  getMergePreview,
+  mergeAccount,
+  type MergePreviewResponse,
+  type MergePreviewStore,
+  type MergeResult,
 } from './accountBinding';
 
 // ============ SaaS Bridge (Standalone admin → SaaS Casdoor JWT) ============

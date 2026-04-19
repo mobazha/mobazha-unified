@@ -52,6 +52,7 @@ import {
   clearLinkCallbackParams,
   getLinkRedirectPath,
   getLinkCallbackStorefrontReturn,
+  AccountLinkConflictError,
 } from '../../../services/auth/accountBinding';
 
 function jsonResponse(data: unknown, status = 200): Response {
@@ -218,10 +219,45 @@ describe('accountBinding', () => {
   });
 
   // =========================================================================
-  // US-4: Conflict detection via handleLinkCallback (409 PROVIDER_ALREADY_LINKED)
+  // US-4: Conflict detection via handleLinkCallback (409 ACCOUNT_LINK_CONFLICT)
   // =========================================================================
   describe('handleLinkCallback - conflict detection', () => {
-    it('returns error on 409 conflict (provider already linked to another user)', async () => {
+    it('throws AccountLinkConflictError on 409 with ACCOUNT_LINK_CONFLICT code', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(
+        jsonResponse(
+          {
+            error: {
+              code: 'ACCOUNT_LINK_CONFLICT',
+              message: 'This Telegram account is already linked to another user',
+              data: {
+                provider: 'telegram',
+                providerId: 'tg-99999',
+                otherAccountName: 'old-user-abc',
+                otherAccountProviderCount: 1,
+              },
+            },
+          },
+          409
+        )
+      );
+
+      await expect(handleLinkCallback(null, 'link:user1:telegram', 'tg-99999')).rejects.toThrow(
+        AccountLinkConflictError
+      );
+
+      try {
+        await handleLinkCallback(null, 'link:user1:telegram', 'tg-99999');
+      } catch (err) {
+        expect(err).toBeInstanceOf(AccountLinkConflictError);
+        const conflict = (err as AccountLinkConflictError).conflict;
+        expect(conflict.provider).toBe('telegram');
+        expect(conflict.providerId).toBe('tg-99999');
+        expect(conflict.otherAccountName).toBe('old-user-abc');
+        expect(conflict.otherAccountProviderCount).toBe(1);
+      }
+    });
+
+    it('returns generic error on 409 without ACCOUNT_LINK_CONFLICT code', async () => {
       vi.mocked(window.fetch).mockResolvedValue(
         jsonResponse(
           {
@@ -309,7 +345,30 @@ describe('accountBinding', () => {
       await expect(directLinkTelegram(authData)).rejects.toThrow('Not authenticated');
     });
 
-    it('throws on server error (e.g. conflict)', async () => {
+    it('throws AccountLinkConflictError on 409 with structured conflict data', async () => {
+      vi.mocked(window.fetch).mockResolvedValue(
+        jsonResponse(
+          {
+            error: {
+              code: 'ACCOUNT_LINK_CONFLICT',
+              message: 'This Telegram account is already linked to another user',
+              data: {
+                provider: 'telegram',
+                providerId: '123',
+                otherAccountName: 'other-user',
+                otherAccountProviderCount: 2,
+              },
+            },
+          },
+          409
+        )
+      );
+
+      const authData = { id: 123, first_name: 'Test', auth_date: 1700000000, hash: 'abc' };
+      await expect(directLinkTelegram(authData)).rejects.toThrow(AccountLinkConflictError);
+    });
+
+    it('throws generic error on 409 without conflict code', async () => {
       vi.mocked(window.fetch).mockResolvedValue(
         jsonResponse(
           { error: { message: 'This Telegram account is already linked to another user' } },

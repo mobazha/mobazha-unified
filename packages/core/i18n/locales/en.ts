@@ -1704,6 +1704,28 @@ export const en: TranslationResource = {
       keepOneDesc:
         'After linking multiple accounts, you can log in with any of them. For account security, at least one login method must be kept.',
       standaloneStore: 'My Standalone Store',
+      conflictTitle: 'Link Conflict',
+      conflictDesc:
+        'This {{provider}} account is already linked to another Mobazha account and cannot be linked again.',
+      conflictOtherAccount: 'Conflicting account',
+      conflictProviderCount: '{{count}} login method(s) linked',
+      conflictGuidance:
+        'To use this account here, first unlink {{provider}} from the other account, then try linking again.',
+      conflictMergeHint:
+        'If the other account has only this one login method, you can merge it into this account directly.',
+      conflictClose: 'Got it',
+      mergeButton: 'Merge Account',
+      mergePreviewTitle: 'Merge Account Preview',
+      mergePreviewDesc:
+        'The following will be migrated from the old account to your current account. All stores, products, orders, messages, funds, and reputation stay with their Identity — only the login entry changes.',
+      mergePreviewStores: 'Stores to migrate',
+      mergePreviewProvider: 'Login method to transfer',
+      mergeConfirmLabel: 'Type the other account name to confirm',
+      mergeConfirmPlaceholder: 'Enter account name',
+      mergeExecute: 'Confirm Merge',
+      mergeSuccess: 'Account merged successfully',
+      mergeFailed: 'Account merge failed',
+      mergeNoStores: 'No associated stores',
     },
     // Access Control
     accessControl: {
