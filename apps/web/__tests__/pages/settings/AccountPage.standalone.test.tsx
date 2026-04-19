@@ -100,6 +100,7 @@ vi.mock('lucide-react', () => ({
   ExternalLink: () => <span>ExternalLink</span>,
   Wifi: () => <span>Wifi</span>,
   WifiOff: () => <span>WifiOff</span>,
+  GitMerge: () => <span>GitMerge</span>,
 }));
 
 import AccountSettingsPage from '../../../src/app/settings/account/page';
