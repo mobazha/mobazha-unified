@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { AddressSummary } from '@/components/Address';
@@ -15,8 +15,7 @@ import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
-import { useTGMainButton } from '@/hooks/useTGMainButton';
-import { useTGMiniApp } from '@/components/TGMiniAppProvider';
+import { usePrimaryCTA, useHaptic } from '@/lib/platform';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -63,24 +62,48 @@ export function CheckoutMobile({ checkout }: Props) {
     handleRemoveDiscount,
   } = checkout;
 
-  const { isAvailable: isTG, haptic } = useTGMiniApp();
+  // MVP-1: platform-abstract primary CTA + haptic (replaces direct
+  // useTGMainButton / useTGMiniApp().haptic). `cta.isNative` is the
+  // channel-neutral equivalent of the old `isTG` guard — Web/Discord
+  // adapters report `false` so the inline fallback bar below stays.
+  const cta = usePrimaryCTA();
+  const haptic = useHaptic();
 
-  const handleTGPlaceOrder = useCallback(() => {
+  const handlePlaceOrderNative = useCallback(() => {
     handleCreateOrder();
-    haptic?.notificationOccurred('success');
+    haptic.success();
   }, [handleCreateOrder, haptic]);
 
-  useTGMainButton({
-    text: `${t('checkout.placeOrder')} - ${renderPairedPrice(total, currency)}`,
-    onClick: handleTGPlaceOrder,
-    visible: isTG && checkoutItems.length > 0,
-    disabled: !canSubmit,
-    showProgress: isSubmitting,
-  });
+  useEffect(() => {
+    if (!cta.isNative) return;
+    const shouldShow = checkoutItems.length > 0;
+    cta.setText(
+      shouldShow ? `${t('checkout.placeOrder')} - ${renderPairedPrice(total, currency)}` : undefined
+    );
+    cta.setOnClick(shouldShow ? handlePlaceOrderNative : undefined);
+    cta.setDisabled(!canSubmit);
+    cta.setLoading(isSubmitting);
+    return () => {
+      cta.setText(undefined);
+    };
+  }, [
+    cta,
+    checkoutItems.length,
+    canSubmit,
+    isSubmitting,
+    handlePlaceOrderNative,
+    t,
+    renderPairedPrice,
+    total,
+    currency,
+  ]);
 
   return (
     <div
-      className="min-h-screen bg-background pb-24 animate-page-enter"
+      // MVP-3 A1: min-h-screen-tg respects Telegram's viewport_stable_height
+      // so the fixed bottom CTA (Place Order) is not clipped by the TG toolbar
+      // on iOS. Non-TG environments fall back to 100dvh / 100vh.
+      className="min-h-screen-tg bg-background pb-24 animate-page-enter"
       data-testid="checkout-page-mobile"
     >
       <MobilePageHeader title={t('checkout.title')} />
@@ -430,8 +453,9 @@ export function CheckoutMobile({ checkout }: Props) {
         )}
       </div>
 
-      {/* Mobile Bottom Bar — hidden in TG (MainButton replaces it) */}
-      {checkoutItems.length > 0 && !isTG && (
+      {/* Mobile Bottom Bar — hidden when the platform provides a native CTA
+          (Telegram MainButton); shown on Web / Discord / Standalone. */}
+      {checkoutItems.length > 0 && !cta.isNative && (
         <div className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-sm border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-50">
           <HStack justify="between" align="center">
             <div>

@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MobilePageHeader } from '@/components';
 import { Button } from '@/components/ui/button';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { useCart, buildCheckoutUrl } from '@/hooks/useCart';
-import { useTGMainButton } from '@/hooks/useTGMainButton';
-import { useTGMiniApp } from '@/components/TGMiniAppProvider';
+import { usePrimaryCTA } from '@/lib/platform';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem, OrderItemOption } from '@mobazha/core';
@@ -246,7 +245,12 @@ export function CartMobile() {
   } = useCart();
 
   const router = useRouter();
-  const { isAvailable: isTG } = useTGMiniApp();
+  // MVP-1: channel-neutral bottom CTA. Web/Discord adapters return a
+  // no-op with isNative=false, which lets the inline fallback bar render.
+  // NB: `usePlatform()` below returns business-level detection flags
+  // (isTGMiniApp / isEmbeddedApp) used to gate the register prompt; that
+  // is a different abstraction layer and intentionally kept.
+  const cta = usePrimaryCTA();
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
   const isAuthenticated = useUserStore(state => state.isAuthenticated);
   const { promptRegister } = useMiniAppRegister();
@@ -270,15 +274,32 @@ export function CartMobile() {
     [isAuthenticated, isTGMiniApp, isEmbeddedApp, promptRegister, handleCheckout, router]
   );
 
-  const handleTGCheckout = useCallback(() => {
+  const handleNativeCheckout = useCallback(() => {
     if (groups.length === 1) handleCheckoutWithAuth(groups[0]);
   }, [groups, handleCheckoutWithAuth]);
 
-  useTGMainButton({
-    text: `${t('cart.checkout')} (${renderPairedPrice(totalAmount, defaultCurrency)})`,
-    onClick: handleTGCheckout,
-    visible: isTG && items.length > 0 && groups.length === 1,
-  });
+  useEffect(() => {
+    if (!cta.isNative) return;
+    const shouldShow = items.length > 0 && groups.length === 1;
+    cta.setText(
+      shouldShow
+        ? `${t('cart.checkout')} (${renderPairedPrice(totalAmount, defaultCurrency)})`
+        : undefined
+    );
+    cta.setOnClick(shouldShow ? handleNativeCheckout : undefined);
+    return () => {
+      cta.setText(undefined);
+    };
+  }, [
+    cta,
+    items.length,
+    groups.length,
+    totalAmount,
+    defaultCurrency,
+    handleNativeCheckout,
+    t,
+    renderPairedPrice,
+  ]);
 
   if (items.length === 0) {
     return (
@@ -297,7 +318,11 @@ export function CartMobile() {
   }
 
   return (
-    <PageTransition className="min-h-screen bg-background pb-24">
+    // MVP-3 A1: use viewport_stable_height so the fixed checkout CTA bar is
+    // visible and tappable on iOS Telegram. pb-24 already reserves space for
+    // the fixed bottom bar; the Tailwind v4 `min-h-screen-tg` utility defined
+    // in globals.css falls back to 100dvh / 100vh outside of Telegram.
+    <PageTransition className="min-h-screen-tg bg-background pb-24">
       <MobilePageHeader
         title={t('cart.title')}
         rightAction={
@@ -340,8 +365,9 @@ export function CartMobile() {
         </div>
       </div>
 
-      {/* Fixed bottom bar — hidden in TG (MainButton replaces it) */}
-      {!isTG && (
+      {/* Fixed bottom bar — hidden when the platform provides a native CTA
+          (Telegram MainButton); visible on Web / Discord / Standalone. */}
+      {!cta.isNative && (
         <div className="fixed bottom-0 inset-x-0 bg-background border-t border-border px-4 py-2.5 pb-safe z-40">
           <div className="flex items-center justify-between">
             <div>

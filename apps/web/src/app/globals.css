@@ -495,6 +495,26 @@ body {
   }
 }
 
+/* ===== MVP-3 A1 — Telegram Mini App viewport utilities =====
+ *
+ * `TGMiniAppProvider` publishes `--tg-viewport-stable-h` on `<html>` when the
+ * app is running inside Telegram (see TGMiniAppProvider.tsx A1 effect). The
+ * stable-height value excludes keyboard animation, matching what TG iOS gives
+ * Mini Apps after `expand()`.
+ *
+ * Use `min-h-screen-tg` on the topmost scroll container of Mobile pages that
+ * also render a fixed bottom CTA bar (Checkout, Cart, Product detail). In
+ * non-Telegram environments the variable is undefined, so the fallback chain
+ * resolves to `100dvh` (if supported) → `100vh`, which matches prior Web
+ * behavior. Do NOT replace every `min-h-screen` globally — only the few pages
+ * whose CTAs were observed to be clipped by the TG toolbar.
+ */
+@utility min-h-screen-tg {
+  min-height: 100vh;
+  min-height: 100dvh; /* progressive enhancement for modern browsers */
+  min-height: var(--tg-viewport-stable-h, 100dvh);
+}
+
 /* Safe area utilities */
 @utility pt-safe {
   padding-top: var(--safe-area-inset-top);

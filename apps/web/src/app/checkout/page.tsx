@@ -6,6 +6,7 @@ import { usePlatform } from '@mobazha/ui';
 import { useI18n } from '@mobazha/core';
 import { CheckoutDesktop, CheckoutMobile } from '@/components/Checkout';
 import { useCheckout } from '@/hooks/useCheckout';
+import { useCloseGuard } from '@/hooks';
 import { Header } from '@/components';
 
 function CheckoutError() {
@@ -34,6 +35,10 @@ function CheckoutError() {
 function CheckoutContent() {
   const { isMobile } = usePlatform();
   const checkout = useCheckout();
+  // MVP-3 A5: prevent accidental Mini App close while checkout is in progress.
+  // Cleanup on unmount (on successful order redirect) automatically releases
+  // the guard, so Telegram no longer prompts on subsequent close attempts.
+  useCloseGuard(true);
 
   if (checkout.error && !checkout.isLoading && checkout.checkoutItems.length === 0) {
     return <CheckoutError />;

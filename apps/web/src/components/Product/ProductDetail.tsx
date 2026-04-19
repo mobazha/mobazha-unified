@@ -10,9 +10,8 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { StarRating } from '@/components/ui/star-rating';
 import { cn } from '@/lib/utils';
-import { useTGMainButton } from '@/hooks/useTGMainButton';
+import { usePrimaryCTA, useHaptic } from '@/lib/platform';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
-import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import {
   productDataService,
   profileApi,
@@ -407,8 +406,11 @@ export function ProductDetail({
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [product, quantity, isModal, onClose, router]);
 
-  // TG Mini App integration
-  const { isAvailable: isTG, haptic } = useTGMiniApp();
+  // MVP-1: platform-abstract primary CTA + haptic (replaces useTGMainButton
+  // + useTGMiniApp().haptic). On Web/Discord the CTA is a no-op; the page's
+  // inline Add-to-Cart button continues to render below.
+  const cta = usePrimaryCTA();
+  const haptic = useHaptic();
   const tgStock = useMemo(() => (product ? getStockQuantity(product) : 0), [product]);
   const tgPriceDisplay = useMemo(() => {
     if (!product) return '';
@@ -417,21 +419,28 @@ export function ProductDetail({
     return renderPairedPrice(price, curr);
   }, [product, renderPairedPrice]);
 
-  const handleTGAddToCart = useCallback(() => {
+  const handleNativeAddToCart = useCallback(() => {
     handleAddToCart();
-    haptic?.notificationOccurred('success');
+    haptic.success();
   }, [handleAddToCart, haptic]);
 
-  useTGMainButton({
-    text: isStorePaused
-      ? t('store.statusPaused')
-      : tgStock === 0
-        ? t('product.outOfStock')
-        : `${t('product.addToCart')} - ${tgPriceDisplay}`,
-    onClick: handleTGAddToCart,
-    visible: isTG && !!product && !isModal,
-    disabled: tgStock === 0 || isStorePaused,
-  });
+  useEffect(() => {
+    if (!cta.isNative) return;
+    const shouldShow = !!product && !isModal;
+    const text = !shouldShow
+      ? undefined
+      : isStorePaused
+        ? t('store.statusPaused')
+        : tgStock === 0
+          ? t('product.outOfStock')
+          : `${t('product.addToCart')} - ${tgPriceDisplay}`;
+    cta.setText(text);
+    cta.setOnClick(shouldShow ? handleNativeAddToCart : undefined);
+    cta.setDisabled(tgStock === 0 || isStorePaused);
+    return () => {
+      cta.setText(undefined);
+    };
+  }, [cta, product, isModal, isStorePaused, tgStock, tgPriceDisplay, handleNativeAddToCart, t]);
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;

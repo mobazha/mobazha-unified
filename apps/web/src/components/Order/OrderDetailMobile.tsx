@@ -24,6 +24,7 @@ import {
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
 import { useToast } from '@/components/ui/use-toast';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider/TGMiniAppProvider';
+import { useHaptic } from '@/lib/platform';
 import {
   OrderChat,
   AcceptOrderDialog,
@@ -136,7 +137,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     fulfillOrderProps,
   } = useOrderDetailPage(orderId, viewingContext);
 
-  const { isAvailable: isTG, backButton, mainButton, haptic } = useTGMiniApp();
+  // NOTE (MVP-1 partial migration): `haptic` has moved to the platform-abstract
+  // `useHaptic()` below. `isTG` / `backButton` / `mainButton` are still pulled
+  // directly from `useTGMiniApp()` because this component drives the native
+  // BackButton / MainButton imperatively (not through useTGMainButton). Those
+  // direct SDK calls will be migrated to `usePrimaryCTA` + `useBackAction`
+  // in a follow-up pass; until then keep the dual-import shim.
+  const { isAvailable: isTG, backButton, mainButton } = useTGMiniApp();
+  const haptic = useHaptic();
   const { toast } = useToast();
 
   // --- UI-only state ---
@@ -247,14 +255,16 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     const actionType = confirmDialog;
     setConfirmDialog(null);
     const ok = await executeConfirmAction(actionType);
-    haptic?.notificationOccurred(ok ? 'success' : 'error');
+    if (ok) haptic.success();
+    else haptic.error();
   }, [confirmDialog, executeConfirmAction, haptic]);
 
   const handleFiatRefund = useCallback(
     async (params: { amount?: number; currency?: string; reason?: string }) => {
       setShowFiatRefundDialog(false);
       const ok = await executeConfirmAction('refund', params);
-      haptic?.notificationOccurred(ok ? 'success' : 'error');
+      if (ok) haptic.success();
+      else haptic.error();
     },
     [executeConfirmAction, haptic]
   );
@@ -265,14 +275,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       try {
         await ordersApi.openDispute(orderId, claim, evidenceHashes);
         setShowDisputeModal(false);
-        haptic?.notificationOccurred('success');
+        haptic.success();
         toast({
           title: t('order.disputeOpened'),
           description: t('order.disputeOpenedSuccess'),
         });
         setTimeout(() => refetch(), 500);
       } catch (error) {
-        haptic?.notificationOccurred('error');
+        haptic.error();
         toast({
           title: t('order.actions.error'),
           description: (error as Error).message,
@@ -291,14 +301,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       try {
         await disputesApi.openAfterSaleDispute(orderId, reason, description);
         setShowDisputeModal(false);
-        haptic?.notificationOccurred('success');
+        haptic.success();
         toast({
           title: t('order.disputeOpened'),
           description: t('order.afterSaleDisputeSuccess'),
         });
         setTimeout(() => refetch(), 500);
       } catch (error) {
-        haptic?.notificationOccurred('error');
+        haptic.error();
         toast({
           title: t('order.actions.error'),
           description: (error as Error).message,
@@ -818,11 +828,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         productTitle={reviewProductTitle}
         onSubmit={async data => {
           await submitReviewAndComplete(data);
-          haptic?.notificationOccurred('success');
+          haptic.success();
         }}
         onSkip={async () => {
           await skipReviewAndComplete();
-          haptic?.notificationOccurred('success');
+          haptic.success();
         }}
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
