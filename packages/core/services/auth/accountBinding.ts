@@ -34,8 +34,53 @@ import type {
   LinkConfigResponse,
   TelegramAuthData,
   OAuthProvider,
+  AccountLinkConflict,
 } from '../../types/account';
 import { CASDOOR_PROVIDER_NAMES } from '../../types/account';
+
+/**
+ * 账号绑定冲突错误。
+ *
+ * 后端（mobazha_hosting）在 Phase 0.1 起对 provider ID 冲突返回
+ * HTTP 409 + error.code = "ACCOUNT_LINK_CONFLICT"，payload 见 error.data。
+ * 前端捕获此错误后展示冲突对话框，Phase 0.2 会在此基础上提供合并入口。
+ */
+export class AccountLinkConflictError extends Error {
+  readonly code = 'ACCOUNT_LINK_CONFLICT' as const;
+  readonly conflict: AccountLinkConflict;
+
+  constructor(message: string, conflict: AccountLinkConflict) {
+    super(message);
+    this.name = 'AccountLinkConflictError';
+    this.conflict = conflict;
+  }
+}
+
+/**
+ * 尝试把后端返回的错误响应解析为 AccountLinkConflictError。
+ * 不匹配则返回 null，调用方继续走通用错误分支。
+ */
+function tryParseLinkConflict(
+  errorData: { error?: { code?: string; message?: string; data?: unknown } } | null
+): AccountLinkConflictError | null {
+  if (!errorData?.error || errorData.error.code !== 'ACCOUNT_LINK_CONFLICT') {
+    return null;
+  }
+  const data = errorData.error.data as Partial<AccountLinkConflict> | undefined;
+  if (
+    !data ||
+    typeof data.provider !== 'string' ||
+    typeof data.providerId !== 'string' ||
+    typeof data.otherAccountName !== 'string' ||
+    typeof data.otherAccountProviderCount !== 'number'
+  ) {
+    return null;
+  }
+  return new AccountLinkConflictError(
+    errorData.error.message || 'Account link conflict',
+    data as AccountLinkConflict
+  );
+}
 
 /**
  * Get the correct base URL and Bearer token for account binding APIs.
@@ -318,6 +363,8 @@ export async function handleLinkCallback(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
+    const conflict = tryParseLinkConflict(errorData);
+    if (conflict) throw conflict;
     return { success: false, error: errorData?.error?.message || 'Link failed' };
   }
 
@@ -382,6 +429,8 @@ export async function directLinkTelegram(authData: TelegramAuthData): Promise<Di
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
+    const conflict = tryParseLinkConflict(errorData);
+    if (conflict) throw conflict;
     throw new Error(errorData?.error?.message || 'Failed to link Telegram');
   }
 
@@ -498,4 +547,78 @@ export function getLinkRedirectPath(): string {
   sessionStorage.removeItem('link_redirect');
   sessionStorage.removeItem('link_provider');
   return path || '/settings/account';
+}
+
+// ---------------------------------------------------------------------------
+// Account Merge API (Phase 0.2)
+// ---------------------------------------------------------------------------
+
+export interface MergePreviewStore {
+  peerId: string;
+  storeName?: string;
+  domain?: string;
+}
+
+export interface MergePreviewResponse {
+  oldAccountName: string;
+  peerIds: MergePreviewStore[];
+  providers: string[];
+}
+
+export interface MergeResult {
+  success: boolean;
+  mergedAccount: string;
+  movedPeerIds: string[];
+  movedProvider: string;
+}
+
+/**
+ * Preview what would happen if the target account is merged into the current one.
+ */
+export async function getMergePreview(targetAccountName: string): Promise<MergePreviewResponse> {
+  const { baseUrl, token } = getBindingEndpoint();
+  if (!token) throw new Error('Not authenticated');
+
+  const params = new URLSearchParams({ target: targetAccountName });
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/merge/preview?${params}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error?.message || 'Failed to load merge preview');
+  }
+
+  const data = await response.json();
+  return data.data as MergePreviewResponse;
+}
+
+/**
+ * Execute account merge: moves all stores and provider from target account
+ * to the current one and deletes the target account.
+ */
+export async function mergeAccount(confirmAccountName: string): Promise<MergeResult> {
+  const { baseUrl, token } = getBindingEndpoint();
+  if (!token) throw new Error('Not authenticated');
+
+  const response = await fetch(`${baseUrl}/platform/v1/accounts/merge`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ confirm_account_name: confirmAccountName }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.error?.message || 'Merge failed');
+  }
+
+  const data = await response.json();
+  return data.data as MergeResult;
 }

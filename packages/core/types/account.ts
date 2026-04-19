@@ -91,6 +91,21 @@ export interface DirectLinkResponse {
 }
 
 /**
+ * 账号绑定冲突详情
+ *
+ * 后端返回 HTTP 409 + error.code = "ACCOUNT_LINK_CONFLICT" 时，
+ * error.data 会携带此结构，让前端引导用户走合并流程（Phase 0.2）。
+ */
+export interface AccountLinkConflict {
+  provider: OAuthProvider;
+  providerId: string;
+  /** 冲突账户的 Casdoor 用户名（完整值，用于 Phase 0.2 合并时二次确认） */
+  otherAccountName: string;
+  /** 冲突账户已绑定的登录方式数量（Phase 0.2 合并硬约束：必须 == 1） */
+  otherAccountProviderCount: number;
+}
+
+/**
  * 绑定配置响应（后端返回的 provider 配置）
  */
 export interface LinkConfigResponse {

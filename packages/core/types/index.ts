@@ -253,6 +253,7 @@ export type {
   LinkConfigResponse,
   TelegramAuthData,
   ProviderInfo,
+  AccountLinkConflict,
 } from './account';
 
 export { SUPPORTED_PROVIDERS, CASDOOR_PROVIDER_NAMES, getProviderInfo } from './account';
