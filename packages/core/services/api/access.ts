@@ -6,7 +6,6 @@
  * 所有 API 调用都通过 baseUrl（hosting_server）
  */
 
-import { getEnvConfig } from '../../config/env';
 import { getStoredToken } from '../auth/token';
 import type {
   UserGroup,
@@ -30,13 +29,7 @@ import type {
   ReviewSellerRequest,
 } from '../../types/access';
 import { HOSTING_API } from '../../config/apiPaths';
-
-/**
- * 获取 API 基础 URL
- */
-function getBaseUrl(): string {
-  return getEnvConfig().api.baseUrl;
-}
+import { getHostingUrl } from './config';
 
 /**
  * 获取认证 headers
@@ -151,7 +144,7 @@ function extractErrorMessage(errBody: unknown): string {
  * @param peerID - 用户的 peerID
  */
 export async function getUserGroups(peerID: string): Promise<UserGroup[]> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.USER_GROUPS}?peerID=${peerID}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.USER_GROUPS}?peerID=${peerID}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -174,7 +167,7 @@ export async function getUserGroups(peerID: string): Promise<UserGroup[]> {
  * 创建用户组
  */
 export async function createUserGroup(data: CreateUserGroupRequest): Promise<UserGroup> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.USER_GROUPS}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.USER_GROUPS}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -193,7 +186,7 @@ export async function updateUserGroup(
   groupId: number,
   data: UpdateUserGroupRequest
 ): Promise<UserGroup> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.USER_GROUP(String(groupId))}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.USER_GROUP(String(groupId))}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -209,7 +202,7 @@ export async function updateUserGroup(
  * 删除用户组
  */
 export async function deleteUserGroup(groupId: number): Promise<void> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.USER_GROUP(String(groupId))}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.USER_GROUP(String(groupId))}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });
@@ -226,7 +219,7 @@ export async function deleteUserGroup(groupId: number): Promise<void> {
  */
 export async function getUserGroupMembers(groupId: number): Promise<UserGroupMember[]> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.USER_GROUP_MEMBERS(String(groupId))}`,
+    `${getHostingUrl()}${HOSTING_API.USER_GROUP_MEMBERS(String(groupId))}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -253,7 +246,7 @@ export async function addUserGroupMember(
   peerID: string
 ): Promise<UserGroupMember> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.USER_GROUP_MEMBERS(String(groupId))}`,
+    `${getHostingUrl()}${HOSTING_API.USER_GROUP_MEMBERS(String(groupId))}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -275,7 +268,7 @@ export async function addUserGroupMembersBatch(
   peerIDs: string[]
 ): Promise<{ added: number; failed: number }> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.USER_GROUP_MEMBERS_BATCH(String(groupId))}`,
+    `${getHostingUrl()}${HOSTING_API.USER_GROUP_MEMBERS_BATCH(String(groupId))}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -294,7 +287,7 @@ export async function addUserGroupMembersBatch(
  */
 export async function removeUserGroupMember(groupId: number, memberId: number): Promise<void> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.USER_GROUP_MEMBER(String(groupId), String(memberId))}`,
+    `${getHostingUrl()}${HOSTING_API.USER_GROUP_MEMBER(String(groupId), String(memberId))}`,
     {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -313,7 +306,7 @@ export async function removeUserGroupMember(groupId: number, memberId: number): 
  * @param userID - 用户 ID（Telegram User ID 等）
  */
 export async function getProductGroups(userID: string): Promise<ProductGroup[]> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.PRODUCT_GROUPS}?userID=${userID}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.PRODUCT_GROUPS}?userID=${userID}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -334,7 +327,7 @@ export async function getProductGroups(userID: string): Promise<ProductGroup[]> 
  * 创建产品组
  */
 export async function createProductGroup(data: CreateProductGroupRequest): Promise<ProductGroup> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.PRODUCT_GROUPS}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.PRODUCT_GROUPS}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -353,7 +346,7 @@ export async function updateProductGroup(
   groupId: number,
   data: UpdateProductGroupRequest
 ): Promise<ProductGroup> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP(String(groupId))}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP(String(groupId))}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -369,7 +362,7 @@ export async function updateProductGroup(
  * 删除产品组
  */
 export async function deleteProductGroup(groupId: number): Promise<void> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP(String(groupId))}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP(String(groupId))}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });
@@ -384,7 +377,7 @@ export async function deleteProductGroup(groupId: number): Promise<void> {
  */
 export async function getProductGroupItems(groupId: number): Promise<ProductGroupItem[]> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP_ITEMS(String(groupId))}`,
+    `${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP_ITEMS(String(groupId))}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -412,7 +405,7 @@ export async function addProductToGroup(
   peerID: string
 ): Promise<ProductGroupItem> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP_ITEMS(String(groupId))}`,
+    `${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP_ITEMS(String(groupId))}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -431,7 +424,7 @@ export async function addProductToGroup(
  */
 export async function removeProductFromGroup(groupId: number, slug: string): Promise<void> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP_ITEM(String(groupId), slug)}`,
+    `${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP_ITEM(String(groupId), slug)}`,
     {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -452,7 +445,7 @@ export async function getProductGroupAuthorizations(
   productGroupId: number
 ): Promise<ProductGroupAuthorization[]> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP_AUTHORIZATIONS(String(productGroupId))}`,
+    `${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP_AUTHORIZATIONS(String(productGroupId))}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -480,7 +473,7 @@ export async function addProductGroupAuthorization(
   data: AddProductGroupAuthorizationRequest
 ): Promise<ProductGroupAuthorization> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP_AUTHORIZATIONS(String(productGroupId))}`,
+    `${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP_AUTHORIZATIONS(String(productGroupId))}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -502,7 +495,7 @@ export async function deleteProductGroupAuthorization(
   authId: number
 ): Promise<void> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.PRODUCT_GROUP_AUTHORIZATION(String(productGroupId), String(authId))}`,
+    `${getHostingUrl()}${HOSTING_API.PRODUCT_GROUP_AUTHORIZATION(String(productGroupId), String(authId))}`,
     {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -523,7 +516,7 @@ export async function getStoreAccessRequests(
   storePeerID: string,
   status?: string
 ): Promise<StoreAccessRequest[]> {
-  let url = `${getBaseUrl()}${HOSTING_API.STORE_ACCESS_REQUESTS}?storePeerID=${storePeerID}`;
+  let url = `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_REQUESTS}?storePeerID=${storePeerID}`;
   if (status) {
     url += `&status=${status}`;
   }
@@ -550,7 +543,7 @@ export async function getStoreAccessRequests(
 export async function submitStoreAccessRequest(
   data: SubmitAccessRequestData
 ): Promise<StoreAccessRequest> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_ACCESS_REQUESTS}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_ACCESS_REQUESTS}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -570,7 +563,7 @@ export async function reviewAccessRequest(
   data: ReviewAccessRequestData
 ): Promise<StoreAccessRequest> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.STORE_ACCESS_REQUEST(String(requestId))}`,
+    `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_REQUEST(String(requestId))}`,
     {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -595,7 +588,7 @@ export async function checkStoreAccess(
   groupPlatform?: string,
   groupChatID?: string
 ): Promise<StoreAccessCheckResult> {
-  let url = `${getBaseUrl()}${HOSTING_API.STORE_ACCESS_CHECK}?storePeerID=${storePeerID}&requestorPeerID=${requestorPeerID}`;
+  let url = `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_CHECK}?storePeerID=${storePeerID}&requestorPeerID=${requestorPeerID}`;
 
   // 添加群组上下文参数（如果有）
   if (groupPlatform && groupChatID) {
@@ -620,7 +613,7 @@ export async function checkStoreAccess(
  */
 export async function getStoreAccessSettings(peerID: string): Promise<StoreAccessSettings> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.STORE_ACCESS_SETTINGS}?peerID=${peerID}`,
+    `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_SETTINGS}?peerID=${peerID}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -640,7 +633,7 @@ export async function updateStoreAccessSettings(
   peerID: string,
   data: Partial<StoreAccessSettings>
 ): Promise<StoreAccessSettings> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_ACCESS_SETTINGS}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_ACCESS_SETTINGS}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ peerID, ...data }),
@@ -659,7 +652,7 @@ export async function updateStoreAccessSettings(
  */
 export async function getStoreAccessList(storePeerID: string): Promise<StoreAccessListItem[]> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.STORE_ACCESS_LIST}?storePeerID=${storePeerID}`,
+    `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_LIST}?storePeerID=${storePeerID}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -687,7 +680,7 @@ export async function addToStoreAccessList(
   storePeerID: string,
   requestorPeerID: string
 ): Promise<StoreAccessListItem> {
-  const response = await fetch(`${getBaseUrl()}${HOSTING_API.STORE_ACCESS_LIST}`, {
+  const response = await fetch(`${getHostingUrl()}${HOSTING_API.STORE_ACCESS_LIST}`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ storePeerID, requestorPeerID }),
@@ -707,7 +700,7 @@ export async function removeFromStoreAccessList(
   requestorPeerID: string
 ): Promise<void> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.STORE_ACCESS_LIST}?storePeerID=${storePeerID}&requestorPeerID=${requestorPeerID}`,
+    `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_LIST}?storePeerID=${storePeerID}&requestorPeerID=${requestorPeerID}`,
     {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -735,7 +728,7 @@ export async function getGroupListings(
   });
 
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.GROUP_MARKETPLACE_LISTINGS(platform, chatId)}?${queryParams}`,
+    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_LISTINGS(platform, chatId)}?${queryParams}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -761,7 +754,7 @@ export async function getGroupSellers(
   if (filters.userID) queryParams.set('userID', filters.userID);
 
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLERS(platform, chatId)}?${queryParams}`,
+    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLERS(platform, chatId)}?${queryParams}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -789,7 +782,7 @@ export async function applyAsSeller(
   data: ApplyAsSellerRequest
 ): Promise<GroupSeller> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLERS_APPLY(platform, chatId)}`,
+    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLERS_APPLY(platform, chatId)}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -813,7 +806,7 @@ export async function reviewSeller(
   data: ReviewSellerRequest
 ): Promise<GroupSeller> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLER_REVIEW(platform, chatId, String(sellerId))}`,
+    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLER_REVIEW(platform, chatId, String(sellerId))}`,
     {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -836,7 +829,7 @@ export async function checkGroupAdmin(
   platformUserID: string
 ): Promise<{ isAdmin: boolean }> {
   const response = await fetch(
-    `${getBaseUrl()}${HOSTING_API.GROUP_MARKETPLACE_CHECK_ADMIN(platform, chatId)}`,
+    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_CHECK_ADMIN(platform, chatId)}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
