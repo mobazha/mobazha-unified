@@ -600,9 +600,18 @@ function BotDiagnosticsPanel({
 }) {
   const { t } = useI18n();
 
+  // Keep the latest onLoad in a ref so the mount-only effect below always
+  // calls the freshest callback (avoids a stale closure when `peerID` —
+  // the sole dep of `useSalesChannels#loadBotWebhookStatusFn` — changes
+  // after mount). We still want to fire exactly once on mount, so the
+  // effect itself has an empty dep array.
+  const onLoadRef = useRef(onLoad);
   useEffect(() => {
-    onLoad();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    onLoadRef.current = onLoad;
+  }, [onLoad]);
+
+  useEffect(() => {
+    onLoadRef.current();
   }, []);
 
   if (statusLoading && !status) {

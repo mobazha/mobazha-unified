@@ -17,16 +17,14 @@
  */
 
 import { getCachedFeatureFlags } from '../hooks/featureFlagsCache';
+import { isValidStorefrontSlug } from './storefrontSlug';
 
 const STOREFRONT_CONTEXT_KEY = 'mbz_storefront_slug';
-
-// Slug contract: kebab-case, 1..64 chars. Mirrors the parser and the server.
-const SLUG_PATTERN = /^[a-z0-9-]{1,64}$/;
 
 let currentSlug: string | null = null;
 
 function isValidSlug(value: string | null | undefined): value is string {
-  return typeof value === 'string' && SLUG_PATTERN.test(value);
+  return isValidStorefrontSlug(value);
 }
 
 /**

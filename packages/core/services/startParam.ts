@@ -23,10 +23,12 @@
  *     regex). Downstream context services can assume trusted input.
  */
 
+import { isValidStorefrontSlug } from './storefrontSlug';
+
 export interface ParsedStartParam {
   /** Standalone store peer ID (base58, ≤80 chars). */
   storePeerID?: string;
-  /** Storefront slug (kebab-case, ≤64 chars). */
+  /** Storefront slug (kebab-case, 3..63 chars). */
   storefrontSlug?: string;
   /** Account-binding session ID (alphanumeric, ≤128 chars). */
   bindSessionId?: string;
@@ -36,11 +38,11 @@ export interface ParsedStartParam {
 
 const SEGMENT_SEPARATOR = '__';
 
-// Mirrors server-side validation. Keep these in sync with
-// `StoreDomainService.ResolveStorefrontSlugFull` (slug) and the peer-ID regex
-// used by `storeContext.ts`.
+// Mirrors server-side validation. Slug rules are centralized in
+// `./storefrontSlug` so the admin form, slug context, and this parser
+// cannot drift. Peer-ID / bind / short-code regexes remain inline — they
+// gate different namespaces.
 const PEER_ID_PATTERN = /^[A-Za-z0-9]{1,80}$/;
-const SLUG_PATTERN = /^[a-z0-9-]{1,64}$/;
 const BIND_SESSION_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 const SHORT_CODE_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
@@ -69,7 +71,7 @@ export function parseStartParam(input: string | null | undefined): ParsedStartPa
 
     if (segment.startsWith('sf_')) {
       const value = segment.slice('sf_'.length);
-      if (SLUG_PATTERN.test(value) && !result.storefrontSlug) {
+      if (isValidStorefrontSlug(value) && !result.storefrontSlug) {
         result.storefrontSlug = value;
       }
       continue;
@@ -108,7 +110,7 @@ export function buildStartParam(parts: ParsedStartParam): string {
   if (parts.storePeerID && PEER_ID_PATTERN.test(parts.storePeerID)) {
     segments.push(`store_${parts.storePeerID}`);
   }
-  if (parts.storefrontSlug && SLUG_PATTERN.test(parts.storefrontSlug)) {
+  if (parts.storefrontSlug && isValidStorefrontSlug(parts.storefrontSlug)) {
     segments.push(`sf_${parts.storefrontSlug}`);
   }
   if (parts.bindSessionId && BIND_SESSION_PATTERN.test(parts.bindSessionId)) {
