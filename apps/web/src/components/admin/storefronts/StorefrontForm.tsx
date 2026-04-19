@@ -24,6 +24,7 @@ import type {
   StorefrontVisibility,
 } from '@mobazha/core';
 import { DEFAULT_STOREFRONT_ID } from '@mobazha/core';
+import { isValidStorefrontID, isValidStorefrontSlug } from '@mobazha/core/services/storefrontSlug';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -36,10 +37,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2, ArrowLeft } from 'lucide-react';
-
-// kebab-case with lowercase letters + digits + hyphens. Mirrors the
-// server-side constraint so we fail-fast before the network.
-const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
 export type StorefrontFormMode = 'create' | 'edit';
 
@@ -137,7 +134,7 @@ export function StorefrontForm({
         next.id = t('admin.storefronts.idRequired');
       } else if (trimmedID === DEFAULT_STOREFRONT_ID) {
         next.id = t('admin.storefronts.idReserved');
-      } else if (!SLUG_RE.test(trimmedID)) {
+      } else if (!isValidStorefrontID(trimmedID)) {
         next.id = t('admin.storefronts.idInvalid');
       }
     }
@@ -145,7 +142,7 @@ export function StorefrontForm({
       next.name = t('admin.storefronts.nameRequired');
     }
     const trimmedSlug = state.slug.trim();
-    if (trimmedSlug && !SLUG_RE.test(trimmedSlug)) {
+    if (trimmedSlug && !isValidStorefrontSlug(trimmedSlug)) {
       next.slug = t('admin.storefronts.slugInvalid');
     }
     if (state.priceRuleType === 'flat_discount' || state.priceRuleType === 'flat_markup') {
