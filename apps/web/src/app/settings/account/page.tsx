@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,8 +22,6 @@ import {
   getLinkedAccounts,
   unlinkAccount,
   startLinkAccount,
-  getLinkConfig,
-  directLinkTelegram,
   hasLinkCallback,
   getLinkCallbackParams,
   getLinkCallbackStorefrontReturn,
@@ -42,8 +40,6 @@ import type {
   OAuthProvider,
   ProviderInfo,
   StandaloneStore,
-  LinkConfigResponse,
-  TelegramAuthData,
   AccountLinkConflict,
   MergePreviewResponse,
 } from '@mobazha/core';
@@ -62,35 +58,6 @@ import {
 } from 'lucide-react';
 import { ProviderIcon } from '@/components/ProviderIcon';
 import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
-
-const TELEGRAM_WIDGET_CALLBACK = '__mbz_telegram_link_cb';
-
-/**
- * Telegram Login Widget — renders the official Telegram login button.
- * When user authenticates, fires the global callback which triggers directLinkTelegram.
- */
-function TelegramLoginWidget({ botUsername }: { botUsername: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    container.innerHTML = '';
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', botUsername);
-    script.setAttribute('data-size', 'medium');
-    script.setAttribute('data-onauth', `${TELEGRAM_WIDGET_CALLBACK}(user)`);
-    script.setAttribute('data-request-access', 'write');
-    script.async = true;
-    container.appendChild(script);
-    return () => {
-      container.innerHTML = '';
-    };
-  }, [botUsername]);
-
-  return <div ref={containerRef} />;
-}
 
 export default function AccountSettingsPage() {
   const { t } = useI18n();
@@ -113,9 +80,6 @@ export default function AccountSettingsPage() {
   // When popup mode callback completes but window.close() is blocked by the browser,
   // show a "you can close this tab" hint instead of leaving the user stranded.
   const [showCloseTabHint, setShowCloseTabHint] = useState(false);
-
-  // Provider config for direct linking (Telegram botUsername, Discord clientId)
-  const [linkConfig, setLinkConfig] = useState<LinkConfigResponse | null>(null);
 
   // Account link conflict dialog state
   const [linkConflict, setLinkConflict] = useState<AccountLinkConflict | null>(null);
@@ -170,56 +134,45 @@ export default function AccountSettingsPage() {
     }
   }, [t, standaloneMode]);
 
-  // 加载绑定配置 — skip when standalone admin hasn't connected to platform
+  // Listen for messages from popup windows (conflict data, link success, etc.)
   useEffect(() => {
-    if (standaloneMode && !platformBound) return;
-    getLinkConfig()
-      .then(setLinkConfig)
-      .catch(() => {});
-  }, [standaloneMode, platformBound]);
-
-  // Telegram Login Widget 全局回调
-  const handleTelegramAuth = useCallback(
-    async (authData: TelegramAuthData) => {
-      try {
-        setLinkingProvider('telegram');
-        await directLinkTelegram(authData);
+    const onMessage = (e: globalThis.MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type === 'mbz-link-conflict' && e.data.conflict) {
+        setLinkConflict(e.data.conflict as AccountLinkConflict);
+      } else if (e.data?.type === 'mbz-link-success') {
         toast({
           title: t('common.success'),
           description: t('settings.accountBinding.linkSuccess'),
         });
         loadLinkedAccounts();
-      } catch (err) {
-        if (err instanceof AccountLinkConflictError) {
-          setLinkConflict(err.conflict);
-        } else {
-          toast({
-            title: t('common.error'),
-            description:
-              err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
-            variant: 'destructive',
-          });
-        }
-      } finally {
-        setLinkingProvider(null);
+      } else if (e.data?.type === 'mbz-link-error' && e.data.message) {
+        toast({
+          title: t('common.error'),
+          description: e.data.message,
+          variant: 'destructive',
+        });
       }
-    },
-    [toast, t, loadLinkedAccounts]
-  );
-
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any)[TELEGRAM_WIDGET_CALLBACK] = handleTelegramAuth;
-    return () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (window as any)[TELEGRAM_WIDGET_CALLBACK];
     };
-  }, [handleTelegramAuth]);
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [toast, t, loadLinkedAccounts]);
 
   // Casdoor link mode 绑定回调（Discord/Google/GitHub 等标准 OAuth provider）
+  // Guard against effect re-runs. Without this, i18n hydration (which
+  // changes `t` identity and therefore `loadLinkedAccounts` identity) causes
+  // this effect to fire twice. The second run launches a second POST /link-callback
+  // while the first one is already closing the popup via window.close(), so its
+  // fetch aborts with `TypeError: Failed to fetch`. The catch branch then
+  // postMessage'd that error back to the opener, producing a misleading
+  // "Failed to fetch" toast after an actually-successful bind.
+  const linkCallbackProcessedRef = useRef(false);
   useEffect(() => {
+    if (linkCallbackProcessedRef.current) return;
+    if (!hasLinkCallback()) return;
+
     const processLinkCallback = async () => {
-      if (hasLinkCallback()) {
+      {
         const sfReturn = getLinkCallbackStorefrontReturn();
         const params = new URLSearchParams(window.location.search);
         const rawReturnTo = params.get('returnTo');
@@ -227,23 +180,28 @@ export default function AccountSettingsPage() {
           rawReturnTo?.startsWith('/') && !rawReturnTo.startsWith('//') ? rawReturnTo : null;
         const { code, state, providerId } = getLinkCallbackParams();
         if (state && (code || providerId)) {
+          // Mark as processed only once we have a real callback to handle.
+          // Placed inside the guarded branch so unrelated mounts don't burn the
+          // slot before the popup URL has been fully parsed.
+          linkCallbackProcessedRef.current = true;
+
           const isPopup = params.get('popup') === '1';
-          // Try to close the popup/tab; if the browser blocks it, show a hint.
-          const tryClosePopup = (delay = 0) => {
-            const doClose = () => {
-              window.close();
-              // If still open after a tick, browser refused — show fallback hint
-              setTimeout(() => setShowCloseTabHint(true), 300);
-            };
-            if (delay > 0) setTimeout(doClose, delay);
-            else doClose();
+
+          const notifyOpenerAndClose = (message: Record<string, unknown>) => {
+            try {
+              window.opener?.postMessage(message, window.location.origin);
+            } catch {
+              /* cross-origin or opener gone */
+            }
+            window.close();
+            setTimeout(() => setShowCloseTabHint(true), 300);
           };
 
           try {
             const result = await handleLinkCallback(code, state, providerId);
             if (result.success) {
               if (isPopup) {
-                tryClosePopup();
+                notifyOpenerAndClose({ type: 'mbz-link-success' });
                 return;
               }
               if (sfReturn) {
@@ -260,14 +218,32 @@ export default function AccountSettingsPage() {
               });
               loadLinkedAccounts();
             } else {
+              if (isPopup) {
+                notifyOpenerAndClose({
+                  type: 'mbz-link-error',
+                  message: result.error || t('settings.accountBinding.linkFailed'),
+                });
+                return;
+              }
               toast({
                 title: t('common.error'),
                 description: result.error || t('settings.accountBinding.linkFailed'),
                 variant: 'destructive',
               });
-              if (isPopup) tryClosePopup(2000);
             }
           } catch (err) {
+            if (isPopup) {
+              if (err instanceof AccountLinkConflictError) {
+                notifyOpenerAndClose({ type: 'mbz-link-conflict', conflict: err.conflict });
+              } else {
+                notifyOpenerAndClose({
+                  type: 'mbz-link-error',
+                  message:
+                    err instanceof Error ? err.message : t('settings.accountBinding.linkFailed'),
+                });
+              }
+              return;
+            }
             if (err instanceof AccountLinkConflictError) {
               setLinkConflict(err.conflict);
             } else {
@@ -278,7 +254,6 @@ export default function AccountSettingsPage() {
                 variant: 'destructive',
               });
             }
-            if (isPopup) tryClosePopup(2000);
           } finally {
             clearLinkCallbackParams();
           }
@@ -414,14 +389,8 @@ export default function AccountSettingsPage() {
     );
   };
 
-  // 可绑定账号卡片
+  // 可绑定账号卡片 — all providers use Casdoor OAuth redirect uniformly
   const renderAvailableProviderCard = (provider: ProviderInfo) => {
-    const telegramBot = linkConfig?.providers?.telegram?.botUsername;
-    // Standalone stores run on localhost / custom domains not whitelisted in
-    // BotFather, so the Telegram Login Widget shows "Bot domain invalid".
-    // Fall back to Casdoor OAuth redirect which runs on the SaaS domain.
-    const isTelegram = provider.id === 'telegram' && telegramBot && !standaloneMode;
-
     return (
       <div
         key={provider.id}
@@ -438,19 +407,15 @@ export default function AccountSettingsPage() {
             </p>
           </div>
         </div>
-        {isTelegram ? (
-          <TelegramLoginWidget botUsername={telegramBot} />
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleLink(provider.id)}
-            disabled={linkingProvider === provider.id}
-          >
-            <Link2 className="w-4 h-4 mr-1" />
-            {linkingProvider === provider.id ? '...' : t('settings.accountBinding.link')}
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleLink(provider.id)}
+          disabled={linkingProvider === provider.id}
+        >
+          <Link2 className="w-4 h-4 mr-1" />
+          {linkingProvider === provider.id ? '...' : t('settings.accountBinding.link')}
+        </Button>
       </div>
     );
   };
