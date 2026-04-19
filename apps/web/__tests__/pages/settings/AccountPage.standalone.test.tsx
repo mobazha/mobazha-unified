@@ -232,12 +232,17 @@ describe('AccountSettingsPage — standalone mode', () => {
       });
     });
 
-    it('fetches link config on mount', async () => {
+    // After the Casdoor-OAuth unification (page.tsx no longer renders a
+    // Telegram Login Widget), getLinkConfig is not fetched on mount. The
+    // linking flow goes through the standard OAuth popup for every provider,
+    // so the old "must fetch link config" expectation no longer holds.
+    it('does not fetch link config on mount (all providers use OAuth popup)', async () => {
       render(<AccountSettingsPage />);
 
       await waitFor(() => {
-        expect(mockGetLinkConfig).toHaveBeenCalled();
+        expect(mockGetLinkedAccounts).toHaveBeenCalled();
       });
+      expect(mockGetLinkConfig).not.toHaveBeenCalled();
     });
 
     it('does not show connect button when already connected', async () => {

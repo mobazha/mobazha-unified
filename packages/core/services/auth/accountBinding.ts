@@ -235,13 +235,21 @@ export async function startLinkAccount(
   let callbackUrl: string;
   let storefrontSuffix = '';
 
-  if (isStandaloneMode() && !redirectUri) {
-    // Callback to the standalone itself so the local popup-close code runs,
-    // independent of which SaaS version is deployed.
+  // When opened from a storefront subdomain (e.g. alice.mobaza.org) the
+  // OAuth callback lands on the main SaaS domain. A popup in that mode cannot
+  // postMessage back to its opener (cross-origin: browsers silently drop the
+  // message to a mismatched targetOrigin), so we fall back to a full-page
+  // redirect + sfReturn re-redirect for this case only.
+  const isStorefrontCrossDomain = !redirectUri && !!sfReturnOrigin && !!mainOrigin;
+  const usePopup = !redirectUri && !isStorefrontCrossDomain;
+
+  if (isStandaloneMode() && usePopup) {
     callbackUrl = `${window.location.origin}/settings/account?link_callback=1&popup=1${returnToParam}`;
-  } else if (!redirectUri && sfReturnOrigin && mainOrigin) {
+  } else if (isStorefrontCrossDomain) {
     callbackUrl = `${mainOrigin}/settings/account?link_callback=1${returnToParam}`;
-    storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin)}`;
+    storefrontSuffix = `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin!)}`;
+  } else if (usePopup) {
+    callbackUrl = `${window.location.origin}/settings/account?link_callback=1&popup=1${returnToParam}`;
   } else {
     callbackUrl =
       redirectUri || `${window.location.origin}/settings/account?link_callback=1${returnToParam}`;
@@ -252,9 +260,7 @@ export async function startLinkAccount(
 
   const { url } = getLinkUrl(provider, callbackUrl, storefrontSuffix, ownerUserId);
 
-  // Standalone mode: open popup, wait for close, then caller refreshes accounts.
-  // SaaS / storefront mode: full page redirect (same-origin, reliable).
-  if (isStandaloneMode() && !redirectUri) {
+  if (usePopup) {
     const POPUP_W = 500;
     const POPUP_H = 650;
     const left = Math.max(0, (window.screen.width - POPUP_W) / 2);
