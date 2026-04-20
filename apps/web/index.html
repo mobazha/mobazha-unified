@@ -66,31 +66,30 @@
 
           root.setAttribute('data-embedded', 'telegram');
 
-          // 从 URL hash 的 tgWebAppThemeParams 里解 bg_color，React mount 之前就把背景
-          // 刷成 TG 自身颜色，避免 Tailwind/Mobazha 默认主题的白底→TG 深底瞬闪。
+          // 从 URL hash 的 tgWebAppThemeParams 里解颜色，React mount 之前就
+          // 把 --theme-* 直接设为 TG 自身颜色，避免白底→TG 深底瞬闪。
+          // 注意：直接写 --theme-*（不是 --tg-*），与 TGMiniAppProvider 的
+          // 运行时逻辑一致，避免 CSS 自引用陷阱。
           var themeMatch = (location.hash || '').match(/tgWebAppThemeParams=([^&]+)/);
           var appliedBg = null;
           if (themeMatch) {
             try {
               var params = JSON.parse(decodeURIComponent(themeMatch[1]));
-              appliedBg = params.bg_color || params.secondary_bg_color || null;
+              var norm = function(c) {
+                return c && c.charAt(0) !== '#' ? '#' + c : c;
+              };
+              appliedBg = norm(params.bg_color || params.secondary_bg_color) || null;
               if (appliedBg) {
-                // Normalize "ffffff" → "#ffffff" (Telegram 历史版本不带 # 前缀)
-                if (appliedBg.charAt(0) !== '#') appliedBg = '#' + appliedBg;
-                root.style.setProperty('--tg-bg', appliedBg);
-                // 同时设置 secondary/text 兜底，让 globals.css 的 var(--tg-*) 链路生效
-                if (params.secondary_bg_color) {
-                  var secBg = params.secondary_bg_color.charAt(0) === '#'
-                    ? params.secondary_bg_color
-                    : '#' + params.secondary_bg_color;
-                  root.style.setProperty('--tg-secondary-bg', secBg);
+                root.style.setProperty('--theme-background', appliedBg);
+                var secBg = norm(params.secondary_bg_color);
+                if (secBg) {
+                  root.style.setProperty('--theme-backgroundAlt', secBg);
+                  root.style.setProperty('--theme-surface', secBg);
                 }
-                if (params.text_color) {
-                  var txt = params.text_color.charAt(0) === '#'
-                    ? params.text_color
-                    : '#' + params.text_color;
-                  root.style.setProperty('--tg-text', txt);
-                }
+                var txt = norm(params.text_color);
+                if (txt) root.style.setProperty('--theme-textPrimary', txt);
+                var hint = norm(params.hint_color);
+                if (hint) root.style.setProperty('--theme-textMuted', hint);
                 root.style.backgroundColor = appliedBg;
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) meta.setAttribute('content', appliedBg);

@@ -66,7 +66,7 @@ export function useVisitorData(days: VisitorPeriod = 30) {
     const f = data.funnel;
     const maxVal = Math.max(f.pageView, 1);
     return [
-      { key: 'pageView' as const, value: f.pageView, pct: 100 },
+      { key: 'pageView' as const, value: f.pageView, pct: f.pageView > 0 ? 100 : 0 },
       {
         key: 'productView' as const,
         value: f.productView,

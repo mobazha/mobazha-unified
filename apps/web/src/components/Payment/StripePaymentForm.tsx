@@ -197,7 +197,7 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
     appearance: {
       theme: isDark ? 'night' : 'stripe',
       variables: {
-        colorPrimary: 'hsl(var(--primary))',
+        colorPrimary: 'var(--color-primary)',
         borderRadius: '8px',
       },
     },

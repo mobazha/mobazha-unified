@@ -8,6 +8,7 @@ import { AIChatPanel } from '@/components/AIChatPanel';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { isStandalone, useUserStore, useUserContext } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 
 interface AdminLayoutProps {
@@ -17,6 +18,7 @@ interface AdminLayoutProps {
 function AdminLayoutShell({ children }: AdminLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { isStorePaused } = useUserContext();
+  const { isEmbeddedApp } = usePlatform();
 
   const toggleCollapse = useCallback(() => setCollapsed(prev => !prev), []);
 
@@ -33,7 +35,9 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
         {isStorePaused && <StorePausedBanner variant="admin" />}
 
         <main className="flex-1 overflow-y-auto" role="main">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 lg:pb-6">
+          <div
+            className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 lg:pb-6 ${isEmbeddedApp ? 'py-2' : 'py-6'}`}
+          >
             {children}
           </div>
         </main>

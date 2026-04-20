@@ -229,54 +229,60 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
           <FeatureItem
             icon={<Settings className="w-5 h-5" />}
             title={t('settings.sidebar.general')}
-            description={t('settingsExtended.generalDesc')}
+            description={
+              isEmbedded
+                ? t('settingsExtended.generalDescCompact')
+                : t('settingsExtended.generalDesc')
+            }
             href="/settings/general"
           />
         )}
 
-        {/* Language selector — available for all users */}
-        <div>
-          <button
-            type="button"
-            className="w-full flex items-center gap-3 py-3 px-3 min-h-[52px] text-left"
-            onClick={() => setLangOpen(prev => !prev)}
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-              <Globe className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{t('me.language')}</p>
-              <p className="text-xs text-muted-foreground">{localeInfo[locale].nativeName}</p>
-            </div>
-            <ChevronRight
-              className={`w-4 h-4 text-muted-foreground transition-transform ${langOpen ? 'rotate-90' : ''}`}
-            />
-          </button>
-          {langOpen && (
-            <div className="px-3 pb-2">
-              <div className="grid grid-cols-2 gap-1.5">
-                {supportedLocales.map(loc => (
-                  <button
-                    key={loc}
-                    type="button"
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
-                      loc === locale
-                        ? 'bg-primary/15 text-primary font-medium'
-                        : 'hover:bg-muted text-foreground'
-                    }`}
-                    onClick={() => {
-                      setLocale(loc);
-                      setLangOpen(false);
-                    }}
-                  >
-                    <span className="text-base">{localeInfo[loc].flag}</span>
-                    <span className="truncate">{localeInfo[loc].nativeName}</span>
-                  </button>
-                ))}
+        {/* Language selector — only for unauthenticated users (authenticated users access it via General) */}
+        {!authenticated && (
+          <div>
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 py-3 px-3 min-h-[52px] text-left"
+              onClick={() => setLangOpen(prev => !prev)}
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                <Globe className="w-5 h-5" />
               </div>
-            </div>
-          )}
-        </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{t('me.language')}</p>
+                <p className="text-xs text-muted-foreground">{localeInfo[locale].nativeName}</p>
+              </div>
+              <ChevronRight
+                className={`w-4 h-4 text-muted-foreground transition-transform ${langOpen ? 'rotate-90' : ''}`}
+              />
+            </button>
+            {langOpen && (
+              <div className="px-3 pb-2">
+                <div className="grid grid-cols-2 gap-1.5">
+                  {supportedLocales.map(loc => (
+                    <button
+                      key={loc}
+                      type="button"
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+                        loc === locale
+                          ? 'bg-primary/15 text-primary font-medium'
+                          : 'hover:bg-muted text-foreground'
+                      }`}
+                      onClick={() => {
+                        setLocale(loc);
+                        setLangOpen(false);
+                      }}
+                    >
+                      <span className="text-base">{localeInfo[loc].flag}</span>
+                      <span className="truncate">{localeInfo[loc].nativeName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {showThemeToggle && (
           <div className="flex items-center gap-3 py-3 px-3 min-h-[52px]">

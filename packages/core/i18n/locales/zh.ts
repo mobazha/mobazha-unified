@@ -2231,6 +2231,7 @@ export const zh: TranslationResource = {
     country: '国家',
     shippingAddresses: '收货地址',
     generalDesc: '语言、主题和显示偏好',
+    generalDescCompact: '语言、地区和声音偏好',
     profileDesc: '您的名称、头像和简介',
     chatEncryptionDesc: '端对端加密密钥和备份',
     manageAddresses: '管理收货地址',

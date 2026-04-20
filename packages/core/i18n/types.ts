@@ -979,6 +979,7 @@ export interface TranslationResource {
   settingsExtended: {
     profile: string;
     generalDesc?: string;
+    generalDescCompact?: string;
     profileDesc?: string;
     chatEncryptionDesc?: string;
     country: string;

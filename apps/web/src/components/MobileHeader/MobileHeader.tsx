@@ -14,8 +14,10 @@ import {
   useUserContext,
 } from '@mobazha/core';
 import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
+import { usePlatform } from '@mobazha/ui/hooks';
 
 export const MobileHeader: React.FC = () => {
+  const { isEmbeddedApp } = usePlatform();
   const router = useRouter();
   const { t } = useI18n();
   const { profile, isAuthenticated } = useUserStore();
@@ -42,36 +44,63 @@ export const MobileHeader: React.FC = () => {
       <Container size="xl">
         <div className="flex items-center gap-2 h-14 py-2">
           {standaloneMode ? (
-            <>
-              <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
-                {brandProfile ? (
-                  <>
-                    <Avatar
-                      src={getImageUrl(brandProfile.avatarHashes?.small)}
-                      name={brandProfile.name || ''}
-                      size="sm"
+            isEmbeddedApp ? (
+              <>
+                <form onSubmit={handleSearch} className="flex-1 min-w-0">
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder={t('search.placeholder')}
+                      enterKeyHint="search"
+                      className="w-full h-10 pl-10 pr-3 rounded-xl border border-border bg-surface text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                     />
-                    <span className="font-bold text-base text-foreground truncate">
-                      {brandProfile.name}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0" />
-                    <div className="w-24 h-4 rounded bg-muted animate-pulse" />
-                  </>
+                  </div>
+                </form>
+                {isAuthenticated && hasStore && (
+                  <Link
+                    href="/admin"
+                    className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors"
+                    aria-label={t('admin.title')}
+                  >
+                    <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+                  </Link>
                 )}
-              </Link>
-              {isAuthenticated && hasStore && (
-                <Link
-                  href="/admin"
-                  className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors"
-                  aria-label={t('admin.title')}
-                >
-                  <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+              </>
+            ) : (
+              <>
+                <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+                  {brandProfile ? (
+                    <>
+                      <Avatar
+                        src={getImageUrl(brandProfile.avatarHashes?.small)}
+                        name={brandProfile.name || ''}
+                        size="sm"
+                      />
+                      <span className="font-bold text-base text-foreground truncate">
+                        {brandProfile.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                      <div className="w-24 h-4 rounded bg-muted animate-pulse" />
+                    </>
+                  )}
                 </Link>
-              )}
-            </>
+                {isAuthenticated && hasStore && (
+                  <Link
+                    href="/admin"
+                    className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-hover active:bg-surface-hover transition-colors"
+                    aria-label={t('admin.title')}
+                  >
+                    <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+                  </Link>
+                )}
+              </>
+            )
           ) : (
             <>
               <form onSubmit={handleSearch} className="flex-1 min-w-0">

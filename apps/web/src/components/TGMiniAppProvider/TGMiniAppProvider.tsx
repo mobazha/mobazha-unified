@@ -314,18 +314,118 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
     };
   }, [webApp]);
 
-  // MVP-3 M2 — Keep `<html data-embedded="telegram">` in sync for scoped CSS
-  // overrides (globals.css remaps --theme-* → var(--tg-*, <fallback>)). The
-  // inline anti-flash script in index.html sets this pre-paint; this effect
-  // guarantees sync across HMR / remounts / tests and cleans up on unmount.
+  // MVP-3 M2 — Unified embedded-attribute + theme-color sync.
+  //
+  // IMPORTANT: these two concerns MUST be in a single effect with correct
+  // ordering. Setting `data-embedded="telegram"` activates CSS rules in
+  // globals.css; if TG theme colors aren't populated yet, CSS variable
+  // self-references (`var(--tg-*, var(--theme-*))`) become cyclic on
+  // <html> (no parent to inherit from) and resolve to the CSS
+  // guaranteed-invalid value → text/bg colors fall back to browser defaults
+  // → dark text on dark background. Merging the effects ensures --theme-*
+  // overrides are written BEFORE the attribute activates any CSS selector.
+  //
+  // The provider directly writes `--theme-*` properties (the same tokens
+  // every component consumes) via inline style on <html>. Inline-style
+  // custom properties win over any stylesheet rule, so the TG palette
+  // overrides both [data-theme] and [data-theme].dark without needing
+  // specificity tricks or self-referencing fallbacks in CSS.
+
+  // Properties we override — used for both application and cleanup.
+  const themeOverrideProps = useMemo(
+    () => [
+      '--theme-background',
+      '--theme-backgroundAlt',
+      '--theme-surface',
+      '--theme-surfaceHover',
+      '--theme-textPrimary',
+      '--theme-textSecondary',
+      '--theme-textMuted',
+      '--theme-border',
+      '--theme-primary',
+      '--theme-accent',
+      '--color-muted',
+    ],
+    []
+  );
+
   useEffect(() => {
     if (!webApp) return;
     const root = document.documentElement;
+
+    const applyTGTheme = () => {
+      const tp = webApp.themeParams;
+      if (!tp) return;
+
+      // Map TG SDK params → --theme-* tokens. For params that older TG
+      // clients don't provide (Bot API < 6.9 / < 6.10), derive reasonable
+      // values from the params that ARE always present (bg, text, hint,
+      // link, button — available since Bot API 6.1).
+      //
+      // --color-muted: computed as a blend between bg_color and
+      // secondary_bg_color so skeleton loaders inside cards (bg-card =
+      // secondary_bg_color) remain visible. Without this, bg-muted and
+      // bg-card resolve to the same value and skeletons become invisible.
+      const blendHex = (a: string, b: string, ratio = 0.5): string => {
+        const parse = (c: string) => {
+          const h = c.replace('#', '');
+          return [
+            parseInt(h.slice(0, 2), 16),
+            parseInt(h.slice(2, 4), 16),
+            parseInt(h.slice(4, 6), 16),
+          ];
+        };
+        const [r1, g1, b1] = parse(a);
+        const [r2, g2, b2] = parse(b);
+        const hex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
+        return `#${hex(r1 + (r2 - r1) * ratio)}${hex(g1 + (g2 - g1) * ratio)}${hex(b1 + (b2 - b1) * ratio)}`;
+      };
+
+      const bg = tp.bg_color || '#17212b';
+      const secBg = tp.secondary_bg_color || bg;
+      const mutedColor = bg !== secBg ? blendHex(bg, secBg, 0.4) : undefined;
+
+      const overrides: Record<string, string | undefined> = {
+        '--theme-background': tp.bg_color,
+        '--theme-backgroundAlt': secBg,
+        '--theme-surface': secBg,
+        '--theme-surfaceHover': tp.section_bg_color || secBg,
+        '--theme-textPrimary': tp.text_color,
+        '--theme-textSecondary': tp.subtitle_text_color || tp.hint_color,
+        '--theme-textMuted': tp.hint_color,
+        '--theme-border': tp.section_bg_color || secBg,
+        '--theme-primary': tp.button_color,
+        '--theme-accent': tp.accent_text_color || tp.link_color,
+        '--color-muted': mutedColor,
+      };
+
+      for (const [prop, val] of Object.entries(overrides)) {
+        if (val) {
+          root.style.setProperty(prop, val);
+        }
+      }
+    };
+
+    // 1. Apply TG palette as inline-style overrides
+    applyTGTheme();
+
+    // 2. NOW safe to set data-embedded — CSS selectors using this attribute
+    //    for non-color concerns (layout, component visibility) can activate.
     const prev = root.dataset.embedded;
     root.dataset.embedded = 'telegram';
+
+    // 3. Listen for live theme switches (user toggles Telegram dark/light)
+    webApp.onEvent?.('themeChanged', applyTGTheme);
+
     return () => {
-      // Only clear if WE set it — don't stomp on a future Discord provider that
-      // might coexist temporarily during channel detection.
+      webApp.offEvent?.('themeChanged', applyTGTheme);
+
+      // Clean up inline --theme-* overrides so the base Mobazha theme
+      // re-emerges when this provider unmounts (HMR, tests, channel switch).
+      for (const prop of themeOverrideProps) {
+        root.style.removeProperty(prop);
+      }
+
       if (root.dataset.embedded !== 'telegram') return;
       if (prev === undefined) {
         delete root.dataset.embedded;
@@ -333,43 +433,7 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
         root.dataset.embedded = prev;
       }
     };
-  }, [webApp]);
-
-  // Sync TG theme colors → CSS custom properties on mount AND on live
-  // themeChanged events (user switches Telegram dark/light while Mini App is
-  // open). Without the event listener, --tg-* variables would stay stale and
-  // globals.css `var(--tg-*, …)` bridges would render the old palette.
-  useEffect(() => {
-    if (!webApp) return;
-    const root = document.documentElement;
-    const syncThemeParams = () => {
-      const tp = webApp.themeParams;
-      if (!tp) return;
-      const map: Record<string, string | undefined> = {
-        '--tg-bg': tp.bg_color,
-        '--tg-text': tp.text_color,
-        '--tg-hint': tp.hint_color,
-        '--tg-link': tp.link_color,
-        '--tg-button': tp.button_color,
-        '--tg-button-text': tp.button_text_color,
-        '--tg-secondary-bg': tp.secondary_bg_color,
-        '--tg-header-bg': tp.header_bg_color,
-        '--tg-accent-text': tp.accent_text_color,
-        '--tg-section-bg': tp.section_bg_color,
-        '--tg-section-header': tp.section_header_text_color,
-        '--tg-subtitle': tp.subtitle_text_color,
-        '--tg-destructive': tp.destructive_text_color,
-      };
-      Object.entries(map).forEach(([prop, val]) => {
-        if (val) root.style.setProperty(prop, val);
-      });
-    };
-    syncThemeParams();
-    webApp.onEvent?.('themeChanged', syncThemeParams);
-    return () => {
-      webApp.offEvent?.('themeChanged', syncThemeParams);
-    };
-  }, [webApp]);
+  }, [webApp, themeOverrideProps]);
 
   const value = useMemo<TGMiniAppContextValue>(() => {
     const isAvailable = !!webApp;

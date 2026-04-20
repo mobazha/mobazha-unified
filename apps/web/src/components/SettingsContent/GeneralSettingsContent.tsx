@@ -29,11 +29,13 @@ import { SUPPORTED_LANGUAGES } from '@mobazha/core';
 import { Check, ChevronRight, Volume2 } from 'lucide-react';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { SettingsSection } from '@/components/SettingsLayout';
+import { usePlatform } from '@mobazha/ui/hooks';
 
 export const GeneralSettingsContent: React.FC = () => {
   const { t, language, setLanguage } = useI18n();
   const { theme, mode, setTheme, setMode, themes, isDark } = useTheme();
   const { toast } = useToast();
+  const { isEmbeddedApp } = usePlatform();
   const {
     currencySections,
     selectedCurrencyInfo,
@@ -148,20 +150,22 @@ export const GeneralSettingsContent: React.FC = () => {
           </Card>
         </SettingsSection>
 
-        {/* Appearance */}
-        <SettingsSection
-          className="py-5 md:py-8"
-          title={t('settings.appearance')}
-          description={t('settingsExtended.displayModeDesc')}
-        >
-          <Card className="p-4 md:p-6">
-            <SettingRow
-              label={t('settingsExtended.themeStyle')}
-              value={`${THEME_INFO[theme]?.icon || '🌊'} ${t(`theme.${theme}` as Parameters<typeof t>[0]) || THEME_INFO[theme]?.displayName || 'Classic'} · ${mode === 'system' ? t('settings.system') : isDark ? t('settingsExtended.dark') : t('settingsExtended.light')}`}
-              onClick={() => setShowThemeModal(true)}
-            />
-          </Card>
-        </SettingsSection>
+        {/* Appearance — hidden in TMA since Telegram controls the palette */}
+        {!isEmbeddedApp && (
+          <SettingsSection
+            className="py-5 md:py-8"
+            title={t('settings.appearance')}
+            description={t('settingsExtended.displayModeDesc')}
+          >
+            <Card className="p-4 md:p-6">
+              <SettingRow
+                label={t('settingsExtended.themeStyle')}
+                value={`${THEME_INFO[theme]?.icon || '🌊'} ${t(`theme.${theme}` as Parameters<typeof t>[0]) || THEME_INFO[theme]?.displayName || 'Classic'} · ${mode === 'system' ? t('settings.system') : isDark ? t('settingsExtended.dark') : t('settingsExtended.light')}`}
+                onClick={() => setShowThemeModal(true)}
+              />
+            </Card>
+          </SettingsSection>
+        )}
 
         {/* Sound */}
         <SettingsSection
@@ -509,6 +513,7 @@ const ThemeModal: React.FC<ThemeModalProps> = ({
   onModeChange,
 }) => {
   const { t } = useI18n();
+  const isEmbedded = typeof document !== 'undefined' && !!document.documentElement.dataset.embedded;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -516,34 +521,36 @@ const ThemeModal: React.FC<ThemeModalProps> = ({
           <DialogTitle>{t('settings.appearance')}</DialogTitle>
         </DialogHeader>
 
-        <div className="mb-6">
-          <h3 className="text-sm font-medium mb-3">{t('settings.displayMode')}</h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            {t('settingsExtended.displayModeDesc')}
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { value: 'light', label: t('settingsExtended.light'), icon: '☀️' },
-              { value: 'dark', label: t('settingsExtended.dark'), icon: '🌙' },
-              { value: 'system', label: t('settings.system'), icon: '💻' },
-            ].map(option => (
-              <button
-                key={option.value}
-                onClick={() => onModeChange(option.value)}
-                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-lg transition-all border-2 ${
-                  mode === option.value
-                    ? 'bg-primary/10 border-primary text-primary'
-                    : 'bg-muted border-transparent hover:bg-surface-hover'
-                }`}
-              >
-                <span className="text-lg">{option.icon}</span>
-                <span className="text-sm font-medium">{option.label}</span>
-              </button>
-            ))}
+        {!isEmbedded && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium mb-3">{t('settings.displayMode')}</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              {t('settingsExtended.displayModeDesc')}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'light', label: t('settingsExtended.light'), icon: '☀️' },
+                { value: 'dark', label: t('settingsExtended.dark'), icon: '🌙' },
+                { value: 'system', label: t('settings.system'), icon: '💻' },
+              ].map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => onModeChange(option.value)}
+                  className={`flex items-center justify-center gap-2 px-3 py-3 rounded-lg transition-all border-2 ${
+                    mode === option.value
+                      ? 'bg-primary/10 border-primary text-primary'
+                      : 'bg-muted border-transparent hover:bg-surface-hover'
+                  }`}
+                >
+                  <span className="text-lg">{option.icon}</span>
+                  <span className="text-sm font-medium">{option.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="border-t border-border pt-6">
+        <div className={isEmbedded ? '' : 'border-t border-border pt-6'}>
           <h3 className="text-sm font-medium mb-3">{t('settingsExtended.themeStyle')}</h3>
           <p className="text-xs text-muted-foreground mb-3">
             {t('settingsExtended.themeStyleDesc')}
@@ -569,17 +576,19 @@ const ThemeModal: React.FC<ThemeModalProps> = ({
           </div>
         </div>
 
-        <div className="border-t border-border pt-4 mt-4">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-            <span className="text-sm text-muted-foreground">
-              {t('settingsExtended.currentEffect')}
-            </span>
-            <span className="font-medium">
-              {THEME_INFO[theme]?.displayName} ·{' '}
-              {isDark ? t('settingsExtended.dark') : t('settingsExtended.light')}
-            </span>
+        {!isEmbedded && (
+          <div className="border-t border-border pt-4 mt-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+              <span className="text-sm text-muted-foreground">
+                {t('settingsExtended.currentEffect')}
+              </span>
+              <span className="font-medium">
+                {THEME_INFO[theme]?.displayName} ·{' '}
+                {isDark ? t('settingsExtended.dark') : t('settingsExtended.light')}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         <Button className="w-full mt-4" onClick={() => onOpenChange(false)}>
           {t('settingsExtended.done')}
