@@ -139,7 +139,7 @@ export default function ChatPage() {
   // ---- Invite view ----
   if (currentInvite) {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className={`flex flex-col ${tgAvailable ? 'h-dvh' : 'h-[calc(100vh-4rem)]'}`}>
         <div className="flex items-center gap-3 p-3 border-b border-border/30">
           <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-xl">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,10 @@ export default function ChatPage() {
   if (currentRoom && currentRoomId) {
     return (
       <>
-        <div className="flex flex-col h-[calc(100vh-4rem)]" data-testid="chat-page-messages">
+        <div
+          className={`flex flex-col ${tgAvailable ? 'h-dvh' : 'h-[calc(100vh-4rem)]'}`}
+          data-testid="chat-page-messages"
+        >
           <ChatMessages
             roomId={currentRoomId}
             roomName={currentRoomPresentation?.title || t('chat.defaultRoom')}
@@ -280,7 +283,7 @@ export default function ChatPage() {
     <>
       {showPageHeader && <MobilePageHeader title={t('chat.title')} />}
       <div
-        className={`flex flex-col ${showPageHeader ? 'h-[calc(100vh-7rem)]' : 'h-[calc(100vh-4rem)]'}`}
+        className={`flex flex-col ${tgAvailable ? 'h-dvh' : showPageHeader ? 'h-[calc(100vh-7rem)]' : 'h-[calc(100vh-4rem)]'}`}
         data-testid="chat-page-list"
       >
         {/* Minimal status bar — only show abnormal states */}
