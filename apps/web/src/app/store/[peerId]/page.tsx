@@ -1143,6 +1143,7 @@ export default function StorePage() {
                     }
                     embedType="store"
                     embedIdentifier={peerId}
+                    className="text-white bg-white/20 backdrop-blur hover:bg-white/30 hover:text-white"
                   />
                 </div>
               </div>
