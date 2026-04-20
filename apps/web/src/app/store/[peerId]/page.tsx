@@ -971,9 +971,7 @@ export default function StorePage() {
                   <div className="flex items-center gap-3 sm:gap-5 mt-2 text-sm">
                     <span className="flex items-center gap-1">
                       <span className="font-medium">{products.length}</span>
-                      <span className="opacity-70">
-                        {t('trust.products', { count: products.length })}
-                      </span>
+                      <span className="opacity-70">{t('profile.listings')}</span>
                     </span>
                     <button
                       onClick={() => setActiveTab('followers')}
