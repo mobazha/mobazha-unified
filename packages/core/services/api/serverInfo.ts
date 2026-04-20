@@ -8,10 +8,11 @@
  * Callers that run pre-login must tolerate 401 and treat flags as "all off".
  *
  * Feature flag keys are flat camelCase by design — see
- * `docs/MULTI_STORE_DESIGN.md` §21 for the naming contract. Adding a new flag
- * requires touching both the backend DTO and `FeatureFlags` below, but we
- * intentionally keep that in sync manually (rather than generating) so a
- * missing flag is a compile-time error in consumers that reference it.
+ * `docs/MULTI_STORE_DESIGN.md` §21 for the naming contract. The backend
+ * auto-includes every feature with `ClientVisible: true` from the registry
+ * (features_defined.go); explicit fields below provide type-safe access for
+ * known flags, while the index signature accepts any new flag the backend
+ * adds without requiring a frontend release.
  */
 
 import { hostingGet } from './helpers';
@@ -62,10 +63,17 @@ export interface FeatureFlags {
   identityTaxAggregationEnabled?: boolean;
   identityMatrixProxyEnabled?: boolean;
 
+  // Payment
+  guestCheckout?: boolean;
+
   // Kill switches — `true` means the feature is emergency-disabled.
   killMultistoreReadsDisabled?: boolean;
   killStorefrontRoutingDisabled?: boolean;
   killBotClusterIngestDisabled?: boolean;
+
+  // Catch-all: the backend may add new ClientVisible features at any time.
+  // This index signature lets them pass through without a frontend type update.
+  [key: string]: boolean | undefined;
 }
 
 export interface ServerInfo {
