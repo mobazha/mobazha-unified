@@ -335,29 +335,40 @@ export function TGMiniAppProvider({ children }: TGMiniAppProviderProps) {
     };
   }, [webApp]);
 
-  // Sync TG theme colors → CSS custom properties
+  // Sync TG theme colors → CSS custom properties on mount AND on live
+  // themeChanged events (user switches Telegram dark/light while Mini App is
+  // open). Without the event listener, --tg-* variables would stay stale and
+  // globals.css `var(--tg-*, …)` bridges would render the old palette.
   useEffect(() => {
-    const tp = webApp?.themeParams;
-    if (!tp) return;
+    if (!webApp) return;
     const root = document.documentElement;
-    const map: Record<string, string | undefined> = {
-      '--tg-bg': tp.bg_color,
-      '--tg-text': tp.text_color,
-      '--tg-hint': tp.hint_color,
-      '--tg-link': tp.link_color,
-      '--tg-button': tp.button_color,
-      '--tg-button-text': tp.button_text_color,
-      '--tg-secondary-bg': tp.secondary_bg_color,
-      '--tg-header-bg': tp.header_bg_color,
-      '--tg-accent-text': tp.accent_text_color,
-      '--tg-section-bg': tp.section_bg_color,
-      '--tg-section-header': tp.section_header_text_color,
-      '--tg-subtitle': tp.subtitle_text_color,
-      '--tg-destructive': tp.destructive_text_color,
+    const syncThemeParams = () => {
+      const tp = webApp.themeParams;
+      if (!tp) return;
+      const map: Record<string, string | undefined> = {
+        '--tg-bg': tp.bg_color,
+        '--tg-text': tp.text_color,
+        '--tg-hint': tp.hint_color,
+        '--tg-link': tp.link_color,
+        '--tg-button': tp.button_color,
+        '--tg-button-text': tp.button_text_color,
+        '--tg-secondary-bg': tp.secondary_bg_color,
+        '--tg-header-bg': tp.header_bg_color,
+        '--tg-accent-text': tp.accent_text_color,
+        '--tg-section-bg': tp.section_bg_color,
+        '--tg-section-header': tp.section_header_text_color,
+        '--tg-subtitle': tp.subtitle_text_color,
+        '--tg-destructive': tp.destructive_text_color,
+      };
+      Object.entries(map).forEach(([prop, val]) => {
+        if (val) root.style.setProperty(prop, val);
+      });
     };
-    Object.entries(map).forEach(([prop, val]) => {
-      if (val) root.style.setProperty(prop, val);
-    });
+    syncThemeParams();
+    webApp.onEvent?.('themeChanged', syncThemeParams);
+    return () => {
+      webApp.offEvent?.('themeChanged', syncThemeParams);
+    };
   }, [webApp]);
 
   const value = useMemo<TGMiniAppContextValue>(() => {
