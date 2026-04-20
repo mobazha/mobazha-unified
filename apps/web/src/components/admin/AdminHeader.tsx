@@ -27,6 +27,7 @@ import { LanguageSwitcher } from '../LanguageSwitcher';
 import { NotificationDropdown } from '../Notification';
 import { ArrowLeft, Eye, User, LogOut, MessageSquare, MessageCircle } from 'lucide-react';
 import { useAIChatStore } from '@mobazha/core/stores';
+import { usePlatform } from '@mobazha/ui/hooks';
 
 interface AdminHeaderProps {
   title?: string;
@@ -40,6 +41,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const toggleAIChat = useAIChatStore(s => s.toggle);
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
+  const { shouldUseMobileView, isEmbeddedApp } = usePlatform();
   const [peerIdCopied, setPeerIdCopied] = useState(false);
   const peerID = profile?.peerID;
   const handleCopyPeerID = useCallback(() => {
@@ -71,7 +73,10 @@ export function AdminHeader({ title }: AdminHeaderProps) {
       data-testid="admin-header"
     >
       <div className="flex items-center gap-2 sm:gap-3">
-        {standaloneMode ? (
+        {isEmbeddedApp ? (
+          /* TMA: minimal left side — just the label, no back arrow / logo */
+          <span className="font-semibold text-sm text-foreground">{t('admin.title')}</span>
+        ) : standaloneMode ? (
           <button
             onClick={handleViewStore}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
@@ -100,28 +105,32 @@ export function AdminHeader({ title }: AdminHeaderProps) {
           </>
         )}
 
-        <Link href="/admin" className="lg:hidden flex items-center gap-2">
-          <MobazhaLogo size={24} className="text-primary" />
-          <span className="font-semibold text-sm text-foreground">{t('admin.title')}</span>
-        </Link>
+        {!isEmbeddedApp && (
+          <Link href="/admin" className="lg:hidden flex items-center gap-2">
+            <MobazhaLogo size={24} className="text-primary" />
+            <span className="font-semibold text-sm text-foreground">{t('admin.title')}</span>
+          </Link>
+        )}
 
         {title && <h1 className="text-lg font-semibold text-foreground">{title}</h1>}
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
-        <button
-          onClick={toggleAIChat}
-          className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label={t('ai.openAssistant')}
-          data-testid="admin-header-ai-chat"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </button>
+        {!isEmbeddedApp && (
+          <button
+            onClick={toggleAIChat}
+            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label={t('ai.openAssistant')}
+            data-testid="admin-header-ai-chat"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+        )}
         <Button
           variant="ghost"
           size="icon"
           className="hover:bg-primary/10 hover:text-primary transition-colors relative"
-          onClick={openChatDrawer}
+          onClick={shouldUseMobileView ? () => router.push('/chat') : openChatDrawer}
           aria-label={t('nav.openMessages')}
           data-testid="admin-header-chat"
         >
@@ -133,8 +142,8 @@ export function AdminHeader({ title }: AdminHeaderProps) {
           )}
         </Button>
         <NotificationDropdown />
-        <LanguageSwitcher compact />
-        <ThemeSwitcher compact />
+        {!isEmbeddedApp && <LanguageSwitcher compact />}
+        {!isEmbeddedApp && <ThemeSwitcher compact />}
 
         {profile && (
           <div className="ml-1 pl-1 sm:ml-2 sm:pl-2 border-l border-border">

@@ -34,6 +34,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { usePlatform } from '@mobazha/ui/hooks';
 
 type ViewMode = 'table' | 'grid';
 type StatusFilter = 'all' | 'active' | 'draft';
@@ -83,6 +84,7 @@ export default function AdminProductsPage() {
   const { formatPrice, fromMinimalUnit } = useCurrency();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { isEmbeddedApp } = usePlatform();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -307,18 +309,27 @@ export default function AdminProductsPage() {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-        <div className="min-w-0">
-          <h1 className="text-lg sm:text-2xl font-bold text-foreground">
-            {t('admin.products.title')}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5 sm:mt-1">
+      <div
+        className={`flex items-center justify-between gap-3 ${isEmbeddedApp ? 'mb-2' : 'mb-4 sm:mb-6'}`}
+      >
+        {!isEmbeddedApp && (
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground">
+              {t('admin.products.title')}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5 sm:mt-1">
+              {t('admin.products.count', { count: products.length })}
+            </p>
+          </div>
+        )}
+        {isEmbeddedApp && (
+          <p className="text-sm text-muted-foreground">
             {t('admin.products.count', { count: products.length })}
           </p>
-        </div>
+        )}
         {products.length > 0 && (
-          <Link href="/listing/new?from=admin" className="hidden md:block">
-            <Button className="gap-2">
+          <Link href="/listing/new?from=admin" className={isEmbeddedApp ? '' : 'hidden md:block'}>
+            <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
               <Plus className="w-4 h-4" />
               {t('admin.products.addProduct')}
             </Button>
@@ -327,7 +338,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Status filter tabs */}
-      <div className="flex gap-1 mb-4 border-b border-border">
+      <div className={`flex gap-1 ${isEmbeddedApp ? 'mb-2' : 'mb-4'} border-b border-border`}>
         {(['all', 'active', 'draft'] as StatusFilter[]).map(filter => {
           const labels: Record<StatusFilter, string> = {
             all: t('admin.products.filterAll'),
@@ -353,7 +364,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className={`flex flex-col sm:flex-row gap-3 ${isEmbeddedApp ? 'mb-3' : 'mb-6'}`}>
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -469,12 +480,16 @@ export default function AdminProductsPage() {
             <Package className="w-7 h-7 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-1">
-            {searchQuery ? t('admin.products.noResults') : t('admin.products.emptyTitle')}
+            {searchQuery || (products.length > 0 && statusFilter !== 'all')
+              ? t('admin.products.noResults')
+              : t('admin.products.emptyTitle')}
           </h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-sm mx-auto">
-            {searchQuery ? t('admin.products.noResultsDesc') : t('admin.products.emptyDescription')}
+            {searchQuery || (products.length > 0 && statusFilter !== 'all')
+              ? t('admin.products.noResultsDesc')
+              : t('admin.products.emptyDescription')}
           </p>
-          {!searchQuery && (
+          {!searchQuery && products.length === 0 && (
             <Link href="/listing/new?from=admin">
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
@@ -636,8 +651,8 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Mobile FAB */}
-      {products.length > 0 && (
+      {/* Mobile FAB — hidden in TMA where the top bar already has Add Product */}
+      {products.length > 0 && !isEmbeddedApp && (
         <Link
           href="/listing/new?from=admin"
           className="md:hidden fixed right-4 bottom-24 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"

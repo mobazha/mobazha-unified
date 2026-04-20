@@ -197,10 +197,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: parseInt(process.env.PORT || '3000', 10),
-      allowedHosts: ['miniappdev.mobazha.org'],
+      allowedHosts: ['miniappdev.mobazha.org', '.mobaza.org'],
       ...(mode === 'miniappdev' && {
         hmr: {
-          host: 'miniappdev.mobazha.org',
           protocol: 'wss',
           clientPort: 443,
         },

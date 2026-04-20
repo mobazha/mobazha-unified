@@ -307,7 +307,7 @@ function OrdersPageContent() {
     <div className="min-h-screen bg-background" ref={pullRefreshRef}>
       <Header />
       {/* 移动端顶部导航栏 */}
-      <MobilePageHeader title={isMobile ? t('order.myPurchases') : t('nav.orders')} />
+      <MobilePageHeader title={isMobile ? t('order.myPurchases') : t('nav.orders')} rootTab />
 
       <main className="py-3 sm:py-8">
         <Container>

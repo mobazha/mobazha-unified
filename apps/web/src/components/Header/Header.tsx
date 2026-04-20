@@ -57,7 +57,7 @@ export const Header: React.FC = () => {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
-  const { isEmbeddedApp } = usePlatform();
+  const { isEmbeddedApp, shouldUseMobileView } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const [peerIdCopied, setPeerIdCopied] = useState(false);
   const peerID = profile?.peerID;
@@ -208,7 +208,7 @@ export const Header: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   className="hover:bg-primary/10 hover:text-primary transition-colors relative"
-                  onClick={openChatDrawer}
+                  onClick={shouldUseMobileView ? () => router.push('/chat') : openChatDrawer}
                   aria-label={t('nav.openMessages')}
                   data-testid="header-messages-btn"
                 >

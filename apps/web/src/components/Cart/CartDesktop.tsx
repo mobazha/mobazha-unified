@@ -30,7 +30,7 @@ export function CartDesktop() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <MobilePageHeader title={t('cart.title')} />
+        <MobilePageHeader title={t('cart.title')} rootTab />
         <main className="py-4 sm:py-16">
           <Container size="md">
             <Card className="text-center">
@@ -61,6 +61,7 @@ export function CartDesktop() {
       <Header />
       <MobilePageHeader
         title={t('cart.title')}
+        rootTab
         rightAction={
           <ClearCartAlert onConfirm={clearCart}>
             {openDialog => (

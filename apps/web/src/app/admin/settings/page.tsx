@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { usePlatform } from '@mobazha/ui/hooks';
 import { useToast } from '@/components/ui/use-toast';
 
 interface SettingsCardProps {
@@ -150,19 +151,22 @@ function StoreStatusToggle() {
 
 export default function AdminSettingsPage() {
   const { t } = useI18n();
+  const { isEmbeddedApp } = usePlatform();
 
   return (
     <div data-testid="admin-settings">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-lg sm:text-2xl font-bold text-foreground">
-          {t('admin.settings.title')}
-        </h1>
-        <p className="hidden sm:block text-sm text-muted-foreground mt-1">
-          {t('admin.settings.subtitle')}
-        </p>
-      </div>
+      {!isEmbeddedApp && (
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-lg sm:text-2xl font-bold text-foreground">
+            {t('admin.settings.title')}
+          </h1>
+          <p className="hidden sm:block text-sm text-muted-foreground mt-1">
+            {t('admin.settings.subtitle')}
+          </p>
+        </div>
+      )}
 
-      <div className="space-y-6 sm:space-y-8">
+      <div className={isEmbeddedApp ? 'space-y-4' : 'space-y-6 sm:space-y-8'}>
         {/* Store Status */}
         <StoreStatusToggle />
 

@@ -29,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OrderTable, OrderListCompact } from '@/components/Order';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { usePlatform } from '@mobazha/ui/hooks';
 import { useToast } from '@/components/ui/use-toast';
 import {
   transformOrderListItem,
@@ -157,6 +158,7 @@ export default function AdminOrdersPage() {
   const router = useRouter();
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
   const isDesktop = useIsDesktop();
+  const { isEmbeddedApp } = usePlatform();
 
   const { orders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch } = useAdminOrders();
 
@@ -428,68 +430,76 @@ export default function AdminOrdersPage() {
     setDateTo('');
   }, []);
 
+  const renderExportButton = () => (
+    <div className="relative shrink-0">
+      <Button
+        variant="outline"
+        size={isDesktop ? 'default' : 'icon'}
+        className={isDesktop ? 'gap-2' : 'h-9 w-9'}
+        onClick={() => setShowExportMenu(!showExportMenu)}
+        aria-haspopup="menu"
+        aria-expanded={showExportMenu}
+        aria-controls="admin-orders-export-menu"
+      >
+        <Download className="w-4 h-4" />
+        {isDesktop && (
+          <>
+            {t('admin.orders.export')}
+            {isSomeSelected && <span className="text-xs opacity-70">({selectedIds.size})</span>}
+            <ChevronDown className="w-3 h-3" />
+          </>
+        )}
+      </Button>
+      {showExportMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+          <div
+            id="admin-orders-export-menu"
+            role="menu"
+            className="absolute right-0 top-full mt-1 z-50 w-44 bg-popover border border-border rounded-lg shadow-lg py-1"
+          >
+            <button
+              role="menuitem"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-popover-foreground hover:bg-muted transition-colors"
+              onClick={() => handleExport('csv')}
+            >
+              <FileText className="w-4 h-4" /> CSV
+            </button>
+            <button
+              role="menuitem"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-popover-foreground hover:bg-muted transition-colors"
+              onClick={() => handleExport('json')}
+            >
+              <FileJson className="w-4 h-4" /> JSON
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div data-testid="admin-orders">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-        <div className="min-w-0">
-          <h1 className="text-lg sm:text-2xl font-bold text-foreground">
-            {t('admin.orders.title')}
-          </h1>
-          <p className="hidden sm:block text-sm text-muted-foreground mt-1">
-            {t('admin.orders.subtitle')}
-          </p>
+      {/* Header — hidden in TMA; export button moves to search row */}
+      {!isEmbeddedApp && (
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground">
+              {t('admin.orders.title')}
+            </h1>
+            <p className="hidden sm:block text-sm text-muted-foreground mt-1">
+              {t('admin.orders.subtitle')}
+            </p>
+          </div>
+          {renderExportButton()}
         </div>
-        <div className="relative shrink-0">
-          <Button
-            variant="outline"
-            size={isDesktop ? 'default' : 'icon'}
-            className={isDesktop ? 'gap-2' : 'h-9 w-9'}
-            onClick={() => setShowExportMenu(!showExportMenu)}
-            aria-haspopup="menu"
-            aria-expanded={showExportMenu}
-            aria-controls="admin-orders-export-menu"
-          >
-            <Download className="w-4 h-4" />
-            {isDesktop && (
-              <>
-                {t('admin.orders.export')}
-                {isSomeSelected && <span className="text-xs opacity-70">({selectedIds.size})</span>}
-                <ChevronDown className="w-3 h-3" />
-              </>
-            )}
-          </Button>
-          {showExportMenu && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
-              <div
-                id="admin-orders-export-menu"
-                role="menu"
-                className="absolute right-0 top-full mt-1 z-20 w-44 bg-popover border border-border rounded-lg shadow-lg py-1"
-              >
-                <button
-                  role="menuitem"
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-popover-foreground hover:bg-muted transition-colors"
-                  onClick={() => handleExport('csv')}
-                >
-                  <FileText className="w-4 h-4" /> CSV
-                </button>
-                <button
-                  role="menuitem"
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-popover-foreground hover:bg-muted transition-colors"
-                  onClick={() => handleExport('json')}
-                >
-                  <FileJson className="w-4 h-4" /> JSON
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Order type toggle */}
       {guestEnabled && (
-        <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
+        <div
+          className={`flex gap-1 ${isEmbeddedApp ? 'mb-2' : 'mb-4'} p-1 bg-muted rounded-lg w-fit`}
+        >
           <button
             type="button"
             onClick={() => setOrderView('standard')}
@@ -579,7 +589,7 @@ export default function AdminOrdersPage() {
           )}
 
           {/* Filters */}
-          <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+          <div className={`flex flex-col gap-3 ${isEmbeddedApp ? 'mb-2' : 'mb-4 sm:mb-6'}`}>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex gap-2 flex-1">
                 <div className="relative flex-1">
@@ -601,6 +611,7 @@ export default function AdminOrdersPage() {
                 >
                   <Calendar className="w-4 h-4" />
                 </Button>
+                {isEmbeddedApp && renderExportButton()}
               </div>
               {/* Desktop: always show date range */}
               <div className="hidden sm:flex gap-2">
@@ -661,7 +672,7 @@ export default function AdminOrdersPage() {
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value)}
-                  className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] sm:min-h-0 snap-start ${
+                  className={`${isEmbeddedApp ? 'px-3 py-1.5' : 'px-4 py-2 sm:px-3 sm:py-1.5'} rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${isEmbeddedApp ? '' : 'min-h-[44px] sm:min-h-0'} snap-start ${
                     statusFilter === tab.value
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border'
@@ -676,7 +687,7 @@ export default function AdminOrdersPage() {
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0 snap-start"
+                  className={`${isEmbeddedApp ? 'px-3 py-1.5' : 'px-4 py-2 sm:px-3 sm:py-1.5'} rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${isEmbeddedApp ? '' : 'min-h-[44px] sm:min-h-0'} snap-start`}
                 >
                   {t('admin.orders.clearFilters')}
                 </button>
