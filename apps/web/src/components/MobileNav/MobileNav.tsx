@@ -96,7 +96,8 @@ const navItems: NavItem[] = [
   },
   {
     labelKey: 'chat.title',
-    isChat: true, // 使用 drawer 而非路由
+    href: '/chat',
+    isChat: true,
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -161,8 +162,7 @@ export const MobileNav: React.FC = () => {
   const pathname = usePathname();
   const { t } = useI18n();
   const { isEmbeddedApp, isTGMiniApp } = usePlatform();
-  const openChatDrawer = useChatStore(state => state.openDrawer);
-  const drawerOpen = useChatStore(state => state.drawerOpen);
+  const currentRoomId = useChatStore(state => state.currentRoomId);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const { isAuthenticated, profile } = useUserStore();
 
@@ -187,8 +187,11 @@ export const MobileNav: React.FC = () => {
 
   const shouldHideNav = HIDE_NAV_PATTERNS.some(pattern => pattern.test(pathname));
 
+  // Hide when a chat room is active on the /chat page (message view)
+  const chatRoomActive = pathname === '/chat' && !!currentRoomId;
+
   // TMA uses MobileNav; other embedded apps (Discord/Farcaster) have their own nav
-  if ((isEmbeddedApp && !isTGMiniApp) || shouldHideNav || drawerOpen) {
+  if ((isEmbeddedApp && !isTGMiniApp) || shouldHideNav || chatRoomActive) {
     return null;
   }
 
@@ -200,44 +203,12 @@ export const MobileNav: React.FC = () => {
       {/* Safe area padding for iOS */}
       <div className="relative pb-safe">
         <div className="flex items-center justify-around h-16 px-2">
-          {filteredNavItems.map((item, index) => {
-            const active = item.isChat ? drawerOpen : isActive(item.href);
+          {filteredNavItems.map((item, _index) => {
+            const active = isActive(item.href);
             // 动态获取 badge：聊天用未读数，购物车用商品数量，其他用静态值
             const badge = item.isChat ? totalUnread : item.isCart ? cartItemCount : item.badge;
 
-            // Chat 项使用按钮
-            if (item.isChat) {
-              return (
-                <button
-                  key={`chat-${index}`}
-                  onClick={openChatDrawer}
-                  data-testid="mobile-nav-chat"
-                  className={`relative flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                    active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
-                  }`}
-                >
-                  {/* Icon with badge */}
-                  <span className={`relative transition-transform ${active ? 'scale-105' : ''}`}>
-                    {active ? item.activeIcon || item.icon : item.icon}
-                    {badge !== undefined && badge > 0 && (
-                      <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                        {badge > 99 ? '99+' : badge}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={`text-xs mt-1 font-medium leading-tight ${active ? 'font-semibold' : ''}`}
-                  >
-                    {t(item.labelKey)}
-                  </span>
-                  {active && (
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-                  )}
-                </button>
-              );
-            }
-
-            // 其他项使用 Link
+            // All items use Link
             // 对于"我"项，如果用户已登录且有头像，显示用户头像
             const showUserAvatar = item.isMe && isAuthenticated && userAvatarUrl;
 

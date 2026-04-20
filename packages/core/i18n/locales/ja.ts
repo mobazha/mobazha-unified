@@ -1301,6 +1301,7 @@ export const ja: TranslationResource = {
       '下のボタンをクリックするか、ストアにアクセスして最初の会話を始めましょう。',
     startNewConversation: '新しい会話を開始',
     startConversation: '会話を始める',
+    encryptedHint: 'エンドツーエンド暗号化。Telegram・Discord・Webで同期。',
     today: '今日',
     yesterday: '昨日',
     directMessages: 'ダイレクトメッセージ',

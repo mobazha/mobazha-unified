@@ -8,7 +8,7 @@ import { useTGMiniApp } from './TGMiniAppProvider';
  * Paths that correspond to bottom-nav root tabs.
  * BackButton is hidden on these; shown on all other pages.
  */
-const ROOT_TAB_PATHS = new Set(['/', '/orders', '/cart', '/me']);
+const ROOT_TAB_PATHS = new Set(['/', '/orders', '/cart', '/chat', '/me']);
 
 /**
  * Layout-level manager for the Telegram Mini App native BackButton.

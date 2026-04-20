@@ -179,6 +179,9 @@ const routes: RouteObject[] = [
   // 通知
   { path: '/notifications', element: protectedPage(() => import('./app/notifications/page')) },
 
+  // 聊天（mobile/TMA 独立页面，desktop 仍用 ChatDrawer）
+  { path: '/chat', element: protectedPage(() => import('./app/chat/page')) },
+
   // 订单
   { path: '/orders', element: protectedPage(() => import('./app/orders/page')) },
   { path: '/orders/:orderId', element: protectedPage(() => import('./app/orders/[orderId]/page')) },

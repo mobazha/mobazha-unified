@@ -1290,6 +1290,7 @@ export const ko: TranslationResource = {
     startFirstConversation: '아래 버튼을 클릭하거나 스토어를 방문하여 첫 대화를 시작하세요.',
     startNewConversation: '새 대화 시작',
     startConversation: '대화 시작',
+    encryptedHint: '종단간 암호화. Telegram, Discord, 웹에서 동기화됩니다.',
     today: '오늘',
     yesterday: '어제',
     directMessages: '다이렉트 메시지',

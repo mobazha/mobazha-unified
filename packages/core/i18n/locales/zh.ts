@@ -1269,6 +1269,7 @@ export const zh: TranslationResource = {
     startFirstConversation: '点击下方按钮开始您的第一次对话，或访问店铺与卖家联系。',
     startNewConversation: '开始新对话',
     startConversation: '开始对话',
+    encryptedHint: '端到端加密，Telegram / Discord / 网页多端同步',
     today: '今天',
     yesterday: '昨天',
     directMessages: '私信',
