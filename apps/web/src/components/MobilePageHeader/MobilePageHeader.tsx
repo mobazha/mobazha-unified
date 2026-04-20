@@ -18,6 +18,12 @@ export interface MobilePageHeaderProps {
   transparent?: boolean;
   /** 自定义类名 */
   className?: string;
+  /**
+   * Mark as a root tab page (Home/Purchases/Cart/Messages/Me).
+   * In embedded apps (TMA), the entire header is hidden because
+   * L1 (native header) + bottom nav already provide full context.
+   */
+  rootTab?: boolean;
 }
 
 /**
@@ -33,10 +39,17 @@ export function MobilePageHeader({
   rightAction,
   transparent = false,
   className = '',
+  rootTab = false,
 }: MobilePageHeaderProps) {
   const router = useRouter();
   const { t } = useI18n();
   const { isEmbeddedApp } = usePlatform();
+
+  // Root tab pages in embedded apps: L1 (native header) + bottom nav
+  // already provide full context — this header is pure redundancy.
+  if (rootTab && isEmbeddedApp) {
+    return null;
+  }
 
   // In embedded apps (TG/Discord), hide our back button:
   // - TG: native BackButton replaces it (bound by useTGBackButton below)

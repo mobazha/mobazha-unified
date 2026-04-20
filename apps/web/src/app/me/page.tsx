@@ -100,9 +100,10 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 // --- Anonymous Me Page (MA-1.4) ---
 const AnonymousMePage: React.FC<{
   isTGMiniApp: boolean;
+  isEmbeddedApp: boolean;
   onContinueWithTelegram: () => void;
   onLogin: () => void;
-}> = ({ isTGMiniApp, onContinueWithTelegram, onLogin }) => {
+}> = ({ isTGMiniApp, isEmbeddedApp, onContinueWithTelegram, onLogin }) => {
   const { t } = useI18n();
   const cartItemCount = useCartStore(state => state.items.length);
 
@@ -110,11 +111,13 @@ const AnonymousMePage: React.FC<{
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-center h-11">
-          <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+      {!isEmbeddedApp && (
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border lg:hidden">
+          <div className="flex items-center justify-center h-11">
+            <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       <Container size="sm" className="py-3">
         <VStack gap="sm">
@@ -519,6 +522,7 @@ export default function MePage() {
     return (
       <AnonymousMePage
         isTGMiniApp={isTGMiniApp}
+        isEmbeddedApp={isEmbeddedApp}
         onContinueWithTelegram={handleContinueWithTelegram}
         onLogin={handleLogin}
       />
@@ -531,11 +535,13 @@ export default function MePage() {
       <div className="min-h-screen bg-background">
         <Header />
 
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-center h-11">
-            <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+        {!isEmbeddedApp && (
+          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border lg:hidden">
+            <div className="flex items-center justify-center h-11">
+              <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         <Container size="sm" className="py-3">
           <VStack gap="sm">
@@ -610,11 +616,13 @@ export default function MePage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-center h-11">
-          <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+      {!isEmbeddedApp && (
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border lg:hidden">
+          <div className="flex items-center justify-center h-11">
+            <span className="text-base font-semibold text-foreground">{t('me.title')}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       <Container size="sm" className="py-3">
         <VStack gap="sm">

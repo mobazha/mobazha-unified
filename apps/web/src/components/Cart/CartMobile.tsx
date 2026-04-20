@@ -304,7 +304,7 @@ export function CartMobile() {
   if (items.length === 0) {
     return (
       <PageTransition className="min-h-screen bg-background">
-        <MobilePageHeader title={t('cart.title')} />
+        <MobilePageHeader title={t('cart.title')} rootTab />
         <div className="flex flex-col items-center justify-center px-6 pt-24">
           <ShoppingBag className="w-16 h-16 text-muted-foreground/40 mb-4" />
           <h2 className="text-lg font-bold text-foreground mb-2">{t('cart.empty')}</h2>
@@ -325,6 +325,7 @@ export function CartMobile() {
     <PageTransition className="min-h-screen-tg bg-background pb-24">
       <MobilePageHeader
         title={t('cart.title')}
+        rootTab
         rightAction={
           <ClearCartAlert onConfirm={clearCart}>
             {openDialog => (

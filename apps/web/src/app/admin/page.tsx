@@ -30,6 +30,7 @@ import {
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { usePlatform } from '@mobazha/ui/hooks';
 import {
   StatCard,
   RecentOrderRow,
@@ -152,6 +153,10 @@ function useDashboardData() {
 
 function DashboardHeader({ name }: { name: string }) {
   const { t } = useI18n();
+  const { isEmbeddedApp } = usePlatform();
+
+  if (isEmbeddedApp) return null;
+
   return (
     <div className="mb-5 sm:mb-8">
       <h1 className="text-xl sm:text-2xl font-bold text-foreground">
