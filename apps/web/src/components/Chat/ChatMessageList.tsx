@@ -6,7 +6,6 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { Copy, Trash2, Pencil, Check, X, SmilePlus } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
-import { usePlatform } from '@mobazha/ui/hooks';
 import type { Message } from './ChatMessages';
 import {
   ChatImageContent,
@@ -238,7 +237,6 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   onDeleteConfirm,
 }) => {
   const { t } = useI18n();
-  const { isEmbeddedApp } = usePlatform();
 
   const memberNameMap = memberNameMapProp || EMPTY_NAME_MAP;
 
@@ -397,30 +395,24 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         </VStack>
       ) : messages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-muted-foreground relative px-4">
-          {!isEmbeddedApp && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div
-                className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-primary/5 blur-3xl animate-pulse"
-                style={{ animationDuration: '4s' }}
-              />
-              <div
-                className="absolute bottom-1/4 right-1/4 w-40 h-40 rounded-full bg-primary/3 blur-3xl animate-pulse"
-                style={{ animationDuration: '6s', animationDelay: '1s' }}
-              />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-primary/10 opacity-50" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-primary/5" />
-            </div>
-          )}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-primary/5 blur-3xl animate-pulse"
+              style={{ animationDuration: '4s' }}
+            />
+            <div
+              className="absolute bottom-1/4 right-1/4 w-40 h-40 rounded-full bg-primary/3 blur-3xl animate-pulse"
+              style={{ animationDuration: '6s', animationDelay: '1s' }}
+            />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-primary/10 opacity-50" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-primary/5" />
+          </div>
           <div className="relative z-10 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className={`relative ${isEmbeddedApp ? 'mb-4' : 'mb-6'}`}>
-              {!isEmbeddedApp && (
-                <div className="absolute inset-0 w-24 h-24 rounded-2xl bg-primary/10 blur-xl" />
-              )}
-              <div
-                className={`relative ${isEmbeddedApp ? 'w-16 h-16 rounded-xl' : 'w-24 h-24 rounded-2xl'} bg-gradient-to-br from-primary/25 via-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-lg shadow-primary/10`}
-              >
+            <div className="relative mb-6">
+              <div className="absolute inset-0 w-24 h-24 rounded-2xl bg-primary/10 blur-xl" />
+              <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary/5 flex items-center justify-center ring-1 ring-primary/20 shadow-xl shadow-primary/10 backdrop-blur-sm">
                 <svg
-                  className={`${isEmbeddedApp ? 'w-8 h-8' : 'w-12 h-12'} text-primary/70`}
+                  className="w-12 h-12 text-primary/70"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -434,16 +426,24 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                 </svg>
               </div>
             </div>
-            <h3
-              className={`${isEmbeddedApp ? 'text-base' : 'text-lg'} font-bold text-foreground mb-1`}
-            >
-              {t('chat.noMessages')}
-            </h3>
-            {!isEmbeddedApp && (
-              <p className="text-sm text-muted-foreground/70 text-center max-w-[200px]">
-                {t('chat.typeMessage')}
-              </p>
-            )}
+            <h3 className="text-lg font-bold text-foreground mb-1">{t('chat.noMessages')}</h3>
+            <p className="text-sm text-muted-foreground/70 text-center max-w-[200px]">
+              {t('chat.typeMessage')}
+            </p>
+            <div className="flex items-center gap-1.5 mt-6">
+              <div
+                className="w-2 h-2 rounded-full bg-primary/30 animate-bounce"
+                style={{ animationDelay: '0ms', animationDuration: '1s' }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                style={{ animationDelay: '150ms', animationDuration: '1s' }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-primary/30 animate-bounce"
+                style={{ animationDelay: '300ms', animationDuration: '1s' }}
+              />
+            </div>
           </div>
         </div>
       ) : (
