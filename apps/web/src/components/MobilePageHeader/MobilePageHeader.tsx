@@ -51,11 +51,25 @@ export function MobilePageHeader({
     return null;
   }
 
-  // In embedded apps (TG/Discord), hide our back button:
-  // - TG: native BackButton replaces it (bound by useTGBackButton below)
-  // - Discord: Activity frame has its own navigation
-  // Exception: if a custom onBack is provided, always show it (e.g. close modal)
-  const effectiveShowBack = isEmbeddedApp && !onBack ? false : showBack;
+  // Embedded apps: left-aligned title, no back button
+  // TG: native BackButton managed by TGBackButtonManager
+  // Discord: Activity frame has its own navigation
+  if (isEmbeddedApp) {
+    return (
+      <div
+        className={`sticky top-0 z-40 lg:hidden ${
+          transparent
+            ? 'bg-transparent'
+            : 'bg-background/95 backdrop-blur-sm border-b border-border'
+        } ${className}`}
+      >
+        <div className="flex items-center justify-between h-12 px-4">
+          {title && <h1 className="text-lg font-semibold text-foreground truncate">{title}</h1>}
+          {rightAction && <div className="flex items-center">{rightAction}</div>}
+        </div>
+      </div>
+    );
+  }
 
   const handleBack = () => {
     if (onBack) {
@@ -73,7 +87,7 @@ export function MobilePageHeader({
     >
       <div className="flex items-center justify-between h-12 px-1">
         {/* 左侧返回按钮 — 44px 触摸目标 */}
-        {effectiveShowBack ? (
+        {showBack ? (
           <button
             onClick={handleBack}
             className="w-11 h-11 flex items-center justify-center text-foreground touch-feedback rounded-full active:bg-muted/50"

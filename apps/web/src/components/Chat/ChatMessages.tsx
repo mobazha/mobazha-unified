@@ -162,7 +162,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Chat Header */}
       <div
-        className={`flex items-center gap-3 ${isEmbeddedApp ? 'px-3 py-2' : 'p-4'} bg-card/80 backdrop-blur-sm border-b border-border/50 shadow-sm`}
+        className="flex items-center gap-3 p-4 bg-card/80 backdrop-blur-sm border-b border-border/50 shadow-sm"
         data-testid="chat-room-header"
       >
         {onBack && !isEmbeddedApp && (
