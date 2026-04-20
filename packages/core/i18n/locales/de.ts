@@ -1331,6 +1331,7 @@ export const de: TranslationResource = {
       'Starten Sie Ihre erste Unterhaltung, indem Sie auf die Schaltfläche unten klicken oder einen Shop besuchen.',
     startNewConversation: 'Neue Unterhaltung starten',
     startConversation: 'Unterhaltung beginnen',
+    encryptedHint: 'Ende-zu-Ende-verschlüsselt. Synchronisiert über Telegram, Discord & Web.',
     today: 'Heute',
     yesterday: 'Gestern',
     directMessages: 'Direktnachrichten',

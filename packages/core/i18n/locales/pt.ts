@@ -1317,6 +1317,7 @@ export const pt: TranslationResource = {
       'Inicie sua primeira conversa clicando no botão abaixo ou visitando uma loja.',
     startNewConversation: 'Iniciar nova conversa',
     startConversation: 'Iniciar conversa',
+    encryptedHint: 'Criptografia ponta a ponta. Sincroniza entre Telegram, Discord e Web.',
     today: 'Hoje',
     yesterday: 'Ontem',
     directMessages: 'Mensagens diretas',

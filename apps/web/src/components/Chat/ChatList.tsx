@@ -282,7 +282,9 @@ export const ChatList: React.FC<ChatListProps> = ({
   );
 
   return (
-    <div className="h-full flex flex-col bg-card border-r border-border/50 shadow-sm">
+    <div
+      className={`h-full flex flex-col overflow-hidden bg-background ${embedded ? '' : 'bg-card border-r border-border/50 shadow-sm'}`}
+    >
       {/* Header — hidden when embedded in ChatDrawer (which provides its own header) */}
       {!embedded && (
         <div className="p-3 sm:p-4 border-b border-border/50 bg-gradient-to-b from-card to-transparent">
@@ -365,8 +367,8 @@ export const ChatList: React.FC<ChatListProps> = ({
         </div>
       )}
 
-      {/* Search bar — always visible when embedded (Drawer provides header, but search lives here) */}
-      {embedded && (
+      {/* Search bar — visible when embedded AND room count justifies it */}
+      {embedded && rooms.length + invites.length >= 5 && (
         <div className="px-3 py-2 border-b border-border/30">
           <Input
             placeholder={t('chat.searchConversations')}
@@ -394,7 +396,7 @@ export const ChatList: React.FC<ChatListProps> = ({
 
       {/* Room List */}
       <div
-        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+        className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
         data-testid="chat-conversation-list"
       >
         {isLoading ? (
@@ -435,12 +437,17 @@ export const ChatList: React.FC<ChatListProps> = ({
                 {searchQuery ? t('empty.noStoresFound') : t('chat.noMessages')}
               </p>
               {!searchQuery && (
-                <button
-                  onClick={onNewChat}
-                  className="mt-5 px-5 py-2.5 text-sm font-semibold text-primary hover:text-white hover:bg-primary rounded-xl transition-all duration-200 border border-primary/30 hover:border-transparent hover:shadow-lg hover:shadow-primary/20"
-                >
-                  {t('chat.startConversation')}
-                </button>
+                <>
+                  <p className="mt-2 text-xs text-muted-foreground/50 max-w-[220px]">
+                    {t('chat.encryptedHint')}
+                  </p>
+                  <button
+                    onClick={onNewChat}
+                    className="mt-5 px-5 py-2.5 text-sm font-medium text-primary hover:text-primary/80 rounded-xl transition-all duration-200 border border-primary/20 hover:border-primary/40"
+                  >
+                    {t('chat.startConversation')}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -466,16 +473,11 @@ export const ChatList: React.FC<ChatListProps> = ({
       >
         <button
           onClick={onNewChat}
-          className="w-full flex items-center justify-center gap-2.5 py-3 px-5 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 active:from-primary/90 text-white rounded-xl transition-all duration-300 text-[13px] font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 rounded-xl transition-all duration-200 text-[13px] font-medium"
           data-testid="chat-new-btn"
         >
-          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M12 4v16m8-8H4"
-            />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           {t('chat.newMessage')}
         </button>

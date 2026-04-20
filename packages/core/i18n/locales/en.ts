@@ -1431,6 +1431,7 @@ export const en: TranslationResource = {
       'Start your first conversation by clicking the button below or visiting a store.',
     startNewConversation: 'Start a New Conversation',
     startConversation: 'Start a conversation',
+    encryptedHint: 'End-to-end encrypted. Syncs across Telegram, Discord & Web.',
     // Time
     today: 'Today',
     yesterday: 'Yesterday',

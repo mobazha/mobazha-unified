@@ -1308,6 +1308,7 @@ export const ru: TranslationResource = {
     startFirstConversation: 'Начните первый разговор, нажав кнопку ниже или посетив магазин.',
     startNewConversation: 'Новый разговор',
     startConversation: 'Начать разговор',
+    encryptedHint: 'Сквозное шифрование. Синхронизация между Telegram, Discord и Web.',
     today: 'Сегодня',
     yesterday: 'Вчера',
     directMessages: 'Личные сообщения',

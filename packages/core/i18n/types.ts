@@ -529,6 +529,7 @@ export interface TranslationResource {
     yesterday: string;
     connecting: string;
     startConversation: string;
+    encryptedHint: string;
   };
 
   // Matrix 房间事件

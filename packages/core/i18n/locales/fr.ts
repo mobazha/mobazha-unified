@@ -1323,6 +1323,7 @@ export const fr: TranslationResource = {
       'Démarrez votre première conversation en cliquant sur le bouton ci-dessous ou en visitant une boutique.',
     startNewConversation: 'Démarrer une nouvelle conversation',
     startConversation: 'Démarrer une conversation',
+    encryptedHint: 'Chiffrement de bout en bout. Synchronisé sur Telegram, Discord et Web.',
     today: "Aujourd'hui",
     yesterday: 'Hier',
     directMessages: 'Messages directs',
