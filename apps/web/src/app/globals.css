@@ -59,6 +59,13 @@
   --color-error: var(--theme-error);
   --color-info: var(--theme-info);
 
+  /* 图表色板（recharts 等直接引用） */
+  --color-chart-1: var(--theme-primary);
+  --color-chart-2: var(--theme-success);
+  --color-chart-3: var(--theme-info);
+  --color-chart-4: var(--theme-warning);
+  --color-chart-5: var(--theme-secondary);
+
   /* 渐变和发光 */
   --color-glow: var(--theme-glow, transparent);
 
@@ -471,41 +478,17 @@
 /* ===================================================================== *
  * Embedded-channel theme overrides (MVP-3 M2)
  *
- * When the app is rendered inside a host chat client (Telegram Mini App,
- * Discord Activity, ...), the host injects its own palette via --tg-* /
- * --dc-* variables (published by the respective providers). We re-map the
- * neutral --theme-* tokens to those host values with the original theme's
- * value as the fallback, so individual components keep using --theme-* and
- * don't need per-channel branching.
+ * Telegram: colors are applied via inline `style` on <html> by
+ * TGMiniAppProvider (JS-driven). Inline custom properties beat any
+ * stylesheet rule, so no CSS-level override is needed here. The previous
+ * approach used `var(--tg-*, var(--theme-*))` which created cyclic
+ * self-references on <html> (no parent to inherit from), causing colors to
+ * resolve to the CSS guaranteed-invalid value when a --tg-* param was
+ * missing → dark text on dark background.
  *
- * Specificity notes
- *   html[data-embedded="telegram"]            → (0,1,1) beats plain theme
- *     attr selectors like [data-theme='crypto'] (0,1,0).
- *   html.dark[data-embedded="telegram"]       → (0,2,1) beats dark variants
- *     like [data-theme='crypto'].dark (0,2,0).
- *
- * Therefore the 2-selector list below correctly wins the cascade across all
- * combinations of Mobazha themes × light/dark without needing !important.
- *
- * Keep this block AFTER every [data-theme=…] rule above; order matters for
- * equal-specificity ties (not strictly required here, but defensive).
+ * The `data-embedded` attribute is still set for non-color concerns (layout
+ * adjustments, component visibility) — see isEmbeddedApp checks in TSX.
  * ===================================================================== */
-html[data-embedded='telegram'],
-html.dark[data-embedded='telegram'] {
-  --theme-background: var(--tg-bg, var(--theme-background));
-  --theme-backgroundAlt: var(--tg-secondary-bg, var(--theme-backgroundAlt));
-  --theme-surface: var(--tg-secondary-bg, var(--theme-surface));
-  --theme-surfaceHover: var(--tg-section-bg, var(--theme-surfaceHover));
-  --theme-textPrimary: var(--tg-text, var(--theme-textPrimary));
-  --theme-textSecondary: var(--tg-subtitle, var(--tg-hint, var(--theme-textSecondary)));
-  --theme-textMuted: var(--tg-hint, var(--theme-textMuted));
-  --theme-border: var(--tg-section-bg, var(--theme-border));
-  /* Primary button / link color: prefer TG's button_color, then link_color,
-     then the theme's own primary. This ensures CTAs inside TG still feel
-     "on-brand" for TG users while not overriding Mobazha palette elsewhere. */
-  --theme-primary: var(--tg-button, var(--theme-primary));
-  --theme-accent: var(--tg-accent-text, var(--tg-link, var(--theme-accent)));
-}
 
 /* Reserved for future embedded channels — left as no-op blocks so reviewers
    can see the extension point. Populate when the corresponding provider

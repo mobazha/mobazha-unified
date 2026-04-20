@@ -2378,6 +2378,7 @@ export const de: TranslationResource = {
     country: 'Land',
     shippingAddresses: 'Lieferadressen',
     generalDesc: 'Language, theme, and display preferences',
+    generalDescCompact: 'Language, region, and sound preferences',
     profileDesc: 'Your name, avatar, and bio',
     chatEncryptionDesc: 'End-to-end encryption keys and backup',
     manageAddresses: 'Lieferadressen verwalten',

@@ -2329,6 +2329,7 @@ export const ja: TranslationResource = {
     country: '国',
     shippingAddresses: '配送先住所',
     generalDesc: 'Language, theme, and display preferences',
+    generalDescCompact: 'Language, region, and sound preferences',
     profileDesc: 'Your name, avatar, and bio',
     chatEncryptionDesc: 'End-to-end encryption keys and backup',
     manageAddresses: '配送先住所を管理',

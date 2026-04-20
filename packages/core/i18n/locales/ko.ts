@@ -2315,6 +2315,7 @@ export const ko: TranslationResource = {
     country: '국가',
     shippingAddresses: '배송 주소',
     generalDesc: 'Language, theme, and display preferences',
+    generalDescCompact: 'Language, region, and sound preferences',
     profileDesc: 'Your name, avatar, and bio',
     chatEncryptionDesc: 'End-to-end encryption keys and backup',
     manageAddresses: '배송 주소 관리',

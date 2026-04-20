@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 
 interface SettingsPageHeaderProps {
   title: string;
@@ -24,6 +25,7 @@ export const SettingsPageHeader: React.FC<SettingsPageHeaderProps> = ({
 }) => {
   const { t } = useI18n();
   const pathname = usePathname();
+  const { isEmbeddedApp } = usePlatform();
 
   const isAdminRoute = pathname?.startsWith('/admin/settings');
   const resolvedBackHref = backHref ?? (isAdminRoute ? '/admin/settings' : '/settings');
@@ -31,6 +33,10 @@ export const SettingsPageHeader: React.FC<SettingsPageHeaderProps> = ({
   // /admin/settings/* has no sidebar → always show back link
   // /settings/* has a desktop sidebar → only show on mobile
   const backLinkClass = isAdminRoute ? 'mb-3' : 'lg:hidden mb-3';
+
+  // In TMA, Telegram's native BackButton already handles navigation —
+  // our in-page "< Back" link is redundant and wastes vertical space.
+  const hideBackLink = isEmbeddedApp;
 
   const backLink = mobileBackHref ? (
     <>
@@ -60,8 +66,8 @@ export const SettingsPageHeader: React.FC<SettingsPageHeaderProps> = ({
   );
 
   return (
-    <div className="mb-4 md:mb-6">
-      <div className={backLinkClass}>{backLink}</div>
+    <div className={isEmbeddedApp ? 'mb-2' : 'mb-4 md:mb-6'}>
+      {!hideBackLink && <div className={backLinkClass}>{backLink}</div>}
 
       <div className="flex items-start justify-between gap-4">
         <div>

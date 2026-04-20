@@ -132,26 +132,26 @@ export function VisitorAnalytics() {
             <AreaChart data={trend} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-chart-2)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--color-chart-2)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDateTick}
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
                 minTickGap={40}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
                 axisLine={false}
                 tickLine={false}
                 width={40}
@@ -159,8 +159,8 @@ export function VisitorAnalytics() {
               />
               <Tooltip
                 contentStyle={{
-                  background: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
+                  background: 'var(--color-card)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: 8,
                   fontSize: 12,
                 }}
@@ -177,7 +177,7 @@ export function VisitorAnalytics() {
                 type="monotone"
                 dataKey="views"
                 name={t('admin.analytics.pageViews')}
-                stroke="hsl(var(--chart-1))"
+                stroke="var(--color-chart-1)"
                 fillOpacity={1}
                 fill="url(#viewsGrad)"
                 strokeWidth={1.5}
@@ -186,7 +186,7 @@ export function VisitorAnalytics() {
                 type="monotone"
                 dataKey="visitors"
                 name={t('admin.analytics.uniqueVisitors')}
-                stroke="hsl(var(--chart-2))"
+                stroke="var(--color-chart-2)"
                 fillOpacity={1}
                 fill="url(#visitorsGrad)"
                 strokeWidth={2}
@@ -234,10 +234,10 @@ export function VisitorAnalytics() {
                         style={{
                           width: `${step.pct}%`,
                           backgroundColor: [
-                            'hsl(var(--chart-1))',
-                            'hsl(var(--chart-2))',
-                            'hsl(var(--chart-4))',
-                            'hsl(var(--chart-3))',
+                            'var(--color-chart-1)',
+                            'var(--color-chart-2)',
+                            'var(--color-chart-4)',
+                            'var(--color-chart-3)',
                           ][i],
                         }}
                       />

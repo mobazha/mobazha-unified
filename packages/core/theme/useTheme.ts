@@ -56,27 +56,31 @@ function colorsToCssVars(colors: ThemeColors): Record<string, string> {
 
 /**
  * 应用主题到 DOM
+ *
+ * In embedded mode (data-embedded="telegram" etc.) the host provider
+ * (TGMiniAppProvider) manages the entire palette via --theme-* inline styles.
+ * Theme selection UI is hidden in TMA, so we only set structural attributes
+ * (.dark class + data-theme) and skip all color writes to avoid clobbering
+ * the host palette.
  */
 function applyThemeToDOM(themeName: ThemeName, mode: 'light' | 'dark', colors: ThemeColors) {
   const root = document.documentElement;
 
-  // 设置暗色模式 class
   if (mode === 'dark') {
     root.classList.add('dark');
   } else {
     root.classList.remove('dark');
   }
 
-  // 设置主题属性
   root.setAttribute('data-theme', themeName);
 
-  // 设置 CSS 变量
+  if (root.dataset.embedded) return;
+
   const cssVars = colorsToCssVars(colors);
   Object.entries(cssVars).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
 
-  // 更新 meta theme-color
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) {
     metaThemeColor.setAttribute('content', colors.background);

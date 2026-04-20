@@ -2341,6 +2341,7 @@ export const ru: TranslationResource = {
     country: 'Страна',
     shippingAddresses: 'Адреса доставки',
     generalDesc: 'Language, theme, and display preferences',
+    generalDescCompact: 'Language, region, and sound preferences',
     profileDesc: 'Your name, avatar, and bio',
     chatEncryptionDesc: 'End-to-end encryption keys and backup',
     manageAddresses: 'Управление адресами доставки',

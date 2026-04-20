@@ -34,17 +34,17 @@ const PERIOD_OPTIONS: { value: Period; labelKey: string }[] = [
 ];
 
 const STATUS_COLORS: Record<string, string> = {
-  COMPLETED: 'hsl(var(--chart-1))',
-  FULFILLED: 'hsl(var(--chart-2))',
-  PAYMENT_FINALIZED: 'hsl(var(--chart-3))',
-  AWAITING_PAYMENT: 'hsl(var(--chart-4))',
-  AWAITING_PAYMENT_VERIFICATION: 'hsl(var(--chart-4))',
-  AWAITING_FULFILLMENT: 'hsl(var(--chart-5))',
-  PENDING: 'hsl(var(--muted-foreground))',
-  CANCELED: 'hsl(var(--destructive))',
-  DECLINED: 'hsl(var(--destructive))',
-  REFUNDED: 'hsl(var(--warning))',
-  DISPUTED: 'hsl(var(--warning))',
+  COMPLETED: 'var(--color-chart-1)',
+  FULFILLED: 'var(--color-chart-2)',
+  PAYMENT_FINALIZED: 'var(--color-chart-3)',
+  AWAITING_PAYMENT: 'var(--color-chart-4)',
+  AWAITING_PAYMENT_VERIFICATION: 'var(--color-chart-4)',
+  AWAITING_FULFILLMENT: 'var(--color-chart-5)',
+  PENDING: 'var(--color-muted-foreground)',
+  CANCELED: 'var(--color-destructive)',
+  DECLINED: 'var(--color-destructive)',
+  REFUNDED: 'var(--color-warning)',
+  DISPUTED: 'var(--color-warning)',
 };
 
 function formatDateTick(dateStr: string): string {
@@ -102,22 +102,22 @@ function SalesTrendChart({
       <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+            <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.2} />
+            <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
         <XAxis
           dataKey="date"
           tickFormatter={formatDateTick}
-          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+          tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
           axisLine={false}
           tickLine={false}
           interval="preserveStartEnd"
           minTickGap={40}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+          tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
           axisLine={false}
           tickLine={false}
           width={50}
@@ -125,8 +125,8 @@ function SalesTrendChart({
         />
         <Tooltip
           contentStyle={{
-            background: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
+            background: 'var(--color-card)',
+            border: '1px solid var(--color-border)',
             borderRadius: 8,
             fontSize: 12,
           }}
@@ -147,7 +147,7 @@ function SalesTrendChart({
         <Area
           type="monotone"
           dataKey="revenue"
-          stroke="hsl(var(--primary))"
+          stroke="var(--color-primary)"
           fillOpacity={1}
           fill="url(#revenueGrad)"
           strokeWidth={2}
@@ -175,18 +175,18 @@ function OrdersTrendChart({ data, loading }: { data: TrendPoint[]; loading: bool
   return (
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
         <XAxis
           dataKey="date"
           tickFormatter={formatDateTick}
-          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+          tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
           axisLine={false}
           tickLine={false}
           interval="preserveStartEnd"
           minTickGap={40}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+          tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
           axisLine={false}
           tickLine={false}
           width={30}
@@ -194,8 +194,8 @@ function OrdersTrendChart({ data, loading }: { data: TrendPoint[]; loading: bool
         />
         <Tooltip
           contentStyle={{
-            background: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
+            background: 'var(--color-card)',
+            border: '1px solid var(--color-border)',
             borderRadius: 8,
             fontSize: 12,
           }}
@@ -208,7 +208,7 @@ function OrdersTrendChart({ data, loading }: { data: TrendPoint[]; loading: bool
           }}
           formatter={(value: number | undefined) => [value ?? 0, t('admin.analytics.orders')]}
         />
-        <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} maxBarSize={24} />
+        <Bar dataKey="orders" fill="var(--color-primary)" radius={[3, 3, 0, 0]} maxBarSize={24} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -235,7 +235,7 @@ function StatusBreakdownChart({ data, loading }: { data: StatusCount[]; loading:
     <div className="space-y-3">
       {data.map(item => {
         const pct = total > 0 ? (item.count / total) * 100 : 0;
-        const color = STATUS_COLORS[item.state] || 'hsl(var(--muted-foreground))';
+        const color = STATUS_COLORS[item.state] || 'var(--color-muted-foreground)';
         return (
           <div key={item.state}>
             <div className="flex items-center justify-between text-sm mb-1">

@@ -36,7 +36,7 @@ export function StoreTabsSection({ tabs, peerId }: StoreTabsSectionProps) {
             onClick={() => setActiveTab(tab)}
             className={`px-4 sm:px-5 py-3 text-sm sm:text-base font-medium transition-colors border-b-2 ${
               activeTab === tab
-                ? 'border-[var(--store-primary,hsl(var(--primary)))] text-foreground'
+                ? 'border-[var(--store-primary,var(--color-primary))] text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
             style={{ fontFamily: 'var(--store-font, inherit)' }}
