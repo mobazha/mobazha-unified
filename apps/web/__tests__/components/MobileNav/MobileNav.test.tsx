@@ -109,7 +109,7 @@ describe('MobileNav', () => {
       expect(screen.getByTestId('mobile-nav-purchases')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-nav-cart')).toBeInTheDocument();
       expect(screen.getByTestId('mobile-nav-chat')).toBeInTheDocument();
-      expect(screen.getByTestId('mobile-nav-title')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-nav-me')).toBeInTheDocument();
     });
 
     it('highlights home tab when on /', () => {

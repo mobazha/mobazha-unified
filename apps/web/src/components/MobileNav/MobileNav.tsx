@@ -15,6 +15,7 @@ import { usePlatform } from '@mobazha/ui/hooks';
 
 interface NavItem {
   labelKey: string; // i18n key
+  testId?: string; // explicit test id segment; falls back to labelKey's last dot-segment
   href?: string;
   onClick?: () => void;
   icon: React.ReactNode;
@@ -96,6 +97,7 @@ const navItems: NavItem[] = [
   },
   {
     labelKey: 'chat.title',
+    testId: 'chat',
     href: '/chat',
     isChat: true,
     icon: (
@@ -120,6 +122,7 @@ const navItems: NavItem[] = [
   },
   {
     labelKey: 'me.title',
+    testId: 'me',
     href: '/me',
     isMe: true, // 用于显示用户头像
     icon: (
@@ -216,7 +219,7 @@ export const MobileNav: React.FC = () => {
               <Link
                 key={item.href}
                 href={item.href!}
-                data-testid={`mobile-nav-${item.labelKey.split('.').pop()}`}
+                data-testid={`mobile-nav-${item.testId ?? item.labelKey.split('.').pop()}`}
                 className={`relative flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                   active ? 'text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}
