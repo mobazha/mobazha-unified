@@ -148,10 +148,17 @@ export async function getUserGroups(peerID: string): Promise<UserGroup[]> {
     method: 'GET',
     headers: getAuthHeaders(),
   });
-  const raw = await response.json();
   if (!response.ok) {
-    throw new Error(extractErrorMessage(raw));
+    const text = await response.text();
+    let msg = `HTTP ${response.status}`;
+    try {
+      msg = extractErrorMessage(JSON.parse(text));
+    } catch {
+      /* non-JSON body */
+    }
+    throw new Error(msg);
   }
+  const raw = await response.json();
   const data = unwrapData<{ groups?: UserGroup[] } | UserGroup[] | null>(raw);
   if (data == null) return [];
   if (Array.isArray((data as { groups?: UserGroup[] }).groups)) {
