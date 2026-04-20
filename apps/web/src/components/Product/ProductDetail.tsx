@@ -10,7 +10,7 @@ import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { StarRating } from '@/components/ui/star-rating';
 import { cn } from '@/lib/utils';
-import { usePrimaryCTA, useHaptic } from '@/lib/platform';
+import { usePrimaryCTA } from '@/lib/platform';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import {
   productDataService,
@@ -406,11 +406,11 @@ export function ProductDetail({
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [product, quantity, isModal, onClose, router]);
 
-  // MVP-1: platform-abstract primary CTA + haptic (replaces useTGMainButton
-  // + useTGMiniApp().haptic). On Web/Discord the CTA is a no-op; the page's
-  // inline Add-to-Cart button continues to render below.
+  // MVP-1: platform-abstract primary CTA (replaces useTGMainButton). On
+  // Web/Discord the CTA is a no-op; the page's inline Add-to-Cart button
+  // continues to render below. Haptic lives in useProductDetail's
+  // handleAddToCart.
   const cta = usePrimaryCTA();
-  const haptic = useHaptic();
   const tgStock = useMemo(() => (product ? getStockQuantity(product) : 0), [product]);
   const tgPriceDisplay = useMemo(() => {
     if (!product) return '';
@@ -421,8 +421,7 @@ export function ProductDetail({
 
   const handleNativeAddToCart = useCallback(() => {
     handleAddToCart();
-    haptic.success();
-  }, [handleAddToCart, haptic]);
+  }, [handleAddToCart]);
 
   useEffect(() => {
     if (!cta.isNative) return;

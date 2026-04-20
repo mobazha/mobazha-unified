@@ -43,6 +43,7 @@ import {
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
+import { useHaptic } from '@/lib/platform';
 
 // Types
 interface OrderDetails {
@@ -148,6 +149,7 @@ export default function PaymentPage() {
   const { secondsAgo } = useRateFreshness('payment');
   const { t } = useI18n();
   const { toast } = useToast();
+  const haptic = useHaptic();
   const evmWallet = useWallet();
   const tronWallet = useTronWallet();
 
@@ -724,6 +726,7 @@ export default function PaymentPage() {
       }
 
       // 8. 支付成功，跳转到订单确认页
+      haptic.success();
       setPaymentStep('success');
       await new Promise(resolve => setTimeout(resolve, 1200));
       router.push(buildConfirmationUrl(orderDetails));
@@ -734,6 +737,7 @@ export default function PaymentPage() {
       const isCancelled =
         msg.includes('rejected') || msg.includes('denied') || msg.includes('cancelled');
 
+      if (!isCancelled) haptic.error();
       setPaymentError(isCancelled ? t('payment.userCancelledTransaction') : msg);
       setPaymentStep('failed');
     }
@@ -753,6 +757,7 @@ export default function PaymentPage() {
     router,
     t,
     toast,
+    haptic,
   ]);
 
   // Error state
