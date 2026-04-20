@@ -6,6 +6,7 @@ import { HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Search, ChevronUp, ChevronDown, X, Download } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
+import { usePlatform } from '@mobazha/ui/hooks';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,6 +105,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   onCall,
 }) => {
   const { t } = useI18n();
+  const { isEmbeddedApp } = usePlatform();
   const displayName = useMemo(() => cleanDisplayName(roomName), [roomName]);
 
   // Search state
@@ -160,10 +162,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Chat Header */}
       <div
-        className="flex items-center gap-3 p-4 bg-card/80 backdrop-blur-sm border-b border-border/50 shadow-sm"
+        className={`flex items-center gap-3 ${isEmbeddedApp ? 'px-3 py-2' : 'p-4'} bg-card/80 backdrop-blur-sm border-b border-border/50 shadow-sm`}
         data-testid="chat-room-header"
       >
-        {onBack && (
+        {onBack && !isEmbeddedApp && (
           <button
             onClick={onBack}
             className="p-2 -ml-2 hover:bg-surface-hover rounded-lg transition-colors"
