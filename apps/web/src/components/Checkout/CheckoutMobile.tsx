@@ -70,8 +70,8 @@ export function CheckoutMobile({ checkout }: Props) {
   const haptic = useHaptic();
 
   const handlePlaceOrderNative = useCallback(() => {
+    haptic.impact('medium');
     handleCreateOrder();
-    haptic.success();
   }, [handleCreateOrder, haptic]);
 
   useEffect(() => {

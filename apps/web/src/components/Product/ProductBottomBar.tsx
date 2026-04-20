@@ -7,6 +7,7 @@ import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { useI18n, useCartStore, useChatStore, selectUnreadCountByPeerID } from '@mobazha/core';
 import type { Product } from '@mobazha/core';
+import { useHaptic } from '@/lib/platform';
 
 export interface ProductBottomBarProps {
   /** 商品数据 */
@@ -39,6 +40,7 @@ export function ProductBottomBar({
   const [cartSuccess, setCartSuccess] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const haptic = useHaptic();
   const addCartItem = useCartStore(state => state.addItem);
   const cartItemCount = useCartStore(state => state.getItemCount());
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
@@ -70,9 +72,10 @@ export function ProductBottomBar({
       quantity,
     });
 
+    haptic.impact('light');
     setCartSuccess(true);
     setTimeout(() => setCartSuccess(false), 2000);
-  }, [product, quantity, addCartItem]);
+  }, [product, quantity, addCartItem, haptic]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {

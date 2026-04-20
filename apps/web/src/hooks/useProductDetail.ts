@@ -17,6 +17,7 @@ import {
   useChatStore,
   usePaymentMethods,
 } from '@mobazha/core';
+import { useHaptic } from '@/lib/platform';
 import type {
   Product,
   ProductRating,
@@ -160,6 +161,7 @@ export function useProductDetail({
   const [linkCopied, setLinkCopied] = useState(false);
   const [applicableDiscounts, setApplicableDiscounts] = useState<ApplicableDiscount[]>([]);
 
+  const haptic = useHaptic();
   const { isAuthenticated, profile: currentUserProfile } = useUserStore();
   const isOwnProduct =
     isAuthenticated &&
@@ -390,6 +392,7 @@ export function useProductDetail({
 
   const handleSelectOption = useCallback(
     (optionName: string, variantName: string) => {
+      haptic.selectionChange();
       setSelectedOptions(prev => ({ ...prev, [optionName]: variantName }));
 
       if (!product?.item?.options) return;
@@ -408,7 +411,7 @@ export function useProductDetail({
         }
       }
     },
-    [product, imageUrls, setSelectedImage]
+    [product, imageUrls, setSelectedImage, haptic]
   );
 
   // Auto-select the first variant for each option on product load
@@ -522,6 +525,7 @@ export function useProductDetail({
       options,
     });
 
+    haptic.impact('light');
     setCartSuccess(true);
     openCartDrawer();
     setTimeout(() => setCartSuccess(false), 3000);
@@ -534,6 +538,7 @@ export function useProductDetail({
     hasVariants,
     selectedOptions,
     openCartDrawer,
+    haptic,
   ]);
 
   const handleBuyNow = useCallback(() => {
