@@ -1083,7 +1083,11 @@ export default function StorePage() {
                       size="sm"
                       onClick={handleFollowToggle}
                       disabled={followLoading || !isAuthenticated}
-                      className="min-h-[36px] sm:min-h-0"
+                      className={`min-h-[36px] sm:min-h-0 shadow-md ${
+                        isFollowing
+                          ? 'bg-white/90 hover:bg-white text-gray-700 border-white/60'
+                          : 'bg-white hover:bg-gray-50 text-gray-900 border-white/80'
+                      }`}
                     >
                       {followLoading ? (
                         <span className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
@@ -1098,7 +1102,7 @@ export default function StorePage() {
                       size="sm"
                       onClick={handleMessage}
                       disabled={!isAuthenticated}
-                      className="min-h-[36px] sm:min-h-0 bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                      className="min-h-[36px] sm:min-h-0 bg-white/90 hover:bg-white text-gray-700 border-white/60 shadow-md"
                     >
                       {t('profile.message')}
                     </Button>
@@ -1107,7 +1111,11 @@ export default function StorePage() {
                       size="sm"
                       onClick={handleBlockToggle}
                       disabled={blockLoading || !isAuthenticated}
-                      className="min-h-[36px] sm:min-h-0 min-w-[36px] bg-white/20 backdrop-blur hover:bg-white/30 text-white border-white/20"
+                      className={`min-h-[36px] sm:min-h-0 min-w-[36px] shadow-md ${
+                        isBlockedUser
+                          ? ''
+                          : 'bg-white/90 hover:bg-white text-gray-700 border-white/60'
+                      }`}
                       title={isBlockedUser ? t('profile.unblock') : t('profile.block')}
                     >
                       {blockLoading ? (
