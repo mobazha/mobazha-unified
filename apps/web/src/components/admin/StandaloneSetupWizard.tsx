@@ -612,8 +612,9 @@ export default function StandaloneSetupWizard({
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => !saving && setVisibility(opt.value)}
-                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full ${
+                    disabled={saving}
+                    onClick={() => setVisibility(opt.value)}
+                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
                       selected
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-muted-foreground/30'
