@@ -1,5 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: path.join(__dirname, '../../'),
+
   transpilePackages: ['@mobazha/ui', '@mobazha/core'],
 
   // 禁用开发指示器（左下角的 "N" 图标）
