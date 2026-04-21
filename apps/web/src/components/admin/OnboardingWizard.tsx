@@ -32,12 +32,13 @@ import {
   ShieldCheck,
   Shield,
   Zap,
-  Eye,
+  Link2,
+  Lock,
+  Globe,
   EyeOff,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
-import { Switch } from '@/components/ui';
 import CountryCurrencySelector from './CountryCurrencySelector';
 
 const STORAGE_KEY = 'sellerOnboardingDismissed';
@@ -481,25 +482,61 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             <h3 className="text-xs sm:text-sm font-medium text-foreground">
               {t('admin.onboarding.storeVisibility')}
             </h3>
-            <div className="flex items-start gap-3 rounded-lg border p-3 sm:p-4">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                {visibility === 'private' ? (
-                  <EyeOff className="w-4.5 h-4.5 text-primary" />
-                ) : (
-                  <Eye className="w-4.5 h-4.5 text-primary" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{t('admin.onboarding.privateStore')}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('admin.onboarding.privateStoreDesc')}
-                </p>
-              </div>
-              <Switch
-                checked={visibility === 'private'}
-                onCheckedChange={checked => setVisibility(checked ? 'private' : 'public')}
-                disabled={saving}
-              />
+            <div className="space-y-2">
+              {[
+                {
+                  value: 'public' as const,
+                  icon: Globe,
+                  titleKey: 'settings.visibility.public',
+                  descKey: 'settings.visibility.publicDesc',
+                },
+                {
+                  value: 'unlisted' as const,
+                  icon: Link2,
+                  titleKey: 'settings.visibility.unlisted',
+                  descKey: 'settings.visibility.unlistedDesc',
+                },
+                {
+                  value: 'private' as const,
+                  icon: Lock,
+                  titleKey: 'settings.visibility.private',
+                  descKey: 'settings.visibility.privateDesc',
+                },
+              ].map(opt => {
+                const Icon = opt.icon;
+                const selected = visibility === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => !saving && setVisibility(opt.value)}
+                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full ${
+                      selected
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                        selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      <Icon className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{t(opt.titleKey)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
+                    </div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                        selected ? 'border-primary' : 'border-muted-foreground/40'
+                      }`}
+                    >
+                      {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
             <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
           </div>
