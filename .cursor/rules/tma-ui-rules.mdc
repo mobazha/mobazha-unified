@@ -1,0 +1,117 @@
+---
+description: Telegram Mini App (TMA) UI adaptation rules — viewport, navigation, headers, theming
+globs: apps/web/src/**/*.tsx,apps/web/src/**/*.ts,apps/web/src/**/*.css
+alwaysApply: false
+---
+
+# TMA (Telegram Mini App) UI Rules
+
+Rules for building UI that works correctly inside the Telegram Mini App embedded viewport.
+Detect via `usePlatform()` → `isEmbeddedApp` / `isTGMiniApp`, or `data-embedded` attribute.
+
+## 1. Viewport Height
+
+- **NEVER** use `100vh` for full-height containers — it includes the TG native header area
+  and causes content to overflow below the visible viewport.
+- **USE** `100dvh` or Tailwind `h-dvh` (dynamic viewport height) which adapts to the actual
+  visible area in TMA.
+- When a fixed element (MobileNav, header) is visible, subtract its height:
+  `h-[calc(100dvh-4rem)]`. When no fixed element is present (e.g. MobileNav hidden in
+  chat room view), use `h-dvh` directly.
+- Verify MobileNav visibility before choosing the offset — `MobileNav` hides itself when
+  `chatRoomActive`, on admin routes, and on detail pages via `HIDE_NAV_PATTERNS`.
+
+```tsx
+// ❌ Bad — overflows in TMA
+<div className="h-[calc(100vh-4rem)]">
+
+// ✅ Good — dynamic viewport, adapts to TMA
+<div className="h-[calc(100dvh-4rem)]">  // MobileNav visible
+<div className="h-dvh">                  // MobileNav hidden
+```
+
+## 2. Back Button / Navigation
+
+- **NEVER** show in-page back buttons (`<`, `← Back`) in TMA.
+  `TGBackButtonManager` (layout-level) already manages the native Telegram BackButton
+  for all non-root-tab pages.
+- In `MobilePageHeader`: early-return a left-aligned title layout for embedded apps.
+- In `SettingsPageHeader`: `hideBackLink = isEmbeddedApp`.
+- In custom headers (e.g. ChatMessages room header): guard with `!isEmbeddedApp`.
+- Root tab pages (`/`, `/orders`, `/cart`, `/chat`, `/me`): TG BackButton is hidden
+  automatically.
+
+```tsx
+// ❌ Bad — redundant with TG native back button
+{onBack && <button onClick={onBack}>←</button>}
+
+// ✅ Good — hidden in TMA
+{onBack && !isEmbeddedApp && <button onClick={onBack}>←</button>}
+```
+
+## 3. L2 Page Headers
+
+- All L2 (sub-page) headers must use a consistent **left-aligned title** style in TMA.
+- `MobilePageHeader` renders differently per context:
+  - **Embedded (TMA)**: `<h1>` left-aligned, `text-lg font-semibold`, no back button.
+  - **Mobile browser**: centered title with `<` back button + right action.
+  - **Root tab + TMA**: returns `null` (hidden entirely).
+- This matches `SettingsPageHeader` which also renders left-aligned `<h1>` in TMA.
+
+## 4. Theme & Color System
+
+- TMA theme colors are managed by `TGMiniAppProvider` via inline `style.setProperty()`
+  on `--theme-*` CSS variables. `useTheme` skips color writes when `data-embedded` is set.
+- **NEVER** use `hsl(var(--xxx))` format — Tailwind v4 already wraps values.
+  Use `var(--color-xxx)` directly (e.g. in recharts, Stripe, inline styles).
+- For derived colors (e.g. `--color-muted` for skeleton visibility), use `blendHex()`
+  in TGMiniAppProvider to compute from TG's `bg_color` and `secondary_bg_color`.
+- Hide theme/appearance selectors in TMA — TG controls the color scheme.
+
+```tsx
+// ❌ Bad — double-wrapping breaks in Tailwind v4
+fill: 'hsl(var(--primary))'
+
+// ✅ Good — direct CSS variable reference
+fill: 'var(--color-primary)'
+```
+
+## 5. Spacing & Density
+
+- Admin pages: use `py-2` (not `py-6`) for main content in TMA to save vertical space.
+- `SettingsPageHeader`: reduce bottom margin to `mb-2` in TMA (vs `mb-4 md:mb-6`).
+- Hide redundant page titles that duplicate the L2 header (e.g. desktop-only `<h1>`
+  that repeats `MobilePageHeader` title).
+
+## 6. Feature Flags & Route Registration
+
+- **NEVER** gate core infrastructure routes (user-groups, product-groups) behind
+  optional feature flags. Only gate feature-specific routes (e.g. group marketplace
+  discovery endpoints).
+- When a route returns 405 Method Not Allowed, check `gateway.go` for routes
+  accidentally nested inside feature-flag conditionals.
+
+## 7. API Error Handling
+
+- **ALWAYS** check `response.ok` before calling `response.json()`.
+  Non-JSON error responses (405, 502, etc.) will throw `SyntaxError` otherwise.
+
+```tsx
+// ❌ Bad — crashes on 405/502
+const data = await response.json();
+
+// ✅ Good — safe error extraction
+if (!response.ok) {
+  const text = await response.text();
+  let msg = `HTTP ${response.status}`;
+  try { msg = extractErrorMessage(JSON.parse(text)); } catch { /* non-JSON */ }
+  throw new Error(msg);
+}
+const data = await response.json();
+```
+
+## 8. TestId Generation
+
+- When generating `data-testid` from i18n keys, avoid `labelKey.split('.').pop()` which
+  can collide (e.g. `chat.title` and `me.title` both yield `title`).
+- Prefer an explicit `testId` field on nav/config items, falling back to the split method.
