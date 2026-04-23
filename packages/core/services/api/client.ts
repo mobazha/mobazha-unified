@@ -7,6 +7,7 @@
 
 import type { ErrorEnvelope, ApiErrorCode } from '../../types';
 import { isStandaloneBuyerAuth, getBuyerGatewayUrl } from './config';
+import { getStoredToken } from '../auth/token';
 
 /**
  * Return true if the token was refreshed and the request should be retried.
@@ -112,7 +113,11 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     if (!response.ok) {
       if (response.status === 401 && onUnauthorizedCallback && !_retried) {
         const isLocalNodeReject = isStandaloneBuyerAuth() && !url.startsWith(getBuyerGatewayUrl());
-        if (!isLocalNodeReject) {
+        // Basic-auth admin hitting a platform/hosting endpoint that only
+        // accepts JWTs — the 401 is expected, not a session expiry signal.
+        const isBasicOnPlatform =
+          getStoredToken()?.startsWith('basic:') && /\/platform\//.test(url);
+        if (!isLocalNodeReject && !isBasicOnPlatform) {
           const refreshed = await Promise.resolve(onUnauthorizedCallback());
           if (refreshed) {
             clearTimeout(timeoutId);

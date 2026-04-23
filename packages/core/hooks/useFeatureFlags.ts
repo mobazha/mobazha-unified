@@ -28,11 +28,23 @@ import {
   setCachedFeatureFlags,
   subscribeFeatureFlags,
 } from './featureFlagsCache';
+import { getStoredToken } from '../services/auth/token';
 
 let inflightFetch: Promise<FeatureFlags | null> | null = null;
 
 async function fetchFlags(): Promise<FeatureFlags | null> {
   if (inflightFetch) return inflightFetch;
+
+  // Feature flags live on the SaaS platform endpoint (Casdoor JWT required).
+  // Basic-auth sessions (standalone admin AND native/desktop) hold tokens the
+  // SaaS backend rejects with 401, which cascades through the global 401
+  // interceptor into forceLogout. Skip the network call entirely — basic-auth
+  // deployments never need platform-level feature flags.
+  if (getStoredToken()?.startsWith('basic:')) {
+    setCachedFeatureFlags(null);
+    return null;
+  }
+
   inflightFetch = (async () => {
     try {
       const info = await getServerInfo();
@@ -40,9 +52,6 @@ async function fetchFlags(): Promise<FeatureFlags | null> {
       setCachedFeatureFlags(next);
       return next;
     } catch {
-      // Swallow: hook semantics are "off by default" when the call fails
-      // (typically 401 for unauthenticated sessions). The caller can still
-      // observe `loading=false, flags=null` and render accordingly.
       setCachedFeatureFlags(null);
       return null;
     } finally {
