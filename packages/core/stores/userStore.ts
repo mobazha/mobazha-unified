@@ -126,6 +126,8 @@ interface UserState {
   authSource: AuthSource;
   /** True when browsing anonymously inside a Mini App (no account yet) */
   isAnonymousMiniAppUser: boolean;
+  /** 当前用户是否是该独立站的店铺拥有者 (basic auth 或 ownerUserId 匹配的 OAuth) */
+  isStoreOwner: boolean;
 
   // 动作
   /** Basic Auth 登录（VPS 模式） */
@@ -172,6 +174,7 @@ export const useUserStore = create<UserState>()(
         sessionExpired: false,
         authSource: null,
         isAnonymousMiniAppUser: false,
+        isStoreOwner: false,
 
         // Basic Auth 登录（VPS / standalone 卖家模式）
         login: async (credentials: AuthCredentials) => {
@@ -204,6 +207,7 @@ export const useUserStore = create<UserState>()(
               authMode: 'basic',
               isSessionRestored: true,
               needsOnboarding: !profile,
+              isStoreOwner: true,
             });
 
             if (isStandaloneMode()) {
@@ -358,6 +362,7 @@ export const useUserStore = create<UserState>()(
                   casdoorId,
                 });
               }
+              setStandaloneBuyerAuth(false);
               set({
                 profile: adminProfile,
                 token: result.token,
@@ -366,6 +371,7 @@ export const useUserStore = create<UserState>()(
                 authMode: 'standalone',
                 isSessionRestored: true,
                 needsOnboarding: false,
+                isStoreOwner: true,
               });
 
               if (isStandaloneMode()) {
@@ -394,6 +400,7 @@ export const useUserStore = create<UserState>()(
                 authMode: 'standalone',
                 isSessionRestored: true,
                 needsOnboarding: false,
+                isStoreOwner: false,
               });
             } else {
               if (casdoorId) {
@@ -406,6 +413,7 @@ export const useUserStore = create<UserState>()(
                 authMode: 'standalone',
                 isSessionRestored: true,
                 needsOnboarding: !buyerProfile,
+                isStoreOwner: false,
               });
             }
 
@@ -452,6 +460,7 @@ export const useUserStore = create<UserState>()(
                 needsOnboarding: false,
                 authSource: source,
                 isAnonymousMiniAppUser: false,
+                isStoreOwner: false,
               });
               connectWebSocket();
               return true;
@@ -469,6 +478,7 @@ export const useUserStore = create<UserState>()(
               needsOnboarding: true,
               authSource: source,
               isAnonymousMiniAppUser: false,
+              isStoreOwner: false,
             });
             connectWebSocket();
             return true;
@@ -539,6 +549,7 @@ export const useUserStore = create<UserState>()(
                 authMode: 'hosted',
                 isSessionRestored: true,
                 needsOnboarding: false,
+                isStoreOwner: false,
               });
 
               // 连接 WebSocket
@@ -562,6 +573,7 @@ export const useUserStore = create<UserState>()(
               isLoading: false,
               authMode: 'hosted',
               isSessionRestored: true,
+              isStoreOwner: false,
               needsOnboarding: true,
             });
 
@@ -585,14 +597,30 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true, error: null });
 
           try {
-            // 保存 Token
             saveToken(token);
-
-            // 切换到真实 API 模式
             disableMockData();
 
-            // 获取用户资料验证 token 有效性
-            const profile = await profileApi.getMyProfile();
+            const effectiveMode = resolveAuthMode(token);
+            let ownerDetected = token.startsWith('basic:');
+
+            if (!ownerDetected && isStandaloneMode()) {
+              try {
+                const claims = parseJwtToken(token);
+                if (claims?.id) {
+                  const setup = await publicGet<{ ownerUserId?: string }>(NODE_API.SYSTEM_SETUP);
+                  ownerDetected = !!setup?.ownerUserId && setup.ownerUserId === claims.id;
+                }
+              } catch {
+                // Network error — default to non-owner; restoreSession will re-check
+              }
+            }
+
+            setStandaloneBuyerAuth(!ownerDetected && isStandaloneMode());
+
+            const profile =
+              ownerDetected || effectiveMode === 'hosted'
+                ? await profileApi.getMyProfile()
+                : await profileApi.getBuyerProfile();
 
             if (profile) {
               saveUser({ id: profile.peerID, name: profile.name || profile.peerID });
@@ -601,23 +629,23 @@ export const useUserStore = create<UserState>()(
                 token,
                 isAuthenticated: true,
                 isLoading: false,
+                authMode: effectiveMode,
                 isSessionRestored: true,
                 needsOnboarding: false,
+                isStoreOwner: ownerDetected,
               });
-
-              // 连接 WebSocket
               connectWebSocket();
-
               return true;
             }
 
-            // Token 有效但无 profile — 需要 onboarding
             set({
               token,
               isAuthenticated: true,
               isLoading: false,
+              authMode: effectiveMode,
               isSessionRestored: true,
               needsOnboarding: true,
+              isStoreOwner: ownerDetected,
             });
 
             connectWebSocket();
@@ -665,6 +693,7 @@ export const useUserStore = create<UserState>()(
             sessionExpired: false,
             authSource: null,
             isAnonymousMiniAppUser: false,
+            isStoreOwner: false,
           });
         },
 
@@ -710,8 +739,9 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true, token, isAuthenticated: true });
 
           const effectiveMode = resolveAuthMode(token);
-          let isStandaloneBuyer = effectiveMode === 'standalone';
           const isBasicSeller = effectiveMode === 'basic';
+          let ownerDetected = isBasicSeller;
+          let isStandaloneBuyer = effectiveMode === 'standalone';
 
           if (get().authMode !== effectiveMode) {
             set({ authMode: effectiveMode });
@@ -730,6 +760,7 @@ export const useUserStore = create<UserState>()(
                 }>(NODE_API.SYSTEM_SETUP);
                 if (setup?.ownerUserId && setup.ownerUserId === jwtUserId) {
                   isStandaloneBuyer = false;
+                  ownerDetected = true;
                   setStandaloneBuyerAuth(false);
                   const adminProfile = await profileApi.getMyProfile();
                   if (adminProfile) {
@@ -739,6 +770,7 @@ export const useUserStore = create<UserState>()(
                       isLoading: false,
                       isSessionRestored: true,
                       needsOnboarding: false,
+                      isStoreOwner: true,
                     });
                     setWebSocketBaseUrl(getSellerWebSocketUrl());
                     connectWebSocket();
@@ -765,6 +797,7 @@ export const useUserStore = create<UserState>()(
                 isLoading: false,
                 isSessionRestored: true,
                 needsOnboarding: false,
+                isStoreOwner: ownerDetected,
               });
 
               if (isStandaloneBuyer) {
@@ -782,6 +815,7 @@ export const useUserStore = create<UserState>()(
               isLoading: false,
               isSessionRestored: true,
               needsOnboarding: true,
+              isStoreOwner: ownerDetected,
             });
             return true;
           } catch (error) {
@@ -819,7 +853,8 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true });
 
           try {
-            const isBuyer = get().authMode === 'standalone';
+            const { isStoreOwner: owner, authMode: mode } = get();
+            const isBuyer = mode !== 'hosted' && !owner;
             const profile = isBuyer
               ? await profileApi.getBuyerProfile()
               : await profileApi.getMyProfile();
@@ -992,10 +1027,17 @@ export const useUserStore = create<UserState>()(
           authMode: state.authMode,
           token: state.token,
           authSource: state.authSource,
+          isStoreOwner: state.isStoreOwner,
         }),
         merge: (persisted, current) => {
           const merged = { ...current, ...(persisted as Partial<UserState>) };
           merged.authMode = resolveAuthMode(merged.token);
+          if (merged.token?.startsWith('basic:')) {
+            merged.isStoreOwner = true;
+          } else if (!merged.token) {
+            merged.isStoreOwner = false;
+          }
+          // JWT: trust persisted isStoreOwner; restoreSession re-validates
           return merged;
         },
       }

@@ -183,7 +183,12 @@ export default function StandaloneSetupWizard({
     const authHeader = btoa(`${username}:${pwd}`);
     const basicToken = `basic:${authHeader}`;
     saveToken(basicToken);
-    useUserStore.setState({ authMode: 'basic', token: basicToken, isAuthenticated: true });
+    useUserStore.setState({
+      authMode: 'basic',
+      token: basicToken,
+      isAuthenticated: true,
+      isStoreOwner: true,
+    });
   };
 
   const handleLogin = async () => {

@@ -12,7 +12,7 @@ export function TopProductRow({ product }: { product: ProductListItem }) {
 
   return (
     <Link
-      href={`/listing/${product.slug}`}
+      href={`/listing/edit/${product.slug}?from=admin`}
       className="flex items-center gap-3 py-3 border-b border-border last:border-0 hover:bg-muted/50 -mx-2 px-2 rounded-md transition-colors"
     >
       <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0">
