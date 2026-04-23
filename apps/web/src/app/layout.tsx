@@ -135,21 +135,52 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             `,
           }}
         />
-        {/* 防闪烁脚本 - 在页面加载前立即应用主题 */}
+        {/* 防闪烁脚本 - 在页面加载前立即应用主题 + Telegram 嵌入态 (MVP-3 M2) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  const theme = localStorage.getItem('mobazha-theme') || 'classic';
-                  const mode = localStorage.getItem('mobazha-theme-mode') || 'system';
-                  let resolvedMode = mode;
+                  var root = document.documentElement;
+                  var theme = localStorage.getItem('mobazha-theme') || 'classic';
+                  var mode = localStorage.getItem('mobazha-theme-mode') || 'system';
+                  var resolvedMode = mode;
                   if (mode === 'system') {
                     resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                   }
-                  document.documentElement.setAttribute('data-theme', theme);
+                  root.setAttribute('data-theme', theme);
                   if (resolvedMode === 'dark') {
-                    document.documentElement.classList.add('dark');
+                    root.classList.add('dark');
+                  }
+                  var isTG = !!window.Telegram || (location.hash || '').indexOf('tgWebAppData') !== -1;
+                  if (!isTG) return;
+                  root.setAttribute('data-embedded', 'telegram');
+                  var themeMatch = (location.hash || '').match(/tgWebAppThemeParams=([^&]+)/);
+                  var appliedBg = null;
+                  if (themeMatch) {
+                    try {
+                      var params = JSON.parse(decodeURIComponent(themeMatch[1]));
+                      var norm = function(c) { return c && c.charAt(0) !== '#' ? '#' + c : c; };
+                      appliedBg = norm(params.bg_color || params.secondary_bg_color) || null;
+                      if (appliedBg) {
+                        root.style.setProperty('--theme-background', appliedBg);
+                        var secBg = norm(params.secondary_bg_color);
+                        if (secBg) {
+                          root.style.setProperty('--theme-backgroundAlt', secBg);
+                          root.style.setProperty('--theme-surface', secBg);
+                        }
+                        var txt = norm(params.text_color);
+                        if (txt) root.style.setProperty('--theme-textPrimary', txt);
+                        var hint = norm(params.hint_color);
+                        if (hint) root.style.setProperty('--theme-textMuted', hint);
+                        root.style.backgroundColor = appliedBg;
+                        var meta = document.querySelector('meta[name="theme-color"]');
+                        if (meta) meta.setAttribute('content', appliedBg);
+                      }
+                    } catch (e) {}
+                  }
+                  if (!appliedBg && resolvedMode === 'dark') {
+                    root.style.backgroundColor = '#17212b';
                   }
                 } catch (e) {}
               })();
