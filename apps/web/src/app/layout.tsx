@@ -100,6 +100,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
+        {/* Runtime config — injected by container init at startup (standalone mode).
+            Sets window.__RUNTIME_CONFIG__ with SAAS_API_URL and other env-specific values.
+            Must load synchronously before React hydration so applyRuntimeConfig() picks it up.
+            Uses document.write to guarantee blocking execution (same pattern as Telegram SDK below).
+            In SaaS/dev the file 404s silently — onerror="" suppresses console noise. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.write('<scr'+'ipt src="/runtime-config.js" onerror=""><\\/scr'+'ipt>');`,
+          }}
+        />
         {/* Storefront peerID — synchronous global for client hooks (SSR-injected) */}
         {storefrontPeerID && (
           <script
