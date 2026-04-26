@@ -216,6 +216,14 @@ export type {
   GuestCheckoutSettings,
 } from './guestCheckout';
 
+// API Tokens (MCP / programmatic access)
+export * as apiTokensApi from './apiTokens';
+export type { ApiTokenInfo, CreateTokenRequest, CreateTokenResponse, ScopeInfo } from './apiTokens';
+
+// MCP Auto-Connect (standalone only)
+export * as mcpConnectApi from './mcpConnect';
+export type { MCPClientStatus, MCPConnectResult, MCPConnectResponse } from './mcpConnect';
+
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';
 export type {

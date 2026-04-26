@@ -349,6 +349,7 @@ const routes: RouteObject[] = [
         element: lazyPage(() => import('./app/admin/settings/access-control/requests/page')),
       },
       { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
+      { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
     ],
   },
 

@@ -90,6 +90,10 @@ export function AuthProvider({
   const hasRestoredSession = useRef(hasHashToken);
   const hashTokenHandled = useRef(false);
 
+  // Synchronous guard for OAuth processing — survives React Strict Mode
+  // double-invocation where useState updates are deferred.
+  const oauthProcessingRef = useRef(false);
+
   // 登出时重置 hasRestoredSession，确保重新登录时能正确恢复会话。
   // 但不在 hash token 待处理期间重置，防止 restoreSession 竞态。
   useEffect(() => {
@@ -270,17 +274,21 @@ export function AuthProvider({
   }, [router, hasHashToken]);
 
   // 处理 OAuth 回调（在任何页面都可能发生）
+  // Uses oauthProcessingRef (synchronous) to prevent React Strict Mode
+  // double-invocation from consuming the authorization code twice.
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      if (hasOAuthCallback() && !isProcessingOAuth) {
+      if (hasOAuthCallback() && !oauthProcessingRef.current) {
+        oauthProcessingRef.current = true;
         setIsProcessingOAuth(true);
+
         const { code, state } = getOAuthParams();
+        clearOAuthParams();
 
         if (code && state) {
           const [, sfReturnOrigin] = extractStorefrontReturn(state);
 
           const success = await loginWithOAuth(code, state);
-          clearOAuthParams();
 
           if (success && sfReturnOrigin) {
             const token = useUserStore.getState().token;
@@ -302,6 +310,7 @@ export function AuthProvider({
             }
           }
         }
+        oauthProcessingRef.current = false;
         setIsProcessingOAuth(false);
         setIsInitialized(true);
       }

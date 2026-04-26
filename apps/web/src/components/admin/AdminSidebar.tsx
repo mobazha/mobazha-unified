@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   Server,
   Store,
+  Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -56,6 +57,7 @@ const baseNavItems: NavItem[] = [
     icon: Palette,
   },
   { id: 'analytics', labelKey: 'admin.nav.analytics', href: '/admin/analytics', icon: BarChart3 },
+  { id: 'ai-agents', labelKey: 'admin.nav.aiAgents', href: '/admin/ai-agents', icon: Bot },
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
 ];
 

@@ -2623,6 +2623,7 @@ export interface TranslationResource {
       backToMarketplace?: string;
       backToShopping?: string;
       mainNavigation?: string;
+      aiAgents?: string;
     };
     dashboard?: {
       welcome?: string;
@@ -4014,6 +4015,88 @@ export interface TranslationResource {
     saveLinkCopied?: string;
     expiredHelpTitle?: string;
     expiredHelpBody?: string;
+  };
+
+  // AI Agents — MCP connection DX
+  aiAgents?: {
+    title?: string;
+    subtitle?: string;
+    quickConnect?: string;
+    forOwners?: string;
+    forDevelopers?: string;
+    connectionKeys?: string;
+    connectionKeysAdvanced?: string;
+    manageTokens?: string;
+    connectAll?: string;
+    connectAllDesc?: string;
+    connectSpecific?: string;
+    connecting?: string;
+    connected?: string;
+    reconnect?: string;
+    disconnected?: string;
+    openIde?: string;
+    copyCommand?: string;
+    copyCli?: string;
+    copyConfig?: string;
+    showDetails?: string;
+    connect?: string;
+    copied?: string;
+    tokenOnlyOnce?: string;
+    notDetected?: string;
+    ideOpening?: string;
+    deepLinkFallback?: string;
+    cliStep?: string;
+    remoteUrlStep1?: string;
+    remoteUrlStep2?: string;
+    mcpUrl?: string;
+    bearerToken?: string;
+    jsonConfigSteps?: {
+      step1?: string;
+      step2?: string;
+      step3?: string;
+    };
+    postConnect?: {
+      title?: string;
+      afterSetup?: string;
+      prompt1?: string;
+      prompt2?: string;
+      prompt3?: string;
+    };
+    connectClient?: string;
+    other?: string;
+    otherDesc?: string;
+    onboarding?: string;
+    autoConnect?: {
+      title?: string;
+      desc?: string;
+      summary?: string;
+    };
+    tokens?: {
+      title?: string;
+      name?: string;
+      scopes?: string;
+      created?: string;
+      status?: string;
+      active?: string;
+      revoked?: string;
+      revoke?: string;
+      revokeConfirm?: string;
+      create?: string;
+      createTitle?: string;
+      nameLabel?: string;
+      namePlaceholder?: string;
+      scopesLabel?: string;
+      scopesSeller?: string;
+      scopesBuyer?: string;
+      scopesCustom?: string;
+      expiresLabel?: string;
+      expires90?: string;
+      expires365?: string;
+      expiresNever?: string;
+      autoLabel?: string;
+      empty?: string;
+      createFailed?: string;
+    };
   };
 
   // Multi-Store (Phase MS) — My Stores console & claim flow
