@@ -258,6 +258,13 @@ export const NODE_API = {
   SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
+  // --- MCP Auto-Connect (standalone only) ---
+  SYSTEM_MCP_CONNECT: '/system/mcp/connect',
+  SYSTEM_MCP_CONNECT_CLIENT: (client: string) => `/system/mcp/connect/${client}`,
+  SYSTEM_MCP_CLIENTS: '/system/mcp/clients',
+  SYSTEM_MCP_DISCONNECT: '/system/mcp/disconnect',
+  SYSTEM_MCP_DISCONNECT_CLIENT: (client: string) => `/system/mcp/disconnect/${client}`,
+
   // --- Guest Checkout (anonymous direct-payment orders) ---
   GUEST_ORDERS: '/guest/orders',
   GUEST_ORDER: (token: string) => `/guest/orders/${token}`,
@@ -417,6 +424,12 @@ export const HOSTING_API = {
   MARKETPLACE_ANNOUNCEMENT: (marketplaceId: string, announcementId: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
   MARKETPLACE_ACTIVITY: (id: string) => `/platform/v1/marketplaces/${id}/activity`,
+
+  // --- Auth Tokens (MCP / API) ---
+  AUTH_TOKENS: '/platform/v1/auth/tokens',
+  AUTH_TOKEN: (tokenID: string) => `/platform/v1/auth/tokens/${tokenID}`,
+  AUTH_SCOPES: '/platform/v1/auth/scopes',
+  AUTH_IDENTITY: '/platform/v1/auth/identity',
 
   // --- Fiat Payment Onboarding (SaaS) ---
   FIAT_ONBOARDING_START: (provider: string) => `/platform/v1/fiat/providers/${provider}/onboarding`,
