@@ -53,11 +53,11 @@ export function generateCursorDeepLink(storeName: string, mcpUrl: string, token:
   return `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(name)}&config=${base64Config}`;
 }
 
-export function generateVSCodeDeepLink(storeName: string, sseUrl: string, token: string): string {
+export function generateVSCodeDeepLink(storeName: string, mcpUrl: string, token: string): string {
   const config = {
     name: `mobazha-${storeName}`,
     type: 'http',
-    url: sseUrl,
+    url: mcpUrl,
     headers: { Authorization: `Bearer ${token}` },
   };
   return `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
@@ -96,12 +96,12 @@ export interface JsonConfigResult {
 
 export function generateWindsurfConfig(
   storeName: string,
-  sseUrl: string,
+  mcpUrl: string,
   token: string
 ): JsonConfigResult {
   const config = {
     [`mobazha-${storeName}`]: {
-      serverUrl: sseUrl,
+      serverUrl: mcpUrl,
       headers: { Authorization: `Bearer ${token}` },
     },
   };
@@ -114,13 +114,13 @@ export function generateWindsurfConfig(
 
 export function generateClineConfig(
   storeName: string,
-  sseUrl: string,
+  mcpUrl: string,
   token: string
 ): JsonConfigResult {
   const config = {
     mcpServers: {
       [`mobazha-${storeName}`]: {
-        url: sseUrl,
+        url: mcpUrl,
         headers: { Authorization: `Bearer ${token}` },
       },
     },
@@ -159,7 +159,7 @@ export interface ConnectArtifact {
   mode: ConnectMode;
   deepLink?: string;
   cliCommand?: string;
-  sseUrl?: string;
+  mcpUrl?: string;
   token?: string;
   jsonConfig?: JsonConfigResult;
   guidanceSteps?: string[];
@@ -168,31 +168,31 @@ export interface ConnectArtifact {
 export function generateConnectArtifact(
   clientId: string,
   storeName: string,
-  sseUrl: string,
+  mcpUrl: string,
   token: string
 ): ConnectArtifact {
   switch (clientId) {
     case 'cursor':
       return {
         mode: 'deeplink',
-        deepLink: generateCursorDeepLink(storeName, sseUrl, token),
-        sseUrl,
+        deepLink: generateCursorDeepLink(storeName, mcpUrl, token),
+        mcpUrl,
         token,
       };
     case 'vscode':
       return {
         mode: 'deeplink',
-        deepLink: generateVSCodeDeepLink(storeName, sseUrl, token),
-        sseUrl,
+        deepLink: generateVSCodeDeepLink(storeName, mcpUrl, token),
+        mcpUrl,
         token,
       };
 
     case 'claude-code':
-      return { mode: 'cli', cliCommand: generateClaudeCodeCli(storeName, sseUrl, token) };
+      return { mode: 'cli', cliCommand: generateClaudeCodeCli(storeName, mcpUrl, token) };
     case 'codex':
       return {
         mode: 'remote-url',
-        sseUrl,
+        mcpUrl,
         token,
         guidanceSteps: [
           'Open Codex → Settings → MCP servers → "+ Add server"',
@@ -200,14 +200,14 @@ export function generateConnectArtifact(
         ],
       };
     case 'openclaw':
-      return { mode: 'cli', cliCommand: generateOpenClawCli(storeName, sseUrl, token) };
+      return { mode: 'cli', cliCommand: generateOpenClawCli(storeName, mcpUrl, token) };
     case 'opencode':
-      return { mode: 'cli', cliCommand: generateOpenCodeCli(storeName, sseUrl, token) };
+      return { mode: 'cli', cliCommand: generateOpenCodeCli(storeName, mcpUrl, token) };
 
     case 'chatgpt-desktop':
       return {
         mode: 'remote-url',
-        sseUrl,
+        mcpUrl,
         token,
         guidanceSteps: [
           'Open ChatGPT Desktop → Settings → Apps → Advanced Settings → Developer Mode',
@@ -217,7 +217,7 @@ export function generateConnectArtifact(
     case 'claude-desktop':
       return {
         mode: 'remote-url',
-        sseUrl,
+        mcpUrl,
         token,
         guidanceSteps: [
           'Open Claude Desktop → Settings → Connectors → "Add custom connector"',
@@ -226,12 +226,12 @@ export function generateConnectArtifact(
       };
 
     case 'windsurf':
-      return { mode: 'json-config', jsonConfig: generateWindsurfConfig(storeName, sseUrl, token) };
+      return { mode: 'json-config', jsonConfig: generateWindsurfConfig(storeName, mcpUrl, token) };
     case 'cline':
-      return { mode: 'json-config', jsonConfig: generateClineConfig(storeName, sseUrl, token) };
+      return { mode: 'json-config', jsonConfig: generateClineConfig(storeName, mcpUrl, token) };
 
     default:
-      return { mode: 'json-config', jsonConfig: generateGenericConfig(storeName, sseUrl, token) };
+      return { mode: 'json-config', jsonConfig: generateGenericConfig(storeName, mcpUrl, token) };
   }
 }
 

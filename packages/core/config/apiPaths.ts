@@ -258,6 +258,12 @@ export const NODE_API = {
   SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
+  // --- Auth Tokens (standalone local token management) ---
+  AUTH_TOKENS: '/auth/tokens',
+  AUTH_TOKEN: (tokenID: string) => `/auth/tokens/${tokenID}`,
+  AUTH_SCOPES: '/auth/scopes',
+  AUTH_IDENTITY: '/auth/identity',
+
   // --- MCP Auto-Connect (standalone only) ---
   SYSTEM_MCP_CONNECT: '/system/mcp/connect',
   SYSTEM_MCP_CONNECT_CLIENT: (client: string) => `/system/mcp/connect/${client}`,

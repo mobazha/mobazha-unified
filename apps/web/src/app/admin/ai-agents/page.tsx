@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { useI18n, useUserStore, isStandalone } from '@mobazha/core';
-import { getGatewayUrl } from '@mobazha/core/services/api/config';
 import { getEnvConfig } from '@mobazha/core/config/env';
 import { Bot } from 'lucide-react';
 import { QuickConnectGrid } from '@/components/ai-agents/QuickConnectGrid';
@@ -25,16 +24,12 @@ export default function AIAgentsPage() {
   }, [profile]);
 
   const mcpUrl = useMemo(() => {
-    if (standalone) {
-      return `${getGatewayUrl()}/platform/v1/mcp`;
-    }
-    // External AI clients need an absolute URL.
-    // env.api.baseUrl has the actual backend address (e.g. http://127.0.0.1:18080).
-    // In production it's '' (nginx same-origin proxy), so fall back to window.location.origin.
+    // MCP endpoint is registered at absolute path /v1/mcp on the topMux.
+    // getGatewayUrl() already includes /v1 suffix, so we use the base URL instead.
     const envBase = getEnvConfig().api.baseUrl;
     const base = envBase || (typeof window !== 'undefined' ? window.location.origin : '');
-    return `${base}/platform/v1/mcp`;
-  }, [standalone]);
+    return `${base}/v1/mcp`;
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -55,7 +50,7 @@ export default function AIAgentsPage() {
         <h2 className="text-base font-medium text-foreground mb-4">{t('aiAgents.quickConnect')}</h2>
         <QuickConnectGrid
           storeName={storeName}
-          sseUrl={mcpUrl}
+          mcpUrl={mcpUrl}
           onTokenCreated={() => setTokenRefreshKey(k => k + 1)}
         />
       </div>

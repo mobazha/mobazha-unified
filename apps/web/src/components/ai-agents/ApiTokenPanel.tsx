@@ -216,11 +216,17 @@ function CreateTokenDialog({ open, onOpenChange, onCreated }: CreateTokenDialogP
     if (!name.trim()) return;
     setCreating(true);
     try {
-      const resp = await apiTokensApi.createToken({
+      // expiryDays === 0 means "never expire". Backends (standalone + SaaS)
+      // both treat the field as "absent → no expiry; present → must be 1-365".
+      // Sending 0 would trip the 1-365 validator and 400; omit it instead.
+      const payload: { name: string; scopes: string[]; expires_in_days?: number } = {
         name: name.trim(),
         scopes: ['seller:*'],
-        expires_in_days: expiryDays,
-      });
+      };
+      if (expiryDays > 0) {
+        payload.expires_in_days = expiryDays;
+      }
+      const resp = await apiTokensApi.createToken(payload);
       setNewToken(resp.token);
       onCreated();
     } catch {
