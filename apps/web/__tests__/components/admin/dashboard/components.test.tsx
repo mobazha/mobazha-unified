@@ -215,7 +215,7 @@ describe('TopProductRow', () => {
   it('links to listing page', () => {
     render(<TopProductRow product={baseProduct as any} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/listing/vintage-tee');
+    expect(link).toHaveAttribute('href', '/listing/edit/vintage-tee?from=admin');
   });
 
   it('hides rating when zero', () => {
