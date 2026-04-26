@@ -47,11 +47,11 @@ function getButtonProps(client: McpClient) {
 
 interface QuickConnectGridProps {
   storeName: string;
-  sseUrl: string;
+  mcpUrl: string;
   onTokenCreated?: () => void;
 }
 
-export function QuickConnectGrid({ storeName, sseUrl, onTokenCreated }: QuickConnectGridProps) {
+export function QuickConnectGrid({ storeName, mcpUrl, onTokenCreated }: QuickConnectGridProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const [loadingClient, setLoadingClient] = useState<string | null>(null);
@@ -74,7 +74,7 @@ export function QuickConnectGrid({ storeName, sseUrl, onTokenCreated }: QuickCon
         });
         onTokenCreated?.();
 
-        const artifact = generateConnectArtifact(client.id, storeName, sseUrl, resp.token);
+        const artifact = generateConnectArtifact(client.id, storeName, mcpUrl, resp.token);
 
         if (artifact.mode === 'deeplink' && artifact.deepLink) {
           window.location.href = artifact.deepLink;
@@ -101,18 +101,18 @@ export function QuickConnectGrid({ storeName, sseUrl, onTokenCreated }: QuickCon
         setLoadingClient(null);
       }
     },
-    [storeName, sseUrl, onTokenCreated, toast, t]
+    [storeName, mcpUrl, onTokenCreated, toast, t]
   );
 
   const handleOtherClick = useCallback(() => {
     setDialogClient(null);
     setDialogArtifact({
       mode: 'json-config',
-      sseUrl,
+      mcpUrl,
       token: '',
     });
     setDialogOpen(true);
-  }, [sseUrl]);
+  }, [mcpUrl]);
 
   return (
     <>
@@ -166,7 +166,7 @@ export function QuickConnectGrid({ storeName, sseUrl, onTokenCreated }: QuickCon
         onOpenChange={setDialogOpen}
         client={dialogClient}
         artifact={dialogArtifact}
-        sseUrl={sseUrl}
+        mcpUrl={mcpUrl}
         storeName={storeName}
         onTokenCreated={onTokenCreated}
       />

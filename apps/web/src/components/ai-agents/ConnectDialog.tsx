@@ -14,7 +14,7 @@ interface ConnectDialogProps {
   onOpenChange: (open: boolean) => void;
   client: McpClient | null;
   artifact: ConnectArtifact | null;
-  sseUrl: string;
+  mcpUrl: string;
   storeName: string;
   onTokenCreated?: () => void;
 }
@@ -24,7 +24,7 @@ export function ConnectDialog({
   onOpenChange,
   client,
   artifact,
-  sseUrl,
+  mcpUrl,
   storeName,
   onTokenCreated,
 }: ConnectDialogProps) {
@@ -46,7 +46,7 @@ export function ConnectDialog({
       onTokenCreated?.();
       setOtherArtifact({
         mode: 'json-config',
-        sseUrl,
+        mcpUrl,
         token: resp.token,
         jsonConfig: {
           json: JSON.stringify(
@@ -54,7 +54,7 @@ export function ConnectDialog({
               mcpServers: {
                 [`mobazha-${storeName}`]: {
                   transport: 'http',
-                  url: sseUrl,
+                  url: mcpUrl,
                   headers: { Authorization: `Bearer ${resp.token}` },
                 },
               },
@@ -70,7 +70,7 @@ export function ConnectDialog({
     } finally {
       setCreatingForOther(false);
     }
-  }, [sseUrl, storeName, onTokenCreated, toast]);
+  }, [mcpUrl, storeName, onTokenCreated, toast]);
 
   const handleClose = () => {
     setOtherArtifact(null);
@@ -101,7 +101,7 @@ export function ConnectDialog({
           <div className="space-y-4 py-2">
             {/* Mode A: Deep Link fallback — show URL + token as manual alternative */}
             {effectiveArtifact.mode === 'deeplink' && (
-              <DeepLinkFallback sseUrl={sseUrl} artifact={effectiveArtifact} />
+              <DeepLinkFallback mcpUrl={mcpUrl} artifact={effectiveArtifact} />
             )}
 
             {/* Mode B: CLI command */}
@@ -111,7 +111,7 @@ export function ConnectDialog({
 
             {/* Mode C: Remote URL guidance */}
             {effectiveArtifact.mode === 'remote-url' && (
-              <RemoteUrlGuide artifact={effectiveArtifact} sseUrl={sseUrl} />
+              <RemoteUrlGuide artifact={effectiveArtifact} mcpUrl={mcpUrl} />
             )}
 
             {/* Mode D: JSON config */}
@@ -128,12 +128,12 @@ export function ConnectDialog({
   );
 }
 
-function DeepLinkFallback({ sseUrl, artifact }: { sseUrl: string; artifact: ConnectArtifact }) {
+function DeepLinkFallback({ mcpUrl, artifact }: { mcpUrl: string; artifact: ConnectArtifact }) {
   const { t } = useI18n();
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">{t('aiAgents.deepLinkFallback')}</p>
-      <CopyField label={t('aiAgents.mcpUrl')} value={sseUrl} />
+      <CopyField label={t('aiAgents.mcpUrl')} value={mcpUrl} />
       {artifact.token && (
         <CopyField label={t('aiAgents.bearerToken')} value={artifact.token} sensitive />
       )}
@@ -151,7 +151,7 @@ function CliBlock({ command }: { command: string }) {
   );
 }
 
-function RemoteUrlGuide({ artifact, sseUrl }: { artifact: ConnectArtifact; sseUrl: string }) {
+function RemoteUrlGuide({ artifact, mcpUrl }: { artifact: ConnectArtifact; mcpUrl: string }) {
   const { t } = useI18n();
   return (
     <div className="space-y-3">
@@ -163,7 +163,7 @@ function RemoteUrlGuide({ artifact, sseUrl }: { artifact: ConnectArtifact; sseUr
           {step}
         </div>
       ))}
-      <CopyField label={t('aiAgents.mcpUrl')} value={sseUrl} />
+      <CopyField label={t('aiAgents.mcpUrl')} value={mcpUrl} />
       {artifact.token && (
         <CopyField label={t('aiAgents.bearerToken')} value={artifact.token} sensitive />
       )}
