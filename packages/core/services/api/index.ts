@@ -222,7 +222,12 @@ export type { ApiTokenInfo, CreateTokenRequest, CreateTokenResponse, ScopeInfo }
 
 // MCP Auto-Connect (standalone only)
 export * as mcpConnectApi from './mcpConnect';
-export type { MCPClientStatus, MCPConnectResult, MCPConnectResponse } from './mcpConnect';
+export type {
+  MCPClientStatus,
+  MCPConnectResult,
+  MCPConnectResponse,
+  MCPCapability,
+} from './mcpConnect';
 
 // AI Settings API
 export * as aiSettingsApi from './aiSettings';

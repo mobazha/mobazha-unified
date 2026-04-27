@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { useI18n, useUserStore, isStandalone } from '@mobazha/core';
-import { getEnvConfig } from '@mobazha/core/config/env';
 import { Bot } from 'lucide-react';
 import { QuickConnectGrid } from '@/components/ai-agents/QuickConnectGrid';
 import { ApiTokenPanel } from '@/components/ai-agents/ApiTokenPanel';
@@ -24,11 +23,12 @@ export default function AIAgentsPage() {
   }, [profile]);
 
   const mcpUrl = useMemo(() => {
-    // MCP endpoint is registered at absolute path /v1/mcp on the topMux.
-    // getGatewayUrl() already includes /v1 suffix, so we use the base URL instead.
-    const envBase = getEnvConfig().api.baseUrl;
-    const base = envBase || (typeof window !== 'undefined' ? window.location.origin : '');
-    return `${base}/v1/mcp`;
+    // Always derive from the origin the user is currently on.
+    // This works for SaaS (app.mobazha.org), standalone Docker,
+    // native binary (localhost), and any custom domain — the AI
+    // client reaches the same host the admin UI is served from.
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/v1/mcp`;
   }, []);
 
   return (

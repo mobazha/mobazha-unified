@@ -5933,6 +5933,39 @@ export const en: TranslationResource = {
       title: 'Auto Connect',
       desc: 'Your node can automatically detect and configure AI clients installed on this machine.',
       summary: 'Configured {{count}} client(s). Restart each and ask: "List my store products"',
+      connectCount: 'Connect {{count}} client(s)',
+      rescan: 'Re-scan for AI clients',
+      checkingEnvironment: 'Checking environment…',
+      probeError: 'Could not probe environment: {{error}}',
+      capabilityProbeFailed: 'Capability probe failed',
+      connectionFailed: 'Connection failed',
+      detected: 'Detected on this machine: {{clients}}.',
+      tokenSlotsRemaining: '{{count}} token slot(s) remaining.',
+      tokenLabel: 'API Token (shown once — save if needed for manual setup)',
+      containerized: {
+        description:
+          "This node is running inside a container, so it can't detect or configure AI clients on your computer for you.",
+        useQuickConnectBefore: 'Use',
+        useQuickConnectAfter:
+          'below to copy an API token and paste the snippet into your AI client.',
+      },
+      status: {
+        configured: 'configured',
+        configuredAt: 'configured — {{path}}',
+        alreadyConfigured: 'already configured',
+        notInstalled: 'not installed',
+        failed: 'failed',
+      },
+      reason: {
+        noClients:
+          'No supported AI clients (Cursor, Claude Desktop, etc.) detected on this machine. Install one and retry.',
+        tokenSlotsExhausted:
+          "You've reached the maximum number of API tokens. Revoke an unused token below to free a slot.",
+        noTokenStore:
+          'API token storage is unavailable on this node — auto-connect requires a token store to mint a credential.',
+        containerized: 'Auto-connect is unavailable inside a container.',
+        default: 'Auto-connect is unavailable on this node.',
+      },
     },
     tokens: {
       title: 'API Tokens',
