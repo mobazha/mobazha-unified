@@ -265,6 +265,7 @@ export const NODE_API = {
   AUTH_IDENTITY: '/auth/identity',
 
   // --- MCP Auto-Connect (standalone only) ---
+  SYSTEM_MCP_CAPABILITY: '/system/mcp/capability',
   SYSTEM_MCP_CONNECT: '/system/mcp/connect',
   SYSTEM_MCP_CONNECT_CLIENT: (client: string) => `/system/mcp/connect/${client}`,
   SYSTEM_MCP_CLIENTS: '/system/mcp/clients',

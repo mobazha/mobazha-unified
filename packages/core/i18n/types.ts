@@ -4070,6 +4070,34 @@ export interface TranslationResource {
       title?: string;
       desc?: string;
       summary?: string;
+      connectCount?: string;
+      rescan?: string;
+      checkingEnvironment?: string;
+      probeError?: string;
+      capabilityProbeFailed?: string;
+      connectionFailed?: string;
+      detected?: string;
+      tokenSlotsRemaining?: string;
+      tokenLabel?: string;
+      containerized?: {
+        description?: string;
+        useQuickConnectBefore?: string;
+        useQuickConnectAfter?: string;
+      };
+      status?: {
+        configured?: string;
+        configuredAt?: string;
+        alreadyConfigured?: string;
+        notInstalled?: string;
+        failed?: string;
+      };
+      reason?: {
+        noClients?: string;
+        tokenSlotsExhausted?: string;
+        noTokenStore?: string;
+        containerized?: string;
+        default?: string;
+      };
     };
     tokens?: {
       title?: string;
