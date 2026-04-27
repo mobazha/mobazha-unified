@@ -106,13 +106,9 @@ export function QuickConnectGrid({ storeName, mcpUrl, onTokenCreated }: QuickCon
 
   const handleOtherClick = useCallback(() => {
     setDialogClient(null);
-    setDialogArtifact({
-      mode: 'json-config',
-      mcpUrl,
-      token: '',
-    });
+    setDialogArtifact(null);
     setDialogOpen(true);
-  }, [mcpUrl]);
+  }, []);
 
   return (
     <>
