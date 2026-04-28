@@ -224,7 +224,7 @@ export const mockOrderService = {
     return { success: true };
   },
 
-  async fulfillOrder(_orderId: string): Promise<{ success: boolean }> {
+  async shipOrder(_orderId: string): Promise<{ success: boolean }> {
     await delay(500);
     return { success: true };
   },

@@ -382,13 +382,13 @@ export function useOrderActions() {
     (p: { orderID: string; decline?: boolean }) => ordersApi.confirmOrder(p),
     invalidateOrders
   );
-  const fulfill = useMutationAction(
+  const ship = useMutationAction(
     (p: {
       orderID: string;
       physicalDelivery?: { shipper: string; trackingNumber: string };
       digitalDelivery?: { url?: string; password?: string };
       note?: string;
-    }) => ordersApi.fulfillOrder(p),
+    }) => ordersApi.shipOrder(p),
     invalidateOrders
   );
   const complete = useMutationAction(
@@ -428,14 +428,14 @@ export function useOrderActions() {
     (orderID: string, decline = false) => confirm.execute({ orderID, decline }),
     [confirm]
   );
-  const fulfillOrder = useCallback(
+  const shipOrder = useCallback(
     (params: {
       orderID: string;
       physicalDelivery?: { shipper: string; trackingNumber: string };
       digitalDelivery?: { url?: string; password?: string };
       note?: string;
-    }) => fulfill.execute(params),
-    [fulfill]
+    }) => ship.execute(params),
+    [ship]
   );
   const completeOrder = useCallback(
     (params: {
@@ -470,7 +470,7 @@ export function useOrderActions() {
 
   const isLoading =
     confirm.isPending ||
-    fulfill.isPending ||
+    ship.isPending ||
     complete.isPending ||
     cancel.isPending ||
     refund.isPending ||
@@ -480,7 +480,7 @@ export function useOrderActions() {
 
   const firstError =
     confirm.error ||
-    fulfill.error ||
+    ship.error ||
     complete.error ||
     cancel.error ||
     refund.error ||
@@ -490,25 +490,25 @@ export function useOrderActions() {
 
   const clearError = useCallback(() => {
     confirm.reset();
-    fulfill.reset();
+    ship.reset();
     complete.reset();
     cancel.reset();
     refund.reset();
     dispute.reset();
     acceptDisp.reset();
     resend.reset();
-  }, [confirm, fulfill, complete, cancel, refund, dispute, acceptDisp, resend]);
+  }, [confirm, ship, complete, cancel, refund, dispute, acceptDisp, resend]);
 
   return {
     isLoading,
     isConfirming: confirm.isPending,
-    isFulfilling: fulfill.isPending,
+    isShipping: ship.isPending,
     isCompleting: complete.isPending,
     isCancelling: cancel.isPending,
     isRefunding: refund.isPending,
     error: formatQueryError(firstError),
     confirmOrder,
-    fulfillOrder,
+    shipOrder,
     refundOrder,
     completeOrder,
     cancelOrder,

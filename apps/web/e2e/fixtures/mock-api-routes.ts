@@ -45,7 +45,7 @@ const mockPurchases = [
     total: { amount: 8999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: DAY_AGO,
-    state: 'FULFILLED',
+    state: 'SHIPPED',
     vendorID: MOCK_PEER_ID,
     buyerID: MOCK_BUYER_PEER_ID,
     paymentCoin: 'ETH',
@@ -77,7 +77,7 @@ const mockPurchases = [
     total: { amount: 24500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: NOW,
-    state: 'AWAITING_FULFILLMENT',
+    state: 'AWAITING_SHIPMENT',
     vendorID: MOCK_PEER_ID,
     buyerID: MOCK_BUYER_PEER_ID,
     paymentCoin: 'ETH',
@@ -96,7 +96,7 @@ const mockSales = [
     total: { amount: 5500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 2,
     timestamp: DAY_AGO,
-    state: 'AWAITING_FULFILLMENT',
+    state: 'AWAITING_SHIPMENT',
     vendorID: MOCK_PEER_ID,
     buyerID: MOCK_BUYER_PEER_ID,
     paymentCoin: 'ETH',
@@ -156,7 +156,7 @@ const mockNotifications = [
   {
     timestamp: WEEK_AGO,
     read: true,
-    type: 'order.fulfilled',
+    type: 'order.shipped',
     notification: {
       notificationId: 'notif-004',
       orderId: 'QmOrder001',
@@ -363,10 +363,14 @@ const mockOrderDetail = {
     orderConfirmation: {
       timestamp: DAY_AGO,
     },
-    orderFulfillments: [
+    orderShipments: [
       {
         timestamp: DAY_AGO,
-        physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX1234567890' }],
+        shipments: [
+          {
+            physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX1234567890' },
+          },
+        ],
       },
     ],
     vendorListings: [
@@ -383,7 +387,7 @@ const mockOrderDetail = {
       },
     ],
   },
-  state: 'FULFILLED',
+  state: 'SHIPPED',
   read: true,
   funded: true,
   paymentAddressTransactions: [

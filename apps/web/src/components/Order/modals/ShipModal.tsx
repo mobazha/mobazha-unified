@@ -8,15 +8,15 @@ import { useI18n } from '@mobazha/core';
 
 export type ContractType = 'PHYSICAL_GOOD' | 'DIGITAL_GOOD' | 'SERVICE' | 'RWA_TOKEN';
 
-export interface FulfillModalProps {
+export interface ShipModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FulfillmentData) => Promise<void>;
+  onSubmit: (data: ShipmentData) => Promise<void>;
   contractType: ContractType;
   isLoading?: boolean;
 }
 
-export interface FulfillmentData {
+export interface ShipmentData {
   physicalDelivery?: {
     shipper: string;
     trackingNumber: string;
@@ -35,7 +35,7 @@ export interface FulfillmentData {
  * 发货模态框
  * 支持物理商品、数字商品、服务和 RWA Token
  */
-export const FulfillModal: React.FC<FulfillModalProps> = ({
+export const ShipModal: React.FC<ShipModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
@@ -53,12 +53,12 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
   const [note, setNote] = useState('');
 
   const handleSubmit = useCallback(async () => {
-    const data: FulfillmentData = { note: note.trim() || undefined };
+    const data: ShipmentData = { note: note.trim() || undefined };
 
     switch (contractType) {
       case 'PHYSICAL_GOOD':
         if (!trackingNumber.trim()) {
-          window.alert(t('order.fulfill.trackingRequired'));
+          window.alert(t('order.ship.trackingRequired'));
           return;
         }
         data.physicalDelivery = {
@@ -69,7 +69,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
 
       case 'DIGITAL_GOOD':
         if (!fileUrl.trim()) {
-          window.alert(t('order.fulfill.urlRequired'));
+          window.alert(t('order.ship.urlRequired'));
           return;
         }
         data.digitalDelivery = {
@@ -80,7 +80,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
 
       case 'RWA_TOKEN':
         if (!transactionID.trim()) {
-          window.alert(t('order.fulfill.transactionRequired'));
+          window.alert(t('order.ship.transactionRequired'));
           return;
         }
         data.cryptocurrencyDelivery = {
@@ -123,26 +123,26 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
     <>
       <div>
         <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-          {t('order.fulfill.carrier')}
+          {t('order.ship.carrier')}
         </label>
         <input
           type="text"
           value={shipper}
           onChange={e => setShipper(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-          placeholder={t('order.fulfill.carrierPlaceholder')}
+          placeholder={t('order.ship.carrierPlaceholder')}
         />
       </div>
       <div>
         <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-          {t('order.fulfill.trackingNumber')} *
+          {t('order.ship.trackingNumber')} *
         </label>
         <input
           type="text"
           value={trackingNumber}
           onChange={e => setTrackingNumber(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-          placeholder={t('order.fulfill.trackingPlaceholder')}
+          placeholder={t('order.ship.trackingPlaceholder')}
         />
       </div>
     </>
@@ -152,26 +152,26 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
     <>
       <div>
         <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-          {t('order.fulfill.fileUrl')} *
+          {t('order.ship.fileUrl')} *
         </label>
         <input
           type="url"
           value={fileUrl}
           onChange={e => setFileUrl(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-          placeholder={t('order.fulfill.fileUrlPlaceholder')}
+          placeholder={t('order.ship.fileUrlPlaceholder')}
         />
       </div>
       <div>
         <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-          {t('order.fulfill.password')}
+          {t('order.ship.password')}
         </label>
         <input
           type="text"
           value={filePassword}
           onChange={e => setFilePassword(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-          placeholder={t('order.fulfill.passwordPlaceholder')}
+          placeholder={t('order.ship.passwordPlaceholder')}
         />
       </div>
     </>
@@ -180,35 +180,35 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
   const renderRwaTokenForm = () => (
     <div>
       <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-        {t('order.fulfill.transactionId')} *
+        {t('order.ship.transactionId')} *
       </label>
       <input
         type="text"
         value={transactionID}
         onChange={e => setTransactionID(e.target.value)}
         className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm font-mono"
-        placeholder={t('order.fulfill.transactionPlaceholder')}
+        placeholder={t('order.ship.transactionPlaceholder')}
       />
-      <p className="text-xs text-muted-foreground mt-1.5">{t('order.fulfill.transactionHint')}</p>
+      <p className="text-xs text-muted-foreground mt-1.5">{t('order.ship.transactionHint')}</p>
     </div>
   );
 
   const renderServiceForm = () => (
-    <p className="text-sm text-muted-foreground">{t('order.fulfill.serviceHint')}</p>
+    <p className="text-sm text-muted-foreground">{t('order.ship.serviceHint')}</p>
   );
 
   const getTitle = () => {
     switch (contractType) {
       case 'PHYSICAL_GOOD':
-        return t('order.fulfill.shipOrder');
+        return t('order.ship.shipOrder');
       case 'DIGITAL_GOOD':
-        return t('order.fulfill.deliverDigital');
+        return t('order.ship.deliverDigital');
       case 'RWA_TOKEN':
-        return t('order.fulfill.transferToken');
+        return t('order.ship.transferToken');
       case 'SERVICE':
-        return t('order.fulfill.completeService');
+        return t('order.ship.completeService');
       default:
-        return t('order.fulfill.fulfillOrder');
+        return t('order.ship.shipOrder');
     }
   };
 
@@ -226,14 +226,14 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
           {/* Note field for all types */}
           <div>
             <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 block">
-              {t('order.fulfill.note')}
+              {t('order.ship.note')}
             </label>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
               rows={3}
               className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm resize-none"
-              placeholder={t('order.fulfill.notePlaceholder')}
+              placeholder={t('order.ship.notePlaceholder')}
             />
           </div>
         </VStack>
@@ -243,7 +243,7 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
             {t('common.cancel')}
           </Button>
           <Button size="sm" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? t('common.loading') : t('order.fulfill.confirm')}
+            {isLoading ? t('common.loading') : t('order.ship.confirm')}
           </Button>
         </HStack>
       </Card>
@@ -251,4 +251,4 @@ export const FulfillModal: React.FC<FulfillModalProps> = ({
   );
 };
 
-export default FulfillModal;
+export default ShipModal;

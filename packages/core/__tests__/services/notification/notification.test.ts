@@ -107,7 +107,7 @@ describe('Notification Types', () => {
 
     it('should map completion events to order_complete', () => {
       expect(eventTypeToSoundType('order.completed')).toBe('order_complete');
-      expect(eventTypeToSoundType('order.fulfilled')).toBe('order_complete');
+      expect(eventTypeToSoundType('order.shipped')).toBe('order_complete');
     });
 
     it('should map social events to chat_message (default)', () => {
@@ -120,7 +120,7 @@ describe('Notification Types', () => {
     it('should return true for valid order event types', () => {
       expect(isValidNotificationEventType('order.created')).toBe(true);
       expect(isValidNotificationEventType('order.payment_received')).toBe(true);
-      expect(isValidNotificationEventType('order.fulfilled')).toBe(true);
+      expect(isValidNotificationEventType('order.shipped')).toBe(true);
     });
 
     it('should return true for valid dispute event types', () => {

@@ -114,9 +114,18 @@ interface RealOrderData {
       transactionID?: string;
       payoutAddress?: string;
     };
+    orderShipments?: Array<{
+      timestamp?: string | { seconds?: number };
+      shipments?: Array<{
+        physicalDelivery?: { shipper?: string; trackingNumber?: string };
+      }>;
+    }>;
+    /** Legacy field name (pre-shipment rename) */
     orderFulfillments?: Array<{
       timestamp?: string;
-      physicalDelivery?: Array<{ shipper?: string; trackingNumber?: string }>;
+      physicalDelivery?:
+        | Array<{ shipper?: string; trackingNumber?: string }>
+        | { shipper?: string; trackingNumber?: string };
       note?: string;
     }>;
     orderComplete?: {
@@ -166,7 +175,7 @@ interface RealOrderData {
  * 将后端订单状态映射到 UI 状态
  * 参考桌面端逻辑：PENDING 表示已支付等待确认，AWAITING_PAYMENT 才是未支付
  */
-export function mapOrderState(state: OrderState): DisplayOrderStatus {
+export function mapOrderState(state: OrderState | string): DisplayOrderStatus {
   const stateMap: Record<string, DisplayOrderStatus> = {
     // PENDING 表示订单已创建且已支付，等待卖家确认（参考桌面端）
     PENDING: 'paid',
@@ -174,9 +183,9 @@ export function mapOrderState(state: OrderState): DisplayOrderStatus {
     // 已提交支付，等待系统验证（通过 awaitingPaymentVerification 标记区分文案）
     AWAITING_PAYMENT_VERIFICATION: 'awaiting_payment',
     AWAITING_PICKUP: 'processing',
-    AWAITING_FULFILLMENT: 'processing',
-    PARTIALLY_FULFILLED: 'processing',
-    FULFILLED: 'shipped',
+    AWAITING_SHIPMENT: 'processing',
+    PARTIALLY_SHIPPED: 'processing',
+    SHIPPED: 'shipped',
     COMPLETED: 'completed',
     CANCELED: 'cancelled',
     CANCELLED: 'cancelled',
@@ -230,6 +239,15 @@ function getThumbnailUrl(
 /**
  * 格式化收货地址
  */
+function shipmentMessageTimestamp(msg: { timestamp?: string | { seconds?: number } }): string {
+  const t = msg.timestamp;
+  if (typeof t === 'string') return t;
+  if (t && typeof t === 'object' && typeof t.seconds === 'number') {
+    return new Date(t.seconds * 1000).toISOString();
+  }
+  return '';
+}
+
 function formatShippingAddress(shipping?: {
   name?: string;
   shipTo?: string;
@@ -322,15 +340,26 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     });
   }
 
-  // 发货
-  const fulfillments = contract.orderFulfillments;
-  if (fulfillments?.length) {
-    const fulfillment = fulfillments[0];
-    const trackingInfo = fulfillment.physicalDelivery?.[0];
-    if (trackingInfo) {
+  // 发货（orderShipments 优先，兼容 orderFulfillments）
+  const vendorMsgs = contract.orderShipments;
+  const legacyFulfillments = contract.orderFulfillments;
+  const vendorFirst = vendorMsgs?.[0];
+  const legacyFirst = legacyFulfillments?.[0];
+  const fulfillmentTs = vendorFirst
+    ? shipmentMessageTimestamp(vendorFirst)
+    : legacyFirst?.timestamp || '';
+  const pdFromVendor = vendorFirst?.shipments?.[0]?.physicalDelivery;
+  const pdLegacy = legacyFirst?.physicalDelivery;
+  const trackingInfo = pdFromVendor
+    ? pdFromVendor
+    : Array.isArray(pdLegacy)
+      ? pdLegacy[0]
+      : pdLegacy;
+  if (vendorFirst || legacyFirst) {
+    if (trackingInfo?.shipper || trackingInfo?.trackingNumber) {
       timeline.push({
         status: 'shipped',
-        timestamp: fulfillment.timestamp || '',
+        timestamp: fulfillmentTs,
         description: `Package shipped - ${trackingInfo.shipper}: ${trackingInfo.trackingNumber}`,
         descriptionKey: 'order.timeline.packageShippedWithTracking',
         descriptionParams: {
@@ -342,7 +371,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     } else {
       timeline.push({
         status: 'shipped',
-        timestamp: fulfillment.timestamp || '',
+        timestamp: fulfillmentTs,
         description: 'Package shipped',
         descriptionKey: 'order.timeline.packageShipped',
         actor: 'seller',
@@ -590,8 +619,11 @@ export function transformCoreOrder(
   // 判断是否为跨币种订单（定价货币 ≠ 支付币种）
   const isCrossCurrency = listingCurrencyCode.toUpperCase() !== pricingCoin.toUpperCase();
   const timestamp = orderOpen?.timestamp || '';
-  const fulfillments = contract.orderFulfillments;
-  const trackingInfo = fulfillments?.[0]?.physicalDelivery?.[0];
+  const vsm = contract.orderShipments;
+  const legacyF = contract.orderFulfillments;
+  const pdVendor = vsm?.[0]?.shipments?.[0]?.physicalDelivery;
+  const pdLeg = legacyF?.[0]?.physicalDelivery;
+  const trackingInfo = pdVendor ? pdVendor : Array.isArray(pdLeg) ? pdLeg[0] : pdLeg;
   const shipping = orderOpen?.shipping;
 
   const paymentAddress = paymentSent?.address || contract.orderConfirmation?.payoutAddress;

@@ -866,7 +866,7 @@ export const de: TranslationResource = {
       writeReview: 'Bewertung schreiben',
       accept: 'Bestellung annehmen',
       decline: 'Ablehnen',
-      fulfill: 'Bestellung versenden',
+      ship: 'Bestellung versenden',
       refund: 'Rückerstatten',
       claim: 'Zahlung beanspruchen',
       acceptPayout: 'Auszahlung akzeptieren',
@@ -886,8 +886,8 @@ export const de: TranslationResource = {
       claimSuccessDesc: 'Sie haben die Zahlung erfolgreich beansprucht.',
       acceptPayoutSuccess: 'Auszahlung akzeptiert',
       acceptPayoutSuccessDesc: 'Sie haben die Streitfall-Auszahlung akzeptiert.',
-      fulfillSuccess: 'Bestellung versendet',
-      fulfillSuccessDesc:
+      shipSuccess: 'Bestellung versendet',
+      shipSuccessDesc:
         'Die Bestellung wurde als versendet markiert. Der Käufer wurde benachrichtigt.',
       completeSuccess: 'Bestellung abgeschlossen',
       completeSuccessDesc:
@@ -972,7 +972,7 @@ export const de: TranslationResource = {
         description:
           'Möchten Sie die Streitfallentscheidung wirklich akzeptieren? Das Geld wird gemäß der Moderator-Entscheidung verteilt.',
       },
-      fulfillOrder: {
+      shipOrder: {
         title: 'Bestellung versenden',
         description:
           'Geben Sie die Versandinformationen für diese Bestellung ein. Der Käufer wird nach Ihrer Bestätigung benachrichtigt.',
@@ -1036,12 +1036,11 @@ export const de: TranslationResource = {
       accept: 'Accept',
       decline: 'Decline',
     },
-    fulfill: {
+    ship: {
       shipOrder: 'Bestellung versenden',
       deliverDigital: 'Digitale Inhalte liefern',
       transferToken: 'Token übertragen',
       completeService: 'Service abschließen',
-      fulfillOrder: 'Bestellung erfüllen',
       carrier: 'Versanddienstleister',
       carrierPlaceholder: 'z.B. UPS, FedEx, DHL',
       trackingNumber: 'Sendungsnummer',
@@ -1158,7 +1157,7 @@ export const de: TranslationResource = {
       description:
         'Dies sind die Rohvertragsdaten für diese Bestellung. Sie enthalten alle kryptografischen Nachweise und Signaturen.',
     },
-    fulfillment: {
+    shipment: {
       title: 'Erfüllungsdetails',
       packageShipped: 'Paket versendet',
       serviceDelivered: 'Service geliefert',
@@ -2866,7 +2865,7 @@ export const de: TranslationResource = {
       lockedPayment: 'hat Zahlung gesperrt',
       orderFunded: 'Bestellung wurde finanziert',
       orderConfirmed: 'Bestellung bestätigt',
-      orderFulfilled: 'Bestellung erfüllt',
+      orderShipped: 'Bestellung erfüllt',
       orderCompleted: 'Bestellung abgeschlossen',
       acceptedYourOrder: 'hat Ihre Bestellung angenommen',
       youAcceptedOrder: 'Sie haben eine Bestellung angenommen',
@@ -2876,8 +2875,8 @@ export const de: TranslationResource = {
       cancelledOrder: 'hat die Bestellung storniert',
       refundedYourOrder: 'hat Ihre Bestellung erstattet',
       youRefundedOrder: 'Sie haben eine Bestellung erstattet',
-      fulfilledYourOrder: 'hat Ihre Bestellung ausgeführt',
-      youFulfilledOrder: 'Sie haben eine Bestellung ausgeführt',
+      shippedYourOrder: 'hat Ihre Bestellung ausgeführt',
+      youShippedOrder: 'Sie haben eine Bestellung ausgeführt',
       completedOrder: 'hat die Bestellung abgeschlossen',
       staleWarning: 'Order has been inactive for several days',
       expired: 'Order auto-canceled due to timeout',
@@ -2908,7 +2907,7 @@ export const de: TranslationResource = {
       orderDeclined: 'Bestellung abgelehnt',
       orderCancelled: 'Bestellung storniert',
       refundReceived: 'Erstattung erhalten',
-      orderFulfilled: 'Bestellung erfüllt',
+      orderShipped: 'Bestellung erfüllt',
       orderCompleted: 'Bestellung abgeschlossen',
       paymentFinalized: 'Zahlung abgeschlossen',
       disputeOpened: 'Streitfall eröffnet',

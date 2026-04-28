@@ -106,10 +106,14 @@ function mockModeratedOrderDetail(page: import('@playwright/test').Page) {
             orderConfirmation: {
               timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
             },
-            vendorOrderFulfillment: [
+            orderShipments: [
               {
                 timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-                shipping: { shipper: 'FedEx', trackingNumber: 'FX123456789' },
+                shipments: [
+                  {
+                    physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX123456789' },
+                  },
+                ],
               },
             ],
             paymentSent: {
@@ -121,7 +125,7 @@ function mockModeratedOrderDetail(page: import('@playwright/test').Page) {
               transactionID: '0xabc123',
             },
           },
-          state: 'FULFILLED',
+          state: 'SHIPPED',
           read: true,
           funded: true,
           paymentTx: '0xabc123',

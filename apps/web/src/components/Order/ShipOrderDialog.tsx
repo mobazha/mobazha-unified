@@ -26,7 +26,7 @@ import { ReceivingAccountSelector } from './ReceivingAccountSelector';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export interface FulfillOrderDialogProps {
+export interface ShipOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orderId: string;
@@ -51,7 +51,7 @@ function getDeliveryMode(contractType?: string): DeliveryMode {
   }
 }
 
-export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
+export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
   open,
   onOpenChange,
   orderId,
@@ -175,7 +175,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     if (deliveryMode === 'physical' && !trackingInfo.trackingNumber.trim()) {
       toast({
         title: t('order.actions.error'),
-        description: t('order.fulfill.trackingRequired'),
+        description: t('order.ship.trackingRequired'),
         variant: 'destructive',
       });
       return;
@@ -184,7 +184,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     if (deliveryMode === 'digital' && !trackingInfo.fileUrl.trim()) {
       toast({
         title: t('order.actions.error'),
-        description: t('order.fulfill.urlRequired'),
+        description: t('order.ship.urlRequired'),
         variant: 'destructive',
       });
       return;
@@ -193,7 +193,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
     if (deliveryMode === 'rwa' && !selectedAccountRef.current) {
       toast({
         title: t('order.actions.error'),
-        description: t('order.fulfill.receivingAccountRequired'),
+        description: t('order.ship.receivingAccountRequired'),
         variant: 'destructive',
       });
       return;
@@ -201,7 +201,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
 
     setIsLoading(true);
     try {
-      const payload: Parameters<typeof ordersApi.fulfillOrder>[0] = {
+      const payload: Parameters<typeof ordersApi.shipOrder>[0] = {
         orderID: orderId,
         note: trackingInfo.note || '',
       };
@@ -224,7 +224,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         payload.receivingAccountID = selectedAccountRef.current.id;
       }
 
-      const result = await ordersApi.fulfillOrder(payload);
+      const result = await ordersApi.shipOrder(payload);
 
       if (result.success) {
         if (deliveryMode === 'physical' && trackingInfo.shipper) {
@@ -235,8 +235,8 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
           }
         }
         toast({
-          title: t('order.actions.fulfillSuccess'),
-          description: t('order.actions.fulfillSuccessDesc'),
+          title: t('order.actions.shipSuccess'),
+          description: t('order.actions.shipSuccessDesc'),
         });
         setTrackingInfo({
           shipper: '',
@@ -252,7 +252,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
           onSuccess?.();
         }, 500);
       } else {
-        throw new Error(result.error || 'Failed to fulfill order');
+        throw new Error(result.error || 'Failed to ship order');
       }
     } catch (error) {
       toast({
@@ -288,16 +288,16 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {deliveryMode === 'physical' && t('order.dialogs.fulfillOrder.title')}
-            {deliveryMode === 'digital' && t('order.dialogs.fulfillOrder.digitalTitle')}
-            {deliveryMode === 'service' && t('order.dialogs.fulfillOrder.serviceTitle')}
-            {deliveryMode === 'rwa' && t('order.dialogs.fulfillOrder.title')}
+            {deliveryMode === 'physical' && t('order.dialogs.shipOrder.title')}
+            {deliveryMode === 'digital' && t('order.dialogs.shipOrder.digitalTitle')}
+            {deliveryMode === 'service' && t('order.dialogs.shipOrder.serviceTitle')}
+            {deliveryMode === 'rwa' && t('order.dialogs.shipOrder.title')}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {deliveryMode === 'physical' && t('order.dialogs.fulfillOrder.description')}
-            {deliveryMode === 'digital' && t('order.dialogs.fulfillOrder.digitalDescription')}
-            {deliveryMode === 'service' && t('order.dialogs.fulfillOrder.serviceDescription')}
-            {deliveryMode === 'rwa' && t('order.dialogs.fulfillOrder.description')}
+            {deliveryMode === 'physical' && t('order.dialogs.shipOrder.description')}
+            {deliveryMode === 'digital' && t('order.dialogs.shipOrder.digitalDescription')}
+            {deliveryMode === 'service' && t('order.dialogs.shipOrder.serviceDescription')}
+            {deliveryMode === 'rwa' && t('order.dialogs.shipOrder.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -319,7 +319,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                   className="text-sm font-medium text-foreground mb-1.5 block"
                   id="carrier-label"
                 >
-                  {t('order.fulfill.carrier')}
+                  {t('order.ship.carrier')}
                 </label>
                 <div className="relative">
                   <input
@@ -338,7 +338,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                     onBlur={handleCarrierBlur}
                     onKeyDown={handleCarrierKeyDown}
                     className="w-full px-3 py-2 pr-8 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                    placeholder={t('order.fulfill.carrierPlaceholder')}
+                    placeholder={t('order.ship.carrierPlaceholder')}
                     disabled={isLoading}
                     autoComplete="off"
                   />
@@ -419,7 +419,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
 
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  {t('order.fulfill.trackingNumber')} *
+                  {t('order.ship.trackingNumber')} *
                 </label>
                 <input
                   type="text"
@@ -440,12 +440,12 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                     }
                   }}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  placeholder={t('order.fulfill.trackingPlaceholder')}
+                  placeholder={t('order.ship.trackingPlaceholder')}
                   disabled={isLoading}
                 />
                 {trackingInfo.trackingNumber.trim() && !trackingInfo.shipper.trim() && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('order.fulfill.carrierHint')}
+                    {t('order.ship.carrierHint')}
                   </p>
                 )}
               </div>
@@ -456,20 +456,20 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
             <>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  {t('order.fulfill.fileUrl')} *
+                  {t('order.ship.fileUrl')} *
                 </label>
                 <input
                   type="url"
                   value={trackingInfo.fileUrl}
                   onChange={e => setTrackingInfo(prev => ({ ...prev, fileUrl: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  placeholder={t('order.fulfill.fileUrlPlaceholder')}
+                  placeholder={t('order.ship.fileUrlPlaceholder')}
                   disabled={isLoading}
                 />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  {t('order.fulfill.password')}
+                  {t('order.ship.password')}
                 </label>
                 <input
                   type="text"
@@ -478,7 +478,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
                     setTrackingInfo(prev => ({ ...prev, filePassword: e.target.value }))
                   }
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  placeholder={t('order.fulfill.passwordPlaceholder')}
+                  placeholder={t('order.ship.passwordPlaceholder')}
                   disabled={isLoading}
                 />
               </div>
@@ -486,19 +486,19 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
           )}
 
           {deliveryMode === 'service' && (
-            <p className="text-sm text-muted-foreground">{t('order.fulfill.serviceHint')}</p>
+            <p className="text-sm text-muted-foreground">{t('order.ship.serviceHint')}</p>
           )}
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              {t('order.fulfill.note')}
+              {t('order.ship.note')}
             </label>
             <textarea
               value={trackingInfo.note}
               onChange={e => setTrackingInfo(prev => ({ ...prev, note: e.target.value }))}
               rows={3}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
-              placeholder={t('order.fulfill.notePlaceholder')}
+              placeholder={t('order.ship.notePlaceholder')}
               disabled={isLoading}
             />
           </div>
@@ -507,7 +507,7 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? t('common.processing') : t('order.fulfill.confirm')}
+            {isLoading ? t('common.processing') : t('order.ship.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -515,4 +515,4 @@ export const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
   );
 };
 
-export default FulfillOrderDialog;
+export default ShipOrderDialog;

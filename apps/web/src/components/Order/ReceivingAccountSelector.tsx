@@ -147,7 +147,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
   if (!isLoading && accounts.length === 0) {
     return (
       <div className="p-3 rounded-lg bg-warning/15 border border-warning/20">
-        <p className="text-sm text-warning">{t('order.fulfill.noReceivingAccount')}</p>
+        <p className="text-sm text-warning">{t('order.ship.noReceivingAccount')}</p>
       </div>
     );
   }
@@ -155,7 +155,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
   return (
     <div>
       <label className="text-sm font-medium text-foreground mb-1.5 block">
-        {t('order.fulfill.receivingAccount')} {required && '*'}
+        {t('order.ship.receivingAccount')} {required && '*'}
       </label>
       <select
         value={selectedAccountId || ''}
@@ -163,16 +163,14 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
         className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
         disabled={disabled || isLoading}
       >
-        <option value="">{t('order.fulfill.selectReceivingAccount')}</option>
+        <option value="">{t('order.ship.selectReceivingAccount')}</option>
         {accounts.map(account => (
           <option key={account.id} value={account.id}>
             {account.name} ({account.chainType}) - {formatAddress(account.address)}
           </option>
         ))}
       </select>
-      <p className="text-xs text-muted-foreground mt-1">
-        {t('order.fulfill.receivingAccountHint')}
-      </p>
+      <p className="text-xs text-muted-foreground mt-1">{t('order.ship.receivingAccountHint')}</p>
     </div>
   );
 };

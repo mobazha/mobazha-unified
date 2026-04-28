@@ -43,7 +43,7 @@ export function ActionItems({ orders, loading }: ActionItemsProps) {
       key: 'fulfill',
       icon: Truck,
       labelKey: 'admin.dashboard.actionToFulfill',
-      count: countByStates(orders, ['AWAITING_FULFILLMENT']),
+      count: countByStates(orders, ['AWAITING_SHIPMENT']),
       href: '/admin/orders?status=processing',
       color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-500/10',

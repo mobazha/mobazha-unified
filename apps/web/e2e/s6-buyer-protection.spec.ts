@@ -112,10 +112,14 @@ function makeOrderContract(overrides?: Record<string, unknown>) {
     orderConfirmation: {
       timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
     },
-    vendorOrderFulfillment: [
+    orderShipments: [
       {
         timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        shipping: { shipper: 'FedEx', trackingNumber: 'FX123456789' },
+        shipments: [
+          {
+            physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX123456789' },
+          },
+        ],
       },
     ],
     paymentSent: {
@@ -143,7 +147,7 @@ function wrapOrderResponse(
       read: true,
       funded: true,
       paymentTx: '0xabc123',
-      paymentLocked: state === 'FULFILLED',
+      paymentLocked: state === 'SHIPPED',
       protection,
       ...extras,
     },
@@ -183,14 +187,14 @@ async function setupPage(page: Page) {
 // ─── Tests ───────────────────────────────────────────────────────────────
 
 test.describe('S6: Protection Period — Buyer View', () => {
-  test('shows protection card with countdown for FULFILLED order', async ({ page }) => {
+  test('shows protection card with countdown for SHIPPED order', async ({ page }) => {
     await setupPage(page);
     const futureDate = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString();
     await page.route('**/v1/orders/**', route =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 8,
           autoCompleteAt: futureDate,
@@ -216,7 +220,7 @@ test.describe('S6: Protection Period — Buyer View', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 5,
           autoCompleteAt: futureDate,
@@ -244,7 +248,7 @@ test.describe('S6: Protection Period — Buyer View', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 18,
           autoCompleteAt: futureDate,
@@ -274,7 +278,7 @@ test.describe('S6: Protection Period — Seller View', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 8,
           autoCompleteAt: futureDate,
@@ -302,7 +306,7 @@ test.describe('S6: Protection Period — Seller View', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 18,
           autoCompleteAt: futureDate,
@@ -447,7 +451,7 @@ test.describe('S6: CANCELABLE Payment Model', () => {
         status: 200,
         contentType: 'application/json',
         body: wrapOrderResponse(
-          'FULFILLED',
+          'SHIPPED',
           {
             stage: 'PROTECTION_PERIOD',
             daysRemaining: 10,
@@ -490,7 +494,7 @@ test.describe('S6: CANCELABLE Payment Model', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 8,
           autoCompleteAt: futureDate,
@@ -519,7 +523,7 @@ test.describe('S6: Extend Protection — Click Interaction', () => {
     await page.route('**/v1/orders/QmOrder001', route => {
       if (route.request().method() === 'GET') {
         const body = extendCalled
-          ? wrapOrderResponse('FULFILLED', {
+          ? wrapOrderResponse('SHIPPED', {
               stage: 'PROTECTION_PERIOD',
               daysRemaining: 19,
               autoCompleteAt: new Date(Date.now() + 19 * 24 * 60 * 60 * 1000).toISOString(),
@@ -527,7 +531,7 @@ test.describe('S6: Extend Protection — Click Interaction', () => {
               extended: true,
               afterSaleWindowDays: 45,
             })
-          : wrapOrderResponse('FULFILLED', {
+          : wrapOrderResponse('SHIPPED', {
               stage: 'PROTECTION_PERIOD',
               daysRemaining: 5,
               autoCompleteAt: futureDate,
@@ -724,7 +728,7 @@ test.describe('S6: Mobile Responsive', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: wrapOrderResponse('FULFILLED', {
+        body: wrapOrderResponse('SHIPPED', {
           stage: 'PROTECTION_PERIOD',
           daysRemaining: 6,
           autoCompleteAt: futureDate,

@@ -7,7 +7,7 @@ import { VStack, HStack } from '@/components/layouts';
 import { useI18n } from '@mobazha/core';
 import { formatOrderDate, copyToClipboard } from './utils';
 
-export interface FulfillmentInfo {
+export interface ShipmentInfo {
   type: 'physical' | 'digital' | 'cryptocurrency';
   timestamp: string;
   // Physical delivery
@@ -22,18 +22,15 @@ export interface FulfillmentInfo {
   note?: string;
 }
 
-export interface OrderFulfillmentProps {
-  fulfillments: FulfillmentInfo[];
+export interface OrderShipmentProps {
+  shipments: ShipmentInfo[];
   className?: string;
 }
 
 /**
  * 发货信息展示组件
  */
-export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
-  fulfillments,
-  className = '',
-}) => {
+export const OrderShipment: React.FC<OrderShipmentProps> = ({ shipments, className = '' }) => {
   const { t } = useI18n();
   const [showPassword, setShowPassword] = useState<Record<number, boolean>>({});
 
@@ -41,7 +38,7 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
     copyToClipboard(text);
   }, []);
 
-  if (!fulfillments.length) {
+  if (!shipments.length) {
     return null;
   }
 
@@ -56,42 +53,40 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
             d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
           />
         </svg>
-        {t('order.fulfillment.title')}
+        {t('order.shipment.title')}
       </h3>
 
       <VStack gap="md">
-        {fulfillments.map((fulfillment, index) => (
+        {shipments.map((row, index) => (
           <div key={index} className={`${index > 0 ? 'pt-4 border-t border-border' : ''}`}>
             {/* Timestamp */}
-            <p className="text-xs text-muted-foreground mb-3">
-              {formatOrderDate(fulfillment.timestamp)}
-            </p>
+            <p className="text-xs text-muted-foreground mb-3">{formatOrderDate(row.timestamp)}</p>
 
             {/* Physical Delivery */}
-            {fulfillment.type === 'physical' && (
+            {row.type === 'physical' && (
               <VStack gap="sm">
-                {fulfillment.shipper && (
+                {row.shipper && (
                   <HStack justify="between" align="start">
                     <span className="text-sm text-muted-foreground">
-                      {t('order.fulfillment.carrier')}
+                      {t('order.shipment.carrier')}
                     </span>
-                    <span className="text-sm text-foreground">{fulfillment.shipper}</span>
+                    <span className="text-sm text-foreground">{row.shipper}</span>
                   </HStack>
                 )}
-                {fulfillment.trackingNumber && (
+                {row.trackingNumber && (
                   <HStack justify="between" align="center">
                     <span className="text-sm text-muted-foreground">
-                      {t('order.fulfillment.trackingNumber')}
+                      {t('order.shipment.trackingNumber')}
                     </span>
                     <HStack gap="xs">
                       <span className="text-sm font-mono text-foreground">
-                        {fulfillment.trackingNumber}
+                        {row.trackingNumber}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0"
-                        onClick={() => handleCopy(fulfillment.trackingNumber!)}
+                        onClick={() => handleCopy(row.trackingNumber!)}
                       >
                         <svg
                           className="w-4 h-4"
@@ -114,27 +109,27 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
             )}
 
             {/* Digital Delivery */}
-            {fulfillment.type === 'digital' && (
+            {row.type === 'digital' && (
               <VStack gap="sm">
-                {fulfillment.fileUrl && (
+                {row.fileUrl && (
                   <div>
                     <span className="text-sm text-muted-foreground block mb-1">
-                      {t('order.fulfillment.downloadUrl')}
+                      {t('order.shipment.downloadUrl')}
                     </span>
                     <div className="flex items-center gap-2">
                       <a
-                        href={fulfillment.fileUrl}
+                        href={row.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline truncate max-w-xs"
                       >
-                        {fulfillment.fileUrl}
+                        {row.fileUrl}
                       </a>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 flex-shrink-0"
-                        onClick={() => handleCopy(fulfillment.fileUrl!)}
+                        onClick={() => handleCopy(row.fileUrl!)}
                       >
                         <svg
                           className="w-4 h-4"
@@ -153,14 +148,14 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
                     </div>
                   </div>
                 )}
-                {fulfillment.password && (
+                {row.password && (
                   <HStack justify="between" align="center">
                     <span className="text-sm text-muted-foreground">
-                      {t('order.fulfillment.password')}
+                      {t('order.shipment.password')}
                     </span>
                     <HStack gap="xs">
                       <span className="text-sm font-mono text-foreground">
-                        {showPassword[index] ? fulfillment.password : '••••••••'}
+                        {showPassword[index] ? row.password : '••••••••'}
                       </span>
                       <Button
                         variant="ghost"
@@ -200,20 +195,18 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
             )}
 
             {/* Cryptocurrency Delivery */}
-            {fulfillment.type === 'cryptocurrency' && fulfillment.transactionID && (
+            {row.type === 'cryptocurrency' && row.transactionID && (
               <div>
                 <span className="text-sm text-muted-foreground block mb-1">
-                  {t('order.fulfillment.transactionId')}
+                  {t('order.shipment.transactionId')}
                 </span>
                 <HStack gap="xs" className="break-all">
-                  <span className="text-xs font-mono text-foreground">
-                    {fulfillment.transactionID}
-                  </span>
+                  <span className="text-xs font-mono text-foreground">{row.transactionID}</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0 flex-shrink-0"
-                    onClick={() => handleCopy(fulfillment.transactionID!)}
+                    onClick={() => handleCopy(row.transactionID!)}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -229,10 +222,10 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
             )}
 
             {/* Note */}
-            {fulfillment.note && (
+            {row.note && (
               <div className="mt-3 p-3 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">{t('order.fulfillment.note')}</p>
-                <p className="text-sm text-foreground">{fulfillment.note}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('order.shipment.note')}</p>
+                <p className="text-sm text-foreground">{row.note}</p>
               </div>
             )}
           </div>
@@ -242,4 +235,4 @@ export const OrderFulfillment: React.FC<OrderFulfillmentProps> = ({
   );
 };
 
-export default OrderFulfillment;
+export default OrderShipment;

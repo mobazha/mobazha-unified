@@ -159,7 +159,7 @@ const STEPS: StepMeta[] = [
   {
     id: '16-confirm-receipt',
     title: 'Confirm Receipt',
-    description: 'FULFILLED order → confirm receipt interaction.',
+    description: 'SHIPPED order → confirm receipt interaction.',
     phase: 'Post-purchase',
     reviewFocus: 'Transaction closure feeling, pre-confirm safety prompt.',
   },
@@ -401,7 +401,7 @@ test.describe('Buyer Journey — 19-step AI UX Audit', () => {
 
   test('B15 — Order Tracking', async ({ page }) => {
     await setupMockAuth(page);
-    await mockOrderDetailByState(page, 'FULFILLED');
+    await mockOrderDetailByState(page, 'SHIPPED');
     await mockImageRoutes(page);
     await page.goto('/orders/QmFulfill001');
     await page.waitForLoadState('domcontentloaded');
@@ -411,7 +411,7 @@ test.describe('Buyer Journey — 19-step AI UX Audit', () => {
 
   test('B16 — Confirm Receipt', async ({ page }) => {
     await setupMockAuth(page);
-    await mockOrderDetailByState(page, 'FULFILLED');
+    await mockOrderDetailByState(page, 'SHIPPED');
     await mockImageRoutes(page);
     await page.goto('/orders/QmFulfill001');
     await page.waitForLoadState('domcontentloaded');

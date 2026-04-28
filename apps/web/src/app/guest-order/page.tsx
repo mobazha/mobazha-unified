@@ -93,7 +93,7 @@ export default function GuestOrderPage() {
 
   const showPaymentInfo = order.state === 'AWAITING_PAYMENT';
   const showConfirmations = order.state === 'PENDING_CONFIRMATION';
-  const showTracking = order.state === 'FULFILLED' && order.trackingNumber;
+  const showTracking = order.state === 'SHIPPED' && order.trackingNumber;
 
   return (
     <div className="min-h-screen bg-background">

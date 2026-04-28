@@ -120,7 +120,7 @@ const DISPUTED_ORDER = {
   paymentAddressTransactions: [{ txid: '0xabc123def456', value: 29999, confirmations: 12, timestamp: TWO_WEEKS_AGO }],
 };
 
-const FULFILLED_ORDER = {
+const SHIPPED_ORDER = {
   contract: {
     OrderID: 'QmFulfilled001',
     orderOpen: {
@@ -155,9 +155,9 @@ const FULFILLED_ORDER = {
     },
     vendorListings: [{ slug: 'wireless-headphones', metadata: { contractType: 'PHYSICAL_GOOD', pricingCurrency: { code: 'USD', divisibility: 2 } }, item: { title: 'Wireless Noise-Cancelling Headphones', images: [img(3)] } }],
     orderConfirmation: { timestamp: WEEK_AGO },
-    orderFulfillments: [{ timestamp: THREE_DAYS_AGO, physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX9876543210' }] }],
+    orderShipments: [{ timestamp: THREE_DAYS_AGO, shipments: [{ physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX9876543210' } }] }],
   },
-  state: 'FULFILLED', read: true, funded: true,
+  state: 'SHIPPED', read: true, funded: true,
   paymentAddressTransactions: [{ txid: '0xdef789', value: 8999, confirmations: 24, timestamp: WEEK_AGO }],
 };
 
@@ -195,11 +195,11 @@ const FULFILLED_ORDER = {
     `${BASE_URL}/orders/QmDispute001?type=purchase`);
 
   // 3. Fulfilled order (can open dispute) — Desktop
-  await capture('03-fulfilled-desktop', { width: 1280, height: 800 }, FULFILLED_ORDER,
+  await capture('03-shipped-desktop', { width: 1280, height: 800 }, SHIPPED_ORDER,
     `${BASE_URL}/orders/QmFulfilled001?type=purchase`);
 
   // 4. Try opening dispute modal on fulfilled order
-  await capture('04-dispute-modal', { width: 1280, height: 800 }, FULFILLED_ORDER,
+  await capture('04-dispute-modal', { width: 1280, height: 800 }, SHIPPED_ORDER,
     `${BASE_URL}/orders/QmFulfilled001?type=purchase`, async (page) => {
       const btn = page.locator('button:has-text("Open Dispute"), button:has-text("Dispute"), [data-testid="open-dispute-btn"]').first();
       const visible = await btn.isVisible().catch(() => false);

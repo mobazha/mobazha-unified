@@ -77,7 +77,7 @@ function getNotificationIcon(type: string): React.ReactNode {
       return <XCircle className={cn(iconClass, 'text-error')} />;
     case 'order.stale_warning':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
-    case 'order.fulfilled':
+    case 'order.shipped':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'order.completed':
       return <CheckCircle className={cn(iconClass, 'text-primary')} />;

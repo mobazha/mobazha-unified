@@ -323,7 +323,7 @@ export const OrderRatingCard = memo(function OrderRatingCard({
  * - SERVICE: 显示服务已交付
  * - DIGITAL_GOOD: 显示数字商品已交付
  */
-export interface FulfillmentCardProps {
+export interface ShipmentCardProps {
   timestamp?: string;
   shipper?: string;
   trackingNumber?: string;
@@ -333,7 +333,7 @@ export interface FulfillmentCardProps {
   className?: string;
 }
 
-export const FulfillmentCard = memo(function FulfillmentCard({
+export const ShipmentCard = memo(function ShipmentCard({
   timestamp,
   shipper,
   trackingNumber,
@@ -341,7 +341,7 @@ export const FulfillmentCard = memo(function FulfillmentCard({
   contractType,
   className,
   showDivider = true,
-}: FulfillmentCardProps & { showDivider?: boolean }) {
+}: ShipmentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
 
@@ -350,10 +350,10 @@ export const FulfillmentCard = memo(function FulfillmentCard({
 
   const title = isPhysicalGood ? t('order.stages.fulfilled') : t('order.stages.delivered');
   const statusText = isPhysicalGood
-    ? t('order.fulfillment.packageShipped')
+    ? t('order.shipment.packageShipped')
     : isService
-      ? t('order.fulfillment.serviceDelivered')
-      : t('order.fulfillment.digitalDelivered');
+      ? t('order.shipment.serviceDelivered')
+      : t('order.shipment.digitalDelivered');
 
   const trackingUrl = isPhysicalGood ? getTrackingUrl(shipper, trackingNumber) : undefined;
 
@@ -387,13 +387,13 @@ export const FulfillmentCard = memo(function FulfillmentCard({
             <p className="text-sm font-medium text-foreground">{statusText}</p>
             {isPhysicalGood && shipper && (
               <p className="text-xs text-muted-foreground">
-                {t('order.fulfillment.carrier')}: {shipper}
+                {t('order.shipment.carrier')}: {shipper}
               </p>
             )}
             {isPhysicalGood && trackingNumber && (
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-xs text-muted-foreground">
-                  {t('order.fulfillment.trackingNumber')}:
+                  {t('order.shipment.trackingNumber')}:
                 </span>
                 {trackingUrl ? (
                   <a
