@@ -2,7 +2,15 @@
 
 import React, { memo, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, Package, CheckCircle, AlertCircle, RefreshCcw, Copy, ExternalLink } from 'lucide-react';
+import {
+  Check,
+  Package,
+  CheckCircle,
+  AlertCircle,
+  RefreshCcw,
+  Copy,
+  ExternalLink,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { getTrackingUrl, useI18n } from '@mobazha/core';
 import { copyToClipboard } from './utils';
@@ -87,7 +95,11 @@ function StarRating({ rating, maxRating = 5 }: { rating: number; maxRating?: num
 /**
  * Inline copy button for tracking numbers
  */
-const CopyTrackingButton = memo(function CopyTrackingButton({ trackingNumber }: { trackingNumber: string }) {
+const CopyTrackingButton = memo(function CopyTrackingButton({
+  trackingNumber,
+}: {
+  trackingNumber: string;
+}) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback(async () => {
@@ -242,7 +254,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 )}
                 {data?.trackingNumber && (
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{t('order.fulfillment.trackingNumber')}:</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('order.fulfillment.trackingNumber')}:
+                    </span>
                     {tUrl ? (
                       <a
                         href={tUrl}
@@ -261,7 +275,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 )}
                 {data?.note && (
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                    {t('order.fulfill.note')}: {data.note}
+                    {t('order.ship.note')}: {data.note}
                   </p>
                 )}
               </div>

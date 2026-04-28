@@ -76,7 +76,7 @@ export interface UseOrderDetailPageReturn {
     paymentCoin?: string;
     onSuccess: () => void;
   };
-  fulfillOrderProps: {
+  shipOrderProps: {
     orderId: string;
     contractType?: string;
     blockchain?: string;
@@ -421,7 +421,7 @@ export function useOrderDetailPage(
     [orderId, coreOrder, refetch]
   );
 
-  const fulfillOrderProps = useMemo(
+  const shipOrderProps = useMemo(
     () => ({
       orderId,
       contractType: (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing
@@ -455,6 +455,6 @@ export function useOrderDetailPage(
     chatMessages,
     sendMessage,
     acceptOrderProps,
-    fulfillOrderProps,
+    shipOrderProps,
   };
 }

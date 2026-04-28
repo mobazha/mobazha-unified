@@ -17,7 +17,7 @@ export interface OrderActionSheetProps {
   userRole: UserRole;
   timestamp: string;
   isModerated?: boolean;
-  isFulfilled?: boolean;
+  isShipped?: boolean;
   paymentMethod?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
@@ -35,7 +35,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   userRole,
   timestamp: _timestamp,
   isModerated,
-  isFulfilled,
+  isShipped,
   paymentMethod,
   hasRated,
   inAfterSaleWindow = false,
@@ -46,12 +46,12 @@ export const OrderActionSheet = memo(function OrderActionSheet({
     () =>
       getOrderActions(orderState, userRole, {
         isModerated,
-        isFulfilled,
+        isShipped,
         paymentMethod,
         hasRated,
         inAfterSaleWindow,
       }),
-    [orderState, userRole, isModerated, isFulfilled, paymentMethod, hasRated, inAfterSaleWindow]
+    [orderState, userRole, isModerated, isShipped, paymentMethod, hasRated, inAfterSaleWindow]
   );
 
   const primaryAction = useMemo(() => getPrimaryAction(actions), [actions]);

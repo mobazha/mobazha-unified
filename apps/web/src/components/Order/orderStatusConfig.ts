@@ -127,11 +127,18 @@ export function getGuestStatusConfig(t: TranslateFn): Record<string, StatusDispl
       icon: RefreshCw,
       description: t('guestOrder.stateProcessingDesc'),
     },
-    FULFILLED: {
-      label: t('guestOrder.stateFulfilled'),
+    SHIPPED: {
+      label: t('guestOrder.stateShipped'),
       color: 'bg-primary/15 text-primary',
       icon: Package,
-      description: t('guestOrder.stateFulfilledDesc'),
+      description: t('guestOrder.stateShippedDesc'),
+    },
+    /** Legacy API string — same display as SHIPPED */
+    FULFILLED: {
+      label: t('guestOrder.stateShipped'),
+      color: 'bg-primary/15 text-primary',
+      icon: Package,
+      description: t('guestOrder.stateShippedDesc'),
     },
     COMPLETED: {
       label: t('guestOrder.stateCompleted'),
@@ -158,10 +165,12 @@ const UNKNOWN_COLOR = 'bg-muted text-muted-foreground';
 
 export function resolveStatusDisplay(
   state: string,
-  config: Record<string, StatusDisplayConfig>,
+  config: Record<string, StatusDisplayConfig>
 ): StatusDisplayConfig {
-  return config[state] ?? {
-    label: state.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase()),
-    color: UNKNOWN_COLOR,
-  };
+  return (
+    config[state] ?? {
+      label: state.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase()),
+      color: UNKNOWN_COLOR,
+    }
+  );
 }

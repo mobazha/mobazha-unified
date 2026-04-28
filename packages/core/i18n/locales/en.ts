@@ -660,7 +660,7 @@ export const en: TranslationResource = {
     stages: {
       paid: 'Paid',
       accepted: 'Accepted',
-      fulfilled: 'Fulfilled',
+      fulfilled: 'Shipped',
       delivered: 'Delivered',
       complete: 'Complete',
       disputed: 'Disputed',
@@ -789,7 +789,7 @@ export const en: TranslationResource = {
       AUSTRALIA: 'Australia',
     },
     orderAccepted: 'Order Accepted',
-    acceptedDescSeller: "You received the order and can fulfill it whenever you're ready.",
+    acceptedDescSeller: "You received the order and can ship whenever you're ready.",
     acceptedDescBuyer: 'Order accepted by seller.',
     purchases: 'Purchases',
     sales: 'Sales',
@@ -927,7 +927,7 @@ export const en: TranslationResource = {
       writeReview: 'Write Review',
       accept: 'Accept Order',
       decline: 'Decline',
-      fulfill: 'Ship Order',
+      ship: 'Ship Order',
       refund: 'Refund',
       claim: 'Claim Payment',
       acceptPayout: 'Accept Payout',
@@ -935,7 +935,7 @@ export const en: TranslationResource = {
       confirmDelivery: 'Confirm',
       // Success messages
       acceptSuccess: 'Order Accepted',
-      acceptSuccessDesc: 'You have accepted the order. Please fulfill it as soon as possible.',
+      acceptSuccessDesc: 'You have accepted the order. Please ship as soon as possible.',
       declineSuccess: 'Order Declined',
       declineSuccessDesc: 'You have declined the order. The buyer has been notified.',
       cancelSuccess: 'Order Cancelled',
@@ -946,8 +946,8 @@ export const en: TranslationResource = {
       claimSuccessDesc: 'You have successfully claimed the payment.',
       acceptPayoutSuccess: 'Payout Accepted',
       acceptPayoutSuccessDesc: 'You have accepted the dispute resolution payout.',
-      fulfillSuccess: 'Order Shipped',
-      fulfillSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
+      shipSuccess: 'Order Shipped',
+      shipSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
       completeSuccess: 'Order Completed',
       completeSuccessDesc: 'The order has been completed. Funds have been released to the seller.',
       rateSuccess: 'Review Submitted',
@@ -1006,7 +1006,7 @@ export const en: TranslationResource = {
       acceptOrder: {
         title: 'Accept Order',
         description:
-          'Are you sure you want to accept this order? Once accepted, you will be expected to fulfill it.',
+          'Are you sure you want to accept this order? Once accepted, you will be expected to ship it.',
       },
       declineOrder: {
         title: 'Decline Order',
@@ -1032,7 +1032,7 @@ export const en: TranslationResource = {
         description:
           "Are you sure you want to accept the dispute resolution? The funds will be distributed according to the moderator's decision.",
       },
-      fulfillOrder: {
+      shipOrder: {
         title: 'Ship Order',
         description:
           'Enter the shipping information for this order. The buyer will be notified once you confirm.',
@@ -1092,18 +1092,17 @@ export const en: TranslationResource = {
     accept: {
       title: 'Accept Order',
       description: 'Select the receiving account where you want to receive payment for this order.',
-      fiatDescription: 'Payment has been received. Accept this order and prepare for fulfillment.',
+      fiatDescription: 'Payment has been received. Accept this order and prepare to ship.',
       receivingAccountRequired: 'Please select a receiving account',
       accept: 'Accept',
       decline: 'Decline',
     },
-    // Fulfill modal
-    fulfill: {
+    // Ship order modal
+    ship: {
       shipOrder: 'Ship Order',
       deliverDigital: 'Deliver Digital Content',
       transferToken: 'Transfer Token',
       completeService: 'Complete Service',
-      fulfillOrder: 'Fulfill Order',
       carrier: 'Carrier',
       carrierPlaceholder: 'e.g., UPS, FedEx, DHL',
       trackingNumber: 'Tracking Number',
@@ -1122,7 +1121,7 @@ export const en: TranslationResource = {
       serviceHint: 'Add a note to confirm service completion',
       note: 'Note',
       notePlaceholder: 'Add a note for the buyer...',
-      confirm: 'Confirm Fulfillment',
+      confirm: 'Confirm shipment',
       // Receiving account
       receivingAccount: 'Receiving Account',
       selectReceivingAccount: 'Select receiving account',
@@ -1224,9 +1223,9 @@ export const en: TranslationResource = {
       description:
         'This is the raw contract data for this order. It contains all the cryptographic proofs and signatures.',
     },
-    // Fulfillment display
-    fulfillment: {
-      title: 'Fulfillment Details',
+    // Shipment display
+    shipment: {
+      title: 'Shipment details',
       packageShipped: 'Package shipped',
       serviceDelivered: 'Service delivered',
       digitalDelivered: 'Digital content delivered',
@@ -3024,7 +3023,7 @@ export const en: TranslationResource = {
       lockedPayment: 'locked payment',
       orderFunded: 'Order has been funded',
       orderConfirmed: 'Order confirmed',
-      orderFulfilled: 'Order fulfilled',
+      orderShipped: 'Order shipped',
       orderCompleted: 'Order completed',
       acceptedYourOrder: 'accepted your order',
       youAcceptedOrder: 'You accepted an order',
@@ -3034,8 +3033,8 @@ export const en: TranslationResource = {
       cancelledOrder: 'cancelled their order',
       refundedYourOrder: 'refunded your order',
       youRefundedOrder: 'You refunded an order',
-      fulfilledYourOrder: 'fulfilled your order',
-      youFulfilledOrder: 'You fulfilled an order',
+      shippedYourOrder: 'shipped your order',
+      youShippedOrder: 'You shipped an order',
       completedOrder: 'completed the order',
       staleWarning: 'Order has been inactive for several days',
       expired: 'Order auto-canceled due to timeout',
@@ -3069,7 +3068,7 @@ export const en: TranslationResource = {
       orderDeclined: 'Order Declined',
       orderCancelled: 'Order Cancelled',
       refundReceived: 'Refund Received',
-      orderFulfilled: 'Order Fulfilled',
+      orderShipped: 'Order Shipped',
       orderCompleted: 'Order Completed',
       paymentFinalized: 'Payment Finalized',
       disputeOpened: 'Dispute Opened',
@@ -6223,8 +6222,8 @@ export const en: TranslationResource = {
     stateFundedDesc: 'Your payment is confirmed. The seller will process your order.',
     stateProcessing: 'Processing',
     stateProcessingDesc: 'The seller is preparing your order for shipment.',
-    stateFulfilled: 'Shipped',
-    stateFulfilledDesc: 'Your order has been shipped!',
+    stateShipped: 'Shipped',
+    stateShippedDesc: 'Your order has been shipped!',
     stateCompleted: 'Completed',
     stateCompletedDesc: 'Your order is complete. Thank you for your purchase!',
     stateExpired: 'Expired',

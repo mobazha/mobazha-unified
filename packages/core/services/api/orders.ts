@@ -106,7 +106,7 @@ const mockOrders: OrderListItem[] = [
     vendorID: 'QmVendor123',
     vendorName: 'TechGear Store',
     buyerID: 'QmBuyer001',
-    state: 'AWAITING_FULFILLMENT',
+    state: 'AWAITING_SHIPMENT',
     read: true,
     paymentCoin: 'ETH',
     coinType: 'ETH',
@@ -126,7 +126,7 @@ const mockOrders: OrderListItem[] = [
     vendorID: 'QmVendor456',
     vendorName: 'WearTech',
     buyerID: 'QmBuyer001',
-    state: 'FULFILLED',
+    state: 'SHIPPED',
     read: false,
     paymentCoin: 'BTC',
     coinType: 'BTC',
@@ -304,7 +304,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       unreadChatMessages: orderItem.unreadChatMessages || 0,
       paymentAddressTransactions: [],
       protection: (() => {
-        if (orderItem.state === 'FULFILLED') {
+        if (orderItem.state === 'SHIPPED') {
           return {
             stage: 'PROTECTION_PERIOD',
             daysRemaining: 8,
@@ -314,7 +314,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
             afterSaleWindowDays: 7,
           };
         }
-        if (orderItem.state === 'AWAITING_FULFILLMENT') {
+        if (orderItem.state === 'AWAITING_SHIPMENT') {
           return {
             stage: 'ESCROWED',
             daysRemaining: 0,
@@ -580,7 +580,7 @@ export async function confirmOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
-      order.state = payload.decline ? 'DECLINED' : 'AWAITING_FULFILLMENT';
+      order.state = payload.decline ? 'DECLINED' : 'AWAITING_SHIPMENT';
     }
     return { success: true };
   };
@@ -592,7 +592,7 @@ export async function confirmOrder(payload: {
  * 发货（卖家）
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function fulfillOrder(payload: {
+export async function shipOrder(payload: {
   orderID: string;
   physicalDelivery?: { shipper: string; trackingNumber: string };
   digitalDelivery?: { url?: string; password?: string };
@@ -601,7 +601,7 @@ export async function fulfillOrder(payload: {
   receivingAccountID?: number;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDER_FULFILL(payload.orderID), payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_SHIP(payload.orderID), payload);
     return { success: true };
   };
 
@@ -609,12 +609,12 @@ export async function fulfillOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
-      order.state = 'FULFILLED';
+      order.state = 'SHIPPED';
     }
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/fulfill`);
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/ship`);
 }
 
 /**
@@ -992,7 +992,7 @@ export async function fundOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderId);
     if (order) {
-      order.state = 'AWAITING_FULFILLMENT';
+      order.state = 'AWAITING_SHIPMENT';
     }
     return {
       success: true,
@@ -1284,7 +1284,7 @@ export const ordersApi = {
 
   // 状态操作
   confirmOrder,
-  fulfillOrder,
+  shipOrder,
   completeOrder,
   cancelOrder,
   extendProtection,

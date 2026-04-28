@@ -175,7 +175,7 @@ describe.skipIf(!isIntegrationTestEnabled())('Purchase Flow E2E Tests', () => {
       }
 
       try {
-        const result = await ordersApi.fulfillOrder({
+        const result = await ordersApi.shipOrder({
           orderID: orderId,
           physicalDelivery: [
             {

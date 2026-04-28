@@ -356,7 +356,7 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
 
   test('08 — Fulfilled (tracking)', async ({ page }) => {
     await mockAppShell(page);
-    await mockGuestAPIs(page, 'FULFILLED', {
+    await mockGuestAPIs(page, 'SHIPPED', {
       confirmations: 12,
       requiredConfirmations: 12,
       trackingNumber: 'UPS1234567890',

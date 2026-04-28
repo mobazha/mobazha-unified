@@ -78,7 +78,7 @@ export type {
   OrderCancel,
   OrderConfirmation,
   OrderComplete,
-  OrderFulfillment,
+  OrderShipment,
   // 支付相关
   PaymentSent,
   PaymentMethod,
@@ -100,7 +100,7 @@ export type {
   RatingSignature,
   PhysicalDelivery,
   DigitalDelivery,
-  FulfilledItem,
+  ShippedItem,
   CryptocurrencyDelivery,
   OrderRating,
   Cart,

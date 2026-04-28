@@ -135,17 +135,17 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
     }
   );
 
-  // Guest order detail / fulfill / complete (path with token segment after /guest/orders/)
+  // Guest order detail / ship / complete (path with token segment after /guest/orders/)
   await page.route(
     url => isV1Api(url, '/guest/orders/'),
     async (route, request) => {
       const path = request.url();
-      if (path.includes('/fulfill') || path.includes('/complete')) {
+      if (path.includes('/ship') || path.includes('/complete')) {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            data: { ...MOCK_GUEST_ORDER_STATUS, state: 'FULFILLED' },
+            data: { ...MOCK_GUEST_ORDER_STATUS, state: 'SHIPPED' },
           }),
         });
       }
@@ -578,10 +578,10 @@ test.describe('Guest Checkout — Edge Cases', () => {
     });
   });
 
-  test('guest order status with fulfilled state shows tracking info', async ({ page }) => {
+  test('guest order status with shipped state shows tracking info', async ({ page }) => {
     await mockAppShellAPIs(page);
     await mockGuestOrderStatus(page, {
-      state: 'FULFILLED',
+      state: 'SHIPPED',
       confirmations: 12,
       requiredConfirmations: 12,
       trackingNumber: 'UPS1234567890',
@@ -600,7 +600,7 @@ test.describe('Guest Checkout — Edge Cases', () => {
     expect(hasContent).toBe(true);
 
     await page.screenshot({
-      path: 'test-results/guest-edge-fulfilled-tracking.png',
+      path: 'test-results/guest-edge-shipped-tracking.png',
       fullPage: true,
     });
   });

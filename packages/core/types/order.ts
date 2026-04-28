@@ -9,9 +9,9 @@ export type OrderState =
   | 'AWAITING_PAYMENT'
   | 'AWAITING_PAYMENT_VERIFICATION'
   | 'AWAITING_PICKUP'
-  | 'AWAITING_FULFILLMENT'
-  | 'PARTIALLY_FULFILLED'
-  | 'FULFILLED'
+  | 'AWAITING_SHIPMENT'
+  | 'PARTIALLY_SHIPPED'
+  | 'SHIPPED'
   | 'COMPLETED'
   | 'CANCELED'
   | 'DECLINED'
@@ -100,7 +100,8 @@ export interface OrderContract {
   orderCancel?: OrderCancel;
   orderConfirmation?: OrderConfirmation;
   orderComplete?: OrderComplete;
-  orderFulfillments?: OrderFulfillment[];
+  /** API: repeated OrderShipment (Ricardian contract) */
+  orderShipments?: OrderShipment[];
 
   // 支付相关
   paymentSent?: PaymentSent;
@@ -162,18 +163,18 @@ export interface OrderComplete {
 }
 
 /**
- * 订单履行 - 对应后端 OrderFulfillment
+ * 订单发货消息 - 对应后端 pb.OrderShipment
  */
-export interface OrderFulfillment {
+export interface OrderShipment {
   timestamp?: string;
-  fulfillments?: FulfilledItem[];
+  shipments?: ShippedItem[];
   releaseInfo?: EscrowRelease; // 仲裁订单的托管释放
 }
 
 /**
- * 履行项 - 对应后端 FulfilledItem
+ * 单条发货项 - 对应后端 OrderShipment.ShippedItem
  */
-export interface FulfilledItem {
+export interface ShippedItem {
   itemIndex?: number;
   note?: string;
   physicalDelivery?: PhysicalDelivery;

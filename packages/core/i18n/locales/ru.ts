@@ -862,7 +862,7 @@ export const ru: TranslationResource = {
       writeReview: 'Написать отзыв',
       accept: 'Принять заказ',
       decline: 'Отклонить',
-      fulfill: 'Отправить заказ',
+      ship: 'Отправить заказ',
       refund: 'Возврат',
       claim: 'Получить оплату',
       acceptPayout: 'Принять выплату',
@@ -880,8 +880,8 @@ export const ru: TranslationResource = {
       claimSuccessDesc: 'Вы успешно получили оплату.',
       acceptPayoutSuccess: 'Выплата принята',
       acceptPayoutSuccessDesc: 'Вы приняли выплату по разрешению спора.',
-      fulfillSuccess: 'Заказ отправлен',
-      fulfillSuccessDesc: 'Заказ отмечен как отправленный. Покупатель уведомлён.',
+      shipSuccess: 'Заказ отправлен',
+      shipSuccessDesc: 'Заказ отмечен как отправленный. Покупатель уведомлён.',
       completeSuccess: 'Заказ завершён',
       completeSuccessDesc: 'Заказ завершён. Средства переведены продавцу.',
       rateSuccess: 'Отзыв отправлен',
@@ -961,7 +961,7 @@ export const ru: TranslationResource = {
         description:
           'Вы уверены, что хотите принять решение по спору? Средства будут распределены по решению модератора.',
       },
-      fulfillOrder: {
+      shipOrder: {
         title: 'Отправить заказ',
         description:
           'Введите информацию о доставке. Покупатель получит уведомление после подтверждения.',
@@ -1023,12 +1023,11 @@ export const ru: TranslationResource = {
       accept: 'Accept',
       decline: 'Decline',
     },
-    fulfill: {
+    ship: {
       shipOrder: 'Отправить заказ',
       deliverDigital: 'Доставить цифровой контент',
       transferToken: 'Перевести токен',
       completeService: 'Завершить услугу',
-      fulfillOrder: 'Выполнить заказ',
       carrier: 'Перевозчик',
       carrierPlaceholder: 'напр. UPS, FedEx, DHL',
       trackingNumber: 'Номер отслеживания',
@@ -1139,7 +1138,7 @@ export const ru: TranslationResource = {
       description:
         'Сырые данные контракта заказа. Содержит криптографические доказательства и подписи.',
     },
-    fulfillment: {
+    shipment: {
       title: 'Детали выполнения',
       packageShipped: 'Посылка отправлена',
       serviceDelivered: 'Услуга оказана',
@@ -2819,7 +2818,7 @@ export const ru: TranslationResource = {
       lockedPayment: 'заблокировал платёж',
       orderFunded: 'Заказ оплачен',
       orderConfirmed: 'Заказ подтверждён',
-      orderFulfilled: 'Заказ отправлен',
+      orderShipped: 'Заказ отправлен',
       orderCompleted: 'Заказ завершён',
       acceptedYourOrder: 'принял ваш заказ',
       youAcceptedOrder: 'Вы приняли заказ',
@@ -2829,8 +2828,8 @@ export const ru: TranslationResource = {
       cancelledOrder: 'отменил заказ',
       refundedYourOrder: 'вернул средства за ваш заказ',
       youRefundedOrder: 'Вы вернули средства за заказ',
-      fulfilledYourOrder: 'отправил ваш заказ',
-      youFulfilledOrder: 'Вы отправили заказ',
+      shippedYourOrder: 'отправил ваш заказ',
+      youShippedOrder: 'Вы отправили заказ',
       completedOrder: 'завершил заказ',
       staleWarning: 'Order has been inactive for several days',
       expired: 'Order auto-canceled due to timeout',
@@ -2861,7 +2860,7 @@ export const ru: TranslationResource = {
       orderDeclined: 'Заказ отклонён',
       orderCancelled: 'Заказ отменён',
       refundReceived: 'Возврат получен',
-      orderFulfilled: 'Заказ отправлен',
+      orderShipped: 'Заказ отправлен',
       orderCompleted: 'Заказ завершён',
       paymentFinalized: 'Оплата завершена',
       disputeOpened: 'Спор открыт',

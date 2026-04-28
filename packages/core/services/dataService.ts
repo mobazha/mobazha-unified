@@ -239,16 +239,16 @@ export const orderDataService = {
   /**
    * 发货（卖家）
    */
-  async fulfillOrder(params: {
+  async shipOrder(params: {
     orderID: string;
     physicalDelivery?: { shipper: string; trackingNumber: string };
     digitalDelivery?: { url?: string; password?: string };
     note?: string;
   }) {
     if (isMockMode()) {
-      return mockServices.orders.fulfillOrder(params.orderID);
+      return mockServices.orders.shipOrder(params.orderID);
     }
-    return await ordersApi.fulfillOrder(params);
+    return await ordersApi.shipOrder(params);
   },
 
   /**

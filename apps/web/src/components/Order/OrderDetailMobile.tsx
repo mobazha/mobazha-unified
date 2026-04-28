@@ -12,7 +12,7 @@ import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
 import {
   useI18n,
-  isOrderFulfilled,
+  isOrderShipped,
   getOrderActions,
   getPrimaryAction,
   getActionButtonConfig,
@@ -28,7 +28,7 @@ import { useHaptic } from '@/lib/platform';
 import {
   OrderChat,
   AcceptOrderDialog,
-  FulfillOrderDialog,
+  ShipOrderDialog,
   OrderConfirmDialog,
   WriteReviewDialog,
   type OrderConfirmType,
@@ -134,7 +134,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     chatMessages,
     sendMessage,
     acceptOrderProps,
-    fulfillOrderProps,
+    shipOrderProps,
   } = useOrderDetailPage(orderId, viewingContext);
 
   // NOTE (MVP-1 partial migration): `haptic` has moved to the platform-abstract
@@ -151,7 +151,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
   const [showFiatRefundDialog, setShowFiatRefundDialog] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
-  const [showFulfillDialog, setShowFulfillDialog] = useState(false);
+  const [showShipDialog, setShowShipDialog] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
@@ -218,8 +218,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         case 'Decline':
           setConfirmDialog('decline');
           break;
-        case 'Fulfill':
-          setShowFulfillDialog(true);
+        case 'Ship':
+          setShowShipDialog(true);
           break;
         case 'Refund':
           if (displayOrder?.fiatPayment) {
@@ -347,7 +347,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       displayOrder.userRole as CoreUserRole,
       {
         isModerated: !!displayOrder.moderator,
-        isFulfilled: isOrderFulfilled(coreOrder),
+        isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
       }
@@ -363,7 +363,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       displayOrder.userRole as CoreUserRole,
       {
         isModerated: !!displayOrder.moderator,
-        isFulfilled: isOrderFulfilled(coreOrder),
+        isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
       }
@@ -769,7 +769,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           userRole={displayOrder.userRole as CoreUserRole}
           timestamp={displayOrder.createdAt}
           isModerated={!!displayOrder.moderator}
-          isFulfilled={isOrderFulfilled(coreOrder)}
+          isShipped={isOrderShipped(coreOrder)}
           paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
           onAction={handleOrderAction}
@@ -807,13 +807,13 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         onSuccess={acceptOrderProps.onSuccess}
       />
 
-      <FulfillOrderDialog
-        open={showFulfillDialog}
-        onOpenChange={setShowFulfillDialog}
-        orderId={fulfillOrderProps.orderId}
-        contractType={fulfillOrderProps.contractType}
-        blockchain={fulfillOrderProps.blockchain}
-        onSuccess={fulfillOrderProps.onSuccess}
+      <ShipOrderDialog
+        open={showShipDialog}
+        onOpenChange={setShowShipDialog}
+        orderId={shipOrderProps.orderId}
+        contractType={shipOrderProps.contractType}
+        blockchain={shipOrderProps.blockchain}
+        onSuccess={shipOrderProps.onSuccess}
       />
 
       <OrderContractView

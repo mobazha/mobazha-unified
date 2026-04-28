@@ -16,7 +16,7 @@ export {
   OrderStageCard,
   PaymentCard,
   OrderRatingCard,
-  FulfillmentCard,
+  ShipmentCard,
   AcceptedCard,
   OrderCompleteCard,
 } from './OrderStageCard';
@@ -24,7 +24,7 @@ export type {
   OrderStageCardProps,
   PaymentCardProps,
   OrderRatingCardProps,
-  FulfillmentCardProps,
+  ShipmentCardProps,
   AcceptedCardProps,
   OrderCompleteCardProps,
 } from './OrderStageCard';
@@ -47,8 +47,8 @@ export * from './modals';
 // Dialogs
 export { AcceptOrderDialog } from './AcceptOrderDialog';
 export type { AcceptOrderDialogProps } from './AcceptOrderDialog';
-export { FulfillOrderDialog } from './FulfillOrderDialog';
-export type { FulfillOrderDialogProps } from './FulfillOrderDialog';
+export { ShipOrderDialog } from './ShipOrderDialog';
+export type { ShipOrderDialogProps } from './ShipOrderDialog';
 
 export { OrderConfirmDialog } from './OrderConfirmDialog';
 export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDialog';

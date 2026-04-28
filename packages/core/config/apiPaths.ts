@@ -55,7 +55,7 @@ export const NODE_API = {
   ORDERS_ESTIMATE: '/orders/estimate',
   ORDERS_CHECKOUT_BREAKDOWN: '/orders/checkout-breakdown',
   ORDER_CONFIRM: (orderId: string) => `/orders/${orderId}/confirm`,
-  ORDER_FULFILL: (orderId: string) => `/orders/${orderId}/fulfill`,
+  ORDER_SHIP: (orderId: string) => `/orders/${orderId}/ship`,
   ORDER_COMPLETE: (orderId: string) => `/orders/${orderId}/complete`,
   ORDER_CANCEL: (orderId: string) => `/orders/${orderId}/cancel`,
   ORDER_EXTEND_PROTECTION: (orderId: string) => `/orders/${orderId}/extend-protection`,
@@ -275,7 +275,7 @@ export const NODE_API = {
   // --- Guest Checkout (anonymous direct-payment orders) ---
   GUEST_ORDERS: '/guest/orders',
   GUEST_ORDER: (token: string) => `/guest/orders/${token}`,
-  GUEST_ORDER_FULFILL: (token: string) => `/guest/orders/${token}/fulfill`,
+  GUEST_ORDER_SHIP: (token: string) => `/guest/orders/${token}/ship`,
   GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${token}/complete`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
 

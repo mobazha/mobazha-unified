@@ -47,7 +47,7 @@ import StandaloneSetupWizard from '@/components/admin/StandaloneSetupWizard';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
 
-const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
+const REVENUE_STATES = new Set(['COMPLETED', 'SHIPPED', 'PAYMENT_FINALIZED']);
 
 function useDashboardData() {
   const { t } = useI18n();

@@ -7,7 +7,7 @@ import { getOrderCurrencyCode } from '../dashboard/utils';
 
 export type Period = '7d' | '30d' | '90d' | 'all';
 
-const REVENUE_STATES = new Set(['COMPLETED', 'FULFILLED', 'PAYMENT_FINALIZED']);
+const REVENUE_STATES = new Set(['COMPLETED', 'SHIPPED', 'PAYMENT_FINALIZED']);
 
 function daysAgo(days: number): Date {
   const d = new Date();

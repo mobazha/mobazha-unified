@@ -92,9 +92,7 @@ export interface GuestOrderSummary {
 
 // ========== Buyer-facing APIs (public, no auth) ==========
 
-export function createGuestOrder(
-  data: CreateGuestOrderRequest,
-): Promise<GuestOrderResponse> {
+export function createGuestOrder(data: CreateGuestOrderRequest): Promise<GuestOrderResponse> {
   return publicPost(NODE_API.GUEST_ORDERS, data);
 }
 
@@ -109,7 +107,7 @@ export function getGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
 }
 
 export function updateGuestCheckoutSettings(
-  settings: GuestCheckoutSettings,
+  settings: GuestCheckoutSettings
 ): Promise<GuestCheckoutSettings> {
   return authPut(NODE_API.GUEST_CHECKOUT_SETTINGS, settings);
 }
@@ -127,11 +125,11 @@ export function listGuestOrders(params?: {
   return authGet(`${NODE_API.GUEST_ORDERS}${qs ? `?${qs}` : ''}`);
 }
 
-export function fulfillGuestOrder(
+export function shipGuestOrder(
   token: string,
-  data: { trackingNumber?: string; carrier?: string },
+  data: { trackingNumber?: string; carrier?: string }
 ): Promise<GuestOrderStatus> {
-  return authPost(NODE_API.GUEST_ORDER_FULFILL(token), data);
+  return authPut(NODE_API.GUEST_ORDER_SHIP(token), data);
 }
 
 export function completeGuestOrder(token: string): Promise<GuestOrderStatus> {

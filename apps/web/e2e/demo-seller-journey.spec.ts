@@ -371,10 +371,10 @@ test.describe('Seller Journey — 20-step AI UX Audit', () => {
     await captureStep(page, '13-orders-list');
   });
 
-  // S14: Ship Order (AWAITING_FULFILLMENT detail)
+  // S14: Ship Order (AWAITING_SHIPMENT detail)
   test('S14 — Ship Order', async ({ page }) => {
     await setupMockAuth(page);
-    await mockOrderDetailByState(page, 'AWAITING_FULFILLMENT');
+    await mockOrderDetailByState(page, 'AWAITING_SHIPMENT');
     await mockImageRoutes(page);
     await page.goto('/orders/QmAwait001');
     await page.waitForLoadState('domcontentloaded');

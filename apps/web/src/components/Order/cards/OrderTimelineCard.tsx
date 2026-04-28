@@ -3,7 +3,7 @@
 import React, { memo, useMemo } from 'react';
 import { useI18n, type DisplayOrder } from '@mobazha/core';
 import type { Order as CoreOrder } from '@mobazha/core';
-import { OrderCompleteCard, FulfillmentCard, AcceptedCard } from '@/components/Order';
+import { OrderCompleteCard, ShipmentCard, AcceptedCard } from '@/components/Order';
 import { getBlockExplorerUrl } from '@/components/Order/utils';
 import { cn } from '@/lib/utils';
 import { ShoppingBag, XCircle, Clock } from 'lucide-react';
@@ -145,7 +145,7 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
 
         {(order.trackingNumber || ['shipped', 'delivered', 'completed'].includes(order.status)) && (
           <div className="bg-muted/10 rounded-lg p-2">
-            <FulfillmentCard
+            <ShipmentCard
               timestamp={order.timeline.find(e => e.status === 'shipped')?.timestamp}
               shipper={order.shipper}
               trackingNumber={order.trackingNumber}

@@ -1471,7 +1471,7 @@ export interface TranslationResource {
       lockedPayment: string;
       orderFunded: string;
       orderConfirmed: string;
-      orderFulfilled: string;
+      orderShipped: string;
       orderCompleted: string;
       acceptedYourOrder: string;
       youAcceptedOrder: string;
@@ -1481,8 +1481,8 @@ export interface TranslationResource {
       cancelledOrder: string;
       refundedYourOrder: string;
       youRefundedOrder: string;
-      fulfilledYourOrder: string;
-      youFulfilledOrder: string;
+      shippedYourOrder: string;
+      youShippedOrder: string;
       completedOrder: string;
       staleWarning: string;
       expired: string;
@@ -3999,8 +3999,8 @@ export interface TranslationResource {
     stateFundedDesc?: string;
     stateProcessing?: string;
     stateProcessingDesc?: string;
-    stateFulfilled?: string;
-    stateFulfilledDesc?: string;
+    stateShipped?: string;
+    stateShippedDesc?: string;
     stateCompleted?: string;
     stateCompletedDesc?: string;
     stateExpired?: string;

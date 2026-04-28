@@ -862,7 +862,7 @@ export const es: TranslationResource = {
       writeReview: 'Escribir reseña',
       accept: 'Aceptar pedido',
       decline: 'Rechazar',
-      fulfill: 'Enviar pedido',
+      ship: 'Enviar pedido',
       refund: 'Reembolsar',
       claim: 'Reclamar pago',
       acceptPayout: 'Aceptar pago',
@@ -880,8 +880,8 @@ export const es: TranslationResource = {
       claimSuccessDesc: 'Has reclamado el pago correctamente.',
       acceptPayoutSuccess: 'Pago aceptado',
       acceptPayoutSuccessDesc: 'Has aceptado el pago de la resolución de disputa.',
-      fulfillSuccess: 'Pedido enviado',
-      fulfillSuccessDesc: 'El pedido se ha marcado como enviado. El comprador ha sido notificado.',
+      shipSuccess: 'Pedido enviado',
+      shipSuccessDesc: 'El pedido se ha marcado como enviado. El comprador ha sido notificado.',
       completeSuccess: 'Pedido completado',
       completeSuccessDesc: 'El pedido se ha completado. Los fondos han sido liberados al vendedor.',
       rateSuccess: 'Reseña enviada',
@@ -961,7 +961,7 @@ export const es: TranslationResource = {
         description:
           '¿Seguro que quieres aceptar la resolución de disputa? Los fondos se distribuirán según la decisión del moderador.',
       },
-      fulfillOrder: {
+      shipOrder: {
         title: 'Enviar pedido',
         description:
           'Ingresa la información de envío. El comprador será notificado cuando confirmes.',
@@ -1023,12 +1023,11 @@ export const es: TranslationResource = {
       accept: 'Accept',
       decline: 'Decline',
     },
-    fulfill: {
+    ship: {
       shipOrder: 'Enviar pedido',
       deliverDigital: 'Entregar contenido digital',
       transferToken: 'Transferir token',
       completeService: 'Completar servicio',
-      fulfillOrder: 'Completar pedido',
       carrier: 'Transportista',
       carrierPlaceholder: 'ej. UPS, FedEx, DHL',
       trackingNumber: 'Número de seguimiento',
@@ -1145,7 +1144,7 @@ export const es: TranslationResource = {
       description:
         'Estos son los datos crudos del contrato. Contiene todas las pruebas criptográficas y firmas.',
     },
-    fulfillment: {
+    shipment: {
       title: 'Detalles de entrega',
       packageShipped: 'Paquete enviado',
       serviceDelivered: 'Servicio entregado',
@@ -2844,7 +2843,7 @@ export const es: TranslationResource = {
       lockedPayment: 'bloqueó el pago',
       orderFunded: 'Pedido financiado',
       orderConfirmed: 'Pedido confirmado',
-      orderFulfilled: 'Pedido completado',
+      orderShipped: 'Pedido completado',
       orderCompleted: 'Pedido finalizado',
       acceptedYourOrder: 'aceptó tu pedido',
       youAcceptedOrder: 'Aceptaste un pedido',
@@ -2854,8 +2853,8 @@ export const es: TranslationResource = {
       cancelledOrder: 'canceló el pedido',
       refundedYourOrder: 'reembolsó tu pedido',
       youRefundedOrder: 'Reembolsaste un pedido',
-      fulfilledYourOrder: 'completó tu pedido',
-      youFulfilledOrder: 'Completaste un pedido',
+      shippedYourOrder: 'completó tu pedido',
+      youShippedOrder: 'Completaste un pedido',
       completedOrder: 'finalizó el pedido',
       staleWarning: 'Order has been inactive for several days',
       expired: 'Order auto-canceled due to timeout',
@@ -2886,7 +2885,7 @@ export const es: TranslationResource = {
       orderDeclined: 'Pedido rechazado',
       orderCancelled: 'Pedido cancelado',
       refundReceived: 'Reembolso recibido',
-      orderFulfilled: 'Pedido completado',
+      orderShipped: 'Pedido completado',
       orderCompleted: 'Pedido finalizado',
       paymentFinalized: 'Pago finalizado',
       disputeOpened: 'Disputa abierta',

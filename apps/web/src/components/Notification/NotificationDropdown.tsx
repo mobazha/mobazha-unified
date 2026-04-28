@@ -53,7 +53,7 @@ function getNotificationIcon(type: string) {
       return <XCircle className={cn(iconClass, 'text-error')} />;
     case 'order.stale_warning':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
-    case 'order.fulfilled':
+    case 'order.shipped':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'dispute.opened':
     case 'dispute.case_open':

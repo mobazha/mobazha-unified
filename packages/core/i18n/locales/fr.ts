@@ -865,7 +865,7 @@ export const fr: TranslationResource = {
       writeReview: 'Écrire un avis',
       accept: 'Accepter la commande',
       decline: 'Refuser',
-      fulfill: 'Expédier',
+      ship: 'Expédier',
       refund: 'Rembourser',
       claim: 'Réclamer le paiement',
       acceptPayout: 'Accepter le paiement',
@@ -883,8 +883,8 @@ export const fr: TranslationResource = {
       claimSuccessDesc: 'Vous avez réclamé le paiement avec succès.',
       acceptPayoutSuccess: 'Paiement accepté',
       acceptPayoutSuccessDesc: 'Vous avez accepté le paiement de résolution du litige.',
-      fulfillSuccess: 'Commande expédiée',
-      fulfillSuccessDesc: "La commande a été marquée comme expédiée. L'acheteur a été notifié.",
+      shipSuccess: 'Commande expédiée',
+      shipSuccessDesc: "La commande a été marquée comme expédiée. L'acheteur a été notifié.",
       completeSuccess: 'Commande terminée',
       completeSuccessDesc: 'La commande est terminée. Les fonds ont été libérés au vendeur.',
       rateSuccess: 'Avis envoyé',
@@ -967,7 +967,7 @@ export const fr: TranslationResource = {
         description:
           'Êtes-vous sûr de vouloir accepter la résolution du litige ? Les fonds seront distribués selon la décision du modérateur.',
       },
-      fulfillOrder: {
+      shipOrder: {
         title: 'Expédier la commande',
         description:
           "Entrez les informations d'expédition pour cette commande. L'acheteur sera notifié une fois confirmé.",
@@ -1031,12 +1031,11 @@ export const fr: TranslationResource = {
       accept: 'Accept',
       decline: 'Decline',
     },
-    fulfill: {
+    ship: {
       shipOrder: 'Expédier la commande',
       deliverDigital: 'Livrer le contenu numérique',
       transferToken: 'Transférer le token',
       completeService: 'Terminer le service',
-      fulfillOrder: 'Exécuter la commande',
       carrier: 'Transporteur',
       carrierPlaceholder: 'ex. UPS, FedEx, DHL',
       trackingNumber: 'Numéro de suivi',
@@ -1152,7 +1151,7 @@ export const fr: TranslationResource = {
       description:
         'Ce sont les données brutes du contrat pour cette commande. Il contient toutes les preuves cryptographiques et signatures.',
     },
-    fulfillment: {
+    shipment: {
       title: "Détails d'exécution",
       packageShipped: 'Colis expédié',
       serviceDelivered: 'Service livré',
@@ -2864,7 +2863,7 @@ export const fr: TranslationResource = {
       lockedPayment: 'a verrouillé le paiement',
       orderFunded: 'Commande financée',
       orderConfirmed: 'Commande confirmée',
-      orderFulfilled: 'Commande expédiée',
+      orderShipped: 'Commande expédiée',
       orderCompleted: 'Commande terminée',
       acceptedYourOrder: 'a accepté votre commande',
       youAcceptedOrder: 'Vous avez accepté une commande',
@@ -2874,8 +2873,8 @@ export const fr: TranslationResource = {
       cancelledOrder: 'a annulé la commande',
       refundedYourOrder: 'a remboursé votre commande',
       youRefundedOrder: 'Vous avez remboursé une commande',
-      fulfilledYourOrder: 'a expédié votre commande',
-      youFulfilledOrder: 'Vous avez expédié une commande',
+      shippedYourOrder: 'a expédié votre commande',
+      youShippedOrder: 'Vous avez expédié une commande',
       completedOrder: 'a terminé la commande',
       staleWarning: 'Order has been inactive for several days',
       expired: 'Order auto-canceled due to timeout',
@@ -2906,7 +2905,7 @@ export const fr: TranslationResource = {
       orderDeclined: 'Commande refusée',
       orderCancelled: 'Commande annulée',
       refundReceived: 'Remboursement reçu',
-      orderFulfilled: 'Commande expédiée',
+      orderShipped: 'Commande expédiée',
       orderCompleted: 'Commande terminée',
       paymentFinalized: 'Paiement finalisé',
       disputeOpened: 'Litige ouvert',

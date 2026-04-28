@@ -21,7 +21,7 @@ export interface OrderFooterProps {
   userRole: UserRole;
   timestamp: string;
   isModerated?: boolean;
-  isFulfilled?: boolean;
+  isShipped?: boolean;
   paymentMethod?: string;
   totalAmount?: string;
   currency?: string;
@@ -41,7 +41,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   userRole,
   timestamp,
   isModerated = false,
-  isFulfilled = false,
+  isShipped = false,
   paymentMethod,
   totalAmount,
   currency,
@@ -59,7 +59,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   // 获取可用操作
   const actions = getOrderActions(orderState, userRole, {
     isModerated,
-    isFulfilled,
+    isShipped,
     isExpired: expired,
     paymentMethod,
     hasRated,
@@ -85,7 +85,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       WriteReview: t('order.actions.writeReview'),
       Accept: t('order.actions.accept'),
       Decline: t('order.actions.decline'),
-      Fulfill: t('order.actions.fulfill'),
+      Ship: t('order.actions.ship'),
       Refund: t('order.actions.refund'),
       Claim: t('order.actions.claim'),
       AcceptPayout: t('order.actions.acceptPayout'),
@@ -202,9 +202,9 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       AWAITING_PAYMENT: 'order.statusLabels.awaitingPayment',
       AWAITING_PAYMENT_VERIFICATION: 'order.statusLabels.awaitingPaymentVerification',
       AWAITING_PICKUP: 'order.statusLabels.awaitingPickup',
-      AWAITING_FULFILLMENT: 'order.statusLabels.processing',
-      PARTIALLY_FULFILLED: 'order.statusLabels.partialShipped',
-      FULFILLED: 'order.statusLabels.shipped',
+      AWAITING_SHIPMENT: 'order.statusLabels.processing',
+      PARTIALLY_SHIPPED: 'order.statusLabels.partialShipped',
+      SHIPPED: 'order.statusLabels.shipped',
       COMPLETED: 'order.statusLabels.completed',
       CANCELED: 'order.statusLabels.cancelled',
       DECLINED: 'order.stages.declined',

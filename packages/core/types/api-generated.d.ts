@@ -3154,7 +3154,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/orders/fulfill': {
+  '/v1/orders/{orderID}/ship': {
     parameters: {
       query?: never;
       header?: never;
@@ -3163,17 +3163,19 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark order as fulfilled */
+    /** Ship an order (add shipment tracking) */
     post: {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          orderID: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
       responses: {
-        /** @description Order fulfilled */
+        /** @description Order shipped */
         200: {
           headers: {
             [name: string]: unknown;

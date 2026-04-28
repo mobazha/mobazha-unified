@@ -98,10 +98,14 @@ const BASE_ORDER_CONTRACT = {
   orderConfirmation: {
     timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
   },
-  vendorOrderFulfillment: [
+  orderShipments: [
     {
       timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      shipping: { shipper: 'FedEx', trackingNumber: 'FX123456789' },
+      shipments: [
+        {
+          physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX123456789' },
+        },
+      ],
     },
   ],
   paymentSent: {
@@ -171,8 +175,8 @@ function mockCompletedBuyerOrder(page: import('@playwright/test').Page) {
   });
 }
 
-// T10: Seller FULFILLED order in protection period → seller countdown
-function mockFulfilledSellerOrder(page: import('@playwright/test').Page) {
+// T10: Seller SHIPPED order in protection period → seller countdown
+function mockShippedSellerOrder(page: import('@playwright/test').Page) {
   const futureDate = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString();
   return page.route('**/v1/orders/**', route => {
     route.fulfill({
@@ -181,7 +185,7 @@ function mockFulfilledSellerOrder(page: import('@playwright/test').Page) {
       body: JSON.stringify({
         data: {
           contract: BASE_ORDER_CONTRACT,
-          state: 'FULFILLED',
+          state: 'SHIPPED',
           read: true,
           funded: true,
           paymentTx: '0xabc123',
@@ -210,7 +214,7 @@ function mockExtendedSellerOrder(page: import('@playwright/test').Page) {
       body: JSON.stringify({
         data: {
           contract: BASE_ORDER_CONTRACT,
-          state: 'FULFILLED',
+          state: 'SHIPPED',
           read: true,
           funded: true,
           paymentTx: '0xabc123',
@@ -341,7 +345,7 @@ test.describe('S6 Phase 3: T5/T8/T10 Screenshots', () => {
 
   // T10: Seller fulfilled — protection countdown
   test('desktop: seller fulfilled — protection countdown', async ({ page }) => {
-    await mockFulfilledSellerOrder(page);
+    await mockShippedSellerOrder(page);
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('http://localhost:3001/orders/QmOrder001?type=sale');
     await page.waitForLoadState('networkidle');
@@ -353,7 +357,7 @@ test.describe('S6 Phase 3: T5/T8/T10 Screenshots', () => {
   });
 
   test('mobile: seller fulfilled — protection countdown', async ({ page }) => {
-    await mockFulfilledSellerOrder(page);
+    await mockShippedSellerOrder(page);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('http://localhost:3001/orders/QmOrder001?type=sale');
     await page.waitForLoadState('networkidle');
