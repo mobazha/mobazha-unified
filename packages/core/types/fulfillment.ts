@@ -28,20 +28,25 @@ export interface ConnectProviderRequest {
 
 export interface CatalogVariant {
   id: string;
-  name: string;
+  title: string;
   sku?: string;
-  price: number;
+  price: string;
   currency: string;
   inStock: boolean;
-  options?: Record<string, string>;
+  attributes?: Record<string, string>;
+  imageUrl?: string;
 }
 
 export interface CatalogProduct {
   id: string;
-  name: string;
+  title: string;
   description?: string;
-  thumbnailUrl?: string;
+  imageUrl?: string;
+  images?: string[];
   variants: CatalogVariant[];
+  minPrice?: string;
+  maxPrice?: string;
+  currency?: string;
   printAreas?: unknown[];
 }
 
