@@ -59,11 +59,11 @@ export function FulfillmentProvidersSection() {
       }
       setConnections(map);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load providers');
+      setError(err instanceof Error ? err.message : t('admin.fulfillment.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchConnections();
@@ -226,7 +226,7 @@ export function FulfillmentProvidersSection() {
                       <button
                         onClick={() => copyToClipboard(conn.webhookUrl!, `webhook-${provider.id}`)}
                         className="p-1 rounded hover:bg-muted transition-colors"
-                        title="Copy"
+                        title={t('admin.fulfillment.copy')}
                       >
                         {copiedField === `webhook-${provider.id}` ? (
                           <CheckCircle className="w-3.5 h-3.5 text-green-500" />
@@ -315,7 +315,7 @@ export function FulfillmentProvidersSection() {
                       onClick={() => setExpandedProvider(null)}
                       className="px-4 py-2 text-sm rounded-md border hover:bg-muted transition-colors"
                     >
-                      Cancel
+                      {t('admin.fulfillment.cancel')}
                     </button>
                     <a
                       href={provider.docsUrl}
@@ -341,7 +341,7 @@ export function FulfillmentProvidersSection() {
                       onClick={() => setExpandedProvider(provider.id)}
                       className="px-3 py-1.5 text-sm rounded-md border hover:bg-muted transition-colors"
                     >
-                      Reconnect
+                      {t('admin.fulfillment.reconnect')}
                     </button>
                     <button
                       onClick={() => setDisconnectTarget(provider.id)}
@@ -386,7 +386,9 @@ export function FulfillmentProvidersSection() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={disconnecting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={disconnecting}>
+              {t('admin.fulfillment.cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDisconnect}
               disabled={disconnecting}
