@@ -33,10 +33,10 @@ export function ProductImportPanel({
   const lowestCost = useMemo(() => {
     const selected = product.variants.filter(v => selectedVariantIds.has(v.id));
     if (selected.length === 0) return 0;
-    return Math.min(...selected.map(v => v.price));
+    return Math.min(...selected.map(v => parseFloat(v.price) || 0));
   }, [product.variants, selectedVariantIds]);
 
-  const currency = product.variants[0]?.currency ?? 'USD';
+  const currency = product.currency ?? product.variants[0]?.currency ?? 'USD';
   const retailPrice = lowestCost * (1 + markup / 100);
   const profit = retailPrice - lowestCost;
 
@@ -67,7 +67,7 @@ export function ProductImportPanel({
       const res = await fulfillmentApi.importFulfillmentProduct(providerID, {
         productId: product.id,
         variantIds: [...selectedVariantIds],
-        retailMarkup: markup,
+        retailMarkup: 1 + markup / 100,
         title: customTitle.trim() || undefined,
         tags: tags
           .split(',')
@@ -117,10 +117,10 @@ export function ProductImportPanel({
       {/* Product preview */}
       <div className="flex gap-4">
         <div className="w-24 h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-          {product.thumbnailUrl ? (
+          {product.imageUrl ? (
             <img
-              src={product.thumbnailUrl}
-              alt={product.name}
+              src={product.imageUrl}
+              alt={product.title}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -130,7 +130,7 @@ export function ProductImportPanel({
           )}
         </div>
         <div className="min-w-0">
-          <h4 className="font-medium">{product.name}</h4>
+          <h4 className="font-medium">{product.title}</h4>
           {product.description && (
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
           )}
@@ -166,7 +166,7 @@ export function ProductImportPanel({
               {t('admin.fulfillment.importSupplierCost')}
             </span>
             <span>
-              {(lowestCost / 100).toFixed(2)} {currency}
+              {lowestCost.toFixed(2)} {currency}
             </span>
           </div>
           <div className="flex justify-between text-sm">
@@ -174,13 +174,13 @@ export function ProductImportPanel({
               {t('admin.fulfillment.importRetailPrice')}
             </span>
             <span className="font-medium">
-              {(retailPrice / 100).toFixed(2)} {currency}
+              {retailPrice.toFixed(2)} {currency}
             </span>
           </div>
           <div className="flex justify-between text-sm border-t pt-2">
             <span className="text-muted-foreground">{t('admin.fulfillment.importProfit')}</span>
             <span className="font-medium text-green-600 dark:text-green-400">
-              +{(profit / 100).toFixed(2)} {currency}
+              +{profit.toFixed(2)} {currency}
             </span>
           </div>
         </div>
@@ -212,9 +212,9 @@ export function ProductImportPanel({
                   onChange={() => toggleVariant(variant.id)}
                   className="rounded border-gray-300"
                 />
-                <span className="flex-1 truncate">{variant.name}</span>
+                <span className="flex-1 truncate">{variant.title}</span>
                 <span className="text-muted-foreground text-xs">
-                  {(variant.price / 100).toFixed(2)} {variant.currency}
+                  {parseFloat(variant.price).toFixed(2)} {variant.currency}
                 </span>
                 {variant.inStock ? (
                   <span className="text-xs text-green-600">In stock</span>
@@ -237,7 +237,7 @@ export function ProductImportPanel({
             type="text"
             value={customTitle}
             onChange={e => setCustomTitle(e.target.value)}
-            placeholder={product.name}
+            placeholder={product.title}
             className="w-full px-3 py-2 rounded-md border bg-background text-sm"
           />
         </div>

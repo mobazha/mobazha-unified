@@ -157,10 +157,9 @@ export function CatalogBrowserDialog({
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 py-2">
                 {products.map(product => {
                   const isImported = importedSlugs.has(product.id);
-                  const lowestPrice = product.variants.length
-                    ? Math.min(...product.variants.map(v => v.price))
-                    : 0;
-                  const currency = product.variants[0]?.currency ?? 'USD';
+                  const prices = product.variants.map(v => parseFloat(v.price) || 0);
+                  const lowestPrice = prices.length ? Math.min(...prices) : 0;
+                  const currency = product.currency ?? product.variants[0]?.currency ?? 'USD';
 
                   return (
                     <button
@@ -175,10 +174,10 @@ export function CatalogBrowserDialog({
                         </div>
                       )}
                       <div className="aspect-square rounded-md bg-muted mb-2 overflow-hidden">
-                        {product.thumbnailUrl ? (
+                        {product.imageUrl ? (
                           <img
-                            src={product.thumbnailUrl}
-                            alt={product.name}
+                            src={product.imageUrl}
+                            alt={product.title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -188,7 +187,7 @@ export function CatalogBrowserDialog({
                         )}
                       </div>
                       <div className="text-sm font-medium line-clamp-2 leading-tight">
-                        {product.name}
+                        {product.title}
                       </div>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-xs text-muted-foreground">
@@ -199,7 +198,7 @@ export function CatalogBrowserDialog({
                         {lowestPrice > 0 && (
                           <span className="text-xs font-medium">
                             {t('admin.fulfillment.catalogPrice', {
-                              price: `${(lowestPrice / 100).toFixed(2)} ${currency}`,
+                              price: `${lowestPrice.toFixed(2)} ${currency}`,
                             })}
                           </span>
                         )}
