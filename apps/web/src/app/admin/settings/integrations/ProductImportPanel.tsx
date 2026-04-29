@@ -90,7 +90,7 @@ export function ProductImportPanel({
         <div className="text-center">
           <p className="font-medium text-lg">{t('admin.fulfillment.importSuccess')}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            {result.variantsCount} variant(s) imported
+            {t('admin.fulfillment.importedCount', { count: String(result.variantsCount) })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -105,7 +105,7 @@ export function ProductImportPanel({
             onClick={onCancel}
             className="px-4 py-2 text-sm rounded-md border hover:bg-muted transition-colors"
           >
-            Back to catalog
+            {t('admin.fulfillment.backToCatalog')}
           </button>
         </div>
       </div>
@@ -134,7 +134,9 @@ export function ProductImportPanel({
           {product.description && (
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{product.description}</p>
           )}
-          <p className="text-sm mt-1">{product.variants.length} variant(s) available</p>
+          <p className="text-sm mt-1">
+            {t('admin.fulfillment.variantsAvailable', { count: String(product.variants.length) })}
+          </p>
         </div>
       </div>
 
@@ -217,9 +219,11 @@ export function ProductImportPanel({
                   {parseFloat(variant.price).toFixed(2)} {variant.currency}
                 </span>
                 {variant.inStock ? (
-                  <span className="text-xs text-green-600">In stock</span>
+                  <span className="text-xs text-green-600">{t('admin.fulfillment.inStock')}</span>
                 ) : (
-                  <span className="text-xs text-yellow-600">Out of stock</span>
+                  <span className="text-xs text-yellow-600">
+                    {t('admin.fulfillment.outOfStock')}
+                  </span>
                 )}
               </label>
             ))}
@@ -249,7 +253,7 @@ export function ProductImportPanel({
             type="text"
             value={tags}
             onChange={e => setTags(e.target.value)}
-            placeholder="apparel, t-shirt, custom"
+            placeholder={t('admin.fulfillment.tagsPlaceholder')}
             className="w-full px-3 py-2 rounded-md border bg-background text-sm"
           />
         </div>
@@ -276,7 +280,7 @@ export function ProductImportPanel({
           disabled={importing}
           className="px-4 py-2 text-sm rounded-md border hover:bg-muted transition-colors"
         >
-          Cancel
+          {t('admin.fulfillment.cancel')}
         </button>
       </div>
     </div>

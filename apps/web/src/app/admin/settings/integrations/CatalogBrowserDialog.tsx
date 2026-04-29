@@ -217,7 +217,10 @@ export function CatalogBrowserDialog({
                     className="px-4 py-2 text-sm rounded-md border hover:bg-muted transition-colors flex items-center gap-2"
                   >
                     {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    Load more ({products.length} / {total})
+                    {t('admin.fulfillment.loadMore', {
+                      loaded: String(products.length),
+                      total: String(total),
+                    })}
                   </button>
                 </div>
               )}

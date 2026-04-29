@@ -63,13 +63,8 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
     return (
       <div className="text-center py-6 text-muted-foreground">
         <Package className="w-6 h-6 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">
-          {t('admin.fulfillment.noSyncedProducts') || 'No synced products yet'}
-        </p>
-        <p className="text-xs mt-1">
-          {t('admin.fulfillment.noSyncedProductsDesc') ||
-            'Import products from the catalog to get started'}
-        </p>
+        <p className="text-sm">{t('admin.fulfillment.noSyncedProducts')}</p>
+        <p className="text-xs mt-1">{t('admin.fulfillment.noSyncedProductsDesc')}</p>
       </div>
     );
   }
@@ -78,7 +73,7 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium">
-          {t('admin.fulfillment.syncedProducts') || 'Synced Products'} ({products.length})
+          {t('admin.fulfillment.syncedProducts')} ({products.length})
         </h4>
       </div>
 
@@ -93,13 +88,22 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
                 >
                   {product.listingSlug}
                 </Link>
-                {statusBadge(product.status)}
+                {statusBadge(product.status, t)}
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                <span>Cost: {(parseFloat(product.supplierCost) / 100).toFixed(2)}</span>
-                <span>Retail: {(parseFloat(product.retailPrice) / 100).toFixed(2)}</span>
+                <span>
+                  {t('admin.fulfillment.syncedCost')}:{' '}
+                  {(parseFloat(product.supplierCost) / 100).toFixed(2)}
+                </span>
+                <span>
+                  {t('admin.fulfillment.syncedRetail')}:{' '}
+                  {(parseFloat(product.retailPrice) / 100).toFixed(2)}
+                </span>
                 {product.lastSyncAt && (
-                  <span>Synced: {new Date(product.lastSyncAt).toLocaleDateString()}</span>
+                  <span>
+                    {t('admin.fulfillment.syncedAt')}:{' '}
+                    {new Date(product.lastSyncAt).toLocaleDateString()}
+                  </span>
                 )}
               </div>
             </div>
@@ -109,7 +113,7 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
                 onClick={() => handleSync(product.listingSlug)}
                 disabled={syncing === product.listingSlug}
                 className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                title="Sync now"
+                title={t('admin.fulfillment.syncNow')}
               >
                 {syncing === product.listingSlug ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -121,7 +125,7 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
                 href={`/product/${product.listingSlug}`}
                 target="_blank"
                 className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                title="View listing"
+                title={t('admin.fulfillment.viewListing')}
               >
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
@@ -133,25 +137,25 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
   );
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case 'synced':
       return (
         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-          Synced
+          {t('admin.fulfillment.statusSynced')}
         </span>
       );
     case 'pending':
       return (
         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-          Pending
+          {t('admin.fulfillment.statusPending')}
         </span>
       );
     case 'error':
       return (
         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
           <AlertCircle className="w-3 h-3" />
-          Error
+          {t('admin.fulfillment.statusError')}
         </span>
       );
     default:

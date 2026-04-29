@@ -78,9 +78,7 @@ export function FulfillmentStatusCard({ orderId, className }: FulfillmentStatusC
       <div className={cn('rounded-lg border p-4', className)}>
         <div className="flex items-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
-            {t('order.fulfillment.loading') || 'Loading fulfillment status...'}
-          </span>
+          <span className="text-sm text-muted-foreground">{t('order.fulfillment.loading')}</span>
         </div>
       </div>
     );
@@ -96,9 +94,7 @@ export function FulfillmentStatusCard({ orderId, className }: FulfillmentStatusC
     <div className={cn('rounded-lg border p-4', className)}>
       <div className="flex items-center gap-2 mb-3">
         <Package className="w-4 h-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold">
-          {t('order.fulfillment.title') || 'Supplier Fulfillment'}
-        </h3>
+        <h3 className="text-sm font-semibold">{t('order.fulfillment.title')}</h3>
       </div>
 
       <div className="flex items-center gap-3 mb-3">
@@ -155,7 +151,7 @@ export function FulfillmentStatusCard({ orderId, className }: FulfillmentStatusC
       {fulfillment.costs && (
         <div className="mt-3 pt-3 border-t text-xs text-muted-foreground flex items-center gap-3">
           <span>
-            {t('order.fulfillment.supplierCost') || 'Supplier cost'}:{' '}
+            {t('order.fulfillment.supplierCost')}:{' '}
             <span className="font-medium text-foreground">
               {fulfillment.costs.currency ? `${fulfillment.costs.currency} ` : ''}
               {fulfillment.costs.total}
