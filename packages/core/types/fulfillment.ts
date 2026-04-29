@@ -72,8 +72,8 @@ export interface ImportResult {
   listingSlug: string;
   syncProductId: string;
   variantsCount: number;
-  retailPrice: number;
-  supplierCost: number;
+  retailPrice: string;
+  supplierCost: string;
 }
 
 export interface SyncedProduct {
@@ -84,8 +84,8 @@ export interface SyncedProduct {
   syncProductId: string;
   status: string;
   lastSyncAt?: string;
-  supplierCost: number;
-  retailPrice: number;
+  supplierCost: string;
+  retailPrice: string;
 }
 
 export interface SyncStatus {
