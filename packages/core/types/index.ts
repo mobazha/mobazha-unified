@@ -392,5 +392,27 @@ export type {
   BotWebhookStatus,
 } from './salesChannels';
 
+// Fulfillment provider types (Supply Chain FF-1d)
+export type {
+  FulfillmentProviderStatus,
+  ProviderConnection,
+  ConnectProviderCredentials,
+  ConnectProviderRequest,
+  CatalogVariant,
+  CatalogProduct,
+  CatalogPage,
+  ImportProductRequest,
+  ImportResult,
+  SyncedProduct,
+  SyncStatus,
+  FulfillmentProviderID,
+  FulfillmentStatus,
+  FulfillmentShipment,
+  FulfillmentCosts,
+  FulfillmentOrder,
+} from './fulfillment';
+
+export { FULFILLMENT_PROVIDERS } from './fulfillment';
+
 // OpenAPI auto-generated types (from hosting openapi.yaml)
 export type { paths as ApiPaths, components as ApiComponents } from './api-generated';

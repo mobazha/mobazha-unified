@@ -147,6 +147,9 @@ export * as notificationChannelsApi from './notificationChannels';
 // 法币支付 API
 export * as fiatApi from './fiat';
 
+// 履约供应商 API (Supply Chain FF-1d)
+export * as fulfillmentApi from './fulfillment';
+
 // Storefront Config API (PG-201)
 export * as storefrontApi from './storefront';
 

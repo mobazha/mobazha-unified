@@ -13,6 +13,7 @@ import {
   isOrderShipped,
   ordersApi,
   disputesApi,
+  useFeature,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
@@ -49,6 +50,7 @@ import {
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
+import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
@@ -59,6 +61,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
+  const supplyChainEnabled = useFeature('supplyChainEnabled');
 
   const {
     displayOrder,
@@ -493,6 +496,10 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 />
                 <OrderMemoCard displayOrder={displayOrder} className="mb-4" />
                 <OrderShippingCard displayOrder={displayOrder} />
+
+                {supplyChainEnabled && displayOrder.userRole === 'seller' && (
+                  <FulfillmentStatusCard orderId={orderId} className="mb-4" />
+                )}
 
                 {/* Participants — inline within the card for cohesive layout */}
                 <OrderCounterpartyCard

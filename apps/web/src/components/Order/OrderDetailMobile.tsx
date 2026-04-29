@@ -18,6 +18,7 @@ import {
   getActionButtonConfig,
   ordersApi,
   disputesApi,
+  useFeature,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
@@ -56,6 +57,7 @@ import {
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
+import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -112,6 +114,7 @@ export interface OrderDetailMobileProps {
 export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobileProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const supplyChainEnabled = useFeature('supplyChainEnabled');
 
   const {
     displayOrder,
@@ -698,6 +701,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 <OrderShippingCard displayOrder={displayOrder} />
               </div>
             )}
+
+          {/* 7.5. Fulfillment status — seller-only, supply-chain orders */}
+          {supplyChainEnabled && displayOrder.userRole === 'seller' && (
+            <FulfillmentStatusCard orderId={orderId} />
+          )}
 
           {/* 8. Parties — buyer (seller view) + moderator */}
           {((displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID) ||
