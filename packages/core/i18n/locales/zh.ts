@@ -4311,6 +4311,7 @@ export const zh: TranslationResource = {
       tabNotifications: '通知',
       tabWebhooks: 'Webhook',
       tabAI: 'AI 助手',
+      tabFulfillment: '履约服务',
       channels: '通知渠道',
       channelsDesc: '通过 Telegram、Discord 等接收店铺事件通知',
       addChannel: '添加渠道',

@@ -279,6 +279,19 @@ export const NODE_API = {
   GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${token}/complete`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
 
+  // --- Fulfillment (Supply Chain) ---
+  FULFILLMENT_PROVIDERS: '/fulfillment/providers',
+  FULFILLMENT_CONNECT: (providerID: string) => `/fulfillment/${providerID}/connect`,
+  FULFILLMENT_DISCONNECT: (providerID: string) => `/fulfillment/${providerID}/disconnect`,
+  FULFILLMENT_STATUS: (providerID: string) => `/fulfillment/${providerID}/status`,
+  FULFILLMENT_CATALOG: (providerID: string) => `/fulfillment/${providerID}/catalog`,
+  FULFILLMENT_CATALOG_PRODUCT: (providerID: string, productID: string) =>
+    `/fulfillment/${providerID}/catalog/${productID}`,
+  FULFILLMENT_IMPORT: (providerID: string) => `/fulfillment/${providerID}/import`,
+  FULFILLMENT_SYNCED_PRODUCTS: (providerID: string) => `/fulfillment/${providerID}/synced-products`,
+  FULFILLMENT_SYNC_PRODUCT: (slug: string) => `/fulfillment/products/${slug}/sync`,
+  FULFILLMENT_ORDER_STATUS: (orderID: string) => `/fulfillment/orders/${orderID}/status`,
+
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',

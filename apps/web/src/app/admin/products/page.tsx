@@ -1,9 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getImageUrl,
+  useFeature,
+  fulfillmentApi,
+  FULFILLMENT_PROVIDERS,
+} from '@mobazha/core';
 import { productDataService } from '@mobazha/core';
-import type { ProductListItem } from '@mobazha/core';
+import type { ProductListItem, SyncedProduct } from '@mobazha/core';
 import {
   Package,
   Plus,
@@ -85,8 +92,10 @@ export default function AdminProductsPage() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { isEmbeddedApp } = usePlatform();
+  const supplyChainEnabled = useFeature('supplyChainEnabled');
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncedSlugs, setSyncedSlugs] = useState<Map<string, string>>(new Map());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -116,6 +125,24 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    if (!supplyChainEnabled) return;
+    (async () => {
+      const map = new Map<string, string>();
+      for (const p of FULFILLMENT_PROVIDERS) {
+        try {
+          const synced = await fulfillmentApi.getSyncedProducts(p.id);
+          for (const sp of synced) {
+            map.set(sp.listingSlug, p.name);
+          }
+        } catch {
+          // provider might not be connected
+        }
+      }
+      setSyncedSlugs(map);
+    })();
+  }, [supplyChainEnabled]);
 
   const getEffectiveStatus = useCallback((p: ProductListItem) => p.status ?? 'published', []);
 
@@ -235,6 +262,17 @@ export default function AdminProductsPage() {
     const code = price.currency?.code || price.currencyCode || 'USD';
     const standardAmount = fromMinimalUnit(price.amount, code);
     return formatPrice(standardAmount, code);
+  }
+
+  function fulfillmentBadge(slug: string) {
+    const provider = syncedSlugs.get(slug);
+    if (!provider) return null;
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+        <Package className="w-3 h-3" />
+        {provider}
+      </span>
+    );
   }
 
   function contractTypeLabel(type?: string): string {
@@ -446,6 +484,7 @@ export default function AdminProductsPage() {
                       {renderPrice(product.price)}
                     </span>
                     {statusBadge(product.status)}
+                    {fulfillmentBadge(product.slug)}
                     {product.quantity !== undefined && product.quantity !== null && (
                       <span
                         className={cn(
@@ -557,7 +596,10 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      {statusBadge(product.status)}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {statusBadge(product.status)}
+                        {fulfillmentBadge(product.slug)}
+                      </div>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -630,6 +672,7 @@ export default function AdminProductsPage() {
                     {renderPrice(product.price)}
                   </span>
                   {statusBadge(product.status)}
+                  {fulfillmentBadge(product.slug)}
                   {product.quantity !== undefined && product.quantity !== null && (
                     <span
                       className={cn(
