@@ -96,8 +96,8 @@ export function SyncedProductsList({ providerID, providerName }: SyncedProductsL
                 {statusBadge(product.status)}
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                <span>Cost: {(product.supplierCost / 100).toFixed(2)}</span>
-                <span>Retail: {(product.retailPrice / 100).toFixed(2)}</span>
+                <span>Cost: {(parseFloat(product.supplierCost) / 100).toFixed(2)}</span>
+                <span>Retail: {(parseFloat(product.retailPrice) / 100).toFixed(2)}</span>
                 {product.lastSyncAt && (
                   <span>Synced: {new Date(product.lastSyncAt).toLocaleDateString()}</span>
                 )}
