@@ -5203,6 +5203,7 @@ export const en: TranslationResource = {
       noProvidersDesc: 'Connect a provider to enable automatic order fulfillment',
       learnMore: 'Learn more',
       viewDashboard: 'Open Dashboard',
+      openSourcingHub: 'Open Sourcing Hub',
       browseCatalog: 'Browse Catalog',
       catalogTitle: 'Product Catalog',
       catalogSearch: 'Search products...',
