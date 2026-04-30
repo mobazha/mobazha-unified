@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, Package, CheckCircle, ExternalLink } from 'lucide-r
 import { useI18n, fulfillmentApi } from '@mobazha/core';
 import type { CatalogVariant, StoreSyncVariant } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
+import { PricingCalculator } from '../components/PricingCalculator';
 
 type Variant = CatalogVariant | StoreSyncVariant;
 
@@ -80,10 +81,6 @@ export function ImportPageLayout({
     if (selected.length === 0) return 0;
     return Math.min(...selected.map(getVariantPrice));
   }, [variants, selectedVariantIds]);
-
-  const retailPrice = lowestCost * (1 + markup / 100);
-  const profit = retailPrice - lowestCost;
-  const margin = retailPrice > 0 ? (profit / retailPrice) * 100 : 0;
 
   const toggleVariant = (id: string) => {
     setSelectedVariantIds(prev => {
@@ -277,63 +274,12 @@ export function ImportPageLayout({
       )}
 
       {/* Pricing Strategy */}
-      <section className="rounded-lg border p-5">
-        <h3 className="font-medium mb-4">{t('admin.sourcing.pricingStrategy')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              {t('admin.sourcing.markupLabel')}
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={0}
-                max={200}
-                value={markup}
-                onChange={e => setMarkup(Number(e.target.value))}
-                className="flex-1"
-              />
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={markup}
-                  onChange={e => setMarkup(Math.max(0, Number(e.target.value)))}
-                  min={0}
-                  max={500}
-                  className="w-16 px-2 py-1.5 rounded-md border bg-background text-sm text-right"
-                />
-                <span className="text-sm text-muted-foreground">%</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">{t('admin.sourcing.markupHint')}</p>
-          </div>
-
-          <div className="space-y-2.5 p-4 rounded-lg bg-muted/50">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('admin.sourcing.supplierCost')}</span>
-              <span>
-                {lowestCost.toFixed(2)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('admin.sourcing.retailPriceLabel')}</span>
-              <span className="font-medium">
-                {retailPrice.toFixed(2)} {currency}
-              </span>
-            </div>
-            <div className="border-t pt-2 flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('admin.sourcing.yourProfit')}</span>
-              <span className="font-medium text-green-600 dark:text-green-400">
-                +{profit.toFixed(2)} {currency}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('admin.sourcing.margin')}</span>
-              <span className="text-muted-foreground">{margin.toFixed(1)}%</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingCalculator
+        supplierCost={lowestCost}
+        currency={currency}
+        markup={markup}
+        onMarkupChange={setMarkup}
+      />
 
       {/* Listing Details */}
       <section className="rounded-lg border p-5">
