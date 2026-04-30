@@ -348,6 +348,19 @@ const routes: RouteObject[] = [
         path: 'settings/access-control/requests',
         element: lazyPage(() => import('./app/admin/settings/access-control/requests/page')),
       },
+      { path: 'sourcing', element: lazyPage(() => import('./app/admin/sourcing/page')) },
+      {
+        path: 'sourcing/catalog',
+        element: lazyPage(() => import('./app/admin/sourcing/catalog/page')),
+      },
+      {
+        path: 'sourcing/designs',
+        element: lazyPage(() => import('./app/admin/sourcing/designs/page')),
+      },
+      {
+        path: 'sourcing/products',
+        element: lazyPage(() => import('./app/admin/sourcing/products/page')),
+      },
       { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
       { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
     ],
