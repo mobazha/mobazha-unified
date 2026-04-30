@@ -136,33 +136,40 @@ export function SyncProductImportPanel({
         </div>
       </div>
 
-      {/* Mockup previews (if available) */}
+      {/* Mockup previews (deduplicated by URL) */}
       {variants.some(v => v.previewUrl) && (
         <div>
           <label className="text-sm font-medium mb-2 block">
             {t('admin.fulfillment.designPreviews')}
           </label>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {variants
-              .filter(v => v.previewUrl)
-              .slice(0, 8)
-              .map(v => {
-                const isActive = activePreview === v.previewUrl;
-                return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    onClick={() => setActivePreview(isActive ? null : v.previewUrl!)}
-                    className={`w-20 h-20 rounded-md bg-muted overflow-hidden flex-shrink-0 border-2 transition-colors cursor-pointer ${
-                      isActive
-                        ? 'border-primary ring-1 ring-primary'
-                        : 'border-muted hover:border-muted-foreground/30'
-                    }`}
-                  >
-                    <img src={v.previewUrl} alt={v.name} className="w-full h-full object-cover" />
-                  </button>
-                );
-              })}
+            {(() => {
+              const seen = new Set<string>();
+              return variants
+                .filter(v => {
+                  if (!v.previewUrl || seen.has(v.previewUrl)) return false;
+                  seen.add(v.previewUrl);
+                  return true;
+                })
+                .slice(0, 8)
+                .map(v => {
+                  const isActive = activePreview === v.previewUrl;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setActivePreview(isActive ? null : v.previewUrl!)}
+                      className={`w-20 h-20 rounded-md bg-muted overflow-hidden flex-shrink-0 border-2 transition-colors cursor-pointer ${
+                        isActive
+                          ? 'border-primary ring-1 ring-primary'
+                          : 'border-muted hover:border-muted-foreground/30'
+                      }`}
+                    >
+                      <img src={v.previewUrl} alt={v.name} className="w-full h-full object-cover" />
+                    </button>
+                  );
+                });
+            })()}
           </div>
         </div>
       )}
