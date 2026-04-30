@@ -407,6 +407,7 @@ export type {
   SyncStatus,
   FulfillmentProviderID,
   FulfillmentStatus,
+  FulfillmentFailureReason,
   FulfillmentShipment,
   FulfillmentCosts,
   FulfillmentOrder,
