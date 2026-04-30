@@ -11,8 +11,9 @@ import {
   EyeOff,
   Package,
   Copy,
-  Palette,
+  ArrowRight,
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ErrorAlert } from '@/components/ui/error-alert';
 import {
@@ -27,9 +28,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
-import { CatalogBrowserDialog } from './CatalogBrowserDialog';
-import { StoreSyncBrowserDialog } from './StoreSyncBrowserDialog';
-import { SyncedProductsList } from './SyncedProductsList';
 
 interface ProviderFormValues {
   apiKey: string;
@@ -48,8 +46,6 @@ export function FulfillmentProvidersSection() {
   const [disconnectTarget, setDisconnectTarget] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [catalogProvider, setCatalogProvider] = useState<string | null>(null);
-  const [designsProvider, setDesignsProvider] = useState<string | null>(null);
 
   const fetchConnections = useCallback(async () => {
     try {
@@ -240,20 +236,14 @@ export function FulfillmentProvidersSection() {
                     </div>
                   )}
                   <div className="flex items-center gap-2 mt-2">
-                    <button
-                      onClick={() => setCatalogProvider(provider.id)}
+                    <Link
+                      href="/admin/sourcing"
                       className="px-3 py-1.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1"
                     >
                       <Package className="w-3.5 h-3.5" />
-                      {t('admin.fulfillment.browseCatalog')}
-                    </button>
-                    <button
-                      onClick={() => setDesignsProvider(provider.id)}
-                      className="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-muted transition-colors flex items-center gap-1"
-                    >
-                      <Palette className="w-3.5 h-3.5" />
-                      {t('admin.fulfillment.myDesigns')}
-                    </button>
+                      {t('admin.fulfillment.openSourcingHub')}
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
                     <a
                       href={provider.docsUrl}
                       target="_blank"
@@ -263,10 +253,6 @@ export function FulfillmentProvidersSection() {
                       {t('admin.fulfillment.viewDashboard')}
                       <ExternalLink className="w-3 h-3" />
                     </a>
-                  </div>
-
-                  <div className="mt-3 pt-3 border-t border-green-200/50 dark:border-green-800/50">
-                    <SyncedProductsList providerID={provider.id} providerName={provider.name} />
                   </div>
                 </div>
               )}
@@ -366,30 +352,6 @@ export function FulfillmentProvidersSection() {
           );
         })}
       </div>
-
-      {/* Catalog browser dialog */}
-      {catalogProvider && (
-        <CatalogBrowserDialog
-          providerID={catalogProvider}
-          providerName={
-            FULFILLMENT_PROVIDERS.find(p => p.id === catalogProvider)?.name ?? catalogProvider
-          }
-          open={!!catalogProvider}
-          onOpenChange={open => !open && setCatalogProvider(null)}
-        />
-      )}
-
-      {/* My Designs browser dialog */}
-      {designsProvider && (
-        <StoreSyncBrowserDialog
-          providerID={designsProvider}
-          providerName={
-            FULFILLMENT_PROVIDERS.find(p => p.id === designsProvider)?.name ?? designsProvider
-          }
-          open={!!designsProvider}
-          onOpenChange={open => !open && setDesignsProvider(null)}
-        />
-      )}
 
       {/* Disconnect confirmation dialog */}
       <AlertDialog
