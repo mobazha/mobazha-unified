@@ -15,6 +15,8 @@ import type {
   ConnectProviderRequest,
   CatalogPage,
   CatalogProduct,
+  StoreSyncPage,
+  StoreSyncProduct,
   ImportProductRequest,
   ImportResult,
   SyncedProduct,
@@ -69,6 +71,38 @@ export async function importFulfillmentProduct(
   params: ImportProductRequest
 ): Promise<ImportResult> {
   return authPost<ImportResult>(NODE_API.FULFILLMENT_IMPORT(providerID), params);
+}
+
+export async function getStoreSyncProducts(
+  providerID: string,
+  opts?: { offset?: number; limit?: number }
+): Promise<StoreSyncPage> {
+  const params = new URLSearchParams();
+  if (opts?.offset != null) params.set('offset', String(opts.offset));
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  const path = `${NODE_API.FULFILLMENT_STORE_PRODUCTS(providerID)}${qs ? `?${qs}` : ''}`;
+  return authGet<StoreSyncPage>(path);
+}
+
+export async function getStoreSyncProduct(
+  providerID: string,
+  syncProductID: string
+): Promise<StoreSyncProduct> {
+  return authGet<StoreSyncProduct>(NODE_API.FULFILLMENT_STORE_PRODUCT(providerID, syncProductID));
+}
+
+export async function importStoreSyncProduct(
+  providerID: string,
+  syncProductID: string,
+  params?: { retailMarkup?: number; title?: string; tags?: string[] }
+): Promise<ImportResult> {
+  return authPost<ImportResult>(NODE_API.FULFILLMENT_IMPORT(providerID), {
+    syncProductId: syncProductID,
+    retailMarkup: params?.retailMarkup,
+    title: params?.title,
+    tags: params?.tags,
+  });
 }
 
 export async function getSyncedProducts(providerID: string): Promise<SyncedProduct[]> {
