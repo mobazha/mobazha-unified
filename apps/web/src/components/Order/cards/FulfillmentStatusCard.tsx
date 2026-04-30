@@ -51,6 +51,11 @@ const STATUS_CONFIG: Record<
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-100 dark:bg-red-900/30',
   },
+  supplier_loss: {
+    icon: AlertCircle,
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+  },
 };
 
 export function FulfillmentStatusCard({ orderId, className }: FulfillmentStatusCardProps) {

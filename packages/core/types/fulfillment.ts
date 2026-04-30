@@ -102,7 +102,8 @@ export type FulfillmentStatus =
   | 'shipped'
   | 'delivered'
   | 'canceled'
-  | 'failed';
+  | 'failed'
+  | 'supplier_loss';
 
 export interface FulfillmentShipment {
   id: string;
