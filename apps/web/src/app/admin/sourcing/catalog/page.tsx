@@ -2,24 +2,26 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Search, Loader2, Package } from 'lucide-react';
+import { Search, Loader2, Package } from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { CatalogProduct, ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
-import { ProductImportPanel } from '../../settings/integrations/ProductImportPanel';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 
 function CatalogProductCard({
   product,
-  onImport,
+  providerID,
 }: {
   product: CatalogProduct;
-  onImport: (product: CatalogProduct) => void;
+  providerID: string;
 }) {
   const { t } = useI18n();
   const priceDisplay = product.minPrice ? `$${parseFloat(product.minPrice).toFixed(2)}+` : '';
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors group">
+    <Link
+      href={`/admin/sourcing/import/catalog/${providerID}/${product.id}`}
+      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors group block"
+    >
       <div className="aspect-square bg-muted relative">
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
@@ -36,15 +38,12 @@ function CatalogProductCard({
         </p>
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-primary">{priceDisplay}</span>
-          <button
-            onClick={() => onImport(product)}
-            className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 opacity-0 group-hover:opacity-100 transition-all"
-          >
+          <span className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all">
             {t('admin.sourcing.import')}
-          </button>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -64,7 +63,6 @@ function AdminSourcingCatalogContent() {
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [importProduct, setImportProduct] = useState<CatalogProduct | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -101,30 +99,6 @@ function AdminSourcingCatalogContent() {
   }, [selectedProvider, fetchCatalog]);
 
   const connectedProviders = connections.filter(c => c.status === 'connected');
-
-  if (importProduct && selectedProvider) {
-    return (
-      <div data-testid="admin-sourcing-catalog-import">
-        <div className="flex items-center gap-2 mb-6">
-          <button
-            onClick={() => setImportProduct(null)}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            {t('admin.sourcing.backToCatalog')}
-          </button>
-        </div>
-        <ProductImportPanel
-          providerID={selectedProvider}
-          product={importProduct}
-          onSuccess={_slug => {
-            setImportProduct(null);
-          }}
-          onCancel={() => setImportProduct(null)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div data-testid="admin-sourcing-catalog">
@@ -202,7 +176,7 @@ function AdminSourcingCatalogContent() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {catalog.map(product => (
-            <CatalogProductCard key={product.id} product={product} onImport={setImportProduct} />
+            <CatalogProductCard key={product.id} product={product} providerID={selectedProvider} />
           ))}
         </div>
       )}
