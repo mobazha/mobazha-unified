@@ -27,6 +27,7 @@ import {
   Server,
   Store,
   Bot,
+  Compass,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -61,6 +62,13 @@ const baseNavItems: NavItem[] = [
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
 ];
 
+const sourcingNavItem: NavItem = {
+  id: 'sourcing',
+  labelKey: 'admin.nav.sourcing',
+  href: '/admin/sourcing',
+  icon: Compass,
+};
+
 const storefrontsNavItem: NavItem = {
   id: 'storefronts',
   labelKey: 'admin.nav.storefronts',
@@ -73,14 +81,28 @@ const standaloneNavItems: NavItem[] = [
   { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
 ];
 
-function getNavItems(storefrontsEnabled: boolean): NavItem[] {
-  const base = isStandalone() ? standaloneNavItems : baseNavItems;
-  if (!storefrontsEnabled) return base;
-  // Inject "Storefronts" right after the single-storefront "Storefront"
-  // branding editor so both live together in the navigation.
-  const idx = base.findIndex(item => item.id === 'storefront');
-  if (idx < 0) return [...base, storefrontsNavItem];
-  return [...base.slice(0, idx + 1), storefrontsNavItem, ...base.slice(idx + 1)];
+function getNavItems(storefrontsEnabled: boolean, supplyChainEnabled: boolean): NavItem[] {
+  const items = isStandalone() ? [...standaloneNavItems] : [...baseNavItems];
+
+  if (supplyChainEnabled) {
+    const collectionsIdx = items.findIndex(item => item.id === 'collections');
+    if (collectionsIdx >= 0) {
+      items.splice(collectionsIdx + 1, 0, sourcingNavItem);
+    } else {
+      items.push(sourcingNavItem);
+    }
+  }
+
+  if (storefrontsEnabled) {
+    const idx = items.findIndex(item => item.id === 'storefront');
+    if (idx < 0) {
+      items.push(storefrontsNavItem);
+    } else {
+      items.splice(idx + 1, 0, storefrontsNavItem);
+    }
+  }
+
+  return items;
 }
 
 interface AdminSidebarProps {
@@ -95,6 +117,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   const standaloneMode = useStorefrontMode();
   const { isEnabled } = useFeatureFlags();
   const storefrontsEnabled = isEnabled('storefrontsEnabled', 'killStorefrontRoutingDisabled');
+  const supplyChainEnabled = isEnabled('supplyChainEnabled');
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
@@ -140,7 +163,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-        {getNavItems(storefrontsEnabled).map(item => {
+        {getNavItems(storefrontsEnabled, supplyChainEnabled).map(item => {
           const Icon = item.icon;
           const active = isActive(item.href);
           return (
