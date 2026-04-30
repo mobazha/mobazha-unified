@@ -9,11 +9,12 @@ import {
   Clock,
   ExternalLink,
   AlertCircle,
+  AlertTriangle,
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n, fulfillmentApi } from '@mobazha/core';
-import type { FulfillmentOrder, FulfillmentStatus } from '@mobazha/core';
+import type { FulfillmentOrder, FulfillmentStatus, FulfillmentFailureReason } from '@mobazha/core';
 
 interface FulfillmentStatusCardProps {
   orderId: string;
@@ -95,6 +96,15 @@ export function FulfillmentStatusCard({ orderId, className }: FulfillmentStatusC
   const Icon = cfg.icon;
   const statusLabel = t(`order.fulfillment.status.${fulfillment.status}`) || fulfillment.status;
 
+  const reason = fulfillment.failureReason as FulfillmentFailureReason | undefined;
+  const reasonLabel = reason ? t(`order.fulfillment.failureReason.${reason}`) || reason : '';
+  const isManualAction = reason === 'manual_action_required';
+  const isMarginBlocked = reason === 'margin_protection_failed';
+  const willRetry = reason === 'retryable_provider_error';
+  const retryCount = fulfillment.retryCount ?? 0;
+  const maxRetries = fulfillment.maxRetries ?? 0;
+  const showRetryCounter = !!reason && maxRetries > 0;
+
   return (
     <div className={cn('rounded-lg border p-4', className)}>
       <div className="flex items-center gap-2 mb-3">
@@ -121,7 +131,45 @@ export function FulfillmentStatusCard({ orderId, className }: FulfillmentStatusC
         </div>
       </div>
 
-      {fulfillment.errorMessage && (
+      {reason && (
+        <div
+          className={cn(
+            'flex items-start gap-2 mb-3 p-2 rounded text-sm',
+            isManualAction || isMarginBlocked
+              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+              : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+          )}
+        >
+          {isManualAction || isMarginBlocked ? (
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="font-medium">{reasonLabel}</div>
+            {fulfillment.errorMessage && (
+              <div className="text-xs opacity-80 mt-0.5 break-words">
+                {fulfillment.errorMessage}
+              </div>
+            )}
+            {showRetryCounter && willRetry && (
+              <div className="text-xs mt-1">
+                {t('order.fulfillment.retryCounter', {
+                  current: retryCount,
+                  max: maxRetries,
+                })}
+                {' · '}
+                {t('order.fulfillment.retryWillBeAttempted')}
+              </div>
+            )}
+            {(isManualAction || isMarginBlocked) && (
+              <div className="text-xs mt-1">{t('order.fulfillment.manualActionHint')}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!reason && fulfillment.errorMessage && (
         <div className="flex items-start gap-2 mb-3 p-2 rounded bg-red-50 dark:bg-red-900/20 text-sm text-red-700 dark:text-red-400">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <span>{fulfillment.errorMessage}</span>

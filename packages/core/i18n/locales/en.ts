@@ -693,6 +693,10 @@ export const en: TranslationResource = {
       title: 'Supplier Fulfillment',
       loading: 'Loading fulfillment status...',
       supplierCost: 'Supplier cost',
+      retryCounter: 'Retry attempt {{current}} of {{max}}',
+      retryWillBeAttempted: 'Will retry automatically',
+      manualActionHint:
+        'This order needs your review. Check the failure reason and resolve it manually.',
       status: {
         draft: 'Draft',
         pending: 'Pending',
@@ -702,6 +706,13 @@ export const en: TranslationResource = {
         canceled: 'Canceled',
         failed: 'Failed',
         supplier_loss: 'Supplier Cost Not Recoverable',
+      },
+      failureReason: {
+        retryable_provider_error: 'Temporary supplier error — retrying',
+        validation_failed: 'Order data rejected by supplier',
+        margin_protection_failed: 'Blocked by margin protection (cost or currency mismatch)',
+        manual_action_required: 'Needs manual review',
+        permanently_failed: 'Failed permanently',
       },
     },
     // Shipping

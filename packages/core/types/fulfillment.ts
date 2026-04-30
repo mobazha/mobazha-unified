@@ -105,6 +105,23 @@ export type FulfillmentStatus =
   | 'failed'
   | 'supplier_loss';
 
+/**
+ * Why a fulfillment order is in a non-terminal failed state.
+ * Mirrors backend `contracts.FailureReason` (mobazha3.0).
+ *
+ * - retryable_provider_error  → automatic retry will be attempted
+ * - validation_failed         → bad request to provider, will not retry
+ * - margin_protection_failed  → blocked by margin gate (cost/discount/currency)
+ * - manual_action_required    → ambiguous data; needs operator review
+ * - permanently_failed        → exhausted retries or hard supplier rejection
+ */
+export type FulfillmentFailureReason =
+  | 'retryable_provider_error'
+  | 'validation_failed'
+  | 'margin_protection_failed'
+  | 'manual_action_required'
+  | 'permanently_failed';
+
 export interface FulfillmentShipment {
   id: string;
   carrier: string;
@@ -131,6 +148,12 @@ export interface FulfillmentOrder {
   createdAt: string;
   updatedAt: string;
   errorMessage?: string;
+  /** Classified failure reason. Empty/undefined when not in a failed state. */
+  failureReason?: FulfillmentFailureReason;
+  /** Number of retry attempts already made (only set when failureReason present). */
+  retryCount?: number;
+  /** Maximum retry attempts allowed by the retry worker. */
+  maxRetries?: number;
 }
 
 export type FulfillmentProviderID = 'printful';
