@@ -7,6 +7,7 @@ import { useI18n, fulfillmentApi } from '@mobazha/core';
 import type { CatalogVariant, StoreSyncVariant } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 import { PricingCalculator } from '../components/PricingCalculator';
+import { VariantSelector } from '../components/VariantSelector';
 
 type Variant = CatalogVariant | StoreSyncVariant;
 
@@ -25,20 +26,10 @@ interface ImportPageLayoutProps {
   mode: 'catalog' | 'design';
 }
 
-function getVariantTitle(v: Variant): string {
-  if ('title' in v) return v.title;
-  if ('name' in v) return v.name;
-  return v.id;
-}
-
 function getVariantPrice(v: Variant): number {
   if ('price' in v) return parseFloat(v.price) || 0;
   if ('retailPrice' in v) return parseFloat(v.retailPrice) || 0;
   return 0;
-}
-
-function getVariantInStock(v: Variant): boolean {
-  return 'inStock' in v ? v.inStock : true;
 }
 
 export function ImportPageLayout({
@@ -81,26 +72,6 @@ export function ImportPageLayout({
     if (selected.length === 0) return 0;
     return Math.min(...selected.map(getVariantPrice));
   }, [variants, selectedVariantIds]);
-
-  const toggleVariant = (id: string) => {
-    setSelectedVariantIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        if (next.size > 1) next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const toggleAll = () => {
-    if (selectedVariantIds.size === variants.length) {
-      setSelectedVariantIds(new Set([variants[0].id]));
-    } else {
-      setSelectedVariantIds(new Set(variants.map(v => v.id)));
-    }
-  };
 
   const handleImport = async () => {
     try {
@@ -230,48 +201,12 @@ export function ImportPageLayout({
       </section>
 
       {/* Variant Selection */}
-      {variants.length > 1 && (
-        <section className="rounded-lg border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-medium">
-              {t('admin.sourcing.variantSelection')} ({selectedVariantIds.size}/{variants.length})
-            </h3>
-            <button onClick={toggleAll} className="text-sm text-primary hover:underline">
-              {selectedVariantIds.size === variants.length
-                ? t('admin.sourcing.deselectAll')
-                : t('admin.sourcing.selectAll')}
-            </button>
-          </div>
-          <div className="max-h-56 overflow-y-auto rounded-md border divide-y">
-            {variants.map(variant => (
-              <label
-                key={variant.id}
-                className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 cursor-pointer text-sm"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedVariantIds.has(variant.id)}
-                  onChange={() => toggleVariant(variant.id)}
-                  className="rounded border-gray-300"
-                />
-                <span className="flex-1 truncate">{getVariantTitle(variant)}</span>
-                <span className="text-muted-foreground">
-                  {getVariantPrice(variant).toFixed(2)} {currency}
-                </span>
-                {getVariantInStock(variant) ? (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    {t('admin.sourcing.inStock')}
-                  </span>
-                ) : (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                    {t('admin.sourcing.outOfStock')}
-                  </span>
-                )}
-              </label>
-            ))}
-          </div>
-        </section>
-      )}
+      <VariantSelector
+        variants={variants}
+        selectedIds={selectedVariantIds}
+        onSelectionChange={setSelectedVariantIds}
+        currency={currency}
+      />
 
       {/* Pricing Strategy */}
       <PricingCalculator
