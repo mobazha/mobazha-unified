@@ -58,8 +58,57 @@ export interface CatalogPage {
   searchSupported: boolean;
 }
 
+/** A file (design / mockup) attached to a store sync variant. */
+export interface SyncVariantFile {
+  type: string;
+  url: string;
+  previewUrl?: string;
+  thumbnailUrl?: string;
+  filename?: string;
+}
+
+/** A variant within a StoreSyncProduct (with designs already applied). */
+export interface StoreSyncVariant {
+  id: string;
+  syncProductId: string;
+  name: string;
+  catalogVariantId: string;
+  retailPrice: string;
+  currency: string;
+  sku?: string;
+  size?: string;
+  color?: string;
+  imageUrl?: string;
+  previewUrl?: string;
+  files?: SyncVariantFile[];
+  inStock: boolean;
+}
+
+/**
+ * A product created in the supplier dashboard with custom designs.
+ * Unlike CatalogProduct (generic template), this already has mockups.
+ */
+export interface StoreSyncProduct {
+  id: string;
+  externalId?: string;
+  name: string;
+  thumbnailUrl: string;
+  variantCount: number;
+  syncedCount: number;
+  variants?: StoreSyncVariant[];
+}
+
+/** Paginated list of store sync products. */
+export interface StoreSyncPage {
+  products: StoreSyncProduct[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 export interface ImportProductRequest {
   productId: string;
+  syncProductId?: string;
   variantIds?: string[];
   retailMarkup?: number;
   designFiles?: unknown[];

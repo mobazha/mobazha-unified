@@ -3323,6 +3323,13 @@ export interface TranslationResource {
       noSyncedProducts?: string;
       noSyncedProductsDesc?: string;
       syncedBadge?: string;
+      myDesigns?: string;
+      myDesignsDesc?: string;
+      importDesign?: string;
+      noDesigns?: string;
+      noDesignsDesc?: string;
+      backToDesigns?: string;
+      designPreviews?: string;
     };
     salesChannels?: {
       title?: string;

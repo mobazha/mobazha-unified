@@ -11,6 +11,7 @@ import {
   EyeOff,
   Package,
   Copy,
+  Palette,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ErrorAlert } from '@/components/ui/error-alert';
@@ -27,6 +28,7 @@ import {
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
 import { CatalogBrowserDialog } from './CatalogBrowserDialog';
+import { StoreSyncBrowserDialog } from './StoreSyncBrowserDialog';
 import { SyncedProductsList } from './SyncedProductsList';
 
 interface ProviderFormValues {
@@ -47,6 +49,7 @@ export function FulfillmentProvidersSection() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [catalogProvider, setCatalogProvider] = useState<string | null>(null);
+  const [designsProvider, setDesignsProvider] = useState<string | null>(null);
 
   const fetchConnections = useCallback(async () => {
     try {
@@ -244,6 +247,13 @@ export function FulfillmentProvidersSection() {
                       <Package className="w-3.5 h-3.5" />
                       {t('admin.fulfillment.browseCatalog')}
                     </button>
+                    <button
+                      onClick={() => setDesignsProvider(provider.id)}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md border hover:bg-muted transition-colors flex items-center gap-1"
+                    >
+                      <Palette className="w-3.5 h-3.5" />
+                      {t('admin.fulfillment.myDesigns')}
+                    </button>
                     <a
                       href={provider.docsUrl}
                       target="_blank"
@@ -366,6 +376,18 @@ export function FulfillmentProvidersSection() {
           }
           open={!!catalogProvider}
           onOpenChange={open => !open && setCatalogProvider(null)}
+        />
+      )}
+
+      {/* My Designs browser dialog */}
+      {designsProvider && (
+        <StoreSyncBrowserDialog
+          providerID={designsProvider}
+          providerName={
+            FULFILLMENT_PROVIDERS.find(p => p.id === designsProvider)?.name ?? designsProvider
+          }
+          open={!!designsProvider}
+          onOpenChange={open => !open && setDesignsProvider(null)}
         />
       )}
 

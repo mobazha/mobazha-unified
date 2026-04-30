@@ -5249,6 +5249,14 @@ export const en: TranslationResource = {
       noSyncedProducts: 'No synced products yet',
       noSyncedProductsDesc: 'Import products from the catalog to get started',
       syncedBadge: 'Fulfillment',
+      myDesigns: 'My Designs',
+      myDesignsDesc:
+        'Products you designed in the supplier dashboard. Import them to your store with one click.',
+      importDesign: 'Import Design',
+      noDesigns: 'No designs found',
+      noDesignsDesc: 'Create products in the Printful dashboard first, then import them here.',
+      backToDesigns: 'Back to Designs',
+      designPreviews: 'Design Previews',
     },
     salesChannels: {
       title: 'Sales Channels',

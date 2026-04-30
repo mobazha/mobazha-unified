@@ -291,6 +291,9 @@ export const NODE_API = {
   FULFILLMENT_SYNCED_PRODUCTS: (providerID: string) => `/fulfillment/${providerID}/synced-products`,
   FULFILLMENT_SYNC_PRODUCT: (slug: string) => `/fulfillment/products/${slug}/sync`,
   FULFILLMENT_ORDER_STATUS: (orderID: string) => `/fulfillment/orders/${orderID}/status`,
+  FULFILLMENT_STORE_PRODUCTS: (providerID: string) => `/fulfillment/${providerID}/store-products`,
+  FULFILLMENT_STORE_PRODUCT: (providerID: string, syncProductID: string) =>
+    `/fulfillment/${providerID}/store-products/${syncProductID}`,
 
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
