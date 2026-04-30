@@ -30,7 +30,7 @@ export function SyncProductImportPanel({
   const variants = product.variants ?? [];
 
   const pricing = useMemo(() => {
-    const prices = variants.map(v => parseFloat(v.retailPrice) / 100 || 0);
+    const prices = variants.map(v => parseFloat(v.retailPrice) || 0);
     if (prices.length === 0) return { lowestCost: 0, currency: 'USD' };
     return {
       lowestCost: Math.min(...prices),

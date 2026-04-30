@@ -28,6 +28,7 @@ export function StoreSyncBrowserDialog({
   const [offset, setOffset] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<StoreSyncProduct | null>(null);
   const [importedIds, setImportedIds] = useState<Set<string>>(new Set());
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const LIMIT = 20;
 
@@ -67,10 +68,13 @@ export function StoreSyncBrowserDialog({
     async (summary: StoreSyncProduct) => {
       try {
         setLoading(true);
+        setFetchError(null);
         const detail = await fulfillmentApi.getStoreSyncProduct(providerID, summary.id);
         setSelectedProduct(detail);
-      } catch {
-        setSelectedProduct({ ...summary, variants: [] });
+      } catch (err) {
+        console.error('Failed to fetch sync product detail:', err);
+        const msg = err instanceof Error ? err.message : 'Failed to load product details';
+        setFetchError(msg);
       } finally {
         setLoading(false);
       }
@@ -122,6 +126,11 @@ export function StoreSyncBrowserDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto min-h-0">
+          {fetchError && (
+            <div className="rounded-md bg-destructive/10 text-destructive px-3 py-2 text-sm mb-2">
+              {fetchError}
+            </div>
+          )}
           {loading && products.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="w-6 h-6 animate-spin mb-2" />
@@ -137,7 +146,7 @@ export function StoreSyncBrowserDialog({
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 py-2">
                 {products.map(product => {
-                  const isImported = importedIds.has(product.id) || product.syncedCount > 0;
+                  const isImported = importedIds.has(product.id);
 
                   return (
                     <button
