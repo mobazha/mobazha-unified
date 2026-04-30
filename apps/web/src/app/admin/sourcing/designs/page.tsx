@@ -5,21 +5,17 @@ import Link from 'next/link';
 import { Loader2, Package, Download } from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { StoreSyncProduct, ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
-import { SyncProductImportPanel } from '../../settings/integrations/SyncProductImportPanel';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 
-function DesignCard({
-  product,
-  onImport,
-}: {
-  product: StoreSyncProduct;
-  onImport: (product: StoreSyncProduct) => void;
-}) {
+function DesignCard({ product, providerID }: { product: StoreSyncProduct; providerID: string }) {
   const { t } = useI18n();
   const isImported = product.syncedCount > 0;
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors group">
+    <Link
+      href={`/admin/sourcing/import/design/${providerID}/${product.id}`}
+      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors group block"
+    >
       <div className="aspect-square bg-muted relative">
         {product.thumbnailUrl ? (
           <img
@@ -45,17 +41,14 @@ function DesignCard({
         </p>
         <div className="flex items-center justify-end">
           {!isImported && (
-            <button
-              onClick={() => onImport(product)}
-              className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1"
-            >
+            <span className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1">
               <Download className="w-3 h-3" />
               {t('admin.sourcing.import')}
-            </button>
+            </span>
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -74,7 +67,6 @@ function AdminSourcingDesignsContent() {
   const [designs, setDesigns] = useState<StoreSyncProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [designsLoading, setDesignsLoading] = useState(false);
-  const [importProduct, setImportProduct] = useState<StoreSyncProduct | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -109,22 +101,6 @@ function AdminSourcingDesignsContent() {
   }, [selectedProvider, fetchDesigns]);
 
   const connectedProviders = connections.filter(c => c.status === 'connected');
-
-  if (importProduct && selectedProvider) {
-    return (
-      <div data-testid="admin-sourcing-designs-import">
-        <SyncProductImportPanel
-          providerID={selectedProvider}
-          product={importProduct}
-          onSuccess={() => {
-            setImportProduct(null);
-            fetchDesigns();
-          }}
-          onCancel={() => setImportProduct(null)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div data-testid="admin-sourcing-designs">
@@ -196,7 +172,7 @@ function AdminSourcingDesignsContent() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {designs.map(product => (
-            <DesignCard key={product.id} product={product} onImport={setImportProduct} />
+            <DesignCard key={product.id} product={product} providerID={selectedProvider} />
           ))}
         </div>
       )}

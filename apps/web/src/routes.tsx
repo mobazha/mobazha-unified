@@ -361,6 +361,14 @@ const routes: RouteObject[] = [
         path: 'sourcing/products',
         element: lazyPage(() => import('./app/admin/sourcing/products/page')),
       },
+      {
+        path: 'sourcing/import/catalog/:providerID/:productID',
+        element: lazyPage(() => import('./app/admin/sourcing/import/catalog/page')),
+      },
+      {
+        path: 'sourcing/import/design/:providerID/:syncProductID',
+        element: lazyPage(() => import('./app/admin/sourcing/import/design/page')),
+      },
       { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
       { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
     ],
