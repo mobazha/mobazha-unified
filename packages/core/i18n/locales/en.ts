@@ -701,6 +701,7 @@ export const en: TranslationResource = {
         delivered: 'Delivered',
         canceled: 'Canceled',
         failed: 'Failed',
+        supplier_loss: 'Supplier Cost Not Recoverable',
       },
     },
     // Shipping
