@@ -26,6 +26,7 @@ export function SyncProductImportPanel({
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ slug: string; variantsCount: number } | null>(null);
+  const [activePreview, setActivePreview] = useState<string | null>(null);
 
   const variants = product.variants ?? [];
 
@@ -41,10 +42,11 @@ export function SyncProductImportPanel({
   const retailPrice = pricing.lowestCost * (1 + markup / 100);
   const profit = retailPrice - pricing.lowestCost;
 
-  const previewImage =
+  const defaultPreview =
     product.thumbnailUrl ||
     variants.find(v => v.previewUrl || v.imageUrl)?.previewUrl ||
     variants.find(v => v.imageUrl)?.imageUrl;
+  const previewImage = activePreview || defaultPreview;
 
   const handleImport = async () => {
     try {
@@ -144,14 +146,23 @@ export function SyncProductImportPanel({
             {variants
               .filter(v => v.previewUrl)
               .slice(0, 8)
-              .map(v => (
-                <div
-                  key={v.id}
-                  className="w-20 h-20 rounded-md bg-muted overflow-hidden flex-shrink-0 border"
-                >
-                  <img src={v.previewUrl} alt={v.name} className="w-full h-full object-cover" />
-                </div>
-              ))}
+              .map(v => {
+                const isActive = activePreview === v.previewUrl;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setActivePreview(isActive ? null : v.previewUrl!)}
+                    className={`w-20 h-20 rounded-md bg-muted overflow-hidden flex-shrink-0 border-2 transition-colors cursor-pointer ${
+                      isActive
+                        ? 'border-primary ring-1 ring-primary'
+                        : 'border-muted hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    <img src={v.previewUrl} alt={v.name} className="w-full h-full object-cover" />
+                  </button>
+                );
+              })}
           </div>
         </div>
       )}
