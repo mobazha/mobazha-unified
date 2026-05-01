@@ -4191,6 +4191,7 @@ export const zh: TranslationResource = {
       connectedProviders: '已连接供应商',
       importedProducts: '已导入商品',
       syncedProducts: '已同步商品',
+      totalProducts: '商品总数',
       providers: '已连接供应商',
       addProvider: '添加供应商',
       browseCatalog: '浏览目录',

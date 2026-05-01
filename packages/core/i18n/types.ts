@@ -3346,6 +3346,7 @@ export interface TranslationResource {
       connectedProviders?: string;
       importedProducts?: string;
       syncedProducts?: string;
+      totalProducts?: string;
       providers?: string;
       addProvider?: string;
       browseCatalog?: string;

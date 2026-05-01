@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Package, Compass, ArrowRight, Palette, Plus, Loader2 } from 'lucide-react';
+import { Package, Compass, ArrowRight, Palette, Plus, Loader2, CheckCircle2 } from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { ProviderConnection, SyncedProduct } from '@mobazha/core';
 import { cn } from '@/lib/utils';
@@ -41,6 +41,7 @@ function ProviderCard({
   if (!provider) return null;
 
   const connected = connection?.status === 'connected';
+  const storeName = connection?.storeName;
 
   return (
     <div className="flex items-center justify-between p-3 border border-border rounded-lg">
@@ -49,37 +50,25 @@ function ProviderCard({
           <Package className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <p className="font-medium text-foreground">{provider.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-foreground">{provider.name}</p>
+            {connected && <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
+          </div>
           <p className="text-xs text-muted-foreground">
-            {connected ? t('admin.sourcing.connected') : t('admin.sourcing.notConnected')}
+            {connected
+              ? storeName || t('admin.sourcing.connected')
+              : t('admin.sourcing.notConnected')}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        {connected ? (
-          <>
-            <Link
-              href="/admin/sourcing/catalog"
-              className="text-xs px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-foreground transition-colors"
-            >
-              {t('admin.sourcing.browseCatalog')}
-            </Link>
-            <Link
-              href="/admin/sourcing/designs"
-              className="text-xs px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-foreground transition-colors"
-            >
-              {t('admin.sourcing.myDesigns')}
-            </Link>
-          </>
-        ) : (
-          <Link
-            href="/admin/settings/integrations"
-            className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            {t('admin.sourcing.connect')}
-          </Link>
-        )}
-      </div>
+      {!connected && (
+        <Link
+          href="/admin/settings/integrations"
+          className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          {t('admin.sourcing.connect')}
+        </Link>
+      )}
     </div>
   );
 }
@@ -90,15 +79,27 @@ const STATUS_STYLES: Record<string, string> = {
   error: 'bg-destructive/10 text-destructive',
 };
 
+const MAX_RECENT_ITEMS = 5;
+
 function RecentImportItem({ product }: { product: SyncedProduct }) {
+  const displayName = product.title || product.listingSlug;
+
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0">
-          <Package className="w-4 h-4 text-muted-foreground" />
+        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+          {product.thumbnailUrl ? (
+            <img
+              src={product.thumbnailUrl}
+              alt={displayName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Package className="w-4 h-4 text-muted-foreground" />
+          )}
         </div>
         <div className="min-w-0">
-          <span className="text-sm text-foreground truncate block">{product.listingSlug}</span>
+          <span className="text-sm text-foreground truncate block">{displayName}</span>
           <span className="text-xs text-muted-foreground">
             ${(parseFloat(product.retailPrice) / 100).toFixed(2)}
           </span>
@@ -168,20 +169,15 @@ function AdminSourcingContent() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
         <StatsCard
           label={t('admin.sourcing.connectedProviders')}
           value={connectedCount}
           loading={loading}
         />
         <StatsCard
-          label={t('admin.sourcing.importedProducts')}
+          label={t('admin.sourcing.totalProducts')}
           value={syncedProducts.length}
-          loading={loading}
-        />
-        <StatsCard
-          label={t('admin.sourcing.syncedProducts')}
-          value={syncedProducts.filter(p => p.status === 'synced').length}
           loading={loading}
         />
       </div>
@@ -272,7 +268,7 @@ function AdminSourcingContent() {
           <h2 className="text-sm sm:text-base font-semibold text-foreground">
             {t('admin.sourcing.recentImports')}
           </h2>
-          {syncedProducts.length > 0 && (
+          {syncedProducts.length > MAX_RECENT_ITEMS && (
             <Link
               href="/admin/sourcing/products"
               className="text-xs text-primary hover:text-primary/80 transition-colors"
@@ -293,7 +289,7 @@ function AdminSourcingContent() {
           </div>
         ) : (
           <div>
-            {syncedProducts.slice(0, 5).map(product => (
+            {syncedProducts.slice(0, MAX_RECENT_ITEMS).map(product => (
               <RecentImportItem key={product.id} product={product} />
             ))}
           </div>
