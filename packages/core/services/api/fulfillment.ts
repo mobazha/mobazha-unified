@@ -95,13 +95,14 @@ export async function getStoreSyncProduct(
 export async function importStoreSyncProduct(
   providerID: string,
   syncProductID: string,
-  params?: { retailMarkup?: number; title?: string; tags?: string[] }
+  params?: { retailMarkup?: number; title?: string; tags?: string[]; variantIds?: string[] }
 ): Promise<ImportResult> {
   return authPost<ImportResult>(NODE_API.FULFILLMENT_IMPORT(providerID), {
     syncProductId: syncProductID,
     retailMarkup: params?.retailMarkup,
     title: params?.title,
     tags: params?.tags,
+    variantIds: params?.variantIds,
   });
 }
 
