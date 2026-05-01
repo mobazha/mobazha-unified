@@ -10,8 +10,7 @@ export function getVariantPrice(v: Variant): number {
 
 export function getVariantTitle(v: Variant): string {
   if ('title' in v) return v.title;
-  if ('name' in v) return v.name;
-  return v.id;
+  return v.name;
 }
 
 export function getVariantInStock(v: Variant): boolean {

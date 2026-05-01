@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Package, CheckCircle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Loader2, Package, CheckCircle, Pencil } from 'lucide-react';
 import { useI18n, fulfillmentApi } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 import { PricingCalculator } from '../components/PricingCalculator';
@@ -91,6 +91,7 @@ export function ImportPageLayout({
             .split(',')
             .map(tag => tag.trim())
             .filter(Boolean),
+          variantIds: [...selectedVariantIds],
         });
       }
 
@@ -109,18 +110,18 @@ export function ImportPageLayout({
       <div className="flex flex-col items-center py-16 space-y-4">
         <CheckCircle className="w-14 h-14 text-green-500" />
         <div className="text-center">
-          <p className="font-semibold text-xl">{t('admin.sourcing.importSuccess')}</p>
+          <p className="font-semibold text-xl">{t('admin.sourcing.importSuccessDraft')}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {t('admin.sourcing.importedCount', { count: String(result.variantsCount) })}
           </p>
         </div>
         <div className="flex gap-3 mt-4">
           <Link
-            href={`/product/${result.slug}`}
+            href={`/listing/edit/${result.slug}`}
             className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5"
           >
-            {t('admin.sourcing.viewListing')}
-            <ExternalLink className="w-3.5 h-3.5" />
+            {t('admin.sourcing.editListing')}
+            <Pencil className="w-3.5 h-3.5" />
           </Link>
           <Link
             href={backHref}
@@ -272,7 +273,7 @@ export function ImportPageLayout({
           className="px-5 py-2.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {importing && <Loader2 className="w-4 h-4 animate-spin" />}
-          {importing ? t('admin.sourcing.importing') : t('admin.sourcing.importAndPublish')}
+          {importing ? t('admin.sourcing.importing') : t('admin.sourcing.importAsDraft')}
         </button>
       </div>
     </div>
