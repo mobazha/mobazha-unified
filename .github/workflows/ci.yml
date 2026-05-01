@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: HUSKY=0 pnpm install --frozen-lockfile
 
+      - name: Check codegen drift
+        run: bash scripts/check-codegen-drift.sh
+
       - name: Run ESLint
         run: pnpm lint
 

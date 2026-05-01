@@ -1,0 +1,5 @@
+{
+  "hosting": "${SPEC_HOSTING_PATH:-/Users/mingfeng/go/src/github.com/mobazha/mobazha_hosting-arch}/api-spec/openapi.json",
+  "node": "${SPEC_NODE_PATH:-/Users/mingfeng/go/src/github.com/mobazha/mobazha3.0-arch}/api-spec/openapi.json",
+  "search": "${SPEC_SEARCH_PATH:-/Users/mingfeng/go/src/github.com/mobazha/mobazha.info}/backend/api-spec/openapi.json"
+}
