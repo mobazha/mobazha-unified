@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Loader2, Package, Download } from 'lucide-react';
+import { Loader2, Package, Download, ExternalLink } from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { StoreSyncProduct, ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
@@ -126,22 +126,35 @@ function AdminSourcingDesignsContent() {
             {t('admin.sourcing.myDesignsPageDesc')}
           </p>
         </div>
-        {connectedProviders.length > 1 && (
-          <select
-            value={selectedProvider}
-            onChange={e => setSelectedProvider(e.target.value as FulfillmentProviderID)}
-            className="text-sm border border-border rounded-lg px-3 py-2 bg-background text-foreground"
-          >
-            {connectedProviders.map(conn => {
-              const p = FULFILLMENT_PROVIDERS.find(fp => fp.id === conn.providerId);
-              return (
-                <option key={conn.providerId} value={conn.providerId}>
-                  {p?.name || conn.providerId}
-                </option>
-              );
-            })}
-          </select>
-        )}
+        <div className="flex items-center gap-3">
+          {connectedProviders.length > 1 && (
+            <select
+              value={selectedProvider}
+              onChange={e => setSelectedProvider(e.target.value as FulfillmentProviderID)}
+              className="text-sm border border-border rounded-lg px-3 py-2 bg-background text-foreground"
+            >
+              {connectedProviders.map(conn => {
+                const p = FULFILLMENT_PROVIDERS.find(fp => fp.id === conn.providerId);
+                return (
+                  <option key={conn.providerId} value={conn.providerId}>
+                    {p?.name || conn.providerId}
+                  </option>
+                );
+              })}
+            </select>
+          )}
+          {connectedProviders.length > 0 && (
+            <a
+              href="https://www.printful.com/dashboard/product-templates"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
+            >
+              {t('admin.sourcing.createDesign')}
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -167,7 +180,16 @@ function AdminSourcingDesignsContent() {
         <div className="text-center py-16">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-foreground font-medium mb-2">{t('admin.sourcing.noDesigns')}</p>
-          <p className="text-sm text-muted-foreground">{t('admin.sourcing.noDesignsDesc')}</p>
+          <p className="text-sm text-muted-foreground mb-4">{t('admin.sourcing.noDesignsDesc')}</p>
+          <a
+            href="https://www.printful.com/dashboard/product-templates"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
+          >
+            {t('admin.sourcing.createDesign')}
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">

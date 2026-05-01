@@ -363,11 +363,15 @@ const routes: RouteObject[] = [
       },
       {
         path: 'sourcing/import/catalog/:providerID/:productID',
-        element: lazyPage(() => import('./app/admin/sourcing/import/catalog/page')),
+        element: lazyPage(
+          () => import('./app/admin/sourcing/import/catalog/[providerID]/[productID]/page')
+        ),
       },
       {
         path: 'sourcing/import/design/:providerID/:syncProductID',
-        element: lazyPage(() => import('./app/admin/sourcing/import/design/page')),
+        element: lazyPage(
+          () => import('./app/admin/sourcing/import/design/[providerID]/[syncProductID]/page')
+        ),
       },
       { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
       { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
