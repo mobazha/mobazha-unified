@@ -114,6 +114,36 @@ jobs:
             packages/*/dist
           retention-days: 7
 
+  # ============ API Breaking Change 检测 ============
+  api-compat:
+    name: API Breaking Change Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Skip if BREAKING label
+        id: label-check
+        run: |
+          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+          if echo "$LABELS" | grep -qi 'breaking'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️ BREAKING label detected — skipping breaking-change gate"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect breaking changes
+        if: steps.label-check.outputs.skip != 'true'
+        uses: oasdiff/oasdiff-action/breaking@v0.0.44
+        with:
+          base: 'origin/${{ github.base_ref }}:packages/core/api-spec/openapi.json'
+          revision: 'HEAD:packages/core/api-spec/openapi.json'
+          fail-on: ERR
+
   # ============ 安全检查 ============
   security:
     name: Security Audit
