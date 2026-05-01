@@ -2,31 +2,13 @@
 
 import React from 'react';
 import { useI18n } from '@mobazha/core';
-import type { CatalogVariant, StoreSyncVariant } from '@mobazha/core';
-
-type Variant = CatalogVariant | StoreSyncVariant;
+import { type Variant, getVariantTitle, getVariantPrice, getVariantInStock } from './variant-utils';
 
 interface VariantSelectorProps {
   variants: Variant[];
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
   currency: string;
-}
-
-function getVariantTitle(v: Variant): string {
-  if ('title' in v) return v.title;
-  if ('name' in v) return v.name;
-  return v.id;
-}
-
-function getVariantPrice(v: Variant): number {
-  if ('price' in v) return parseFloat(v.price) || 0;
-  if ('retailPrice' in v) return parseFloat(v.retailPrice) || 0;
-  return 0;
-}
-
-function getVariantInStock(v: Variant): boolean {
-  return 'inStock' in v ? v.inStock : true;
 }
 
 export function VariantSelector({
@@ -94,7 +76,7 @@ export function VariantSelector({
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => toggleVariant(variant.id)}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
+                className="rounded border-border text-primary focus:ring-primary"
               />
               <span className="flex-1 truncate">{getVariantTitle(variant)}</span>
               <span className="text-muted-foreground font-mono text-xs">

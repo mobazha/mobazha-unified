@@ -5347,6 +5347,8 @@ export const en: TranslationResource = {
       tagsPlaceholder: 'apparel, t-shirt, custom',
       viewListing: 'View Listing',
       backToCatalog: 'Back to catalog',
+      loadProductFailed: 'Failed to load product',
+      productNotFound: 'Product not found',
       featureDisabled: 'Sourcing is not available',
       featureDisabledDesc:
         'The supply chain feature is not enabled for your store. Contact your platform administrator.',

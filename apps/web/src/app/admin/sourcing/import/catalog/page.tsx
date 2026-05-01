@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
+import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { CatalogProduct } from '@mobazha/core';
 import { ImportPageLayout, ImportPageWrapper } from '../ImportPageLayout';
 
 function CatalogImportContent() {
+  const { t } = useI18n();
   const { providerID, productID } = useParams<{ providerID: string; productID: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<CatalogProduct | null>(null);
@@ -21,11 +22,11 @@ function CatalogImportContent() {
       const p = await fulfillmentApi.getFulfillmentCatalogProduct(providerID, productID);
       setProduct(p);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load product');
+      setError(err instanceof Error ? err.message : t('admin.sourcing.loadProductFailed'));
     } finally {
       setLoading(false);
     }
-  }, [providerID, productID]);
+  }, [providerID, productID, t]);
 
   useEffect(() => {
     fetchProduct();
@@ -42,12 +43,12 @@ function CatalogImportContent() {
   if (error || !product || !providerID) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-sm text-destructive">{error || 'Product not found'}</p>
+        <p className="text-sm text-destructive">{error || t('admin.sourcing.productNotFound')}</p>
         <button
           onClick={() => navigate('/admin/sourcing/catalog')}
           className="mt-4 text-sm text-primary hover:underline"
         >
-          Back to catalog
+          {t('admin.sourcing.backToCatalog')}
         </button>
       </div>
     );

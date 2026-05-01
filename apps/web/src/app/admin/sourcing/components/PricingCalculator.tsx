@@ -12,6 +12,7 @@ interface PricingCalculatorProps {
 }
 
 const PRESET_MARKUPS = [30, 50, 75, 100, 150];
+const MAX_MARKUP = 500;
 
 export function PricingCalculator({
   supplierCost,
@@ -46,8 +47,8 @@ export function PricingCalculator({
               <input
                 type="range"
                 min={0}
-                max={200}
-                value={markup}
+                max={MAX_MARKUP}
+                value={Math.min(markup, MAX_MARKUP)}
                 onChange={e => onMarkupChange(Number(e.target.value))}
                 className="flex-1 accent-primary"
               />
@@ -55,9 +56,11 @@ export function PricingCalculator({
                 <input
                   type="number"
                   value={markup}
-                  onChange={e => onMarkupChange(Math.max(0, Number(e.target.value)))}
+                  onChange={e =>
+                    onMarkupChange(Math.max(0, Math.min(MAX_MARKUP, Number(e.target.value))))
+                  }
                   min={0}
-                  max={500}
+                  max={MAX_MARKUP}
                   className="w-16 px-2 py-1.5 rounded-md border bg-background text-sm text-right"
                 />
                 <span className="text-sm text-muted-foreground">%</span>

@@ -4,12 +4,10 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Package, CheckCircle, ExternalLink } from 'lucide-react';
 import { useI18n, fulfillmentApi } from '@mobazha/core';
-import type { CatalogVariant, StoreSyncVariant } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 import { PricingCalculator } from '../components/PricingCalculator';
 import { VariantSelector } from '../components/VariantSelector';
-
-type Variant = CatalogVariant | StoreSyncVariant;
+import { type Variant, getVariantPrice } from '../components/variant-utils';
 
 interface ImportPageLayoutProps {
   title: string;
@@ -24,12 +22,6 @@ interface ImportPageLayoutProps {
   syncProductId?: string;
   backHref: string;
   mode: 'catalog' | 'design';
-}
-
-function getVariantPrice(v: Variant): number {
-  if ('price' in v) return parseFloat(v.price) || 0;
-  if ('retailPrice' in v) return parseFloat(v.retailPrice) || 0;
-  return 0;
 }
 
 export function ImportPageLayout({
@@ -88,7 +80,7 @@ export function ImportPageLayout({
           description: customDescription.trim() || undefined,
           tags: tags
             .split(',')
-            .map(t => t.trim())
+            .map(tag => tag.trim())
             .filter(Boolean),
         });
       } else if (mode === 'design' && syncProductId) {
@@ -97,7 +89,7 @@ export function ImportPageLayout({
           title: customTitle.trim() || undefined,
           tags: tags
             .split(',')
-            .map(t => t.trim())
+            .map(tag => tag.trim())
             .filter(Boolean),
         });
       }
@@ -156,9 +148,9 @@ export function ImportPageLayout({
 
       {/* Product Preview */}
       <section className="rounded-lg border p-5">
-        <div className="flex gap-5">
+        <div className="flex flex-col sm:flex-row gap-5">
           <div className="flex-shrink-0 space-y-2">
-            <div className="w-48 h-48 rounded-lg bg-muted overflow-hidden">
+            <div className="w-full sm:w-48 aspect-square sm:h-48 rounded-lg bg-muted overflow-hidden">
               {allImages[selectedImage] ? (
                 <img
                   src={allImages[selectedImage]}
