@@ -14,8 +14,10 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ErrorAlert } from '@/components/ui/error-alert';
+import { useToast } from '@/components/ui/use-toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +37,8 @@ interface ProviderFormValues {
 
 export function FulfillmentProvidersSection() {
   const { t } = useI18n();
+  const { toast } = useToast();
+  const router = useRouter();
 
   const [connections, setConnections] = useState<Record<string, ProviderConnection>>({});
   const [loading, setLoading] = useState(true);
@@ -82,13 +86,27 @@ export function FulfillmentProvidersSection() {
         setConnections(prev => ({ ...prev, [providerID]: conn }));
         setExpandedProvider(null);
         setFormValues(prev => ({ ...prev, [providerID]: { apiKey: '' } }));
+
+        const providerName = FULFILLMENT_PROVIDERS.find(p => p.id === providerID)?.name ?? '';
+        toast({
+          title: t('admin.fulfillment.connectSuccess', { provider: providerName }),
+          description: t('admin.fulfillment.connectSuccessDesc'),
+          action: (
+            <button
+              onClick={() => router.push('/admin/sourcing/catalog')}
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+            >
+              {t('admin.fulfillment.browseCatalog')}
+            </button>
+          ),
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : t('admin.fulfillment.saveFailed'));
       } finally {
         setSaving(null);
       }
     },
-    [formValues, t]
+    [formValues, t, toast, router]
   );
 
   const handleDisconnect = useCallback(async () => {
