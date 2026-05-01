@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Package, CheckCircle, Pencil } from 'lucide-react';
-import { useI18n, fulfillmentApi } from '@mobazha/core';
+import { useI18n, fulfillmentApi, aiService, AiServiceError } from '@mobazha/core';
+import { AiAssistButton } from '@/components/Listing/AiAssistant';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 import { PricingCalculator } from '../components/PricingCalculator';
 import { VariantSelector } from '../components/VariantSelector';
@@ -51,6 +52,77 @@ export function ImportPageLayout({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ slug: string; variantsCount: number } | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [aiLoadingField, setAiLoadingField] = useState<
+    'title' | 'description' | 'tags' | 'pricing' | null
+  >(null);
+  const [suggestedMarkup, setSuggestedMarkup] = useState<number | undefined>();
+
+  const handleAiTitle = useCallback(async () => {
+    setAiLoadingField('title');
+    try {
+      const source = customTitle || title;
+      const res = await aiService.improveTitle(source, {
+        description: customDescription || description,
+      });
+      setCustomTitle(res.title);
+    } catch (e) {
+      if (e instanceof AiServiceError && e.isNotConfigured) return;
+    } finally {
+      setAiLoadingField(null);
+    }
+  }, [customTitle, title, customDescription, description]);
+
+  const handleAiDescription = useCallback(async () => {
+    setAiLoadingField('description');
+    try {
+      const res = await aiService.polishDescription(
+        customTitle || title,
+        customDescription || description || ''
+      );
+      setCustomDescription(res.description);
+    } catch (e) {
+      if (e instanceof AiServiceError && e.isNotConfigured) return;
+    } finally {
+      setAiLoadingField(null);
+    }
+  }, [customTitle, title, customDescription, description]);
+
+  const handleAiTags = useCallback(async () => {
+    setAiLoadingField('tags');
+    try {
+      const res = await aiService.suggestTags(customTitle || title, {
+        description: customDescription || description,
+      });
+      if (res.tags.length > 0) {
+        setTags(res.tags.join(', '));
+      }
+    } catch (e) {
+      if (e instanceof AiServiceError && e.isNotConfigured) return;
+    } finally {
+      setAiLoadingField(null);
+    }
+  }, [customTitle, title, customDescription, description]);
+
+  const handleAiPricing = useCallback(async () => {
+    setAiLoadingField('pricing');
+    try {
+      const res = await aiService.suggestTags(customTitle || title, {
+        description: customDescription || description,
+      });
+      const productType = res.productType?.toLowerCase() || '';
+      let recommended = 50;
+      if (productType.includes('apparel') || productType.includes('clothing')) recommended = 80;
+      else if (productType.includes('accessori')) recommended = 100;
+      else if (productType.includes('art') || productType.includes('poster')) recommended = 120;
+      else if (productType.includes('mug') || productType.includes('home')) recommended = 60;
+      else if (productType.includes('tech') || productType.includes('phone')) recommended = 70;
+      setSuggestedMarkup(recommended);
+    } catch (e) {
+      if (e instanceof AiServiceError && e.isNotConfigured) return;
+    } finally {
+      setAiLoadingField(null);
+    }
+  }, [customTitle, title, customDescription, description]);
 
   const allImages = useMemo(() => {
     const list: string[] = [];
@@ -135,7 +207,7 @@ export function ImportPageLayout({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-8">
+    <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 pb-24 sm:pb-8 px-4 sm:px-0">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link href={backHref} className="p-1.5 rounded-md hover:bg-muted transition-colors">
@@ -207,6 +279,9 @@ export function ImportPageLayout({
         currency={currency}
         markup={markup}
         onMarkupChange={setMarkup}
+        suggestedMarkup={suggestedMarkup}
+        onRequestAiSuggestion={handleAiPricing}
+        aiLoading={aiLoadingField === 'pricing'}
       />
 
       {/* Listing Details */}
@@ -214,9 +289,15 @@ export function ImportPageLayout({
         <h3 className="font-medium mb-4">{t('admin.sourcing.listingDetails')}</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('admin.sourcing.titleLabel')}
-            </label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="text-sm font-medium">{t('admin.sourcing.titleLabel')}</label>
+              <AiAssistButton
+                onClick={handleAiTitle}
+                isLoading={aiLoadingField === 'title'}
+                disabled={aiLoadingField !== null}
+                label={t('admin.sourcing.aiImprove')}
+              />
+            </div>
             <input
               type="text"
               value={customTitle}
@@ -226,9 +307,15 @@ export function ImportPageLayout({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('admin.sourcing.descriptionLabel')}
-            </label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="text-sm font-medium">{t('admin.sourcing.descriptionLabel')}</label>
+              <AiAssistButton
+                onClick={handleAiDescription}
+                isLoading={aiLoadingField === 'description'}
+                disabled={aiLoadingField !== null}
+                label={t('admin.sourcing.aiGenerate')}
+              />
+            </div>
             <textarea
               value={customDescription}
               onChange={e => setCustomDescription(e.target.value)}
@@ -238,9 +325,15 @@ export function ImportPageLayout({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('admin.sourcing.tagsLabel')}
-            </label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="text-sm font-medium">{t('admin.sourcing.tagsLabel')}</label>
+              <AiAssistButton
+                onClick={handleAiTags}
+                isLoading={aiLoadingField === 'tags'}
+                disabled={aiLoadingField !== null}
+                label={t('admin.sourcing.aiSuggest')}
+              />
+            </div>
             <input
               type="text"
               value={tags}
@@ -259,8 +352,8 @@ export function ImportPageLayout({
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      {/* Actions — sticky on mobile */}
+      <div className="fixed bottom-0 left-0 right-0 sm:static bg-background border-t sm:border-t p-4 sm:p-0 sm:pt-4 flex items-center justify-between z-10">
         <Link
           href={backHref}
           className="px-4 py-2.5 text-sm rounded-md border hover:bg-muted transition-colors"

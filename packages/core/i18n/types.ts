@@ -3420,6 +3420,11 @@ export interface TranslationResource {
       descriptionPlaceholder?: string;
       tagsLabel?: string;
       tagsPlaceholder?: string;
+      aiImprove?: string;
+      aiGenerate?: string;
+      aiSuggest?: string;
+      aiSuggestPrice?: string;
+      aiRecommended?: string;
       viewListing?: string;
       backToCatalog?: string;
       backToDesigns?: string;

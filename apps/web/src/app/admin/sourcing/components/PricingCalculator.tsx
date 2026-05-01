@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { TrendingUp, DollarSign, Percent } from 'lucide-react';
+import { TrendingUp, DollarSign, Percent, Sparkles, Loader2 } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 
 interface PricingCalculatorProps {
@@ -9,6 +9,9 @@ interface PricingCalculatorProps {
   currency: string;
   markup: number;
   onMarkupChange: (value: number) => void;
+  suggestedMarkup?: number;
+  onRequestAiSuggestion?: () => void;
+  aiLoading?: boolean;
 }
 
 const PRESET_MARKUPS = [30, 50, 75, 100, 150];
@@ -19,6 +22,9 @@ export function PricingCalculator({
   currency,
   markup,
   onMarkupChange,
+  suggestedMarkup,
+  onRequestAiSuggestion,
+  aiLoading,
 }: PricingCalculatorProps) {
   const { t } = useI18n();
 
@@ -84,6 +90,34 @@ export function PricingCalculator({
               </button>
             ))}
           </div>
+
+          {/* AI Suggestion */}
+          {onRequestAiSuggestion && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onRequestAiSuggestion}
+                disabled={aiLoading}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md font-medium transition-all bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-600 dark:text-purple-400 hover:from-purple-500/20 hover:to-blue-500/20 disabled:opacity-50"
+              >
+                {aiLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3" />
+                )}
+                {t('admin.sourcing.aiSuggestPrice')}
+              </button>
+              {suggestedMarkup != null && (
+                <button
+                  type="button"
+                  onClick={() => onMarkupChange(suggestedMarkup)}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                >
+                  {t('admin.sourcing.aiRecommended')}: {suggestedMarkup}%
+                </button>
+              )}
+            </div>
+          )}
 
           <p className="text-xs text-muted-foreground">{t('admin.sourcing.markupHint')}</p>
         </div>
