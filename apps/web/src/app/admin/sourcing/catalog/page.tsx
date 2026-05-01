@@ -15,7 +15,10 @@ function CatalogProductCard({
   providerID: string;
 }) {
   const { t } = useI18n();
-  const priceDisplay = product.minPrice ? `$${parseFloat(product.minPrice).toFixed(2)}+` : '';
+  const currencyCode = product.currency ?? product.variants[0]?.currency ?? 'USD';
+  const priceDisplay = product.minPrice
+    ? `${parseFloat(product.minPrice).toFixed(2)} ${currencyCode}+`
+    : '';
 
   return (
     <Link

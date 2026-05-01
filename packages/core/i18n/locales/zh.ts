@@ -4264,6 +4264,8 @@ export const zh: TranslationResource = {
       tagsPlaceholder: '服饰, T恤, 定制',
       viewListing: '查看商品',
       backToCatalog: '返回目录',
+      loadProductFailed: '加载商品失败',
+      productNotFound: '商品未找到',
       featureDisabled: '货源采购不可用',
       featureDisabledDesc: '供应链功能未为你的店铺启用。请联系平台管理员。',
       backToDashboard: '返回总览',
