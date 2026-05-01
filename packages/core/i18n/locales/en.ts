@@ -5273,6 +5273,7 @@ export const en: TranslationResource = {
       connectedProviders: 'Connected Providers',
       importedProducts: 'Imported Products',
       syncedProducts: 'Synced Products',
+      totalProducts: 'Total Products',
       providers: 'Connected Providers',
       addProvider: 'Add provider',
       browseCatalog: 'Browse Catalog',

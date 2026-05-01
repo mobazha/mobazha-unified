@@ -9,7 +9,7 @@ import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 
 function DesignCard({ product, providerID }: { product: StoreSyncProduct; providerID: string }) {
   const { t } = useI18n();
-  const isImported = product.syncedCount > 0;
+  const isImported = !!product.importedListingSlug;
 
   return (
     <Link

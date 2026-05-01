@@ -96,6 +96,8 @@ export interface StoreSyncProduct {
   variantCount: number;
   syncedCount: number;
   variants?: StoreSyncVariant[];
+  /** Set when this sync product has been imported into a Mobazha listing. */
+  importedListingSlug?: string;
 }
 
 /** Paginated list of store sync products. */
@@ -129,6 +131,8 @@ export interface SyncedProduct {
   id: string;
   providerId: string;
   listingSlug: string;
+  title?: string;
+  thumbnailUrl?: string;
   externalId: string;
   syncProductId: string;
   status: string;
