@@ -5183,6 +5183,7 @@ export const en: TranslationResource = {
       subtitle: 'Connect print-on-demand and dropshipping services to auto-fulfill orders',
       printfulDesc: 'Print-on-demand for apparel, accessories, and home decor',
       printifyDesc: 'Print-on-demand with 900+ products from global print providers',
+      cjDesc: 'Dropshipping with 400K+ products from global warehouses',
       connected: 'Connected',
       disconnected: 'Not Connected',
       error: 'Error',
