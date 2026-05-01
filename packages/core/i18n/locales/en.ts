@@ -5206,6 +5206,8 @@ export const en: TranslationResource = {
       learnMore: 'Learn more',
       viewDashboard: 'Open Dashboard',
       openSourcingHub: 'Open Sourcing Hub',
+      connectSuccess: '{{provider}} connected!',
+      connectSuccessDesc: 'Browse the catalog to start importing products to your store.',
       browseCatalog: 'Browse Catalog',
       catalogTitle: 'Product Catalog',
       catalogSearch: 'Search products...',
