@@ -98,22 +98,22 @@ export function PricingCalculator({
                 type="button"
                 onClick={onRequestAiSuggestion}
                 disabled={aiLoading}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md font-medium transition-all bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-600 dark:text-purple-400 hover:from-purple-500/20 hover:to-blue-500/20 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md font-medium transition-all bg-muted hover:bg-muted/80 text-foreground disabled:opacity-50"
               >
                 {aiLoading ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 ) : (
                   <Sparkles className="w-3 h-3" />
                 )}
-                {t('admin.sourcing.aiSuggestPrice')}
+                {t('admin.sourcing.smartPreset')}
               </button>
               {suggestedMarkup != null && (
                 <button
                   type="button"
                   onClick={() => onMarkupChange(suggestedMarkup)}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                 >
-                  {t('admin.sourcing.aiRecommended')}: {suggestedMarkup}%
+                  {t('admin.sourcing.categoryRecommended')}: {suggestedMarkup}%
                 </button>
               )}
             </div>
