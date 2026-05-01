@@ -1,18 +1,20 @@
 /**
- * API 路径常量 — 按后端服务分组
+ * API 路径常量 — 按后端服务分组（兼容层）
  *
- * 三个后端服务，三组常量，一一对应：
+ * 基础路径由 apiPaths.generated.ts 自动生成（源自合并 OpenAPI spec）。
+ * 本文件在生成路径之上叠加：
+ *   - 向后兼容别名（如 ORDER → ORDERS_BY_ORDER_ID）
+ *   - 带默认参数的函数（如 PROFILE_AVATAR size='medium'）
+ *   - @deprecated 条目
+ *   - 包含 query string 的自定义 helper
  *
- *   NODE_API    → mobazha3.0 节点 API（经 hosting 反向代理，/v1/* 前缀）
- *   HOSTING_API → mobazha_hosting 平台 API（/platform/v1/* 前缀）
- *   SEARCH_API  → mobazha.info 搜索服务（/search/v1/* 前缀）
- *
- * 使用方式：
+ * 使用方式不变：
  *   import { NODE_API, HOSTING_API, SEARCH_API } from '../../config/apiPaths';
  *   const url = `${getGatewayUrl()}${NODE_API.PROFILES}`;
  *   const url = `${getPlatformUrl()}${HOSTING_API.MATRIX_CONFIG}`;
  *   const url = `${getSearchUrl()}${SEARCH_API.SEARCH_LISTINGS}`;
  */
+import { NODE_API_PATHS, HOSTING_API_PATHS, SEARCH_API_PATHS } from './apiPaths.generated';
 
 // ============================================================
 // 节点 API（mobazha3.0，经 hosting 反向代理）
@@ -20,6 +22,7 @@
 // 后端注册：mobazha3.0/internal/api/gateway.go → newV1Router()
 // ============================================================
 export const NODE_API = {
+  ...NODE_API_PATHS,
   // --- Profiles ---
   PROFILES: '/profiles',
   PROFILE_AVATAR: (peerID: string, size: string = 'medium') => `/profiles/${peerID}/avatar/${size}`,
@@ -316,6 +319,7 @@ export const HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY = {
 } as const;
 
 export const HOSTING_API = {
+  ...HOSTING_API_PATHS,
   // --- Auth ---
   AUTH_SIGNIN: '/platform/v1/auth/signin',
   AUTH_TELEGRAM_SIGNIN: '/platform/v1/auth/telegram/signin',
@@ -506,6 +510,7 @@ export const HOSTING_API = {
 // 后端注册：mobazha.info/backend/internal/api/server.go → setupRoutes()
 // ============================================================
 export const SEARCH_API = {
+  ...SEARCH_API_PATHS,
   SEARCH_LISTINGS: '/search/v1/listings',
   SEARCH_PROFILES: '/search/v1/profiles',
   LISTINGS_FRESH: (limit: number) => `/search/v1/listings/fresh?limit=${limit}`,

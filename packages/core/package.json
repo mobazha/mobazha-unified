@@ -33,7 +33,7 @@
     }
   },
   "scripts": {
-    "generate:api": "openapi-typescript ${OPENAPI_SPEC:-api-spec/openapi.yaml} -o types/api-generated.d.ts",
+    "generate:api": "openapi-typescript api-spec/openapi.json -o types/api-generated.d.ts && node ../../scripts/gen-api-paths.mjs",
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
