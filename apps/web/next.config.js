@@ -42,6 +42,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'matrix.mobazha.org',
       },
+      // Fulfillment provider CDNs (supply chain imports)
+      {
+        protocol: 'https',
+        hostname: '*.printful.com',
+      },
     ],
     // 支持的图片格式
     formats: ['image/avif', 'image/webp'],

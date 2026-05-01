@@ -560,12 +560,22 @@ export default function AdminProductsPage() {
               : t('admin.products.emptyDescription')}
           </p>
           {!searchQuery && products.length === 0 && (
-            <Link href="/listing/new?from=admin">
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                {t('admin.products.addFirstProduct')}
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Link href="/listing/new?from=admin">
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  {t('admin.products.addFirstProduct')}
+                </Button>
+              </Link>
+              {supplyChainEnabled && (
+                <Link href="/admin/sourcing/catalog">
+                  <Button variant="outline" className="gap-2">
+                    <Compass className="w-4 h-4" />
+                    {t('admin.products.sourceFromProvider')}
+                  </Button>
+                </Link>
+              )}
+            </div>
           )}
         </div>
       ) : viewMode === 'table' ? (

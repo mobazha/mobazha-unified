@@ -255,13 +255,10 @@ async function typeSafeFetch(
   const hosting = getHostingClientCached();
 
   // Route to correct client based on path
-  if (ep.path === '/healthz') {
-    const { data, error, response } = await hosting.GET('/healthz', {});
-    return { status: response?.status ?? 0, ok: !error, data: data ?? error };
-  }
-  if (ep.path === '/readyz') {
-    const { data, error, response } = await hosting.GET('/readyz', {});
-    return { status: response?.status ?? 0, ok: !error, data: data ?? error };
+  if (ep.path === '/healthz' || ep.path === '/readyz') {
+    const res = await fetch(`${getHostingUrl()}${ep.path}`);
+    const body = await res.json().catch(() => null);
+    return { status: res.status, ok: res.ok, data: body };
   }
   if (ep.path === '/v1/profiles') {
     const { data, error, response } = await node.GET('/v1/profiles', {});
