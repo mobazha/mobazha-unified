@@ -298,6 +298,12 @@ export const NODE_API = {
   FULFILLMENT_STORE_PRODUCT: (providerID: string, syncProductID: string) =>
     `/fulfillment/${providerID}/store-products/${syncProductID}`,
 
+  // --- Fulfillment Alerts & Rules (FF-4) ---
+  FULFILLMENT_ALERTS: '/fulfillment/alerts',
+  FULFILLMENT_ALERT: (alertID: string) => `/fulfillment/alerts/${alertID}`,
+  FULFILLMENT_RULES: '/fulfillment/rules',
+  FULFILLMENT_RULE: (ruleID: string) => `/fulfillment/rules/${ruleID}`,
+
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',

@@ -22,6 +22,9 @@ import type {
   SyncedProduct,
   SyncStatus,
   FulfillmentOrder,
+  SupplyChainAlert,
+  AutoActionRule,
+  CreateRuleRequest,
 } from '../../types/fulfillment';
 
 export async function getFulfillmentProviders(): Promise<ProviderConnection[]> {
@@ -121,4 +124,38 @@ export async function getFulfillmentOrderStatus(orderID: string): Promise<Fulfil
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Alerts & AutoAction Rules (FF-4)
+// ---------------------------------------------------------------------------
+
+export async function getAlerts(opts?: {
+  dismissed?: boolean;
+  limit?: number;
+}): Promise<SupplyChainAlert[]> {
+  const params = new URLSearchParams();
+  if (opts?.dismissed != null) params.set('dismissed', String(opts.dismissed));
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  const path = `${NODE_API.FULFILLMENT_ALERTS}${qs ? `?${qs}` : ''}`;
+  const res = await authGet<SupplyChainAlert[]>(path);
+  return Array.isArray(res) ? res : [];
+}
+
+export async function dismissAlert(alertID: string): Promise<void> {
+  await authDel(NODE_API.FULFILLMENT_ALERT(alertID));
+}
+
+export async function getRules(): Promise<AutoActionRule[]> {
+  const res = await authGet<AutoActionRule[]>(NODE_API.FULFILLMENT_RULES);
+  return Array.isArray(res) ? res : [];
+}
+
+export async function createRule(rule: CreateRuleRequest): Promise<AutoActionRule> {
+  return authPost<AutoActionRule>(NODE_API.FULFILLMENT_RULES, rule);
+}
+
+export async function deleteRule(ruleID: string): Promise<void> {
+  await authDel(NODE_API.FULFILLMENT_RULE(ruleID));
 }

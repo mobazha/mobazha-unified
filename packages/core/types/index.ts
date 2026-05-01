@@ -415,6 +415,13 @@ export type {
   FulfillmentShipment,
   FulfillmentCosts,
   FulfillmentOrder,
+  AlertType,
+  AlertSeverity,
+  SupplyChainAlert,
+  RuleTrigger,
+  RuleAction,
+  AutoActionRule,
+  CreateRuleRequest,
 } from './fulfillment';
 
 export { FULFILLMENT_PROVIDERS } from './fulfillment';
