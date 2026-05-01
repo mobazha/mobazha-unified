@@ -23,6 +23,8 @@ import {
   Grid3X3,
   List,
   Loader2,
+  Compass,
+  ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -366,12 +368,41 @@ export default function AdminProductsPage() {
           </p>
         )}
         {products.length > 0 && (
-          <Link href="/listing/new?from=admin" className={isEmbeddedApp ? '' : 'hidden md:block'}>
-            <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
-              <Plus className="w-4 h-4" />
-              {t('admin.products.addProduct')}
-            </Button>
-          </Link>
+          <div className={isEmbeddedApp ? '' : 'hidden md:block'}>
+            {supplyChainEnabled ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
+                    <Plus className="w-4 h-4" />
+                    {t('admin.products.addProduct')}
+                    <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/listing/new?from=admin" className="flex items-center">
+                      <Plus className="mr-2 h-4 w-4" />
+                      {t('admin.products.createNew')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/sourcing/catalog" className="flex items-center">
+                      <Compass className="mr-2 h-4 w-4" />
+                      {t('admin.products.sourceFromProvider')}
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/listing/new?from=admin">
+                <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
+                  <Plus className="w-4 h-4" />
+                  {t('admin.products.addProduct')}
+                </Button>
+              </Link>
+            )}
+          </div>
         )}
       </div>
 

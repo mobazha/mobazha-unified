@@ -4535,6 +4535,8 @@ export const en: TranslationResource = {
       subtitle: 'Manage your product listings',
       count: '{{count}} products',
       addProduct: 'Add Product',
+      createNew: 'Create New',
+      sourceFromProvider: 'Source from Provider',
       searchPlaceholder: 'Search products...',
       filterAll: 'All',
       filterActive: 'Active',

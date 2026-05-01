@@ -3994,6 +3994,8 @@ export const zh: TranslationResource = {
       subtitle: '管理你的商品列表',
       count: '{{count}} 件商品',
       addProduct: '添加商品',
+      createNew: '创建新商品',
+      sourceFromProvider: '从供应商导入',
       searchPlaceholder: '搜索商品...',
       filterAll: '全部',
       filterActive: '在售',
