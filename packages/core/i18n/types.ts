@@ -3423,8 +3423,8 @@ export interface TranslationResource {
       aiImprove?: string;
       aiGenerate?: string;
       aiSuggest?: string;
-      aiSuggestPrice?: string;
-      aiRecommended?: string;
+      smartPreset?: string;
+      categoryRecommended?: string;
       viewListing?: string;
       backToCatalog?: string;
       backToDesigns?: string;

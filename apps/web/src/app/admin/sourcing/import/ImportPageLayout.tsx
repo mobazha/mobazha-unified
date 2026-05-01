@@ -103,7 +103,7 @@ export function ImportPageLayout({
     }
   }, [customTitle, title, customDescription, description]);
 
-  const handleAiPricing = useCallback(async () => {
+  const handleCategoryPreset = useCallback(async () => {
     setAiLoadingField('pricing');
     try {
       const res = await aiService.suggestTags(customTitle || title, {
@@ -199,7 +199,9 @@ export function ImportPageLayout({
             href={backHref}
             className="px-4 py-2 text-sm rounded-md border hover:bg-muted transition-colors"
           >
-            {t('admin.sourcing.backToCatalog')}
+            {mode === 'design'
+              ? t('admin.sourcing.backToDesigns')
+              : t('admin.sourcing.backToCatalog')}
           </Link>
         </div>
       </div>
@@ -280,7 +282,7 @@ export function ImportPageLayout({
         markup={markup}
         onMarkupChange={setMarkup}
         suggestedMarkup={suggestedMarkup}
-        onRequestAiSuggestion={handleAiPricing}
+        onRequestAiSuggestion={handleCategoryPreset}
         aiLoading={aiLoadingField === 'pricing'}
       />
 
