@@ -10,9 +10,20 @@ import {
   Loader2,
   CheckCircle2,
   ExternalLink,
+  Bell,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  ShieldCheck,
+  BellOff,
 } from 'lucide-react';
-import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
-import type { ProviderConnection, SyncedProduct } from '@mobazha/core';
+import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS, useCurrency } from '@mobazha/core';
+import type {
+  ProviderConnection,
+  SyncedProduct,
+  SupplyChainAlert,
+  AlertSeverity,
+} from '@mobazha/core';
 import { cn } from '@/lib/utils';
 import { SourcingFeatureGuard } from './SourcingFeatureGuard';
 
@@ -90,7 +101,12 @@ const STATUS_STYLES: Record<string, string> = {
 const MAX_RECENT_ITEMS = 5;
 
 function RecentImportItem({ product }: { product: SyncedProduct }) {
+  const { formatPrice } = useCurrency();
   const displayName = product.title || product.listingSlug;
+  const retailCents = product.retailPrice ? parseFloat(product.retailPrice) : 0;
+  // Fulfillment providers (Printful, Printify) currently price in USD only.
+  // When per-mapping currency lands on SyncedProduct this should switch to it.
+  const currency = 'USD';
 
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
@@ -109,7 +125,7 @@ function RecentImportItem({ product }: { product: SyncedProduct }) {
         <div className="min-w-0">
           <span className="text-sm text-foreground truncate block">{displayName}</span>
           <span className="text-xs text-muted-foreground">
-            ${(parseFloat(product.retailPrice) / 100).toFixed(2)}
+            {formatPrice(retailCents / 100, currency)}
           </span>
         </div>
       </div>
@@ -133,17 +149,97 @@ export default function AdminSourcingPage() {
   );
 }
 
+const SEVERITY_STYLES: Record<AlertSeverity, string> = {
+  critical: 'bg-destructive/10 text-destructive',
+  warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200',
+  info: 'bg-primary/10 text-primary',
+};
+
+const SEVERITY_ICON: Record<AlertSeverity, typeof AlertCircle> = {
+  critical: AlertCircle,
+  warning: AlertTriangle,
+  info: Info,
+};
+
+function AlertsPanel({
+  alerts,
+  onDismiss,
+}: {
+  alerts: SupplyChainAlert[];
+  onDismiss: (id: string) => void;
+}) {
+  const { t } = useI18n();
+  const active = alerts.filter(a => !a.dismissed).slice(0, 3);
+
+  if (active.length === 0) return null;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-4 sm:p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">
+            {t('admin.sourcing.recentAlerts')}
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              ({active.length})
+            </span>
+          </h2>
+        </div>
+        <Link
+          href="/admin/sourcing/alerts"
+          className="text-xs text-primary hover:text-primary/80 transition-colors"
+        >
+          {t('admin.sourcing.viewAllAlerts')}
+        </Link>
+      </div>
+      <div className="space-y-2">
+        {active.map(alert => {
+          const SevIcon = SEVERITY_ICON[alert.severity] || Info;
+          return (
+            <div
+              key={alert.id}
+              className={cn(
+                'flex items-center gap-3 p-3 rounded-lg text-sm',
+                SEVERITY_STYLES[alert.severity]
+              )}
+            >
+              <SevIcon className="w-4 h-4 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium">{alert.title}</span>
+                <span className="opacity-70 ml-2 text-xs hidden sm:inline">{alert.message}</span>
+              </div>
+              <button
+                onClick={() => onDismiss(alert.id)}
+                className="p-1 rounded hover:bg-background/50 transition-colors shrink-0"
+                title={t('admin.sourcing.dismissAlert')}
+              >
+                <BellOff className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AdminSourcingContent() {
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const [connections, setConnections] = useState<ProviderConnection[]>([]);
   const [syncedProducts, setSyncedProducts] = useState<SyncedProduct[]>([]);
+  const [alerts, setAlerts] = useState<SupplyChainAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const conns = await fulfillmentApi.getFulfillmentProviders();
+      const [conns, fetchedAlerts] = await Promise.all([
+        fulfillmentApi.getFulfillmentProviders(),
+        fulfillmentApi.getAlerts({ limit: 10 }).catch(() => [] as SupplyChainAlert[]),
+      ]);
       setConnections(conns);
+      setAlerts(fetchedAlerts);
 
       const connected = conns.filter(c => c.status === 'connected');
       const allProducts = await Promise.all(
@@ -164,6 +260,16 @@ function AdminSourcingContent() {
   const connectedCount = connections.filter(c => c.status === 'connected').length;
   const connectionMap = Object.fromEntries(connections.map(c => [c.providerId, c]));
 
+  const totalCost = syncedProducts.reduce(
+    (sum, p) => sum + (p.supplierCost ? parseFloat(p.supplierCost) : 0),
+    0
+  );
+  const totalRetail = syncedProducts.reduce(
+    (sum, p) => sum + (p.retailPrice ? parseFloat(p.retailPrice) : 0),
+    0
+  );
+  const estProfit = totalRetail - totalCost;
+
   return (
     <div data-testid="admin-sourcing">
       {/* Header */}
@@ -177,7 +283,7 @@ function AdminSourcingContent() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <StatsCard
           label={t('admin.sourcing.connectedProviders')}
           value={connectedCount}
@@ -188,7 +294,26 @@ function AdminSourcingContent() {
           value={syncedProducts.length}
           loading={loading}
         />
+        <StatsCard
+          label={t('admin.sourcing.totalCost')}
+          value={loading ? '' : formatPrice(totalCost / 100, 'USD')}
+          loading={loading}
+        />
+        <StatsCard
+          label={t('admin.sourcing.estProfit')}
+          value={loading ? '' : formatPrice(estProfit / 100, 'USD')}
+          loading={loading}
+        />
       </div>
+
+      {/* Alerts Panel */}
+      <AlertsPanel
+        alerts={alerts}
+        onDismiss={async id => {
+          await fulfillmentApi.dismissAlert(id);
+          setAlerts(prev => prev.map(a => (a.id === id ? { ...a, dismissed: true } : a)));
+        }}
+      />
 
       {/* Connected Providers */}
       <div className="bg-card border border-border rounded-xl p-4 sm:p-6 mb-6">
@@ -253,25 +378,21 @@ function AdminSourcingContent() {
           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
         </Link>
 
-        <a
-          href="https://www.printful.com/custom-products"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/admin/sourcing/alerts"
           className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
         >
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-            <ExternalLink className="w-5 h-5 text-muted-foreground" />
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Bell className="w-5 h-5 text-primary" />
           </div>
           <div className="min-w-0">
             <p className="font-medium text-foreground text-sm">
-              {t('admin.sourcing.designOnPrintful')}
+              {t('admin.sourcing.alertsAndRules')}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {t('admin.sourcing.designOnPrintfulDesc')}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('admin.sourcing.alertsDesc')}</p>
           </div>
-          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
-        </a>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
+        </Link>
       </div>
 
       {/* Recent Imports */}

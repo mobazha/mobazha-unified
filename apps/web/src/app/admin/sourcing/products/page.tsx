@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Loader2,
@@ -8,17 +8,24 @@ import {
   RefreshCw,
   ExternalLink,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Clock,
+  TrendingUp,
 } from 'lucide-react';
-import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
-import type { SyncedProduct, ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
+import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS, useCurrency } from '@mobazha/core';
+import type {
+  SyncedProduct,
+  ProviderConnection,
+  FulfillmentProviderID,
+  SupplyChainAlert,
+} from '@mobazha/core';
 import { cn } from '@/lib/utils';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 
-type StatusFilter = 'all' | 'synced' | 'pending' | 'error';
+type StatusFilter = 'all' | 'synced' | 'pending' | 'error' | 'drift';
 
-type KnownStatus = 'synced' | 'pending' | 'error';
+type KnownStatus = 'synced' | 'pending' | 'error' | 'drift';
 
 const STATUS_CONFIG: Record<
   KnownStatus,
@@ -43,6 +50,14 @@ const STATUS_CONFIG: Record<
     className: 'text-destructive bg-destructive/10',
     label: 'admin.sourcing.statusError',
   },
+  drift: {
+    // Use the shared "amber" warning palette already used by status=pending —
+    // theme tokens (text-amber-* / bg-amber-*) keep dark mode legible. Raw
+    // tailwind orange-* hardcodes the hue and breaks brand theming.
+    icon: TrendingUp,
+    className: 'text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40',
+    label: 'admin.sourcing.statusDrift',
+  },
 };
 
 function getStatusConfig(status: string) {
@@ -51,19 +66,26 @@ function getStatusConfig(status: string) {
 
 function ProductRow({
   product,
+  hasDrift,
   onResync,
 }: {
   product: SyncedProduct;
+  hasDrift: boolean;
   onResync: (product: SyncedProduct) => void;
 }) {
   const { t } = useI18n();
-  const config = getStatusConfig(product.status);
+  const { formatPrice } = useCurrency();
+  const effectiveStatus = hasDrift && product.status === 'synced' ? 'drift' : product.status;
+  const config = getStatusConfig(effectiveStatus);
   const StatusIcon = config.icon;
+  // Fulfillment providers price in USD only (Printful, Printify); when per-mapping
+  // currency lands on SyncedProduct switch this default to product.currency.
+  const currency = 'USD';
   const retailDisplay = product.retailPrice
-    ? `$${(parseFloat(product.retailPrice) / 100).toFixed(2)}`
+    ? formatPrice(parseFloat(product.retailPrice) / 100, currency)
     : '—';
   const costDisplay = product.supplierCost
-    ? `$${(parseFloat(product.supplierCost) / 100).toFixed(2)}`
+    ? formatPrice(parseFloat(product.supplierCost) / 100, currency)
     : '—';
 
   return (
@@ -77,9 +99,17 @@ function ProductRow({
           )}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
-            {product.title || product.listingSlug}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-foreground truncate">
+              {product.title || product.listingSlug}
+            </p>
+            {hasDrift && (
+              <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 shrink-0">
+                <TrendingUp className="w-2.5 h-2.5" />
+                {t('admin.sourcing.driftBadge')}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">{product.providerId}</p>
         </div>
       </div>
@@ -88,7 +118,14 @@ function ProductRow({
       <div className="hidden sm:flex items-center gap-6 shrink-0 mx-4">
         <div className="text-right">
           <p className="text-xs text-muted-foreground">{t('admin.sourcing.cost')}</p>
-          <p className="text-sm text-foreground">{costDisplay}</p>
+          <p
+            className={cn(
+              'text-sm',
+              hasDrift ? 'text-amber-700 dark:text-amber-300 font-medium' : 'text-foreground'
+            )}
+          >
+            {costDisplay}
+          </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">{t('admin.sourcing.retail')}</p>
@@ -142,6 +179,7 @@ function AdminSourcingProductsContent() {
   const [connections, setConnections] = useState<ProviderConnection[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<FulfillmentProviderID | 'all'>('all');
   const [products, setProducts] = useState<SyncedProduct[]>([]);
+  const [alerts, setAlerts] = useState<SupplyChainAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -149,8 +187,12 @@ function AdminSourcingProductsContent() {
   useEffect(() => {
     (async () => {
       try {
-        const conns = await fulfillmentApi.getFulfillmentProviders();
+        const [conns, activeAlerts] = await Promise.all([
+          fulfillmentApi.getFulfillmentProviders(),
+          fulfillmentApi.getAlerts({ dismissed: false }).catch(() => [] as SupplyChainAlert[]),
+        ]);
         setConnections(conns);
+        setAlerts(activeAlerts);
       } finally {
         setLoading(false);
       }
@@ -192,16 +234,40 @@ function AdminSourcingProductsContent() {
     }
   };
 
+  const driftSlugs = useMemo(() => {
+    // Backend emits two related alert types for cost movement:
+    //   - price_drift: poll-based detector noticing variant cost drifted past threshold
+    //   - product_changed: webhook-driven cost-change notification
+    // Both indicate "supplier price has moved relative to the import baseline",
+    // which is exactly what this UI surfaces. Filtering on price_drift alone
+    // hid all webhook-driven drifts, leaving the banner permanently empty.
+    const slugs = new Set<string>();
+    for (const a of alerts) {
+      if (!a.listingSlug) continue;
+      if (a.alertType === 'price_drift' || a.alertType === 'product_changed') {
+        slugs.add(a.listingSlug);
+      }
+    }
+    return slugs;
+  }, [alerts]);
+
   const connectedProviders = connections.filter(c => c.status === 'connected');
 
-  const filteredProducts =
-    statusFilter === 'all' ? products : products.filter(p => p.status === statusFilter);
+  const filteredProducts = useMemo(() => {
+    if (statusFilter === 'drift') {
+      return products.filter(p => driftSlugs.has(p.listingSlug));
+    }
+    return statusFilter === 'all' ? products : products.filter(p => p.status === statusFilter);
+  }, [statusFilter, products, driftSlugs]);
 
-  const statusCounts = {
+  const driftCount = products.filter(p => driftSlugs.has(p.listingSlug)).length;
+
+  const statusCounts: Record<StatusFilter, number> = {
     all: products.length,
     synced: products.filter(p => p.status === 'synced').length,
     pending: products.filter(p => p.status === 'pending').length,
     error: products.filter(p => p.status === 'error').length,
+    drift: driftCount,
   };
 
   return (
@@ -249,16 +315,45 @@ function AdminSourcingProductsContent() {
         )}
       </div>
 
+      {/* Price drift banner */}
+      {driftCount > 0 && statusFilter !== 'drift' && (
+        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+          <AlertTriangle className="w-4 h-4 text-amber-700 dark:text-amber-300 shrink-0" />
+          <p className="text-sm text-amber-900 dark:text-amber-200 flex-1">
+            {t(
+              driftCount === 1 ? 'admin.sourcing.driftBanner' : 'admin.sourcing.driftBanner_plural',
+              { count: driftCount }
+            )}
+          </p>
+          <button
+            onClick={() => setStatusFilter('drift')}
+            className="text-xs font-medium text-amber-800 dark:text-amber-200 hover:underline shrink-0"
+          >
+            {t('admin.sourcing.reviewPricing')}
+          </button>
+        </div>
+      )}
+
       {/* Status filter tabs */}
-      <div className="flex items-center gap-1 mb-4 border-b border-border">
-        {(['all', 'synced', 'pending', 'error'] as StatusFilter[]).map(status => (
+      <div className="flex items-center gap-1 mb-4 border-b border-border overflow-x-auto">
+        {(
+          [
+            'all',
+            'synced',
+            'pending',
+            'error',
+            ...(driftCount > 0 ? ['drift' as const] : []),
+          ] as StatusFilter[]
+        ).map(status => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
             className={cn(
-              'px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
+              'px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap',
               statusFilter === status
-                ? 'border-primary text-primary'
+                ? status === 'drift'
+                  ? 'border-amber-500 text-amber-700 dark:text-amber-300'
+                  : 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
@@ -292,7 +387,12 @@ function AdminSourcingProductsContent() {
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           {filteredProducts.map(product => (
-            <ProductRow key={product.id} product={product} onResync={handleResync} />
+            <ProductRow
+              key={product.id}
+              product={product}
+              hasDrift={driftSlugs.has(product.listingSlug)}
+              onResync={handleResync}
+            />
           ))}
         </div>
       )}

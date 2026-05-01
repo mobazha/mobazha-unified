@@ -209,7 +209,66 @@ export interface FulfillmentOrder {
   maxRetries?: number;
 }
 
-export type FulfillmentProviderID = 'printful';
+// ---------------------------------------------------------------------------
+// Supply Chain Alerts & AutoAction Rules (FF-4)
+// ---------------------------------------------------------------------------
+// Keep these unions in sync with backend pkg/models/supply_chain.go.
+
+export type AlertType =
+  | 'stock_out'
+  | 'stock_back'
+  | 'price_drift'
+  | 'rule_action'
+  | 'product_changed'
+  | 'product_discontinued';
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+
+export interface SupplyChainAlert {
+  id: string;
+  providerId: string;
+  listingSlug: string;
+  alertType: AlertType;
+  severity: AlertSeverity;
+  title: string;
+  message: string;
+  dismissed: boolean;
+  actionTaken?: string;
+  createdAt: string;
+}
+
+export type RuleTrigger =
+  | 'stock_out'
+  | 'stock_back'
+  | 'price_drift'
+  | 'product_cost_changed'
+  | 'product_discontinued';
+export type RuleAction =
+  | 'hide_listing'
+  | 'show_listing'
+  | 'pause_listing'
+  | 'notify_only'
+  | 'auto_delist';
+
+export interface AutoActionRule {
+  id: string;
+  providerId?: string;
+  trigger: RuleTrigger;
+  action: RuleAction;
+  threshold?: number;
+  enabled?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRuleRequest {
+  providerId?: string;
+  trigger: RuleTrigger;
+  action: RuleAction;
+  threshold?: number;
+  enabled?: boolean;
+}
+
+export type FulfillmentProviderID = 'printful' | 'printify';
 
 export const FULFILLMENT_PROVIDERS: {
   id: FulfillmentProviderID;
@@ -224,5 +283,12 @@ export const FULFILLMENT_PROVIDERS: {
     descKey: 'admin.fulfillment.printfulDesc',
     iconPath: '/icons/brands/printful.svg',
     docsUrl: 'https://www.printful.com/dashboard/settings/api',
+  },
+  {
+    id: 'printify',
+    name: 'Printify',
+    descKey: 'admin.fulfillment.printifyDesc',
+    iconPath: '/icons/brands/printify.svg',
+    docsUrl: 'https://printify.com/app/account/api',
   },
 ];
