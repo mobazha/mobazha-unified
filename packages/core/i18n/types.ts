@@ -3356,11 +3356,16 @@ export interface TranslationResource {
       myDesignsPageDesc?: string;
       viewImported?: string;
       viewImportedDesc?: string;
+      designOnPrintful?: string;
+      designOnPrintfulDesc?: string;
+      createDesign?: string;
       recentImports?: string;
       viewAll?: string;
       noImports?: string;
       catalog?: string;
       catalogTitle?: string;
+      catalogPodNotice?: string;
+      catalogPodNoticeDesc?: string;
       searchCatalog?: string;
       variants?: string;
       import?: string;

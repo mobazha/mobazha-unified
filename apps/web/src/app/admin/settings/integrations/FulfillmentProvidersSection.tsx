@@ -93,10 +93,10 @@ export function FulfillmentProvidersSection() {
           description: t('admin.fulfillment.connectSuccessDesc'),
           action: (
             <button
-              onClick={() => router.push('/admin/sourcing/catalog')}
+              onClick={() => router.push('/admin/sourcing/designs')}
               className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
-              {t('admin.fulfillment.browseCatalog')}
+              {t('admin.sourcing.openSourcingHub')}
             </button>
           ),
         });

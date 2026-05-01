@@ -2,29 +2,21 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Loader2, Package } from 'lucide-react';
+import { Search, Loader2, Package, ExternalLink, Info } from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { CatalogProduct, ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 
-function CatalogProductCard({
-  product,
-  providerID,
-}: {
-  product: CatalogProduct;
-  providerID: string;
-}) {
+function CatalogProductCard({ product }: { product: CatalogProduct }) {
   const { t } = useI18n();
-  const currencyCode = product.currency ?? product.variants[0]?.currency ?? 'USD';
+  const variants = product.variants ?? [];
+  const currencyCode = product.currency ?? variants[0]?.currency ?? 'USD';
   const priceDisplay = product.minPrice
     ? `${parseFloat(product.minPrice).toFixed(2)} ${currencyCode}+`
     : '';
 
   return (
-    <Link
-      href={`/admin/sourcing/import/catalog/${providerID}/${product.id}`}
-      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors group block"
-    >
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="aspect-square bg-muted relative">
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
@@ -36,17 +28,16 @@ function CatalogProductCard({
       </div>
       <div className="p-3">
         <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-1">{product.title}</h3>
-        <p className="text-xs text-muted-foreground mb-2">
-          {product.variants.length} {t('admin.sourcing.variants')}
-        </p>
+        {variants.length > 0 && (
+          <p className="text-xs text-muted-foreground mb-2">
+            {variants.length} {t('admin.sourcing.variants')}
+          </p>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-primary">{priceDisplay}</span>
-          <span className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all">
-            {t('admin.sourcing.import')}
-          </span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -117,6 +108,36 @@ function AdminSourcingCatalogContent() {
         <span className="text-sm text-foreground font-medium">{t('admin.sourcing.catalog')}</span>
       </div>
 
+      {/* Info Banner */}
+      <div className="flex items-start gap-3 p-4 mb-6 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl">
+        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
+            {t('admin.sourcing.catalogPodNotice')}
+          </p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+            {t('admin.sourcing.catalogPodNoticeDesc')}
+          </p>
+          <div className="flex items-center gap-4 mt-3">
+            <a
+              href="https://www.printful.com/custom-products"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
+            >
+              {t('admin.sourcing.designOnPrintful')}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <Link
+              href="/admin/sourcing/designs"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
+            >
+              {t('admin.sourcing.myDesigns')} →
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Header with search and provider selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">
@@ -179,7 +200,7 @@ function AdminSourcingCatalogContent() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {catalog.map(product => (
-            <CatalogProductCard key={product.id} product={product} providerID={selectedProvider} />
+            <CatalogProductCard key={product.id} product={product} />
           ))}
         </div>
       )}

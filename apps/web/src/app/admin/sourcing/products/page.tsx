@@ -283,10 +283,10 @@ function AdminSourcingProductsContent() {
             {t('admin.sourcing.noImportedProductsDesc')}
           </p>
           <Link
-            href="/admin/sourcing/catalog"
+            href="/admin/sourcing/designs"
             className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
           >
-            {t('admin.sourcing.browseCatalog')}
+            {t('admin.sourcing.myDesigns')}
           </Link>
         </div>
       ) : (

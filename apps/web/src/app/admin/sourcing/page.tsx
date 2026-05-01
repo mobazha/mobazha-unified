@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Package, Compass, ArrowRight, Palette, Plus, Loader2, CheckCircle2 } from 'lucide-react';
+import {
+  Package,
+  ArrowRight,
+  Palette,
+  Plus,
+  Loader2,
+  CheckCircle2,
+  ExternalLink,
+} from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
 import type { ProviderConnection, SyncedProduct } from '@mobazha/core';
 import { cn } from '@/lib/utils';
@@ -216,22 +224,6 @@ function AdminSourcingContent() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <Link
-          href="/admin/sourcing/catalog"
-          className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Compass className="w-5 h-5 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium text-foreground text-sm">
-              {t('admin.sourcing.browseCatalog')}
-            </p>
-            <p className="text-xs text-muted-foreground">{t('admin.sourcing.browseCatalogDesc')}</p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
-        </Link>
-
-        <Link
           href="/admin/sourcing/designs"
           className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
         >
@@ -260,6 +252,26 @@ function AdminSourcingContent() {
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
         </Link>
+
+        <a
+          href="https://www.printful.com/custom-products"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
+        >
+          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <ExternalLink className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-sm">
+              {t('admin.sourcing.designOnPrintful')}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('admin.sourcing.designOnPrintfulDesc')}
+            </p>
+          </div>
+          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
+        </a>
       </div>
 
       {/* Recent Imports */}
