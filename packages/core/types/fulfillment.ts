@@ -268,7 +268,7 @@ export interface CreateRuleRequest {
   enabled?: boolean;
 }
 
-export type FulfillmentProviderID = 'printful' | 'printify';
+export type FulfillmentProviderID = 'printful' | 'printify' | 'cj';
 
 export const FULFILLMENT_PROVIDERS: {
   id: FulfillmentProviderID;
@@ -290,5 +290,12 @@ export const FULFILLMENT_PROVIDERS: {
     descKey: 'admin.fulfillment.printifyDesc',
     iconPath: '/icons/brands/printify.svg',
     docsUrl: 'https://printify.com/app/account/api',
+  },
+  {
+    id: 'cj',
+    name: 'CJ Dropshipping',
+    descKey: 'admin.fulfillment.cjDesc',
+    iconPath: '/icons/brands/cj.svg',
+    docsUrl: 'https://developers.cjdropshipping.com/',
   },
 ];

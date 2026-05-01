@@ -3258,6 +3258,7 @@ export interface TranslationResource {
       subtitle?: string;
       printfulDesc?: string;
       printifyDesc?: string;
+      cjDesc?: string;
       connected?: string;
       disconnected?: string;
       error?: string;
