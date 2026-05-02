@@ -8,6 +8,8 @@ import type {
   HapticCapability,
   ShareCapability,
   ShareResult,
+  ScanQRCapability,
+  ScanQRResult,
   ConfirmOptions,
   AlertOptions,
 } from '../types';
@@ -91,6 +93,10 @@ export interface TGWebAppLike {
   showConfirm?: (message: string, cb?: (confirmed: boolean) => void) => void;
   showAlert?: (message: string, cb?: () => void) => void;
   openTelegramLink?: (url: string) => void;
+  showScanQrPopup?: (params: { text?: string }, cb?: (text: string) => true | void) => void;
+  closeScanQrPopup?: () => void;
+  onEvent?: (event: string, cb: () => void) => void;
+  offEvent?: (event: string, cb: () => void) => void;
 }
 
 class TGPrimaryCTA implements PrimaryCTACapability {
@@ -287,6 +293,45 @@ class TGShare implements ShareCapability {
   }
 }
 
+class TGScanQR implements ScanQRCapability {
+  readonly isSupported: boolean;
+  constructor(private readonly sdk: TGWebAppLike) {
+    this.isSupported = typeof sdk.showScanQrPopup === 'function';
+  }
+
+  scan(opts?: { text?: string }): Promise<{ result: ScanQRResult; data?: string }> {
+    if (!this.isSupported || !this.sdk.showScanQrPopup) {
+      return Promise.resolve({ result: 'unsupported' });
+    }
+
+    return new Promise(resolve => {
+      let settled = false;
+
+      const onClosed = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve({ result: 'closed' });
+      };
+
+      const cleanup = () => {
+        this.sdk.offEvent?.('scanQrPopupClosed', onClosed);
+      };
+
+      this.sdk.onEvent?.('scanQrPopupClosed', onClosed);
+
+      this.sdk.showScanQrPopup!(opts ?? {}, (text: string) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        this.sdk.closeScanQrPopup?.();
+        resolve({ result: 'scanned', data: text });
+        return true;
+      });
+    });
+  }
+}
+
 export interface TelegramAdapter extends PlatformCapabilities {
   /** Release TG SDK subscriptions. Safe to call multiple times. */
   destroy(): void;
@@ -305,6 +350,7 @@ export function createTelegramAdapter(sdk: TGWebAppLike): TelegramAdapter {
   const confirm = new TGConfirm(sdk);
   const haptic = new TGHaptic(sdk.HapticFeedback);
   const share = new TGShare(sdk);
+  const scanQR = new TGScanQR(sdk);
 
   return {
     primaryCTA,
@@ -312,6 +358,7 @@ export function createTelegramAdapter(sdk: TGWebAppLike): TelegramAdapter {
     confirm,
     haptic,
     share,
+    scanQR,
     channel: 'telegram',
     destroy(): void {
       primaryCTA.destroy();

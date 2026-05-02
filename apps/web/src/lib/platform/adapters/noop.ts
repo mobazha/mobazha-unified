@@ -5,6 +5,7 @@ import type {
   ConfirmCapability,
   HapticCapability,
   ShareCapability,
+  ScanQRCapability,
 } from '../types';
 
 /**
@@ -54,11 +55,17 @@ export const noopShare: ShareCapability = {
   share: () => Promise.resolve('cancelled'),
 };
 
+export const noopScanQR: ScanQRCapability = {
+  scan: () => Promise.resolve({ result: 'unsupported' }),
+  isSupported: false,
+};
+
 export const noopCapabilities: PlatformCapabilities = {
   primaryCTA: noopPrimaryCTA,
   backAction: noopBackAction,
   confirm: noopConfirm,
   haptic: noopHaptic,
   share: noopShare,
+  scanQR: noopScanQR,
   channel: 'web',
 };

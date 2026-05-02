@@ -4376,6 +4376,15 @@ export interface TranslationResource {
 
   // Multi-Store (Phase MS) — My Stores console & claim flow
   stores?: TranslationSection;
+
+  // QR scanning
+  scan?: {
+    prompt?: string;
+    unsupported?: string;
+    paymentDetected?: string;
+    storeFound?: string;
+    searchFallback?: string;
+  };
 }
 
 // i18n 上下文类型

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container } from '@/components/layouts';
@@ -12,9 +12,39 @@ import {
   useStorefrontMode,
   useStorefrontProfile,
   useUserContext,
+  parseScanResult,
+  type AddressValidator,
 } from '@mobazha/core';
 import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
 import { usePlatform } from '@mobazha/ui/hooks';
+import { useScanQR } from '@/lib/platform';
+import { useToast } from '@/components/ui/use-toast';
+import WAValidator from 'multicoin-address-validator';
+
+const COINS_TO_CHECK: Array<{ symbol: string; name: string }> = [
+  { symbol: 'BTC', name: 'bitcoin' },
+  { symbol: 'BCH', name: 'bitcoincash' },
+  { symbol: 'LTC', name: 'litecoin' },
+  { symbol: 'ZEC', name: 'zcash' },
+  { symbol: 'ETH', name: 'ethereum' },
+];
+
+const validateCryptoAddress: AddressValidator = (address: string, coinHint?: string) => {
+  const coins = coinHint
+    ? COINS_TO_CHECK.filter(({ symbol }) => symbol === coinHint.toUpperCase())
+    : COINS_TO_CHECK;
+
+  for (const { symbol, name } of coins) {
+    try {
+      if (WAValidator.validate(address, name)) {
+        return { coin: symbol };
+      }
+    } catch {
+      // Validator may throw on unsupported formats
+    }
+  }
+  return undefined;
+};
 
 export const MobileHeader: React.FC = () => {
   const { isEmbeddedApp } = usePlatform();
@@ -26,6 +56,8 @@ export const MobileHeader: React.FC = () => {
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
   const brandProfile = standaloneMode ? storefrontProfile : profile;
+  const scanQR = useScanQR();
+  const { toast } = useToast();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,10 +66,47 @@ export const MobileHeader: React.FC = () => {
     }
   };
 
-  const handleScan = () => {
-    // TODO: 实现扫码功能
-    console.log('Scan QR code');
-  };
+  const handleScan = useCallback(async () => {
+    if (!scanQR.isSupported) {
+      toast({ description: t('scan.unsupported') });
+      return;
+    }
+
+    const { result, data } = await scanQR.scan({ text: t('scan.prompt') });
+
+    if (result !== 'scanned' || !data) return;
+
+    const parsed = parseScanResult(data, { validateAddress: validateCryptoAddress });
+
+    switch (parsed.type) {
+      case 'store':
+        router.push(`/store/${parsed.peerID}`);
+        break;
+      case 'listing':
+        router.push(`/product/${parsed.slug}?peerID=${encodeURIComponent(parsed.peerID)}`);
+        break;
+      case 'payment':
+        try {
+          await navigator.clipboard.writeText(parsed.address);
+          toast({
+            description: t('scan.paymentDetected', {
+              coin: parsed.coin,
+              address: parsed.address,
+            }),
+          });
+        } catch {
+          toast({ description: `${parsed.coin}: ${parsed.address}` });
+        }
+        break;
+      case 'url':
+        window.open(parsed.url, '_blank', 'noopener,noreferrer');
+        break;
+      case 'search':
+        toast({ description: t('scan.searchFallback') });
+        router.push(`/search?q=${encodeURIComponent(parsed.query)}`);
+        break;
+    }
+  }, [scanQR, router, toast, t]);
 
   return (
     <header className="md:hidden sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">

@@ -12,7 +12,7 @@ import type {
   ShareResult,
 } from '../types';
 import { BackActionStack } from '../backStack';
-import { noopPrimaryCTA } from './noop';
+import { noopPrimaryCTA, noopScanQR } from './noop';
 
 /**
  * MVP-1 — Web / Standalone adapter.
@@ -237,6 +237,7 @@ export function createWebAdapter(overrides?: {
     confirm: new WebConfirmAdapter(),
     haptic: new WebHapticAdapter(),
     share: new WebShareAdapter(),
+    scanQR: noopScanQR,
     channel: 'web',
   };
 }
