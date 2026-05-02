@@ -6582,6 +6582,13 @@ export const en: TranslationResource = {
       },
     },
   },
+  scan: {
+    prompt: 'Scan a QR code',
+    unsupported: 'QR scanning is only available in Telegram',
+    paymentDetected: '{{coin}} address copied: {{address}}',
+    storeFound: 'Opening store...',
+    searchFallback: 'Searching for scanned content...',
+  },
 };
 
 export default en;

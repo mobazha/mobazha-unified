@@ -95,6 +95,15 @@ export interface ShareCapability {
   share(opts: ShareOptions): Promise<ShareResult>;
 }
 
+export type ScanQRResult = 'scanned' | 'closed' | 'unsupported';
+
+export interface ScanQRCapability {
+  /** Open the QR scanner. Resolves when user scans a code or closes the popup. */
+  scan(opts?: { text?: string }): Promise<{ result: ScanQRResult; data?: string }>;
+  /** True if the host supports native QR scanning (Telegram Bot API 6.4+). */
+  readonly isSupported: boolean;
+}
+
 export type PlatformChannel = 'telegram' | 'discord' | 'web' | 'standalone';
 
 export interface PlatformCapabilities {
@@ -103,6 +112,7 @@ export interface PlatformCapabilities {
   confirm: ConfirmCapability;
   haptic: HapticCapability;
   share: ShareCapability;
+  scanQR: ScanQRCapability;
   /**
    * Channel identifier. Business code should NOT branch on this — it's
    * exposed for analytics, logging, and debugging only.

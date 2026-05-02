@@ -44,6 +44,9 @@ export * from './storeConfigValidator';
 // 物流商配置与追踪 URL 工具
 export * from './shipping';
 
+// 扫码结果解析
+export * from './scanResult';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

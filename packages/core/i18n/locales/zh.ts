@@ -5578,4 +5578,11 @@ export const zh: TranslationResource = {
       },
     },
   },
+  scan: {
+    prompt: '扫描二维码',
+    unsupported: '扫码功能仅在 Telegram 中可用',
+    paymentDetected: '{{coin}} 地址已复制：{{address}}',
+    storeFound: '正在打开店铺...',
+    searchFallback: '正在搜索扫码内容...',
+  },
 };
