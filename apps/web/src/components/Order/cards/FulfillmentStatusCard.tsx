@@ -28,34 +28,34 @@ const STATUS_CONFIG: Record<
   draft: { icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted' },
   pending: {
     icon: Clock,
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+    color: 'text-warning',
+    bgColor: 'bg-warning/15',
   },
   in_process: {
     icon: Package,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    color: 'text-info',
+    bgColor: 'bg-info/15',
   },
   shipped: {
     icon: Truck,
-    color: 'text-indigo-600 dark:text-indigo-400',
-    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    color: 'text-info',
+    bgColor: 'bg-info/15',
   },
   delivered: {
     icon: CheckCircle2,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    color: 'text-success',
+    bgColor: 'bg-success/15',
   },
   canceled: { icon: XCircle, color: 'text-muted-foreground', bgColor: 'bg-muted' },
   failed: {
     icon: AlertCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    color: 'text-destructive',
+    bgColor: 'bg-destructive/15',
   },
   supplier_loss: {
     icon: AlertCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    color: 'text-destructive',
+    bgColor: 'bg-destructive/15',
   },
 };
 

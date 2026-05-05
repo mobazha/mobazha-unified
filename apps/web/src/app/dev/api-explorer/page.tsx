@@ -282,18 +282,16 @@ async function typeSafeFetch(
 
 function StatusBadge({ status, ok }: { status: number; ok: boolean }) {
   if (status === 0) return <span className="text-xs text-muted-foreground">--</span>;
-  const color = ok
-    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+  const color = ok ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive';
   return <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${color}`}>{status}</span>;
 }
 
 function MethodBadge({ method }: { method: string }) {
   const colors: Record<string, string> = {
-    GET: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    POST: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    PUT: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    GET: 'bg-info/15 text-info',
+    POST: 'bg-success/15 text-success',
+    PUT: 'bg-warning/15 text-warning',
+    DELETE: 'bg-destructive/15 text-destructive',
   };
   return (
     <span
