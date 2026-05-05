@@ -296,6 +296,6 @@ export const FULFILLMENT_PROVIDERS: {
     name: 'CJ Dropshipping',
     descKey: 'admin.fulfillment.cjDesc',
     iconPath: '/icons/brands/cj.svg',
-    docsUrl: 'https://developers.cjdropshipping.com/',
+    docsUrl: 'https://www.cjdropshipping.com/my.html#/apikey',
   },
 ];

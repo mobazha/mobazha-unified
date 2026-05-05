@@ -96,7 +96,7 @@ export function FulfillmentProvidersSection() {
               onClick={() => router.push('/admin/sourcing/designs')}
               className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
-              {t('admin.sourcing.openSourcingHub')}
+              {t('admin.fulfillment.openSourcingHub')}
             </button>
           ),
         });
@@ -164,9 +164,7 @@ export function FulfillmentProvidersSection() {
               key={provider.id}
               className={cn(
                 'rounded-lg border p-4 transition-colors',
-                isConnected
-                  ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20'
-                  : 'border-border'
+                isConnected ? 'border-success/30 bg-success/8' : 'border-border'
               )}
             >
               <div className="flex items-center justify-between">
@@ -185,7 +183,7 @@ export function FulfillmentProvidersSection() {
                 <div className="flex items-center gap-2">
                   {isConnected ? (
                     <>
-                      <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                      <span className="flex items-center gap-1 text-sm font-medium text-success">
                         <CheckCircle className="w-4 h-4" />
                         {t('admin.fulfillment.connected')}
                       </span>
@@ -215,7 +213,7 @@ export function FulfillmentProvidersSection() {
 
               {/* Connected details */}
               {isConnected && conn && (
-                <div className="mt-3 pt-3 border-t border-green-200/50 dark:border-green-800/50 space-y-2">
+                <div className="mt-3 pt-3 border-t border-success/30 space-y-2">
                   {conn.storeName && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground">
@@ -229,7 +227,13 @@ export function FulfillmentProvidersSection() {
                       <span className="text-muted-foreground">
                         {t('admin.fulfillment.connectedAt')}:
                       </span>
-                      <span>{new Date(conn.connectedAt).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(conn.connectedAt).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </span>
                     </div>
                   )}
                   {conn.webhookUrl && (
@@ -237,7 +241,7 @@ export function FulfillmentProvidersSection() {
                       <span className="text-muted-foreground">
                         {t('admin.fulfillment.webhookUrl')}:
                       </span>
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded max-w-[300px] truncate">
+                      <code className="text-xs bg-muted/50 border border-success/20 px-1.5 py-0.5 rounded max-w-[300px] truncate text-foreground">
                         {conn.webhookUrl}
                       </code>
                       <button
@@ -246,7 +250,7 @@ export function FulfillmentProvidersSection() {
                         title={t('admin.fulfillment.copy')}
                       >
                         {copiedField === `webhook-${provider.id}` ? (
-                          <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                          <CheckCircle className="w-3.5 h-3.5 text-success" />
                         ) : (
                           <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                         )}

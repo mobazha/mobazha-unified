@@ -83,11 +83,11 @@ export function VariantSelector({
                 {price.toFixed(2)} {currency}
               </span>
               {inStock ? (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                <span className="text-xs px-1.5 py-0.5 rounded bg-success/15 text-success">
                   {t('admin.sourcing.inStock')}
                 </span>
               ) : (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                <span className="text-xs px-1.5 py-0.5 rounded bg-warning/15 text-warning">
                   {t('admin.sourcing.outOfStock')}
                 </span>
               )}
