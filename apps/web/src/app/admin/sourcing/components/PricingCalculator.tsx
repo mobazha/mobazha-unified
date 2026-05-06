@@ -111,7 +111,7 @@ export function PricingCalculator({
                 <button
                   type="button"
                   onClick={() => onMarkupChange(suggestedMarkup)}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-info/15 text-info hover:bg-info/25 transition-colors"
                 >
                   {t('admin.sourcing.categoryRecommended')}: {suggestedMarkup}%
                 </button>
@@ -150,7 +150,7 @@ export function PricingCalculator({
                 <TrendingUp className="w-3.5 h-3.5" />
                 {t('admin.sourcing.yourProfit')}
               </span>
-              <span className="font-mono font-medium text-green-600 dark:text-green-400">
+              <span className="font-mono font-medium text-success">
                 +{profit.toFixed(2)} {currency}
               </span>
             </div>
@@ -168,7 +168,7 @@ export function PricingCalculator({
           <div className="pt-1">
             <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-200"
+                className="h-full rounded-full bg-success transition-all duration-200"
                 style={{ width: `${Math.min(margin, 100)}%` }}
               />
             </div>

@@ -87,16 +87,24 @@ export function FulfillmentProvidersSection() {
         setExpandedProvider(null);
         setFormValues(prev => ({ ...prev, [providerID]: { apiKey: '' } }));
 
-        const providerName = FULFILLMENT_PROVIDERS.find(p => p.id === providerID)?.name ?? '';
+        const providerInfo = FULFILLMENT_PROVIDERS.find(p => p.id === providerID);
+        const providerName = providerInfo?.name ?? '';
+        const isCatalogWorkflow = providerInfo?.workflow === 'catalog';
         toast({
           title: t('admin.fulfillment.connectSuccess', { provider: providerName }),
           description: t('admin.fulfillment.connectSuccessDesc'),
           action: (
             <button
-              onClick={() => router.push('/admin/sourcing/designs')}
+              onClick={() =>
+                router.push(
+                  isCatalogWorkflow ? '/admin/sourcing/catalog' : '/admin/sourcing/designs'
+                )
+              }
               className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
-              {t('admin.fulfillment.openSourcingHub')}
+              {isCatalogWorkflow
+                ? t('admin.sourcing.browseCatalog')
+                : t('admin.fulfillment.openSourcingHub')}
             </button>
           ),
         });

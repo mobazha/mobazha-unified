@@ -86,9 +86,12 @@ function AdminSourcingDesignsContent() {
   const fetchDesigns = useCallback(async () => {
     if (!selectedProvider) return;
     try {
+      setDesigns([]);
       setDesignsLoading(true);
       const page = await fulfillmentApi.getStoreSyncProducts(selectedProvider);
       setDesigns(page.products);
+    } catch {
+      setDesigns([]);
     } finally {
       setDesignsLoading(false);
     }
@@ -101,6 +104,9 @@ function AdminSourcingDesignsContent() {
   }, [selectedProvider, fetchDesigns]);
 
   const connectedProviders = connections.filter(c => c.status === 'connected');
+  const currentProviderInfo = FULFILLMENT_PROVIDERS.find(fp => fp.id === selectedProvider);
+  const providerName = currentProviderInfo?.name || selectedProvider;
+  const providerProductsUrl = currentProviderInfo?.productsUrl || '';
 
   return (
     <div data-testid="admin-sourcing-designs">
@@ -143,14 +149,14 @@ function AdminSourcingDesignsContent() {
               })}
             </select>
           )}
-          {connectedProviders.length > 0 && (
+          {connectedProviders.length > 0 && providerProductsUrl && designs.length > 0 && (
             <a
-              href="https://www.printful.com/dashboard/product-templates"
+              href={providerProductsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
             >
-              {t('admin.sourcing.createDesign')}
+              {t('admin.sourcing.createDesign', { provider: providerName })}
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
@@ -170,7 +176,7 @@ function AdminSourcingDesignsContent() {
             {t('admin.sourcing.connectToSeeDesigns')}
           </p>
           <Link
-            href="/admin/settings/integrations"
+            href="/admin/settings/integrations?tab=fulfillment"
             className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
           >
             {t('admin.sourcing.connectProvider')}
@@ -180,16 +186,20 @@ function AdminSourcingDesignsContent() {
         <div className="text-center py-16">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-foreground font-medium mb-2">{t('admin.sourcing.noDesigns')}</p>
-          <p className="text-sm text-muted-foreground mb-4">{t('admin.sourcing.noDesignsDesc')}</p>
-          <a
-            href="https://www.printful.com/dashboard/product-templates"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
-          >
-            {t('admin.sourcing.createDesign')}
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <p className="text-sm text-muted-foreground mb-4">
+            {t('admin.sourcing.noDesignsDesc', { provider: providerName })}
+          </p>
+          {providerProductsUrl && (
+            <a
+              href={providerProductsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
+            >
+              {t('admin.sourcing.createDesign', { provider: providerName })}
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">

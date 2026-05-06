@@ -9,13 +9,12 @@ import {
   Plus,
   Loader2,
   CheckCircle2,
-  ExternalLink,
   Bell,
   AlertTriangle,
   AlertCircle,
   Info,
-  ShieldCheck,
   BellOff,
+  LayoutGrid,
 } from 'lucide-react';
 import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS, useCurrency } from '@mobazha/core';
 import type {
@@ -71,7 +70,7 @@ function ProviderCard({
         <div>
           <div className="flex items-center gap-2">
             <p className="font-medium text-foreground">{provider.name}</p>
-            {connected && <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
+            {connected && <CheckCircle2 className="w-3.5 h-3.5 text-success" />}
           </div>
           <p className="text-xs text-muted-foreground">
             {connected
@@ -82,7 +81,7 @@ function ProviderCard({
       </div>
       {!connected && (
         <Link
-          href="/admin/settings/integrations"
+          href="/admin/settings/integrations?tab=fulfillment"
           className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           {t('admin.sourcing.connect')}
@@ -94,18 +93,23 @@ function ProviderCard({
 
 const STATUS_STYLES: Record<string, string> = {
   synced: 'bg-primary/10 text-primary',
-  pending: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200',
+  pending: 'bg-warning/15 text-warning',
   error: 'bg-destructive/10 text-destructive',
 };
 
 const MAX_RECENT_ITEMS = 5;
 
+const STATUS_LABELS: Record<string, string> = {
+  synced: 'admin.sourcing.statusSynced',
+  pending: 'admin.sourcing.statusPending',
+  error: 'admin.sourcing.statusError',
+};
+
 function RecentImportItem({ product }: { product: SyncedProduct }) {
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const displayName = product.title || product.listingSlug;
   const retailCents = product.retailPrice ? parseFloat(product.retailPrice) : 0;
-  // Fulfillment providers (Printful, Printify) currently price in USD only.
-  // When per-mapping currency lands on SyncedProduct this should switch to it.
   const currency = 'USD';
 
   return (
@@ -135,7 +139,7 @@ function RecentImportItem({ product }: { product: SyncedProduct }) {
           STATUS_STYLES[product.status] || STATUS_STYLES.pending
         )}
       >
-        {product.status}
+        {t(STATUS_LABELS[product.status] || STATUS_LABELS.pending)}
       </span>
     </div>
   );
@@ -151,8 +155,8 @@ export default function AdminSourcingPage() {
 
 const SEVERITY_STYLES: Record<AlertSeverity, string> = {
   critical: 'bg-destructive/10 text-destructive',
-  warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200',
-  info: 'bg-primary/10 text-primary',
+  warning: 'bg-warning/15 text-warning',
+  info: 'bg-info/15 text-info',
 };
 
 const SEVERITY_ICON: Record<AlertSeverity, typeof AlertCircle> = {
@@ -322,7 +326,7 @@ function AdminSourcingContent() {
             {t('admin.sourcing.providers')}
           </h2>
           <Link
-            href="/admin/settings/integrations"
+            href="/admin/settings/integrations?tab=fulfillment"
             className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -347,7 +351,7 @@ function AdminSourcingContent() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <Link
           href="/admin/sourcing/designs"
           className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
@@ -358,6 +362,22 @@ function AdminSourcingContent() {
           <div className="min-w-0">
             <p className="font-medium text-foreground text-sm">{t('admin.sourcing.myDesigns')}</p>
             <p className="text-xs text-muted-foreground">{t('admin.sourcing.myDesignsDesc')}</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
+        </Link>
+
+        <Link
+          href="/admin/sourcing/catalog"
+          className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <LayoutGrid className="w-5 h-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-sm">
+              {t('admin.sourcing.browseCatalog')}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('admin.sourcing.browseCatalogDesc')}</p>
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary ml-auto shrink-0 transition-colors" />
         </Link>

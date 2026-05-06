@@ -1,22 +1,41 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Search, Loader2, Package, ExternalLink, Info } from 'lucide-react';
-import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS } from '@mobazha/core';
+import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS, useCurrency } from '@mobazha/core';
 import type { CatalogProduct, ProviderConnection, FulfillmentProviderID } from '@mobazha/core';
 import { SourcingFeatureGuard } from '../SourcingFeatureGuard';
 
-function CatalogProductCard({ product }: { product: CatalogProduct }) {
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+function CatalogProductCard({
+  product,
+  providerID,
+}: {
+  product: CatalogProduct;
+  providerID: string;
+}) {
   const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const variants = product.variants ?? [];
   const currencyCode = product.currency ?? variants[0]?.currency ?? 'USD';
   const priceDisplay = product.minPrice
-    ? `${parseFloat(product.minPrice).toFixed(2)} ${currencyCode}+`
+    ? `${formatPrice(parseFloat(product.minPrice), currencyCode)}+`
     : '';
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <Link
+      href={`/admin/sourcing/import/catalog/${providerID}/${product.id}`}
+      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors group block"
+    >
       <div className="aspect-square bg-muted relative">
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
@@ -37,7 +56,7 @@ function CatalogProductCard({ product }: { product: CatalogProduct }) {
           <span className="text-sm font-semibold text-primary">{priceDisplay}</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -57,6 +76,8 @@ function AdminSourcingCatalogContent() {
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     (async () => {
@@ -75,16 +96,25 @@ function AdminSourcingCatalogContent() {
 
   const fetchCatalog = useCallback(async () => {
     if (!selectedProvider) return;
+    const currentId = ++requestIdRef.current;
     try {
+      setCatalog([]);
       setCatalogLoading(true);
       const page = await fulfillmentApi.getFulfillmentCatalog(selectedProvider, {
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
       });
+      if (currentId !== requestIdRef.current) return;
       setCatalog(page.products);
+    } catch {
+      if (currentId === requestIdRef.current) {
+        setCatalog([]);
+      }
     } finally {
-      setCatalogLoading(false);
+      if (currentId === requestIdRef.current) {
+        setCatalogLoading(false);
+      }
     }
-  }, [selectedProvider, searchQuery]);
+  }, [selectedProvider, debouncedSearch]);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -93,6 +123,10 @@ function AdminSourcingCatalogContent() {
   }, [selectedProvider, fetchCatalog]);
 
   const connectedProviders = connections.filter(c => c.status === 'connected');
+  const currentProviderInfo = FULFILLMENT_PROVIDERS.find(fp => fp.id === selectedProvider);
+  const providerName = currentProviderInfo?.name || selectedProvider;
+  const providerProductsUrl = currentProviderInfo?.productsUrl || '';
+  const isPODProvider = currentProviderInfo?.workflow === 'pod';
 
   return (
     <div data-testid="admin-sourcing-catalog">
@@ -108,35 +142,39 @@ function AdminSourcingCatalogContent() {
         <span className="text-sm text-foreground font-medium">{t('admin.sourcing.catalog')}</span>
       </div>
 
-      {/* Info Banner */}
-      <div className="flex items-start gap-3 p-4 mb-6 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl">
-        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
-            {t('admin.sourcing.catalogPodNotice')}
-          </p>
-          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-            {t('admin.sourcing.catalogPodNoticeDesc')}
-          </p>
-          <div className="flex items-center gap-4 mt-3">
-            <a
-              href="https://www.printful.com/custom-products"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
-            >
-              {t('admin.sourcing.designOnPrintful')}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-            <Link
-              href="/admin/sourcing/designs"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
-            >
-              {t('admin.sourcing.myDesigns')} →
-            </Link>
+      {/* Info Banner — only for POD providers */}
+      {isPODProvider && (
+        <div className="flex items-start gap-3 p-4 mb-6 bg-info/10 border border-info/30 rounded-xl">
+          <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm text-foreground font-medium">
+              {t('admin.sourcing.catalogPodNotice')}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('admin.sourcing.catalogPodNoticeDesc')}
+            </p>
+            <div className="flex items-center gap-4 mt-3">
+              {providerProductsUrl && (
+                <a
+                  href={providerProductsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-info hover:text-info/80 transition-colors"
+                >
+                  {t('admin.sourcing.createDesign', { provider: providerName })}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              <Link
+                href="/admin/sourcing/designs"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-info hover:text-info/80 transition-colors"
+              >
+                {t('admin.sourcing.myDesigns')} →
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Header with search and provider selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
@@ -186,7 +224,7 @@ function AdminSourcingCatalogContent() {
             {t('admin.sourcing.noProvidersDesc')}
           </p>
           <Link
-            href="/admin/settings/integrations"
+            href="/admin/settings/integrations?tab=fulfillment"
             className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
           >
             {t('admin.sourcing.connectProvider')}
@@ -195,12 +233,23 @@ function AdminSourcingCatalogContent() {
       ) : catalog.length === 0 ? (
         <div className="text-center py-16">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground text-sm">{t('admin.sourcing.noCatalogItems')}</p>
+          <p className="text-foreground font-medium mb-2">{t('admin.sourcing.noCatalogItems')}</p>
+          {providerProductsUrl && (
+            <a
+              href={providerProductsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
+            >
+              {t('admin.sourcing.goToProviderDashboard', { provider: providerName })}
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {catalog.map(product => (
-            <CatalogProductCard key={product.id} product={product} />
+            <CatalogProductCard key={product.id} product={product} providerID={selectedProvider} />
           ))}
         </div>
       )}

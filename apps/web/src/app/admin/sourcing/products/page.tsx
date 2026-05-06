@@ -110,7 +110,10 @@ function ProductRow({
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{product.providerId}</p>
+          <p className="text-xs text-muted-foreground">
+            {FULFILLMENT_PROVIDERS.find(fp => fp.id === product.providerId)?.name ||
+              product.providerId}
+          </p>
         </div>
       </div>
 
@@ -253,6 +256,17 @@ function AdminSourcingProductsContent() {
 
   const connectedProviders = connections.filter(c => c.status === 'connected');
 
+  const preferCatalogCTA = useMemo(() => {
+    if (selectedProvider !== 'all') {
+      const info = FULFILLMENT_PROVIDERS.find(fp => fp.id === selectedProvider);
+      return info?.workflow === 'catalog';
+    }
+    return connectedProviders.some(c => {
+      const info = FULFILLMENT_PROVIDERS.find(fp => fp.id === c.providerId);
+      return info?.workflow === 'catalog';
+    });
+  }, [selectedProvider, connectedProviders]);
+
   const filteredProducts = useMemo(() => {
     if (statusFilter === 'drift') {
       return products.filter(p => driftSlugs.has(p.listingSlug));
@@ -378,10 +392,10 @@ function AdminSourcingProductsContent() {
             {t('admin.sourcing.noImportedProductsDesc')}
           </p>
           <Link
-            href="/admin/sourcing/designs"
+            href={preferCatalogCTA ? '/admin/sourcing/catalog' : '/admin/sourcing/designs'}
             className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
           >
-            {t('admin.sourcing.myDesigns')}
+            {preferCatalogCTA ? t('admin.sourcing.browseCatalog') : t('admin.sourcing.myDesigns')}
           </Link>
         </div>
       ) : (
