@@ -410,6 +410,7 @@ export type {
   SyncedProduct,
   SyncStatus,
   FulfillmentProviderID,
+  FulfillmentWorkflow,
   FulfillmentStatus,
   FulfillmentFailureReason,
   FulfillmentShipment,

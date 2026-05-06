@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useI18n, useFeature } from '@mobazha/core';
 import { Bell, Webhook, Sparkles, Package } from 'lucide-react';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
@@ -10,9 +11,31 @@ import { WebhookSection } from './WebhookSection';
 import { AIConfigSection } from './AIConfigSection';
 import { FulfillmentProvidersSection } from './FulfillmentProvidersSection';
 
+const VALID_TABS = ['notifications', 'ai', 'fulfillment', 'webhooks'] as const;
+type TabValue = (typeof VALID_TABS)[number];
+
+function resolveTab(param: string | null, supplyChainEnabled: boolean): TabValue {
+  if (param && (VALID_TABS as readonly string[]).includes(param)) {
+    if (param === 'fulfillment' && !supplyChainEnabled) return 'notifications';
+    return param as TabValue;
+  }
+  return 'notifications';
+}
+
 export default function AdminIntegrationsPage() {
   const { t } = useI18n();
   const supplyChainEnabled = useFeature('supplyChainEnabled');
+  const searchParams = useSearchParams();
+  const derivedTab = useMemo(
+    () => resolveTab(searchParams.get('tab'), supplyChainEnabled),
+    [searchParams, supplyChainEnabled]
+  );
+  const [activeTab, setActiveTab] = useState<TabValue>(derivedTab);
+  const [prevDerived, setPrevDerived] = useState(derivedTab);
+  if (derivedTab !== prevDerived) {
+    setPrevDerived(derivedTab);
+    setActiveTab(derivedTab);
+  }
 
   return (
     <div data-testid="admin-integrations">
@@ -22,7 +45,7 @@ export default function AdminIntegrationsPage() {
         backHref="/admin/settings"
       />
 
-      <Tabs defaultValue="notifications">
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as TabValue)}>
         <TabsList>
           <TabsTrigger value="notifications" className="gap-1.5">
             <Bell className="w-4 h-4" />

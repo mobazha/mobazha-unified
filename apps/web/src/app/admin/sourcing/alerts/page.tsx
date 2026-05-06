@@ -70,7 +70,7 @@ function alertTypeLabel(t: (k: string) => string, type: AlertType): string {
   return map[type] || type;
 }
 
-function severityLabel(t: (k: string) => string, sev: AlertSeverity): string {
+function _severityLabel(t: (k: string) => string, sev: AlertSeverity): string {
   const map: Record<AlertSeverity, string> = {
     info: t('admin.sourcing.alertSeverityInfo'),
     warning: t('admin.sourcing.alertSeverityWarning'),
@@ -174,7 +174,7 @@ function RuleCard({ rule, onDelete }: { rule: AutoActionRule; onDelete: (id: str
           <span
             className={cn(
               'w-2 h-2 rounded-full shrink-0',
-              rule.enabled !== false ? 'bg-green-500' : 'bg-muted-foreground'
+              rule.enabled !== false ? 'bg-success' : 'bg-muted-foreground'
             )}
           />
           <span className="text-xs text-muted-foreground">

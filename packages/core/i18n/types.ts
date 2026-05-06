@@ -3381,6 +3381,7 @@ export interface TranslationResource {
       noProvidersDesc?: string;
       connectProvider?: string;
       noCatalogItems?: string;
+      goToProviderDashboard?: string;
       connectToSeeDesigns?: string;
       noDesigns?: string;
       noDesignsDesc?: string;

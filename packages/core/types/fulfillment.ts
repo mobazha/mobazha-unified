@@ -270,12 +270,16 @@ export interface CreateRuleRequest {
 
 export type FulfillmentProviderID = 'printful' | 'printify' | 'cj';
 
+export type FulfillmentWorkflow = 'pod' | 'catalog';
+
 export const FULFILLMENT_PROVIDERS: {
   id: FulfillmentProviderID;
   name: string;
   descKey: string;
   iconPath: string;
   docsUrl: string;
+  productsUrl: string;
+  workflow: FulfillmentWorkflow;
 }[] = [
   {
     id: 'printful',
@@ -283,6 +287,8 @@ export const FULFILLMENT_PROVIDERS: {
     descKey: 'admin.fulfillment.printfulDesc',
     iconPath: '/icons/brands/printful.svg',
     docsUrl: 'https://www.printful.com/dashboard/settings/api',
+    productsUrl: 'https://www.printful.com/dashboard/product-templates',
+    workflow: 'pod',
   },
   {
     id: 'printify',
@@ -290,6 +296,8 @@ export const FULFILLMENT_PROVIDERS: {
     descKey: 'admin.fulfillment.printifyDesc',
     iconPath: '/icons/brands/printify.svg',
     docsUrl: 'https://printify.com/app/account/api',
+    productsUrl: 'https://printify.com/app/products',
+    workflow: 'pod',
   },
   {
     id: 'cj',
@@ -297,5 +305,7 @@ export const FULFILLMENT_PROVIDERS: {
     descKey: 'admin.fulfillment.cjDesc',
     iconPath: '/icons/brands/cj.svg',
     docsUrl: 'https://www.cjdropshipping.com/my.html#/apikey',
+    productsUrl: 'https://www.cjdropshipping.com/my.html#/list',
+    workflow: 'catalog',
   },
 ];

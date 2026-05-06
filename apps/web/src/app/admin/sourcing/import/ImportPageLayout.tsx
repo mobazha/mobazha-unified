@@ -180,7 +180,7 @@ export function ImportPageLayout({
   if (result) {
     return (
       <div className="flex flex-col items-center py-16 space-y-4">
-        <CheckCircle className="w-14 h-14 text-green-500" />
+        <CheckCircle className="w-14 h-14 text-success" />
         <div className="text-center">
           <p className="font-semibold text-xl">{t('admin.sourcing.importSuccessDraft')}</p>
           <p className="text-sm text-muted-foreground mt-1">
