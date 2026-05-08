@@ -25,6 +25,6 @@
       "next/font/google": ["../web/src/compat/font-google.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "../web/src/types/outpost.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
