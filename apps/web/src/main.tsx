@@ -10,7 +10,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './app/globals.css';
 
 // 导入 Provider 组件
-import { AuthProvider, MobileNav, ChatSystem, PWAInstall } from '@/components';
+import { AuthProvider, MobileNav, PWAInstall } from '@/components';
+import { ChatSystem } from '@/components/ChatSystem';
 import { OuterProviders } from '@/components/OuterProviders';
 import { StorefrontProvider } from '@/components/StorefrontProvider';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
