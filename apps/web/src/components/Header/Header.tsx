@@ -263,7 +263,7 @@ export const Header: React.FC = () => {
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
             <ThemeSwitcher compact />
-            {typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? null : isLoading ? (
+            {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : isAuthenticated && profile ? (
               <DropdownMenu>

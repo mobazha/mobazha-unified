@@ -13,6 +13,7 @@ interface SidebarItem {
   href: string;
   icon: React.ReactNode;
   saasOnly?: boolean;
+  hideOutpost?: boolean;
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -21,6 +22,7 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.profile',
     href: '/settings/page-profile',
     icon: <User className="w-4 h-4" />,
+    hideOutpost: true,
   },
   {
     id: 'general',
@@ -33,30 +35,35 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.account',
     href: '/settings/account',
     icon: <Link2 className="w-4 h-4" />,
+    hideOutpost: true,
   },
   {
     id: 'addresses',
     labelKey: 'settings.sidebar.addresses',
     href: '/settings/addresses',
     icon: <MapPin className="w-4 h-4" />,
+    hideOutpost: true,
   },
   {
     id: 'blocked',
     labelKey: 'settings.sidebar.blocked',
     href: '/settings/blocked',
     icon: <Ban className="w-4 h-4" />,
+    hideOutpost: true,
   },
   {
     id: 'chat-encryption',
     labelKey: 'settings.sidebar.chatEncryption',
     href: '/settings/chat-encryption',
     icon: <Key className="w-4 h-4" />,
+    hideOutpost: true,
   },
   {
     id: 'moderation',
     labelKey: 'settings.sidebar.moderation',
     href: '/settings/moderation',
     icon: <Scale className="w-4 h-4" />,
+    hideOutpost: true,
   },
   {
     id: 'advanced',
@@ -70,9 +77,15 @@ export const SettingsSidebar: React.FC = () => {
   const { t } = useI18n();
   const pathname = usePathname();
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const isOutpost = __OUTPOST__;
   const visibleItems = useMemo(
-    () => (standaloneMode ? sidebarItems.filter(item => !item.saasOnly) : sidebarItems),
-    [standaloneMode]
+    () =>
+      sidebarItems.filter(item => {
+        if (isOutpost && item.hideOutpost) return false;
+        if (standaloneMode && item.saasOnly) return false;
+        return true;
+      }),
+    [standaloneMode, isOutpost]
   );
 
   return (

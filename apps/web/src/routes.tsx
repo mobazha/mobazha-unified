@@ -506,6 +506,17 @@ if (__OUTPOST__) {
       element: protectedPage(() => import('./app/listing/edit/[slug]/page')),
     },
 
+    // Personal settings (language, country, currency, theme, notifications)
+    {
+      path: '/settings',
+      element: lazyPage(() => import('./app/settings/SettingsLayoutVite')),
+      children: [
+        { index: true, element: lazyPage(() => import('./app/settings/page')) },
+        { path: 'general', element: lazyPage(() => import('./app/settings/general/page')) },
+        { path: 'advanced', element: lazyPage(() => import('./app/settings/advanced/page')) },
+      ],
+    },
+
     // Notifications (local WebSocket only)
     { path: '/notifications', element: protectedPage(() => import('./app/notifications/page')) },
   ];

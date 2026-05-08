@@ -152,6 +152,7 @@ function StoreStatusToggle() {
 export default function AdminSettingsPage() {
   const { t } = useI18n();
   const { isEmbeddedApp } = usePlatform();
+  const isOutpost = __OUTPOST__;
 
   return (
     <div data-testid="admin-settings">
@@ -178,12 +179,14 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.profileDesc')}
             href="/admin/settings/profile"
           />
-          <SettingsCard
-            icon={Shield}
-            title={t('admin.settings.accessControl')}
-            description={t('admin.settings.accessControlDesc')}
-            href="/admin/settings/access-control"
-          />
+          {!isOutpost && (
+            <SettingsCard
+              icon={Shield}
+              title={t('admin.settings.accessControl')}
+              description={t('admin.settings.accessControlDesc')}
+              href="/admin/settings/access-control"
+            />
+          )}
         </SettingsSection>
 
         {/* Transaction Rules */}
@@ -201,44 +204,52 @@ export default function AdminSettingsPage() {
             href="/admin/settings/payments"
           />
           <SettingsCard
-            icon={ShoppingBag}
-            title={t('admin.settings.guestCheckout')}
-            description={t('admin.settings.guestCheckoutDesc')}
-            href="/admin/settings/guest-checkout"
-          />
-          <SettingsCard
             icon={Truck}
             title={t('admin.settings.shipping')}
             description={t('admin.settings.shippingDesc')}
             href="/admin/settings/shipping"
           />
-          <SettingsCard
-            icon={Scale}
-            title={t('admin.settings.moderators')}
-            description={t('admin.settings.moderatorsDesc')}
-            href="/admin/settings/moderators"
-          />
+          {!isOutpost && (
+            <>
+              <SettingsCard
+                icon={ShoppingBag}
+                title={t('admin.settings.guestCheckout')}
+                description={t('admin.settings.guestCheckoutDesc')}
+                href="/admin/settings/guest-checkout"
+              />
+              <SettingsCard
+                icon={Scale}
+                title={t('admin.settings.moderators')}
+                description={t('admin.settings.moderatorsDesc')}
+                href="/admin/settings/moderators"
+              />
+            </>
+          )}
         </SettingsSection>
 
-        {/* Growth */}
-        <SettingsSection title={t('admin.settings.sectionGrowth')}>
-          <SettingsCard
-            icon={Megaphone}
-            title={t('admin.settings.salesChannels')}
-            description={t('admin.settings.salesChannelsDesc')}
-            href="/admin/settings/sales-channels"
-          />
-        </SettingsSection>
+        {!isOutpost && (
+          <>
+            {/* Growth */}
+            <SettingsSection title={t('admin.settings.sectionGrowth')}>
+              <SettingsCard
+                icon={Megaphone}
+                title={t('admin.settings.salesChannels')}
+                description={t('admin.settings.salesChannelsDesc')}
+                href="/admin/settings/sales-channels"
+              />
+            </SettingsSection>
 
-        {/* Extensions */}
-        <SettingsSection title={t('admin.settings.sectionExtensions')}>
-          <SettingsCard
-            icon={Plug}
-            title={t('admin.settings.integrations')}
-            description={t('admin.settings.integrationsDesc')}
-            href="/admin/settings/integrations"
-          />
-        </SettingsSection>
+            {/* Extensions */}
+            <SettingsSection title={t('admin.settings.sectionExtensions')}>
+              <SettingsCard
+                icon={Plug}
+                title={t('admin.settings.integrations')}
+                description={t('admin.settings.integrationsDesc')}
+                href="/admin/settings/integrations"
+              />
+            </SettingsSection>
+          </>
+        )}
       </div>
     </div>
   );

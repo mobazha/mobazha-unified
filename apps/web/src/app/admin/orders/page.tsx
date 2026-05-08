@@ -621,7 +621,7 @@ export default function AdminOrdersPage() {
                     type="date"
                     value={dateFrom}
                     onChange={e => setDateFrom(e.target.value)}
-                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
                     aria-label={t('admin.orders.dateFrom')}
                   />
                 </div>
@@ -632,7 +632,7 @@ export default function AdminOrdersPage() {
                     type="date"
                     value={dateTo}
                     onChange={e => setDateTo(e.target.value)}
-                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
                     aria-label={t('admin.orders.dateTo')}
                   />
                 </div>
@@ -648,7 +648,7 @@ export default function AdminOrdersPage() {
                     type="date"
                     value={dateFrom}
                     onChange={e => setDateFrom(e.target.value)}
-                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
                     aria-label={t('admin.orders.dateFrom')}
                   />
                 </div>
@@ -659,7 +659,7 @@ export default function AdminOrdersPage() {
                     type="date"
                     value={dateTo}
                     onChange={e => setDateTo(e.target.value)}
-                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground"
+                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
                     aria-label={t('admin.orders.dateTo')}
                   />
                 </div>

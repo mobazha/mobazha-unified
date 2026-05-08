@@ -588,70 +588,74 @@ export default function StandaloneSetupWizard({
             </div>
           </div>
 
-          {/* Store Visibility */}
-          <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
-            <h3 className="text-xs sm:text-sm font-medium text-foreground">
-              {t('admin.onboarding.storeVisibility')}
-            </h3>
-            <div className="space-y-2">
-              {[
-                {
-                  value: 'public' as const,
-                  icon: Globe,
-                  titleKey: 'settings.visibility.public',
-                  descKey: 'settings.visibility.publicDesc',
-                },
-                {
-                  value: 'unlisted' as const,
-                  icon: Link2,
-                  titleKey: 'settings.visibility.unlisted',
-                  descKey: 'settings.visibility.unlistedDesc',
-                },
-                {
-                  value: 'private' as const,
-                  icon: Lock,
-                  titleKey: 'settings.visibility.private',
-                  descKey: 'settings.visibility.privateDesc',
-                },
-              ].map(opt => {
-                const Icon = opt.icon;
-                const selected = visibility === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    disabled={saving}
-                    onClick={() => setVisibility(opt.value)}
-                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-muted-foreground/30'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                        selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+          {/* Store Visibility — hidden for Outpost (always unlisted) */}
+          {!isOutpostMode() && (
+            <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">
+                {t('admin.onboarding.storeVisibility')}
+              </h3>
+              <div className="space-y-2">
+                {[
+                  {
+                    value: 'public' as const,
+                    icon: Globe,
+                    titleKey: 'settings.visibility.public',
+                    descKey: 'settings.visibility.publicDesc',
+                  },
+                  {
+                    value: 'unlisted' as const,
+                    icon: Link2,
+                    titleKey: 'settings.visibility.unlisted',
+                    descKey: 'settings.visibility.unlistedDesc',
+                  },
+                  {
+                    value: 'private' as const,
+                    icon: Lock,
+                    titleKey: 'settings.visibility.private',
+                    descKey: 'settings.visibility.privateDesc',
+                  },
+                ].map(opt => {
+                  const Icon = opt.icon;
+                  const selected = visibility === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={saving}
+                      onClick={() => setVisibility(opt.value)}
+                      className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/30'
                       }`}
                     >
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{t(opt.titleKey)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
-                    </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                        selected ? 'border-primary' : 'border-muted-foreground/40'
-                      }`}
-                    >
-                      {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </div>
-                  </button>
-                );
-              })}
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                          selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <Icon className="w-4.5 h-4.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{t(opt.titleKey)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                          selected ? 'border-primary' : 'border-muted-foreground/40'
+                        }`}
+                      >
+                        {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.onboarding.visibilityNote')}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
-          </div>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             <button
@@ -688,11 +692,17 @@ export default function StandaloneSetupWizard({
             </div>
             <div>
               <h2 className="text-lg font-semibold">
-                {t('standalone.setup.regionTitle') || 'Location & Currency'}
+                {isOutpostMode()
+                  ? t('outpost.setup.regionTitle', { defaultValue: 'Location' })
+                  : t('standalone.setup.regionTitle') || 'Location & Currency'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {t('standalone.setup.regionDesc') ||
-                  'Set your country and preferred display currency'}
+                {isOutpostMode()
+                  ? t('outpost.setup.regionDesc', {
+                      defaultValue: 'Set your country for shipping calculations',
+                    })
+                  : t('standalone.setup.regionDesc') ||
+                    'Set your country and preferred display currency'}
               </p>
             </div>
           </div>
@@ -702,6 +712,7 @@ export default function StandaloneSetupWizard({
             currency={currency}
             onCountryChange={setCountry}
             onCurrencyChange={setCurrency}
+            hideCurrency={isOutpostMode()}
           />
 
           <div className="flex items-center justify-between pt-2">

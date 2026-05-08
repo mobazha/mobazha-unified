@@ -15,7 +15,7 @@ import {
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
-const FOOTER_CRYPTO_TOKENS = [
+const FOOTER_CRYPTO_TOKENS_FULL = [
   { id: 'BTC', name: 'Bitcoin' },
   { id: 'ETH', name: 'Ethereum' },
   { id: 'BNB', name: 'BNB Chain' },
@@ -26,6 +26,13 @@ const FOOTER_CRYPTO_TOKENS = [
   { id: 'USDT', name: 'Tether (USDT)' },
   { id: 'USDC', name: 'USD Coin (USDC)' },
 ];
+
+const FOOTER_CRYPTO_TOKENS_OUTPOST = [
+  { id: 'LTC', name: 'Litecoin' },
+  { id: 'XMR', name: 'Monero' },
+];
+
+const FOOTER_CRYPTO_TOKENS = __OUTPOST__ ? FOOTER_CRYPTO_TOKENS_OUTPOST : FOOTER_CRYPTO_TOKENS_FULL;
 
 const FOOTER_FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
   {
@@ -331,12 +338,16 @@ export const Footer: React.FC = () => {
                   <TokenIcon token={id} size={20} />
                 </span>
               ))}
-              <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
-              {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
-                <span key={id} title={name} className="flex items-center">
-                  {icon}
-                </span>
-              ))}
+              {!__OUTPOST__ && (
+                <>
+                  <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                  {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
+                    <span key={id} title={name} className="flex items-center">
+                      {icon}
+                    </span>
+                  ))}
+                </>
+              )}
             </div>
           </div>
 

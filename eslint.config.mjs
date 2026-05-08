@@ -117,6 +117,8 @@ export default [
         isFinite: 'readonly',
         encodeURIComponent: 'readonly',
         decodeURIComponent: 'readonly',
+        // Vite build-time constants
+        __OUTPOST__: 'readonly',
         // Node globals
         process: 'readonly',
         module: 'readonly',
