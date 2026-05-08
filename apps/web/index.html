@@ -35,6 +35,9 @@
       }
     </script>
     
+    <!-- Node.js global polyfill for libraries like multicoin-address-validator -->
+    <script>if(typeof global==="undefined"){window.global=window;}</script>
+    
     <!-- Runtime config — injected by container init at startup (standalone mode).
          Sets window.__RUNTIME_CONFIG__ with SAAS_API_URL and other env-specific values.
          Not present during local dev or SaaS deployments; onerror is a silent no-op. -->

@@ -22,13 +22,16 @@ interface FontResult {
 
 const loadedFamilies = new Set<string>();
 
+const _GFONTS_CDN: string =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://fonts.googleapis.com/css2';
+
 function loadGoogleFont(family: string, weights?: string[]) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined' || !_GFONTS_CDN) return;
   if (loadedFamilies.has(family)) return;
   loadedFamilies.add(family);
 
   const w = weights?.length ? `:wght@${weights.join(';')}` : '';
-  const url = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, '+')}${w}&display=swap`;
+  const url = `${_GFONTS_CDN}?family=${family.replace(/ /g, '+')}${w}&display=swap`;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = url;

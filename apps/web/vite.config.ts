@@ -37,7 +37,127 @@ function readBody(req: IncomingMessage): Promise<string> {
  * Without this, Vite returns 404 for the script in index.html and the app can fall back to
  * SaaS homepage even when the shell passes standalone env vars.
  */
+/**
+ * Strips external resources from index.html for Outpost privacy builds:
+ * - Google Fonts preconnect + stylesheet links
+ * - Telegram SDK conditional loader script
+ * - Any <script src> pointing to external domains
+ */
+function outpostHtmlStripPlugin(): Plugin {
+  return {
+    name: 'outpost-html-strip',
+    transformIndexHtml(html) {
+      return (
+        html
+          // Remove Google Fonts links
+          .replace(/\s*<link[^>]*fonts\.googleapis\.com[^>]*\/?\s*>/g, '')
+          .replace(/\s*<link[^>]*fonts\.gstatic\.com[^>]*\/?\s*>/g, '')
+          // Remove Telegram SDK loader script block
+          .replace(/\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g, '')
+      );
+    },
+  };
+}
+
+/**
+ * Outpost resolveId plugin — intercepts relative imports inside monorepo
+ * packages that bypass Vite alias (aliases only match raw specifiers).
+ * Maps resolved absolute paths to their _outpost stub counterparts.
+ */
+function outpostResolvePlugin(): Plugin {
+  const chatStub = path.resolve(__dirname, './src/stubs/chat-components.ts');
+  const chatSystemStub = path.resolve(__dirname, './src/components/ChatSystem_outpost.tsx');
+  const matrixInitStub = path.resolve(
+    __dirname,
+    '../../packages/core/hooks/useMatrixInit_outpost.ts'
+  );
+
+  const rewrites: Array<{ test: RegExp; replacement: string }> = [
+    {
+      test: /\/packages\/core\/providers\/AppKitProvider\.tsx$/,
+      replacement: path.resolve(
+        __dirname,
+        '../../packages/core/providers/AppKitProvider_outpost.tsx'
+      ),
+    },
+    {
+      test: /\/packages\/core\/config\/appkit\.ts$/,
+      replacement: path.resolve(__dirname, '../../packages/core/config/appkit_outpost.ts'),
+    },
+    {
+      test: /\/src\/components\/DiscordActivityProvider\/DiscordActivityProvider\.tsx$/,
+      replacement: path.resolve(__dirname, './src/components/DiscordActivityProvider_outpost.tsx'),
+    },
+    {
+      test: /\/src\/components\/Payment\/StripePaymentForm\.tsx$/,
+      replacement: path.resolve(
+        __dirname,
+        './src/components/Payment/StripePaymentForm_outpost.tsx'
+      ),
+    },
+    // --- Matrix / Chat isolation for Outpost ---
+    {
+      test: /\/packages\/core\/hooks\/useMatrixInit\.ts$/,
+      replacement: matrixInitStub,
+    },
+    {
+      test: /\/src\/components\/ChatSystem\/(index\.ts|ChatSystem\.tsx|ChatSystemLazy\.tsx)$/,
+      replacement: chatSystemStub,
+    },
+    {
+      test: /\/src\/components\/Chat\/[^/]+\.(ts|tsx)$/,
+      replacement: chatStub,
+    },
+    {
+      test: /\/src\/components\/ChatDrawer\/(index\.ts|ChatDrawer\.tsx|NewChatDialog\.tsx|RoomSettingsPanel\.tsx|VerificationDialog\.tsx)$/,
+      replacement: chatStub,
+    },
+    {
+      test: /\/src\/components\/ChatDrawer\/hooks\/[^/]+\.(ts|tsx)$/,
+      replacement: chatStub,
+    },
+    {
+      test: /\/src\/components\/ChatFloatingButton\/[^/]+\.(ts|tsx)$/,
+      replacement: chatStub,
+    },
+    // Redirect the full Matrix client to a no-op stub — prevents the real
+    // MatrixClientService from being bundled even when imported via barrel exports.
+    {
+      test: /\/packages\/core\/services\/matrix\/client\.ts$/,
+      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/client_outpost.ts'),
+    },
+    {
+      test: /\/packages\/core\/services\/matrix\/index\.ts$/,
+      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/index_outpost.ts'),
+    },
+    // Redirect chat page to a no-op stub
+    {
+      test: /\/src\/app\/chat\/page\.tsx$/,
+      replacement: path.resolve(__dirname, './src/app/chat/page_outpost.tsx'),
+    },
+  ];
+
+  return {
+    name: 'outpost-resolve',
+    enforce: 'pre',
+    async resolveId(source, importer, options) {
+      if (!importer) return null;
+      const resolved = await this.resolve(source, importer, { ...options, skipSelf: true });
+      if (!resolved) return null;
+      for (const { test, replacement } of rewrites) {
+        if (test.test(resolved.id)) {
+          return replacement;
+        }
+      }
+      return null;
+    },
+  };
+}
+
 function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
+  const buildTarget = env.VITE_BUILD_TARGET || 'default';
+  const isOutpost = buildTarget === 'outpost';
+
   return {
     name: 'standalone-runtime-config',
     configureServer(server) {
@@ -47,16 +167,19 @@ function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
           next();
           return;
         }
-        if (env.NEXT_PUBLIC_ENV_MODE !== 'standalone') {
+        if (env.NEXT_PUBLIC_ENV_MODE !== 'standalone' && !isOutpost) {
           next();
           return;
         }
-        const saasUrl = env.NEXT_PUBLIC_SAAS_URL || 'https://app.mobazha.org';
+        const saasUrl = env.NEXT_PUBLIC_SAAS_URL || '';
+        const payload: Record<string, unknown> = {
+          authMode: 'standalone',
+        };
+        if (saasUrl) payload.saasUrl = saasUrl;
+        if (isOutpost) payload.outpostMode = true;
         res.setHeader('Content-Type', 'application/javascript');
         res.setHeader('Cache-Control', 'no-cache');
-        res.end(
-          `window.__RUNTIME_CONFIG__={saasUrl:${JSON.stringify(saasUrl)},authMode:"standalone"};`
-        );
+        res.end(`window.__RUNTIME_CONFIG__=${JSON.stringify(payload)};`);
       });
     },
   };
@@ -117,8 +240,10 @@ function aiProxyPlugin(): Plugin {
 
 export default defineConfig(({ mode }) => {
   // 加载 .env.local 等环境文件中的 NEXT_PUBLIC_* 和 OPENAI_* 变量
-  const env = loadEnv(mode, process.cwd(), ['NEXT_PUBLIC_', 'OPENAI_']);
+  const env = loadEnv(mode, process.cwd(), ['NEXT_PUBLIC_', 'OPENAI_', 'VITE_']);
   const apiBase = env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+  const buildTarget = env.VITE_BUILD_TARGET || 'default';
+  const isOutpost = buildTarget === 'outpost';
 
   // 注入 AI 相关环境变量到 process.env（供 aiHandler 使用）
   if (env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = env.OPENAI_API_KEY;
@@ -126,30 +251,42 @@ export default defineConfig(({ mode }) => {
   if (env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = env.OPENAI_BASE_URL;
 
   return {
-    plugins: [react(), standaloneRuntimeConfigPlugin(env), aiProxyPlugin()],
+    plugins: [
+      react(),
+      standaloneRuntimeConfigPlugin(env),
+      ...(!isOutpost ? [aiProxyPlugin()] : []),
+      ...(isOutpost ? [outpostHtmlStripPlugin(), outpostResolvePlugin()] : []),
+    ],
     // 定义全局变量，兼容 Next.js 环境变量
     // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
     // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined
     define: {
+      __OUTPOST__: JSON.stringify(isOutpost),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.NEXT_PUBLIC_ENV_MODE': JSON.stringify(env.NEXT_PUBLIC_ENV_MODE || 'test'),
+      'process.env.NEXT_PUBLIC_ENV_MODE': JSON.stringify(
+        isOutpost ? 'standalone' : env.NEXT_PUBLIC_ENV_MODE || 'test'
+      ),
       'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(env.NEXT_PUBLIC_API_URL || ''),
       'process.env.NEXT_PUBLIC_MATRIX_HOMESERVER': JSON.stringify(
-        env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org'
+        isOutpost ? '' : env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org'
       ),
       'process.env.NEXT_PUBLIC_MATRIX_ENABLED': JSON.stringify(
-        env.NEXT_PUBLIC_MATRIX_ENABLED || 'true'
+        isOutpost ? 'false' : env.NEXT_PUBLIC_MATRIX_ENABLED || 'true'
       ),
       'process.env.NEXT_PUBLIC_USE_MOCK_DATA': JSON.stringify(
         env.NEXT_PUBLIC_USE_MOCK_DATA || 'false'
       ),
       'process.env.NEXT_PUBLIC_API_BASE_URL': JSON.stringify(apiBase),
       'process.env.NEXT_PUBLIC_AUTH_MODE': JSON.stringify(env.NEXT_PUBLIC_AUTH_MODE || ''),
-      'process.env.NEXT_PUBLIC_CASDOOR_URL': JSON.stringify(env.NEXT_PUBLIC_CASDOOR_URL || ''),
-      'process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID': JSON.stringify(
-        env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || ''
+      'process.env.NEXT_PUBLIC_CASDOOR_URL': JSON.stringify(
+        isOutpost ? '' : env.NEXT_PUBLIC_CASDOOR_URL || ''
       ),
-      'process.env.NEXT_PUBLIC_SAAS_URL': JSON.stringify(env.NEXT_PUBLIC_SAAS_URL || ''),
+      'process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID': JSON.stringify(
+        isOutpost ? '' : env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || ''
+      ),
+      'process.env.NEXT_PUBLIC_SAAS_URL': JSON.stringify(
+        isOutpost ? '' : env.NEXT_PUBLIC_SAAS_URL || ''
+      ),
       'process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE': JSON.stringify(
         env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE || ''
       ),
@@ -159,6 +296,132 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: [
+        // Outpost build-time module replacements — physically remove forbidden code
+        ...(isOutpost
+          ? [
+              {
+                find: /^@\/components\/OuterProviders$/,
+                replacement: path.resolve(__dirname, './src/components/OuterProviders_outpost.tsx'),
+              },
+              {
+                find: /^@\/components\/ChatSystem$/,
+                replacement: path.resolve(__dirname, './src/components/ChatSystem_outpost.tsx'),
+              },
+              {
+                find: /^@\/components\/admin\/AdminLoginForm$/,
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/admin/AdminLoginForm_outpost.tsx'
+                ),
+              },
+              {
+                find: /^@\/components\/AppKitProvider$/,
+                replacement: path.resolve(__dirname, './src/components/AppKitProvider_outpost.tsx'),
+              },
+              // Intercept packages/core internal relative imports to AppKitProvider
+              {
+                find: new RegExp(
+                  path
+                    .resolve(__dirname, '../../packages/core/providers/AppKitProvider')
+                    .replace(/[/\\]/g, '[/\\\\]') + '(\\.tsx)?$'
+                ),
+                replacement: path.resolve(
+                  __dirname,
+                  '../../packages/core/providers/AppKitProvider_outpost.tsx'
+                ),
+              },
+              // Intercept packages/core/config/appkit (contains APPKIT_PROJECT_ID with reown cloud URL)
+              {
+                find: new RegExp(
+                  path
+                    .resolve(__dirname, '../../packages/core/config/appkit')
+                    .replace(/[/\\]/g, '[/\\\\]') + '(\\.ts)?$'
+                ),
+                replacement: path.resolve(
+                  __dirname,
+                  '../../packages/core/config/appkit_outpost.ts'
+                ),
+              },
+              {
+                find: /^@\/components\/DiscordActivityProvider$/,
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/DiscordActivityProvider_outpost.tsx'
+                ),
+              },
+              // Intercept packages/core internal imports to DiscordActivityProvider
+              {
+                find: new RegExp(
+                  path
+                    .resolve(__dirname, '../../packages/core/providers/DiscordActivityProvider')
+                    .replace(/[/\\]/g, '[/\\\\]') + '(\\.tsx)?$'
+                ),
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/DiscordActivityProvider_outpost.tsx'
+                ),
+              },
+              // Intercept the barrel re-export inside DiscordActivityProvider/index.ts
+              {
+                find: new RegExp(
+                  path
+                    .resolve(
+                      __dirname,
+                      './src/components/DiscordActivityProvider/DiscordActivityProvider'
+                    )
+                    .replace(/[/\\]/g, '[/\\\\]') + '(\\.tsx)?$'
+                ),
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/DiscordActivityProvider_outpost.tsx'
+                ),
+              },
+              // Stripe SDK — replace StripePaymentForm with noop stub
+              {
+                find: /^@\/components\/Payment\/StripePaymentForm$/,
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/Payment/StripePaymentForm_outpost.tsx'
+                ),
+              },
+              {
+                find: /^\.\/StripePaymentForm$/,
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/Payment/StripePaymentForm_outpost.tsx'
+                ),
+              },
+              {
+                find: /^@\/components\/TGMiniAppProvider$/,
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/TGMiniAppProvider_outpost.tsx'
+                ),
+              },
+              // NPM-level package stubs — prevent any transitive import from pulling in forbidden SDKs.
+              // Regex must match the ENTIRE specifier (.*) so the replacement is the sole resolved path.
+              {
+                find: /^@reown\/appkit.*/,
+                replacement: path.resolve(__dirname, './src/stubs/empty-module.ts'),
+              },
+              {
+                find: /^@walletconnect\/.*/,
+                replacement: path.resolve(__dirname, './src/stubs/empty-module.ts'),
+              },
+              {
+                find: /^@discord\/embedded-app-sdk.*/,
+                replacement: path.resolve(__dirname, './src/stubs/empty-module.ts'),
+              },
+              {
+                find: /^@stripe\/stripe-js.*/,
+                replacement: path.resolve(__dirname, './src/stubs/empty-module.ts'),
+              },
+              {
+                find: /^@stripe\/react-stripe-js.*/,
+                replacement: path.resolve(__dirname, './src/stubs/empty-module.ts'),
+              },
+            ]
+          : []),
         // 项目别名
         { find: '@', replacement: path.resolve(__dirname, './src') },
         // workspace 包 - 支持子路径导入和热加载

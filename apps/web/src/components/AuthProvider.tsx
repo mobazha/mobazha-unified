@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useUserStore, useCartStore, useMatrixInit } from '@mobazha/core';
+import { useUserStore, useCartStore, useMatrixInit, isStandalone } from '@mobazha/core';
 import {
   hasOAuthCallback,
   getOAuthParams,
@@ -19,8 +19,8 @@ import {
   extractStorefrontReturn,
   buildTelegramMiniAppStoreContextFromWindow,
 } from '@mobazha/core';
-import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
-import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
+import { useDiscordActivity } from '@/components/DiscordActivityProvider';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -102,10 +102,10 @@ export function AuthProvider({
     }
   }, [isAuthenticated, hasHashToken]);
 
-  // 初始化 Matrix（在用户登录后自动连接）
+  // 初始化 Matrix（在用户登录后自动连接；Outpost 模式下完全禁用）
   useMatrixInit({
-    enabled: true,
-    autoConnect: true,
+    enabled: !__OUTPOST__,
+    autoConnect: !__OUTPOST__,
   });
 
   // Sync local cart to backend when user logs in (anonymous → authenticated).
@@ -351,9 +351,14 @@ export function AuthProvider({
   useEffect(() => {
     if (!isInitialized || isProcessingOAuth) return;
 
+    // Standalone / Outpost: admin setup lives inside /admin (StandaloneSetupWizard).
+    // Never redirect to /onboarding — that route only exists for SaaS Casdoor flows.
+    const standaloneOrOutpost =
+      typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? true : isStandalone();
+
     // 如果已认证且在登录页（且没有 OAuth 参数），重定向到目标页面
     if (isAuthenticated && pathname === '/login' && !hasOAuthCallback()) {
-      if (needsOnboarding) {
+      if (needsOnboarding && !standaloneOrOutpost) {
         router.push('/onboarding');
       } else {
         const redirectPath = getRedirectPath(searchParams);
@@ -361,8 +366,14 @@ export function AuthProvider({
       }
     }
 
-    // 如果已认证、需要 onboarding 且不在 onboarding 页面，重定向
-    if (isAuthenticated && needsOnboarding && pathname !== '/onboarding' && pathname !== '/login') {
+    // 如果已认证、需要 onboarding 且不在 onboarding 页面，重定向（仅 SaaS 模式）
+    if (
+      isAuthenticated &&
+      needsOnboarding &&
+      !standaloneOrOutpost &&
+      pathname !== '/onboarding' &&
+      pathname !== '/login'
+    ) {
       router.push('/onboarding');
     }
   }, [

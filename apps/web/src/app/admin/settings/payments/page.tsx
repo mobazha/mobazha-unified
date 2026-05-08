@@ -1,11 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useI18n } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
-import { CryptoReceivingSection } from './CryptoReceivingSection';
-import { PaymentProvidersSection } from './PaymentProvidersSection';
+import { OutpostPaymentSettings } from './OutpostPaymentSettings';
+
+const CryptoReceivingSection = __OUTPOST__
+  ? () => null
+  : lazy(() =>
+      import('./CryptoReceivingSection').then(m => ({ default: m.CryptoReceivingSection }))
+    );
+
+const PaymentProvidersSection = __OUTPOST__
+  ? () => null
+  : lazy(() =>
+      import('./PaymentProvidersSection').then(m => ({ default: m.PaymentProvidersSection }))
+    );
 
 function PayoutInfoSection() {
   const { t } = useI18n();
@@ -83,13 +94,16 @@ export default function AdminPaymentsPage() {
       />
 
       <div className="space-y-6 md:space-y-10">
-        <CryptoReceivingSection />
-
-        <div className="border-t border-border" />
-
-        <PaymentProvidersSection />
-
-        <PayoutInfoSection />
+        {__OUTPOST__ ? (
+          <OutpostPaymentSettings />
+        ) : (
+          <Suspense fallback={<div className="h-40 animate-pulse bg-muted/30 rounded-xl" />}>
+            <CryptoReceivingSection />
+            <div className="border-t border-border" />
+            <PaymentProvidersSection />
+            <PayoutInfoSection />
+          </Suspense>
+        )}
       </div>
     </div>
   );

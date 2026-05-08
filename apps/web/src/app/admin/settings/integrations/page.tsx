@@ -14,12 +14,15 @@ import { FulfillmentProvidersSection } from './FulfillmentProvidersSection';
 const VALID_TABS = ['notifications', 'ai', 'fulfillment', 'webhooks'] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
+const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+
 function resolveTab(param: string | null, supplyChainEnabled: boolean): TabValue {
   if (param && (VALID_TABS as readonly string[]).includes(param)) {
-    if (param === 'fulfillment' && !supplyChainEnabled) return 'notifications';
+    if (param === 'notifications' && isOutpost) return 'ai';
+    if (param === 'fulfillment' && !supplyChainEnabled) return isOutpost ? 'ai' : 'notifications';
     return param as TabValue;
   }
-  return 'notifications';
+  return isOutpost ? 'ai' : 'notifications';
 }
 
 export default function AdminIntegrationsPage() {
@@ -47,10 +50,12 @@ export default function AdminIntegrationsPage() {
 
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as TabValue)}>
         <TabsList>
-          <TabsTrigger value="notifications" className="gap-1.5">
-            <Bell className="w-4 h-4" />
-            {t('admin.integrations.tabNotifications')}
-          </TabsTrigger>
+          {!isOutpost && (
+            <TabsTrigger value="notifications" className="gap-1.5">
+              <Bell className="w-4 h-4" />
+              {t('admin.integrations.tabNotifications')}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="ai" className="gap-1.5">
             <Sparkles className="w-4 h-4" />
             {t('admin.integrations.tabAI')}
@@ -67,9 +72,11 @@ export default function AdminIntegrationsPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="notifications" className="mt-6">
-          <NotificationChannelsSection />
-        </TabsContent>
+        {!isOutpost && (
+          <TabsContent value="notifications" className="mt-6">
+            <NotificationChannelsSection />
+          </TabsContent>
+        )}
 
         <TabsContent value="ai" className="mt-6">
           <AIConfigSection />

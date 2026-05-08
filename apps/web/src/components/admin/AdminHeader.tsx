@@ -60,10 +60,10 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   };
 
   const handleViewStore = () => {
-    if (profile?.peerID) {
-      router.push(`/store/${profile.peerID}`);
-    } else if (standaloneMode) {
+    if (standaloneMode || (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__)) {
       router.push('/');
+    } else if (profile?.peerID) {
+      router.push(`/store/${profile.peerID}`);
     }
   };
 

@@ -36,7 +36,9 @@ function AuthProviderLoading() {
   );
 }
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://app.mobazha.org');
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

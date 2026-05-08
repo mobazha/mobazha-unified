@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
-import { isBasicAuthMode, isStandaloneMode } from '@mobazha/core/config/env';
+import { isBasicAuthMode, isStandaloneMode, isOutpostMode } from '@mobazha/core/config/env';
+import { authSafeGet } from '@mobazha/core/services/api/helpers';
 import {
   getSystemHealth,
   getNetworkConfig,
@@ -17,7 +18,6 @@ import {
   type SystemHealthResponse,
   type NetworkConfigResponse,
   type DoctorSummary,
-  type UpdateInfo,
   type UpdateConfigResponse,
 } from '@mobazha/core/services/api/system';
 import {
@@ -93,6 +93,11 @@ export default function SystemPage() {
   const [updateConfigSaving, setUpdateConfigSaving] = useState(false);
   const [showUpdateSettings, setShowUpdateSettings] = useState(false);
 
+  const [rpcStatus, setRpcStatus] = useState<{
+    ltc?: { connected: boolean; endpoint: string; blockHeight?: number };
+    xmr?: { connected: boolean; endpoint: string; blockHeight?: number };
+  } | null>(null);
+
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
   const fetchHealth = useCallback(async () => {
@@ -136,16 +141,30 @@ export default function SystemPage() {
     }
   }, []);
 
+  const fetchRpcStatus = useCallback(async () => {
+    if (!isOutpostMode()) return;
+    const data = await authSafeGet('/system/rpc-status', null);
+    if (data) setRpcStatus(data);
+  }, []);
+
   useEffect(() => {
     if (isAdmin) {
       fetchHealth();
       fetchNetworkConfig();
       fetchDomainConfig();
       fetchUpdateConfig();
+      fetchRpcStatus();
       const interval = setInterval(fetchHealth, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAdmin, fetchHealth, fetchNetworkConfig, fetchDomainConfig, fetchUpdateConfig]);
+  }, [
+    isAdmin,
+    fetchHealth,
+    fetchNetworkConfig,
+    fetchDomainConfig,
+    fetchUpdateConfig,
+    fetchRpcStatus,
+  ]);
 
   const handleApplyNetwork = async () => {
     setNetworkSaving(true);
@@ -287,7 +306,18 @@ export default function SystemPage() {
     );
   }
 
-  const sys = health!.system;
+  const sys = health!.system ?? {
+    goVersion: '',
+    os: '',
+    arch: '',
+    numCPU: 0,
+    numGoroutine: 0,
+    memAllocMB: 0,
+    memSysMB: 0,
+    diskTotalGB: 0,
+    diskFreeGB: 0,
+    diskUsedPercent: 0,
+  };
   const diskUsedGB = sys.diskTotalGB - sys.diskFreeGB;
   const storePort = networkConfig?.gatewayPort || 5102;
 
@@ -578,8 +608,77 @@ export default function SystemPage() {
         </div>
       )}
 
-      {/* Domain Settings (standalone only) */}
-      {isStandaloneMode() && (
+      {/* RPC Connection Status (Outpost only) */}
+      {isOutpostMode() && rpcStatus && (
+        <div className="border border-border rounded-lg p-5">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            {t('system.rpc.title', { defaultValue: 'Payment RPC Status' })}
+          </h2>
+          <div className="space-y-3">
+            {rpcStatus.ltc && (
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${rpcStatus.ltc.connected ? 'bg-green-500' : 'bg-destructive'}`}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground">Litecoin (Electrum)</div>
+                  <div className="text-xs text-muted-foreground font-mono truncate">
+                    {rpcStatus.ltc.endpoint || 'Not configured'}
+                  </div>
+                  {rpcStatus.ltc.blockHeight != null && (
+                    <div className="text-xs text-muted-foreground">
+                      Block: {rpcStatus.ltc.blockHeight.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+                <span
+                  className={`text-xs font-medium ${rpcStatus.ltc.connected ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
+                >
+                  {rpcStatus.ltc.connected
+                    ? t('system.rpc.connected', { defaultValue: 'Connected' })
+                    : t('system.rpc.disconnected', { defaultValue: 'Disconnected' })}
+                </span>
+              </div>
+            )}
+            {rpcStatus.xmr && (
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${rpcStatus.xmr.connected ? 'bg-green-500' : 'bg-destructive'}`}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground">Monero (wallet-rpc)</div>
+                  <div className="text-xs text-muted-foreground font-mono truncate">
+                    {rpcStatus.xmr.endpoint || 'Not configured'}
+                  </div>
+                  {rpcStatus.xmr.blockHeight != null && (
+                    <div className="text-xs text-muted-foreground">
+                      Block: {rpcStatus.xmr.blockHeight.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+                <span
+                  className={`text-xs font-medium ${rpcStatus.xmr.connected ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
+                >
+                  {rpcStatus.xmr.connected
+                    ? t('system.rpc.connected', { defaultValue: 'Connected' })
+                    : t('system.rpc.disconnected', { defaultValue: 'Disconnected' })}
+                </span>
+              </div>
+            )}
+            {!rpcStatus.ltc && !rpcStatus.xmr && (
+              <p className="text-sm text-muted-foreground">
+                {t('system.rpc.noneConfigured', {
+                  defaultValue:
+                    'No payment RPCs configured. Go to Settings → Payments to set up LTC or XMR.',
+                })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Domain Settings (standalone only, hidden in Outpost) */}
+      {isStandaloneMode() && !isOutpostMode() && (
         <div id="domain" className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
             {t('system.domain.title', { defaultValue: 'Custom Domain' })}

@@ -12,6 +12,8 @@ import {
   type GuestOrderResponse,
 } from '@mobazha/core/services/api/guestCheckout';
 import { GUEST_CHECKOUT_DEFAULT_COINS } from '@mobazha/core/config/guestCheckoutCoins';
+import { isOutpostMode } from '@mobazha/core/config/env';
+import { getPaymentMethods } from '@mobazha/core/services/api/fiat';
 import type { Address } from '@mobazha/core';
 import { Header } from '@/components';
 import { Container } from '@/components/layouts';
@@ -98,17 +100,39 @@ export default function GuestCheckoutPage() {
   const [addressData, setAddressData] = useState<Address>(EMPTY_ADDRESS);
   const [contactEmail, setContactEmail] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>('');
-  const [acceptedCoins, setAcceptedCoins] = useState<string[]>(GUEST_CHECKOUT_DEFAULT_COINS);
+  const [acceptedCoins, setAcceptedCoins] = useState<string[]>(
+    __OUTPOST__ ? [] : GUEST_CHECKOUT_DEFAULT_COINS
+  );
+  const [coinsLoading, setCoinsLoading] = useState(false);
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
 
   useEffect(() => {
+    if (isOutpostMode()) {
+      const vendorPeerID = items[0]?.vendorPeerID;
+      if (!vendorPeerID) return;
+      const fetchCoins = async () => {
+        setCoinsLoading(true);
+        try {
+          const data = await getPaymentMethods(vendorPeerID);
+          if (Array.isArray(data.crypto) && data.crypto.length > 0) {
+            setAcceptedCoins(data.crypto);
+          }
+        } catch {
+          // leave acceptedCoins empty → UI shows "no payment methods"
+        } finally {
+          setCoinsLoading(false);
+        }
+      };
+      fetchCoins();
+      return;
+    }
     getGuestCheckoutSettings()
       .then(res => {
         const coins = res.acceptedCoins;
         if (Array.isArray(coins) && coins.length > 0) setAcceptedCoins(coins);
       })
       .catch(() => {});
-  }, []);
+  }, [items]);
 
   const stepLabels: Record<string, string> = {
     cart: t('guestCheckout.stepCart'),
@@ -302,12 +326,25 @@ export default function GuestCheckoutPage() {
               <p className="text-sm text-muted-foreground">
                 {t('guestCheckout.choosePaymentHint')}
               </p>
-              <PaymentCryptoSelector
-                acceptedCurrencies={acceptedCoins}
-                selectedTokenId={selectedCoin}
-                onSelect={handleCoinSelect}
-                showFiatMethods={false}
-              />
+              {coinsLoading ? (
+                <div className="h-24 flex items-center justify-center">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : acceptedCoins.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  {t('guestCheckout.noPaymentMethodsAvailable', {
+                    defaultValue:
+                      'No payment methods available. The seller has not configured accepted cryptocurrencies yet.',
+                  })}
+                </p>
+              ) : (
+                <PaymentCryptoSelector
+                  acceptedCurrencies={acceptedCoins}
+                  selectedTokenId={selectedCoin}
+                  onSelect={handleCoinSelect}
+                  showFiatMethods={false}
+                />
+              )}
               <Button
                 variant="outline"
                 className="w-full"

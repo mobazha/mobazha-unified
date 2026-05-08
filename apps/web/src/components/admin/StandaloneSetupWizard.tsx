@@ -31,6 +31,7 @@ import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import CountryCurrencySelector from './CountryCurrencySelector';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
+import { isOutpostMode } from '@mobazha/core/config/env';
 
 const TOTAL_STEPS = 4;
 
@@ -158,7 +159,9 @@ export default function StandaloneSetupWizard({
   const [shortDescription, setShortDescription] = useState(profile?.shortDescription || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>(
+    isOutpostMode() ? 'unlisted' : 'public'
+  );
 
   // Step 3: Location & Currency
   const [country, setCountry] = useState('');
@@ -757,31 +760,51 @@ export default function StandaloneSetupWizard({
                   {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {t('admin.onboarding.setupPaymentsDesc') ||
-                    'Add crypto wallets, connect Stripe or PayPal'}
+                  {isOutpostMode()
+                    ? t('outpost.setupPaymentsDesc', {
+                        defaultValue: 'Configure LTC Electrum and XMR wallet-rpc endpoints',
+                      })
+                    : t('admin.onboarding.setupPaymentsDesc') ||
+                      'Add crypto wallets, connect Stripe or PayPal'}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
             </button>
 
-            <button
-              onClick={() => handleFinish('/admin/storefront')}
-              className="w-full flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left hover:bg-primary/10 transition-colors group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                <Palette className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
+            {!isOutpostMode() && (
+              <button
+                onClick={() => handleFinish('/admin/storefront')}
+                className="w-full flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left hover:bg-primary/10 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <Palette className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('admin.onboarding.designWithAi') || 'Design your store with AI'}
+                  </p>
+                  <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
+                    {t('admin.onboarding.designWithAiDesc') ||
+                      'Customize branding, colors, and layout with AI assistance'}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
+              </button>
+            )}
+
+            {isOutpostMode() && (
+              <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 text-left">
                 <p className="text-sm font-medium text-foreground">
-                  {t('admin.onboarding.designWithAi') || 'Design your store with AI'}
+                  {t('outpost.privacyHint', { defaultValue: 'Privacy Notice' })}
                 </p>
-                <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {t('admin.onboarding.designWithAiDesc') ||
-                    'Customize branding, colors, and layout with AI assistance'}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('outpost.privacyHintDesc', {
+                    defaultValue:
+                      'Your store makes zero external network requests. For maximum privacy, access it via a Tor .onion address or I2P eepsite. Configure payment endpoints in Settings → Payments.',
+                  })}
                 </p>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
-            </button>
+            )}
           </div>
 
           <button

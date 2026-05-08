@@ -49,6 +49,7 @@ const loadedFonts = new Set<string>();
  * Idempotent — repeated calls for the same font are no-ops.
  */
 export function loadStoreFont(family: FontFamily): void {
+  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return;
   if (family === 'inter' || loadedFonts.has(family)) return;
   const spec = GOOGLE_FONTS_URL_MAP[family];
   if (!spec) return;

@@ -13,7 +13,8 @@
  * SaaS 前端默认域名 — 当 NEXT_PUBLIC_SITE_URL 未设置时的终极回退值。
  * 域名迁移（如 app.mobazha.org → app.mobazha.org）只需改这一处。
  */
-export const DEFAULT_SITE_URL = 'https://app.mobazha.org';
+export const DEFAULT_SITE_URL: string =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://app.mobazha.org';
 
 /**
  * Store subdomain base domain (e.g. "mymbz.org" → {handle}.mymbz.org).
@@ -93,52 +94,82 @@ export interface EnvConfig {
  * - gateway: 节点 API URL，用于 /v1/* 接口 (如 /v1/profile, /v1/listing)
  * - search: 搜索 API URL，用于 /info/* 接口
  */
-export const TEST_ENV: EnvConfig = {
-  isDevelopment: true,
-  isTestEnv: true,
-  auth: {
-    mode: 'hosted', // 测试环境默认使用托管模式
-  },
-  casdoor: {
-    serverUrl: 'https://test-new-login.mobazha.org',
-    clientId: '22649a5edc7cabcb4398',
-    organizationName: 'built-in',
-    appName: 'app-built-in',
-    redirectPath: '/',
-  },
-  api: {
-    baseUrl: 'https://miniappdev.mobazha.org', // 基础 URL，用于 /platform/*
-    gateway: 'https://miniappdev.mobazha.org/v1', // 节点 API，用于 /v1/*
-    search: 'https://miniappdev.mobazha.org/info',
-    mbzGateway: 'https://miniappdev.mobazha.org/info/v1',
-    websocket: 'wss://miniappdev.mobazha.org/ws',
-  },
-};
+export const TEST_ENV: EnvConfig =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+    ? ({
+        isDevelopment: true,
+        isTestEnv: true,
+        auth: { mode: 'standalone' },
+        casdoor: {
+          serverUrl: '',
+          clientId: '',
+          organizationName: '',
+          appName: '',
+          redirectPath: '/',
+        },
+        api: { baseUrl: '', gateway: '/v1', search: '', mbzGateway: '', websocket: '' },
+      } as EnvConfig)
+    : {
+        isDevelopment: true,
+        isTestEnv: true,
+        auth: {
+          mode: 'hosted',
+        },
+        casdoor: {
+          serverUrl: 'https://test-new-login.mobazha.org',
+          clientId: '22649a5edc7cabcb4398',
+          organizationName: 'built-in',
+          appName: 'app-built-in',
+          redirectPath: '/',
+        },
+        api: {
+          baseUrl: 'https://miniappdev.mobazha.org',
+          gateway: 'https://miniappdev.mobazha.org/v1',
+          search: 'https://miniappdev.mobazha.org/info',
+          mbzGateway: 'https://miniappdev.mobazha.org/info/v1',
+          websocket: 'wss://miniappdev.mobazha.org/ws',
+        },
+      };
 
 /**
  * 生产环境配置
  */
-export const PROD_ENV: EnvConfig = {
-  isDevelopment: false,
-  isTestEnv: false,
-  auth: {
-    mode: 'hosted', // 生产环境默认使用托管模式
-  },
-  casdoor: {
-    serverUrl: 'https://login.mobazha.org',
-    clientId: 'abf0d355830c72755440',
-    organizationName: 'mobazha',
-    appName: 'app-mobazha',
-    redirectPath: '/',
-  },
-  api: {
-    baseUrl: 'https://miniapp.mobazha.org', // 基础 URL，用于 /platform/*
-    gateway: 'https://miniapp.mobazha.org/v1', // 节点 API，用于 /v1/*
-    search: 'https://miniapp.mobazha.org/info',
-    mbzGateway: 'https://miniapp.mobazha.org/info/v1',
-    websocket: 'wss://miniapp.mobazha.org/ws',
-  },
-};
+export const PROD_ENV: EnvConfig =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+    ? ({
+        isDevelopment: false,
+        isTestEnv: false,
+        auth: { mode: 'standalone' },
+        casdoor: {
+          serverUrl: '',
+          clientId: '',
+          organizationName: '',
+          appName: '',
+          redirectPath: '/',
+        },
+        api: { baseUrl: '', gateway: '/v1', search: '', mbzGateway: '', websocket: '' },
+      } as EnvConfig)
+    : {
+        isDevelopment: false,
+        isTestEnv: false,
+        auth: {
+          mode: 'hosted',
+        },
+        casdoor: {
+          serverUrl: 'https://login.mobazha.org',
+          clientId: 'abf0d355830c72755440',
+          organizationName: 'mobazha',
+          appName: 'app-mobazha',
+          redirectPath: '/',
+        },
+        api: {
+          baseUrl: 'https://miniapp.mobazha.org',
+          gateway: 'https://miniapp.mobazha.org/v1',
+          search: 'https://miniapp.mobazha.org/info',
+          mbzGateway: 'https://miniapp.mobazha.org/info/v1',
+          websocket: 'wss://miniapp.mobazha.org/ws',
+        },
+      };
 
 /**
  * 本地/VPS 开发环境配置
@@ -185,6 +216,21 @@ export const STANDALONE_ENV: EnvConfig = {
     websocket: '',
   },
 };
+
+/** Outpost-specific runtime configuration. */
+export interface OutpostConfig {
+  enabled: boolean;
+}
+
+let outpostConfig: OutpostConfig = { enabled: false };
+
+export function getOutpostConfig(): OutpostConfig {
+  return outpostConfig;
+}
+
+export function isOutpostMode(): boolean {
+  return outpostConfig.enabled;
+}
 
 // 当前环境配置
 let currentEnv: EnvConfig = TEST_ENV;
@@ -407,7 +453,7 @@ function applyRuntimeConfig(): void {
   // use `featureFlags.isEnabled(key)` or `useFeature(key)` instead of reading
   // env config.
   const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
-    | { saasUrl?: string; authMode?: string }
+    | { saasUrl?: string; authMode?: string; outpostMode?: boolean }
     | undefined;
   if (!rc) return;
 
@@ -447,6 +493,10 @@ function applyRuntimeConfig(): void {
         },
       },
     };
+  }
+
+  if (rc.outpostMode) {
+    outpostConfig = { enabled: true };
   }
 }
 

@@ -26,11 +26,18 @@ interface TabConfig {
   labelKey: string;
 }
 
-const TABS: TabConfig[] = [
+const ALL_TABS: TabConfig[] = [
   { key: 'all', labelKey: 'notifications.tabAll' },
   { key: 'orders', labelKey: 'notifications.tabOrders' },
   { key: 'followers', labelKey: 'notifications.tabFollowers' },
 ];
+
+const OUTPOST_TABS: TabConfig[] = [
+  { key: 'all', labelKey: 'notifications.tabAll' },
+  { key: 'orders', labelKey: 'notifications.tabOrders' },
+];
+
+const TABS = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? OUTPOST_TABS : ALL_TABS;
 
 // ============ 主组件 ============
 

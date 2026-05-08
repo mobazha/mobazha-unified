@@ -158,18 +158,21 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 匿名用户：开店入口 (SaaS only) */}
-            {!isAuthenticated && !isLoading && !standaloneMode && (
-              <Link href="/login?redirect=%2Fadmin" data-testid="header-start-selling-link">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  {t('footer.startSelling')}
-                </Button>
-              </Link>
-            )}
+            {/* 匿名用户：开店入口 (SaaS only, hidden in Outpost) */}
+            {!isAuthenticated &&
+              !isLoading &&
+              !standaloneMode &&
+              !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+                <Link href="/login?redirect=%2Fadmin" data-testid="header-start-selling-link">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {t('footer.startSelling')}
+                  </Button>
+                </Link>
+              )}
 
             {/* 卖家：店铺管理入口 */}
             {isAuthenticated && hasStore && !isPureBuyer && (
@@ -199,26 +202,28 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 已登录用户：通知、消息、钱包 */}
+            {/* 已登录用户：通知、消息 (Outpost 隐藏 chat) */}
             {isAuthenticated && (
               <>
                 <NotificationDropdown />
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-primary/10 hover:text-primary transition-colors relative"
-                  onClick={shouldUseMobileView ? () => router.push('/chat') : openChatDrawer}
-                  aria-label={t('nav.openMessages')}
-                  data-testid="header-messages-btn"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  {totalUnread > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-error-foreground text-xs font-bold rounded-full">
-                      {totalUnread > 99 ? '99+' : totalUnread}
-                    </span>
-                  )}
-                </Button>
+                {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-primary/10 hover:text-primary transition-colors relative"
+                    onClick={shouldUseMobileView ? () => router.push('/chat') : openChatDrawer}
+                    aria-label={t('nav.openMessages')}
+                    data-testid="header-messages-btn"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    {totalUnread > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-error-foreground text-xs font-bold rounded-full">
+                        {totalUnread > 99 ? '99+' : totalUnread}
+                      </span>
+                    )}
+                  </Button>
+                )}
               </>
             )}
 
@@ -250,13 +255,15 @@ export const Header: React.FC = () => {
             </button>
             <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
 
-            {/* 已登录：钱包连接 */}
-            {isAuthenticated && <WalletConnectButton />}
+            {/* 已登录：钱包连接 (Outpost 无 AppKit) */}
+            {isAuthenticated && !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+              <WalletConnectButton />
+            )}
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
             <ThemeSwitcher compact />
-            {isLoading ? (
+            {typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? null : isLoading ? (
               <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : isAuthenticated && profile ? (
               <DropdownMenu>

@@ -391,7 +391,9 @@ export default function AdminDashboardPage() {
           sublabel={t('admin.dashboard.completedOrders')}
           color="success"
           loading={salesLoading}
-          href="/admin/analytics"
+          href={
+            typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '/admin/orders' : '/admin/analytics'
+          }
         />
         <StatCard
           icon={Star}
@@ -404,7 +406,11 @@ export default function AdminDashboardPage() {
           }
           color="warning"
           loading={productsLoading && ratingAvg === null}
-          href="/admin/analytics"
+          href={
+            typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+              ? '/admin/products'
+              : '/admin/analytics'
+          }
         />
       </div>
 
@@ -454,22 +460,24 @@ export default function AdminDashboardPage() {
           </Link>
         )}
 
-        <Link
-          href="/admin/storefront"
-          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-        >
-          <div className="p-2.5 sm:p-3 rounded-lg bg-warning/10 text-warning group-hover:bg-warning group-hover:text-primary-foreground transition-colors">
-            <Palette className="w-5 h-5" />
-          </div>
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-base font-medium text-foreground">
-              {t('admin.dashboard.designStore')}
-            </p>
-            <p className="hidden sm:block text-sm text-muted-foreground">
-              {t('admin.dashboard.designStoreDesc')}
-            </p>
-          </div>
-        </Link>
+        {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+          <Link
+            href="/admin/storefront"
+            className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+          >
+            <div className="p-2.5 sm:p-3 rounded-lg bg-warning/10 text-warning group-hover:bg-warning group-hover:text-primary-foreground transition-colors">
+              <Palette className="w-5 h-5" />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-base font-medium text-foreground">
+                {t('admin.dashboard.designStore')}
+              </p>
+              <p className="hidden sm:block text-sm text-muted-foreground">
+                {t('admin.dashboard.designStoreDesc')}
+              </p>
+            </div>
+          </Link>
+        )}
 
         {isMobile ? (
           <>
@@ -484,17 +492,19 @@ export default function AdminDashboardPage() {
                 <p className="text-xs font-medium text-foreground">{t('admin.nav.collections')}</p>
               </div>
             </Link>
-            <Link
-              href="/admin/discounts"
-              className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-            >
-              <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                <Tag className="w-5 h-5" />
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-medium text-foreground">{t('admin.nav.discounts')}</p>
-              </div>
-            </Link>
+            {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+              <Link
+                href="/admin/discounts"
+                className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+              >
+                <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div className="text-center">
+                  <p className="text-xs font-medium text-foreground">{t('admin.nav.discounts')}</p>
+                </div>
+              </Link>
+            )}
           </>
         ) : (
           <a

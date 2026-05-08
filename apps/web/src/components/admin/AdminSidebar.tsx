@@ -81,7 +81,23 @@ const standaloneNavItems: NavItem[] = [
   { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
 ];
 
+const outpostNavItems: NavItem[] = [
+  { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
+  { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
+  { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
+  {
+    id: 'collections',
+    labelKey: 'admin.nav.collections',
+    href: '/admin/collections',
+    icon: Layers,
+  },
+  { id: 'ai-agents', labelKey: 'admin.nav.aiAgents', href: '/admin/ai-agents', icon: Bot },
+  { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
+  { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
+];
+
 function getNavItems(storefrontsEnabled: boolean, supplyChainEnabled: boolean): NavItem[] {
+  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return [...outpostNavItems];
   const items = isStandalone() ? [...standaloneNavItems] : [...baseNavItems];
 
   if (supplyChainEnabled) {
@@ -218,19 +234,21 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
             {!collapsed && <span>{t('admin.nav.backToShopping')}</span>}
           </Link>
         )}
-        <a
-          href="https://docs.mobazha.org"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            'flex items-center gap-3 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
-            collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
-          )}
-          title={collapsed ? t('admin.nav.help') : undefined}
-        >
-          <HelpCircle className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>{t('admin.nav.help')}</span>}
-        </a>
+        {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+          <a
+            href="https://docs.mobazha.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              'flex items-center gap-3 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
+              collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
+            )}
+            title={collapsed ? t('admin.nav.help') : undefined}
+          >
+            <HelpCircle className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>{t('admin.nav.help')}</span>}
+          </a>
+        )}
       </div>
     </div>
   );

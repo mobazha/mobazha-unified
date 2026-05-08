@@ -190,7 +190,10 @@ function safeDecode(value: string): string {
   }
 }
 
-const MOBAZHA_DOMAINS = ['app.mobazha.org', 'mobazha.org', 'test-new.mobazha.org'];
+const MOBAZHA_DOMAINS: string[] =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+    ? []
+    : ['app.mobazha.org', 'mobazha.org', 'test-new.mobazha.org'];
 
 function parseMobazhaURL(text: string): ScanResultStore | ScanResultListing | undefined {
   try {

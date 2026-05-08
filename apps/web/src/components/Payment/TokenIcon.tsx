@@ -42,6 +42,8 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   CFX: 'cfx',
   // MBZ
   MBZ: 'mbz',
+  // Monero
+  XMR: 'xmr',
 };
 
 // 法币映射 - 用于法币时显示默认图标
@@ -69,7 +71,7 @@ const FIAT_CURRENCIES = new Set([
 ]);
 
 // CDN 中不存在的 symbol，直接从 local 开始加载
-const CDN_MISSING = new Set(['base', 'mbz']);
+const CDN_MISSING = new Set(['base', 'mbz', 'xmr']);
 
 // 本地图标文件名映射（用于 fallback）
 const LOCAL_ICON_MAP: Record<string, string> = {
@@ -91,6 +93,7 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   trx: 'TRX',
   tron: 'TRX',
   mbz: 'MBZ',
+  xmr: 'XMR',
 };
 
 export interface TokenIconProps {
@@ -110,9 +113,14 @@ export interface TokenIconProps {
  * 获取 CDN 图标 URL
  * 使用 cryptocurrency-icons CDN (jsdelivr)
  */
+const CDN_BASE =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+    ? ''
+    : 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color';
+
 const getCDNIconUrl = (symbol: string): string => {
-  const s = symbol.toLowerCase();
-  return `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${s}.svg`;
+  if (!CDN_BASE) return getLocalIconUrl(symbol);
+  return `${CDN_BASE}/${symbol.toLowerCase()}.svg`;
 };
 
 /**
@@ -157,7 +165,8 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
 }) => {
   const symbol = getSymbol(token);
   const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
-  const initialState = isFiat ? 'default' : CDN_MISSING.has(symbol) ? 'local' : 'cdn';
+  const skipCdn = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const initialState = isFiat ? 'default' : skipCdn || CDN_MISSING.has(symbol) ? 'local' : 'cdn';
   const [iconState, setIconState] = useState<'cdn' | 'local' | 'default'>(initialState);
 
   const chainSymbol = chainId ? getSymbol(chainId) : null;
@@ -204,7 +213,7 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
           style={{ width: Math.max(size * 0.6, 12), height: Math.max(size * 0.6, 12) }}
         >
           <img
-            src={getCDNIconUrl(chainSymbol)}
+            src={skipCdn ? getLocalIconUrl(chainSymbol) : getCDNIconUrl(chainSymbol)}
             alt={chainId || 'chain'}
             width={Math.max(Math.round(size * 0.55), 10)}
             height={Math.max(Math.round(size * 0.55), 10)}

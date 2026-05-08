@@ -15,7 +15,16 @@ import { CHAINS, TOKENS, type PaymentChainConfig, type TokenConfig } from '../da
  * Order determines UI display order.
  */
 const GUEST_SUPPORTED_CHAIN_IDS = [
-  'BTC', 'ETH', 'LTC', 'BCH', 'ZEC', 'BSC', 'MATIC', 'BASE', 'TRON',
+  'BTC',
+  'ETH',
+  'LTC',
+  'BCH',
+  'ZEC',
+  'XMR',
+  'BSC',
+  'MATIC',
+  'BASE',
+  'TRON',
 ] as const;
 
 /**
@@ -33,26 +42,64 @@ export interface GuestCoinInfo {
   nativeToken: TokenConfig | undefined;
 }
 
-export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = GUEST_SUPPORTED_CHAIN_IDS
-  .map((chainId): GuestCoinInfo | null => {
-    const chain = CHAINS.find((c) => c.id === chainId);
+export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = GUEST_SUPPORTED_CHAIN_IDS.map(
+  (chainId): GuestCoinInfo | null => {
+    const chain = CHAINS.find(c => c.id === chainId);
     if (!chain) return null;
-    const nativeToken = TOKENS.find((t) => t.chain === chainId && t.isNative);
+    const nativeToken = TOKENS.find(t => t.chain === chainId && t.isNative);
     return {
       chainId: chainId as string,
       paymentCoin: CHAIN_ID_TO_PAYMENT_COIN[chainId] ?? chainId,
       chain,
       nativeToken,
     };
-  })
-  .filter((c): c is GuestCoinInfo => c !== null);
+  }
+).filter((c): c is GuestCoinInfo => c !== null);
 
 export const GUEST_CHECKOUT_DEFAULT_COINS = ['BTC', 'ETH', 'LTC'];
 
+// ---------------------------------------------------------------------------
+// Dynamic coin filtering via GET /v1/payment-methods/{peerID}
+// ---------------------------------------------------------------------------
+
+let cachedAcceptedCoins: string[] | null = null;
+
+/**
+ * Called after fetching `GET /v1/payment-methods/{peerID}` to cache the
+ * seller's accepted crypto tickers. This is the single source of truth
+ * across all modes (SaaS, standalone, outpost).
+ */
+export function setAcceptedCoins(coins: string[]): void {
+  cachedAcceptedCoins = coins;
+}
+
+export function clearAcceptedCoins(): void {
+  cachedAcceptedCoins = null;
+}
+
+/**
+ * Returns the list of coins available for guest checkout.
+ *
+ * When the seller's accepted coins have been fetched (via setAcceptedCoins),
+ * only those coins are returned. If the seller accepts no crypto, returns [].
+ *
+ * Before the API data is available, returns the full GUEST_CHECKOUT_COINS
+ * list as a safe fallback so the UI can render immediately.
+ */
+export function getAvailableGuestCoins(): GuestCoinInfo[] {
+  if (cachedAcceptedCoins !== null) {
+    if (cachedAcceptedCoins.length === 0) return [];
+    return GUEST_CHECKOUT_COINS.filter(
+      c => cachedAcceptedCoins!.includes(c.chainId) || cachedAcceptedCoins!.includes(c.paymentCoin)
+    );
+  }
+  return GUEST_CHECKOUT_COINS;
+}
+
 export function getGuestCoinByPaymentCoin(paymentCoin: string): GuestCoinInfo | undefined {
-  return GUEST_CHECKOUT_COINS.find((c) => c.paymentCoin === paymentCoin);
+  return GUEST_CHECKOUT_COINS.find(c => c.paymentCoin === paymentCoin);
 }
 
 export function getGuestCoinByChainId(chainId: string): GuestCoinInfo | undefined {
-  return GUEST_CHECKOUT_COINS.find((c) => c.chainId === chainId);
+  return GUEST_CHECKOUT_COINS.find(c => c.chainId === chainId);
 }
