@@ -220,16 +220,31 @@ export const STANDALONE_ENV: EnvConfig = {
 /** Outpost-specific runtime configuration. */
 export interface OutpostConfig {
   enabled: boolean;
+  /** When true, the frontend must not load any third-party resources (fonts, SDKs, CDNs). */
+  disableExternalResources: boolean;
 }
 
-let outpostConfig: OutpostConfig = { enabled: false };
+let outpostConfig: OutpostConfig = { enabled: false, disableExternalResources: false };
 
 export function getOutpostConfig(): OutpostConfig {
   return outpostConfig;
 }
 
 export function isOutpostMode(): boolean {
-  return outpostConfig.enabled;
+  if (outpostConfig.enabled) return true;
+  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return true;
+  return false;
+}
+
+/**
+ * Returns true when external resource loading (Google Fonts, third-party CDNs)
+ * should be suppressed. True for all outpost builds and when the runtime config
+ * explicitly sets `disableExternalResources`.
+ */
+export function isExternalResourcesDisabled(): boolean {
+  if (outpostConfig.disableExternalResources) return true;
+  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return true;
+  return false;
 }
 
 // 当前环境配置
@@ -453,7 +468,12 @@ function applyRuntimeConfig(): void {
   // use `featureFlags.isEnabled(key)` or `useFeature(key)` instead of reading
   // env config.
   const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
-    | { saasUrl?: string; authMode?: string; outpostMode?: boolean }
+    | {
+        saasUrl?: string;
+        authMode?: string;
+        outpostMode?: boolean;
+        disableExternalResources?: boolean;
+      }
     | undefined;
   if (!rc) return;
 
@@ -496,7 +516,12 @@ function applyRuntimeConfig(): void {
   }
 
   if (rc.outpostMode) {
-    outpostConfig = { enabled: true };
+    outpostConfig = {
+      enabled: true,
+      disableExternalResources: rc.disableExternalResources !== false,
+    };
+  } else if (rc.disableExternalResources) {
+    outpostConfig = { ...outpostConfig, disableExternalResources: true };
   }
 }
 

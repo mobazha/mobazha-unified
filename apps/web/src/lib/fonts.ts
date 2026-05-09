@@ -9,6 +9,7 @@
 
 import { Inter } from 'next/font/google';
 import type { FontFamily } from '@mobazha/core';
+import { isExternalResourcesDisabled } from '@mobazha/core/config/env';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -50,6 +51,7 @@ const loadedFonts = new Set<string>();
  */
 export function loadStoreFont(family: FontFamily): void {
   if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return;
+  if (isExternalResourcesDisabled()) return;
   if (family === 'inter' || loadedFonts.has(family)) return;
   const spec = GOOGLE_FONTS_URL_MAP[family];
   if (!spec) return;

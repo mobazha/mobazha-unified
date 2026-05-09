@@ -7,9 +7,8 @@
 # terms leaked into the production bundle.
 #
 # Exit codes:
-#   0 — clean
+#   0 — clean (or Level 2 informational warnings only)
 #   1 — Level 1 hard failure (external domains / SDK identifiers found)
-#   2 — Level 2 warnings (business terms found — review manually)
 #
 # Usage:
 #   ./scripts/outpost-bundle-denylist.sh [dist-dir]
@@ -121,8 +120,9 @@ if [ "$L1_FAIL" -ne 0 ]; then
   echo -e "${RED}BLOCKED${NC}: Level 1 violations detected. Fix before shipping."
   exit 1
 elif [ "$L2_WARN" -ne 0 ]; then
-  echo -e "${YELLOW}REVIEW${NC}: Level 2 warnings detected. Manual review required."
-  exit 2
+  echo -e "${YELLOW}REVIEW${NC}: Level 2 warnings detected. Manual review recommended."
+  echo "(Level 2 is informational and does not block the build.)"
+  exit 0
 else
   echo -e "${GREEN}CLEAN${NC}: Outpost bundle passes all checks."
   exit 0

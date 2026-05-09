@@ -7,6 +7,8 @@
     "dev:standalone-local": "NEXT_PUBLIC_ENV_MODE=standalone NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:4002 NEXT_PUBLIC_SAAS_URL=https://app.mobazha.org vite --port 5173 --host 127.0.0.1",
     "dev:next": "next dev --turbopack",
     "build": "vite build",
+    "build:outpost": "vite build --mode outpost",
+    "build:outpost:verify": "vite build --mode outpost && bash ../../scripts/outpost-bundle-denylist.sh dist",
     "build:next": "next build",
     "start": "vite preview",
     "start:next": "next start",
@@ -16,7 +18,9 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:outpost": "playwright test --config playwright.outpost-prod.config.ts",
+    "test:e2e:outpost:dev": "playwright test --config playwright.outpost-dev.config.ts"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.4.0",

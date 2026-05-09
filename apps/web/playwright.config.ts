@@ -1,13 +1,18 @@
 /**
  * Playwright E2E Test Configuration
  *
- * Env: PLAYWRIGHT_HOST, PLAYWRIGHT_PORT (override PORT for this config only), PORT, PLAYWRIGHT_WEBSERVER_TIMEOUT_MS.
+ * Env: PLAYWRIGHT_HOST, PLAYWRIGHT_PORT (override PORT for this config only), PORT,
+ *      PLAYWRIGHT_WEBSERVER_TIMEOUT_MS.
  *
  * Project scoping:
- *   - chromium:           desktop-visual + general E2E (excludes mobile-visual & standalone)
- *   - Mobile Chrome:      mobile-visual  + general E2E (excludes desktop-visual & standalone)
+ *   - chromium:           desktop-visual + general E2E (excludes mobile-visual, standalone & outpost)
+ *   - Mobile Chrome:      mobile-visual  + general E2E (excludes desktop-visual, standalone & outpost)
  *   - standalone*:        standalone tests only
  *   - firefox/webkit/etc: opt-in via CLI --project flag
+ *
+ * Outpost testing uses dedicated configs (not started by default):
+ *   - pnpm test:e2e:outpost:dev   → playwright.outpost-dev.config.ts (dev server)
+ *   - pnpm test:e2e:outpost       → playwright.outpost-prod.config.ts (production build)
  */
 
 import { defineConfig, devices } from '@playwright/test';
@@ -50,12 +55,12 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: [/standalone/, /mobile-visual/],
+      testIgnore: [/standalone/, /mobile-visual/, /outpost/],
     },
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
-      testIgnore: [/standalone/, /desktop-visual/],
+      testIgnore: [/standalone/, /desktop-visual/, /outpost/],
     },
     // Standalone store (port 3002, or 3000 for demo capture) — only standalone tests
     {
@@ -95,7 +100,6 @@ export default defineConfig({
   webServer: {
     command: `pnpm dev --host ${baseHost} --port ${basePort} --strictPort`,
     url: `http://${baseHost}:${basePort}`,
-    // Keep dev server env aligned with baseURL/cli (avoids .env PORT vs Playwright mismatch).
     env: { ...process.env, PORT: basePort },
     reuseExistingServer: true,
     timeout: webServerTimeoutMs,

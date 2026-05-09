@@ -4,6 +4,11 @@
  * In Next.js, next/font/google optimizes fonts at build time.
  * In Vite dev mode, we load fonts via Google Fonts CDN and return
  * compatible objects with className, variable, and style properties.
+ *
+ * Outpost builds: the __OUTPOST__ compile-time guard ensures Vite
+ * tree-shakes the CDN URL literal so it never appears in the bundle.
+ * isExternalResourcesDisabled() provides an additional runtime guard
+ * for non-outpost standalone deployments that disable external resources.
  */
 
 interface FontConfig {
@@ -20,18 +25,18 @@ interface FontResult {
   style: { fontFamily: string };
 }
 
+import { isExternalResourcesDisabled } from '@mobazha/core/config/env';
+
 const loadedFamilies = new Set<string>();
 
-const _GFONTS_CDN: string =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://fonts.googleapis.com/css2';
-
 function loadGoogleFont(family: string, weights?: string[]) {
-  if (typeof document === 'undefined' || !_GFONTS_CDN) return;
+  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return;
+  if (typeof document === 'undefined' || isExternalResourcesDisabled()) return;
   if (loadedFamilies.has(family)) return;
   loadedFamilies.add(family);
 
   const w = weights?.length ? `:wght@${weights.join(';')}` : '';
-  const url = `${_GFONTS_CDN}?family=${family.replace(/ /g, '+')}${w}&display=swap`;
+  const url = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, '+')}${w}&display=swap`;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = url;

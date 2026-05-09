@@ -176,7 +176,10 @@ function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
           authMode: 'standalone',
         };
         if (saasUrl) payload.saasUrl = saasUrl;
-        if (isOutpost) payload.outpostMode = true;
+        if (isOutpost) {
+          payload.outpostMode = true;
+          payload.disableExternalResources = true;
+        }
         res.setHeader('Content-Type', 'application/javascript');
         res.setHeader('Cache-Control', 'no-cache');
         res.end(`window.__RUNTIME_CONFIG__=${JSON.stringify(payload)};`);
