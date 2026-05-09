@@ -47,14 +47,19 @@ function outpostHtmlStripPlugin(): Plugin {
   return {
     name: 'outpost-html-strip',
     transformIndexHtml(html) {
-      return (
-        html
-          // Remove Google Fonts links
-          .replace(/\s*<link[^>]*fonts\.googleapis\.com[^>]*\/?\s*>/g, '')
-          .replace(/\s*<link[^>]*fonts\.gstatic\.com[^>]*\/?\s*>/g, '')
-          // Remove Telegram SDK loader script block
-          .replace(/\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g, '')
+      let result = html
+        // Remove Google Fonts links
+        .replace(/\s*<link[^>]*fonts\.googleapis\.com[^>]*\/?\s*>/g, '')
+        .replace(/\s*<link[^>]*fonts\.gstatic\.com[^>]*\/?\s*>/g, '')
+        // Remove Telegram SDK loader script block
+        .replace(/\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g, '');
+
+      // Inject self-hosted Inter font CSS (replaces Google Fonts CDN)
+      result = result.replace(
+        '</head>',
+        '    <link rel="stylesheet" href="/fonts/inter-local.css" />\n  </head>'
       );
+      return result;
     },
   };
 }
