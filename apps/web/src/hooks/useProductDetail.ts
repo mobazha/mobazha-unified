@@ -28,11 +28,7 @@ import type {
   OrderItemOption,
 } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
-import {
-  getProductWithDedup,
-  getProfileWithDedup,
-  getRatingsWithDedup,
-} from '@/utils/requestDedup';
+import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
 
 // --- Pure helpers ---
 
@@ -78,6 +74,7 @@ export interface UseProductDetailReturn {
 
   // Loading & error
   isLoading: boolean;
+  isOffline: boolean;
   ratingsLoading: boolean;
   error: string | null;
 
@@ -214,6 +211,8 @@ export function useProductDetail({
     };
   }, [product]);
 
+  const [isOffline, setIsOffline] = useState(false);
+
   // Product fetch
   useEffect(() => {
     const requestKey = `${slug}-${peerID || ''}`;
@@ -225,13 +224,19 @@ export function useProductDetail({
       if (!slug) return;
       setIsLoading(true);
       setError(null);
+      setIsOffline(false);
 
       try {
-        const productData = await getProductWithDedup(slug, peerID, () =>
-          productDataService.getProduct(slug, peerID)
-        );
+        const result = await productDataService.getPublicProduct(slug, peerID);
 
         if (isCancelled) return;
+        if (result.isOffline) {
+          setIsOffline(true);
+          setIsLoading(false);
+          onProductLoadedRef.current?.(null);
+          return;
+        }
+        const productData = result.product;
         if (!productData) {
           setError(t('product.notFound'));
           setIsLoading(false);
@@ -590,6 +595,7 @@ export function useProductDetail({
     applicableDiscounts,
     rwaChainData,
     isLoading,
+    isOffline,
     ratingsLoading,
     error,
     imageUrls,

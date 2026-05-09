@@ -78,6 +78,22 @@ export const productDataService = {
   },
 
   /**
+   * Fetch a public product with offline status — used by buyer product detail page.
+   * Unlike getProduct(), this preserves the isOffline flag from the API layer.
+   */
+  async getPublicProduct(
+    slug: string,
+    peerID?: string
+  ): Promise<{ product: Product | null; isOffline: boolean }> {
+    if (isMockMode()) {
+      const product = await mockServices.products.getProduct(slug);
+      return { product, isOffline: false };
+    }
+    const result = await productsApi.getPublicListing(slug, peerID);
+    return { product: result.listing, isOffline: result.isOffline };
+  },
+
+  /**
    * 创建商品
    */
   async createListing(
