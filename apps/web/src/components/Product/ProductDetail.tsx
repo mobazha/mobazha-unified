@@ -206,7 +206,12 @@ export function ProductDetail({
   }, [product]);
 
   // 通过 React Query 获取商品数据（自动消费 prefetch 缓存）
-  const { listing: rqListing, isLoading: rqLoading, error: rqError } = useListing(slug, peerID);
+  const {
+    listing: rqListing,
+    isOffline: storeOffline,
+    isLoading: rqLoading,
+    error: rqError,
+  } = useListing(slug, peerID);
 
   useEffect(() => {
     if (rqListing) {
@@ -219,10 +224,13 @@ export function ProductDetail({
       setError(rqError);
       setIsLoading(false);
       onProductLoadedRef.current?.(null);
+    } else if (!rqLoading && storeOffline) {
+      setIsLoading(false);
+      onProductLoadedRef.current?.(null);
     } else if (rqLoading) {
       setIsLoading(true);
     }
-  }, [rqListing, rqError, rqLoading, slug, peerID]);
+  }, [rqListing, rqError, rqLoading, storeOffline, slug, peerID]);
 
   // 获取卖家信息（不阻塞商品显示）
   useEffect(() => {
@@ -502,6 +510,11 @@ export function ProductDetail({
 
   // 错误状态
   if (error || !product) {
+    const offlineMessage = storeOffline
+      ? t('product.storeOffline', {
+          defaultValue: 'This store is currently offline. Please try again later.',
+        })
+      : null;
     return (
       <div
         className={`flex items-center justify-center ${isModal ? 'min-h-[300px]' : 'min-h-[60vh]'}`}
@@ -517,10 +530,16 @@ export function ProductDetail({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              d={
+                storeOffline
+                  ? 'M18.364 5.636a9 9 0 11-12.728 12.728 9 9 0 0112.728-12.728M12 9v4m0 4h.01'
+                  : 'M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              }
             />
           </svg>
-          <p className="text-muted-foreground mb-4">{error || t('product.notFound')}</p>
+          <p className="text-muted-foreground mb-4">
+            {offlineMessage || error || t('product.notFound')}
+          </p>
           {isModal ? (
             <Button onClick={onClose}>{t('common.close')}</Button>
           ) : (

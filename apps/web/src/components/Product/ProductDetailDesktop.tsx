@@ -95,6 +95,7 @@ export function ProductDetailDesktop({
     t,
     renderPairedPrice,
     router,
+    isOffline,
   } = useProductDetail({ slug, peerID, isModal, onClose, onProductLoaded });
 
   const displayAcceptedCurrencies = React.useMemo(
@@ -121,6 +122,11 @@ export function ProductDetailDesktop({
 
   // 错误状态
   if (error || !product) {
+    const offlineMessage = isOffline
+      ? t('product.storeOffline', {
+          defaultValue: 'This store is currently offline. Please try again later.',
+        })
+      : null;
     return (
       <div
         className={`flex items-center justify-center ${isModal ? 'min-h-[300px]' : 'min-h-[60vh]'}`}
@@ -136,10 +142,16 @@ export function ProductDetailDesktop({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              d={
+                isOffline
+                  ? 'M18.364 5.636a9 9 0 11-12.728 12.728 9 9 0 0112.728-12.728M12 9v4m0 4h.01'
+                  : 'M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              }
             />
           </svg>
-          <p className="text-muted-foreground mb-4">{error || t('product.notFound')}</p>
+          <p className="text-muted-foreground mb-4">
+            {offlineMessage || error || t('product.notFound')}
+          </p>
           {isModal ? (
             <Button onClick={onClose}>{t('common.close')}</Button>
           ) : (
