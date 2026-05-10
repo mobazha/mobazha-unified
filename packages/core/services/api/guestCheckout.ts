@@ -47,7 +47,7 @@ export interface GuestOrderResponse {
 
 export interface GuestOrderItemResponse {
   listingHash: string;
-  title: string;
+  listingTitle: string;
   quantity: number;
   unitPrice: string;
 }
@@ -67,6 +67,9 @@ export interface GuestOrderStatus {
   txHash?: string;
   trackingNumber?: string;
   carrier?: string;
+  subtotal?: number;
+  shippingCost?: number;
+  totalPrice?: number;
   poolDetected?: boolean;
   poolTxHash?: string;
   poolAmount?: number;

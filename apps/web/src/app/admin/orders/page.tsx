@@ -105,7 +105,7 @@ type OrderViewType = 'standard' | 'guest';
 
 function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: () => void }) {
   const { t } = useI18n();
-  const title = order.items[0]?.title || t('admin.orders.guestOrderTitle');
+  const title = order.items[0]?.listingTitle || t('admin.orders.guestOrderTitle');
   const qty = order.items.reduce((sum, i) => sum + i.quantity, 0);
   const itemLabel =
     qty === 1
