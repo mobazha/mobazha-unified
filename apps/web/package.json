@@ -20,7 +20,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:outpost": "playwright test --config playwright.outpost-prod.config.ts",
-    "test:e2e:outpost:dev": "playwright test --config playwright.outpost-dev.config.ts"
+    "test:e2e:outpost:dev": "playwright test --config playwright.outpost-dev.config.ts",
+    "test:e2e:outpost:real": "playwright test --config playwright.outpost-real.config.ts"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.4.0",

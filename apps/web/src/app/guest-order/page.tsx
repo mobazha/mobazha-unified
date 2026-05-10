@@ -20,6 +20,7 @@ import {
   fromMinimalUnit,
   renderPairedPrice,
 } from '@mobazha/core/services/currencyService';
+import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
@@ -91,6 +92,8 @@ export default function GuestOrderPage() {
   }
 
   const display = resolveStatusDisplay(order.state, guestStatusCfg);
+  const coinSymbol = resolveTokenIdForDisplay(order.paymentCoin);
+  const priceCur = order.priceCurrency || coinSymbol;
 
   const showPaymentInfo = order.state === 'AWAITING_PAYMENT' && !order.poolDetected;
   const isPoolDetected = order.state === 'AWAITING_PAYMENT' && !!order.poolDetected;
@@ -150,7 +153,7 @@ export default function GuestOrderPage() {
           )}
 
         {showPaymentInfo && (
-          <ExternalWalletPayment paymentInfo={toPaymentInfo(order)} tokenId={order.paymentCoin} />
+          <ExternalWalletPayment paymentInfo={toPaymentInfo(order)} tokenId={coinSymbol} />
         )}
 
         {showConfirmations && (
@@ -194,13 +197,13 @@ export default function GuestOrderPage() {
                     <Package className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{item.title}</p>
+                    <p className="text-sm truncate">{item.listingTitle}</p>
                     <p className="text-xs text-muted-foreground">
                       {t('guestOrder.quantityLabel')} {item.quantity}
                     </p>
                   </div>
                   <span className="text-sm text-muted-foreground font-mono flex-shrink-0">
-                    {renderPairedPrice(item.unitPrice, order.priceCurrency, order.priceCurrency, {
+                    {renderPairedPrice(item.unitPrice, priceCur, priceCur, {
                       isMinimalUnit: true,
                       divisibility: order.priceDivisibility,
                     })}
@@ -212,13 +215,12 @@ export default function GuestOrderPage() {
           <div className="p-4 flex justify-between items-center font-medium">
             <span>{t('guestOrder.total')}</span>
             <div className="flex items-center gap-2">
-              <TokenIcon token={order.paymentCoin} size={20} />
+              <TokenIcon token={coinSymbol} size={20} />
               <span className="font-mono">
-                {formatPrice(
-                  fromMinimalUnit(order.paymentAmount, order.paymentCoin),
-                  order.paymentCoin,
-                  { showSymbol: false, showCode: true }
-                )}
+                {formatPrice(fromMinimalUnit(order.paymentAmount, coinSymbol), coinSymbol, {
+                  showSymbol: false,
+                  showCode: true,
+                })}
               </span>
             </div>
           </div>
