@@ -43,7 +43,7 @@ const MOCK_GUEST_ORDER_STATUS = {
   ...MOCK_GUEST_ORDER_RESPONSE,
   state: 'AWAITING_PAYMENT',
   confirmations: 0,
-  requiredConfirmations: 12,
+  requiredConfs: 12,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -328,9 +328,9 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
 
   test('06 — Pending confirmation', async ({ page }) => {
     await mockAppShell(page);
-    await mockGuestAPIs(page, 'PENDING_CONFIRMATION', {
+    await mockGuestAPIs(page, 'PAYMENT_DETECTED', {
       confirmations: 3,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       txHash: '0xabc123def456789012345678901234567890abcdef1234567890abcdef123456',
     });
 
@@ -344,7 +344,7 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
     await mockAppShell(page);
     await mockGuestAPIs(page, 'FUNDED', {
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       txHash: '0xabc123def456789012345678901234567890abcdef1234567890abcdef123456',
     });
 
@@ -358,7 +358,7 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
     await mockAppShell(page);
     await mockGuestAPIs(page, 'SHIPPED', {
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       trackingNumber: 'UPS1234567890',
       carrier: 'UPS',
     });

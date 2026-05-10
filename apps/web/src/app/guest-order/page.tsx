@@ -14,6 +14,7 @@ import {
   type ExternalWalletPaymentInfo,
 } from '@/components/Payment/ExternalWalletPayment';
 import { getGuestStatusConfig, resolveStatusDisplay } from '@/components/Order/orderStatusConfig';
+import { ConfirmationProgress } from '@/components/Order/ConfirmationProgress';
 import {
   formatPrice,
   fromMinimalUnit,
@@ -91,8 +92,9 @@ export default function GuestOrderPage() {
 
   const display = resolveStatusDisplay(order.state, guestStatusCfg);
 
-  const showPaymentInfo = order.state === 'AWAITING_PAYMENT';
-  const showConfirmations = order.state === 'PENDING_CONFIRMATION';
+  const showPaymentInfo = order.state === 'AWAITING_PAYMENT' && !order.poolDetected;
+  const isPoolDetected = order.state === 'AWAITING_PAYMENT' && !!order.poolDetected;
+  const showConfirmations = order.state === 'PAYMENT_DETECTED' || isPoolDetected;
   const showTracking = order.state === 'SHIPPED' && order.trackingNumber;
 
   return (
@@ -135,7 +137,7 @@ export default function GuestOrderPage() {
           </div>
         )}
 
-        {(order.state === 'AWAITING_PAYMENT' || order.state === 'PENDING_CONFIRMATION') &&
+        {(order.state === 'AWAITING_PAYMENT' || order.state === 'PAYMENT_DETECTED') &&
           typeof window !== 'undefined' && (
             <SaveOrderLinkCard
               orderUrl={`${window.location.origin}/guest-order/${order.orderToken}`}
@@ -152,17 +154,24 @@ export default function GuestOrderPage() {
         )}
 
         {showConfirmations && (
-          <div className="rounded-lg border p-4 text-center">
-            <p className="text-sm text-muted-foreground mb-1">{t('guestOrder.confirmations')}</p>
-            <p className="text-2xl font-bold">
-              {order.confirmations} / {order.requiredConfirmations}
-            </p>
-            {order.txHash && (
-              <p className="text-xs text-muted-foreground mt-2 font-mono truncate">
-                {t('guestOrder.txLabel')} {order.txHash}
-              </p>
-            )}
+          <div
+            role="status"
+            className="rounded-lg border border-primary/30 bg-primary/5 dark:bg-primary/10 p-3 text-sm text-primary text-center"
+            data-testid="do-not-pay-again"
+          >
+            {t('guestOrder.doNotPayAgain')}
           </div>
+        )}
+
+        {showConfirmations && (
+          <ConfirmationProgress
+            confirmations={order.confirmations}
+            requiredConfs={order.requiredConfs}
+            chainBlockTimeSec={order.chainBlockTimeSec}
+            poolDetected={isPoolDetected}
+            poolTxHash={order.poolTxHash}
+            txHash={order.txHash}
+          />
         )}
 
         {showTracking && (

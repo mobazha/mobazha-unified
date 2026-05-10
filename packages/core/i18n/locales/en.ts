@@ -6523,6 +6523,17 @@ export const en: TranslationResource = {
     expiredHelpTitle: 'Already sent payment?',
     expiredHelpBody:
       "If you funded this order before it expired, contact the seller with your transaction hash (TX) below. They can manually verify and complete your order. Don't send new payment to the expired address.",
+    doNotPayAgain: '✓ Your payment has been detected. Please do not send another payment.',
+    confirmation: {
+      poolDetected: 'Payment Detected in Mempool',
+      poolDetectedDesc:
+        'Your transaction is visible on the network and waiting to be mined into a block.',
+      onChain: 'Transaction Confirmed On-Chain',
+      onChainDesc: 'Waiting for {{required}} blockchain confirmations.',
+      confirming: 'Confirming ({{current}}/{{required}})',
+      eta: 'Estimated ~{{minutes}} min remaining',
+      funded: 'Payment Confirmed',
+    },
   },
 
   stores: {

@@ -61,11 +61,16 @@ export interface GuestOrderStatus {
   priceCurrency: string;
   priceDivisibility: number;
   confirmations: number;
-  requiredConfirmations: number;
+  requiredConfs: number;
+  chainBlockTimeSec?: number;
   expiresAt: string;
   txHash?: string;
   trackingNumber?: string;
   carrier?: string;
+  poolDetected?: boolean;
+  poolTxHash?: string;
+  poolAmount?: number;
+  poolDetectedAt?: string;
   items: GuestOrderItemResponse[];
   createdAt: string;
   updatedAt: string;

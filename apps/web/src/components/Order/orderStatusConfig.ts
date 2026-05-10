@@ -109,6 +109,12 @@ export function getGuestStatusConfig(t: TranslateFn): Record<string, StatusDispl
       icon: CircleDollarSign,
       description: t('guestOrder.stateAwaitingPaymentDesc'),
     },
+    PAYMENT_DETECTED: {
+      label: t('guestOrder.statePendingConfirmation'),
+      color: 'bg-info/15 text-info',
+      icon: Timer,
+      description: t('guestOrder.statePendingConfirmationDesc'),
+    },
     PENDING_CONFIRMATION: {
       label: t('guestOrder.statePendingConfirmation'),
       color: 'bg-info/15 text-info',

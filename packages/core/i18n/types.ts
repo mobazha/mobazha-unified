@@ -4262,6 +4262,16 @@ export interface TranslationResource {
     saveLinkCopied?: string;
     expiredHelpTitle?: string;
     expiredHelpBody?: string;
+    doNotPayAgain?: string;
+    confirmation?: {
+      poolDetected?: string;
+      poolDetectedDesc?: string;
+      onChain?: string;
+      onChainDesc?: string;
+      confirming?: string;
+      eta?: string;
+      funded?: string;
+    };
   };
 
   // AI Agents — MCP connection DX

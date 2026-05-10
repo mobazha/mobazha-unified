@@ -49,7 +49,7 @@ const MOCK_GUEST_ORDER_STATUS = {
   priceCurrency: 'USD',
   priceDivisibility: 2,
   confirmations: 0,
-  requiredConfirmations: 12,
+  requiredConfs: 12,
   expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
   items: [
     {
@@ -558,7 +558,7 @@ test.describe('Guest Checkout — Edge Cases', () => {
     await mockGuestOrderStatus(page, {
       state: 'FUNDED',
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       txHash: '0xabc123def456789012345678901234567890abcdef1234567890abcdef123456',
     });
 
@@ -583,7 +583,7 @@ test.describe('Guest Checkout — Edge Cases', () => {
     await mockGuestOrderStatus(page, {
       state: 'SHIPPED',
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       trackingNumber: 'UPS1234567890',
       carrier: 'UPS',
     });
