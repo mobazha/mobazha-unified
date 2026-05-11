@@ -973,20 +973,24 @@ export default function StorePage() {
                       <span className="font-medium">{products.length}</span>
                       <span className="opacity-70">{t('profile.listings')}</span>
                     </span>
-                    <button
-                      onClick={() => setActiveTab('followers')}
-                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-                    >
-                      <span className="font-medium">{stats.followerCount}</span>
-                      <span className="opacity-70">{t('profile.followers')}</span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('following')}
-                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-                    >
-                      <span className="font-medium">{stats.followingCount}</span>
-                      <span className="opacity-70">{t('profile.following')}</span>
-                    </button>
+                    {!__OUTPOST__ && (
+                      <>
+                        <button
+                          onClick={() => setActiveTab('followers')}
+                          className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="font-medium">{stats.followerCount}</span>
+                          <span className="opacity-70">{t('profile.followers')}</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('following')}
+                          className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="font-medium">{stats.followingCount}</span>
+                          <span className="opacity-70">{t('profile.following')}</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1076,7 +1080,7 @@ export default function StorePage() {
                       </DropdownMenu>
                     </div>
                   </>
-                ) : (
+                ) : !__OUTPOST__ ? (
                   <>
                     <Button
                       variant={isFollowing ? 'secondary' : 'default'}
@@ -1125,7 +1129,7 @@ export default function StorePage() {
                       )}
                     </Button>
                   </>
-                )}
+                ) : null}
 
                 {heroCtaText && (
                   <a
@@ -1212,22 +1216,24 @@ export default function StorePage() {
                       )}
                     </button>
 
-                    {/* RWA 数字资产 Tab */}
-                    <button
-                      onClick={() => setActiveTab('rwa')}
-                      className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'rwa'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.rwa')}
-                      {rwaListingCount > 0 && (
-                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                          {rwaListingCount}
-                        </span>
-                      )}
-                    </button>
+                    {/* RWA 数字资产 Tab — hidden in Outpost (no RWA support) */}
+                    {!__OUTPOST__ && (
+                      <button
+                        onClick={() => setActiveTab('rwa')}
+                        className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'rwa'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.rwa')}
+                        {rwaListingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {rwaListingCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
 
                     {/* 评价 Tab */}
                     <button

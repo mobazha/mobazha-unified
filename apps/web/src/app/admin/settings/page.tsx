@@ -228,28 +228,25 @@ export default function AdminSettingsPage() {
         </SettingsSection>
 
         {!isOutpost && (
-          <>
-            {/* Growth */}
-            <SettingsSection title={t('admin.settings.sectionGrowth')}>
-              <SettingsCard
-                icon={Megaphone}
-                title={t('admin.settings.salesChannels')}
-                description={t('admin.settings.salesChannelsDesc')}
-                href="/admin/settings/sales-channels"
-              />
-            </SettingsSection>
-
-            {/* Extensions */}
-            <SettingsSection title={t('admin.settings.sectionExtensions')}>
-              <SettingsCard
-                icon={Plug}
-                title={t('admin.settings.integrations')}
-                description={t('admin.settings.integrationsDesc')}
-                href="/admin/settings/integrations"
-              />
-            </SettingsSection>
-          </>
+          <SettingsSection title={t('admin.settings.sectionGrowth')}>
+            <SettingsCard
+              icon={Megaphone}
+              title={t('admin.settings.salesChannels')}
+              description={t('admin.settings.salesChannelsDesc')}
+              href="/admin/settings/sales-channels"
+            />
+          </SettingsSection>
         )}
+
+        {/* Extensions — AI config and webhooks, relevant for all modes */}
+        <SettingsSection title={t('admin.settings.sectionExtensions')}>
+          <SettingsCard
+            icon={Plug}
+            title={t('admin.settings.integrations')}
+            description={t('admin.settings.integrationsDesc')}
+            href="/admin/settings/integrations"
+          />
+        </SettingsSection>
       </div>
     </div>
   );

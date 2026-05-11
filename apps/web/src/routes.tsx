@@ -424,6 +424,10 @@ if (__OUTPOST__) {
     // Storefront (single-store home)
     { path: '/', element: lazyPage(() => import('./app/page')) },
 
+    // Store — clean URL without peerId for single-store Outpost
+    { path: '/store', element: lazyPage(() => import('./app/store/page')) },
+    { path: '/store/:peerId', element: lazyPage(() => import('./app/store/[peerId]/page')) },
+
     // Product detail
     { path: '/product/:slug', element: lazyPage(() => import('./app/product/[slug]/page')) },
 
@@ -494,6 +498,11 @@ if (__OUTPOST__) {
           path: 'settings/policies',
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },
+        {
+          path: 'settings/integrations',
+          element: lazyPage(() => import('./app/admin/settings/integrations/page')),
+        },
+        { path: 'storefront', element: lazyPage(() => import('./app/admin/storefront/page')) },
         { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
         { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
       ],

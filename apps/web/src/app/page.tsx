@@ -428,7 +428,9 @@ function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null
             products={trendingProducts.slice(0, 8)}
             isLoading={isLoading}
             showViewAll
-            viewAllHref={effectivePeerID ? `/store/${effectivePeerID}` : '/'}
+            viewAllHref={
+              __OUTPOST__ ? '/store' : effectivePeerID ? `/store/${effectivePeerID}` : '/'
+            }
           />
         </div>
       </main>

@@ -91,6 +91,12 @@ const outpostNavItems: NavItem[] = [
     href: '/admin/collections',
     icon: Layers,
   },
+  {
+    id: 'storefront',
+    labelKey: 'admin.nav.storefront',
+    href: '/admin/storefront',
+    icon: Palette,
+  },
   { id: 'ai-agents', labelKey: 'admin.nav.aiAgents', href: '/admin/ai-agents', icon: Bot },
   { id: 'settings', labelKey: 'admin.nav.settings', href: '/admin/settings', icon: Settings },
   { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
