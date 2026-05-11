@@ -20,6 +20,7 @@ function resolveTab(param: string | null, supplyChainEnabled: boolean): TabValue
   if (param && (VALID_TABS as readonly string[]).includes(param)) {
     if (param === 'notifications' && isOutpost) return 'ai';
     if (param === 'fulfillment' && !supplyChainEnabled) return isOutpost ? 'ai' : 'notifications';
+    if (param === 'webhooks' && isOutpost) return 'ai';
     return param as TabValue;
   }
   return isOutpost ? 'ai' : 'notifications';
@@ -60,16 +61,18 @@ export default function AdminIntegrationsPage() {
             <Sparkles className="w-4 h-4" />
             {t('admin.integrations.tabAI')}
           </TabsTrigger>
-          {supplyChainEnabled && (
+          {!isOutpost && supplyChainEnabled && (
             <TabsTrigger value="fulfillment" className="gap-1.5">
               <Package className="w-4 h-4" />
               {t('admin.integrations.tabFulfillment')}
             </TabsTrigger>
           )}
-          <TabsTrigger value="webhooks" className="gap-1.5">
-            <Webhook className="w-4 h-4" />
-            {t('admin.integrations.tabWebhooks')}
-          </TabsTrigger>
+          {!isOutpost && (
+            <TabsTrigger value="webhooks" className="gap-1.5">
+              <Webhook className="w-4 h-4" />
+              {t('admin.integrations.tabWebhooks')}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {!isOutpost && (
@@ -82,15 +85,17 @@ export default function AdminIntegrationsPage() {
           <AIConfigSection />
         </TabsContent>
 
-        {supplyChainEnabled && (
+        {!isOutpost && supplyChainEnabled && (
           <TabsContent value="fulfillment" className="mt-6">
             <FulfillmentProvidersSection />
           </TabsContent>
         )}
 
-        <TabsContent value="webhooks" className="mt-6">
-          <WebhookSection />
-        </TabsContent>
+        {!isOutpost && (
+          <TabsContent value="webhooks" className="mt-6">
+            <WebhookSection />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

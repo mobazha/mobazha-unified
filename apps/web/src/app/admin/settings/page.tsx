@@ -244,7 +244,9 @@ export default function AdminSettingsPage() {
             icon={Plug}
             title={t('admin.settings.integrations')}
             description={t('admin.settings.integrationsDesc')}
-            href="/admin/settings/integrations"
+            href={
+              isOutpost ? '/admin/settings/integrations?tab=ai' : '/admin/settings/integrations'
+            }
           />
         </SettingsSection>
       </div>

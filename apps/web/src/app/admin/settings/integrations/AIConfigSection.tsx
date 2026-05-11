@@ -17,6 +17,8 @@ import {
   ExternalLink,
   Zap,
   Key,
+  Shield,
+  Terminal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +34,8 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+
+const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
 
 export function AIConfigSection() {
   const { t } = useI18n();
@@ -161,11 +165,12 @@ export function AIConfigSection() {
     setTesting(true);
     setTestResult(null);
     try {
+      const effectiveBaseUrl = baseUrl || selectedProviderInfo?.default_base_url || '';
       const result = await aiSettingsApi.testAIConnection({
         provider: selectedProvider,
-        api_key: apiKey || undefined,
+        api_key: apiKey || (isOutpost ? 'ollama' : undefined),
         model: model || selectedProviderInfo?.default_model || '',
-        base_url: baseUrl || selectedProviderInfo?.default_base_url || '',
+        base_url: effectiveBaseUrl,
       });
       setTestResult(result);
     } catch {
@@ -178,14 +183,19 @@ export function AIConfigSection() {
   async function handleSave() {
     setSaving(true);
     try {
+      const effectiveBaseUrl =
+        baseUrl || (isOutpost ? selectedProviderInfo?.default_base_url || '' : '');
+      const effectiveModel = model || selectedProviderInfo?.default_model || '';
       const input: AIConfigInput = {
         provider: selectedProvider,
-        model,
-        base_url: baseUrl,
+        model: effectiveModel,
+        base_url: effectiveBaseUrl,
         enabled,
       };
       if (apiKey) {
         input.api_key = apiKey;
+      } else if (isOutpost) {
+        input.api_key = 'ollama';
       }
       const result = await aiSettingsApi.saveAIConfig(input);
       setConfig(result);
@@ -249,7 +259,7 @@ export function AIConfigSection() {
   const anyProviderConfigured = config?.providers
     ? Object.values(config.providers).some(p => p.has_api_key)
     : false;
-  const canTest = !!selectedProvider && (!!apiKey || hasExistingKey);
+  const canTest = !!selectedProvider && (isOutpost || !!apiKey || hasExistingKey);
 
   const isPlatformAI = aiStatus?.source === 'platform';
   const isByokAI = aiStatus?.source === 'byok';
@@ -287,8 +297,59 @@ export function AIConfigSection() {
         </div>
       </div>
 
+      {/* Outpost: Local LLM setup guide */}
+      {isOutpost && (
+        <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
+            <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {t('admin.integrations.aiOutpostGuideTitle')}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('admin.integrations.aiOutpostGuideDesc')}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-xs text-foreground">
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                  1
+                </span>
+                <span>{t('admin.integrations.aiOutpostGuideStep1')}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground">
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                  2
+                </span>
+                <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">
+                  {t('admin.integrations.aiOutpostGuideStep2')}
+                </code>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground">
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                  3
+                </span>
+                <span>{t('admin.integrations.aiOutpostGuideStep3')}</span>
+              </div>
+            </div>
+            <a
+              href="https://ollama.com/download"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline mt-1"
+            >
+              <Terminal className="w-3 h-3" />
+              ollama.com/download
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Platform AI status banner */}
-      {isPlatformAI && aiStatus && (
+      {!isOutpost && isPlatformAI && aiStatus && (
         <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
           <div className="p-2 rounded-lg bg-primary/10 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
@@ -354,53 +415,81 @@ export function AIConfigSection() {
 
       {/* Config form card */}
       <div className="border border-border rounded-xl p-5 space-y-4 bg-card">
-        {/* Provider pills */}
-        <div className="space-y-1.5">
-          <Label>
-            {t('admin.integrations.aiProvider')} <span className="text-destructive">*</span>
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            {providers.map(p => {
-              const isSelected = selectedProvider === p.id;
-              const isActive = config?.active_provider === p.id;
-              const isConfigured = !!config?.providers?.[p.id]?.has_api_key;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleProviderPillClick(p.id)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
-                    isSelected
-                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                      : isConfigured
-                        ? 'bg-muted text-foreground border-border hover:border-primary/50'
-                        : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
-                  )}
-                >
-                  {isConfigured && !isSelected && <Check className="w-3 h-3 text-green-500" />}
-                  {p.label}
-                  {isActive && (
-                    <Badge
-                      variant={isSelected ? 'secondary' : 'default'}
-                      className="text-[10px] px-1.5 py-0 h-4 leading-4"
-                    >
-                      {t('admin.integrations.aiProviderActive')}
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
+        {/* Provider pills — hidden in Outpost (only one provider) */}
+        {!isOutpost && providers.length > 1 && (
+          <div className="space-y-1.5">
+            <Label>
+              {t('admin.integrations.aiProvider')} <span className="text-destructive">*</span>
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {providers.map(p => {
+                const isSelected = selectedProvider === p.id;
+                const isActive = config?.active_provider === p.id;
+                const isConfigured = !!config?.providers?.[p.id]?.has_api_key;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleProviderPillClick(p.id)}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                      isSelected
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : isConfigured
+                          ? 'bg-muted text-foreground border-border hover:border-primary/50'
+                          : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                    )}
+                  >
+                    {isConfigured && !isSelected && <Check className="w-3 h-3 text-green-500" />}
+                    {p.label}
+                    {isActive && (
+                      <Badge
+                        variant={isSelected ? 'secondary' : 'default'}
+                        className="text-[10px] px-1.5 py-0 h-4 leading-4"
+                      >
+                        {t('admin.integrations.aiProviderActive')}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Outpost: Base URL as primary field */}
+        {isOutpost && (
+          <div className="space-y-1.5">
+            <Label>
+              {t('admin.integrations.aiOutpostEndpoint')}{' '}
+              <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={baseUrl}
+              onChange={e => setBaseUrl(e.target.value)}
+              placeholder={selectedProviderInfo?.default_base_url || 'http://localhost:11434/v1'}
+            />
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Shield className="w-3 h-3" />
+              {t('admin.integrations.aiOutpostEndpointHint')}
+            </p>
+          </div>
+        )}
 
         {/* API Key */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label>
-              {t('admin.integrations.aiApiKey')} <span className="text-destructive">*</span>
+              {t('admin.integrations.aiApiKey')}{' '}
+              {isOutpost ? (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {t('common.optional')}
+                </span>
+              ) : (
+                <span className="text-destructive">*</span>
+              )}
             </Label>
-            {selectedProviderInfo?.help_url && (
+            {!isOutpost && selectedProviderInfo?.help_url && (
               <a
                 href={selectedProviderInfo.help_url}
                 target="_blank"
@@ -425,6 +514,11 @@ export function AIConfigSection() {
                 : t('admin.integrations.aiApiKeyPlaceholder')
             }
           />
+          {isOutpost && !hasExistingKey && !apiKey && (
+            <p className="text-xs text-muted-foreground">
+              {t('admin.integrations.aiOutpostApiKeyOptional')}
+            </p>
+          )}
           {hasExistingKey && !apiKey && (
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <Check className="w-3 h-3 text-green-500" />
@@ -565,7 +659,7 @@ export function AIConfigSection() {
         )}
 
         {/* Validation hint */}
-        {enabled && !hasExistingKey && !apiKey && (
+        {!isOutpost && enabled && !hasExistingKey && !apiKey && (
           <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-md text-sm">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{t('admin.integrations.aiApiKeyRequired')}</span>
@@ -581,7 +675,9 @@ export function AIConfigSection() {
           )}
           <Button
             onClick={handleSave}
-            disabled={saving || !selectedProvider || (enabled && !hasExistingKey && !apiKey)}
+            disabled={
+              saving || !selectedProvider || (!isOutpost && enabled && !hasExistingKey && !apiKey)
+            }
           >
             {saving
               ? t('admin.integrations.saving')

@@ -3218,6 +3218,14 @@ export interface TranslationResource {
       aiSaveActivate?: string;
       aiProviderActive?: string;
       aiApiKeySaved?: string;
+      aiOutpostGuideTitle?: string;
+      aiOutpostGuideDesc?: string;
+      aiOutpostGuideStep1?: string;
+      aiOutpostGuideStep2?: string;
+      aiOutpostGuideStep3?: string;
+      aiOutpostEndpoint?: string;
+      aiOutpostEndpointHint?: string;
+      aiOutpostApiKeyOptional?: string;
       aiPlatformActive?: string;
       aiPlatformTitle?: string;
       aiPlatformDesc?: string;
