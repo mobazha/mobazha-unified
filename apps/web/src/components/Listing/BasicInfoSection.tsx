@@ -2,7 +2,12 @@
 
 import React, { useCallback } from 'react';
 import type { ContractType, ProductCondition, WeightUnit, DimensionUnit } from '@mobazha/core';
-import { useI18n, calculateDiscountPercent, STANDARD_PRODUCT_TYPES } from '@mobazha/core';
+import {
+  useI18n,
+  calculateDiscountPercent,
+  STANDARD_PRODUCT_TYPES,
+  isOutpostMode,
+} from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
 import {
   Select,
@@ -67,7 +72,15 @@ interface BasicInfoSectionProps {
   aiLoadingAction?: string | null;
 }
 
-const currencies = [
+// Outpost is crypto-native: listings are priced natively in LTC or XMR
+// (the only payment coins supported), with no fiat conversion layer.
+// SaaS/full-node mode retains the full fiat+crypto picker.
+const OUTPOST_CURRENCIES = [
+  { value: 'LTC', label: 'LTC (Ł)' },
+  { value: 'XMR', label: 'XMR (ɱ)' },
+];
+
+const SAAS_CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
   { value: 'CNY', label: 'CNY (¥)' },
   { value: 'EUR', label: 'EUR (€)' },
@@ -77,6 +90,8 @@ const currencies = [
   { value: 'ETH', label: 'ETH (Ξ)' },
   { value: 'USDT', label: 'USDT' },
 ];
+
+const currencies = isOutpostMode() ? OUTPOST_CURRENCIES : SAAS_CURRENCIES;
 
 const conditions: { value: ProductCondition; labelKey: string }[] = [
   { value: 'NEW', labelKey: 'listing.conditions.new' },
@@ -154,6 +169,8 @@ export function BasicInfoSection({
       BTC: '₿',
       ETH: 'Ξ',
       USDT: '$',
+      LTC: 'Ł',
+      XMR: 'ɱ',
     };
     return symbols[pricingCurrency] || pricingCurrency;
   }, [pricingCurrency]);
