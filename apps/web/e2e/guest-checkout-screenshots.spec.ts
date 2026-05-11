@@ -32,7 +32,7 @@ const MOCK_GUEST_ORDER_RESPONSE = {
   items: [
     {
       listingHash: 'QmTestHash123',
-      title: 'Premium Wireless Headphones',
+      listingTitle: 'Premium Wireless Headphones',
       quantity: 1,
       unitPrice: '9900',
     },

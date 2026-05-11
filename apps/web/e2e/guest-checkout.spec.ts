@@ -33,7 +33,7 @@ const MOCK_GUEST_ORDER_RESPONSE = {
   items: [
     {
       listingHash: 'QmTestHash123',
-      title: 'Premium Wireless Headphones',
+      listingTitle: 'Premium Wireless Headphones',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -54,7 +54,7 @@ const MOCK_GUEST_ORDER_STATUS = {
   items: [
     {
       listingHash: 'QmTestHash123',
-      title: 'Premium Wireless Headphones',
+      listingTitle: 'Premium Wireless Headphones',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -89,7 +89,7 @@ const MOCK_GUEST_ORDERS_LIST = [
     items: [
       {
         listingHash: 'QmTestHash456',
-        title: 'Vintage Camera',
+        listingTitle: 'Vintage Camera',
         quantity: 1,
         unitPrice: '24500',
       },
