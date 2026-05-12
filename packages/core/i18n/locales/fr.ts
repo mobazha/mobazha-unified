@@ -4513,6 +4513,7 @@ export const fr: TranslationResource = {
       featureVariants: 'Variantes, prix et stock',
       featureShipping: 'Options de livraison et expédition',
       featurePricing: 'Tarification crypto et fiat',
+      featureCryptoPricing: 'Tarification crypto',
       completeTitle: 'Votre boutique est prête !',
       completeDesc:
         "Votre profil de boutique est configuré. Ajoutez des produits à tout moment depuis le panneau d'administration.",

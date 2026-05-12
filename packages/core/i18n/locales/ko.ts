@@ -4401,6 +4401,7 @@ export const ko: TranslationResource = {
       featureVariants: '변형, 가격 및 재고',
       featureShipping: '배송 프로필 관리',
       featurePricing: '암호화폐 및 법정화폐 가격 설정',
+      featureCryptoPricing: '암호화폐 가격 설정',
       completeTitle: '스토어 준비 완료!',
       completeDesc:
         '스토어 프로필이 설정되었습니다. 관리자 패널에서 언제든 상품을 추가할 수 있습니다.',

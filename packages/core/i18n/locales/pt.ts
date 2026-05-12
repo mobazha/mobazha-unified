@@ -4485,6 +4485,7 @@ export const pt: TranslationResource = {
       featureVariants: 'Variantes, preços e estoque',
       featureShipping: 'Opções de envio e entrega',
       featurePricing: 'Preços em cripto e moeda fiduciária',
+      featureCryptoPricing: 'Preços em cripto',
       completeTitle: 'Sua loja está pronta!',
       completeDesc:
         'O perfil da sua loja está configurado. Adicione produtos a qualquer momento no painel.',
