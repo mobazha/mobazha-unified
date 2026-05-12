@@ -5426,13 +5426,12 @@ export const zh: TranslationResource = {
     onboarding: '30 秒连接你的第一个 AI 助手',
     outpost: {
       banner: {
-        title: '隐私模式：仅显示支持本地推理的客户端',
-        body: '当前店铺运行在 Outpost 模式下。为兑现 "AI runs locally" 承诺，会把店铺数据发送到厂商云端推理的 AI 客户端（ChatGPT Desktop、Claude Desktop、Codex）默认已隐藏。',
+        title: '隐私模式：已隐藏云端 AI 客户端',
+        body: 'ChatGPT Desktop、Claude Desktop、Codex 只能在厂商云端推理。Outpost 默认隐藏它们，让 AI 留在本机、店铺数据不离开你的设备。',
       },
       showHighRisk: {
         label: '显示高风险 AI 客户端',
-        description:
-          '显示那些只能在厂商云端推理的客户端。连接这些客户端会将店铺数据发送到第三方服务商。',
+        description: '显示需要把推理放到厂商云端的客户端。连接后，店铺数据会离开本机送到第三方。',
       },
       hiddenCount: '已隐藏 {{count}} 个客户端',
       risk: {
@@ -5441,7 +5440,7 @@ export const zh: TranslationResource = {
         cloud: '云端推理',
         mixedTooltip: '该客户端可配置为本地 LLM，但默认走云端。连接前请确认你的配置。',
         cloudTooltip:
-          '该客户端会把店铺数据发往厂商云端推理。连接会违反 Outpost "AI runs locally" 承诺。',
+          '该客户端会把店铺数据发往厂商云端推理。连接会违反 Outpost「AI 仅在本机运行」的承诺。',
       },
       localLlm: {
         title: '本地 LLM 引擎',
@@ -5457,9 +5456,9 @@ export const zh: TranslationResource = {
           },
           llamacpp: {
             name: 'llama.cpp',
-            tagline: '单文件二进制，支持 GGUF 模型与全 GPU 加速。',
+            tagline: '提供 Linux / macOS / Windows 预编译二进制；支持 GGUF 模型与全 GPU 加速。',
             recommendedModel: '推荐：Qwen 2.5 1.5B',
-            cta: 'GitHub',
+            cta: '下载发行版',
           },
           lmstudio: {
             name: 'LM Studio',

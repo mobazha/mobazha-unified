@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n, useFeature } from '@mobazha/core';
 import { Bell, Webhook, Sparkles, Package } from 'lucide-react';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
@@ -28,6 +28,7 @@ function resolveTab(param: string | null, supplyChainEnabled: boolean): TabValue
 
 export default function AdminIntegrationsPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const supplyChainEnabled = useFeature('supplyChainEnabled');
   const searchParams = useSearchParams();
   const derivedTab = useMemo(
@@ -39,6 +40,21 @@ export default function AdminIntegrationsPage() {
   if (derivedTab !== prevDerived) {
     setPrevDerived(derivedTab);
     setActiveTab(derivedTab);
+  }
+
+  // Outpost: this page used to be the AI configuration entry point, but the
+  // dedicated `/admin/ai-agents` page now hosts the full funnel (install
+  // runtime → configure endpoint → connect clients). Redirect users who
+  // land here via stale links / bookmarks so we stop maintaining two parallel
+  // AI surfaces.
+  useEffect(() => {
+    if (isOutpost) {
+      router.replace('/admin/ai-agents');
+    }
+  }, [router]);
+
+  if (isOutpost) {
+    return null;
   }
 
   return (

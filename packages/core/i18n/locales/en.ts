@@ -6316,15 +6316,15 @@ export const en: TranslationResource = {
     onboarding: 'Connect your first AI agent in 30 seconds',
     outpost: {
       banner: {
-        title: 'Privacy mode: only local-inference clients shown',
-        body: 'Your store is running in Outpost mode. To uphold the "AI runs locally" promise, AI clients that send your store data to vendor clouds (ChatGPT Desktop, Claude Desktop, Codex) are hidden by default.',
+        title: 'Privacy mode: cloud AI clients hidden',
+        body: "ChatGPT Desktop, Claude Desktop, and Codex only run inference in the vendor's cloud. Outpost hides them by default so AI stays local and your store data never leaves your device.",
       },
       showHighRisk: {
         label: 'Show high-risk AI clients',
         description:
-          'Reveals clients whose inference happens in vendor clouds. Connecting these will send store data to third-party providers.',
+          "Show clients whose inference runs in a vendor's cloud. Connecting one will send your store data off-device.",
       },
-      hiddenCount: '{{count}} client(s) hidden',
+      hiddenCount: '{{count}} hidden',
       risk: {
         local: 'Local inference',
         mixed: 'Local possible',
@@ -6348,9 +6348,10 @@ export const en: TranslationResource = {
           },
           llamacpp: {
             name: 'llama.cpp',
-            tagline: 'Single binary, GGUF models, full GPU support.',
+            tagline:
+              'Prebuilt binaries for Linux / macOS / Windows; GGUF models; full GPU support.',
             recommendedModel: 'Recommended: Qwen 2.5 1.5B',
-            cta: 'GitHub',
+            cta: 'Download release',
           },
           lmstudio: {
             name: 'LM Studio',

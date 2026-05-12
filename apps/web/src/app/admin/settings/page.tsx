@@ -238,17 +238,21 @@ export default function AdminSettingsPage() {
           </SettingsSection>
         )}
 
-        {/* Extensions — AI config and webhooks, relevant for all modes */}
-        <SettingsSection title={t('admin.settings.sectionExtensions')}>
-          <SettingsCard
-            icon={Plug}
-            title={t('admin.settings.integrations')}
-            description={t('admin.settings.integrationsDesc')}
-            href={
-              isOutpost ? '/admin/settings/integrations?tab=ai' : '/admin/settings/integrations'
-            }
-          />
-        </SettingsSection>
+        {/* Extensions — AI config / webhooks / fulfillment.
+            Hidden in Outpost mode: the only sub-page that survives there is
+            the AI tab, which has been hoisted to /admin/ai-agents (a sidebar
+            entry of its own). Showing the card would re-create the duplicate
+            "two AI configuration entry points" UX we just consolidated. */}
+        {!isOutpost && (
+          <SettingsSection title={t('admin.settings.sectionExtensions')}>
+            <SettingsCard
+              icon={Plug}
+              title={t('admin.settings.integrations')}
+              description={t('admin.settings.integrationsDesc')}
+              href="/admin/settings/integrations"
+            />
+          </SettingsSection>
+        )}
       </div>
     </div>
   );

@@ -37,7 +37,18 @@ import { cn } from '@/lib/utils';
 
 const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
 
-export function AIConfigSection() {
+export interface AIConfigSectionProps {
+  /**
+   * When true, suppress the inline "Install Ollama" guide block that ships in
+   * Outpost mode. The dedicated `LocalLlmEnginePanel` (rendered above this
+   * component on `/admin/ai-agents`) already covers runtime installation and
+   * provides three engine options instead of just Ollama, so showing both
+   * would duplicate the same call to action.
+   */
+  hideOutpostInstallGuide?: boolean;
+}
+
+export function AIConfigSection({ hideOutpostInstallGuide = false }: AIConfigSectionProps = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -272,7 +283,7 @@ export function AIConfigSection() {
       : t('admin.integrations.aiNotConfigured');
 
   return (
-    <div className="space-y-6">
+    <div id="ai-endpoint-config" className="space-y-6 scroll-mt-24">
       {/* Header card with enable toggle */}
       <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl">
         <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
@@ -297,8 +308,12 @@ export function AIConfigSection() {
         </div>
       </div>
 
-      {/* Outpost: Local LLM setup guide */}
-      {isOutpost && (
+      {/* Outpost: Local LLM setup guide.
+          Hidden when rendered alongside `LocalLlmEnginePanel` (e.g. on
+          `/admin/ai-agents`), which already covers runtime installation with
+          a richer 3-engine picker. Kept for the legacy Settings →
+          Integrations page so it still works as a standalone surface. */}
+      {isOutpost && !hideOutpostInstallGuide && (
         <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
           <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
             <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />

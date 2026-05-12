@@ -1,17 +1,26 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useI18n, apiTokensApi, isStandalone } from '@mobazha/core';
+import { useI18n, apiTokensApi } from '@mobazha/core';
 import type { CreateTokenResponse } from '@mobazha/core';
 import {
   MCP_CLIENTS,
   generateConnectArtifact,
   type McpClient,
   type ConnectArtifact,
+  type ClientRisk,
 } from '@mobazha/core/utils/mcpConnectors';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, ExternalLink, Copy, Loader2 } from 'lucide-react';
+import {
+  MoreHorizontal,
+  ExternalLink,
+  Copy,
+  Loader2,
+  ShieldCheck,
+  ShieldAlert,
+  CloudOff,
+} from 'lucide-react';
 import { ConnectDialog } from './ConnectDialog';
 
 interface BrandIcon {
@@ -49,9 +58,25 @@ interface QuickConnectGridProps {
   storeName: string;
   mcpUrl: string;
   onTokenCreated?: () => void;
+  /**
+   * Pre-filtered client list. When omitted, defaults to all MCP_CLIENTS.
+   * In Outpost mode, callers should pass `filterMcpClients(true, showHighRisk)`.
+   */
+  clients?: McpClient[];
+  /**
+   * When true, renders privacy risk badges on each ClientCard (used in Outpost mode).
+   * Always false outside Outpost (avoids visual noise on SaaS/Standalone).
+   */
+  showRiskBadges?: boolean;
 }
 
-export function QuickConnectGrid({ storeName, mcpUrl, onTokenCreated }: QuickConnectGridProps) {
+export function QuickConnectGrid({
+  storeName,
+  mcpUrl,
+  onTokenCreated,
+  clients,
+  showRiskBadges = false,
+}: QuickConnectGridProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const [loadingClient, setLoadingClient] = useState<string | null>(null);
@@ -59,8 +84,9 @@ export function QuickConnectGrid({ storeName, mcpUrl, onTokenCreated }: QuickCon
   const [dialogArtifact, setDialogArtifact] = useState<ConnectArtifact | null>(null);
   const [dialogClient, setDialogClient] = useState<McpClient | null>(null);
 
-  const ownerClients = MCP_CLIENTS.filter(c => c.audience === 'owner');
-  const devClients = MCP_CLIENTS.filter(c => c.audience === 'developer');
+  const list = clients ?? MCP_CLIENTS;
+  const ownerClients = list.filter(c => c.audience === 'owner');
+  const devClients = list.filter(c => c.audience === 'developer');
 
   const handleConnect = useCallback(
     async (client: McpClient) => {
@@ -114,21 +140,24 @@ export function QuickConnectGrid({ storeName, mcpUrl, onTokenCreated }: QuickCon
     <>
       <div className="space-y-6">
         {/* For store owners */}
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            {t('aiAgents.forOwners')}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {ownerClients.map(client => (
-              <ClientCard
-                key={client.id}
-                client={client}
-                loading={loadingClient === client.id}
-                onConnect={handleConnect}
-              />
-            ))}
+        {ownerClients.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+              {t('aiAgents.forOwners')}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {ownerClients.map(client => (
+                <ClientCard
+                  key={client.id}
+                  client={client}
+                  loading={loadingClient === client.id}
+                  onConnect={handleConnect}
+                  showRiskBadge={showRiskBadges}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* For developers */}
         <div>
@@ -142,6 +171,7 @@ export function QuickConnectGrid({ storeName, mcpUrl, onTokenCreated }: QuickCon
                 client={client}
                 loading={loadingClient === client.id}
                 onConnect={handleConnect}
+                showRiskBadge={showRiskBadges}
               />
             ))}
             {/* Other / generic */}
@@ -174,25 +204,67 @@ interface ClientCardProps {
   client: McpClient;
   loading: boolean;
   onConnect: (client: McpClient) => void;
+  showRiskBadge?: boolean;
 }
 
-function ClientCard({ client, loading, onConnect }: ClientCardProps) {
+const RISK_BADGE: Record<
+  ClientRisk,
+  { Icon: React.ComponentType<{ className?: string }>; tone: string }
+> = {
+  'local-capable': { Icon: ShieldCheck, tone: 'text-success' },
+  mixed: { Icon: ShieldAlert, tone: 'text-amber-600 dark:text-amber-400' },
+  'cloud-only': { Icon: CloudOff, tone: 'text-destructive' },
+};
+
+function ClientCard({ client, loading, onConnect, showRiskBadge = false }: ClientCardProps) {
   const { t } = useI18n();
   const icon = CLIENT_ICONS[client.id];
   const btn = getButtonProps(client);
   const BtnIcon = btn.icon;
+  const riskBadge = RISK_BADGE[client.risk];
+  const RiskIcon = riskBadge.Icon;
+  const riskLabelKey =
+    client.risk === 'local-capable'
+      ? 'aiAgents.outpost.risk.local'
+      : client.risk === 'mixed'
+        ? 'aiAgents.outpost.risk.mixed'
+        : 'aiAgents.outpost.risk.cloud';
+  const riskTitleKey =
+    client.risk === 'mixed'
+      ? 'aiAgents.outpost.risk.mixedTooltip'
+      : client.risk === 'cloud-only'
+        ? 'aiAgents.outpost.risk.cloudTooltip'
+        : null;
+  // Merge the short label and the long explanation into aria-label so keyboard /
+  // touch / screen-reader users get the full risk context (the `title` attribute
+  // is unreliable for those modalities — it only fires on mouse hover).
+  const riskAriaLabel = riskTitleKey ? `${t(riskLabelKey)} — ${t(riskTitleKey)}` : t(riskLabelKey);
 
   return (
     <button
       onClick={() => onConnect(client)}
       disabled={loading}
       className={cn(
-        'flex flex-col items-center gap-2 p-4 rounded-lg border border-border',
+        'relative flex flex-col items-center gap-2 p-4 rounded-lg border border-border',
         'hover:border-primary/40 hover:bg-muted/50 transition-colors text-center',
         'disabled:opacity-60 disabled:cursor-wait'
       )}
       data-testid={`mcp-client-${client.id}`}
     >
+      {showRiskBadge && (
+        <span
+          className={cn(
+            'absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-medium',
+            riskBadge.tone
+          )}
+          title={riskTitleKey ? t(riskTitleKey) : undefined}
+          aria-label={riskAriaLabel}
+          data-testid={`mcp-client-risk-${client.id}`}
+        >
+          <RiskIcon className="w-3 h-3" />
+          {t(riskLabelKey)}
+        </span>
+      )}
       {icon ? (
         icon.color ? (
           <img

@@ -9,34 +9,86 @@
 export type ConnectMode = 'deeplink' | 'cli' | 'remote-url' | 'json-config';
 export type ClientAudience = 'owner' | 'developer';
 
+/**
+ * Privacy risk classification — used by Outpost mode to filter cloud-only clients.
+ *
+ * - `local-capable`: Inference can run locally with zero or trivial configuration.
+ *   Example: OpenClaw (BYO model).
+ * - `mixed`: Client can be configured for local inference but defaults to cloud.
+ *   Examples: Cursor, VS Code, Claude Code, Windsurf, OpenCode, Cline (defaults to
+ *   Anthropic/OpenRouter; local providers like Ollama require explicit setup).
+ * - `cloud-only`: Inference happens in the vendor's cloud and the end user cannot
+ *   redirect it to a local LLM. Examples: ChatGPT Desktop, Claude Desktop, Codex.
+ *
+ * Outpost mode default behavior:
+ * - `local-capable`: shown by default
+ * - `mixed`: shown with a yellow risk badge
+ * - `cloud-only`: hidden by default, revealed only when user opts in via
+ *   "Show high-risk AI clients" setting (records explicit acknowledgement)
+ */
+export type ClientRisk = 'local-capable' | 'mixed' | 'cloud-only';
+
 export interface McpClient {
   id: string;
   name: string;
   mode: ConnectMode;
   audience: ClientAudience;
+  /** Privacy risk classification — controls Outpost mode visibility (see ClientRisk). */
+  risk: ClientRisk;
   tagline?: string;
 }
 
 export const MCP_CLIENTS: McpClient[] = [
   // --- For store owners ---
-  { id: 'chatgpt-desktop', name: 'ChatGPT Desktop', mode: 'remote-url', audience: 'owner' },
-  { id: 'claude-desktop', name: 'Claude Desktop', mode: 'remote-url', audience: 'owner' },
+  {
+    id: 'chatgpt-desktop',
+    name: 'ChatGPT Desktop',
+    mode: 'remote-url',
+    audience: 'owner',
+    risk: 'cloud-only',
+  },
+  {
+    id: 'claude-desktop',
+    name: 'Claude Desktop',
+    mode: 'remote-url',
+    audience: 'owner',
+    risk: 'cloud-only',
+  },
   {
     id: 'openclaw',
     name: 'OpenClaw',
     mode: 'cli',
     audience: 'owner',
+    risk: 'local-capable',
     tagline: 'Manage via WhatsApp & Telegram',
   },
   // --- For developers ---
-  { id: 'cursor', name: 'Cursor', mode: 'deeplink', audience: 'developer' },
-  { id: 'vscode', name: 'VS Code', mode: 'deeplink', audience: 'developer' },
-  { id: 'claude-code', name: 'Claude Code', mode: 'cli', audience: 'developer' },
-  { id: 'windsurf', name: 'Windsurf', mode: 'json-config', audience: 'developer' },
-  { id: 'codex', name: 'Codex', mode: 'remote-url', audience: 'developer' },
-  { id: 'opencode', name: 'OpenCode', mode: 'cli', audience: 'developer' },
-  { id: 'cline', name: 'Cline', mode: 'json-config', audience: 'developer' },
+  { id: 'cursor', name: 'Cursor', mode: 'deeplink', audience: 'developer', risk: 'mixed' },
+  { id: 'vscode', name: 'VS Code', mode: 'deeplink', audience: 'developer', risk: 'mixed' },
+  { id: 'claude-code', name: 'Claude Code', mode: 'cli', audience: 'developer', risk: 'mixed' },
+  { id: 'windsurf', name: 'Windsurf', mode: 'json-config', audience: 'developer', risk: 'mixed' },
+  { id: 'codex', name: 'Codex', mode: 'remote-url', audience: 'developer', risk: 'cloud-only' },
+  { id: 'opencode', name: 'OpenCode', mode: 'cli', audience: 'developer', risk: 'mixed' },
+  {
+    id: 'cline',
+    name: 'Cline',
+    mode: 'json-config',
+    audience: 'developer',
+    risk: 'mixed',
+  },
 ];
+
+/**
+ * Filter MCP_CLIENTS based on privacy mode.
+ *
+ * @param outpost When true, applies Outpost privacy filtering rules
+ * @param showHighRisk When true (and outpost), reveals cloud-only clients (user opted in)
+ */
+export function filterMcpClients(outpost: boolean, showHighRisk: boolean): McpClient[] {
+  if (!outpost) return MCP_CLIENTS;
+  if (showHighRisk) return MCP_CLIENTS;
+  return MCP_CLIENTS.filter(c => c.risk !== 'cloud-only');
+}
 
 // ---------------------------------------------------------------------------
 // Mode A: Deep Link generators
