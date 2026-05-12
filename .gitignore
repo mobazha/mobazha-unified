@@ -35,6 +35,7 @@ build/
 # Testing
 coverage/
 playwright-report/
+playwright-report-*/
 playwright/.auth/
 test-results/
 e2e-screenshots/
