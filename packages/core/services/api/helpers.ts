@@ -32,6 +32,13 @@ export function authGet<T>(path: string): Promise<T> {
   return get<T>(`${getMyGatewayUrl()}${path}`, getAuthHeaders());
 }
 
+// Authenticated local node request. This intentionally bypasses
+// getMyGatewayUrl()'s standalone-buyer SaaS routing for node-local resources
+// that do not exist behind the buyer gateway.
+export function nodeAuthGet<T>(path: string): Promise<T> {
+  return get<T>(`${getGatewayUrl()}${path}`, getAuthHeaders());
+}
+
 export function authPost<T>(path: string, body?: unknown): Promise<T> {
   return post<T>(`${getMyGatewayUrl()}${path}`, body, getAuthHeaders());
 }
@@ -71,6 +78,13 @@ export function authRequest<T>(path: string, reqOpts: Omit<RequestOptions, 'head
 
 export function publicGet<T>(path: string): Promise<T> {
   return get<T>(`${getGatewayUrl()}${path}`, getHeadersWithContext());
+}
+
+export function publicGetWithHeaders<T>(path: string, headers: Record<string, string>): Promise<T> {
+  return get<T>(`${getGatewayUrl()}${path}`, {
+    ...getHeadersWithContext(),
+    ...headers,
+  });
 }
 
 export function publicPost<T>(path: string, body?: unknown): Promise<T> {

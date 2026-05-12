@@ -320,7 +320,7 @@ export const NODE_API = {
   DIGITAL_ASSET_LICENSE_KEY_REVOKE: (keyID: string) =>
     `/digital-assets/license-keys/${encodeURIComponent(keyID)}/revoke`,
 
-  // --- Digital Assets — Buyer Portal (capability-based auth via orderID) ---
+  // --- Digital Assets — Buyer Portal (guest token or authenticated buyer/admin) ---
   ORDER_DIGITAL_ASSETS: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-assets`,
   ORDER_DIGITAL_DOWNLOAD: (orderID: string) =>
