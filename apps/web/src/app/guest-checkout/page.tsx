@@ -6,6 +6,7 @@ import { useI18n, getImageUrl } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
+  buyerPortalTokenStorageKey,
   getGuestCheckoutSettings,
   createGuestOrder,
   type CreateGuestOrderRequest,
@@ -91,6 +92,19 @@ function toPaymentInfo(data: GuestOrderResponse, coin: string): ExternalWalletPa
   };
 }
 
+function buildGuestOrderUrl(
+  orderToken: string,
+  buyerPortalToken?: string,
+  absolute = false
+): string {
+  const path = `/guest-order/${encodeURIComponent(orderToken)}`;
+  const fragment = buyerPortalToken
+    ? `#buyerPortalToken=${encodeURIComponent(buyerPortalToken)}`
+    : '';
+  if (!absolute || typeof window === 'undefined') return `${path}${fragment}`;
+  return `${window.location.origin}${path}${fragment}`;
+}
+
 export default function GuestCheckoutPage() {
   const { t } = useI18n();
   const router = useRouter();
@@ -174,6 +188,12 @@ export default function GuestCheckoutPage() {
         const req = buildOrderRequest(items, addressData, contactEmail, coin);
         const res = await createGuestOrder(req);
         if (submitOrderAbortRef.current) return;
+        if (res.buyerPortalToken && typeof window !== 'undefined') {
+          window.sessionStorage.setItem(
+            buyerPortalTokenStorageKey(res.orderToken),
+            res.buyerPortalToken
+          );
+        }
         setPaymentState({ status: 'awaiting', data: res });
         clearCart();
       } catch (err) {
@@ -429,11 +449,11 @@ export default function GuestCheckoutPage() {
                   )}
 
                   <SaveOrderLinkCard
-                    orderUrl={
-                      typeof window !== 'undefined'
-                        ? `${window.location.origin}/guest-order/${paymentState.data.orderToken}`
-                        : `/guest-order/${paymentState.data.orderToken}`
-                    }
+                    orderUrl={buildGuestOrderUrl(
+                      paymentState.data.orderToken,
+                      paymentState.data.buyerPortalToken,
+                      true
+                    )}
                     title={t('guestCheckout.saveLinkTitle')}
                     description={t('guestCheckout.saveLinkDescription')}
                     copyLabel={t('guestCheckout.saveLinkCopy')}
@@ -447,7 +467,14 @@ export default function GuestCheckoutPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() => router.push(`/guest-order/${paymentState.data.orderToken}`)}
+                    onClick={() =>
+                      router.push(
+                        buildGuestOrderUrl(
+                          paymentState.data.orderToken,
+                          paymentState.data.buyerPortalToken
+                        )
+                      )
+                    }
                   >
                     {t('guestCheckout.trackOrderStatus')}
                   </Button>

@@ -93,13 +93,23 @@ export function LicenseKeyPoolPanel({
   const [refreshKey, setRefreshKey] = useState(0);
   const [showImport, setShowImport] = useState(false);
   const [pendingRevokeId, setPendingRevokeId] = useState<string | null>(null);
+  const variantScoped = Boolean(variantSku?.trim());
 
   useEffect(() => {
+    if (variantScoped) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStats(null);
+      setKeys([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     // Refetch when refreshKey changes — show loading=true immediately so a
     // stale empty state doesn't flash. Async fetch dwarfs any cascading-render
     // cost the rule warns about.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setLoading(true);
     setError(null);
 
@@ -127,7 +137,7 @@ export function LicenseKeyPoolPanel({
     return () => {
       cancelled = true;
     };
-  }, [listingSlug, variantSku, refreshKey, t]);
+  }, [listingSlug, variantSku, refreshKey, variantScoped, t]);
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
@@ -157,6 +167,25 @@ export function LicenseKeyPoolPanel({
 
   const lowInventoryWarning = stats != null && stats.available < 5 && stats.available > 0;
   const outOfStock = stats != null && stats.available === 0 && stats.total > 0;
+
+  if (variantScoped) {
+    return (
+      <div
+        className={cn(
+          'flex items-start gap-2 rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground',
+          className
+        )}
+      >
+        <Ban className="w-4 h-4 mt-0.5 shrink-0" />
+        <span>
+          {t('listing.digital.variantUnsupported', {
+            defaultValue:
+              'Variant-specific digital delivery is not supported in Phase 1. Configure digital assets at the listing level.',
+          })}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('space-y-4', className)}>

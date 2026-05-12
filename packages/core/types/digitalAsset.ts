@@ -140,18 +140,21 @@ export interface LicenseActivationResult {
 
 export interface CreateLinkAssetRequest {
   listingSlug: string;
+  /** @deprecated Phase 1 only supports listing-level digital delivery; setting this throws client-side. */
   variantSku?: string;
   url: string;
 }
 
 export interface CreateLicenseKeyAssetRequest {
   listingSlug: string;
+  /** @deprecated Phase 1 only supports listing-level digital delivery; setting this throws client-side. */
   variantSku?: string;
   appId?: string;
 }
 
 export interface ImportLicenseKeysRequest {
   listingSlug: string;
+  /** @deprecated Phase 1 only supports listing-level digital delivery; setting this throws client-side. */
   variantSku?: string;
   appId?: string;
   keys: string[];

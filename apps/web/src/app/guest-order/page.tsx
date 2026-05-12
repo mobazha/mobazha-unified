@@ -6,6 +6,7 @@ import { Package } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
 import {
+  buyerPortalTokenStorageKey,
   getGuestOrderStatus,
   type GuestOrderStatus,
 } from '@mobazha/core/services/api/guestCheckout';
@@ -37,12 +38,81 @@ function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
   };
 }
 
+function buildGuestOrderUrl(orderToken: string, buyerPortalToken?: string): string {
+  const path = `${window.location.origin}/guest-order/${encodeURIComponent(orderToken)}`;
+  if (!buyerPortalToken) return path;
+  return `${path}#buyerPortalToken=${encodeURIComponent(buyerPortalToken)}`;
+}
+
+function readBuyerPortalTokenFromURL(): { token?: string; shouldCleanURL: boolean } {
+  const url = new URL(window.location.href);
+  const fragmentParams = new URLSearchParams(url.hash.startsWith('#') ? url.hash.slice(1) : '');
+  const fragmentToken = fragmentParams.get('buyerPortalToken') || undefined;
+  const legacyQueryToken = url.searchParams.get('buyerPortalToken') || undefined;
+  return {
+    token: fragmentToken || legacyQueryToken,
+    shouldCleanURL: Boolean(fragmentToken || legacyQueryToken),
+  };
+}
+
+function cleanBuyerPortalTokenFromAddressBar(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('buyerPortalToken');
+  url.hash = '';
+  const cleanPath = `${url.pathname}${url.search}`;
+  window.history.replaceState(window.history.state, '', cleanPath);
+}
+
 export default function GuestOrderPage() {
   const { orderToken } = useParams<{ orderToken: string }>();
   const { t } = useI18n();
   const [order, setOrder] = useState<GuestOrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [buyerPortalToken, setBuyerPortalToken] = useState<string | undefined>();
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
+
+  // Keep the recovery token out of Referer headers even for legacy query-link
+  // visits, then strip it from the visible URL after local recovery.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    // eslint-disable-next-line no-undef
+    const existing = document.querySelector<HTMLMetaElement>('meta[name="referrer"]');
+    const previousContent = existing?.getAttribute('content') ?? null;
+    let meta = existing;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'referrer');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', 'no-referrer');
+    return () => {
+      if (!meta) return;
+      if (previousContent === null) {
+        meta.remove();
+      } else {
+        meta.setAttribute('content', previousContent);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!orderToken || typeof window === 'undefined') return;
+    const fromURL = readBuyerPortalTokenFromURL();
+    const key = buyerPortalTokenStorageKey(orderToken);
+    const legacyPersistedToken = window.localStorage.getItem(key) || undefined;
+    const token = fromURL.token || window.sessionStorage.getItem(key) || legacyPersistedToken;
+    if (token) {
+      window.sessionStorage.setItem(key, token);
+    }
+    if (legacyPersistedToken) {
+      window.localStorage.removeItem(key);
+    }
+    if (fromURL.shouldCleanURL) {
+      cleanBuyerPortalTokenFromAddressBar();
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBuyerPortalToken(token);
+  }, [orderToken]);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,7 +220,7 @@ export default function GuestOrderPage() {
         {(order.state === 'AWAITING_PAYMENT' || order.state === 'PAYMENT_DETECTED') &&
           typeof window !== 'undefined' && (
             <SaveOrderLinkCard
-              orderUrl={`${window.location.origin}/guest-order/${order.orderToken}`}
+              orderUrl={buildGuestOrderUrl(order.orderToken, buyerPortalToken)}
               title={t('guestOrder.saveLinkTitle')}
               description={t('guestOrder.saveLinkDescription')}
               copyLabel={t('guestOrder.saveLinkCopy')}
@@ -184,7 +254,12 @@ export default function GuestOrderPage() {
           />
         )}
 
-        {showDigitalDeliveries && <BuyerDigitalAssetsSection orderId={order.orderToken} />}
+        {showDigitalDeliveries && buyerPortalToken && (
+          <BuyerDigitalAssetsSection
+            orderId={order.orderToken}
+            buyerPortalToken={buyerPortalToken}
+          />
+        )}
 
         {showTracking && (
           <div className="rounded-lg border p-4">

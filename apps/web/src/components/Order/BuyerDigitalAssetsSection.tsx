@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 
 export interface BuyerDigitalAssetsSectionProps {
   orderId: string;
+  buyerPortalToken?: string;
   className?: string;
 }
 
@@ -87,17 +88,20 @@ function formatBytes(bytes?: number): string {
  * digital entitlements on this node" — render an empty state instead of an
  * error banner.
  *
- * - 401/403: buyer auth not in scope for this order (e.g. cross-tenant or
- *   anon buyer hitting a SaaS node) → safe to hide the section
+ * - 401/403 without a buyerPortalToken: authenticated node-admin fallback is
+ *   not available for this order → safe to hide the section
  * - 404/410: order known but no entitlements / revoked
  * - 501:    digital assets subsystem disabled on this node (Outpost build,
  *           feature flag off)
  *
  * 5xx other than 501 still surfaces because it indicates a real failure.
  */
-function isMissingEntitlementsError(err: unknown): boolean {
+function isMissingEntitlementsError(err: unknown, hasBuyerPortalToken: boolean): boolean {
   const status = (err as { status?: number })?.status;
-  if (status === 401 || status === 403 || status === 404 || status === 410 || status === 501) {
+  if (!hasBuyerPortalToken && (status === 401 || status === 403)) {
+    return true;
+  }
+  if (status === 404 || status === 410 || status === 501) {
     return true;
   }
   // Some helpers attach the code on `err.code` instead of HTTP status; treat
@@ -109,7 +113,11 @@ function isMissingEntitlementsError(err: unknown): boolean {
   return false;
 }
 
-export function BuyerDigitalAssetsSection({ orderId, className }: BuyerDigitalAssetsSectionProps) {
+export function BuyerDigitalAssetsSection({
+  orderId,
+  buyerPortalToken,
+  className,
+}: BuyerDigitalAssetsSectionProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const [assets, setAssets] = useState<BuyerAssetEntry[] | null>(null);
@@ -128,7 +136,7 @@ export function BuyerDigitalAssetsSection({ orderId, className }: BuyerDigitalAs
     setError(null);
 
     digitalAssetsApi
-      .getBuyerDigitalAssets(orderId)
+      .getBuyerDigitalAssets(orderId, buyerPortalToken)
       .then(data => {
         if (cancelled) return;
         setAssets(Array.isArray(data) ? data : []);
@@ -140,14 +148,19 @@ export function BuyerDigitalAssetsSection({ orderId, className }: BuyerDigitalAs
         // nothing rather than shouting "load failed" on a normal physical
         // order page (TD-111B). The fallthrough surfaces only true errors
         // (network failures, 5xx other than 501, unexpected payloads).
-        if (isMissingEntitlementsError(err)) {
+        if (isMissingEntitlementsError(err, Boolean(buyerPortalToken))) {
           setAssets([]);
           return;
         }
+        const status = (err as { status?: number })?.status;
         const message =
-          err instanceof Error
-            ? err.message
-            : t('common.unknownError', { defaultValue: 'Unknown error' });
+          buyerPortalToken && (status === 401 || status === 403)
+            ? t('order.digital.invalidPortalToken', {
+                defaultValue: 'This download link is invalid or has expired.',
+              })
+            : err instanceof Error
+              ? err.message
+              : t('common.unknownError', { defaultValue: 'Unknown error' });
         setError(message);
       })
       .finally(() => {
@@ -157,7 +170,7 @@ export function BuyerDigitalAssetsSection({ orderId, className }: BuyerDigitalAs
     return () => {
       cancelled = true;
     };
-  }, [orderId, refreshKey, t]);
+  }, [orderId, buyerPortalToken, refreshKey, t]);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey(k => k + 1);

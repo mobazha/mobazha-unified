@@ -6,7 +6,6 @@ import {
   Link2,
   Key,
   FileText,
-  ExternalLink,
   Trash2,
   Plus,
   AlertCircle,
@@ -95,13 +94,14 @@ export function DigitalAssetsManagerSection({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const persisted = typeof listingSlug === 'string' && listingSlug.length > 0;
+  const variantScoped = Boolean(variantSku?.trim());
 
   // License key asset (if any) for nested pool management
   const licenseKeyAsset = useMemo(() => assets.find(a => a.assetType === 'license_key'), [assets]);
 
   // Load assets
   useEffect(() => {
-    if (!persisted) {
+    if (!persisted || variantScoped) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAssets([]);
       return;
@@ -138,7 +138,7 @@ export function DigitalAssetsManagerSection({
     return () => {
       cancelled = true;
     };
-  }, [listingSlug, variantSku, refreshKey, persisted, t]);
+  }, [listingSlug, variantSku, refreshKey, persisted, variantScoped, t]);
 
   const handleAssetCreated = useCallback(
     (asset: DigitalAssetInfo) => {
@@ -190,6 +190,30 @@ export function DigitalAssetsManagerSection({
             {t('listing.digital.saveFirst', {
               defaultValue:
                 'Save the listing first, then come back to attach files, links, or license keys.',
+            })}
+          </span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (variantScoped) {
+    return (
+      <Card className={cn('p-6', className)}>
+        <h2 className="text-lg font-semibold mb-1">
+          {t('listing.digital.title', { defaultValue: 'Digital downloads' })}
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          {t('listing.digital.description', {
+            defaultValue: 'Provide files, access links, or license keys delivered after purchase.',
+          })}
+        </p>
+        <div className="flex items-start gap-2 p-3 rounded-md bg-muted/50 text-sm text-muted-foreground">
+          <Info className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            {t('listing.digital.variantUnsupported', {
+              defaultValue:
+                'Variant-specific digital delivery is not supported in Phase 1. Configure digital assets at the listing level.',
             })}
           </span>
         </div>

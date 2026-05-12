@@ -36,6 +36,7 @@ export interface CreateGuestOrderRequest {
 
 export interface GuestOrderResponse {
   orderToken: string;
+  buyerPortalToken?: string;
   paymentAddress: string;
   paymentAmount: string;
   paymentCoin: string;
@@ -99,6 +100,10 @@ export interface GuestOrderSummary {
 }
 
 // ========== Buyer-facing APIs (public, no auth) ==========
+
+export function buyerPortalTokenStorageKey(orderToken: string): string {
+  return `mobazha:guest-order:${orderToken}:buyerPortalToken`;
+}
 
 export function createGuestOrder(data: CreateGuestOrderRequest): Promise<GuestOrderResponse> {
   return publicPost(NODE_API.GUEST_ORDERS, data);

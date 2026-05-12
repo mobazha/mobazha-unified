@@ -2,6 +2,11 @@ import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import './globals.css';
+
+// __OUTPOST__ 是 Vite (apps/web/vite.config.ts) 的编译时 define。
+// Next.js 构建不替换此变量，导致裸引用在运行时抛 ReferenceError。
+// 在最早期挂载到 globalThis（覆盖 SSR）— 客户端再通过 inline script 兜底（见 <head>）。
+(globalThis as { __OUTPOST__?: boolean }).__OUTPOST__ = false;
 import {
   AuthProvider,
   MainContent,
@@ -102,6 +107,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
+        {/* __OUTPOST__ — Vite 编译时 define，Next.js 不替换。
+            必须在所有其他 script 之前定义，避免裸引用抛 ReferenceError。
+            Next.js 永远走 SaaS / Standalone，恒为 false。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__OUTPOST__=false;`,
+          }}
+        />
         {/* Runtime config — injected by container init at startup (standalone mode).
             Sets window.__RUNTIME_CONFIG__ with SAAS_API_URL and other env-specific values.
             Must load synchronously before React hydration so applyRuntimeConfig() picks it up.

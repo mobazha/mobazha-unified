@@ -2,7 +2,7 @@
  * Digital Asset API service — Phase 1.0 Core MVP
  *
  * Three groups of endpoints:
- * 1. Buyer Portal — capability-based auth (orderID acts as token, no Bearer required)
+ * 1. Buyer Portal — guest bearer token or authenticated buyer/admin access
  * 2. License validation — public, per-store, feature-flag gated
  * 3. Seller asset management — authenticated (Bearer token)
  *
@@ -13,7 +13,15 @@
  */
 
 import { NODE_API } from '../../config/apiPaths';
-import { authGet, authPost, authPatch, authDel, publicGet, publicPost } from './helpers';
+import {
+  authGet,
+  authPost,
+  authPatch,
+  authDel,
+  nodeAuthGet,
+  publicGetWithHeaders,
+  publicPost,
+} from './helpers';
 import { getAuthHeaders, getMyGatewayUrl } from './config';
 import type {
   AssetUpdateInput,
@@ -33,7 +41,7 @@ import type {
 } from '../../types/digitalAsset';
 
 // =====================================================================
-// Buyer Portal — capability-based auth (no Bearer required)
+// Buyer Portal — guest bearer token or authenticated buyer/admin access
 // =====================================================================
 
 /**
@@ -43,10 +51,16 @@ import type {
  */
 export function getBuyerDigitalAssets(
   orderID: string,
+  buyerPortalToken?: string,
   urlExpirySec = 3600
 ): Promise<BuyerAssetEntry[]> {
-  const path = `${NODE_API.ORDER_DIGITAL_ASSETS(orderID)}?urlExpirySec=${urlExpirySec}`;
-  return publicGet<BuyerAssetEntry[]>(path);
+  const query = new URLSearchParams({ urlExpirySec: String(urlExpirySec) });
+  const path = `${NODE_API.ORDER_DIGITAL_ASSETS(orderID)}?${query.toString()}`;
+  return buyerPortalToken
+    ? publicGetWithHeaders<BuyerAssetEntry[]>(path, {
+        'X-Buyer-Portal-Token': buyerPortalToken,
+      })
+    : nodeAuthGet<BuyerAssetEntry[]>(path);
 }
 
 /**
@@ -106,6 +120,7 @@ const UPLOAD_TIMEOUT_MS = 30 * 60 * 1000;
 
 export interface UploadDigitalFileStreamInput {
   listingSlug: string;
+  /** Phase 1 supports listing-level digital assets only. */
   variantSku?: string;
   fileName?: string;
   mimeType?: string;
@@ -137,6 +152,8 @@ export function uploadDigitalFileStream(
   input: UploadDigitalFileStreamInput,
   options: UploadDigitalFileStreamOptions = {}
 ): Promise<DigitalAssetInfo> {
+  assertPhase1UniversalAsset(input.variantSku);
+
   const { onProgress, signal } = options;
 
   return new Promise<DigitalAssetInfo>((resolve, reject) => {
@@ -155,7 +172,7 @@ export function uploadDigitalFileStream(
 
     const body = new FormData();
     body.append('listingSlug', input.listingSlug);
-    body.append('variantSku', input.variantSku ?? '');
+    body.append('variantSku', '');
     body.append('fileName', fileName);
     body.append('mimeType', mimeType);
     // Field name `file` must come last — backend reads the multipart stream
@@ -289,13 +306,21 @@ function toAbortError(signal?: AbortSignal): Error {
 }
 
 export function createLinkAsset(req: CreateLinkAssetRequest): Promise<DigitalAssetInfo> {
-  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LINK, req);
+  assertPhase1UniversalAsset(req.variantSku);
+  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LINK, {
+    ...req,
+    variantSku: undefined,
+  });
 }
 
 export function createLicenseKeyAsset(
   req: CreateLicenseKeyAssetRequest
 ): Promise<DigitalAssetInfo> {
-  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LICENSE_KEY, req);
+  assertPhase1UniversalAsset(req.variantSku);
+  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LICENSE_KEY, {
+    ...req,
+    variantSku: undefined,
+  });
 }
 
 export function listAssets(listingSlug: string, variantSku?: string): Promise<DigitalAssetInfo[]> {
@@ -323,7 +348,17 @@ export function deleteAsset(assetID: string): Promise<void> {
 export function importLicenseKeys(
   req: ImportLicenseKeysRequest
 ): Promise<ImportLicenseKeysResponse> {
-  return authPost<ImportLicenseKeysResponse>(NODE_API.DIGITAL_ASSET_LICENSE_KEYS, req);
+  assertPhase1UniversalAsset(req.variantSku);
+  return authPost<ImportLicenseKeysResponse>(NODE_API.DIGITAL_ASSET_LICENSE_KEYS, {
+    ...req,
+    variantSku: undefined,
+  });
+}
+
+function assertPhase1UniversalAsset(variantSku?: string): void {
+  if (variantSku?.trim()) {
+    throw new Error('Variant-specific digital delivery is not supported in Phase 1.');
+  }
 }
 
 export function listLicenseKeys(

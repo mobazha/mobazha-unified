@@ -10,7 +10,7 @@ import {
   FULFILLMENT_PROVIDERS,
 } from '@mobazha/core';
 import { productDataService } from '@mobazha/core';
-import type { ProductListItem, SyncedProduct } from '@mobazha/core';
+import type { ProductListItem } from '@mobazha/core';
 import {
   Package,
   Plus,
@@ -560,7 +560,7 @@ export default function AdminProductsPage() {
               : t('admin.products.emptyDescription')}
           </p>
           {!searchQuery && products.length === 0 && (
-            <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/listing/new?from=admin">
                 <Button className="gap-2">
                   <Plus className="w-4 h-4" />
