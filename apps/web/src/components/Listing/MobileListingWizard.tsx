@@ -28,7 +28,6 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalFileSection,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiSetupPrompt,
@@ -634,10 +633,16 @@ export function MobileListingWizard({
 
             {formData.contractType === 'DIGITAL_GOOD' && (
               <AccordionItem title={t('listing.tabs.files')}>
-                <DigitalFileSection
-                  files={formData.digitalFiles}
-                  onFilesChange={files => updateField('digitalFiles', files)}
-                />
+                {/* Phase 1.0: 数字商品资产挂载发生在编辑页（需要 listingSlug）。
+                    新建页只保存为草稿，避免发布"空壳"商品。*/}
+                <div
+                  className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
+                  role="note"
+                  data-testid="listing-mobile-digital-save-first-hint"
+                >
+                  <p className="font-medium mb-1">{t('listing.digital.saveFirstTitle')}</p>
+                  <p className="text-muted-foreground">{t('listing.digital.saveFirst')}</p>
+                </div>
               </AccordionItem>
             )}
 
@@ -822,7 +827,15 @@ export function MobileListingWizard({
             >
               {t('listing.saveDraft')}
             </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>
+            <Button
+              className="flex-1"
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting ||
+                // Phase 1.0: 新建页发布数字商品会得到无资产空壳，强制走 Save Draft。
+                (!isEditMode && formData.contractType === 'DIGITAL_GOOD')
+              }
+            >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
               ) : (

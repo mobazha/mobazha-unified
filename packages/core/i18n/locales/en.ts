@@ -1392,6 +1392,27 @@ export const en: TranslationResource = {
       cancelOrder: 'Cancel Order',
       claimRefund: 'Claim Refund',
     },
+
+    // Digital downloads — buyer-facing entitlement portal (Supply Chain Phase 1.0)
+    digital: {
+      title: 'Digital downloads',
+      loading: 'Loading your downloads…',
+      loadError: 'Could not load digital deliveries',
+      download: 'Download',
+      openLink: 'Open link',
+      copiedToClipboard: '{{label}} copied to clipboard',
+      copyFailed: 'Failed to copy to clipboard',
+      downloadsUsed: '{{current}} / {{max}} downloads used',
+      activationsUsed: '{{current}} / {{max}} seats',
+      expiresAt: 'Access expires {{date}}',
+      status: {
+        active: 'Available',
+        protected: 'Available (protected)',
+        frozen: 'Temporarily paused',
+        revoked: 'Access revoked',
+        expired: 'Expired',
+      },
+    },
   },
 
   chat: {
@@ -3840,15 +3861,6 @@ export const en: TranslationResource = {
     barcodePlaceholder: 'UPC, EAN, ISBN...',
     barcodeHelper: 'Product barcode for inventory tracking',
 
-    // Digital Files
-    digital: {
-      title: 'Digital Files',
-      description: 'Upload files that buyers will receive after purchase.',
-      uploadFiles: 'Click to upload files',
-      uploadHint: 'Drag and drop or click to select files (max 500MB each)',
-      fileTooLarge: 'exceeds the 500MB file size limit',
-    },
-
     // Status
     statusDraft: 'Draft',
     statusPublished: 'Published',
@@ -3878,6 +3890,89 @@ export const en: TranslationResource = {
     save: 'Save',
     tokenAddress: 'Token address',
     uploadFailed: 'One or more images failed to upload.',
+
+    // Digital downloads (Supply Chain Phase 1.0)
+    digital: {
+      title: 'Digital downloads',
+      description: 'Provide files, access links, or license keys delivered after purchase.',
+      // Legacy keys used by DigitalFileSection in MobileListingWizard
+      uploadFiles: 'Click to upload files',
+      uploadHint: 'Drag and drop or click to select files (max 500MB each)',
+      saveFirst: 'Save the listing first, then come back to attach files, links, or license keys.',
+      saveFirstTitle: 'Save as draft to attach digital assets',
+      publishBlockedToast:
+        'Save the listing as a draft first. Then attach files, links, or license keys from the edit page before publishing.',
+      emptyState: 'No digital downloads yet. Add a file, link, or license key pool.',
+      addFile: 'Upload file',
+      addLink: 'Add link',
+      addLicenseKeys: 'Set up license keys',
+      uploadFileTitle: 'Upload digital file',
+      uploadFileDesc:
+        'File is encrypted on the server and delivered to buyers via a signed download URL.',
+      selectFile: 'Select file',
+      maxSizeHint: 'Max 512 MiB per file',
+      fileTooLarge: 'File exceeds 512 MiB upload limit',
+      encodingFile: 'Encoding file…',
+      uploading: 'Uploading…',
+      upload: 'Upload',
+      uploadFailed: 'Upload failed',
+      maxDownloadsValue: 'Max {{n}} downloads',
+      expiryHoursValue: 'URL expires in {{h}}h',
+      addLinkTitle: 'Add access link',
+      addLinkDesc:
+        'The URL is encrypted at rest and revealed to buyers only after the order is confirmed.',
+      urlLabel: 'Access URL',
+      invalidUrl: 'Enter a valid http(s) URL',
+      createLinkFailed: 'Failed to add link',
+      licenseKeyPoolTitle: 'Set up license key pool',
+      licenseKeyPoolDesc:
+        'Each buyer receives one key from the pool at order confirmation. Import keys below after creating the pool.',
+      licenseKeyPoolHeader: 'License key pool',
+      appIdLabel: 'App identifier (optional)',
+      appIdHint: 'Used by the public license validation API to scope keys to your app.',
+      createPool: 'Create pool',
+      createLicenseKeyFailed: 'Failed to set up license key pool',
+      importKeys: 'Import keys',
+      importKeysTitle: 'Import license keys',
+      importKeysDesc:
+        'Paste keys one per line or comma-separated. Keys are hashed at rest — only masked previews are shown afterward.',
+      keysLabel: 'License keys',
+      licenseTypeLabel: 'License type',
+      maxActivationsLabel: 'Max activations',
+      expiresAtLabel: 'Expires at (optional)',
+      importing: 'Importing…',
+      importNKeys: 'Import {{n}} keys',
+      keysImported: '{{n}} keys imported',
+      importFailed: 'Failed to import keys',
+      emptyKeyPool: 'No license keys yet. Import a CSV or paste keys to seed the pool.',
+      lowInventoryWarning: 'Only {{n}} license keys left. Consider importing more.',
+      outOfStockWarning:
+        'No license keys available. New buyers will not receive a key until you import more.',
+      poolStats: {
+        available: 'Available',
+        dispensed: 'Dispensed',
+        revoked: 'Revoked',
+        total: 'Total',
+      },
+      keyStatus: {
+        available: 'Available',
+        dispensed: 'Dispensed',
+        revoked: 'Revoked',
+        expired: 'Expired',
+      },
+      revokeKey: 'Revoke key',
+      confirmRevokeTitle: 'Revoke license key?',
+      confirmRevokeDesc:
+        'Buyers who have already received this key may lose access on next activation check. This cannot be undone.',
+      keyRevoked: 'License key revoked',
+      revokeFailed: 'Failed to revoke license key',
+      assetAdded: 'Digital asset added',
+      assetDeleted: 'Digital asset deleted',
+      deleteFailed: 'Failed to delete asset',
+      confirmDeleteTitle: 'Delete digital asset?',
+      confirmDeleteDesc:
+        'Existing buyers will no longer receive this asset on new orders. Past entitlements are preserved.',
+    },
   },
 
   // RWA Digital Assets Tab
@@ -6219,6 +6314,53 @@ export const en: TranslationResource = {
     other: 'Other',
     otherDesc: 'Generic MCP URL + Token for any MCP client',
     onboarding: 'Connect your first AI agent in 30 seconds',
+    outpost: {
+      banner: {
+        title: 'Privacy mode: only local-inference clients shown',
+        body: 'Your store is running in Outpost mode. To uphold the "AI runs locally" promise, AI clients that send your store data to vendor clouds (ChatGPT Desktop, Claude Desktop, Codex) are hidden by default.',
+      },
+      showHighRisk: {
+        label: 'Show high-risk AI clients',
+        description:
+          'Reveals clients whose inference happens in vendor clouds. Connecting these will send store data to third-party providers.',
+      },
+      hiddenCount: '{{count}} client(s) hidden',
+      risk: {
+        local: 'Local inference',
+        mixed: 'Local possible',
+        cloud: 'Cloud inference',
+        mixedTooltip:
+          'This client can be configured to use a local LLM, but defaults to cloud. Verify your setup before connecting.',
+        cloudTooltip:
+          'This client sends your store data to a vendor cloud for inference. Connecting violates the Outpost "AI runs locally" promise.',
+      },
+      localLlm: {
+        title: 'Local LLM engine',
+        body: 'Outpost needs a local LLM to power on-device AI. Install one of the engines below — your store data never leaves this machine.',
+        alreadyInstalled: 'Already installed?',
+        configureEndpoint: 'Configure endpoint in AI Models',
+        engines: {
+          ollama: {
+            name: 'Ollama',
+            tagline: 'One-line install. Best default for most users.',
+            recommendedModel: 'Recommended: Llama 3.2 3B',
+            cta: 'Download',
+          },
+          llamacpp: {
+            name: 'llama.cpp',
+            tagline: 'Single binary, GGUF models, full GPU support.',
+            recommendedModel: 'Recommended: Qwen 2.5 1.5B',
+            cta: 'GitHub',
+          },
+          lmstudio: {
+            name: 'LM Studio',
+            tagline: 'Desktop GUI for browsing & running open models.',
+            recommendedModel: 'Recommended: Llama 3.2 3B Instruct',
+            cta: 'Download',
+          },
+        },
+      },
+    },
     autoConnect: {
       title: 'Auto Connect',
       desc: 'Your node can automatically detect and configure AI clients installed on this machine.',
@@ -6482,6 +6624,9 @@ export const en: TranslationResource = {
       "Bookmark this link to check payment status, confirmations and shipping. It's the only way to find this order again.",
     saveLinkCopy: 'Copy link',
     saveLinkCopied: 'Link copied',
+    digitalSaveLinkTitle: 'Your downloads live behind this link',
+    digitalSaveLinkBody:
+      'Your order has digital deliveries (files, license keys, or access links). After payment confirms, the downloads will appear on this same order page. Without the link, downloads cannot be recovered.',
     paymentAmountHelpTitle: 'Why this exact amount?',
     paymentAmountHelpBody:
       'The crypto amount is locked at the current exchange rate when the order was created. Send the exact amount — more or less may cause detection delays.',
@@ -6608,6 +6753,15 @@ export const en: TranslationResource = {
     paymentDetected: '{{coin}} address copied: {{address}}',
     storeFound: 'Opening store...',
     searchFallback: 'Searching for scanned content...',
+  },
+
+  // Digital downloads — shared asset type labels (Supply Chain Phase 1.0)
+  digital: {
+    assetType: {
+      file: 'File download',
+      link: 'Access link',
+      license_key: 'License key',
+    },
   },
 };
 

@@ -143,6 +143,10 @@ export default function GuestCheckoutPage() {
 
   const total = getTotal();
   const itemCount = getItemCount();
+  // True if any cart item is a digital product. The guest order page is the
+  // only access surface for download links / license keys, so we surface an
+  // emphasized "save this link" notice on top of the generic SaveOrderLinkCard.
+  const hasDigitalItems = items.some(i => i.contractType === 'DIGITAL_GOOD');
 
   const handleAddressChange = (field: keyof Address, value: string) => {
     setAddressData(prev => ({ ...prev, [field]: value }));
@@ -408,6 +412,21 @@ export default function GuestCheckoutPage() {
                       />
                     </span>
                   </div>
+
+                  {hasDigitalItems && (
+                    <div
+                      role="note"
+                      className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm"
+                      data-testid="guest-checkout-digital-save-link-hint"
+                    >
+                      <p className="font-semibold mb-1">
+                        {t('guestCheckout.digitalSaveLinkTitle')}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {t('guestCheckout.digitalSaveLinkBody')}
+                      </p>
+                    </div>
+                  )}
 
                   <SaveOrderLinkCard
                     orderUrl={

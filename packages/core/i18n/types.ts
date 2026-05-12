@@ -4226,6 +4226,8 @@ export interface TranslationResource {
     saveLinkDescription?: string;
     saveLinkCopy?: string;
     saveLinkCopied?: string;
+    digitalSaveLinkTitle?: string;
+    digitalSaveLinkBody?: string;
     paymentAmountHelpTitle?: string;
     paymentAmountHelpBody?: string;
     expireTimeHelpTitle?: string;
@@ -4331,6 +4333,50 @@ export interface TranslationResource {
     other?: string;
     otherDesc?: string;
     onboarding?: string;
+    outpost?: {
+      banner?: {
+        title?: string;
+        body?: string;
+      };
+      showHighRisk?: {
+        label?: string;
+        description?: string;
+      };
+      hiddenCount?: string;
+      risk?: {
+        local?: string;
+        mixed?: string;
+        cloud?: string;
+        mixedTooltip?: string;
+        cloudTooltip?: string;
+      };
+      localLlm?: {
+        title?: string;
+        body?: string;
+        alreadyInstalled?: string;
+        configureEndpoint?: string;
+        engines?: {
+          ollama?: {
+            name?: string;
+            tagline?: string;
+            recommendedModel?: string;
+            cta?: string;
+          };
+          llamacpp?: {
+            name?: string;
+            tagline?: string;
+            recommendedModel?: string;
+            cta?: string;
+          };
+          lmstudio?: {
+            name?: string;
+            tagline?: string;
+            recommendedModel?: string;
+            cta?: string;
+          };
+        };
+      };
+    };
     autoConnect?: {
       title?: string;
       desc?: string;
@@ -4403,6 +4449,9 @@ export interface TranslationResource {
     storeFound?: string;
     searchFallback?: string;
   };
+
+  // Digital asset shared labels (Supply Chain Phase 1.0)
+  digital?: TranslationSection;
 }
 
 // i18n 上下文类型

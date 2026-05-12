@@ -24,6 +24,7 @@ import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
+import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 import { cn } from '@/lib/utils';
 
 function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
@@ -99,6 +100,12 @@ export default function GuestOrderPage() {
   const isPoolDetected = order.state === 'AWAITING_PAYMENT' && !!order.poolDetected;
   const showConfirmations = order.state === 'PAYMENT_DETECTED' || isPoolDetected;
   const showTracking = order.state === 'SHIPPED' && order.trackingNumber;
+  // Digital deliveries become available once the order is FUNDED. For a
+  // physical-only order, BuyerDigitalAssetsSection short-circuits to render
+  // nothing (no grants found), so it's safe to mount for any post-funded
+  // state without leaking a misleading empty card.
+  const showDigitalDeliveries =
+    order.state === 'FUNDED' || order.state === 'SHIPPED' || order.state === 'COMPLETED';
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,6 +183,8 @@ export default function GuestOrderPage() {
             txHash={order.txHash}
           />
         )}
+
+        {showDigitalDeliveries && <BuyerDigitalAssetsSection orderId={order.orderToken} />}
 
         {showTracking && (
           <div className="rounded-lg border p-4">

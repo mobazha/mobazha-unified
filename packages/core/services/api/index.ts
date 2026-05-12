@@ -150,6 +150,11 @@ export * as fiatApi from './fiat';
 // 履约供应商 API (Supply Chain FF-1d)
 export * as fulfillmentApi from './fulfillment';
 
+// 数字商品 API (Supply Chain Phase 1.0 — Core MVP)
+export * as digitalAssetsApi from './digitalAssets';
+export { MAX_DIGITAL_ASSET_UPLOAD_BYTES, uploadDigitalFileStream } from './digitalAssets';
+export type { UploadDigitalFileStreamInput, UploadDigitalFileStreamOptions } from './digitalAssets';
+
 // Storefront Config API (PG-201)
 export * as storefrontApi from './storefront';
 

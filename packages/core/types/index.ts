@@ -427,5 +427,26 @@ export type {
 
 export { FULFILLMENT_PROVIDERS } from './fulfillment';
 
+// Digital asset types (Supply Chain Phase 1.0 — Core MVP)
+export type {
+  DigitalAssetType,
+  BuyerAssetStatus,
+  DigitalAssetInfo,
+  AssetUpdateInput,
+  LicenseKeyPoolStats,
+  MaskedLicenseKey,
+  BuyerLicenseEntry,
+  BuyerAssetEntry,
+  LicenseValidationResult,
+  LicenseActivationResult,
+  CreateLinkAssetRequest,
+  CreateLicenseKeyAssetRequest,
+  ImportLicenseKeysRequest,
+  ImportLicenseKeysResponse,
+  LicenseValidateRequest,
+  LicenseActivateRequest,
+  LicenseDeactivateRequest,
+} from './digitalAsset';
+
 // OpenAPI auto-generated types (from hosting openapi.yaml)
 export type { paths as ApiPaths, components as ApiComponents } from './api-generated';
