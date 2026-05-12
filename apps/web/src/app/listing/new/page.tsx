@@ -366,7 +366,7 @@ function CreateListingContent() {
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
-      router.push(returnToDashboard ? '/admin' : '/settings/store');
+      router.push(returnToDashboard ? '/admin' : '/admin/products');
     }
   }, [submitDraft, toast, t, router, returnToDashboard]);
 
@@ -404,7 +404,7 @@ function CreateListingContent() {
           <Container>
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-destructive mb-4">{loadError}</p>
-              <Link href="/settings/store">
+              <Link href="/admin/products">
                 <Button variant="outline">{t('common.back')}</Button>
               </Link>
             </div>
@@ -503,7 +503,7 @@ function CreateListingContent() {
           <div className="flex items-center justify-between mb-4 lg:mb-6">
             <div className="flex items-center gap-2 lg:gap-3">
               <Link
-                href={returnToDashboard ? '/admin' : '/settings/store'}
+                href={returnToDashboard ? '/admin' : '/admin/products'}
                 className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <ArrowLeft className="w-5 h-5" />

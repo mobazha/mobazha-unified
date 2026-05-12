@@ -4532,6 +4532,7 @@ export const zh: TranslationResource = {
       featureVariants: '变体、定价和库存管理',
       featureShipping: '配送方案管理',
       featurePricing: '加密货币与法币双轨定价',
+      featureCryptoPricing: '加密货币定价',
       completeTitle: '你的店铺已就绪！',
       completeDesc: '店铺资料已设置完成。你可以随时在管理面板中添加商品。',
       designWithAi: '用 AI 设计你的店铺',

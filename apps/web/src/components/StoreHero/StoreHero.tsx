@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getImageUrl, useStorefrontProfile } from '@mobazha/core';
+import { useI18n, getImageUrl, useStorefrontProfile, getBrandConfig } from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { Store, MapPin, Star, Package, Search } from 'lucide-react';
 
@@ -126,12 +126,14 @@ export function StoreHero() {
             </div>
           </form>
 
-          {/* Powered by */}
-          <div className="mt-6 flex items-center gap-2 text-white/40">
-            <span className="text-xs">Powered by</span>
-            <MobazhaLogo size={16} className="text-white/40" />
-            <span className="text-xs">Mobazha</span>
-          </div>
+          {/* Powered by — hidden when brand.hidePoweredBy is true */}
+          {!getBrandConfig()?.hidePoweredBy && (
+            <div className="mt-6 flex items-center gap-2 text-white/40">
+              <span className="text-xs">Powered by</span>
+              <MobazhaLogo size={16} className="text-white/40" />
+              <span className="text-xs">Mobazha</span>
+            </div>
+          )}
         </div>
       </div>
     </section>

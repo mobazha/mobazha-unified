@@ -12,6 +12,8 @@ import {
   useStorefrontMode,
   useStorefrontProfile,
   stripHtmlTags,
+  getBrandConfig,
+  isOutpostMode,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
@@ -174,7 +176,9 @@ export const Footer: React.FC = () => {
       { label: t('policies.termsOfService'), href: '/policies/terms' },
       { label: t('policies.shipping'), href: '/policies/shipping' },
       { label: t('policies.returns'), href: '/policies/returns' },
-      { label: t('policies.buyerProtectionPolicy'), href: '/policies/buyer-protection' },
+      ...(!isOutpostMode()
+        ? [{ label: t('policies.buyerProtectionPolicy'), href: '/policies/buyer-protection' }]
+        : []),
       { label: t('policies.refundTitle'), href: '/policies/refund' },
     ],
   };
@@ -357,14 +361,16 @@ export const Footer: React.FC = () => {
               {standaloneMode && brandProfile ? (
                 <>
                   © {new Date().getFullYear()} {brandProfile.name}.{' '}
-                  <a
-                    href="https://mobazha.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary transition-colors"
-                  >
-                    Powered by Mobazha
-                  </a>
+                  {!getBrandConfig()?.hidePoweredBy && (
+                    <a
+                      href="https://mobazha.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Powered by Mobazha
+                    </a>
+                  )}
                 </>
               ) : (
                 <>

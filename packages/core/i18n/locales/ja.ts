@@ -4424,6 +4424,7 @@ export const ja: TranslationResource = {
       featureVariants: 'バリエーション、価格、在庫',
       featureShipping: '配送プロファイル管理',
       featurePricing: '暗号通貨と法定通貨の価格設定',
+      featureCryptoPricing: '暗号通貨の価格設定',
       completeTitle: 'ストアの準備ができました！',
       completeDesc:
         'ストアプロフィールが設定されました。管理パネルからいつでも商品を追加できます。',

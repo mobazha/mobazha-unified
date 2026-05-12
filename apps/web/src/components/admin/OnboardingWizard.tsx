@@ -612,7 +612,9 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               },
               {
                 icon: <Coins className="w-5 h-5 text-primary" />,
-                text: t('admin.onboarding.featurePricing') || 'Crypto & fiat pricing',
+                text: isOutpostMode()
+                  ? t('admin.onboarding.featureCryptoPricing') || 'Crypto pricing'
+                  : t('admin.onboarding.featurePricing') || 'Crypto & fiat pricing',
               },
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">

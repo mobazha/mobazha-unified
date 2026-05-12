@@ -217,17 +217,38 @@ export const STANDALONE_ENV: EnvConfig = {
   },
 };
 
+/** White-label brand overrides from brand.yaml via /runtime-config.js. */
+export interface BrandConfig {
+  name: string;
+  shortName?: string;
+  tagline?: string;
+  description?: string;
+  primaryColor?: string;
+  accentColor?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  privacyNotice?: string;
+  hidePoweredBy?: boolean;
+}
+
 /** Outpost-specific runtime configuration. */
 export interface OutpostConfig {
   enabled: boolean;
   /** When true, the frontend must not load any third-party resources (fonts, SDKs, CDNs). */
   disableExternalResources: boolean;
+  /** White-label brand overrides (undefined = Mobazha defaults). */
+  brand?: BrandConfig;
 }
 
 let outpostConfig: OutpostConfig = { enabled: false, disableExternalResources: false };
 
 export function getOutpostConfig(): OutpostConfig {
   return outpostConfig;
+}
+
+/** Returns the brand config if present, or undefined for Mobazha defaults. */
+export function getBrandConfig(): BrandConfig | undefined {
+  return outpostConfig.brand;
 }
 
 export function isOutpostMode(): boolean {
@@ -473,6 +494,18 @@ function applyRuntimeConfig(): void {
         authMode?: string;
         outpostMode?: boolean;
         disableExternalResources?: boolean;
+        brand?: {
+          name?: string;
+          shortName?: string;
+          tagline?: string;
+          description?: string;
+          primaryColor?: string;
+          accentColor?: string;
+          logoUrl?: string;
+          faviconUrl?: string;
+          privacyNotice?: string;
+          hidePoweredBy?: boolean;
+        };
       }
     | undefined;
   if (!rc) return;
@@ -519,9 +552,27 @@ function applyRuntimeConfig(): void {
     outpostConfig = {
       enabled: true,
       disableExternalResources: rc.disableExternalResources !== false,
+      brand: rc.brand?.name ? (rc.brand as BrandConfig) : undefined,
     };
   } else if (rc.disableExternalResources) {
     outpostConfig = { ...outpostConfig, disableExternalResources: true };
+  }
+
+  // Apply brand overrides to the document
+  if (outpostConfig.brand) {
+    const b = outpostConfig.brand;
+    if (b.name) {
+      document.title = b.name;
+    }
+    if (b.faviconUrl) {
+      const existing = document.querySelector('link[rel="icon"]');
+      const link = (existing || document.createElement('link')) as HTMLLinkElement; // eslint-disable-line no-undef
+      link.rel = 'icon';
+      link.href = b.faviconUrl;
+      if (!link.parentElement) document.head.appendChild(link);
+    }
+    // Brand colors are applied by useTheme → applyThemeToDOM → brandColorOverrides()
+    // which overlays --color-primary/Light/Dark/accent after the base theme is set.
   }
 }
 

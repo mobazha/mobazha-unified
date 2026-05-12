@@ -4490,6 +4490,7 @@ export const es: TranslationResource = {
       featureVariants: 'Variantes, precios e inventario',
       featureShipping: 'Opciones de envío y entrega',
       featurePricing: 'Precios en cripto y moneda fiat',
+      featureCryptoPricing: 'Precios en cripto',
       completeTitle: '¡Tu tienda está lista!',
       completeDesc:
         'Tu perfil de tienda está configurado. Agrega productos cuando quieras desde el panel.',

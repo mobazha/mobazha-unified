@@ -4440,6 +4440,7 @@ export const ru: TranslationResource = {
       featureVariants: 'Варианты, цены, остатки',
       featureShipping: 'Профили и варианты доставки',
       featurePricing: 'Крипто- и фиатные цены',
+      featureCryptoPricing: 'Криптовалютные цены',
       completeTitle: 'Магазин готов!',
       completeDesc: 'Профиль настроен. Добавляйте товары из админ-панели.',
       designWithAi: 'Оформить магазин с ИИ',

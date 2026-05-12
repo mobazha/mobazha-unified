@@ -5007,6 +5007,7 @@ export const en: TranslationResource = {
       featureVariants: 'Variants, pricing & inventory',
       featureShipping: 'Shipping & delivery options',
       featurePricing: 'Crypto & fiat pricing',
+      featureCryptoPricing: 'Crypto pricing',
       completeTitle: 'Your Store is Ready!',
       completeDesc: 'Your store profile is set up. Add products anytime from the admin panel.',
       designWithAi: 'Design your store with AI',

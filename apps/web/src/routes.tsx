@@ -248,6 +248,7 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/settings/user-groups/[groupId]/members/page')),
         },
         { path: 'system', element: lazyPage(() => import('./app/settings/system/page')) },
+        { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
       ],
     },
 
@@ -523,6 +524,7 @@ if (__OUTPOST__) {
         { index: true, element: lazyPage(() => import('./app/settings/page')) },
         { path: 'general', element: lazyPage(() => import('./app/settings/general/page')) },
         { path: 'advanced', element: lazyPage(() => import('./app/settings/advanced/page')) },
+        { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
       ],
     },
 

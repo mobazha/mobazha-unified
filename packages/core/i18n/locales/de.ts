@@ -4525,6 +4525,7 @@ export const de: TranslationResource = {
       featureVariants: 'Varianten, Preise & Bestand',
       featureShipping: 'Versandprofile & Lieferoptionen',
       featurePricing: 'Krypto- & Fiat-Preise',
+      featureCryptoPricing: 'Krypto-Preise',
       completeTitle: 'Ihr Shop ist bereit!',
       completeDesc:
         'Ihr Shop-Profil ist eingerichtet. Fügen Sie jederzeit Produkte über das Admin-Panel hinzu.',
