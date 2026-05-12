@@ -304,6 +304,34 @@ export const NODE_API = {
   FULFILLMENT_RULES: '/fulfillment/rules',
   FULFILLMENT_RULE: (ruleID: string) => `/fulfillment/rules/${ruleID}`,
 
+  // --- Digital Assets — Seller management (Phase 1.0 Core MVP) ---
+  // Path helpers accept RAW (unencoded) param values. encodeURIComponent is
+  // applied internally so callers don't pre-encode — this matches the
+  // contract used by apiPaths.generated.ts. orderID for guest checkout
+  // (gst_<64-hex>) is safe either way; including it here keeps the helper
+  // contract uniform across all params.
+  DIGITAL_ASSETS: '/digital-assets',
+  DIGITAL_ASSET: (assetID: string) => `/digital-assets/${encodeURIComponent(assetID)}`,
+  DIGITAL_ASSET_UPLOAD_STREAM: '/digital-assets/upload-stream',
+  DIGITAL_ASSET_CREATE_LINK: '/digital-assets/link',
+  DIGITAL_ASSET_CREATE_LICENSE_KEY: '/digital-assets/license-key',
+  DIGITAL_ASSET_LICENSE_KEYS: '/digital-assets/license-keys',
+  DIGITAL_ASSET_LICENSE_KEY_STATS: '/digital-assets/license-keys/stats',
+  DIGITAL_ASSET_LICENSE_KEY_REVOKE: (keyID: string) =>
+    `/digital-assets/license-keys/${encodeURIComponent(keyID)}/revoke`,
+
+  // --- Digital Assets — Buyer Portal (capability-based auth via orderID) ---
+  ORDER_DIGITAL_ASSETS: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-assets`,
+  ORDER_DIGITAL_DOWNLOAD: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-download`,
+
+  // --- Digital Assets — Public license validation (per-store) ---
+  LICENSE_VALIDATE: (storeID: string) => `/stores/${encodeURIComponent(storeID)}/licenses/validate`,
+  LICENSE_ACTIVATE: (storeID: string) => `/stores/${encodeURIComponent(storeID)}/licenses/activate`,
+  LICENSE_DEACTIVATE: (storeID: string) =>
+    `/stores/${encodeURIComponent(storeID)}/licenses/deactivate`,
+
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',

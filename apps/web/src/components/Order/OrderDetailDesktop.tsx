@@ -51,6 +51,7 @@ import {
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
@@ -461,6 +462,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 )}
 
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
+
+                {displayOrder.userRole === 'buyer' && (
+                  <BuyerDigitalAssetsSection orderId={orderId} className="mb-4" />
+                )}
+
                 <OrderSummaryCard
                   displayOrder={displayOrder}
                   statusLabel={statusLabel}

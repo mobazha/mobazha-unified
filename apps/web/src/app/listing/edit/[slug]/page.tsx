@@ -53,7 +53,7 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalFileSection,
+  DigitalAssetsManagerSection,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiAssistButton,
@@ -834,22 +834,15 @@ export default function EditListingPage() {
                 </Card>
               )}
 
-              {/* 数字文件 - 仅数字商品 */}
+              {/* 数字商品 — 文件 / 链接 / License Key 池统一管理（Phase 1.0 Core MVP）*/}
               {formData.contractType === 'DIGITAL_GOOD' && (
-                <Card
-                  className="p-6"
+                <div
                   ref={el => {
                     sectionRefs.current.files = el;
                   }}
                 >
-                  <h2 className="text-lg font-semibold text-foreground mb-4">
-                    {t('listing.tabs.files')}
-                  </h2>
-                  <DigitalFileSection
-                    files={formData.digitalFiles || []}
-                    onFilesChange={files => updateField('digitalFiles', files)}
-                  />
-                </Card>
+                  <DigitalAssetsManagerSection listingSlug={slug} />
+                </div>
               )}
 
               {/* 其他设置 - 处理时间 */}

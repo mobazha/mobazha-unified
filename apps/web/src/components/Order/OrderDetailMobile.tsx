@@ -58,6 +58,7 @@ import {
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -586,6 +587,9 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
           {/* 2. Product card (vendor merged inline) */}
           <OrderProductCard displayOrder={displayOrder} />
+
+          {/* 2b. Buyer digital downloads — License keys, file links, etc. */}
+          {displayOrder.userRole === 'buyer' && <BuyerDigitalAssetsSection orderId={orderId} />}
 
           {/* 3. Order summary — total, shipping, status badge */}
           <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />

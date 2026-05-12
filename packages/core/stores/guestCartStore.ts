@@ -18,6 +18,13 @@ export interface GuestCartItem {
   price: { amount: number; currency: string; divisibility: number };
   thumbnail: string;
   vendorPeerID: string;
+  /**
+   * Listing's contract type (e.g., "DIGITAL_GOOD", "PHYSICAL_GOOD"). Optional —
+   * populated by add-to-cart call sites that have access to the listing
+   * detail. Used by guest-checkout to show digital-specific hints (downloads
+   * are accessible only via the saved order link).
+   */
+  contractType?: string;
 }
 
 interface GuestCartState {
@@ -33,7 +40,10 @@ interface GuestCartState {
 }
 
 const optionsKey = (item: { slug: string; options?: { name: string; value: string }[] }) =>
-  `${item.slug}:${(item.options ?? []).map(o => `${o.name}=${o.value}`).sort().join('|')}`;
+  `${item.slug}:${(item.options ?? [])
+    .map(o => `${o.name}=${o.value}`)
+    .sort()
+    .join('|')}`;
 
 export const useGuestCartStore = create<GuestCartState>()(
   devtools(
@@ -84,8 +94,8 @@ export const useGuestCartStore = create<GuestCartState>()(
           return { amount: total, currency: first.currency, divisibility: first.divisibility };
         },
       }),
-      { name: 'guest-cart-storage' },
+      { name: 'guest-cart-storage' }
     ),
-    { name: 'GuestCartStore' },
-  ),
+    { name: 'GuestCartStore' }
+  )
 );

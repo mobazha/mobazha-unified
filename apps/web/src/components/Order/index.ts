@@ -70,6 +70,10 @@ export type { OrderActionSheetProps } from './OrderActionSheet';
 // Sub-card components
 export * from './cards';
 
+// Digital assets (buyer entitlement portal)
+export { BuyerDigitalAssetsSection } from './BuyerDigitalAssetsSection';
+export type { BuyerDigitalAssetsSectionProps } from './BuyerDigitalAssetsSection';
+
 // Selectors
 export { ReceivingAccountSelector } from './ReceivingAccountSelector';
 export type { ReceivingAccountSelectorProps } from './ReceivingAccountSelector';

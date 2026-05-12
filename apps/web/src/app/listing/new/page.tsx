@@ -54,7 +54,6 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalFileSection,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiAssistButton,
@@ -306,6 +305,19 @@ function CreateListingContent() {
     async (e?: React.FormEvent) => {
       e?.preventDefault();
 
+      // Phase 1.0: digital products require a draft first so the seller can
+      // attach files / links / license keys via the edit page (which has a
+      // listingSlug). Direct publish from /listing/new would create an empty
+      // shell with no deliverables.
+      if (formData.contractType === 'DIGITAL_GOOD') {
+        toast({
+          title: t('listing.digital.saveFirstTitle'),
+          description: t('listing.digital.publishBlockedToast'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
       if (!validate()) {
         toast({
           title: t('common.error'),
@@ -336,7 +348,7 @@ function CreateListingContent() {
         }
       }
     },
-    [validate, submit, toast, t, router, returnToDashboard]
+    [validate, submit, toast, t, router, returnToDashboard, formData.contractType]
   );
 
   // 保存草稿
@@ -532,8 +544,13 @@ function CreateListingContent() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || formData.contractType === 'DIGITAL_GOOD'}
                 data-testid="listing-form-publish"
+                title={
+                  formData.contractType === 'DIGITAL_GOOD'
+                    ? t('listing.digital.publishBlockedToast')
+                    : undefined
+                }
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -867,19 +884,31 @@ function CreateListingContent() {
                 </Card>
               )}
 
-              {/* 数字商品文件 - 仅数字商品 */}
+              {/* 数字商品 — 在新建页只展示流程提示，资产挂载发生在编辑页 (Phase 1.0)。
+                  在没有 listingSlug 之前，DigitalAssetsManagerSection 无法挂载真实资产，
+                  避免发布"空壳"商品。*/}
               {formData.contractType === 'DIGITAL_GOOD' && (
-                <div
+                <Card
+                  className="p-6"
                   ref={el => {
                     sectionRefs.current.files = el;
                   }}
                 >
-                  <DigitalFileSection
-                    files={formData.digitalFiles}
-                    onFilesChange={files => updateField('digitalFiles', files)}
-                    errors={errors}
-                  />
-                </div>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">
+                    {t('listing.digital.title')}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {t('listing.digital.description')}
+                  </p>
+                  <div
+                    className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-foreground"
+                    role="note"
+                    data-testid="listing-digital-save-first-hint"
+                  >
+                    <p className="font-medium mb-1">{t('listing.digital.saveFirstTitle')}</p>
+                    <p className="text-muted-foreground">{t('listing.digital.saveFirst')}</p>
+                  </div>
+                </Card>
               )}
 
               {/* 其他设置 - 处理时间 */}

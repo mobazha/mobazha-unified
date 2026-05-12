@@ -21,6 +21,12 @@ export type { VariantInventoryTableProps } from './VariantInventoryTable';
 
 export { DigitalFileSection } from './DigitalFileSection';
 
+export { DigitalAssetsManagerSection } from './DigitalAssetsManagerSection';
+export type { DigitalAssetsManagerSectionProps } from './DigitalAssetsManagerSection';
+
+export { LicenseKeyPoolPanel } from './LicenseKeyPoolPanel';
+export type { LicenseKeyPoolPanelProps } from './LicenseKeyPoolPanel';
+
 export { ProcessingTimeSelect } from './ProcessingTimeSelect';
 
 export { ReturnPolicySelector } from './ReturnPolicySelector';
