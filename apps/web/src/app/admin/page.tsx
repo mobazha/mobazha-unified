@@ -40,6 +40,7 @@ import {
   SetupChecklist,
   MnemonicBackupBanner,
   MoneroPoolStatusBanner,
+  XmrWalletSetupBanner,
   ActionItems,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
@@ -321,6 +322,8 @@ export default function AdminDashboardPage() {
       <SetupChecklist hasProducts={hasProducts} productsLoading={productsLoading} />
 
       <MnemonicBackupBanner />
+
+      <XmrWalletSetupBanner />
 
       <MoneroPoolStatusBanner />
 

@@ -314,6 +314,11 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
         {
+          // Outpost-only: XMR wallet setup wizard (OP-MP-2.5)
+          path: 'settings/payments/xmr-wallet',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+        },
+        {
           path: 'settings/policies',
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },
@@ -499,6 +504,19 @@ if (__OUTPOST__) {
         {
           path: 'settings/payments',
           element: lazyPage(() => import('./app/admin/settings/payments/page')),
+        },
+        {
+          // Outpost-only: XMR wallet setup wizard (OP-MP-2.5) — must be
+          // registered in the Outpost route subset so the link from
+          // OutpostPaymentSettings resolves in real Outpost builds where
+          // the SaaS `routes` block is dead-code eliminated.
+          path: 'settings/payments/xmr-wallet',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+        },
+        {
+          // Outpost-only: Monero NodePool admin (linked from payments page)
+          path: 'settings/monero-nodes',
+          element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
         {
           path: 'settings/policies',

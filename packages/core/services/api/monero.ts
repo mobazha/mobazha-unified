@@ -146,6 +146,74 @@ export async function sweepAllXMR(req: MoneroSweepAllRequest): Promise<MoneroSwe
 }
 
 // =====================================================================
+// Setup wizard (OP-MP-2.5)
+// =====================================================================
+// First-run XMR wallet provisioning. The backend persists xmr-wallet.json
+// locally and auto-opens the wallet on subsequent boots, so the wizard
+// should appear at most once per outpost lifetime (unless the operator
+// resets state on disk).
+
+export interface MoneroWalletSetupStatus {
+  /** xmr-wallet.json exists on disk */
+  exists: boolean;
+  /** Live wallet-rpc state via GetAddress probe; false on transient outages */
+  walletOpen: boolean;
+  /** Primary address; empty before create/restore */
+  address?: string;
+  /** Operator confirmed they backed up the seed (UX-only, does not gate fns) */
+  backupConfirmed: boolean;
+  /** Unix seconds; 0 before create/restore */
+  createdAt: number;
+}
+
+export interface MoneroCreateWalletResult {
+  /** 25-word English seed — display once, never persist client-side */
+  mnemonic: string;
+  /** Primary address for this wallet/account */
+  address: string;
+}
+
+export interface MoneroRestoreWalletRequest {
+  /** 25-word English seed (whitespace-separated) */
+  seed: string;
+  language?: string;
+  /** Block height to start scanning from; 0 = full rescan */
+  restoreHeight?: number;
+}
+
+export interface MoneroRestoreWalletResult {
+  address: string;
+}
+
+export async function getXMRWalletSetupStatus(): Promise<MoneroWalletSetupStatus> {
+  return authGet<MoneroWalletSetupStatus>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET);
+}
+
+export async function createXMRWallet(language?: string): Promise<MoneroCreateWalletResult> {
+  return authPost<MoneroCreateWalletResult>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
+    action: 'create',
+    language,
+  });
+}
+
+export async function restoreXMRWallet(
+  req: MoneroRestoreWalletRequest
+): Promise<MoneroRestoreWalletResult> {
+  return authPost<MoneroRestoreWalletResult>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
+    action: 'restore',
+    seed: req.seed,
+    language: req.language,
+    restoreHeight: req.restoreHeight,
+  });
+}
+
+export async function confirmXMRWalletBackup(): Promise<void> {
+  await authPost<void>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
+    action: 'confirm-backup',
+  });
+}
+
+// =====================================================================
 // Frontend formatting helpers
 // =====================================================================
 

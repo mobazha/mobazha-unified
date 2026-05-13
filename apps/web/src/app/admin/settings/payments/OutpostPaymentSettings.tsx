@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@mobazha/core';
 import { getPaymentRPCStatus, type PaymentRPCStatusEntry } from '@mobazha/core/services/api/system';
-import { Wifi, WifiOff, Server, Terminal, Settings, ChevronRight } from 'lucide-react';
+import { Wifi, WifiOff, Server, Terminal, Settings, ChevronRight, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 function StatusBadge({ connected, error }: { connected: boolean; error?: string }) {
@@ -89,6 +89,18 @@ function XmrSection() {
                   'XMR payment is configured via startup parameters (--xmrwalletrpc). To change, restart the node with updated flags.',
               })}
             </p>
+            <Link
+              to="/admin/settings/payments/xmr-wallet"
+              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm">
+                <Wallet className="w-4 h-4 text-muted-foreground" />
+                {t('outpost.manageWallet', {
+                  defaultValue: 'Set up or manage Monero wallet',
+                })}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
             <Link
               to="/admin/settings/monero-nodes"
               className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
