@@ -5,5 +5,6 @@ export { EmptyState } from './EmptyState';
 export { ListSkeleton } from './ListSkeleton';
 export { SetupChecklist } from './SetupChecklist';
 export { MnemonicBackupBanner } from './MnemonicBackupBanner';
+export { MoneroPoolStatusBanner } from './MoneroPoolStatusBanner';
 export { ActionItems } from './ActionItems';
 export { getOrderCurrencyCode, getProductCurrencyCode } from './utils';
