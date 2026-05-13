@@ -262,6 +262,18 @@ export const NODE_API = {
   SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
+  // --- Monero NodePool admin (Outpost only) ---
+  // host:port addresses are URL-encoded on the client (encodeURIComponent)
+  // and decoded by chi's {address} path parameter on the server.
+  SYSTEM_MONERO_NODES: '/system/monero-nodes',
+  SYSTEM_MONERO_NODE: (address: string) => `/system/monero-nodes/${encodeURIComponent(address)}`,
+  SYSTEM_MONERO_NODE_SWITCH: (address: string) =>
+    `/system/monero-nodes/${encodeURIComponent(address)}/switch`,
+
+  // --- XMR wallet admin (Outpost only) ---
+  WALLET_XMR_WITHDRAW: '/wallet/xmr/withdraw',
+  WALLET_XMR_SWEEP_ALL: '/wallet/xmr/sweep-all',
+
   // --- Auth Tokens (standalone local token management) ---
   AUTH_TOKENS: '/auth/tokens',
   AUTH_TOKEN: (tokenID: string) => `/auth/tokens/${tokenID}`,

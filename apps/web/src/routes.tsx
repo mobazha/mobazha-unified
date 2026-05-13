@@ -309,6 +309,11 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/payments/page')),
         },
         {
+          // Outpost-only: Monero NodePool admin (linked from payments page)
+          path: 'settings/monero-nodes',
+          element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
+        },
+        {
           path: 'settings/policies',
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },

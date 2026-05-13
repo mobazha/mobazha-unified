@@ -210,6 +210,19 @@ export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from
 export * as systemApi from './system';
 export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } from './system';
 
+// Monero (XMR) admin API — Outpost only
+export * as moneroApi from './monero';
+export type {
+  MoneroNodeInfo,
+  MoneroNodePoolSnapshot,
+  MoneroNodeAddRequest,
+  MoneroWithdrawRequest,
+  MoneroWithdrawResult,
+  MoneroSweepAllRequest,
+  MoneroSweepAllResult,
+  Piconero,
+} from './monero';
+
 // Sales Channels API (Store Links + Store Bot)
 export { resolveStoreShortCode } from './salesChannels';
 

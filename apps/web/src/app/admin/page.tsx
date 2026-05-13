@@ -39,6 +39,7 @@ import {
   ListSkeleton,
   SetupChecklist,
   MnemonicBackupBanner,
+  MoneroPoolStatusBanner,
   ActionItems,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
@@ -320,6 +321,8 @@ export default function AdminDashboardPage() {
       <SetupChecklist hasProducts={hasProducts} productsLoading={productsLoading} />
 
       <MnemonicBackupBanner />
+
+      <MoneroPoolStatusBanner />
 
       {profile?.visibility === 'private' && (
         <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
