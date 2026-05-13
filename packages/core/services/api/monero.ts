@@ -16,8 +16,9 @@
  *     POST   /v1/system/monero-nodes/{address}/switch  rebind wallet-rpc
  *
  *   /v1/wallet/xmr/*            — wallet-level operations
- *     POST   /v1/wallet/xmr/withdraw    send to external address
- *     POST   /v1/wallet/xmr/sweep-all   sweep entire balance
+ *     GET    /v1/wallet/xmr/balance    per-account balance snapshot
+ *     POST   /v1/wallet/xmr/withdraw   send to external address
+ *     POST   /v1/wallet/xmr/sweep-all  sweep entire balance
  *
  * Amount is a decimal piconero string (1 XMR = 10^12 piconero). String not
  * number because JS Number's safe-integer limit (2^53 ≈ 9007 XMR) is below
@@ -133,9 +134,33 @@ export async function switchMoneroNode(address: string): Promise<MoneroNodePoolS
   return authPost<MoneroNodePoolSnapshot>(NODE_API.SYSTEM_MONERO_NODE_SWITCH(address));
 }
 
+/**
+ * Per-account XMR balance snapshot. Piconero amounts are decimal strings
+ * (see file header rationale). blocksToUnlock applies to whichever portion
+ * is still time-locked; 0 means everything in `balance` is also unlocked.
+ */
+export interface MoneroBalance {
+  balance: Piconero;
+  unlockedBalance: Piconero;
+  blocksToUnlock?: number;
+  accountIndex: number;
+}
+
 // =====================================================================
 // Wallet API
 // =====================================================================
+
+/**
+ * Fetch the wallet balance. Pass accountIndex to override the node's
+ * configured default; pass null/undefined to use the default.
+ */
+export async function getXMRBalance(accountIndex?: number | null): Promise<MoneroBalance> {
+  const path =
+    accountIndex == null
+      ? NODE_API.WALLET_XMR_BALANCE
+      : `${NODE_API.WALLET_XMR_BALANCE}?accountIndex=${encodeURIComponent(String(accountIndex))}`;
+  return authGet<MoneroBalance>(path);
+}
 
 export async function withdrawXMR(req: MoneroWithdrawRequest): Promise<MoneroWithdrawResult> {
   return authPost<MoneroWithdrawResult>(NODE_API.WALLET_XMR_WITHDRAW, req);

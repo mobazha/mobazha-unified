@@ -319,6 +319,11 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
         },
         {
+          // Outpost-only: XMR withdraw / sweep
+          path: 'settings/payments/xmr-withdraw',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+        },
+        {
           path: 'settings/policies',
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },
@@ -512,6 +517,11 @@ if (__OUTPOST__) {
           // the SaaS `routes` block is dead-code eliminated.
           path: 'settings/payments/xmr-wallet',
           element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+        },
+        {
+          // Outpost-only: XMR withdraw / sweep
+          path: 'settings/payments/xmr-withdraw',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
         },
         {
           // Outpost-only: Monero NodePool admin (linked from payments page)

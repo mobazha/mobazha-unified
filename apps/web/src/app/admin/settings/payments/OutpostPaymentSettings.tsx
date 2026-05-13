@@ -4,7 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@mobazha/core';
 import { getPaymentRPCStatus, type PaymentRPCStatusEntry } from '@mobazha/core/services/api/system';
-import { Wifi, WifiOff, Server, Terminal, Settings, ChevronRight, Wallet } from 'lucide-react';
+import {
+  Wifi,
+  WifiOff,
+  Server,
+  Terminal,
+  Settings,
+  ChevronRight,
+  Wallet,
+  ArrowUpRight,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 function StatusBadge({ connected, error }: { connected: boolean; error?: string }) {
@@ -97,6 +106,18 @@ function XmrSection() {
                 <Wallet className="w-4 h-4 text-muted-foreground" />
                 {t('outpost.manageWallet', {
                   defaultValue: 'Set up or manage Monero wallet',
+                })}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/admin/settings/payments/xmr-withdraw"
+              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm">
+                <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+                {t('outpost.withdrawWallet', {
+                  defaultValue: 'Withdraw Monero',
                 })}
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />

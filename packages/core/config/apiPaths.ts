@@ -271,6 +271,7 @@ export const NODE_API = {
     `/system/monero-nodes/${encodeURIComponent(address)}/switch`,
 
   // --- XMR wallet admin (Outpost only) ---
+  WALLET_XMR_BALANCE: '/wallet/xmr/balance',
   WALLET_XMR_WITHDRAW: '/wallet/xmr/withdraw',
   WALLET_XMR_SWEEP_ALL: '/wallet/xmr/sweep-all',
 
