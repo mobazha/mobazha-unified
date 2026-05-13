@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { isBasicAuthMode, isStandaloneMode, isOutpostMode } from '@mobazha/core/config/env';
-import { authSafeGet } from '@mobazha/core/services/api/helpers';
 import {
   getSystemHealth,
+  getPaymentRPCStatus,
   getNetworkConfig,
   updateNetworkConfig,
   runDoctor,
@@ -16,6 +16,7 @@ import {
   getUpdateConfig,
   updateUpdateConfig,
   type SystemHealthResponse,
+  type PaymentRPCStatusResponse,
   type NetworkConfigResponse,
   type DoctorSummary,
   type UpdateConfigResponse,
@@ -93,10 +94,7 @@ export default function SystemPage() {
   const [updateConfigSaving, setUpdateConfigSaving] = useState(false);
   const [showUpdateSettings, setShowUpdateSettings] = useState(false);
 
-  const [rpcStatus, setRpcStatus] = useState<{
-    ltc?: { connected: boolean; endpoint: string; blockHeight?: number };
-    xmr?: { connected: boolean; endpoint: string; blockHeight?: number };
-  } | null>(null);
+  const [rpcStatus, setRpcStatus] = useState<PaymentRPCStatusResponse | null>(null);
 
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
@@ -143,8 +141,11 @@ export default function SystemPage() {
 
   const fetchRpcStatus = useCallback(async () => {
     if (!isOutpostMode()) return;
-    const data = await authSafeGet('/system/rpc-status', null);
-    if (data) setRpcStatus(data);
+    try {
+      setRpcStatus(await getPaymentRPCStatus());
+    } catch {
+      setRpcStatus(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -615,31 +616,6 @@ export default function SystemPage() {
             {t('system.rpc.title', { defaultValue: 'Payment RPC Status' })}
           </h2>
           <div className="space-y-3">
-            {rpcStatus.ltc && (
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${rpcStatus.ltc.connected ? 'bg-green-500' : 'bg-destructive'}`}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground">Litecoin (Electrum)</div>
-                  <div className="text-xs text-muted-foreground font-mono truncate">
-                    {rpcStatus.ltc.endpoint || 'Not configured'}
-                  </div>
-                  {rpcStatus.ltc.blockHeight != null && (
-                    <div className="text-xs text-muted-foreground">
-                      Block: {rpcStatus.ltc.blockHeight.toLocaleString()}
-                    </div>
-                  )}
-                </div>
-                <span
-                  className={`text-xs font-medium ${rpcStatus.ltc.connected ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
-                >
-                  {rpcStatus.ltc.connected
-                    ? t('system.rpc.connected', { defaultValue: 'Connected' })
-                    : t('system.rpc.disconnected', { defaultValue: 'Disconnected' })}
-                </span>
-              </div>
-            )}
             {rpcStatus.xmr && (
               <div className="flex items-center gap-3">
                 <div
@@ -665,11 +641,11 @@ export default function SystemPage() {
                 </span>
               </div>
             )}
-            {!rpcStatus.ltc && !rpcStatus.xmr && (
+            {!rpcStatus.xmr && (
               <p className="text-sm text-muted-foreground">
                 {t('system.rpc.noneConfigured', {
                   defaultValue:
-                    'No payment RPCs configured. Go to Settings → Payments to set up LTC or XMR.',
+                    'No payment RPC configured. Go to Settings → Payments to set up XMR wallet-rpc.',
                 })}
               </p>
             )}

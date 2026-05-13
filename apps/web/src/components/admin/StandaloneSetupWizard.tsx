@@ -773,7 +773,7 @@ export default function StandaloneSetupWizard({
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
                   {isOutpostMode()
                     ? t('outpost.setupPaymentsDesc', {
-                        defaultValue: 'Configure LTC Electrum and XMR wallet-rpc endpoints',
+                        defaultValue: 'Configure XMR wallet-rpc endpoint',
                       })
                     : t('admin.onboarding.setupPaymentsDesc') ||
                       'Add crypto wallets, connect Stripe or PayPal'}

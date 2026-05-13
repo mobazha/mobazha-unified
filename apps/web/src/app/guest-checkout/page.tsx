@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getImageUrl } from '@mobazha/core';
+import { useI18n, getImageUrl, mustAssetIdFromTokenId } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
@@ -206,9 +206,13 @@ export default function GuestCheckoutPage() {
   );
 
   const handleCoinSelect = (tokenId: string) => {
-    setSelectedCoin(tokenId);
+    const paymentCoin =
+      tokenId.startsWith('crypto:') || tokenId.startsWith('fiat:')
+        ? tokenId
+        : mustAssetIdFromTokenId(tokenId);
+    setSelectedCoin(paymentCoin);
     setStep('payment');
-    void submitGuestOrder(tokenId);
+    void submitGuestOrder(paymentCoin);
   };
 
   return (

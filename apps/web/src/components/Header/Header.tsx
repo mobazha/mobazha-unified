@@ -392,34 +392,36 @@ export const Header: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-2"
-                data-testid="header-login-btn"
-                onClick={async () => {
-                  if (isEmbeddedApp) {
-                    router.push('/');
-                  } else if (isHosted()) {
-                    startCasdoorLogin();
-                  } else if (isStandalone()) {
-                    try {
-                      const { loginStandalone } = useUserStore.getState();
-                      const success = await loginStandalone();
-                      if (success && !isStandaloneBuyerAuth()) {
-                        router.push('/admin');
+              !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-2"
+                  data-testid="header-login-btn"
+                  onClick={async () => {
+                    if (isEmbeddedApp) {
+                      router.push('/');
+                    } else if (isHosted()) {
+                      startCasdoorLogin();
+                    } else if (isStandalone()) {
+                      try {
+                        const { loginStandalone } = useUserStore.getState();
+                        const success = await loginStandalone();
+                        if (success && !isStandaloneBuyerAuth()) {
+                          router.push('/admin');
+                        }
+                      } catch {
+                        router.push('/login');
                       }
-                    } catch {
+                    } else {
                       router.push('/login');
                     }
-                  } else {
-                    router.push('/login');
-                  }
-                }}
-              >
-                <LogIn className="h-4 w-4" />
-                {t('nav.login')}
-              </Button>
+                  }}
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t('nav.login')}
+                </Button>
+              )
             )}
           </HStack>
         </div>

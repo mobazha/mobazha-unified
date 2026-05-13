@@ -67,7 +67,7 @@ export async function fetchExchangeRates(forceRefresh = false): Promise<Exchange
   const now = Date.now();
 
   // Outpost mode is fully crypto-native — listings are priced natively in
-  // LTC or XMR with no fiat conversion layer. Skip the external exchange
+  // XMR with no fiat conversion layer. Skip the external exchange
   // rate fetch entirely to preserve the zero-outbound guarantee. Returning
   // an empty rate map signals to callers that no fiat ≈ display should
   // be rendered.

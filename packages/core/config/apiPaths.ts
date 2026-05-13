@@ -252,6 +252,7 @@ export const NODE_API = {
   SYSTEM_CONNECT_PLATFORM: '/system/connect-platform',
   SYSTEM_CLAIM_STORE: '/system/claim-store',
   SYSTEM_HEALTH: '/system/health',
+  SYSTEM_RPC_STATUS: '/system/rpc-status',
   SYSTEM_LOGS: '/system/logs',
   SYSTEM_INFO: '/system/info',
   SYSTEM_NETWORK: '/system/network',

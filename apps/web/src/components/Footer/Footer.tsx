@@ -29,12 +29,11 @@ const FOOTER_CRYPTO_TOKENS_FULL = [
   { id: 'USDC', name: 'USD Coin (USDC)' },
 ];
 
-const FOOTER_CRYPTO_TOKENS_OUTPOST = [
-  { id: 'LTC', name: 'Litecoin' },
-  { id: 'XMR', name: 'Monero' },
-];
+const FOOTER_CRYPTO_TOKENS_OUTPOST = [{ id: 'XMR', name: 'Monero' }];
 
-const FOOTER_CRYPTO_TOKENS = __OUTPOST__ ? FOOTER_CRYPTO_TOKENS_OUTPOST : FOOTER_CRYPTO_TOKENS_FULL;
+function getFooterCryptoTokens() {
+  return isOutpostMode() ? FOOTER_CRYPTO_TOKENS_OUTPOST : FOOTER_CRYPTO_TOKENS_FULL;
+}
 
 const FOOTER_FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
   {
@@ -337,12 +336,12 @@ export const Footer: React.FC = () => {
               {t('footer.paymentMethods')}
             </span>
             <div className="flex items-center gap-2 opacity-60">
-              {FOOTER_CRYPTO_TOKENS.map(({ id, name }) => (
+              {getFooterCryptoTokens().map(({ id, name }) => (
                 <span key={id} title={name}>
                   <TokenIcon token={id} size={20} />
                 </span>
               ))}
-              {!__OUTPOST__ && (
+              {!isOutpostMode() && (
                 <>
                   <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
                   {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (

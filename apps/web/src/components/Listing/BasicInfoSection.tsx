@@ -72,13 +72,10 @@ interface BasicInfoSectionProps {
   aiLoadingAction?: string | null;
 }
 
-// Outpost is crypto-native: listings are priced natively in LTC or XMR
-// (the only payment coins supported), with no fiat conversion layer.
+// Outpost is crypto-native: listings are priced natively in XMR (the only
+// payment coin supported), with no fiat conversion layer.
 // SaaS/full-node mode retains the full fiat+crypto picker.
-const OUTPOST_CURRENCIES = [
-  { value: 'LTC', label: 'LTC (Ł)' },
-  { value: 'XMR', label: 'XMR (ɱ)' },
-];
+const OUTPOST_CURRENCIES = [{ value: 'XMR', label: 'XMR (ɱ)' }];
 
 const SAAS_CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
