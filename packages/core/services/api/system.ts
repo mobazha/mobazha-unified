@@ -82,6 +82,18 @@ export interface SystemHealthResponse {
   update?: UpdateInfo;
 }
 
+export interface PaymentRPCStatusEntry {
+  connected: boolean;
+  endpoint?: string;
+  accountIndex?: number;
+  blockHeight?: number;
+  error?: string;
+}
+
+export interface PaymentRPCStatusResponse {
+  xmr?: PaymentRPCStatusEntry;
+}
+
 // --- Setup API ---
 
 export async function getSetupStatus(): Promise<SetupStatusResponse> {
@@ -107,6 +119,10 @@ export async function connectPlatform(token: string): Promise<ConnectPlatformRes
 
 export async function getSystemHealth(): Promise<SystemHealthResponse> {
   return authGet<SystemHealthResponse>(NODE_API.SYSTEM_HEALTH);
+}
+
+export async function getPaymentRPCStatus(): Promise<PaymentRPCStatusResponse> {
+  return authGet<PaymentRPCStatusResponse>(NODE_API.SYSTEM_RPC_STATUS);
 }
 
 export async function getSystemLogs(): Promise<string> {
