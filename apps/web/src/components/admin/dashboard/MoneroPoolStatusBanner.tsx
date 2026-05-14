@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2, ServerOff, ChevronRight } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
+import { getBrandNetworkConfig } from '@mobazha/core/config/env';
 import { getMoneroNodes, type MoneroNodePoolSnapshot } from '@mobazha/core/services/api/monero';
 
 /**
@@ -30,8 +31,13 @@ export function MoneroPoolStatusBanner() {
   const [snapshot, setSnapshot] = useState<MoneroNodePoolSnapshot | null>(null);
   const [failed, setFailed] = useState(false);
 
+  // White-label brands may hide the NodePool surface entirely. When that
+  // flag is off, the banner is meaningless (it links to a hidden page),
+  // so we suppress it before issuing the round-trip too.
+  const showNodePoolUI = getBrandNetworkConfig().showNodePoolUI;
+
   useEffect(() => {
-    if (!__OUTPOST__) return;
+    if (!__OUTPOST__ || !showNodePoolUI) return;
     let cancelled = false;
     getMoneroNodes()
       .then(snap => {
@@ -43,9 +49,9 @@ export function MoneroPoolStatusBanner() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [showNodePoolUI]);
 
-  if (!__OUTPOST__) return null;
+  if (!__OUTPOST__ || !showNodePoolUI) return null;
   if (failed) return null;
   if (!snapshot) return null;
   if (!snapshot.available) return null;

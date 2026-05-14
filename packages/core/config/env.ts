@@ -217,6 +217,23 @@ export const STANDALONE_ENV: EnvConfig = {
   },
 };
 
+/**
+ * White-label network UI gating, mirrors `repo.NetworkFields` /
+ * `frontend.NetworkSnapshot` from the backend. All flags default to
+ * `false` (locked-down baseline) when omitted — partners must opt in
+ * explicitly. See `docs/privacy/OUTPOST_MONEROD_NETWORK_DESIGN.md` § OP-MP-4.
+ */
+export interface BrandNetworkConfig {
+  /** Show a "paste your own monerod RPC" form on the NodePool admin page. */
+  allowUserCustomNode?: boolean;
+  /** Show latency / fail-streak / source columns and other power-user diagnostics. */
+  showAdvancedDiagnostics?: boolean;
+  /** Expose Settings → Monero Nodes (and the dashboard pool banner). */
+  showNodePoolUI?: boolean;
+  /** Let the user toggle Tier-3 P2P discovery (UI lives in OP-MP-7). */
+  allowDiscoverToggle?: boolean;
+}
+
 /** White-label brand overrides from brand.yaml via /runtime-config.js. */
 export interface BrandConfig {
   name: string;
@@ -229,6 +246,7 @@ export interface BrandConfig {
   faviconUrl?: string;
   privacyNotice?: string;
   hidePoweredBy?: boolean;
+  network?: BrandNetworkConfig;
 }
 
 /** Outpost-specific runtime configuration. */
@@ -249,6 +267,22 @@ export function getOutpostConfig(): OutpostConfig {
 /** Returns the brand config if present, or undefined for Mobazha defaults. */
 export function getBrandConfig(): BrandConfig | undefined {
   return outpostConfig.brand;
+}
+
+/**
+ * Returns the brand network UI gating flags. Always returns an object so
+ * callers can read fields without null-checking; missing values default to
+ * `false` (the locked-down baseline). Mobazha defaults (no brand.yaml)
+ * therefore hide all network/node-pool surface area.
+ */
+export function getBrandNetworkConfig(): Required<BrandNetworkConfig> {
+  const network = outpostConfig.brand?.network;
+  return {
+    allowUserCustomNode: network?.allowUserCustomNode === true,
+    showAdvancedDiagnostics: network?.showAdvancedDiagnostics === true,
+    showNodePoolUI: network?.showNodePoolUI === true,
+    allowDiscoverToggle: network?.allowDiscoverToggle === true,
+  };
 }
 
 export function isOutpostMode(): boolean {
@@ -505,6 +539,12 @@ function applyRuntimeConfig(): void {
           faviconUrl?: string;
           privacyNotice?: string;
           hidePoweredBy?: boolean;
+          network?: {
+            allowUserCustomNode?: boolean;
+            showAdvancedDiagnostics?: boolean;
+            showNodePoolUI?: boolean;
+            allowDiscoverToggle?: boolean;
+          };
         };
       }
     | undefined;

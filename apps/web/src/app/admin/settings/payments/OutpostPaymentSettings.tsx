@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@mobazha/core';
+import { getBrandNetworkConfig } from '@mobazha/core/config/env';
 import { getPaymentRPCStatus, type PaymentRPCStatusEntry } from '@mobazha/core/services/api/system';
 import {
   Wifi,
@@ -40,6 +41,9 @@ function StatusBadge({ connected, error }: { connected: boolean; error?: string 
 function XmrSection() {
   const { t } = useI18n();
   const [status, setStatus] = useState<PaymentRPCStatusEntry | null | undefined>(undefined);
+  // Brand may hide the NodePool admin page (Asgardium baseline). When so,
+  // the link below points to a placeholder, so we omit it altogether.
+  const showNodePoolUI = getBrandNetworkConfig().showNodePoolUI;
 
   useEffect(() => {
     let cancelled = false;
@@ -148,16 +152,18 @@ function XmrSection() {
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Link>
-            <Link
-              to="/admin/settings/monero-nodes"
-              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
-            >
-              <span className="flex items-center gap-2 text-sm">
-                <Settings className="w-4 h-4 text-muted-foreground" />
-                {t('outpost.manageNodes', { defaultValue: 'Manage Monero nodes (NodePool)' })}
-              </span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </Link>
+            {showNodePoolUI && (
+              <Link
+                to="/admin/settings/monero-nodes"
+                className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
+              >
+                <span className="flex items-center gap-2 text-sm">
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                  {t('outpost.manageNodes', { defaultValue: 'Manage Monero nodes (NodePool)' })}
+                </span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-3">

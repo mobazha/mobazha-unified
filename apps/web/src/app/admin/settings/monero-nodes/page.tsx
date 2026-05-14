@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useI18n } from '@mobazha/core';
+import { getBrandNetworkConfig } from '@mobazha/core/config/env';
 import {
   AlertCircle,
   CheckCircle2,
@@ -135,6 +136,17 @@ function formatLastChecked(iso: string | undefined): string {
 
 export default function MoneroNodesPage() {
   const { t } = useI18n();
+  // White-label gating: a partner brand may hide the NodePool surface
+  // entirely (Asgardium baseline) or expose it read-only without the
+  // custom-node form (The Market Place pattern). Diagnostics columns are
+  // gated separately so partners can show the active node + pool size
+  // without leaking latency/fail-streak data that suggests "go fix it".
+  // See docs/privacy/OUTPOST_MONEROD_NETWORK_DESIGN.md § OP-MP-4.
+  const networkBrand = getBrandNetworkConfig();
+  const showNodePoolUI = networkBrand.showNodePoolUI;
+  const allowUserCustomNode = networkBrand.allowUserCustomNode;
+  const showAdvancedDiagnostics = networkBrand.showAdvancedDiagnostics;
+
   const [snapshot, setSnapshot] = useState<MoneroNodePoolSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -166,12 +178,16 @@ export default function MoneroNodesPage() {
   );
 
   useEffect(() => {
-    if (!__OUTPOST__) {
+    // Skip the network round-trip when the brand has hidden the surface
+    // — even if the user navigates here directly we shouldn't probe
+    // /v1/system/monero/nodes when the partner has chosen to keep the
+    // pool out of the UI.
+    if (!__OUTPOST__ || !showNodePoolUI) {
       setLoading(false);
       return;
     }
     refresh(true);
-  }, [refresh]);
+  }, [refresh, showNodePoolUI]);
 
   const showToast = useCallback((msg: string) => {
     setSuccess(msg);
@@ -262,9 +278,11 @@ export default function MoneroNodesPage() {
   const candidates = useMemo(() => snapshot?.candidates ?? [], [snapshot]);
   const activeAddress = snapshot?.active?.address;
 
-  // Non-outpost build: render an explanatory placeholder. We don't 404 because
-  // the page may be linked from elsewhere and the message is more helpful.
-  if (!__OUTPOST__) {
+  // Non-outpost build OR brand has hidden the NodePool surface: render an
+  // explanatory placeholder. We don't 404 because the page may still be
+  // linked from elsewhere (older docs, bookmarks) and the message is
+  // more useful than a blank screen.
+  if (!__OUTPOST__ || !showNodePoolUI) {
     return (
       <div>
         <SettingsPageHeader
@@ -276,9 +294,14 @@ export default function MoneroNodesPage() {
         />
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            {t('outpost.nodes.notApplicable', {
-              defaultValue: 'This page is only available on Outpost builds.',
-            })}
+            {!__OUTPOST__
+              ? t('outpost.nodes.notApplicable', {
+                  defaultValue: 'This page is only available on Outpost builds.',
+                })
+              : t('outpost.nodes.brandHidden', {
+                  defaultValue:
+                    'Node pool management is not exposed in this build. Your administrator manages Monero daemons silently.',
+                })}
           </CardContent>
         </Card>
       </div>
@@ -408,15 +431,19 @@ export default function MoneroNodesPage() {
                       <th className="text-left px-4 py-2 font-medium">
                         {t('outpost.nodes.colAddress', { defaultValue: 'Address' })}
                       </th>
-                      <th className="text-left px-4 py-2 font-medium">
-                        {t('outpost.nodes.colSource', { defaultValue: 'Source' })}
-                      </th>
-                      <th className="text-left px-4 py-2 font-medium">
-                        {t('outpost.nodes.colHealth', { defaultValue: 'Health' })}
-                      </th>
-                      <th className="text-left px-4 py-2 font-medium">
-                        {t('outpost.nodes.colLastChecked', { defaultValue: 'Last checked' })}
-                      </th>
+                      {showAdvancedDiagnostics && (
+                        <>
+                          <th className="text-left px-4 py-2 font-medium">
+                            {t('outpost.nodes.colSource', { defaultValue: 'Source' })}
+                          </th>
+                          <th className="text-left px-4 py-2 font-medium">
+                            {t('outpost.nodes.colHealth', { defaultValue: 'Health' })}
+                          </th>
+                          <th className="text-left px-4 py-2 font-medium">
+                            {t('outpost.nodes.colLastChecked', { defaultValue: 'Last checked' })}
+                          </th>
+                        </>
+                      )}
                       <th className="text-right px-4 py-2 font-medium">
                         {t('outpost.nodes.colActions', { defaultValue: 'Actions' })}
                       </th>
@@ -445,15 +472,19 @@ export default function MoneroNodesPage() {
                               </p>
                             )}
                           </td>
-                          <td className="px-4 py-3 align-top">
-                            <SourceBadge source={node.source} />
-                          </td>
-                          <td className="px-4 py-3 align-top">
-                            <HealthCell node={node} />
-                          </td>
-                          <td className="px-4 py-3 align-top text-xs text-muted-foreground">
-                            {formatLastChecked(node.lastChecked)}
-                          </td>
+                          {showAdvancedDiagnostics && (
+                            <>
+                              <td className="px-4 py-3 align-top">
+                                <SourceBadge source={node.source} />
+                              </td>
+                              <td className="px-4 py-3 align-top">
+                                <HealthCell node={node} />
+                              </td>
+                              <td className="px-4 py-3 align-top text-xs text-muted-foreground">
+                                {formatLastChecked(node.lastChecked)}
+                              </td>
+                            </>
+                          )}
                           <td className="px-4 py-3 align-top text-right">
                             <div className="inline-flex gap-1">
                               <Button
@@ -507,8 +538,11 @@ export default function MoneroNodesPage() {
           </Card>
         )}
 
-        {/* Add-node form (only when NodePool is configured) */}
-        {snapshot?.available && (
+        {/* Add-node form (only when NodePool is configured AND the brand
+            allows custom node entry — Asgardium baseline keeps this off
+            because pasting an arbitrary monerod RPC URL is a known
+            phishing vector). */}
+        {snapshot?.available && allowUserCustomNode && (
           <Card>
             <CardHeader>
               <CardTitle>{t('outpost.nodes.addTitle', { defaultValue: 'Add a node' })}</CardTitle>
