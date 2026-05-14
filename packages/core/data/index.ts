@@ -51,6 +51,21 @@ export {
   type PaymentChainConfig,
 } from './tokens';
 
+// DG-1.12: digital-goods cost-comparison pricing data + calculator
+export {
+  PROCESSORS,
+  PLATFORMS,
+  calculateNetPerSale,
+  calculateAll,
+  comparisonHighlight,
+  type ProcessorKey,
+  type ProcessorFee,
+  type PlatformKey,
+  type PlatformFee,
+  type CalcInput,
+  type PlatformResult,
+} from './digitalGoodsPricing';
+
 // RWA 预定义资产数据
 export {
   assetTypes,
