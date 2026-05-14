@@ -19,7 +19,10 @@ interface ProductData {
     priceCurrency?: { code?: string };
   };
   vendorID?: { peerID?: string; handle?: string };
-  metadata?: { pricingCurrency?: { code?: string } };
+  metadata?: {
+    pricingCurrency?: { code?: string };
+    contractType?: string;
+  };
 }
 
 function getImageUrl(hash?: string): string | undefined {
@@ -53,6 +56,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const vendorName = product?.vendorID?.handle || '';
   const firstImage = product?.item?.images?.[0];
   const imageUrl = getImageUrl(firstImage?.medium || firstImage?.original);
+  const isDigital = product?.metadata?.contractType === 'DIGITAL_GOOD';
 
   return new ImageResponse(
     <div
@@ -62,8 +66,32 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         display: 'flex',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         padding: '48px',
+        position: 'relative',
       }}
     >
+      {isDigital && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '32px',
+            right: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            borderRadius: '999px',
+            background: 'rgba(56, 189, 248, 0.15)',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
+            color: '#7dd3fc',
+            fontSize: '18px',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Digital
+        </div>
+      )}
       {/* Product image */}
       {imageUrl && (
         <div
