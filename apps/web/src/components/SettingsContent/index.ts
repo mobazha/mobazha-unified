@@ -6,4 +6,5 @@ export { SettingsReferrerBanner } from './SettingsReferrerBanner';
 export { GeneralSettingsContent } from './GeneralSettingsContent';
 export { ProfileSettingsContent } from './ProfileSettingsContent';
 export { StorePoliciesContent } from './StorePoliciesContent';
+export { OperatorResponsibilitiesContent } from './OperatorResponsibilitiesContent';
 export { StoreModeratorsContent } from './StoreModeratorsContent';

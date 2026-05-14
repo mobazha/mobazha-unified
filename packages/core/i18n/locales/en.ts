@@ -2581,6 +2581,36 @@ export const en: TranslationResource = {
     digitalReviewWindowHelper:
       'Leave blank to use the protocol default of {default} days. Only applies to digital-good listings.',
     digitalReviewWindowInvalid: 'Enter a whole number between 0 and {max}.',
+    operatorResponsibilities: 'Operator Responsibilities',
+    operatorResponsibilitiesDesc: 'What Mobazha covers vs. what you cover as the store operator',
+    operatorResponsibilitiesPageTitle: 'Store Operator Responsibilities',
+    operatorResponsibilitiesIntro:
+      'Operating a Mobazha store is a partnership. We provide the infrastructure and tooling; you remain the merchant of record. Review what each side covers so you can run your store with full clarity on your obligations.',
+    operatorResponsibilitiesPlatformTitle: 'What Mobazha covers',
+    operatorResponsibilitiesPlatformInfra: 'Hosting infrastructure, CDN, and payment routing',
+    operatorResponsibilitiesPlatformAUP:
+      'Acceptable-use enforcement on hosted (SaaS) deployments, including DMCA takedown response',
+    operatorResponsibilitiesPlatformCustody: 'Wallet key custody on hosted deployments',
+    operatorResponsibilitiesPlatformTech:
+      'Technical correctness of order, delivery, refund, and dispute flows',
+    operatorResponsibilitiesSellerTitle: 'What you cover as the operator',
+    operatorResponsibilitiesSellerTax:
+      'Local tax registration and reporting (VAT, sales tax, etc.)',
+    operatorResponsibilitiesSellerContent:
+      'Content compliance: copyright, AUP adherence, regional regulation',
+    operatorResponsibilitiesSellerProcessor:
+      'Payment-processor terms (Stripe / PayPal / etc.) for fiat-enabled stores',
+    operatorResponsibilitiesSellerCustomer:
+      'Customer support, refund decisions, and chargeback responses (we provide tooling but do not arbitrate)',
+    operatorResponsibilitiesSellerSelfHost:
+      'Self-hosted deployments: all operations, security patching, and incident response',
+    operatorResponsibilitiesDigitalNoteTitle: 'Digital goods are non-recoverable',
+    operatorResponsibilitiesDigitalNote:
+      'Once a file is downloaded or a license key is delivered, neither Mobazha nor you can pull it back from the buyer device. Refunds and dispute outcomes can revoke future access, license validation, and membership entry; previously delivered content cannot be unsent.',
+    operatorResponsibilitiesAckLabel: 'I have read and acknowledge these responsibilities.',
+    operatorResponsibilitiesAckedAt: 'Acknowledged on {date}',
+    operatorResponsibilitiesUnacked: 'You have not acknowledged this contract yet.',
+    operatorResponsibilitiesAckSaved: 'Acknowledgement saved.',
     termsPlaceholder:
       'Enter your store terms and conditions, e.g. payment terms, dispute resolution process, liability limitations...',
     storeModerators: 'Store Moderators',

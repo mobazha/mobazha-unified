@@ -14,6 +14,7 @@ import {
   PlayCircle,
   Megaphone,
   ShoppingBag,
+  ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -187,6 +188,15 @@ export default function AdminSettingsPage() {
               href="/admin/settings/access-control"
             />
           )}
+          {/* DG-1.14: operator responsibilities — surfaces the platform/seller
+              compliance contract so sellers can see the obligations they accept
+              by running a Mobazha store. Available in every deployment. */}
+          <SettingsCard
+            icon={ShieldCheck}
+            title={t('settingsExtended.operatorResponsibilities')}
+            description={t('settingsExtended.operatorResponsibilitiesDesc')}
+            href="/admin/settings/responsibilities"
+          />
         </SettingsSection>
 
         {/* Transaction Rules */}
