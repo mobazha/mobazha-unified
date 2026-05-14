@@ -2565,6 +2565,32 @@ export const en: TranslationResource = {
       'This calculator uses public pricing pages from each platform as of the date noted on each row. External rates change without notice — always verify against the source before making a decision. Mobazha rates reflect the protocol fee for hosted accounts and zero protocol fee for self-hosted deployments.',
   },
 
+  // DG-1.10 — seller data-portability ("Your store, your data, your customers").
+  // Surfaced as an /admin/settings card and at /admin/settings/data-export.
+  dataExport: {
+    cardTitle: 'Export Data',
+    cardDescription: 'Download your listings, sales, and customer list',
+    pageTitle: 'Export your store data',
+    pageDescription:
+      'Your store, your data, your customers. Download a fresh snapshot at any time — for backups, migrations, or your own reporting.',
+    listingsTitle: 'Listings',
+    listingsDescription: 'All products you sell, including title, price, currency, and visibility.',
+    salesTitle: 'Sales',
+    salesDescription:
+      'Every order received as a seller, with buyer, shipping, payment, and protection state.',
+    customersTitle: 'Customers',
+    customersDescription:
+      'Aggregated buyer list — one row per buyer with order count, first/last purchase, and most-recent shipping city.',
+    csvButton: 'CSV',
+    jsonButton: 'JSON',
+    downloading: 'Downloading…',
+    toastSuccess: '{kind} export downloaded',
+    toastError: 'Export failed',
+    noteTitle: 'How exports work',
+    noteBody:
+      'Each click pulls a live snapshot from your store. CSVs open directly in Excel, Numbers, and Google Sheets; JSON is best for migration scripts. We never email these files anywhere — the download stays on this device.',
+  },
+
   searchExtended: {
     searchPlaceholder: 'Search products, stores, or paste a listing URL...',
     recentSearches: 'Recent Searches',

@@ -350,6 +350,12 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/responsibilities/page')),
         },
         {
+          // DG-1.10: seller data-portability exports (listings/sales/customers).
+          // Implements the "Your store, your data, your customers" contract.
+          path: 'settings/data-export',
+          element: lazyPage(() => import('./app/admin/settings/data-export/page')),
+        },
+        {
           path: 'settings/moderators',
           element: lazyPage(() => import('./app/admin/settings/moderators/page')),
         },
@@ -578,6 +584,10 @@ if (__OUTPOST__) {
           path: 'settings/responsibilities',
           element: lazyPage(() => import('./app/admin/settings/responsibilities/page')),
         },
+        // NOTE: settings/data-export is intentionally omitted from the
+        // Outpost build — the /v1/exports/* backend handlers carry a
+        // !outpost build tag because they depend on the full OrderService.
+        // A guest-order-aware export is on the Outpost roadmap.
         {
           path: 'settings/integrations',
           element: lazyPage(() => import('./app/admin/settings/integrations/page')),

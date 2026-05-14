@@ -52,6 +52,13 @@ export const NODE_API = {
   PURCHASES: '/purchases',
   SALES: '/sales',
   ORDERS: '/orders',
+
+  // --- Data export (DG-1.10 — "Your store, your data, your customers") ---
+  // CSV/JSON downloads of vendor-side listings, sales, and aggregated buyer
+  // lists. Frontend appends ?format=csv|json (default csv).
+  EXPORTS_LISTINGS: '/exports/listings',
+  EXPORTS_SALES: '/exports/sales',
+  EXPORTS_CUSTOMERS: '/exports/customers',
   ORDER: (orderId: string) => `/orders/${orderId}`,
   /** @deprecated Use ORDERS (POST /v1/orders) instead. '/purchase' does not exist in backend. */
   PURCHASE: '/orders',

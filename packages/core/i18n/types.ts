@@ -993,6 +993,28 @@ export interface TranslationResource {
     disclaimerBody?: string;
   };
 
+  // DG-1.10: seller data-portability page (/admin/settings/data-export).
+  // Optional so locales can fall back to English while translations sync.
+  dataExport?: {
+    cardTitle?: string;
+    cardDescription?: string;
+    pageTitle?: string;
+    pageDescription?: string;
+    listingsTitle?: string;
+    listingsDescription?: string;
+    salesTitle?: string;
+    salesDescription?: string;
+    customersTitle?: string;
+    customersDescription?: string;
+    csvButton?: string;
+    jsonButton?: string;
+    downloading?: string;
+    toastSuccess?: string;
+    toastError?: string;
+    noteTitle?: string;
+    noteBody?: string;
+  };
+
   // 搜索扩展
   searchExtended: {
     searchPlaceholder: string;

@@ -15,6 +15,7 @@ import {
   Megaphone,
   ShoppingBag,
   ShieldCheck,
+  Download,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -197,6 +198,17 @@ export default function AdminSettingsPage() {
             description={t('settingsExtended.operatorResponsibilitiesDesc')}
             href="/admin/settings/responsibilities"
           />
+          {/* DG-1.10: data export — "Your store, your data, your customers".
+              Hidden in Outpost mode because the /v1/exports/* backend handlers
+              are !outpost-tagged (full OrderService dependency). */}
+          {!isOutpost && (
+            <SettingsCard
+              icon={Download}
+              title={t('dataExport.cardTitle')}
+              description={t('dataExport.cardDescription')}
+              href="/admin/settings/data-export"
+            />
+          )}
         </SettingsSection>
 
         {/* Transaction Rules */}

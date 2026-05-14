@@ -210,6 +210,10 @@ export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from
 export * as systemApi from './system';
 export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } from './system';
 
+// Data export API (DG-1.10 — listings/sales/customers CSV+JSON downloads)
+export * as exportsApi from './exports';
+export type { ExportKind, ExportFormat, ExportResult } from './exports';
+
 // Monero (XMR) admin API — Outpost only
 export * as moneroApi from './monero';
 export type {
