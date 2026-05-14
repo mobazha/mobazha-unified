@@ -109,6 +109,7 @@ export function ProductDetail({
   const [isLoading, setIsLoading] = useState(true);
   const [ratingsLoading, setRatingsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [cartSuccess, setCartSuccess] = useState(false);
@@ -230,6 +231,7 @@ export function ProductDetail({
     } else if (rqLoading) {
       setIsLoading(true);
     }
+    if (storeOffline) setIsOffline(true);
   }, [rqListing, rqError, rqLoading, storeOffline, slug, peerID]);
 
   // 获取卖家信息（不阻塞商品显示）
@@ -566,8 +568,33 @@ export function ProductDetail({
   const tags = product.item.tags || [];
   const category = product.item.productType || '';
 
+  const purchaseDisabled = isOffline || stock === 0 || !paymentAvailable || isStorePaused;
+
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
+      {isOffline && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800 px-4 py-3 flex items-center gap-3">
+          <svg
+            className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            {t('product.offlineBanner', {
+              defaultValue:
+                'This seller is currently offline. You can browse the listing but purchasing is unavailable until they come back online.',
+            })}
+          </p>
+        </div>
+      )}
       {isStorePaused && (
         <div
           role="status"
@@ -1187,11 +1214,10 @@ export function ProductDetail({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      (stock === 0 || !paymentAvailable || isStorePaused) &&
-                        'opacity-50 cursor-not-allowed'
+                      purchaseDisabled && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleAddToCart}
-                    disabled={stock === 0 || !paymentAvailable || isStorePaused}
+                    disabled={purchaseDisabled}
                     data-testid="product-detail-add-to-cart"
                   >
                     {cartSuccess ? (
@@ -1211,6 +1237,8 @@ export function ProductDetail({
                         </svg>
                         {t('product.addedToCart')}
                       </span>
+                    ) : isOffline ? (
+                      t('product.sellerOffline', { defaultValue: 'Seller Offline' })
                     ) : isStorePaused ? (
                       t('store.statusPaused')
                     ) : stock === 0 ? (
@@ -1226,11 +1254,10 @@ export function ProductDetail({
                     size="default"
                     className={cn(
                       'w-full touch-feedback',
-                      (stock === 0 || !paymentAvailable || isStorePaused) &&
-                        'opacity-50 cursor-not-allowed'
+                      purchaseDisabled && 'opacity-50 cursor-not-allowed'
                     )}
                     onClick={handleBuyNow}
-                    disabled={stock === 0 || !paymentAvailable || isStorePaused}
+                    disabled={purchaseDisabled}
                     data-testid="product-detail-buy-now"
                   >
                     {t('product.buyNow')}

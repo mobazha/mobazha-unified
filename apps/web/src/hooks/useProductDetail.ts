@@ -232,8 +232,14 @@ export function useProductDetail({
         if (isCancelled) return;
         if (result.isOffline) {
           setIsOffline(true);
+          if (result.product) {
+            loadedDataRef.current = requestKey;
+            setProduct(result.product);
+            onProductLoadedRef.current?.(result.product);
+          } else {
+            onProductLoadedRef.current?.(null);
+          }
           setIsLoading(false);
-          onProductLoadedRef.current?.(null);
           return;
         }
         const productData = result.product;

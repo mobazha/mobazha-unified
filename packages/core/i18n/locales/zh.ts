@@ -332,6 +332,8 @@ export const zh: TranslationResource = {
     addToCart: '加入购物车',
     addedToCart: '已加入购物车',
     buyNow: '立即购买',
+    sellerOffline: '卖家离线',
+    offlineBanner: '该卖家当前不在线。您可以浏览商品信息，但在卖家恢复在线之前暂时无法购买。',
     share: '分享',
     report: '举报',
     options: '选项',

@@ -374,6 +374,9 @@ export const en: TranslationResource = {
     addToCart: 'Add to Cart',
     addedToCart: 'Added to Cart',
     buyNow: 'Buy Now',
+    sellerOffline: 'Seller Offline',
+    offlineBanner:
+      'This seller is currently offline. You can browse the listing but purchasing is unavailable until they come back online.',
     share: 'Share',
     report: 'Report',
     options: 'Options',

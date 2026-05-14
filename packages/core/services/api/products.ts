@@ -341,18 +341,61 @@ export interface PublicListingResult {
 }
 
 /**
+ * Build a minimal Product from search-index summary data so the UI can
+ * render a degraded product page when the seller node is offline.
+ */
+async function getListingFromSearchFallback(peerID: string, slug: string): Promise<Product | null> {
+  try {
+    const items = await fetchStoreListings(peerID, 100);
+    const match = items.find(item => item.slug === slug);
+    if (!match) return null;
+
+    const thumbnail = match.thumbnail ?? ({} as Image);
+    const currCode = match.price?.currency?.code || '';
+    const divisibility = match.price?.currency?.divisibility ?? 2;
+
+    return {
+      slug: match.slug,
+      vendorID: { peerID: match.vendorPeerID ?? peerID, name: match.vendorName },
+      metadata: {
+        version: 0,
+        contractType: match.contractType ?? 'PHYSICAL_GOOD',
+        format: 'FIXED_PRICE',
+        expiry: '',
+        acceptedCurrencies: [],
+        pricingCurrency: { code: currCode, divisibility },
+        escrowTimeoutHours: 0,
+      },
+      item: {
+        title: match.title,
+        description: '',
+        processingTime: '',
+        price: match.price?.amount ?? 0,
+        nsfw: match.nsfw ?? false,
+        tags: [],
+        images: [thumbnail],
+        productType: match.productType,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 获取公开商品详情（无需认证）
  *
- * Uses the shared storeStatusCache: if the store is known offline and we
- * have a peerID, returns immediately with isOffline=true so the UI can
- * display an appropriate message instead of silently showing nothing.
+ * When the store is offline, falls back to search-index summary data so the
+ * UI can render a degraded (read-only) product page with an offline banner
+ * instead of showing a jarring "connection failed" modal.
  */
 export async function getPublicListing(
   slug: string,
   peerID?: string
 ): Promise<PublicListingResult> {
   if (peerID && isStoreKnownOffline(peerID)) {
-    return { listing: null, isOffline: true };
+    const fallback = await getListingFromSearchFallback(peerID, slug);
+    return { listing: fallback, isOffline: true };
   }
 
   const path = !peerID
@@ -380,7 +423,8 @@ export async function getPublicListing(
   } catch (err) {
     if (peerID && isStoreUnavailableError(err)) {
       markStoreOffline(peerID);
-      return { listing: null, isOffline: true };
+      const fallback = await getListingFromSearchFallback(peerID, slug);
+      return { listing: fallback, isOffline: true };
     }
     return { listing: null, isOffline: false };
   }
