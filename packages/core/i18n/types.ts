@@ -3002,6 +3002,7 @@ export interface TranslationResource {
       featureVariants?: string;
       featureShipping?: string;
       featurePricing?: string;
+      featureCryptoPricing?: string;
       completeTitle?: string;
       completeDesc?: string;
       viewStore?: string;
