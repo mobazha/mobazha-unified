@@ -2573,6 +2573,14 @@ export const en: TranslationResource = {
     shippingOptionsDesc: 'Configure shipping methods and prices',
     storePoliciesSaved: 'Store policies have been saved',
     termsDesc: 'Set terms and conditions that apply to all purchases in your store',
+    digitalReviewWindowTitle: 'Digital Goods Review Window',
+    digitalReviewWindowDesc:
+      'How long after delivery a digital-good order stays open for buyer review before auto-completing. Default {default} days; you can extend it up to {max} days. Shorter values are ignored — buyers always get at least the default window.',
+    digitalReviewWindowLabel: 'Review window',
+    digitalReviewWindowUnit: 'days',
+    digitalReviewWindowHelper:
+      'Leave blank to use the protocol default of {default} days. Only applies to digital-good listings.',
+    digitalReviewWindowInvalid: 'Enter a whole number between 0 and {max}.',
     termsPlaceholder:
       'Enter your store terms and conditions, e.g. payment terms, dispute resolution process, liability limitations...',
     storeModerators: 'Store Moderators',

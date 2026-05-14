@@ -109,6 +109,13 @@ export interface UserSettings {
   blockedNodes?: string[];
   storeModerators?: string[];
   smtpSettings?: SmtpSettings;
+  /**
+   * DG-1.11: per-store buyer-protection window for DIGITAL_GOOD orders, in days.
+   * Range 0–7. 0 = use protocol default (3d). Backend ResolvePolicyForOrder
+   * honours this only when the value EXTENDS the default — shorter values are
+   * silently clamped so buyers always have at least the default window.
+   */
+  digitalGoodReviewWindowDays?: number;
 }
 
 /**

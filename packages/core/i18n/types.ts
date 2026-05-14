@@ -1006,6 +1006,12 @@ export interface TranslationResource {
     paymentAndShippingDesc?: string;
     storePoliciesSaved?: string;
     termsDesc?: string;
+    digitalReviewWindowTitle?: string;
+    digitalReviewWindowDesc?: string;
+    digitalReviewWindowLabel?: string;
+    digitalReviewWindowUnit?: string;
+    digitalReviewWindowHelper?: string;
+    digitalReviewWindowInvalid?: string;
     termsPlaceholder?: string;
     storeModerators?: string;
     storeModeratorsDesc?: string;
