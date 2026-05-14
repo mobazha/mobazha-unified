@@ -59,6 +59,12 @@ export const NODE_API = {
   EXPORTS_LISTINGS: '/exports/listings',
   EXPORTS_SALES: '/exports/sales',
   EXPORTS_CUSTOMERS: '/exports/customers',
+
+  // --- Vendor migration (DG-1.9 — "Storefront creators can leave with") ---
+  // Single endpoint handles both dry-run preview and actual import via the
+  // request body's `dryRun` flag. SaaS / Standalone only — Outpost build
+  // omits the handler entirely.
+  LISTINGS_IMPORT_GUMROAD: '/listings/import/gumroad',
   ORDER: (orderId: string) => `/orders/${orderId}`,
   /** @deprecated Use ORDERS (POST /v1/orders) instead. '/purchase' does not exist in backend. */
   PURCHASE: '/orders',

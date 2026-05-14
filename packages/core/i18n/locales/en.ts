@@ -4724,6 +4724,7 @@ export const en: TranslationResource = {
       addProduct: 'Add Product',
       createNew: 'Create New',
       sourceFromProvider: 'Source from Provider',
+      importFromGumroad: 'Import from Gumroad',
       searchPlaceholder: 'Search products...',
       filterAll: 'All',
       filterActive: 'Active',
@@ -4758,6 +4759,46 @@ export const en: TranslationResource = {
       viewGrid: 'Grid view',
       selectAll: 'Select all products',
       selectProduct: 'Select {{title}}',
+    },
+    gumroadImport: {
+      backToProducts: 'Back to Products',
+      title: 'Import from Gumroad',
+      subtitle:
+        'Bring your Gumroad catalog over as draft listings — review, attach digital files, then publish.',
+      tokenLabel: 'Gumroad access token',
+      tokenHint:
+        'We only use it for this import — nothing is stored. Generate a personal access token in Gumroad → Advanced.',
+      tokenHelpLink: 'How to create a Gumroad token',
+      scopeNote: 'We import: title, description, price, tags, and the public thumbnail.',
+      fileNote:
+        'Gumroad protects your downloadable files behind authenticated URLs we cannot fetch — you will re-upload each file to its draft listing before publishing.',
+      previewButton: 'Preview Import',
+      errors: {
+        tokenRequired: 'Please paste your Gumroad access token first.',
+      },
+      toast: {
+        successTitle: 'Import complete',
+        successDesc: 'Imported {{count}} listings as drafts.',
+      },
+      summary: {
+        fetched: 'Fetched',
+        eligible: 'Will import',
+        skipped: 'Skipped',
+      },
+      review: {
+        eligibleTitle: 'Will import ({{count}})',
+        skippedTitle: 'Skipped ({{count}})',
+        confirmButton: 'Import {{count}} as drafts',
+      },
+      done: {
+        title: 'Imported as drafts',
+        summary: '{{created}} created, {{updated}} updated, {{failed}} failed.',
+        fallback: '{{count}} listings imported.',
+        fileReminderTitle: 'Next: upload your digital files',
+        errorsTitle: 'Errors',
+        importMore: 'Import another batch',
+        goToProducts: 'Go to Products',
+      },
     },
     orders: {
       title: 'Orders',

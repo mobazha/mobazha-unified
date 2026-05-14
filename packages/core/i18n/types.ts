@@ -2822,6 +2822,44 @@ export interface TranslationResource {
       selectProduct?: string;
       createNew?: string;
       sourceFromProvider?: string;
+      importFromGumroad?: string;
+    };
+    gumroadImport?: {
+      backToProducts?: string;
+      title?: string;
+      subtitle?: string;
+      tokenLabel?: string;
+      tokenHint?: string;
+      tokenHelpLink?: string;
+      scopeNote?: string;
+      fileNote?: string;
+      previewButton?: string;
+      errors?: {
+        tokenRequired?: string;
+      };
+      toast?: {
+        successTitle?: string;
+        successDesc?: string;
+      };
+      summary?: {
+        fetched?: string;
+        eligible?: string;
+        skipped?: string;
+      };
+      review?: {
+        eligibleTitle?: string;
+        skippedTitle?: string;
+        confirmButton?: string;
+      };
+      done?: {
+        title?: string;
+        summary?: string;
+        fallback?: string;
+        fileReminderTitle?: string;
+        errorsTitle?: string;
+        importMore?: string;
+        goToProducts?: string;
+      };
     };
     orders?: {
       title?: string;

@@ -25,6 +25,7 @@ import {
   Loader2,
   Compass,
   ChevronDown,
+  Download,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -390,6 +391,12 @@ export default function AdminProductsPage() {
                     <Link href="/admin/sourcing/catalog" className="flex items-center">
                       <Compass className="mr-2 h-4 w-4" />
                       {t('admin.products.sourceFromProvider')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/products/import-gumroad" className="flex items-center">
+                      <Download className="mr-2 h-4 w-4" />
+                      {t('admin.products.importFromGumroad')}
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

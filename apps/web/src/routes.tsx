@@ -265,6 +265,13 @@ if (!__OUTPOST__) {
       children: [
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
+        {
+          // DG-1.9 — Gumroad migration wizard. Full build only; outpostRoutes
+          // intentionally omits this entry because the Outpost Go binary doesn't
+          // ship the /v1/listings/import/gumroad handler (build-tagged !outpost).
+          path: 'products/import-gumroad',
+          element: lazyPage(() => import('./app/admin/products/import-gumroad/page')),
+        },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
         {

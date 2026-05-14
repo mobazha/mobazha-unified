@@ -214,6 +214,16 @@ export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } f
 export * as exportsApi from './exports';
 export type { ExportKind, ExportFormat, ExportResult } from './exports';
 
+// Gumroad import API (DG-1.9 — vendor migration tool)
+export * as gumroadImportApi from './gumroadImport';
+export type {
+  GumroadImportResponse,
+  GumroadImportPreviewItem,
+  GumroadImportListingResult,
+  GumroadImportedItem,
+  GumroadImportError,
+} from './gumroadImport';
+
 // Monero (XMR) admin API — Outpost only
 export * as moneroApi from './monero';
 export type {

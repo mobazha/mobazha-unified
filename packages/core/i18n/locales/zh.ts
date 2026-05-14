@@ -4107,6 +4107,7 @@ export const zh: TranslationResource = {
       addProduct: '添加商品',
       createNew: '创建新商品',
       sourceFromProvider: '从供应商导入',
+      importFromGumroad: '从 Gumroad 导入',
       searchPlaceholder: '搜索商品...',
       filterAll: '全部',
       filterActive: '在售',
@@ -4140,6 +4141,44 @@ export const zh: TranslationResource = {
       viewGrid: '网格视图',
       selectAll: '全选商品',
       selectProduct: '选择 {{title}}',
+    },
+    gumroadImport: {
+      backToProducts: '返回商品列表',
+      title: '从 Gumroad 导入',
+      subtitle: '将 Gumroad 商品作为草稿导入 — 审阅、上传文件，然后发布。',
+      tokenLabel: 'Gumroad 访问令牌',
+      tokenHint: '仅用于本次导入，我们不会保存。请在 Gumroad → Advanced 中生成个人访问令牌。',
+      tokenHelpLink: '如何创建 Gumroad 令牌',
+      scopeNote: '我们会导入：标题、描述、价格、标签、公开缩略图。',
+      fileNote:
+        'Gumroad 通过认证 URL 保护数字文件，我们无法抓取 — 发布前需要您手动将每个文件上传到对应的草稿。',
+      previewButton: '预览导入',
+      errors: {
+        tokenRequired: '请先粘贴您的 Gumroad 访问令牌。',
+      },
+      toast: {
+        successTitle: '导入完成',
+        successDesc: '已将 {{count}} 件商品导入为草稿。',
+      },
+      summary: {
+        fetched: '已获取',
+        eligible: '将导入',
+        skipped: '已跳过',
+      },
+      review: {
+        eligibleTitle: '将导入 ({{count}})',
+        skippedTitle: '已跳过 ({{count}})',
+        confirmButton: '导入 {{count}} 件为草稿',
+      },
+      done: {
+        title: '已导入为草稿',
+        summary: '新建 {{created}} 件，更新 {{updated}} 件，失败 {{failed}} 件。',
+        fallback: '已导入 {{count}} 件商品。',
+        fileReminderTitle: '下一步：上传您的数字文件',
+        errorsTitle: '错误',
+        importMore: '再导入一批',
+        goToProducts: '前往商品列表',
+      },
     },
     orders: {
       title: '订单管理',
