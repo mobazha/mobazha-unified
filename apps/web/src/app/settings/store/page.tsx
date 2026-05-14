@@ -13,7 +13,7 @@ import { useStorefrontProfile } from '@mobazha/core';
 export default function SettingsStorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profile } = useStorefrontProfile();
+  const profile = useStorefrontProfile();
 
   useEffect(() => {
     const peerID = searchParams.get('peerID') || profile?.peerID;
