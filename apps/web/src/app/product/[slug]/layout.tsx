@@ -18,6 +18,10 @@ interface ProductData {
     condition?: string;
     categories?: string[];
   };
+  metadata?: {
+    contractType?: string;
+    pricingCurrency?: { code?: string };
+  };
   vendorID?: { peerID?: string; handle?: string };
   hash?: string;
 }
@@ -74,6 +78,29 @@ export async function generateMetadata({
   const canonicalUrl = `${canonicalSiteUrl}/product/${slug}`;
   const ogImageUrl = `${canonicalSiteUrl}/product/${slug}/opengraph-image`;
 
+  // E-commerce-specific Open Graph fields (product:price:* / product:availability)
+  // are not in the typed Next.js OG schema, so pass them via `other` so Pinterest,
+  // Facebook, and LinkedIn can render rich product cards with price/currency.
+  const currency =
+    product.metadata?.pricingCurrency?.code || product.item.priceCurrency?.code || '';
+  const price = product.item.price;
+  const productOtherMeta: Record<string, string> = {};
+  if (price !== undefined) {
+    productOtherMeta['product:price:amount'] = String(price);
+  }
+  if (currency) {
+    productOtherMeta['product:price:currency'] = currency;
+  }
+  productOtherMeta['product:availability'] = 'in stock';
+  if (product.item.condition) {
+    productOtherMeta['product:condition'] =
+      product.item.condition.toLowerCase() === 'new' ? 'new' : 'used';
+  }
+  // Override og:type to "product" for richer commerce parsing on platforms
+  // that respect Facebook's product OG namespace (Next's typed enum doesn't
+  // include "product", so we set it via `other`).
+  productOtherMeta['og:type'] = 'product';
+
   return {
     title,
     description,
@@ -95,6 +122,7 @@ export async function generateMetadata({
       description,
       images: [ogImageUrl],
     },
+    other: productOtherMeta,
   };
 }
 
