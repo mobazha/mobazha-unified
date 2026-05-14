@@ -2537,6 +2537,34 @@ export const en: TranslationResource = {
     digitalAssets: 'Digital Assets',
   },
 
+  costCalc: {
+    pageTitle: 'Digital Goods Cost Calculator',
+    pageSubtitle:
+      'See how much you actually keep on Mobazha vs. Gumroad, Lemon Squeezy, and Payhip — with full transparency about the trade-offs.',
+    inputsTitle: 'Your assumptions',
+    unitPriceLabel: 'Unit price',
+    monthlySalesLabel: 'Monthly sales',
+    processorLabel: 'Payment method',
+    resultsTitle: 'Net to you per month',
+    perSale: 'per sale',
+    perMonth: 'per month',
+    feeRate: 'Total fees',
+    morBadge: 'Merchant of record',
+    morPartial: 'EU/UK only',
+    youHandle: 'You handle taxes',
+    asOfNote: 'Rates verified {date}',
+    sourceLink: 'Source',
+    bestForYou: 'Best for you',
+    highlightLine: 'Compared to {worst}, you keep {diff} more per month with {best}.',
+    honestyTitle: 'The honest trade-off',
+    honestyBody:
+      'Lower fees mean you take on the operator role: local taxes, chargebacks, refund decisions, and content moderation are yours. We provide the tooling — Stripe Tax integration, refund workflows, AUP templates — to make this manageable, not invisible.',
+    learnMoreResponsibilities: 'Read the full operator responsibilities',
+    disclaimerTitle: 'About these numbers',
+    disclaimerBody:
+      'This calculator uses public pricing pages from each platform as of the date noted on each row. External rates change without notice — always verify against the source before making a decision. Mobazha rates reflect the protocol fee for hosted accounts and zero protocol fee for self-hosted deployments.',
+  },
+
   searchExtended: {
     searchPlaceholder: 'Search products, stores, or paste a listing URL...',
     recentSearches: 'Recent Searches',

@@ -89,6 +89,12 @@ if (!__OUTPOST__) {
     { path: '/collections', element: lazyPage(() => import('./app/collections/page')) },
     { path: '/collections/:id', element: lazyPage(() => import('./app/collections/[id]/page')) },
 
+    // DG-1.12: digital-goods cost calculator (public marketing page)
+    {
+      path: '/tools/cost-calculator',
+      element: lazyPage(() => import('./app/tools/cost-calculator/page')),
+    },
+
     // 政策页面（公开浏览）
     {
       path: '/policies',
@@ -338,6 +344,12 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },
         {
+          // DG-1.14: store operator responsibilities — surfaces the
+          // platform-vs-seller compliance contract.
+          path: 'settings/responsibilities',
+          element: lazyPage(() => import('./app/admin/settings/responsibilities/page')),
+        },
+        {
           path: 'settings/moderators',
           element: lazyPage(() => import('./app/admin/settings/moderators/page')),
         },
@@ -474,6 +486,12 @@ if (__OUTPOST__) {
     // Track Order (buyer entry point)
     { path: '/track', element: lazyPage(() => import('./app/track/page')) },
 
+    // DG-1.12: digital-goods cost calculator (public marketing page)
+    {
+      path: '/tools/cost-calculator',
+      element: lazyPage(() => import('./app/tools/cost-calculator/page')),
+    },
+
     // Policies
     {
       path: '/policies',
@@ -553,6 +571,12 @@ if (__OUTPOST__) {
         {
           path: 'settings/policies',
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
+        },
+        {
+          // DG-1.14: operator responsibilities — Outpost build also
+          // surfaces the responsibility card from /admin/settings.
+          path: 'settings/responsibilities',
+          element: lazyPage(() => import('./app/admin/settings/responsibilities/page')),
         },
         {
           path: 'settings/integrations',

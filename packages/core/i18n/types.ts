@@ -965,6 +965,34 @@ export interface TranslationResource {
     digitalAssets: string;
   };
 
+  // DG-1.12: digital-goods cost calculator (public marketing page).
+  // Optional so existing locales fall back to the English copy until
+  // translation sync. Empty default keeps `useI18n` happy in tests.
+  costCalc?: {
+    pageTitle?: string;
+    pageSubtitle?: string;
+    inputsTitle?: string;
+    unitPriceLabel?: string;
+    monthlySalesLabel?: string;
+    processorLabel?: string;
+    resultsTitle?: string;
+    perSale?: string;
+    perMonth?: string;
+    feeRate?: string;
+    morBadge?: string;
+    morPartial?: string;
+    youHandle?: string;
+    asOfNote?: string;
+    sourceLink?: string;
+    bestForYou?: string;
+    highlightLine?: string;
+    honestyTitle?: string;
+    honestyBody?: string;
+    learnMoreResponsibilities?: string;
+    disclaimerTitle?: string;
+    disclaimerBody?: string;
+  };
+
   // 搜索扩展
   searchExtended: {
     searchPlaceholder: string;
