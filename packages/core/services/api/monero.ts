@@ -239,6 +239,139 @@ export async function confirmXMRWalletBackup(): Promise<void> {
 }
 
 // =====================================================================
+// User sovereignty surface (OP-MP-6) — Outpost only, admin-only
+// =====================================================================
+// Three read endpoints so the operator can back up the wallet, hand a
+// view-only copy to a trusted bookkeeper, and audit incoming + outgoing
+// transfers without leaving the admin UI. All are gated by
+// adminOnlyAuthSecurity on the backend (no mbz_ API tokens) and never
+// cached server-side.
+
+/**
+ * Mnemonic export — the 25-word deterministic seed plus local metadata
+ * for sanity-check (the operator should verify the address before
+ * trusting the seed they're about to write down).
+ *
+ * The seed grants total fund control. The UI MUST keep it behind an
+ * explicit "reveal" gesture and MUST NOT offer a clipboard helper —
+ * writing to the OS clipboard exposes it to other apps, browser
+ * extensions, and remote-desktop sync agents.
+ */
+export interface MoneroMnemonicResult {
+  mnemonic: string;
+  /** Primary address echoed from local xmr-wallet.json metadata */
+  address?: string;
+  /** Wallet creation timestamp (unix seconds); 0 if unknown */
+  createdAt?: number;
+}
+
+/**
+ * View-only export triplet — feed PrimaryAddress + PrivateViewKey +
+ * RestoreHeight into a fresh Monero wallet (CLI:
+ * `monero-wallet-cli --generate-from-view-key`, GUI: "Restore wallet
+ * from keys") and the new wallet sees every incoming payment without
+ * being able to spend.
+ *
+ * The view key is "half-private": less catastrophic than the seed (no
+ * fund loss) but a leaked view key permanently de-anonymises every
+ * past + future incoming payment. UI MUST gate it behind a reveal
+ * gesture, but copy-to-clipboard IS allowed because the bookkeeper
+ * needs to paste these values into another wallet.
+ *
+ * `currentHeight` is the chain tip the wallet has scanned to at the
+ * moment of the request — the bookkeeper knows the absolute upper
+ * bound the audit view is up to date with. `restoreHeight` is the
+ * historical scan-from anchor stored in xmr-wallet.json (0 = scan
+ * from genesis, very slow).
+ */
+export interface MoneroViewOnlyKeysResult {
+  primaryAddress: string;
+  privateViewKey: string;
+  restoreHeight: number;
+  currentHeight: number;
+}
+
+/**
+ * Transfer history entry — wallet-rpc bucket plus rich metadata.
+ *
+ * Amount and Fee are decimal piconero strings (same rationale as
+ * MoneroBalance / MoneroWithdrawResult); UI must format from the string
+ * via {@link piconeroToXMR}, never parse to Number for display.
+ *
+ * `direction` is one of: "in" | "out" | "pool" | "pending" | "failed".
+ * Confirmed in/out have height + confirmations populated; pool/pending/
+ * failed report height=0.
+ */
+export interface MoneroTransferEntry {
+  txHash: string;
+  direction: 'in' | 'out' | 'pool' | 'pending' | 'failed';
+  amount: Piconero;
+  fee: Piconero;
+  height: number;
+  confirmations: number;
+  /** Unix seconds; 0 if unknown */
+  timestamp: number;
+  subAddrIndex: number;
+  /** Outgoing only; never populated for incoming buckets */
+  destinations?: MoneroTransferRecipient[];
+  note?: string;
+}
+
+export interface MoneroTransferRecipient {
+  address: string;
+  amount: Piconero;
+}
+
+export interface MoneroTransfersResult {
+  transfers: MoneroTransferEntry[];
+  accountIndex: number;
+}
+
+export interface MoneroListTransfersOptions {
+  /** null/undefined → use the node's --xmraccount default */
+  accountIndex?: number | null;
+  /**
+   * Bucket selectors. Mirror wallet-rpc get_transfers flags. If every
+   * field is left undefined the backend defaults to (in=true, out=true)
+   * — the natural "show me everything that already happened" view.
+   */
+  in?: boolean;
+  out?: boolean;
+  pool?: boolean;
+  pending?: boolean;
+  failed?: boolean;
+}
+
+export async function getXMRMnemonic(): Promise<MoneroMnemonicResult> {
+  return authGet<MoneroMnemonicResult>(NODE_API.WALLET_XMR_SECRETS_MNEMONIC);
+}
+
+export async function getXMRViewOnlyKeys(): Promise<MoneroViewOnlyKeysResult> {
+  return authGet<MoneroViewOnlyKeysResult>(NODE_API.WALLET_XMR_SECRETS_VIEW_ONLY);
+}
+
+export async function listXMRTransfers(
+  opts: MoneroListTransfersOptions = {}
+): Promise<MoneroTransfersResult> {
+  const params = new URLSearchParams();
+  if (opts.accountIndex != null) {
+    params.set('accountIndex', String(opts.accountIndex));
+  }
+  // Forward only flags the caller set explicitly. Empty values let the
+  // backend apply its (in,out)=true default; sending false explicitly
+  // is honoured and may produce an empty list.
+  if (opts.in !== undefined) params.set('in', String(opts.in));
+  if (opts.out !== undefined) params.set('out', String(opts.out));
+  if (opts.pool !== undefined) params.set('pool', String(opts.pool));
+  if (opts.pending !== undefined) params.set('pending', String(opts.pending));
+  if (opts.failed !== undefined) params.set('failed', String(opts.failed));
+
+  const query = params.toString();
+  const path = query ? `${NODE_API.WALLET_XMR_TRANSFERS}?${query}` : NODE_API.WALLET_XMR_TRANSFERS;
+  return authGet<MoneroTransfersResult>(path);
+}
+
+// =====================================================================
 // Frontend formatting helpers
 // =====================================================================
 

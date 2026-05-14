@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Wallet,
   ArrowUpRight,
+  KeyRound,
+  History,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -118,6 +120,30 @@ function XmrSection() {
                 <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
                 {t('outpost.withdrawWallet', {
                   defaultValue: 'Withdraw Monero',
+                })}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/admin/settings/payments/xmr-secrets"
+              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm">
+                <KeyRound className="w-4 h-4 text-muted-foreground" />
+                {t('outpost.exportSecrets', {
+                  defaultValue: 'Export seed or view-only keys',
+                })}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/admin/settings/payments/xmr-transfers"
+              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-sm">
+                <History className="w-4 h-4 text-muted-foreground" />
+                {t('outpost.viewTransactions', {
+                  defaultValue: 'View transaction history',
                 })}
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />

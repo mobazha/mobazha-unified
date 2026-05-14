@@ -324,6 +324,16 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
         },
         {
+          // Outpost-only: XMR secrets export (OP-MP-6)
+          path: 'settings/payments/xmr-secrets',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+        },
+        {
+          // Outpost-only: XMR transfer history (OP-MP-6)
+          path: 'settings/payments/xmr-transfers',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+        },
+        {
           path: 'settings/policies',
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },
@@ -522,6 +532,18 @@ if (__OUTPOST__) {
           // Outpost-only: XMR withdraw / sweep
           path: 'settings/payments/xmr-withdraw',
           element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+        },
+        {
+          // Outpost-only: XMR secrets export (OP-MP-6) — sibling of
+          // xmr-wallet so the link from OutpostPaymentSettings resolves
+          // in real Outpost builds.
+          path: 'settings/payments/xmr-secrets',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+        },
+        {
+          // Outpost-only: XMR transfer history (OP-MP-6)
+          path: 'settings/payments/xmr-transfers',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
         },
         {
           // Outpost-only: Monero NodePool admin (linked from payments page)

@@ -275,6 +275,13 @@ export const NODE_API = {
   WALLET_XMR_WITHDRAW: '/wallet/xmr/withdraw',
   WALLET_XMR_SWEEP_ALL: '/wallet/xmr/sweep-all',
 
+  // --- XMR user-sovereignty surface (OP-MP-6, Outpost only, admin-only) ---
+  // adminOnlyAuthSecurity on the backend: no API tokens. Each request
+  // round-trips to monero-wallet-rpc; nothing is cached server-side.
+  WALLET_XMR_SECRETS_MNEMONIC: '/wallet/xmr/secrets/mnemonic',
+  WALLET_XMR_SECRETS_VIEW_ONLY: '/wallet/xmr/secrets/view-only',
+  WALLET_XMR_TRANSFERS: '/wallet/xmr/transfers',
+
   // --- XMR wallet setup wizard (Outpost only) ---
   // Single POST endpoint multiplexed on { action: "create" | "restore" |
   // "confirm-backup" }; GET reports whether xmr-wallet.json exists.
