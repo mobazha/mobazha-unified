@@ -17,6 +17,7 @@ import {
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import { getTokenByPaymentCoin } from '@mobazha/core/data/tokens';
+import type { OrderItemOption, ProductSku } from '@mobazha/core';
 import { discountsApi } from '@mobazha/core/services/api/discounts';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
@@ -52,8 +53,8 @@ const FIAT_CURRENCY_CODES = new Set([
  *
  * Supports two entry modes:
  *  1. Single-item "Buy Now": ?slug=xxx&peerID=yyy&quantity=1
- *  2. Multi-item from cart:  ?vendorPeerID=yyy&slugs=slug1,slug2
- *     (quantities read from useCartStore)
+ *  2. Multi-item from cart:  ?vendorPeerID=yyy[&slugs=slug1,slug2]
+ *     (quantities and options read from useCartStore)
  */
 export function useCheckout(): UseCheckoutReturn {
   const router = useRouter();
@@ -66,14 +67,50 @@ export function useCheckout(): UseCheckoutReturn {
   const singleSlug = searchParams.get('slug');
   const singlePeerID = searchParams.get('peerID');
   const singleQty = parseInt(searchParams.get('quantity') || '1', 10);
+  const singleOptionsParam = searchParams.get('options');
 
   const cartVendorPeerID = searchParams.get('vendorPeerID');
   const cartSlugs = searchParams.get('slugs');
 
-  const isCartMode = !!cartVendorPeerID && !!cartSlugs;
+  const isCartMode = !!cartVendorPeerID;
 
   // ---- Cart store (for multi-item mode) ----
   const cartItems = useCartStore(s => s.items);
+
+  const parseOptionsParam = useCallback((value: string | null): OrderItemOption[] | undefined => {
+    if (!value) return undefined;
+    const parsed = value
+      .split(',')
+      .map(part => part.trim())
+      .filter(Boolean)
+      .map(part => {
+        const idx = part.indexOf(':');
+        if (idx <= 0) return null;
+        const name = part.slice(0, idx).trim();
+        const optionValue = part.slice(idx + 1).trim();
+        if (!name || !optionValue) return null;
+        return { name, value: optionValue };
+      })
+      .filter((item): item is OrderItemOption => item !== null);
+    return parsed.length > 0 ? parsed : undefined;
+  }, []);
+
+  const findMatchingSku = useCallback(
+    (skus: ProductSku[] | undefined, options: OrderItemOption[] | undefined): ProductSku | null => {
+      if (!skus?.length || !options?.length) return null;
+      return (
+        skus.find(sku => {
+          if (!sku.selections || sku.selections.length !== options.length) return false;
+          return sku.selections.every(selection =>
+            options.some(
+              option => option.name === selection.option && option.value === selection.variant
+            )
+          );
+        }) ?? null
+      );
+    },
+    []
+  );
 
   // ---- Core state ----
   const [isLoading, setIsLoading] = useState(true);
@@ -137,16 +174,26 @@ export function useCheckout(): UseCheckoutReturn {
 
   // ---- Resolve a single product into a CheckoutItem ----
   const resolveProduct = useCallback(
-    async (slug: string, vendorPeerID: string, quantity: number): Promise<CheckoutItem | null> => {
+    async (
+      slug: string,
+      vendorPeerID: string,
+      quantity: number,
+      options?: OrderItemOption[]
+    ): Promise<CheckoutItem | null> => {
       const product = await productDataService.getProduct(slug, vendorPeerID);
       if (!product) return null;
 
-      const price = Number(product.item.price) || 0;
+      const matchedSku = findMatchingSku(product.item.skus, options);
+      const price = Number(matchedSku?.price ?? product.item.price) || 0;
       const currency = product.metadata?.pricingCurrency?.code;
       if (!currency) {
         throw new Error(`Listing ${slug} is missing pricing currency`);
       }
-      const imageUrl = product.item.images?.[0]?.medium || product.item.images?.[0]?.small;
+      const imageUrl =
+        matchedSku?.images?.[0]?.medium ||
+        matchedSku?.images?.[0]?.small ||
+        product.item.images?.[0]?.medium ||
+        product.item.images?.[0]?.small;
       const sellerPeerID = product.vendorID?.peerID || vendorPeerID;
 
       let listingHash = '';
@@ -163,13 +210,17 @@ export function useCheckout(): UseCheckoutReturn {
       }
 
       return {
-        id: product.slug,
+        id:
+          options && options.length > 0
+            ? `${product.slug}:${options.map(option => `${option.name}=${option.value}`).join('|')}`
+            : product.slug,
         title: product.item.title,
         price,
         currency,
         quantity,
         image: getImageUrl(imageUrl) || '',
         vendor: { name: sellerPeerID.slice(0, 8), peerID: sellerPeerID },
+        options,
         listingHash,
         contractType: product.metadata?.contractType,
         rwaTradeMode: product.metadata?.rwaTradeMode,
@@ -180,7 +231,7 @@ export function useCheckout(): UseCheckoutReturn {
           : undefined,
       };
     },
-    []
+    [findMatchingSku]
   );
 
   // ---- Load products ----
@@ -195,22 +246,41 @@ export function useCheckout(): UseCheckoutReturn {
 
         if (isCartMode) {
           // Multi-item from cart
-          const slugList = cartSlugs!.split(',').filter(Boolean);
           const vendorID = cartVendorPeerID!;
+          const vendorCartItems = cartItems.filter(item => item.listing.vendorPeerID === vendorID);
+          const scopedCartItems = (() => {
+            if (!cartSlugs) return vendorCartItems;
+            const remaining = [...vendorCartItems];
+            return cartSlugs
+              .split(',')
+              .filter(Boolean)
+              .map(slug => {
+                const idx = remaining.findIndex(item => item.listing.slug === slug);
+                if (idx < 0) return null;
+                return remaining.splice(idx, 1)[0];
+              })
+              .filter((item): item is (typeof vendorCartItems)[number] => item !== null);
+          })();
 
           const resolved = await Promise.all(
-            slugList.map(slug => {
-              const cartItem = cartItems.find(
-                ci => ci.listing.slug === slug && ci.listing.vendorPeerID === vendorID
-              );
-              const qty = cartItem?.quantity || 1;
-              return resolveProduct(slug, vendorID, qty);
-            })
+            scopedCartItems.map(cartItem =>
+              resolveProduct(
+                cartItem.listing.slug,
+                vendorID,
+                cartItem.quantity || 1,
+                cartItem.options
+              )
+            )
           );
           items = resolved.filter((r): r is CheckoutItem => r !== null);
         } else if (singleSlug) {
           // Single item buy-now
-          const item = await resolveProduct(singleSlug, singlePeerID || '', singleQty);
+          const item = await resolveProduct(
+            singleSlug,
+            singlePeerID || '',
+            singleQty,
+            parseOptionsParam(singleOptionsParam)
+          );
           if (item) items = [item];
         }
 
@@ -272,7 +342,17 @@ export function useCheckout(): UseCheckoutReturn {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [singleSlug, singlePeerID, singleQty, cartVendorPeerID, cartSlugs]);
+  }, [
+    singleSlug,
+    singlePeerID,
+    singleQty,
+    singleOptionsParam,
+    cartVendorPeerID,
+    cartSlugs,
+    parseOptionsParam,
+    resolveProduct,
+    cartItems,
+  ]);
 
   // ---- Derived state ----
   const subtotal = useMemo(
@@ -613,6 +693,7 @@ export function useCheckout(): UseCheckoutReturn {
           const payload: {
             listingHash: string;
             quantity: number;
+            options?: OrderItemOption[];
             memo?: string;
             shipping?: { name: string; service: string; zoneId?: string; rateId?: string };
           } = {
@@ -620,6 +701,9 @@ export function useCheckout(): UseCheckoutReturn {
             quantity: item.quantity,
             memo: orderNote || undefined,
           };
+          if (item.options && item.options.length > 0) {
+            payload.options = item.options;
+          }
 
           if (item.contractType === 'PHYSICAL_GOOD') {
             const sel = selectedShipping[item.id];

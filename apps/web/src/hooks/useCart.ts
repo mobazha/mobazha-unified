@@ -25,10 +25,12 @@ export function buildCheckoutUrl(cartItems: CartItem[], vendorPeerID: string): s
       peerID: item.listing.vendorPeerID,
       quantity: item.quantity.toString(),
     });
+    if (item.options && item.options.length > 0) {
+      params.set('options', item.options.map(option => `${option.name}:${option.value}`).join(','));
+    }
     return `/checkout?${params.toString()}`;
   }
-  const slugs = cartItems.map(i => i.listing.slug).join(',');
-  return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
+  return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}`;
 }
 
 export function useCart() {

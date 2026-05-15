@@ -16,7 +16,7 @@ import {
   isHosted,
   startCasdoorLogin,
 } from '@mobazha/core';
-import type { Product, AddWishlistParams } from '@mobazha/core';
+import type { Product, AddWishlistParams, ProductSku } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
 import { useBreakpoint, usePlatform } from '@mobazha/ui/hooks';
 import { useRouter } from 'next/navigation';
@@ -53,6 +53,17 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [showLoginSheet, setShowLoginSheet] = useState(false);
+  const [purchaseState, setPurchaseState] = useState<{
+    quantity: number;
+    hasVariants: boolean;
+    selectedOptions: Record<string, string>;
+    selectedSku: ProductSku | null;
+  }>({
+    quantity: 1,
+    hasVariants: false,
+    selectedOptions: {},
+    selectedSku: null,
+  });
 
   const { isInWishlist, toggleItem } = useWishlist();
 
@@ -174,6 +185,7 @@ export default function ProductPage() {
             peerID={peerID}
             isModal={false}
             onProductLoaded={handleProductLoaded}
+            onPurchaseStateChange={setPurchaseState}
             isWishlist={wishlisted}
             onToggleWishlist={handleToggleWishlist}
           />
@@ -181,8 +193,11 @@ export default function ProductPage() {
       </main>
       <ProductBottomBar
         product={product}
-        quantity={1}
+        quantity={purchaseState.quantity}
         stock={stock}
+        hasVariants={purchaseState.hasVariants}
+        selectedOptions={purchaseState.selectedOptions}
+        selectedSku={purchaseState.selectedSku}
         isOwnProduct={isOwnProduct}
         isWishlist={wishlisted}
         onToggleWishlist={handleToggleWishlist}
