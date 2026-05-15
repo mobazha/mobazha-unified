@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { Edit3, Check, X, ImagePlus } from 'lucide-react';
-import { useI18n, getVariantLabel, getGatewayUrl } from '@mobazha/core';
+import { useI18n, getVariantLabel, getImageUrl } from '@mobazha/core';
 import type { Image } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -266,7 +266,7 @@ export function VariantInventoryTable({
                       >
                         {sku.images?.[0] ? (
                           <img
-                            src={`${getGatewayUrl()}/media/images/${sku.images[0].tiny || sku.images[0].small || ''}`}
+                            src={getImageUrl(sku.images[0].tiny || sku.images[0].small || '') || ''}
                             alt=""
                             className="w-full h-full object-cover"
                           />
@@ -292,7 +292,7 @@ export function VariantInventoryTable({
                               }`}
                             >
                               <img
-                                src={`${getGatewayUrl()}/media/images/${img.tiny || img.small || ''}`}
+                                src={getImageUrl(img.tiny || img.small || '') || ''}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />

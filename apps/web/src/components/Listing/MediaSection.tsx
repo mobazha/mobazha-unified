@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import type { Image } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
-import { useI18n, getGatewayUrl, imagesApi, NODE_API } from '@mobazha/core';
+import { useI18n, getImageUrl as getImageUrlHelper, imagesApi } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,12 +160,12 @@ export function MediaSection({
     [images, onImagesChange]
   );
 
-  // 获取图片 URL
+  // 获取图片 URL（支持外部 CDN URL 和内部 hash）
   const getImageUrl = useCallback(
     (image: Image, size: 'tiny' | 'small' | 'medium' | 'large' | 'original' = 'small') => {
       const hash = image[size] || image.small || image.medium || image.original;
       if (!hash) return '';
-      return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(hash)}`;
+      return getImageUrlHelper(hash) || '';
     },
     []
   );

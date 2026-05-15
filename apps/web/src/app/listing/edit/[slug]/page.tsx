@@ -38,7 +38,7 @@ import {
   useListing,
   useI18n,
   useCurrency,
-  getGatewayUrl,
+  getImageUrl,
   productsApi,
   convertProductToFormData,
   DEFAULT_LOCAL_CURRENCY,
@@ -334,11 +334,11 @@ export default function EditListingPage() {
     }
   }, [slug, toast, t, router]);
 
-  // 获取图片URL用于预览
+  // 获取图片URL用于预览（支持外部 CDN URL 和内部 hash）
   const getPreviewImageUrl = useCallback((image: Image) => {
     const hash = image.small || image.medium || image.original;
     if (!hash) return '';
-    return `${getGatewayUrl()}/media/images/${hash}`;
+    return getImageUrl(hash) || '';
   }, []);
 
   // 加载中状态
