@@ -14,7 +14,7 @@ import {
   Eye,
   Tags,
 } from 'lucide-react';
-import { useI18n, useCurrency, getGatewayUrl, DEFAULT_LOCAL_CURRENCY } from '@mobazha/core';
+import { useI18n, useCurrency, getImageUrl, DEFAULT_LOCAL_CURRENCY } from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile } from '@mobazha/core';
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
@@ -268,7 +268,7 @@ export function MobileListingWizard({
   const getPreviewImageUrl = useCallback((image: Image) => {
     const hash = image.small || image.medium || image.original;
     if (!hash) return '';
-    return `${getGatewayUrl()}/media/images/${hash}`;
+    return getImageUrl(hash) || '';
   }, []);
 
   const reviewChecklist = useMemo(() => {

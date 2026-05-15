@@ -93,6 +93,8 @@ export interface ProductCardProps {
   onToggleWishlist?: (e: React.MouseEvent) => void;
   /** 预取回调（鼠标悬停/触摸时触发） */
   onPrefetch?: () => void;
+  /** 商品发布状态 (draft/published/private) */
+  status?: 'draft' | 'published' | 'private';
   /** 自定义类名 */
   className?: string;
 }
@@ -137,6 +139,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onClone,
   onDelete,
   onPrefetch,
+  status,
   isWishlist = false,
   onToggleWishlist,
   className,
@@ -235,6 +238,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         'overflow-hidden group cursor-pointer transition-all duration-200',
         'hover:shadow-lg hover:-translate-y-0.5',
         'active:scale-[0.98] active:opacity-90',
+        status === 'draft' && 'opacity-70',
         className
       )}
       onClick={onClick}
@@ -256,8 +260,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           iconSize="lg"
         />
 
+        {status === 'draft' && (
+          <span className="absolute top-2 left-2 z-10 bg-muted-foreground/80 text-white text-xs font-medium px-2 py-0.5 rounded">
+            {t('admin.statusDraft', { defaultValue: 'Draft' })}
+          </span>
+        )}
+
         {/* Verified Moderator 盾牌 - 左上角 */}
-        {hasVerifiedModerator && (
+        {hasVerifiedModerator && !status?.startsWith('draft') && (
           <div className="absolute top-2 left-2 z-10" title={t('listing.verifiedModerator')}>
             <div className="w-7 h-7 rounded-full bg-warning flex items-center justify-center shadow-md">
               <Shield className="w-4 h-4 text-white" fill="currentColor" />

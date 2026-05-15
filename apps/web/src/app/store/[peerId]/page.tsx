@@ -375,12 +375,16 @@ export default function StorePage() {
     return product.contractType?.toUpperCase() === 'RWA_TOKEN';
   }, []);
 
-  // 从非 RWA 商品数据中提取 productType 列表
+  // 从非 RWA 商品数据中提取 productType 列表（排除访客不可见的草稿）
   const categories = useMemo((): CategoryItem[] => {
     const categoryMap = new Map<string, number>();
 
     products
-      .filter(product => !isRwaProduct(product))
+      .filter(product => {
+        if (isRwaProduct(product)) return false;
+        if (!isOwnStore && product.status === 'draft') return false;
+        return true;
+      })
       .forEach(product => {
         if (product.productType) {
           categoryMap.set(product.productType, (categoryMap.get(product.productType) || 0) + 1);
@@ -394,17 +398,24 @@ export default function StorePage() {
         count,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [products, isRwaProduct]);
+  }, [products, isRwaProduct, isOwnStore]);
 
   const productTitles = useMemo(
-    () => products.filter(p => !isRwaProduct(p) && p.title).map(p => p.title as string),
-    [products, isRwaProduct]
+    () =>
+      products
+        .filter(p => !isRwaProduct(p) && (!isOwnStore ? p.status !== 'draft' : true) && p.title)
+        .map(p => p.title as string),
+    [products, isRwaProduct, isOwnStore]
   );
 
   // 筛选后的商品列表（排除 RWA 商品，RWA 商品显示在数字资产 Tab）
   const filteredProducts = useMemo(() => {
-    // 首先过滤掉 RWA 商品
-    let result = products.filter(product => !isRwaProduct(product));
+    // 首先过滤掉 RWA 商品；访客还需过滤掉草稿商品
+    let result = products.filter(product => {
+      if (isRwaProduct(product)) return false;
+      if (!isOwnStore && product.status === 'draft') return false;
+      return true;
+    });
 
     // 搜索过滤（仅按标题搜索）
     if (filter.search.trim()) {
@@ -704,11 +715,14 @@ export default function StorePage() {
   const stats = store?.stats || defaultStats;
 
   // 分别计算普通商品和 RWA 商品数量（使用统一的 isRwaProduct 辅助函数）
-  const { storeListingCount, rwaListingCount } = useMemo(() => {
+  // 访客视角需排除草稿，保持计数与实际显示一致
+  const { storeListingCount, rwaListingCount, visibleProductCount } = useMemo(() => {
     let storeCount = 0;
     let rwaCount = 0;
 
     products.forEach(product => {
+      const isDraft = !isOwnStore && product.status === 'draft';
+      if (isDraft) return;
       if (isRwaProduct(product)) {
         rwaCount++;
       } else {
@@ -716,8 +730,12 @@ export default function StorePage() {
       }
     });
 
-    return { storeListingCount: storeCount, rwaListingCount: rwaCount };
-  }, [products, isRwaProduct]);
+    return {
+      storeListingCount: storeCount,
+      rwaListingCount: rwaCount,
+      visibleProductCount: storeCount + rwaCount,
+    };
+  }, [products, isRwaProduct, isOwnStore]);
 
   if (isLoading) {
     return (
@@ -970,7 +988,7 @@ export default function StorePage() {
                   {/* Stats row */}
                   <div className="flex items-center gap-3 sm:gap-5 mt-2 text-sm">
                     <span className="flex items-center gap-1">
-                      <span className="font-medium">{products.length}</span>
+                      <span className="font-medium">{visibleProductCount}</span>
                       <span className="opacity-70">{t('profile.listings')}</span>
                     </span>
                     {!__OUTPOST__ && (
@@ -1368,6 +1386,7 @@ export default function StorePage() {
                               rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
                               hasVerifiedModerator={hasVerifiedMod(product.moderators)}
                               isOwnListing={isOwnStore}
+                              status={isOwnStore ? product.status : undefined}
                               onReport={() => {
                                 /* TODO: 打开举报对话框 */
                               }}

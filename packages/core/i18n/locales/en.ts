@@ -5616,6 +5616,7 @@ export const en: TranslationResource = {
       categoryRecommended: 'Recommended',
       viewListing: 'View Listing',
       backToCatalog: 'Back to catalog',
+      backToDesigns: 'Back to Designs',
       loadProductFailed: 'Failed to load product',
       productNotFound: 'Product not found',
       featureDisabled: 'Sourcing is not available',
