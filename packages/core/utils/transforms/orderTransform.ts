@@ -3,7 +3,7 @@
  * 将 API 返回的订单数据转换为 UI 展示格式
  */
 
-import type { Order as CoreOrder, OrderState } from '../../types/order';
+import type { Order as CoreOrder, OrderState, PaymentProgress } from '../../types/order';
 import type {
   DisplayOrder,
   DisplayOrderItem,
@@ -40,6 +40,17 @@ interface RealOrderData {
     verificationFailureReason?: string;
     verificationFailedAt?: string;
     fiatMetadata?: Record<string, string>;
+    /**
+     * Partial-payment progress card. Backend writes this on every
+     * AggregateAndEmit pass when the order has an OrderOpen and a
+     * positive expected amount (backend payment aggregation).
+     */
+    progress?: {
+      totalReceived?: string;
+      expectedAmount?: string;
+      percentage?: number;
+      overpaidAmount?: string;
+    };
   };
   funded?: boolean;
   read?: boolean;
@@ -207,6 +218,113 @@ function normalizePaymentVerificationStatus(status?: string): DisplayPaymentVeri
   if (normalized === 'verified') return 'verified';
   if (normalized === 'failed') return 'failed';
   return 'pending';
+}
+
+/**
+ * Normalize the backend's paymentState.progress payload onto the strict
+ * DisplayOrder.paymentProgress shape. Returns undefined when the backend
+ * omits the field (e.g. fiat-only orders or orders without OrderOpen).
+ *
+ * The helper trusts the server-clamped Percentage but defensively clamps
+ * to [0, 100] anyway so a buggy / older backend can't paint a 110%
+ * progress bar. totalReceived / expectedAmount are passed through as
+ * decimal strings — the UI uses them only for hint text, not arithmetic.
+ */
+function extractPaymentProgress(
+  raw?: {
+    totalReceived?: string;
+    expectedAmount?: string;
+    percentage?: number;
+    overpaidAmount?: string;
+  },
+  paymentDivisibility?: number,
+  paymentCoin?: string
+): PaymentProgress | undefined {
+  if (!raw || !raw.expectedAmount) return undefined;
+  const expected = (raw.expectedAmount || '').trim();
+  if (!expected || expected === '0') return undefined;
+  const total = (raw.totalReceived || '0').trim() || '0';
+  const pctRaw = typeof raw.percentage === 'number' ? raw.percentage : 0;
+  const percentage = Math.max(0, Math.min(100, Math.floor(pctRaw)));
+  const overpaid = (raw.overpaidAmount || '').trim();
+
+  const formatAmount = (raw: string): string | undefined =>
+    formatMinimalUnitAmountString(raw, paymentDivisibility, paymentCoin);
+
+  return {
+    totalReceived: total,
+    expectedAmount: expected,
+    percentage,
+    overpaidAmount: overpaid || undefined,
+    totalReceivedFormatted: formatAmount(total),
+    expectedAmountFormatted: formatAmount(expected),
+    overpaidAmountFormatted: overpaid ? formatAmount(overpaid) : undefined,
+  };
+}
+
+function formatMinimalUnitAmountString(
+  rawAmount: string,
+  divisibility: number = 2,
+  coin?: string
+): string | undefined {
+  const trimmed = rawAmount.trim();
+  if (!/^\d+$/.test(trimmed)) return undefined;
+
+  const token = coin ? getTokenByPaymentCoin(coin) : undefined;
+  const decimals = Math.max(0, Math.floor(token?.decimals ?? divisibility));
+  const baseDisplayDecimals = decimals >= 6 ? 2 : Math.min(decimals, 8);
+  const displayDecimals = smartDisplayDecimalsForMinimalUnit(
+    trimmed,
+    decimals,
+    baseDisplayDecimals
+  );
+
+  return formatMinimalUnitFixed(trimmed, decimals, displayDecimals);
+}
+
+function smartDisplayDecimalsForMinimalUnit(
+  rawAmount: string,
+  decimals: number,
+  desiredDecimals: number,
+  significantDigits = 4
+): number {
+  if (decimals <= desiredDecimals) return decimals;
+
+  const normalized = rawAmount.replace(/^0+/, '') || '0';
+  if (normalized === '0') return desiredDecimals;
+  if (normalized.length > decimals) return desiredDecimals;
+
+  const fractional = normalized.padStart(decimals, '0');
+  const firstNonZero = fractional.search(/[1-9]/);
+  if (firstNonZero < 0) return desiredDecimals;
+
+  const requiredDecimals = firstNonZero + significantDigits;
+  return Math.min(Math.max(requiredDecimals, desiredDecimals), decimals);
+}
+
+function formatMinimalUnitFixed(
+  rawAmount: string,
+  decimals: number,
+  displayDecimals: number
+): string {
+  let amount = BigInt(rawAmount);
+
+  if (decimals > displayDecimals) {
+    const divisor = BigInt(10) ** BigInt(decimals - displayDecimals);
+    const quotient = amount / divisor;
+    const remainder = amount % divisor;
+    amount = remainder * BigInt(2) >= divisor ? quotient + BigInt(1) : quotient;
+  } else if (displayDecimals > decimals) {
+    amount *= BigInt(10) ** BigInt(displayDecimals - decimals);
+  }
+
+  const rendered = amount.toString();
+  if (displayDecimals === 0) return rendered;
+
+  const padded = rendered.padStart(displayDecimals + 1, '0');
+  const integerPart = padded.slice(0, -displayDecimals);
+  const fractionalPart = padded.slice(-displayDecimals);
+  return `${integerPart}.${fractionalPart}`;
 }
 
 /**
@@ -611,8 +729,9 @@ export function transformCoreOrder(
   const listingDivisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
   // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
   const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
+  const paymentCoin = paymentSent?.coin || pricingCoin;
   // 支付币种的 divisibility（优先从 token 配置取 decimals）
-  const paymentTokenConfig = getTokenByPaymentCoin(pricingCoin);
+  const paymentTokenConfig = getTokenByPaymentCoin(paymentCoin);
   const paymentDivisibility = paymentTokenConfig
     ? paymentTokenConfig.decimals
     : listingDivisibility;
@@ -675,7 +794,6 @@ export function transformCoreOrder(
   // 原始定价信息（从 orderOpen 获取，pricingCoin 已在上方定义）
   const pricingAmount = orderOpen?.amount !== undefined ? orderOpen.amount : itemPrice;
 
-  const paymentCoin = paymentSent?.coin || pricingCoin;
   const paymentAmount = paymentSent?.amount;
 
   // 单价使用 listing 的定价货币（如 USD）和 divisibility
@@ -893,6 +1011,11 @@ export function transformCoreOrder(
     paymentVerificationStatus,
     paymentVerificationFailureReason: data.paymentState?.verificationFailureReason || undefined,
     paymentVerificationFailed,
+    paymentProgress: extractPaymentProgress(
+      data.paymentState?.progress,
+      paymentDivisibility,
+      paymentCoin
+    ),
     // RWA 支付锁定信息（仅用于托管模式）
     paymentLocked,
     escrowAddress: paymentAddress,

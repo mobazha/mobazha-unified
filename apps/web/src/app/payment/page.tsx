@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
+import { RefundWalletCard } from '@/components/Checkout/RefundWalletCard';
 import { usePaymentSelector } from '@/hooks';
 import {
   useWallet,
@@ -210,6 +211,19 @@ export default function PaymentPage() {
     ? () => tronWallet.connect().then(() => undefined)
     : evmWallet.connect;
   const getSigner = evmWallet.getSigner;
+  const connectedRefundWalletAddress = useMemo(() => {
+    if (isTronPayment) return tronWallet.address || null;
+    if (chainCategory === 'evm') return evmWallet.walletInfo?.address || null;
+    return null;
+  }, [chainCategory, evmWallet.walletInfo?.address, isTronPayment, tronWallet.address]);
+  const [refundAddress, setRefundAddress] = useState('');
+  const trimmedRefundAddress = refundAddress.trim();
+  const requiresRefundAddress = !selectedFiatProvider && !!selectedPaymentCoin;
+
+  useEffect(() => {
+    if (!requiresRefundAddress || trimmedRefundAddress || !connectedRefundWalletAddress) return;
+    setRefundAddress(connectedRefundWalletAddress);
+  }, [connectedRefundWalletAddress, requiresRefundAddress, trimmedRefundAddress]);
 
   // UTXO 外部钱包支付信息（BTC/LTC/BCH/ZEC）
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
@@ -577,6 +591,15 @@ export default function PaymentPage() {
       return;
     }
 
+    if (requiresRefundAddress && !trimmedRefundAddress) {
+      toast({
+        title: t('checkout.refundWalletRequired'),
+        description: t('checkout.refundWalletRequiredDesc'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setPaymentStep('confirming');
     setPaymentError(undefined);
     setSubmittedTxHash(undefined);
@@ -612,6 +635,7 @@ export default function PaymentPage() {
         orderId: orderID!,
         coin: selectedPaymentCoin,
         payerAddress: payerAddress,
+        refundAddress: trimmedRefundAddress,
         moderator: moderatorPeerID,
       });
 
@@ -752,6 +776,8 @@ export default function PaymentPage() {
     isConnected,
     isTronPayment,
     isUtxoPayment,
+    requiresRefundAddress,
+    trimmedRefundAddress,
     tronWallet,
     getSigner,
     router,
@@ -988,6 +1014,15 @@ export default function PaymentPage() {
                           </Card>
                         )}
 
+                        {/* Refund Wallet (crypto only, validated against actual payment coin) */}
+                        {requiresRefundAddress && (
+                          <RefundWalletCard
+                            value={refundAddress}
+                            onChange={setRefundAddress}
+                            connectedAddress={connectedRefundWalletAddress}
+                          />
+                        )}
+
                         {/* Payment Protection (crypto only) */}
                         {!selectedFiatProvider && (
                           <PaymentProtectionCard
@@ -1114,6 +1149,7 @@ export default function PaymentPage() {
                             isConnecting ||
                             paymentExpired ||
                             !selectedTokenId ||
+                            (requiresRefundAddress && !trimmedRefundAddress) ||
                             (!isUtxoPayment &&
                               isConnected &&
                               paymentProtectionEnabled &&
@@ -1228,7 +1264,10 @@ export default function PaymentPage() {
           isConnected={isUtxoPayment || isConnected}
           isConnecting={isConnecting}
           disabled={
-            paymentExpired || !selectedTokenId || (paymentProtectionEnabled && !paymentModerator)
+            paymentExpired ||
+            !selectedTokenId ||
+            (requiresRefundAddress && !trimmedRefundAddress) ||
+            (paymentProtectionEnabled && !paymentModerator)
           }
         />
       )}

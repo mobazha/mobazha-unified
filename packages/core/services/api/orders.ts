@@ -376,6 +376,7 @@ export interface CreateOrderData {
     addressNotes?: string;
   };
   pricingCoin?: string; // 定价币种
+  refundAddress?: string; // 退款钱包地址（加密货币订单必填）
   moderator?: string; // 仲裁人 ID
 }
 
@@ -461,6 +462,11 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
   // 添加 pricingCoin（如果有）
   if (restData.pricingCoin) {
     apiData.pricingCoin = restData.pricingCoin;
+  }
+
+  // 添加退款钱包地址（加密货币订单必填；法币订单后端会忽略）
+  if (restData.refundAddress) {
+    apiData.refundAddress = restData.refundAddress;
   }
 
   // 添加 moderator（如果有）
@@ -1068,6 +1074,7 @@ export async function getPaymentInstructions(requestData: {
   orderId: string;
   coin: string;
   payerAddress?: string; // 付款人地址
+  refundAddress?: string; // 买家控制的退款钱包地址
   moderator?: string; // 仲裁人 peerID
 }): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
@@ -1078,6 +1085,9 @@ export async function getPaymentInstructions(requestData: {
     };
     if (requestData.payerAddress) {
       backendRequestData.payerAddress = requestData.payerAddress;
+    }
+    if (requestData.refundAddress) {
+      backendRequestData.refundAddress = requestData.refundAddress;
     }
     if (requestData.moderator) {
       backendRequestData.moderator = requestData.moderator;

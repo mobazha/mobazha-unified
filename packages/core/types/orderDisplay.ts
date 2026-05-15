@@ -3,6 +3,8 @@
  * 用于前端展示的订单数据结构，与 API 类型（order.ts）分离
  */
 
+import type { PaymentProgress } from './order';
+
 /**
  * 订单项 - 用于展示
  */
@@ -200,6 +202,12 @@ export interface DisplayOrder {
   paymentVerificationFailureReason?: string;
   /** 支付验证失败标记（用于状态卡展示） */
   paymentVerificationFailed?: boolean;
+  /**
+   * 部分到账进度（来自后端 paymentState.progress）。仅在加密货币支付且后端
+   * 已观测到至少一笔事件时存在。backend payment aggregation — 即使订单已
+   * verified，后端仍会刷新此字段以反映 late deposit。
+   */
+  paymentProgress?: PaymentProgress;
   /** RWA 支付锁定信息（仅用于托管模式） */
   paymentLocked?: DisplayPaymentLocked;
   /** 争议信息（平台内部仲裁，由 Moderator 管理） */

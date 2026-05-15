@@ -223,6 +223,36 @@ export const OrderStatusCard = memo(function OrderStatusCard({
   const isTerminal = config.progress < 0;
   const cancelReason = order.cancelReason;
 
+  // Payment progress (partial / verified intermediate state) — shown only
+  // for crypto payments still in the awaiting/pending verification window
+  // where the buyer has deposited something but the verifier has not yet
+  // flipped the order to "verified". Hide on terminal states and on the
+  // verification-failed branch to avoid mixed-signal UI.
+  const paymentProgress = order.paymentProgress;
+  const showPaymentProgress =
+    !!paymentProgress &&
+    paymentProgress.percentage > 0 &&
+    isCryptoPayment &&
+    !isTerminal &&
+    !order.paymentVerificationFailed &&
+    (order.status === 'awaiting_payment' || order.status === 'pending');
+
+  const paymentProgressReceivedLabel =
+    paymentProgress && showPaymentProgress
+      ? t('order.statusCard.paymentProgressReceived', {
+          received: paymentProgress.totalReceivedFormatted ?? paymentProgress.totalReceived,
+          expected: paymentProgress.expectedAmountFormatted ?? paymentProgress.expectedAmount,
+          percentage: paymentProgress.percentage,
+        })
+      : '';
+
+  const paymentProgressOverpaidLabel =
+    paymentProgress && showPaymentProgress && paymentProgress.overpaidAmount
+      ? t('order.statusCard.paymentProgressOverpaid', {
+          amount: paymentProgress.overpaidAmountFormatted ?? paymentProgress.overpaidAmount,
+        })
+      : '';
+
   return (
     <div
       className={cn('rounded-xl border p-3', config.bgColor, className)}
@@ -257,6 +287,35 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           )}
         </div>
       </div>
+
+      {showPaymentProgress && paymentProgress && (
+        <div className="mt-3 px-0.5" data-testid="order-payment-progress">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+            <span>{t('order.statusCard.paymentProgress')}</span>
+            <span className="font-medium text-foreground tabular-nums">
+              {paymentProgress.percentage}%
+            </span>
+          </div>
+          <div
+            className="h-1.5 w-full rounded-full bg-muted-foreground/15 overflow-hidden"
+            role="progressbar"
+            aria-valuenow={paymentProgress.percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${paymentProgress.percentage}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">{paymentProgressReceivedLabel}</p>
+          {paymentProgressOverpaidLabel && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+              {paymentProgressOverpaidLabel}
+            </p>
+          )}
+        </div>
+      )}
 
       {!isTerminal && (
         <div className="mt-3 px-0.5">

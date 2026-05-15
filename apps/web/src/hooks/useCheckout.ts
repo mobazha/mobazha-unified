@@ -13,8 +13,10 @@ import {
   getImageUrl,
   useShippingAddresses,
   useCartStore,
+  useWallet,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
+import { getTokenByPaymentCoin } from '@mobazha/core/data/tokens';
 import { discountsApi } from '@mobazha/core/services/api/discounts';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
@@ -33,6 +35,18 @@ import type {
   UseCheckoutReturn,
 } from '@/components/Checkout/types';
 
+const FIAT_CURRENCY_CODES = new Set([
+  'USD',
+  'EUR',
+  'GBP',
+  'CAD',
+  'AUD',
+  'JPY',
+  'CNY',
+  'HKD',
+  'SGD',
+]);
+
 /**
  * useCheckout — all business logic for the checkout page.
  *
@@ -46,6 +60,7 @@ export function useCheckout(): UseCheckoutReturn {
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { toast } = useToast();
+  const { walletInfo } = useWallet();
 
   // ---- URL params ----
   const singleSlug = searchParams.get('slug');
@@ -104,6 +119,7 @@ export function useCheckout(): UseCheckoutReturn {
 
   // ---- Order note ----
   const [orderNote, setOrderNote] = useState('');
+  const [refundAddress, setRefundAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ---- Discounts ----
@@ -362,6 +378,20 @@ export function useCheckout(): UseCheckoutReturn {
 
   const total = Math.max(0, subtotal + shippingTotal + taxTotal - discountTotal);
   const currency = checkoutItems[0]?.currency ?? '';
+  const connectedRefundWalletAddress = walletInfo?.address || null;
+  const requiresRefundAddress = useMemo(() => {
+    const raw = currency.trim();
+    if (!raw) return false;
+    const upper = raw.toUpperCase();
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('fiat:') || FIAT_CURRENCY_CODES.has(upper)) return false;
+    return lower.startsWith('crypto:') || !!getTokenByPaymentCoin(raw);
+  }, [currency]);
+
+  useEffect(() => {
+    if (!requiresRefundAddress || !connectedRefundWalletAddress) return;
+    setRefundAddress(prev => prev || connectedRefundWalletAddress);
+  }, [connectedRefundWalletAddress, requiresRefundAddress]);
 
   const isRwaToken = useMemo(
     () => checkoutItems.some(i => i.contractType === 'RWA_TOKEN'),
@@ -394,6 +424,7 @@ export function useCheckout(): UseCheckoutReturn {
   const canSubmit =
     checkoutItems.length > 0 &&
     (!needsShippingAddress || !!selectedAddress) &&
+    (!requiresRefundAddress || !!refundAddress.trim()) &&
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
     !isSubmitting;
@@ -558,6 +589,15 @@ export function useCheckout(): UseCheckoutReturn {
       toast({ title: t('checkout.noItems'), variant: 'destructive' });
       return;
     }
+    const normalizedRefundAddress = refundAddress.trim();
+    if (requiresRefundAddress && !normalizedRefundAddress) {
+      toast({
+        title: t('checkout.refundWalletRequired'),
+        description: t('checkout.refundWalletRequiredDesc'),
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -605,6 +645,7 @@ export function useCheckout(): UseCheckoutReturn {
             }
           : undefined,
         pricingCoin: currency,
+        refundAddress: requiresRefundAddress ? normalizedRefundAddress : undefined,
       });
 
       // Build payment URL
@@ -669,6 +710,8 @@ export function useCheckout(): UseCheckoutReturn {
     apiAddresses,
     currency,
     appliedDiscounts,
+    refundAddress,
+    requiresRefundAddress,
   ]);
 
   return {
@@ -710,6 +753,10 @@ export function useCheckout(): UseCheckoutReturn {
     updateQuantity: handleUpdateQuantity,
     orderNote,
     setOrderNote,
+    refundAddress,
+    setRefundAddress,
+    requiresRefundAddress,
+    connectedRefundWalletAddress,
     handleCreateOrder,
     isSubmitting,
     canSubmit,

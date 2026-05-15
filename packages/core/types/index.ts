@@ -73,6 +73,10 @@ export type {
   OrderContract,
   ContractListing,
   OrderOpen,
+  // 支付状态与进度
+  PaymentVerificationStatus,
+  OrderPaymentState,
+  PaymentProgress,
   // 订单操作相关
   OrderReject,
   OrderCancel,
