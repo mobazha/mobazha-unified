@@ -552,6 +552,16 @@ export const en: TranslationResource = {
     creating: 'Creating...',
     createOrderFailed: 'Failed to create order: ',
     paymentNextStep: 'You will select payment method in the next step',
+    refundWallet: 'Refund Wallet',
+    refundWalletAddress: 'Refund wallet address',
+    refundWalletHint:
+      'If this order is cancelled, overpaid, or paid after timeout, funds will be returned to this wallet.',
+    refundWalletPlaceholder: 'Enter a wallet address you control',
+    refundWalletCexWarning:
+      'Do not enter an exchange deposit address. Use a wallet you control so refunds can be recovered safely.',
+    refundWalletRequired: 'Refund wallet required',
+    refundWalletRequiredDesc: 'Add a refund wallet before continuing to payment.',
+    useConnectedWallet: 'Use connected wallet',
     // RWA 相关
     rwaTransaction: 'RWA Token Transaction',
     rwaInstantHint:
@@ -753,6 +763,9 @@ export const en: TranslationResource = {
       paymentSubmittedBuyer: 'Payment submitted, awaiting verification',
       paymentSubmittedSeller: 'Buyer submitted payment, awaiting verification',
       paymentSubmittedHint: 'We are verifying your payment and will update automatically',
+      paymentProgress: 'Payment Progress',
+      paymentProgressReceived: 'Received {{received}} of {{expected}} ({{percentage}}%)',
+      paymentProgressOverpaid: 'Overpaid by {{amount}}',
       paymentVerificationFailedBuyer: 'Payment verification failed',
       paymentVerificationFailedSeller: "Buyer's payment verification failed",
       paymentVerificationFailedReasonAddressMismatch:

@@ -30,11 +30,53 @@ export type OrderRole = 'buyer' | 'vendor';
 
 export type PaymentVerificationStatus = 'pending' | 'verified' | 'failed';
 
+/**
+ * Running tally of confirmed-and-deduplicated payments toward the order's
+ * expected amount. Backend rewrites this on every aggregation pass (Phase
+ * backend payment aggregation) so the dashboard can render a live
+ * "you've paid X of Y" progress bar even before the order flips to
+ * "verified" and again afterwards if a late deposit lands.
+ *
+ * All amounts are decimal strings in the smallest unit declared by
+ * OrderOpen.Amount (wei / sat / atomic units / lamports for crypto; fiat
+ * uses the order currency's divisibility). Percentage is clamped to
+ * [0, 100] server-side so every client renders the same number.
+ */
+export interface PaymentProgress {
+  /** Running confirmed-and-deduplicated total, smallest unit decimal string. */
+  totalReceived: string;
+  /** Order's expected amount, smallest unit decimal string. */
+  expectedAmount: string;
+  /** Server-clamped percentage in [0, 100]. */
+  percentage: number;
+  /**
+   * Surplus over the expected amount (smallest unit decimal string).
+   * Populated only when the verifier detected a genuine overpayment;
+   * omitted on partial and exact paths.
+   */
+  overpaidAmount?: string;
+  /**
+   * Display-formatted amounts (smallest unit converted to the payment
+   * coin's natural unit, e.g. wei → ETH). The frontend transform fills
+   * these so the UI never has to know about divisibility / big.Int.
+   */
+  totalReceivedFormatted?: string;
+  expectedAmountFormatted?: string;
+  overpaidAmountFormatted?: string;
+}
+
 export interface OrderPaymentState {
   verificationStatus: PaymentVerificationStatus;
   verificationFailureReason?: string;
   verificationFailedAt?: string;
   fiatMetadata?: Record<string, string>;
+  /**
+   * Optional progress card for partial / pending crypto payments. Omitted
+   * when the order has no OrderOpen yet, when the expected amount is
+   * non-positive, or for fiat-only orders without an associated
+   * blockchain payment.
+   */
+  progress?: PaymentProgress;
 }
 
 /**
