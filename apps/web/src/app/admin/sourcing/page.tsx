@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Package,
@@ -16,9 +16,17 @@ import {
   BellOff,
   LayoutGrid,
 } from 'lucide-react';
-import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS, useCurrency } from '@mobazha/core';
+import {
+  useI18n,
+  fulfillmentApi,
+  FULFILLMENT_PROVIDERS,
+  useCurrency,
+  useMyListings,
+  getImageUrl,
+} from '@mobazha/core';
 import type {
   ProviderConnection,
+  ProductListItem,
   SyncedProduct,
   SupplyChainAlert,
   AlertSeverity,
@@ -105,32 +113,59 @@ const STATUS_LABELS: Record<string, string> = {
   error: 'admin.sourcing.statusError',
 };
 
-function RecentImportItem({ product }: { product: SyncedProduct }) {
+function priceToDisplayAmount(
+  listing?: ProductListItem
+): { amount: number; currency: string } | null {
+  if (!listing?.price) return null;
+  const divisibility = listing.price.currency?.divisibility ?? 2;
+  return {
+    amount: listing.price.amount / 10 ** divisibility,
+    currency: listing.price.currency?.code || 'USD',
+  };
+}
+
+function priceToUsdCents(listing?: ProductListItem): number | null {
+  const display = priceToDisplayAmount(listing);
+  if (!display) return null;
+  if (display.currency !== 'USD') return null;
+  return Math.round(display.amount * 100);
+}
+
+function RecentImportItem({
+  product,
+  listing,
+}: {
+  product: SyncedProduct;
+  listing?: ProductListItem;
+}) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
-  const displayName = product.title || product.listingSlug;
-  const retailCents = product.retailPrice ? parseFloat(product.retailPrice) : 0;
-  const currency = 'USD';
+  const displayName = listing?.title || product.title || product.listingSlug;
+  const listingPrice = priceToDisplayAmount(listing);
+  const retailDisplay = listingPrice
+    ? formatPrice(listingPrice.amount, listingPrice.currency)
+    : product.retailPrice
+      ? formatPrice(parseFloat(product.retailPrice) / 100, 'USD')
+      : '—';
+  const thumbnailHash =
+    listing?.thumbnail?.small || listing?.thumbnail?.tiny || listing?.thumbnail?.original;
+  const thumbnailUrl = thumbnailHash
+    ? getImageUrl(thumbnailHash)
+    : getImageUrl(product.thumbnailUrl);
 
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
       <div className="flex items-center gap-3 min-w-0">
         <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-          {product.thumbnailUrl ? (
-            <img
-              src={product.thumbnailUrl}
-              alt={displayName}
-              className="w-full h-full object-cover"
-            />
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt={displayName} className="w-full h-full object-cover" />
           ) : (
             <Package className="w-4 h-4 text-muted-foreground" />
           )}
         </div>
         <div className="min-w-0">
           <span className="text-sm text-foreground truncate block">{displayName}</span>
-          <span className="text-xs text-muted-foreground">
-            {formatPrice(retailCents / 100, currency)}
-          </span>
+          <span className="text-xs text-muted-foreground">{retailDisplay}</span>
         </div>
       </div>
       <span
@@ -230,10 +265,15 @@ function AlertsPanel({
 function AdminSourcingContent() {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
+  const { listings: myListings } = useMyListings();
   const [connections, setConnections] = useState<ProviderConnection[]>([]);
   const [syncedProducts, setSyncedProducts] = useState<SyncedProduct[]>([]);
   const [alerts, setAlerts] = useState<SupplyChainAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const listingsBySlug = useMemo(
+    () => new Map(myListings.map(listing => [listing.slug, listing])),
+    [myListings]
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -269,7 +309,10 @@ function AdminSourcingContent() {
     0
   );
   const totalRetail = syncedProducts.reduce(
-    (sum, p) => sum + (p.retailPrice ? parseFloat(p.retailPrice) : 0),
+    (sum, p) =>
+      sum +
+      (priceToUsdCents(listingsBySlug.get(p.listingSlug)) ??
+        (p.retailPrice ? parseFloat(p.retailPrice) : 0)),
     0
   );
   const estProfit = totalRetail - totalCost;
@@ -443,7 +486,11 @@ function AdminSourcingContent() {
         ) : (
           <div>
             {syncedProducts.slice(0, MAX_RECENT_ITEMS).map(product => (
-              <RecentImportItem key={product.id} product={product} />
+              <RecentImportItem
+                key={product.id}
+                product={product}
+                listing={listingsBySlug.get(product.listingSlug)}
+              />
             ))}
           </div>
         )}

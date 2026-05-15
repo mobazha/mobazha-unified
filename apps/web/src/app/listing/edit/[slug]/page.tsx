@@ -42,8 +42,11 @@ import {
   productsApi,
   convertProductToFormData,
   DEFAULT_LOCAL_CURRENCY,
+  queryKeys,
+  useUserStore,
 } from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile, Product } from '@mobazha/core';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   ProductTypeSelector,
@@ -124,6 +127,8 @@ export default function EditListingPage() {
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { profile: currentUserProfile } = useUserStore();
 
   // 加载现有商品数据
   const { listing, isLoading: isLoadingListing, error: loadError } = useListing(slug);
@@ -260,6 +265,42 @@ export default function EditListingPage() {
     [updateField]
   );
 
+  const refreshListingCaches = useCallback(
+    async (listingSlug?: string) => {
+      const ownPeerID = currentUserProfile?.peerID;
+
+      // /profile 会立刻重定向到 /store/:peerID，这里先清理商品索引缓存，
+      // 避免店铺页先读到发布前的旧列表快照。
+      queryClient.removeQueries({ queryKey: queryKeys.products.myListings() });
+      if (ownPeerID) {
+        queryClient.removeQueries({ queryKey: queryKeys.products.store(ownPeerID) });
+      }
+
+      const invalidations: Array<Promise<unknown>> = [
+        queryClient.invalidateQueries({ queryKey: queryKeys.products.myListings() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+      ];
+
+      if (ownPeerID) {
+        invalidations.push(
+          queryClient.invalidateQueries({ queryKey: queryKeys.products.store(ownPeerID) }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.profiles.detail(ownPeerID) })
+        );
+      }
+
+      if (listingSlug) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.products.detail(listingSlug, ownPeerID),
+          })
+        );
+      }
+
+      await Promise.allSettled(invalidations);
+    },
+    [currentUserProfile?.peerID, queryClient]
+  );
+
   // 提交表单（发布/更新）
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
@@ -283,6 +324,7 @@ export default function EditListingPage() {
           variant: 'destructive',
         });
       } else {
+        await refreshListingCaches(formData.slug || result.slug);
         toast({
           title: t('common.success'),
           description: t('listing.updateSuccess'),
@@ -290,7 +332,7 @@ export default function EditListingPage() {
         router.push('/profile');
       }
     },
-    [validate, submit, toast, t, router]
+    [validate, submit, refreshListingCaches, formData.slug, toast, t, router]
   );
 
   // 保存草稿
@@ -304,19 +346,21 @@ export default function EditListingPage() {
         variant: 'destructive',
       });
     } else {
+      await refreshListingCaches(formData.slug || result.slug);
       toast({
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
       router.push('/profile');
     }
-  }, [submitDraft, toast, t, router]);
+  }, [submitDraft, refreshListingCaches, formData.slug, toast, t, router]);
 
   // 删除商品
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
     try {
       await productsApi.deleteListing(slug);
+      await refreshListingCaches(slug);
       toast({
         title: t('common.success'),
         description: t('listing.deleteSuccess'),
@@ -332,7 +376,7 @@ export default function EditListingPage() {
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }
-  }, [slug, toast, t, router]);
+  }, [slug, refreshListingCaches, toast, t, router]);
 
   // 获取图片URL用于预览（支持外部 CDN URL 和内部 hash）
   const getPreviewImageUrl = useCallback((image: Image) => {

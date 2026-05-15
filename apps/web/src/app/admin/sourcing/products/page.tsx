@@ -13,8 +13,16 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react';
-import { useI18n, fulfillmentApi, FULFILLMENT_PROVIDERS, useCurrency } from '@mobazha/core';
+import {
+  useI18n,
+  fulfillmentApi,
+  FULFILLMENT_PROVIDERS,
+  useCurrency,
+  useMyListings,
+  getImageUrl,
+} from '@mobazha/core';
 import type {
+  ProductListItem,
   SyncedProduct,
   ProviderConnection,
   FulfillmentProviderID,
@@ -64,12 +72,25 @@ function getStatusConfig(status: string) {
   return status in STATUS_CONFIG ? STATUS_CONFIG[status as KnownStatus] : STATUS_CONFIG.pending;
 }
 
+function priceToDisplayAmount(
+  listing?: ProductListItem
+): { amount: number; currency: string } | null {
+  if (!listing?.price) return null;
+  const divisibility = listing.price.currency?.divisibility ?? 2;
+  return {
+    amount: listing.price.amount / 10 ** divisibility,
+    currency: listing.price.currency?.code || 'USD',
+  };
+}
+
 function ProductRow({
   product,
+  listing,
   hasDrift,
   onResync,
 }: {
   product: SyncedProduct;
+  listing?: ProductListItem;
   hasDrift: boolean;
   onResync: (product: SyncedProduct) => void;
 }) {
@@ -81,28 +102,35 @@ function ProductRow({
   // Fulfillment providers price in USD only (Printful, Printify); when per-mapping
   // currency lands on SyncedProduct switch this default to product.currency.
   const currency = 'USD';
-  const retailDisplay = product.retailPrice
-    ? formatPrice(parseFloat(product.retailPrice) / 100, currency)
-    : '—';
+  const listingPrice = priceToDisplayAmount(listing);
+  const retailDisplay = listingPrice
+    ? formatPrice(listingPrice.amount, listingPrice.currency)
+    : product.retailPrice
+      ? formatPrice(parseFloat(product.retailPrice) / 100, currency)
+      : '—';
   const costDisplay = product.supplierCost
     ? formatPrice(parseFloat(product.supplierCost) / 100, currency)
     : '—';
+  const thumbnailHash =
+    listing?.thumbnail?.small || listing?.thumbnail?.tiny || listing?.thumbnail?.original;
+  const thumbnailUrl = thumbnailHash
+    ? getImageUrl(thumbnailHash)
+    : getImageUrl(product.thumbnailUrl);
+  const displayName = listing?.title || product.title || product.listingSlug;
 
   return (
     <div className="flex items-center justify-between py-3 px-4 border-b border-border/50 last:border-0 hover:bg-accent/5 transition-colors">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-          {product.thumbnailUrl ? (
-            <img src={product.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt={displayName} className="w-full h-full object-cover" />
           ) : (
             <Package className="w-5 h-5 text-muted-foreground" />
           )}
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-foreground truncate">
-              {product.title || product.listingSlug}
-            </p>
+            <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
             {hasDrift && (
               <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 shrink-0">
                 <TrendingUp className="w-2.5 h-2.5" />
@@ -179,6 +207,7 @@ export default function AdminSourcingProductsPage() {
 
 function AdminSourcingProductsContent() {
   const { t } = useI18n();
+  const { listings: myListings } = useMyListings();
   const [connections, setConnections] = useState<ProviderConnection[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<FulfillmentProviderID | 'all'>('all');
   const [products, setProducts] = useState<SyncedProduct[]>([]);
@@ -186,6 +215,10 @@ function AdminSourcingProductsContent() {
   const [loading, setLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const listingsBySlug = useMemo(
+    () => new Map(myListings.map(listing => [listing.slug, listing])),
+    [myListings]
+  );
 
   useEffect(() => {
     (async () => {
@@ -404,6 +437,7 @@ function AdminSourcingProductsContent() {
             <ProductRow
               key={product.id}
               product={product}
+              listing={listingsBySlug.get(product.listingSlug)}
               hasDrift={driftSlugs.has(product.listingSlug)}
               onResync={handleResync}
             />
