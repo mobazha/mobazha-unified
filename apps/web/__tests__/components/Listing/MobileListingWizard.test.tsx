@@ -50,6 +50,11 @@ vi.mock('@mobazha/core', () => ({
     formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
   }),
   getGatewayUrl: () => 'http://localhost:4002',
+  getImageUrl: (ref: string) => {
+    if (!ref) return '';
+    if (ref.startsWith('http://') || ref.startsWith('https://')) return ref;
+    return `http://localhost:4002/media/images/${ref}`;
+  },
   DEFAULT_LOCAL_CURRENCY: 'USD',
 }));
 
