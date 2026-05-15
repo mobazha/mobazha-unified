@@ -14,7 +14,7 @@ import {
   sanitizeHtml,
   getTokenIdFromPaymentCoin,
 } from '@mobazha/core';
-import type { Product } from '@mobazha/core';
+import type { Product, ProductSku } from '@mobazha/core';
 import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
@@ -37,6 +37,12 @@ export interface ProductDetailProps {
   onMessage?: () => void;
   onCart?: () => void;
   onProductLoaded?: (product: Product | null) => void;
+  onPurchaseStateChange?: (state: {
+    quantity: number;
+    hasVariants: boolean;
+    selectedOptions: Record<string, string>;
+    selectedSku: ProductSku | null;
+  }) => void;
   isWishlist?: boolean;
   onToggleWishlist?: () => void;
 }
@@ -47,6 +53,7 @@ export function ProductDetailDesktop({
   isModal = false,
   onClose,
   onProductLoaded,
+  onPurchaseStateChange,
   isWishlist = false,
   onToggleWishlist,
 }: ProductDetailProps) {
@@ -78,6 +85,7 @@ export function ProductDetailDesktop({
     paymentAvailable,
     hasVariants,
     selectedOptions,
+    selectedSku,
     unavailableVariants,
     handleSelectOption,
     quantity,
@@ -97,6 +105,15 @@ export function ProductDetailDesktop({
     router,
     isOffline,
   } = useProductDetail({ slug, peerID, isModal, onClose, onProductLoaded });
+
+  React.useEffect(() => {
+    onPurchaseStateChange?.({
+      quantity,
+      hasVariants,
+      selectedOptions,
+      selectedSku,
+    });
+  }, [onPurchaseStateChange, quantity, hasVariants, selectedOptions, selectedSku]);
 
   const displayAcceptedCurrencies = React.useMemo(
     () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),

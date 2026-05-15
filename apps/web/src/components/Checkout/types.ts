@@ -1,5 +1,10 @@
 import type { Address as FrontendAddress } from '@/components/Address';
-import type { UserProfile, DisplayAddress, Address as CoreAddress } from '@mobazha/core';
+import type {
+  UserProfile,
+  DisplayAddress,
+  Address as CoreAddress,
+  OrderItemOption,
+} from '@mobazha/core';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 
@@ -33,6 +38,7 @@ export interface CheckoutItem {
     name: string;
     peerID: string;
   };
+  options?: OrderItemOption[];
   listingHash?: string;
   contractType?: string;
   rwaTradeMode?: number;

@@ -6,7 +6,7 @@ import { Heart } from 'lucide-react';
 import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { useI18n, useCartStore, useChatStore, selectUnreadCountByPeerID } from '@mobazha/core';
-import type { Product } from '@mobazha/core';
+import type { OrderItemOption, Product, ProductSku } from '@mobazha/core';
 import { useHaptic } from '@/lib/platform';
 
 export interface ProductBottomBarProps {
@@ -16,6 +16,12 @@ export interface ProductBottomBarProps {
   quantity: number;
   /** 库存数量 */
   stock: number;
+  /** 当前是否存在买家可选规格 */
+  hasVariants?: boolean;
+  /** 当前已选规格 */
+  selectedOptions?: Record<string, string>;
+  /** 当前已匹配 SKU */
+  selectedSku?: ProductSku | null;
   /** 是否是卖家自己的商品 */
   isOwnProduct?: boolean;
   /** 是否已收藏 */
@@ -30,6 +36,9 @@ export function ProductBottomBar({
   product,
   quantity,
   stock,
+  hasVariants = false,
+  selectedOptions = {},
+  selectedSku = null,
   isOwnProduct = false,
   isWishlist = false,
   onToggleWishlist,
@@ -46,17 +55,25 @@ export function ProductBottomBar({
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
   const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(product?.vendorID?.peerID));
 
+  const orderOptions: OrderItemOption[] | undefined =
+    hasVariants && Object.keys(selectedOptions).length > 0
+      ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
+      : undefined;
+  const effectiveStock = selectedSku?.quantity != null ? Number(selectedSku.quantity) || 0 : stock;
+  const purchaseDisabled = effectiveStock === 0 || !paymentAvailable;
+
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
 
-    const thumbnail = product.item?.images?.[0] ?? {
-      tiny: '',
-      small: '',
-      medium: '',
-      large: '',
-      original: '',
-    };
-    const price = Number(product.item?.price) || 0;
+    const thumbnail = selectedSku?.images?.[0] ??
+      product.item?.images?.[0] ?? {
+        tiny: '',
+        small: '',
+        medium: '',
+        large: '',
+        original: '',
+      };
+    const price = Number(selectedSku?.price ?? product.item?.price) || 0;
     const currency = product.metadata?.pricingCurrency?.code || 'USD';
     const divisibility = product.metadata?.pricingCurrency?.divisibility ?? 2;
 
@@ -70,12 +87,13 @@ export function ProductBottomBar({
         vendorName: product.vendorID?.name || product.vendorID?.handle,
       },
       quantity,
+      options: orderOptions,
     });
 
     haptic.impact('light');
     setCartSuccess(true);
     setTimeout(() => setCartSuccess(false), 2000);
-  }, [product, quantity, addCartItem, haptic]);
+  }, [product, selectedSku, quantity, orderOptions, addCartItem, haptic]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {
@@ -86,9 +104,15 @@ export function ProductBottomBar({
       peerID: product.vendorID.peerID,
       quantity: quantity.toString(),
     });
+    if (orderOptions && orderOptions.length > 0) {
+      checkoutParams.set(
+        'options',
+        orderOptions.map(option => `${option.name}:${option.value}`).join(',')
+      );
+    }
 
     router.push(`/checkout?${checkoutParams.toString()}`);
-  }, [product, quantity, router]);
+  }, [product, quantity, orderOptions, router]);
 
   const handleMessage = useCallback(() => {
     const vendorPeerID = product?.vendorID?.peerID;
@@ -232,7 +256,7 @@ export function ProductBottomBar({
             size="sm"
             className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
             onClick={handleAddToCart}
-            disabled={stock === 0 || !paymentAvailable}
+            disabled={purchaseDisabled}
           >
             {cartSuccess ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,6 +267,8 @@ export function ProductBottomBar({
                   d="M5 13l4 4L19 7"
                 />
               </svg>
+            ) : effectiveStock === 0 ? (
+              t('product.outOfStock')
             ) : !paymentAvailable ? (
               t('payment.paymentUnavailable')
             ) : (
@@ -254,7 +280,7 @@ export function ProductBottomBar({
             size="sm"
             className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback"
             onClick={handleBuyNow}
-            disabled={stock === 0 || !paymentAvailable}
+            disabled={purchaseDisabled}
           >
             {t('product.buyNow')}
           </Button>
