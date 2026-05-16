@@ -36,7 +36,8 @@ import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
-const STEPS: Step[] = ['cart', 'shipping', 'coin', 'payment'];
+const STEPS_WITH_SHIPPING: Step[] = ['cart', 'shipping', 'coin', 'payment'];
+const STEPS_DIGITAL: Step[] = ['cart', 'coin', 'payment'];
 
 const EMPTY_ADDRESS: Address = {
   name: '',
@@ -56,7 +57,7 @@ type PaymentState =
 
 function buildOrderRequest(
   items: GuestCartItem[],
-  addr: Address,
+  addr: Address | null,
   email: string,
   coin: string
 ): CreateGuestOrderRequest {
@@ -70,15 +71,17 @@ function buildOrderRequest(
     })),
     paymentCoin: coin,
     contactEmail: email || undefined,
-    shippingAddress: {
-      name: addr.name,
-      address: addr.addressLineOne,
-      city: addr.city,
-      state: addr.state,
-      postalCode: addr.postalCode,
-      country: addr.country,
-      addressNotes: addr.addressNotes || undefined,
-    },
+    shippingAddress: addr
+      ? {
+          name: addr.name,
+          address: addr.addressLineOne,
+          city: addr.city,
+          state: addr.state,
+          postalCode: addr.postalCode,
+          country: addr.country,
+          addressNotes: addr.addressNotes || undefined,
+        }
+      : undefined,
   };
 }
 
@@ -157,10 +160,13 @@ export default function GuestCheckoutPage() {
 
   const total = getTotal();
   const itemCount = getItemCount();
+  // All items are digital — no physical delivery address needed.
+  const isAllDigital = items.length > 0 && items.every(i => i.contractType === 'DIGITAL_GOOD');
   // True if any cart item is a digital product. The guest order page is the
   // only access surface for download links / license keys, so we surface an
   // emphasized "save this link" notice on top of the generic SaveOrderLinkCard.
   const hasDigitalItems = items.some(i => i.contractType === 'DIGITAL_GOOD');
+  const STEPS = isAllDigital ? STEPS_DIGITAL : STEPS_WITH_SHIPPING;
 
   const handleAddressChange = (field: keyof Address, value: string) => {
     setAddressData(prev => ({ ...prev, [field]: value }));
@@ -185,7 +191,8 @@ export default function GuestCheckoutPage() {
     async (coin: string) => {
       setPaymentState({ status: 'submitting' });
       try {
-        const req = buildOrderRequest(items, addressData, contactEmail, coin);
+        // Pass null for address when all items are digital (no delivery needed)
+        const req = buildOrderRequest(items, isAllDigital ? null : addressData, contactEmail, coin);
         const res = await createGuestOrder(req);
         if (submitOrderAbortRef.current) return;
         if (res.buyerPortalToken && typeof window !== 'undefined') {
@@ -202,7 +209,7 @@ export default function GuestCheckoutPage() {
         setPaymentState({ status: 'error', message: msg });
       }
     },
-    [items, addressData, contactEmail, clearCart]
+    [items, isAllDigital, addressData, contactEmail, clearCart]
   );
 
   const handleCoinSelect = (tokenId: string) => {
@@ -287,8 +294,34 @@ export default function GuestCheckoutPage() {
                     </div>
                   )}
 
-                  <Button className="w-full" size="lg" onClick={() => setStep('shipping')}>
-                    {t('guestCheckout.continueToShipping')}
+                  {/* For digital-only orders, show a compact email field before
+                      proceeding to coin selection (no shipping address needed). */}
+                  {isAllDigital && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cart-email">{t('guestCheckout.emailLabel')}</Label>
+                      <Input
+                        id="cart-email"
+                        type="email"
+                        value={contactEmail}
+                        onChange={e => setContactEmail(e.target.value)}
+                        placeholder="your@email.com"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('guestCheckout.emailDigitalHint', {
+                          defaultValue: 'Optional. We use this to send order updates.',
+                        })}
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => setStep(isAllDigital ? 'coin' : 'shipping')}
+                  >
+                    {isAllDigital
+                      ? t('guestCheckout.continueToPayment')
+                      : t('guestCheckout.continueToShipping')}
                   </Button>
                 </>
               )}

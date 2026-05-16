@@ -48,6 +48,8 @@ export interface AIStatus {
   daily_limit: number;
   daily_used: number;
   byok_configured: boolean;
+  /** Whether the configured model supports image/vision input. Defaults to true when not reported. */
+  supports_vision?: boolean;
 }
 
 export async function getAIStatus(): Promise<AIStatus> {

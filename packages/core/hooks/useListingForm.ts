@@ -19,6 +19,7 @@ import { productsApi } from '../services/api';
 import { mergeSkus } from '../utils/variantUtils';
 import { toMinimalUnit } from '../services/currencyService';
 import { mustAssetIdFromTokenId, mustCanonicalCoin } from '../data/tokens';
+import { getCurrencyDecimals } from '../data/currencies';
 
 const DEFAULT_RWA_ACCEPTED_CURRENCIES = [mustAssetIdFromTokenId('ETHUSDT')];
 const DEFAULT_LISTING_ACCEPTED_CURRENCIES = [
@@ -446,7 +447,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         pricingCurrency: {
           code: formData.pricingCurrency,
-          divisibility: 2,
+          divisibility: getCurrencyDecimals(formData.pricingCurrency),
         },
         acceptedCurrencies: canonicalizeAcceptedCurrencies(
           formData.acceptedCurrencies,

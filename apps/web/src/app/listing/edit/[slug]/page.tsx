@@ -67,6 +67,11 @@ import {
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
+// Outpost is single-store: /store (no peerID) is the clean storefront URL.
+// SaaS /profile redirects to /store/:peerID — same intent, different path.
+const AFTER_LISTING_PATH =
+  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '/store' : '/profile';
+
 // 左侧导航标签
 type TabKey =
   | 'general'
@@ -175,6 +180,7 @@ export default function EditListingPage() {
   const {
     aiLoadingAction,
     aiNotConfigured,
+    aiSupportsVision,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
@@ -269,8 +275,8 @@ export default function EditListingPage() {
     async (listingSlug?: string) => {
       const ownPeerID = currentUserProfile?.peerID;
 
-      // /profile 会立刻重定向到 /store/:peerID，这里先清理商品索引缓存，
-      // 避免店铺页先读到发布前的旧列表快照。
+      // Clear listing caches before navigating so the destination page
+      // doesn't read stale snapshot data.
       queryClient.removeQueries({ queryKey: queryKeys.products.myListings() });
       if (ownPeerID) {
         queryClient.removeQueries({ queryKey: queryKeys.products.store(ownPeerID) });
@@ -329,7 +335,7 @@ export default function EditListingPage() {
           title: t('common.success'),
           description: t('listing.updateSuccess'),
         });
-        router.push('/profile');
+        router.push(AFTER_LISTING_PATH);
       }
     },
     [validate, submit, refreshListingCaches, formData.slug, toast, t, router]
@@ -351,7 +357,7 @@ export default function EditListingPage() {
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
-      router.push('/profile');
+      router.push(AFTER_LISTING_PATH);
     }
   }, [submitDraft, refreshListingCaches, formData.slug, toast, t, router]);
 
@@ -365,7 +371,7 @@ export default function EditListingPage() {
         title: t('common.success'),
         description: t('listing.deleteSuccess'),
       });
-      router.push('/profile');
+      router.push(AFTER_LISTING_PATH);
     } catch {
       toast({
         title: t('common.error'),
@@ -412,7 +418,7 @@ export default function EditListingPage() {
           <Container>
             <div className="flex flex-col items-center justify-center">
               <p className="text-destructive">{loadError || t('listing.notFound')}</p>
-              <Button className="mt-4" onClick={() => router.push('/profile')}>
+              <Button className="mt-4" onClick={() => router.push(AFTER_LISTING_PATH)}>
                 {t('common.goBack')}
               </Button>
             </div>
@@ -494,7 +500,10 @@ export default function EditListingPage() {
           {/* 页面头部 */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Link href="/profile" className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <Link
+                href={AFTER_LISTING_PATH}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+              >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
@@ -777,8 +786,8 @@ export default function EditListingPage() {
               {/* AI 未配置引导 */}
               {aiNotConfigured && <AiSetupPrompt />}
 
-              {/* AI 从图片生成 */}
-              {aiImageUrls.length > 0 && !aiNotConfigured && (
+              {/* AI 从图片生成 — 仅当模型支持视觉时显示 */}
+              {aiImageUrls.length > 0 && !aiNotConfigured && aiSupportsVision && (
                 <AiImageGeneratePanel
                   imageUrls={aiImageUrls}
                   contractType={formData.contractType}

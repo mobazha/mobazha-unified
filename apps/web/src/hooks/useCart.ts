@@ -30,7 +30,11 @@ export function buildCheckoutUrl(cartItems: CartItem[], vendorPeerID: string): s
     }
     return `/checkout?${params.toString()}`;
   }
-  return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}`;
+  const params = new URLSearchParams({
+    vendorPeerID,
+    slugs: cartItems.map(item => item.listing.slug).join(','),
+  });
+  return `/checkout?${params.toString()}`;
 }
 
 export function useCart() {

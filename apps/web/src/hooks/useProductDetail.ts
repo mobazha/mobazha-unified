@@ -17,6 +17,8 @@ import {
   useChatStore,
   usePaymentMethods,
 } from '@mobazha/core';
+import { useGuestCartStore } from '@mobazha/core/stores';
+import { isOutpostMode } from '@mobazha/core/config/env';
 import { useHaptic } from '@/lib/platform';
 import type {
   Product,
@@ -363,7 +365,14 @@ export function useProductDetail({
   const freeShipping = product ? hasFreeShipping(product) : false;
   const estimatedDelivery = product ? getEstimatedDelivery(product) : null;
   const vendorPeerID = product?.vendorID?.peerID;
-  const acceptedCurrencies = product?.metadata?.acceptedCurrencies || [];
+  // In Outpost mode, the listing's acceptedCurrencies may contain stale defaults
+  // (BTC/ETH) set during listing creation. Display only the pricing currency,
+  // since Outpost is XMR-only and payment coin is resolved at guest checkout.
+  const acceptedCurrencies = isOutpostMode()
+    ? product?.metadata?.pricingCurrency?.code
+      ? [product.metadata.pricingCurrency.code]
+      : []
+    : product?.metadata?.acceptedCurrencies || [];
   const tags = product?.item.tags || [];
   const category = product?.item.productType || '';
 
@@ -502,6 +511,7 @@ export function useProductDetail({
 
   // Actions
   const addCartItem = useCartStore(state => state.addItem);
+  const addGuestCartItem = useGuestCartStore(state => state.addItem);
   const openCartDrawer = useCartDrawerStore(state => state.open);
 
   const handleAddToCart = useCallback(() => {
@@ -555,6 +565,47 @@ export function useProductDetail({
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
 
+    // Outpost mode: add to guest cart and navigate to guest checkout
+    if (isOutpostMode()) {
+      const rawProduct = product as unknown as Record<string, unknown>;
+      const thumbnail = selectedSku?.images?.[0] ??
+        product.item?.images?.[0] ?? {
+          tiny: '',
+          small: '',
+          medium: '',
+          large: '',
+          original: '',
+        };
+      const currency = product.metadata?.pricingCurrency?.code || 'XMR';
+      const divisibility = product.metadata?.pricingCurrency?.divisibility ?? 12;
+      const options =
+        hasVariants && Object.keys(selectedOptions).length > 0
+          ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
+          : undefined;
+      const listingHash =
+        typeof rawProduct.hash === 'string'
+          ? rawProduct.hash
+          : typeof rawProduct.cid === 'string'
+            ? rawProduct.cid
+            : '';
+
+      addGuestCartItem({
+        slug: product.slug,
+        listingHash,
+        quantity,
+        options,
+        title: product.item?.title || product.slug,
+        price: { amount: effectivePrice, currency, divisibility },
+        thumbnail: thumbnail.small || thumbnail.tiny || thumbnail.medium || '',
+        vendorPeerID: product.vendorID.peerID,
+        contractType: product.metadata.contractType,
+      });
+
+      if (isModal && onClose) onClose();
+      router.push('/guest-checkout');
+      return;
+    }
+
     const checkoutParams = new URLSearchParams({
       slug: product.slug,
       peerID: product.vendorID.peerID,
@@ -572,7 +623,18 @@ export function useProductDetail({
 
     if (isModal && onClose) onClose();
     router.push(`/checkout?${checkoutParams.toString()}`);
-  }, [product, quantity, hasVariants, selectedOptions, isModal, onClose, router]);
+  }, [
+    product,
+    quantity,
+    effectivePrice,
+    selectedSku,
+    hasVariants,
+    selectedOptions,
+    isModal,
+    onClose,
+    router,
+    addGuestCartItem,
+  ]);
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
