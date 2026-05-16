@@ -125,6 +125,8 @@ export const fr: PartialTranslationResource = {
     scan: 'Scanner',
     unknown: 'Inconnu',
     unknownError: 'Erreur inconnue',
+    enabled: 'Activé',
+    disabled: 'Désactivé',
   },
   share: {
     copyLink: 'Copier le lien',
@@ -408,6 +410,9 @@ export const fr: PartialTranslationResource = {
     moreFromStore: 'Plus de cette boutique',
     viewAllProducts: 'Tout voir',
     rwaToken: 'RWA Token',
+    sellerOffline: 'Vendeur hors ligne',
+    offlineBanner:
+      "Ce vendeur est actuellement hors ligne. Vous pouvez parcourir la liste, mais les achats ne sont pas disponibles jusqu'à ce qu'ils reviennent en ligne.",
   },
   search: {
     placeholder: 'Rechercher produits, boutiques...',
@@ -640,6 +645,7 @@ export const fr: PartialTranslationResource = {
       error: 'Erreur',
       unknown: 'Inconnu',
       awaitingPaymentVerification: 'En attente de verification du paiement',
+      delivered: 'Livré',
     },
     shippingDetails: 'Détails de livraison',
     menu: 'Menu',
@@ -1286,6 +1292,52 @@ export const fr: PartialTranslationResource = {
       cancelOrder: 'Annuler la commande',
       claimRefund: 'Demander le remboursement',
     },
+    fulfillment: {
+      title: 'Exécution des fournisseurs',
+      loading: "Chargement du statut d'exécution...",
+      supplierCost: 'Coût du fournisseur',
+      retryCounter: 'Réessayez la tentative {{current}} sur {{max}}.',
+      retryWillBeAttempted: 'Réessayera automatiquement',
+      manualActionHint:
+        "Cette commande nécessite votre examen. Vérifiez la raison de l'échec et résolvez-la manuellement.",
+      status: {
+        draft: 'Brouillon',
+        pending: 'En attente',
+        in_process: 'En production',
+        shipped: 'Expédié',
+        delivered: 'Livré',
+        canceled: 'Annulé',
+        failed: 'Échoué',
+        supplier_loss: 'Coût du fournisseur non récupérable',
+      },
+      failureReason: {
+        retryable_provider_error: 'Erreur temporaire du fournisseur – nouvelle tentative',
+        validation_failed: 'Données de commande rejetées par le fournisseur',
+        margin_protection_failed:
+          'Bloqué par la protection de la marge (inadéquation des coûts ou des devises)',
+        manual_action_required: 'Nécessite une révision manuelle',
+        permanently_failed: 'Échec permanent',
+      },
+    },
+    digital: {
+      title: 'Téléchargements numériques',
+      loading: 'Chargement de vos téléchargements…',
+      loadError: 'Impossible de charger les diffusions numériques',
+      download: 'Télécharger',
+      openLink: 'Ouvrir le lien',
+      copiedToClipboard: '{{label}} copié dans le presse-papiers',
+      copyFailed: 'Échec de la copie dans le presse-papiers',
+      downloadsUsed: '{{current}} / {{max}} téléchargements utilisés',
+      activationsUsed: '{{current}} / {{max}} sièges',
+      expiresAt: "L'accès expire {{date}}",
+      status: {
+        active: 'Disponible',
+        protected: 'Disponible (protégé)',
+        frozen: 'Temporairement en pause',
+        revoked: 'Accès révoqué',
+        expired: 'Expiré',
+      },
+    },
   },
   chat: {
     title: 'Messages',
@@ -1343,7 +1395,6 @@ export const fr: PartialTranslationResource = {
     leaveRoom: 'Quitter la salle',
     leaveRoomConfirm:
       'Êtes-vous sûr de vouloir quitter cette salle ? Vous ne recevrez plus de messages de cette conversation.',
-
     group: {
       name: 'Nom du groupe',
       namePlaceholder: 'Entrez le nom du groupe...',
@@ -1351,7 +1402,6 @@ export const fr: PartialTranslationResource = {
       searchMembers: 'Rechercher des utilisateurs à ajouter...',
       create: 'Créer un groupe',
     },
-
     inviteUser: 'Inviter un utilisateur',
     inviteSearchPlaceholder: 'Rechercher des utilisateurs à inviter...',
     inviteSuccess: 'Invitation envoyée',
@@ -1717,6 +1767,16 @@ export const fr: PartialTranslationResource = {
       reviewNotePlaceholder: "Ajoutez une note pour l'utilisateur...",
     },
     storePolicies: 'Store policies',
+    visibility: {
+      title: 'Visibilité du magasin',
+      description: 'Contrôlez la façon dont votre boutique peut être découverte et accessible',
+      public: 'Publique',
+      publicDesc: 'Visible dans la recherche et les recommandations du marché',
+      unlisted: 'Non répertorié',
+      unlistedDesc: 'Caché de la recherche, accessible via un lien direct',
+      private: 'Privé',
+      privateDesc: 'Nécessite une autorisation pour accéder',
+    },
   },
   moderatorSettings: {
     title: 'Résolution des litiges',
@@ -2576,6 +2636,51 @@ export const fr: PartialTranslationResource = {
     installApp: 'Install app',
     installAppDesc: 'Add Mobazha to your home screen for faster access.',
     unsavedChanges: 'You have unsaved changes',
+    digitalReviewWindowTitle: "Fenêtre d'examen des biens numériques",
+    digitalReviewWindowDesc:
+      "Combien de temps après la livraison, une commande de bien numérique reste ouverte à l'examen de l'acheteur avant de se compléter automatiquement. Par défaut {default} jours ; vous pouvez le prolonger jusqu'à {max} jours. Les valeurs plus courtes sont ignorées : les acheteurs obtiennent toujours au moins la fenêtre par défaut.",
+    digitalReviewWindowLabel: 'Fenêtre de révision',
+    digitalReviewWindowUnit: 'jours',
+    digitalReviewWindowHelper:
+      "Laissez vide pour utiliser la valeur par défaut du protocole de {default} jours. S'applique uniquement aux annonces de biens numériques.",
+    digitalReviewWindowInvalid: 'Saisissez un nombre entier compris entre 0 et {max}.',
+    operatorResponsibilities: "Responsabilités de l'opérateur",
+    operatorResponsibilitiesDesc:
+      "Ce que Mobazha couvre par rapport à ce que vous couvrez en tant qu'exploitant de magasin",
+    operatorResponsibilitiesPageTitle: "Responsabilités de l'exploitant de magasin",
+    operatorResponsibilitiesIntro:
+      "L'exploitation d'un magasin Mobazha est un partenariat. Nous fournissons l'infrastructure et l'outillage ; vous restez le commerçant officiel. Examinez ce que chaque côté couvre afin que vous puissiez gérer votre magasin en toute clarté sur vos obligations.",
+    operatorResponsibilitiesPlatformTitle: 'Ce que Mobazha couvre',
+    operatorResponsibilitiesPlatformInfra:
+      "Infrastructure d'hébergement, CDN et routage des paiements",
+    operatorResponsibilitiesPlatformAUP:
+      'Application d’une utilisation acceptable sur les déploiements hébergés (SaaS), y compris la réponse au retrait DMCA',
+    operatorResponsibilitiesPlatformCustody:
+      'Garde des clés du portefeuille sur les déploiements hébergés',
+    operatorResponsibilitiesPlatformTech:
+      'Exactitude technique des flux de commande, de livraison, de remboursement et de litige',
+    operatorResponsibilitiesSellerTitle: "Ce que vous couvrez en tant qu'opérateur",
+    operatorResponsibilitiesSellerTax:
+      'Enregistrement et déclaration des taxes locales (TVA, taxe de vente, etc.)',
+    operatorResponsibilitiesSellerContent:
+      "Conformité du contenu : droits d'auteur, adhésion à l'AUP, réglementation régionale",
+    operatorResponsibilitiesSellerProcessor:
+      'Conditions du processeur de paiement (Stripe / PayPal / etc.) pour les magasins compatibles Fiat',
+    operatorResponsibilitiesSellerCustomer:
+      "Assistance client, décisions de remboursement et réponses aux rétrofacturations (nous fournissons des outils mais n'arbitrons pas)",
+    operatorResponsibilitiesSellerSelfHost:
+      'Déploiements auto-hébergés : toutes les opérations, correctifs de sécurité et réponse aux incidents',
+    operatorResponsibilitiesDigitalNoteTitle: 'Les biens numériques ne sont pas récupérables',
+    operatorResponsibilitiesDigitalNote:
+      "Une fois qu'un fichier est téléchargé ou qu'une clé de licence est livrée, ni Mobazha ni vous ne pouvez le retirer de l'appareil de l'acheteur. Les remboursements et les résultats des litiges peuvent révoquer l'accès futur, la validation de la licence et l'adhésion ; le contenu précédemment livré ne peut pas être refusé.",
+    operatorResponsibilitiesAckLabel: "J'ai lu et reconnais ces responsabilités.",
+    operatorResponsibilitiesAckedAt: 'Accusé de réception le {date}',
+    operatorResponsibilitiesUnacked: "Vous n'avez pas encore reconnu ce contrat.",
+    operatorResponsibilitiesAckSaved: 'Accusé de réception enregistré.',
+    storeVisibility: 'Visibilité du magasin',
+    visibilityPublicDesc: 'Visible dans la recherche et les recommandations du marché',
+    visibilityUnlistedDesc: 'Caché de la recherche, accessible via un lien direct',
+    visibilityPrivateDesc: 'Nécessite une autorisation pour accéder',
   },
   userMenu: {
     myProfile: 'Mon Profil',
@@ -3518,41 +3623,14 @@ export const fr: PartialTranslationResource = {
     termsTemplates: {
       placeholder: 'Sélectionner un modèle de conditions',
       standardLabel: 'Conditions de transaction standard',
-      standard: `En passant une commande, vous acceptez les conditions suivantes :
-
-1. Paiement : Tous les paiements sont effectués en cryptomonnaie via le séquestre. Les fonds sont libérés au vendeur lors de la confirmation de livraison par l'acheteur ou à l'expiration du délai de litige.
-
-2. Litiges : Si vous n'êtes pas satisfait de votre commande, vous pouvez ouvrir un litige pendant la période de protection. Un modérateur mutuellement convenu examinera le dossier et prendra une décision contraignante.
-
-3. Livraison : Le vendeur est responsable de l'expédition de l'article comme décrit. Les informations de suivi doivent être fournies lorsque disponibles.
-
-4. Responsabilité : Le vendeur ne garantit rien au-delà de ce qui est explicitement indiqué dans la description. Tous les articles sont vendus tels que décrits.
-
-5. Confidentialité : Les détails des transactions sont stockés sur un réseau pair-à-pair. Aucune donnée personnelle n'est partagée avec des tiers au-delà de ce qui est nécessaire pour finaliser la transaction.`,
+      standard:
+        "En passant une commande, vous acceptez les conditions suivantes :\n\n1. Paiement : Tous les paiements sont effectués en cryptomonnaie via le séquestre. Les fonds sont libérés au vendeur lors de la confirmation de livraison par l'acheteur ou à l'expiration du délai de litige.\n\n2. Litiges : Si vous n'êtes pas satisfait de votre commande, vous pouvez ouvrir un litige pendant la période de protection. Un modérateur mutuellement convenu examinera le dossier et prendra une décision contraignante.\n\n3. Livraison : Le vendeur est responsable de l'expédition de l'article comme décrit. Les informations de suivi doivent être fournies lorsque disponibles.\n\n4. Responsabilité : Le vendeur ne garantit rien au-delà de ce qui est explicitement indiqué dans la description. Tous les articles sont vendus tels que décrits.\n\n5. Confidentialité : Les détails des transactions sont stockés sur un réseau pair-à-pair. Aucune donnée personnelle n'est partagée avec des tiers au-delà de ce qui est nécessaire pour finaliser la transaction.",
       digitalLabel: 'Conditions pour biens numériques',
-      digital: `En achetant des biens numériques dans cette boutique, vous acceptez les conditions suivantes :
-
-1. Livraison : Les articles numériques seront livrés par message chiffré ou lien de téléchargement après confirmation du paiement. La livraison est généralement sous 24 heures.
-
-2. Pas de retour : En raison de la nature des biens numériques, toutes les ventes sont définitives une fois le contenu livré et consulté.
-
-3. Licence : Sauf indication contraire, vous recevez une licence personnelle et non transférable. La redistribution ou la revente est interdite.
-
-4. Litiges : Si le contenu livré ne correspond pas à la description, vous pouvez ouvrir un litige pendant la période de protection.
-
-5. Support : Le vendeur fournira un support raisonnable pour les problèmes d'accès ou d'utilisation du contenu acheté.`,
+      digital:
+        "En achetant des biens numériques dans cette boutique, vous acceptez les conditions suivantes :\n\n1. Livraison : Les articles numériques seront livrés par message chiffré ou lien de téléchargement après confirmation du paiement. La livraison est généralement sous 24 heures.\n\n2. Pas de retour : En raison de la nature des biens numériques, toutes les ventes sont définitives une fois le contenu livré et consulté.\n\n3. Licence : Sauf indication contraire, vous recevez une licence personnelle et non transférable. La redistribution ou la revente est interdite.\n\n4. Litiges : Si le contenu livré ne correspond pas à la description, vous pouvez ouvrir un litige pendant la période de protection.\n\n5. Support : Le vendeur fournira un support raisonnable pour les problèmes d'accès ou d'utilisation du contenu acheté.",
       handmadeLabel: 'Conditions pour articles faits main / sur mesure',
-      handmade: `En commandant des articles faits main ou sur mesure, vous acceptez les conditions suivantes :
-
-1. Délai de production : Les articles faits main et sur mesure nécessitent un délai de production supplémentaire comme indiqué. Veuillez prévoir ce délai avant d'attendre l'expédition.
-
-2. Variations : Les articles faits main peuvent présenter de légères variations de couleur, taille ou apparence. C'est inhérent aux produits artisanaux et ne constitue pas un défaut.
-
-3. Personnalisation : Les commandes sur mesure sont réalisées selon vos spécifications. Vérifiez attentivement tous les détails avant de confirmer. Les modifications après le début de la production peuvent ne pas être possibles.
-
-4. Retours : En raison de la nature personnalisée, les retours ne sont acceptés que si l'article diffère significativement de ce qui a été convenu.
-
-5. Litiges : Si l'article reçu ne correspond pas aux spécifications convenues, vous pouvez ouvrir un litige pendant la période de protection.`,
+      handmade:
+        "En commandant des articles faits main ou sur mesure, vous acceptez les conditions suivantes :\n\n1. Délai de production : Les articles faits main et sur mesure nécessitent un délai de production supplémentaire comme indiqué. Veuillez prévoir ce délai avant d'attendre l'expédition.\n\n2. Variations : Les articles faits main peuvent présenter de légères variations de couleur, taille ou apparence. C'est inhérent aux produits artisanaux et ne constitue pas un défaut.\n\n3. Personnalisation : Les commandes sur mesure sont réalisées selon vos spécifications. Vérifiez attentivement tous les détails avant de confirmer. Les modifications après le début de la production peuvent ne pas être possibles.\n\n4. Retours : En raison de la nature personnalisée, les retours ne sont acceptés que si l'article diffère significativement de ce qui a été convenu.\n\n5. Litiges : Si l'article reçu ne correspond pas aux spécifications convenues, vous pouvez ouvrir un litige pendant la période de protection.",
       custom: 'Conditions personnalisées',
     },
     inventoryPolicy: {
@@ -3591,6 +3669,83 @@ export const fr: PartialTranslationResource = {
       uploadFiles: 'Cliquez pour télécharger',
       uploadHint: 'Glisser-déposer ou cliquer pour sélectionner (max. 500Mo chacun)',
       fileTooLarge: 'dépasse la limite de 500Mo',
+      saveFirst:
+        "Enregistrez d'abord la liste, puis revenez pour joindre des fichiers, des liens ou des clés de licence.",
+      saveFirstTitle: 'Enregistrer en tant que brouillon pour joindre des actifs numériques',
+      publishBlockedToast:
+        "Enregistrez d’abord la liste en tant que brouillon. Joignez ensuite des fichiers, des liens ou des clés de licence à partir de la page d'édition avant de publier.",
+      emptyState:
+        'Pas encore de téléchargements numériques. Ajoutez un fichier, un lien ou un pool de clés de licence.',
+      addFile: 'Télécharger le fichier',
+      addLink: 'Ajouter un lien',
+      addLicenseKeys: 'Configurer les clés de licence',
+      uploadFileTitle: 'Télécharger un fichier numérique',
+      uploadFileDesc:
+        'Le fichier est crypté sur le serveur et livré aux acheteurs via une URL de téléchargement signée.',
+      selectFile: 'Sélectionner un fichier',
+      maxSizeHint: 'Max 512 Mio par fichier',
+      encodingFile: 'Encodage du fichier…',
+      uploading: 'Téléchargement…',
+      upload: 'Télécharger',
+      uploadFailed: 'Échec du téléchargement',
+      maxDownloadsValue: 'Max {{n}} téléchargements',
+      expiryHoursValue: "L'URL expire dans {{h}}h",
+      addLinkTitle: "Ajouter un lien d'accès",
+      addLinkDesc:
+        "L'URL est cryptée au repos et révélée aux acheteurs uniquement après confirmation de la commande.",
+      urlLabel: "URL d'accès",
+      invalidUrl: 'Saisissez une URL http(s) valide(s)',
+      createLinkFailed: "Échec de l'ajout du lien",
+      licenseKeyPoolTitle: 'Configurer le pool de clés de licence',
+      licenseKeyPoolDesc:
+        'Chaque acheteur reçoit une clé du pool lors de la confirmation de commande. Importez les clés ci-dessous après avoir créé le pool.',
+      licenseKeyPoolHeader: 'Pool de clés de licence',
+      appIdLabel: "Identifiant de l'application (facultatif)",
+      appIdHint:
+        "Utilisé par l'API de validation de licence publique pour définir les clés de votre application.",
+      createPool: 'Créer un pool',
+      createLicenseKeyFailed: 'Échec de la configuration du pool de clés de licence',
+      importKeys: 'Importer des clés',
+      importKeysTitle: 'Importer des clés de licence',
+      importKeysDesc:
+        'Collez les clés une par ligne ou séparées par des virgules. Les clés sont hachées au repos : seuls les aperçus masqués sont affichés par la suite.',
+      keysLabel: 'Clés de licence',
+      licenseTypeLabel: 'Type de licence',
+      maxActivationsLabel: 'Activations maximales',
+      expiresAtLabel: 'Expire à (facultatif)',
+      importing: 'Importation…',
+      importNKeys: 'Importer les clés {{n}}',
+      keysImported: '{{n}} clés importées',
+      importFailed: "Échec de l'importation des clés",
+      emptyKeyPool:
+        'Pas encore de clés de licence. Importez un CSV ou collez les clés pour amorcer le pool.',
+      lowInventoryWarning: 'Il ne reste que {{n}} clés de licence. Pensez à en importer davantage.',
+      outOfStockWarning:
+        'Aucune clé de licence disponible. Les nouveaux acheteurs ne recevront pas de clé tant que vous n’en aurez pas importé davantage.',
+      poolStats: {
+        available: 'Disponible',
+        dispensed: 'distribué',
+        revoked: 'Révoqué',
+        total: 'Total',
+      },
+      keyStatus: {
+        available: 'Disponible',
+        dispensed: 'distribué',
+        revoked: 'Révoqué',
+        expired: 'Expiré',
+      },
+      revokeKey: 'Révoquer la clé',
+      confirmRevokeTitle: 'Révoquer la clé de licence ?',
+      confirmRevokeDesc:
+        "Les acheteurs qui ont déjà reçu cette clé risquent de perdre l'accès lors du prochain contrôle d'activation. Cela ne peut pas être annulé.",
+      keyRevoked: 'Clé de licence révoquée',
+      revokeFailed: 'Échec de la révocation de la clé de licence',
+      assetAdded: 'Actif numérique ajouté',
+      assetDeleted: 'Actif numérique supprimé',
+      deleteFailed: "Échec de la suppression de l'élément",
+      confirmDeleteTitle: "Supprimer l'actif numérique ?",
+      confirmDeleteDesc:
+        'Les acheteurs existants ne recevront plus cet actif sur les nouvelles commandes. Les droits passés sont préservés.',
     },
     statusDraft: 'Brouillon',
     statusPublished: 'Publié',
@@ -3612,12 +3767,12 @@ export const fr: PartialTranslationResource = {
     deleteConfirmTitle: "Supprimer l'annonce?",
     deleteConfirmDesc: "Cette action est irréversible. L'annonce sera définitivement supprimée.",
     notFound: 'Annonce non trouvée',
-    descriptionPlaceholderShort: 'Describe your listing...',
-    productImage: 'Product image',
-    productTypeHint: 'Choose from suggestions or type your own',
-    save: 'Save',
-    tokenAddress: 'Token address',
-    uploadFailed: 'One or more images failed to upload.',
+    descriptionPlaceholderShort: 'Décrivez votre annonce...',
+    productImage: 'Image du produit',
+    productTypeHint: 'Choisissez parmi les suggestions ou saisissez votre propre type',
+    save: 'Enregistrer',
+    tokenAddress: 'Adresse du token',
+    uploadFailed: 'Une ou plusieurs images n’ont pas pu être téléversées.',
   },
   rwa: {
     fetchError: 'Échec du chargement des produits RWA',
@@ -3667,12 +3822,12 @@ export const fr: PartialTranslationResource = {
       confirmPurchase: "Confirmer l'achat",
       confirmPurchaseDesc:
         'Votre paiement sera échangé contre des parts de token RWA immédiatement. Cette action est irréversible.',
-      approveFailed: 'Token approval failed',
-      claimFailed: 'Failed to claim',
-      missingBuyerAddress: 'Buyer address is missing',
-      missingSellerAddress: 'Seller address is missing',
-      sellerNotOwner: 'Seller is not the token owner',
-      sellerTokenNotApproved: 'Seller has not approved the token',
+      approveFailed: 'L’approbation du token a échoué',
+      claimFailed: 'Échec de la réclamation',
+      missingBuyerAddress: 'L’adresse de l’acheteur est manquante',
+      missingSellerAddress: 'L’adresse du vendeur est manquante',
+      sellerNotOwner: 'Le vendeur n’est pas le propriétaire du token',
+      sellerTokenNotApproved: 'Le vendeur n’a pas approuvé le token',
     },
     fulfill: {
       waitingBuyer: "En attente de l'autorisation de l'acheteur",
@@ -3689,11 +3844,11 @@ export const fr: PartialTranslationResource = {
       error: "Échec de l'exécution",
     },
     confirm: {
-      approveFailed: 'Token approval failed',
-      confirmFailed: 'Failed to confirm order on-chain',
-      missingTokenInfo: 'Token information is missing',
-      missingWalletAddress: 'Wallet address is required',
-      serviceNotReady: 'Service is not ready. Try again later.',
+      approveFailed: 'L’approbation du token a échoué',
+      confirmFailed: 'Impossible de confirmer la commande on-chain',
+      missingTokenInfo: 'Les informations du token sont manquantes',
+      missingWalletAddress: 'L’adresse du portefeuille est requise',
+      serviceNotReady: 'Le service n’est pas prêt. Réessayez plus tard.',
     },
   },
   rwaDashboard: {
@@ -4153,6 +4308,8 @@ export const fr: PartialTranslationResource = {
       system: 'System',
       aiAgents: 'Agents IA',
       mainNavigation: 'Main navigation',
+      sourcing: 'Approvisionnement',
+      storefronts: 'Vitrines de magasins',
     },
     dashboard: {
       welcome: 'Bienvenue, {{name}}',
@@ -4276,6 +4433,9 @@ export const fr: PartialTranslationResource = {
       viewGrid: 'Vue grille',
       selectAll: 'Tout sélectionner',
       selectProduct: 'Sélectionner {{title}}',
+      createNew: 'Créer nouveau',
+      sourceFromProvider: 'Source du fournisseur',
+      importFromGumroad: 'Importer depuis Gumroad',
     },
     orders: {
       title: 'Commandes',
@@ -4304,6 +4464,13 @@ export const fr: PartialTranslationResource = {
       batchConfirmSuccess: '{{count}} commande(s) confirmée(s)',
       noPendingSelected: 'Aucune commande en attente dans la sélection',
       showingCount: 'Affichage de {{count}} commandes',
+      standardOrders: 'Commandes standards',
+      guestOrders: "Commandes d'invités",
+      guestBadge: 'Invité',
+      guestOrderTitle: "Commande d'invité",
+      guestItemCount: '{{count}} article',
+      guestItemCountPlural: '{{count}} articles',
+      noGuestOrders: "Aucune commande d'invité pour l'instant.",
     },
     discounts: {
       title: 'Réductions',
@@ -4562,6 +4729,8 @@ export const fr: PartialTranslationResource = {
       sectionGrowth: 'Growth',
       salesChannels: 'Sales Channels',
       salesChannelsDesc: 'Store links, Telegram Bot, and distribution',
+      guestCheckout: 'Paiement des invités',
+      guestCheckoutDesc: 'Autorisez les acheteurs anonymes à payer avec des crypto-monnaies.',
     },
     integrations: {
       title: 'Intégrations',
@@ -4745,6 +4914,23 @@ export const fr: PartialTranslationResource = {
       statusActive: 'Actif',
       statusRestricted: 'Restreint',
       statusPending: 'En attente',
+      tabFulfillment: 'Accomplissement',
+      aiOutpostGuideTitle: 'LLM local requis',
+      aiOutpostGuideDesc:
+        "Le mode Outpost nécessite un modèle d'IA local pour la confidentialité. Installez Ollama pour commencer :",
+      aiOutpostGuideStep1: 'Installez Ollama depuis ollama.com',
+      aiOutpostGuideStep2: 'Courir : ollama pull lama3.2',
+      aiOutpostGuideStep3: 'Ollama fonctionne sur le port 11434 par défaut',
+      aiOutpostEndpoint: 'Point de terminaison LLM local',
+      aiOutpostEndpointHint:
+        "Seules les adresses d'hôte local sont autorisées pour des raisons de confidentialité",
+      aiOutpostApiKeyOptional: 'La plupart des LLM locaux ne nécessitent pas de clé API',
+      aiPlatformActive: 'Plateforme IA',
+      aiPlatformTitle: "L'IA est prête à l'emploi",
+      aiPlatformDesc:
+        'Votre boutique dispose de fonctionnalités d’IA activées via la plateforme. Aucune configuration nécessaire.',
+      aiDailyUsage: 'Utilisation quotidienne',
+      aiPlatformUpgrade: 'Ajoutez votre propre clé API ci-dessous pour une utilisation illimitée',
     },
     storeBranding: {
       pageTitle: 'Image de marque de la boutique',
@@ -5065,6 +5251,494 @@ export const fr: PartialTranslationResource = {
         'Set one of these HTTPS URLs as your Bot Menu Button / Web App URL in @BotFather.',
       recommendedWebAppUrlRow: 'Brand storefront URL',
       botFatherHttpsExactNote: 'The URL must match exactly (HTTPS, no extra path).',
+      bot: {
+        diagnosticsTitle: 'Santé des robots',
+        diagnosticsLoading: 'Vérification de la santé du robot…',
+        diagnosticsUnavailable: 'Le bilan de santé du robot n’est pas disponible pour le moment.',
+        diagnosticsDetails: 'Détails du diagnostic',
+        healthOk: 'Le webhook est sain',
+        healthOkDesc: 'Commandes et commandes livrées dans votre magasin en temps réel.',
+        healthUnverified: "Impossible d'accéder à Telegram",
+        healthUnverifiedDesc:
+          "L'enregistrement local semble correct mais nous n'avons pas pu le vérifier avec Telegram.",
+        healthError: "Le webhook a besoin d'être réparé",
+        healthErrorDesc:
+          'Telegram ne peut pas atteindre votre magasin. Cliquez sur Réparer pour reconfigurer.',
+        expectedUrl: 'Webhook attendu',
+        telegramUrl: 'Rapports de télégramme',
+        pendingUpdates: 'Mises à jour en attente',
+        commandsConfiguredAt: 'Commandes synchronisées',
+        menuButtonConfiguredAt: 'Bouton de menu synchronisé',
+        lastErrorAt: 'Dernier échec',
+        localLastError: 'Erreur de provisionnement',
+        repairWebhook: 'Réparer le webhook',
+        syncMenuButton: 'Bouton de menu Resynchroniser',
+        repairSuccess: 'Webhook réparé',
+        menuSyncSuccess: 'Bouton de menu resynchronisé',
+      },
+      standalone: {
+        connectTitle: 'Connectez-vous à la plateforme Mobazha',
+        connectDesc:
+          'Obtenez un sous-domaine de marque ({handle}.mymbz.org), des liens de partage et Telegram Bot – fonctionne même derrière NAT.',
+        featureBrandedDomain: 'Sous-domaine de marque ({handle}.mymbz.org)',
+        featureShortLinks: 'Liens courts pour le partage',
+        featureTelegramBot: 'Liaison Telegram Bot',
+        quickPathTitle: 'Rapide : connexion à la plateforme',
+        quickPathDesc:
+          'Connectez-vous ci-dessus pour obtenir instantanément un lien de marque {handle}.mymbz.org et des URL courtes.',
+        natQuickPathDesc:
+          'Connectez-vous à la plateforme Mobazha ci-dessus pour obtenir un lien de partage de marque ({handle}.mymbz.org) qui fonctionne même derrière NAT.',
+        advancedNat: 'Avancé : Rendre votre boutique accessible au public',
+        tunnelHint:
+          'Configurez un tunnel Cloudflare ou un service similaire pour exposer votre boutique à Internet, puis configurez un domaine dans les paramètres système.',
+        customDomainTitle: 'Domaine personnalisé',
+        customDomainDockerDesc:
+          'Utilisez votre propre domaine pour une vitrine professionnelle avec HTTPS automatique.',
+        customDomainNativeDesc:
+          'Configurez un proxy inverse (Nginx/Caddy) pointant vers votre boutique, puis enregistrez votre domaine.',
+        configureDomain: 'Configurer le domaine',
+        goToSystem: 'Paramètres système',
+        localDomain: 'URL du magasin',
+        natBotTitle: 'Connectez-vous à la plateforme pour Telegram Bot',
+        natBotDesc:
+          "Utilisez @MbzBridgeBot pour permettre aux acheteurs d'accéder à votre boutique via Telegram même derrière NAT. Connectez-vous à la plateforme Mobazha ci-dessus pour configurer cela.",
+        botNeedsDomain: 'Domaine requis',
+        botNeedsDomainDesc:
+          "Connectez-vous à la plateforme ci-dessus pour un bot de marque, ou configurez d'abord un domaine personnalisé pour créer votre propre Bot Telegram.",
+        selfBotGuideTitle: 'Créez votre propre robot Telegram',
+        selfBotStep1: 'Ouvrez @BotFather dans Telegram et envoyez /newbot',
+        selfBotStep2: 'Suivez les instructions pour nommer votre bot',
+        selfBotStep3: "Envoyez /newapp pour créer une application Web, puis définissez l'URL sur :",
+        selfBotNote:
+          'Après avoir créé le bot, vous pouvez revenir ici pour le lier une fois connecté à la plateforme, ou le gérer directement via BotFather.',
+      },
+    },
+    gumroadImport: {
+      backToProducts: 'Retour aux produits',
+      title: 'Importer depuis Gumroad',
+      subtitle:
+        'Apportez votre catalogue Gumroad sous forme de brouillons : examinez, joignez des fichiers numériques, puis publiez.',
+      tokenLabel: "Jeton d'accès Gumroad",
+      tokenHint:
+        "Nous l'utilisons uniquement pour cette importation — rien n'est stocké. Générez un jeton d'accès personnel dans Gumroad → Advanced.",
+      tokenHelpLink: 'Comment créer un jeton Gumroad',
+      scopeNote:
+        'Nous importons : le titre, la description, le prix, les balises et la vignette publique.',
+      fileNote:
+        'Gumroad protège vos fichiers téléchargeables derrière des URL authentifiées que nous ne pouvons pas récupérer – vous téléchargerez à nouveau chaque fichier dans son brouillon de liste avant de le publier.',
+      previewButton: "Aperçu de l'importation",
+      errors: {
+        tokenRequired: "Veuillez d'abord coller votre jeton d'accès Gumroad.",
+      },
+      toast: {
+        successTitle: 'Importation terminée',
+        successDesc: 'Annonces {{count}} importées en tant que brouillons.',
+      },
+      summary: {
+        fetched: 'Récupéré',
+        eligible: 'Importera',
+        skipped: 'Sauté',
+      },
+      review: {
+        eligibleTitle: 'Importera ({{count}})',
+        skippedTitle: 'Ignoré ({{count}})',
+        confirmButton: 'Importer {{count}} en tant que brouillons',
+      },
+      done: {
+        title: 'Importé sous forme de brouillons',
+        summary: '{{created}} créé, {{updated}} mis à jour, {{failed}} a échoué.',
+        fallback: '{{count}} fiches importées.',
+        fileReminderTitle: 'Suivant : téléchargez vos fichiers numériques',
+        errorsTitle: 'Erreurs',
+        importMore: 'Importer un autre lot',
+        goToProducts: 'Aller aux produits',
+      },
+    },
+    storefronts: {
+      title: 'Vitrines de magasins',
+      subtitle:
+        'Vues organisées de votre boutique : différents slugs, visibilité, règles de tarification et thèmes.',
+      comingSoonHint:
+        "Cette fonctionnalité est désactivée sur votre nœud. Demandez à l'administrateur de votre plateforme de l'activer.",
+      create: 'Créer une vitrine',
+      backToList: 'Retour aux vitrines',
+      searchPlaceholder: 'Rechercher dans les vitrines…',
+      defaultGroupLabel: 'Défaut',
+      activeGroupLabel: 'Actif',
+      archivedGroupLabel: 'Archivé',
+      emptyTitle: 'Pas encore de vitrines personnalisées',
+      emptyDescription:
+        'Créez des vitrines nommées pour cibler des publics spécifiques : différentes collections, règles de tarification ou thèmes pour chaque canal.',
+      defaultBadge: 'Défaut',
+      archivedBadge: 'Archivé',
+      visibilityPublic: 'Publique',
+      visibilityUnlisted: 'Non répertorié',
+      visibilityPrivate: 'Privé',
+      slugLabel: 'Limace',
+      noSlug: 'Pas de limace',
+      themeLabel: 'Thème',
+      createdAt: 'Créé {{date}}',
+      editTitle: 'Modifier la vitrine',
+      createTitle: 'Nouvelle vitrine',
+      sectionBasics: 'Les bases',
+      sectionFilter: 'Filtre de produits',
+      sectionPricing: 'Règle de tarification',
+      sectionTheme: 'Thème',
+      sectionAccess: 'Accéder',
+      idLabel: 'Identifiant de la vitrine',
+      idPlaceholder: 'par ex. vip, vente en gros',
+      idHint: 'Lettres minuscules, chiffres et tirets. Ne peut pas être modifié ultérieurement.',
+      idRequired: "Une pièce d'identité est requise",
+      idReserved: '"par défaut" est réservé à la vitrine principale implicite.',
+      idInvalid: 'Utilisez uniquement des lettres minuscules, des chiffres et des traits d’union.',
+      nameLabel: 'Nom',
+      namePlaceholder: 'par ex. Membres VIP',
+      nameRequired: 'Le nom est requis',
+      slugPlaceholder: 'par ex. membres VIP',
+      slugHint: "Slug d'URL public facultatif (lettres, chiffres, traits d'union).",
+      slugInvalid:
+        'Utilisez uniquement des lettres minuscules, des chiffres et des traits d’union.',
+      visibilityLabel: 'Visibilité',
+      visibilityPublicHint: 'Indexé par recherche et détectable via slug.',
+      visibilityUnlistedHint: 'Accessible via un lien direct mais caché de la recherche.',
+      visibilityPrivateHint: "Accessible uniquement aux membres figurant sur la liste d'accès.",
+      filterTagsLabel: 'Inclure des balises',
+      filterTagsHint:
+        "Seuls les produits portant l'une de ces balises sont affichés. Séparez par des virgules.",
+      filterExcludeTagsLabel: 'Exclure les balises',
+      filterExcludeTagsHint: 'Masquez les produits portant l’une de ces balises.',
+      filterCollectionsLabel: 'ID de collection',
+      filterCollectionsHint:
+        'Facultatif : limitez-vous à ces ID de collection (séparés par des virgules).',
+      priceRuleTypeLabel: 'Type de règle',
+      priceRuleTypeNone: 'Aucune règle',
+      priceRuleTypeDiscount: 'Remise forfaitaire (%)',
+      priceRuleTypeMarkup: 'Majoration forfaitaire (%)',
+      priceRuleTypeSurcharge: 'Surtaxe fixe (unités mineures)',
+      priceRuleValuePctLabel: 'Pourcentage',
+      priceRuleValuePctHint: 'Pourcentage en nombre entier, par ex. 15 pour 15%.',
+      priceRuleAmountLabel: 'Montant (unités mineures)',
+      priceRuleAmountHint:
+        'Montant en unités mineures, par ex. 100 = 1,00 $ lorsque la divisibilité est 2.',
+      priceRuleValueRequired: 'Une valeur est requise pour ce type de règle.',
+      themeBaseLabel: 'Thème prédéfini',
+      themeBaseHint:
+        'Préréglage nommé facultatif ; laissez vide pour hériter de la valeur par défaut du magasin.',
+      themeBaseNone: 'Hériter du magasin',
+      themeBaseMinimal: 'Minimal',
+      themeBaseGridV2: 'Grille v2',
+      accessRuleTypeLabel: "Règle d'accès",
+      accessRuleTypePublic: 'Publique',
+      accessRuleTypeList: "Liste d'accès sécurisée par balises",
+      accessRuleTagsLabel: 'Balises obligatoires',
+      accessRuleTagsHint:
+        "Seuls les comptes portant l'une de ces balises peuvent accéder à cette vitrine.",
+      save: 'Enregistrer la vitrine',
+      saving: 'Économie…',
+      archive: 'Archive',
+      archiveTitle: 'Archiver cette vitrine ?',
+      archiveDescription:
+        "L'archivage masque la vitrine des recherches publiques et des pages d'index. Les liens directs existants continuent de fonctionner mais le slug est immédiatement disponible pour être réutilisé par une nouvelle vitrine.",
+      archiveConfirm: 'Archive',
+      created: 'Vitrine créée',
+      saved: 'Vitrine enregistrée',
+      archived: 'Vitrine archivée',
+      fetchError: 'Échec du chargement des vitrines',
+      createError: 'Échec de la création de la vitrine',
+      saveError: "Échec de l'enregistrement de la vitrine",
+      archiveError: "Échec de l'archivage de la vitrine",
+      defaultArchiveError: 'La vitrine par défaut ne peut pas être archivée.',
+    },
+    guestCheckout: {
+      title: 'Paiement des invités',
+      description:
+        'Permettez aux acheteurs anonymes de payer avec des crypto-monnaies sans créer de compte.',
+      loadError: 'Échec du chargement des paramètres',
+      saveError: "Échec de l'enregistrement",
+      saveSuccess: 'Paramètres enregistrés avec succès.',
+      enableToggle: 'Activer le paiement par les invités',
+      enableDescription: "Lorsqu'il est activé, les acheteurs peuvent acheter sans se connecter.",
+      enableHelpTitle: 'Quand dois-je l’activer ?',
+      enableHelpBody:
+        "Le paiement en tant qu'invité permet aux acheteurs de payer sans créer de compte – idéal pour les ventes ponctuelles, les biens numériques ou les magasins axés sur la confidentialité. Remarque : les commandes des clients contournent la protection du dépôt fiduciaire.",
+      acceptedCoins: 'Crypto-monnaies acceptées',
+      acceptedCoinsDescription:
+        "Sélectionnez les pièces que les acheteurs peuvent utiliser pour le paiement en tant qu'invité.",
+      acceptedCoinsHelpTitle: 'Choisir des pièces',
+      acceptedCoinsHelpBody:
+        'Activez uniquement les pièces que vous surveillez activement et que vous pouvez gérer manuellement. Les Stablecoins (USDT, USDC) réduisent le risque de volatilité des prix entre la création de la commande et le paiement.',
+      paymentTimeout: 'Délai de paiement',
+      paymentTimeoutDescription:
+        'Combien de temps les acheteurs disposent-ils pour effectuer le paiement avant l’expiration de la commande.',
+      paymentTimeoutHelpTitle: "Choisir un délai d'attente",
+      paymentTimeoutHelpBody:
+        "Des délais d'attente plus courts réduisent le risque de volatilité des prix ; des délais d'attente plus longs donnent aux acheteurs plus de temps pour approvisionner leur portefeuille. Plage typique : 15 à 60 minutes.",
+      minutes: 'minutes',
+      saving: 'Économie...',
+      saveSettings: 'Enregistrer les paramètres',
+    },
+    fulfillment: {
+      title: 'Fournisseurs de traitement des commandes',
+      subtitle:
+        "Connectez les services d'impression à la demande et de dropshipping pour exécuter automatiquement les commandes",
+      printfulDesc:
+        "Impression à la demande de vêtements, d'accessoires et de décoration intérieure",
+      printifyDesc:
+        "Impression à la demande avec plus de 900 produits provenant de fournisseurs d'impression mondiaux",
+      cjDesc: "Dropshipping avec plus de 400 000 produits provenant d'entrepôts mondiaux",
+      connected: 'Connecté',
+      disconnected: 'Non connecté',
+      error: 'Erreur',
+      connect: 'Connecter',
+      disconnect: 'Déconnecter',
+      disconnectConfirm: 'Êtes-vous sûr de vouloir déconnecter {{provider}} ?',
+      disconnectConfirmDesc:
+        'Les produits synchronisés existants resteront mais les nouvelles commandes ne seront pas exécutées automatiquement.',
+      apiKey: 'Clé API',
+      apiKeyPlaceholder: 'Collez votre clé API ici',
+      apiKeyHint:
+        'Recherchez votre clé API dans le tableau de bord {{provider}} sous Paramètres → API',
+      storeName: 'Magasin',
+      connectedAt: 'Connecté',
+      webhookUrl: 'URL du webhook',
+      saving: 'De liaison...',
+      saved: 'Fournisseur connecté avec succès',
+      saveFailed: 'Échec de la connexion du fournisseur',
+      deleted: 'Fournisseur déconnecté',
+      deleteFailed: 'Échec de la déconnexion du fournisseur',
+      noProviders: 'Aucun fournisseur de traitement des commandes connecté',
+      noProvidersDesc:
+        'Connectez un fournisseur pour activer l’exécution automatique des commandes',
+      learnMore: 'Apprendre encore plus',
+      viewDashboard: 'Ouvrir le tableau de bord',
+      openSourcingHub: "Centre d'approvisionnement ouvert",
+      connectSuccess: '{{provider}} connecté !',
+      connectSuccessDesc:
+        'Concevez des produits sur le tableau de bord des fournisseurs, puis importez-les ici.',
+      browseCatalog: 'Parcourir le catalogue',
+      catalogTitle: 'Catalogue de produits',
+      catalogSearch: 'Rechercher des produits...',
+      catalogEmpty: 'Aucun produit trouvé',
+      catalogEmptyDesc: 'Essayez un autre terme de recherche ou parcourez tous les produits',
+      catalogLoading: 'Chargement du catalogue...',
+      catalogVariants: '{{count}} variante(s)',
+      catalogPrice: 'À partir du {{price}}',
+      importProduct: 'Importer un produit',
+      importTitle: 'Importer dans votre magasin',
+      importMarkup: 'Majoration au détail',
+      importMarkupHint:
+        'Pourcentage ajouté au coût du fournisseur (par exemple 50 = 50 % de majoration)',
+      importRetailPrice: 'Prix ​​en détail',
+      importSupplierCost: 'Coût du fournisseur',
+      importProfit: 'Bénéfice par article',
+      importVariants: 'Variantes à importer',
+      importAllVariants: 'Toutes les variantes',
+      importSelectVariants: 'Sélectionnez des variantes',
+      importCustomTitle: 'Titre personnalisé (facultatif)',
+      importTags: 'Balises (facultatif)',
+      importing: 'Importation...',
+      importSuccess: 'Produit importé avec succès',
+      importFailed: "Échec de l'importation du produit",
+      importViewListing: 'Voir la liste',
+      importedCount: '{{count}} variante(s) importée(s)',
+      backToCatalog: 'Retour au catalogue',
+      variantsAvailable: '{{count}} variante(s) disponible(s)',
+      inStock: 'En stock',
+      outOfStock: 'En rupture de stock',
+      tagsPlaceholder: 'vêtements, t-shirt, personnalisé',
+      cancel: 'Annuler',
+      loadMore: 'Charger plus ({{loaded}} / {{total}})',
+      loadFailed: 'Échec du chargement des fournisseurs',
+      copy: 'Copie',
+      reconnect: 'Reconnecter',
+      syncedProducts: 'Produits synchronisés',
+      syncedCost: 'Coût',
+      syncedRetail: 'Vente au détail',
+      syncedAt: 'Synchronisé',
+      syncNow: 'Synchronisez maintenant',
+      viewListing: "Voir l'annonce",
+      statusSynced: 'Synchronisé',
+      statusPending: 'En attente',
+      statusError: 'Erreur',
+      noSyncedProducts: 'Aucun produit synchronisé pour le moment',
+      noSyncedProductsDesc: 'Importez des produits du catalogue pour commencer',
+      syncedBadge: 'Accomplissement',
+      myDesigns: 'Mes créations',
+      myDesignsDesc:
+        'Produits que vous avez conçus dans le tableau de bord des fournisseurs. Importez-les dans votre boutique en un clic.',
+      importDesign: 'Importer la conception',
+      noDesigns: 'Aucun produit trouvé',
+      noDesignsDesc:
+        "Créez ou sélectionnez d'abord des produits dans le tableau de bord {{provider}}, puis importez-les ici.",
+      backToDesigns: 'Retour aux modèles',
+      designPreviews: 'Aperçus de conception',
+    },
+    sourcing: {
+      title: 'Approvisionnement en produits',
+      subtitle: 'Rechercher et importer des produits de fournisseurs connectés',
+      connected: 'Connecté',
+      notConnected: 'Non connecté',
+      connect: 'Connecter',
+      connectedProviders: 'Fournisseurs connectés',
+      importedProducts: 'Produits importés',
+      syncedProducts: 'Produits synchronisés',
+      totalProducts: 'Produits totaux',
+      totalCost: 'Coût total',
+      estProfit: 'HNE. Profit',
+      providers: 'Fournisseurs connectés',
+      addProvider: 'Ajouter un fournisseur',
+      browseCatalog: 'Parcourir le catalogue',
+      browseCatalogDesc: 'Explorer le catalogue de produits des fournisseurs',
+      myDesigns: 'Mes créations',
+      myDesignsDesc: 'Produits que vous avez conçus dans le tableau de bord des fournisseurs',
+      myDesignsPageDesc:
+        'Produits que vous avez créés dans le tableau de bord des fournisseurs. Importez-les dans votre boutique en un clic.',
+      viewImported: 'Produits importés',
+      viewImportedDesc: 'Gérez vos produits synchronisés',
+      designOnPrintful: 'Concevoir sur Printful',
+      designOnPrintfulDesc: 'Créez des produits sur Printful, puis synchronisez ici',
+      createDesign: 'Créer le {{provider}}',
+      recentImports: 'Importations récentes',
+      viewAll: 'Voir tout',
+      noImports:
+        "Aucune importation pour l'instant. Concevez des produits sur Printful, puis importez-les ici.",
+      catalog: 'Catalogue',
+      catalogTitle: 'Catalogue de produits',
+      catalogPodNotice:
+        "Pour l'impression à la demande : concevez d'abord des produits sur Printful",
+      catalogPodNoticeDesc:
+        'Ce catalogue est uniquement à titre de référence. Pour vendre ces produits, concevez-les sur Printful avec vos illustrations, puis importez-les depuis Mes créations.',
+      searchCatalog: 'Rechercher dans le catalogue...',
+      variants: 'variantes',
+      import: 'Importer',
+      imported: 'Importé',
+      synced: 'synchronisé',
+      unsynced: 'non synchronisé',
+      pending: 'en attente',
+      noProviders: 'Aucun fournisseur connecté',
+      noProvidersDesc:
+        'Connectez un fournisseur de services logistiques pour parcourir son catalogue de produits.',
+      connectProvider: 'Connecter le fournisseur',
+      noCatalogItems: 'Aucun produit trouvé dans le catalogue.',
+      goToProviderDashboard: 'Accédez au tableau de bord {{provider}}',
+      connectToSeeDesigns: 'Connectez un fournisseur pour visualiser vos conceptions de produits.',
+      noDesigns: 'Aucun produit trouvé',
+      noDesignsDesc:
+        "Créez ou sélectionnez d'abord des produits dans le tableau de bord {{provider}}, puis importez-les ici.",
+      importedProductsDesc: 'Produits importés de vos fournisseurs de traitement des commandes.',
+      importMore: 'Importer plus',
+      totalCount: '{{count}} total',
+      syncNow: 'Synchronisez maintenant',
+      noImportedProducts: 'Aucun produit importé',
+      noImportedProductsDesc: 'Importez des produits du catalogue pour commencer à vendre.',
+      importedProductsPageDesc:
+        'Gérez tous les produits importés de vos fournisseurs de traitement des commandes.',
+      allProviders: 'Tous les fournisseurs',
+      filterAll: 'Tous',
+      filterSynced: 'Synchronisé',
+      filterPending: 'En attente',
+      filterError: 'Erreur',
+      filterDrift: 'Dérive des prix',
+      statusSynced: 'Synchronisé',
+      statusPending: 'En attente',
+      statusError: 'Erreur',
+      statusDrift: 'Dérive',
+      cost: 'Coût',
+      retail: 'Vente au détail',
+      driftBanner: 'Le produit {{count}} a une dérive de prix – le coût du fournisseur a changé',
+      driftBanner_plural:
+        'Les prix des produits {{count}} dérivent – les coûts des fournisseurs ont changé',
+      driftBadge: 'Coût modifié',
+      reviewPricing: 'Vérifier les prix',
+      resync: 'Resynchroniser',
+      importPageTitle: 'Importer un produit',
+      importAndPublish: 'Importer et publier le produit',
+      importAsDraft: 'Importer en tant que brouillon',
+      importing: 'Importation...',
+      importSuccess: 'Produit importé avec succès !',
+      importSuccessDraft: 'Produit importé en brouillon !',
+      editListing: "Modifier l'annonce",
+      importFailed: "Échec de l'importation du produit",
+      importedCount: '{{count}} variante(s) importée(s)',
+      cancelImport: 'Annuler',
+      pricingStrategy: 'Stratégie de prix',
+      markupLabel: 'Majoration au détail',
+      markupHint: 'Recommandé : 40 à 60 % pour les vêtements, 50 à 100 % pour les accessoires',
+      supplierCost: 'Coût du fournisseur',
+      retailPriceLabel: 'Prix ​​en détail',
+      yourProfit: 'Votre bénéfice',
+      margin: 'Marge',
+      variantSelection: 'Sélection de variantes',
+      selectAll: 'Tout sélectionner',
+      deselectAll: 'Tout désélectionner',
+      inStock: 'En stock',
+      outOfStock: 'En rupture de stock',
+      listingDetails: "Détails de l'annonce",
+      titleLabel: 'Titre',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Décrivez ce produit à vos acheteurs...',
+      tagsLabel: 'Balises',
+      tagsPlaceholder: 'vêtements, t-shirt, personnalisé',
+      aiImprove: "Amélioration de l'IA",
+      aiGenerate: 'Écriture IA',
+      aiSuggest: "Suggestion d'IA",
+      smartPreset: 'Préréglage intelligent',
+      categoryRecommended: 'Recommandé',
+      viewListing: 'Voir la liste',
+      backToCatalog: 'Retour au catalogue',
+      backToDesigns: 'Retour aux modèles',
+      loadProductFailed: 'Échec du chargement du produit',
+      productNotFound: 'Produit introuvable',
+      featureDisabled: "L'approvisionnement n'est pas disponible",
+      featureDisabledDesc:
+        "La fonctionnalité de chaîne d'approvisionnement n'est pas activée pour votre magasin. Contactez l'administrateur de votre plateforme.",
+      backToDashboard: 'Retour au tableau de bord',
+      alerts: 'Alertes',
+      alertsAndRules: 'Alertes et règles',
+      alertsDesc: 'Surveillez les changements de stocks et de prix de vos fournisseurs',
+      noAlerts: 'Aucune alerte',
+      noAlertsDesc: "Tout a l'air bien. We will notify you of any supplier changes.",
+      dismissAlert: 'Rejeter',
+      dismissed: 'Rejeté',
+      showDismissed: 'Spectacle rejeté',
+      hideDismissed: 'Masquer rejeté',
+      alertTypeStockOut: 'En rupture de stock',
+      alertTypeStockBack: 'De retour en stock',
+      alertTypePriceDrift: 'Changement de prix',
+      alertTypeRuleAction: 'Action de règle',
+      alertSeverityInfo: 'Informations',
+      alertSeverityWarning: 'Avertissement',
+      alertSeverityCritical: 'Critique',
+      rules: "Règles d'automatisation",
+      rulesDesc: 'Configurer des actions automatiques pour les modifications de stock et de prix',
+      noRules: "Aucune règle d'automatisation",
+      noRulesDesc:
+        'Créez des règles pour répondre automatiquement aux changements de fournisseurs.',
+      addRule: 'Ajouter une règle',
+      deleteRule: 'Supprimer',
+      deleteRuleConfirm: 'Supprimer cette règle ? Cela ne peut pas être annulé.',
+      ruleEnabled: 'Activé',
+      ruleDisabled: 'Désactivé',
+      triggerLabel: 'Quand',
+      actionLabel: 'Alors',
+      thresholdLabel: 'Seuil (%)',
+      triggerStockOut: "L'article du fournisseur est en rupture de stock",
+      triggerStockBack: "L'article du fournisseur est de nouveau en stock",
+      triggerPriceDrift: 'Le prix du fournisseur dépasse le seuil',
+      triggerProductCostChanged: 'Modifications des coûts des fournisseurs',
+      triggerProductDiscontinued: 'Le fournisseur abandonne le produit',
+      actionHideListing: 'Masquer la fiche du magasin',
+      actionShowListing: "Afficher l'annonce en magasin",
+      actionPauseListing: 'Suspendre la liste',
+      actionNotifyOnly: 'Prévenez-moi seulement',
+      actionAutoDelist: 'Suppression automatique (masquer et marquer les ruptures de stock)',
+      alertTypeProductChanged: 'Produit mis à jour',
+      alertTypeProductDiscontinued: 'Produit abandonné',
+      ruleCreated: 'Règle créée',
+      ruleDeleted: 'Règle supprimée',
+      alertDismissed: 'Alerte rejetée',
+      recentAlerts: 'Alertes récentes',
+      viewAllAlerts: 'Afficher toutes les alertes',
     },
   },
   receivingAccounts: {
@@ -5233,7 +5907,6 @@ export const fr: PartialTranslationResource = {
     statusActive: 'Active',
     statusPaused: 'Paused',
   },
-
   aiAgents: {
     title: 'Agents IA',
     subtitle:
@@ -5290,6 +5963,41 @@ export const fr: PartialTranslationResource = {
       desc: 'Votre nœud peut détecter et configurer automatiquement les clients IA installés sur cette machine.',
       summary:
         '{{count}} client(s) configuré(s). Redémarrez et demandez : « Liste mes produits en boutique »',
+      connectCount: 'Connectez {{count}} client(s)',
+      rescan: 'Nouvelle analyse pour les clients IA',
+      checkingEnvironment: "Vérification de l'environnement…",
+      probeError: "Impossible de sonder l'environnement : {{error}}",
+      capabilityProbeFailed: 'Échec de la sonde de capacité',
+      connectionFailed: 'La connexion a échoué',
+      detected: 'Détecté sur cette machine : {{clients}}.',
+      tokenSlotsRemaining: '{{count}} emplacement(s) de jeton restant.',
+      tokenLabel:
+        'Jeton API (affiché une fois – enregistrer si nécessaire pour une configuration manuelle)',
+      containerized: {
+        description:
+          "Ce nœud s'exécute dans un conteneur, il ne peut donc pas détecter ou configurer les clients IA sur votre ordinateur pour vous.",
+        useQuickConnectBefore: 'Utiliser',
+        useQuickConnectAfter:
+          "ci-dessous pour copier un jeton API et coller l'extrait dans votre client AI.",
+      },
+      status: {
+        configured: 'configuré',
+        configuredAt: 'configuré — {{path}}',
+        alreadyConfigured: 'déjà configuré',
+        notInstalled: 'non installé',
+        failed: 'échoué',
+      },
+      reason: {
+        noClients:
+          'Aucun client IA pris en charge (Cursor, Claude Desktop, etc.) détecté sur cette machine. Installez-en un et réessayez.',
+        tokenSlotsExhausted:
+          'Vous avez atteint le nombre maximum de jetons API. Révoquer un jeton inutilisé ci-dessous pour libérer un emplacement.',
+        noTokenStore:
+          "Le stockage des jetons API n'est pas disponible sur ce nœud : la connexion automatique nécessite qu'un magasin de jetons génère un identifiant.",
+        containerized:
+          "La connexion automatique n'est pas disponible à l'intérieur d'un conteneur.",
+        default: "La connexion automatique n'est pas disponible sur ce nœud.",
+      },
     },
     tokens: {
       title: 'Tokens API',
@@ -5318,8 +6026,57 @@ export const fr: PartialTranslationResource = {
       empty: 'Aucun token API',
       createFailed: 'Échec de la création du token',
     },
+    outpost: {
+      banner: {
+        title: 'Mode confidentialité : clients cloud AI masqués',
+        body: "ChatGPT Desktop, Claude Desktop et Codex exécutent uniquement l'inférence dans le cloud du fournisseur. Outpost les masque par défaut afin que l'IA reste locale et que les données de votre magasin ne quittent jamais votre appareil.",
+      },
+      showHighRisk: {
+        label: 'Afficher les clients IA à haut risque',
+        description:
+          "Affichez les clients dont l'inférence s'exécute dans le cloud d'un fournisseur. En connecter un enverra les données de votre magasin hors appareil.",
+      },
+      hiddenCount: '{{count}} masqué',
+      risk: {
+        local: 'Inférence locale',
+        mixed: 'Local possible',
+        cloud: 'Inférence cloud',
+        mixedTooltip:
+          'Ce client peut être configuré pour utiliser un LLM local, mais la valeur par défaut est le cloud. Vérifiez votre configuration avant de vous connecter.',
+        cloudTooltip:
+          "Ce client envoie les données de votre magasin à un cloud de fournisseur pour inférence. La connexion viole la promesse d'Outpost « L'IA s'exécute localement ».",
+      },
+      localLlm: {
+        title: 'Moteur LLM local',
+        body: "Outpost a besoin d'un LLM local pour alimenter l'IA sur l'appareil. Installez l'un des moteurs ci-dessous : les données de votre magasin ne quittent jamais cette machine.",
+        alreadyInstalled: 'Déjà installé ?',
+        configureEndpoint: 'Configurer le point de terminaison dans les modèles AI',
+        engines: {
+          ollama: {
+            name: 'Ollama',
+            tagline:
+              'Installation sur une seule ligne. Meilleure valeur par défaut pour la plupart des utilisateurs.',
+            recommendedModel: 'Recommandé : Lama 3.2 3B',
+            cta: 'Télécharger',
+          },
+          llamacpp: {
+            name: 'lama.cpp',
+            tagline:
+              'Binaires prédéfinis pour Linux / macOS / Windows ; Modèles GGUF ; prise en charge complète du GPU.',
+            recommendedModel: 'Recommandé : Qwen 2.5 1.5B',
+            cta: 'Télécharger la version',
+          },
+          lmstudio: {
+            name: 'Studio LM',
+            tagline:
+              'Interface graphique de bureau pour parcourir et exécuter des modèles ouverts.',
+            recommendedModel: 'Recommandé : Llama 3.2 3B Instruct',
+            cta: 'Télécharger',
+          },
+        },
+      },
+    },
   },
-
   system: {
     network: {
       title: 'Réseau et confidentialité',
@@ -5344,6 +6101,7 @@ export const fr: PartialTranslationResource = {
       peerID: 'Peer ID',
       dataDir: 'Data Directory',
       version: 'Version',
+      label: 'Statut',
     },
     resources: {
       title: 'Resources',
@@ -5398,6 +6156,11 @@ export const fr: PartialTranslationResource = {
       title: 'Actions',
       downloadLogs: 'Download Logs',
       downloadLogsDesc: 'Download recent server logs for debugging',
+      runDoctor: 'Exécuter un bilan de santé',
+      runDoctorDesc: "Vérifier l'état du système, la connectivité et la configuration",
+      exportDiag: 'Exporter les diagnostics',
+      exportDiagDesc:
+        "Téléchargez un ensemble de diagnostics avec les journaux, la configuration et les résultats d'intégrité",
     },
     loading: 'Loading system information...',
     error: 'Failed to load system information',
@@ -5406,6 +6169,50 @@ export const fr: PartialTranslationResource = {
     days: 'days',
     hours: 'hours',
     minutes: 'minutes',
+    domain: {
+      title: 'Domaine personnalisé',
+      label: 'Domaine',
+      save: 'Sauvegarder',
+      hint: 'Saisissez le domaine pointant vers ce serveur (sans http/https).',
+      error: 'Échec de la mise à jour du domaine',
+      natWarning:
+        'Votre boutique est derrière NAT et n’est pas directement accessible depuis Internet.',
+      natDesc:
+        "Vous avez besoin d'un service de tunnel pour exposer votre boutique locale à Internet avant de configurer un domaine personnalisé.",
+      natStep1: 'Mettre en place un tunnel pour exposer votre boutique à Internet',
+      natStep2:
+        'Pointez votre domaine vers le tunnel (ou utilisez le domaine fourni par le tunnel)',
+      natStep3: 'Entrez votre domaine ci-dessous et enregistrez',
+      tunnelOptions: 'Services de tunnels recommandés',
+      cfTunnelDesc:
+        'Gratuit, prend en charge les domaines personnalisés avec SSL automatique. Idéal pour une utilisation à long terme.',
+      ngrokDesc:
+        'Configuration rapide pour les tests. Les forfaits payants prennent en charge les domaines personnalisés.',
+      tunnelAlt:
+        'Vous pouvez également vous connecter à la plateforme Mobazha dans les canaux de vente pour un sous-domaine de marque sans configuration sans configurer de tunnels.',
+      dockerGuide:
+        'Votre environnement Docker prend en charge le HTTPS automatique. Suivez ces étapes :',
+      dockerStep1:
+        "Pointez l'enregistrement DNS A de votre domaine vers l'adresse IP de ce serveur",
+      dockerStep2: 'Entrez votre domaine ci-dessous et enregistrez',
+      dockerStep3: 'Caddy obtiendra automatiquement un certificat SSL',
+      nativeGuide:
+        'Configurez un proxy inverse sur ce serveur pour servir votre boutique via HTTPS :',
+      nativeStep1:
+        "Pointez l'enregistrement DNS A de votre domaine vers l'adresse IP publique de ce serveur.",
+      nativeStep2:
+        'Installez un proxy inverse et proxy votre domaine sur ce magasin (voir exemple ci-dessous)',
+      nativeStep3:
+        "Configurez SSL (Caddy le fait automatiquement ; pour Nginx, utilisez Let's Encrypt / certbot)",
+      nativeStep4: 'Entrez votre domaine ci-dessous et enregistrez',
+      configExample: 'Afficher un exemple de configuration de proxy',
+    },
+    doctor: {
+      passed: 'passé',
+      warnings: 'avertissements',
+      failed: 'échoué',
+    },
+    refresh: 'Rafraîchir',
   },
   deploy: {
     title: 'Deploy Your Store',
@@ -5587,12 +6394,256 @@ export const fr: PartialTranslationResource = {
     accountRequired: 'Account required',
     createAccount: 'Créer un compte',
     createAccountPrompt: 'Créez un compte gratuit pour accéder à cette fonctionnalité.',
+    oauthBridgeFinishing: 'Fin de la connexion…',
   },
   collections: {
     browseAll: 'Voir toutes les collections',
     empty: 'Aucune collection pour le moment',
     noProducts: 'Aucun produit dans cette collection',
     notFound: 'Collection introuvable',
+  },
+  costCalc: {
+    pageTitle: 'Calculateur du coût des biens numériques',
+    pageSubtitle:
+      'Découvrez combien vous conservez réellement sur Mobazha contre Gumroad, Lemon Squeezy et Payhip – en toute transparence sur les compromis.',
+    inputsTitle: 'Vos hypothèses',
+    unitPriceLabel: 'Prix ​​unitaire',
+    monthlySalesLabel: 'Ventes mensuelles',
+    processorLabel: 'Mode de paiement',
+    resultsTitle: 'Net pour vous par mois',
+    perSale: 'par vente',
+    perMonth: 'par mois',
+    feeRate: 'Frais totaux',
+    morBadge: 'Commerçant officiel',
+    morPartial: 'UE/Royaume-Uni uniquement',
+    youHandle: 'Vous gérez les impôts',
+    asOfNote: 'Tarifs vérifiés {date}',
+    sourceLink: 'Source',
+    bestForYou: 'Le meilleur pour toi',
+    highlightLine: 'Par rapport à {worst}, vous conservez {diff} de plus par mois avec {best}.',
+    honestyTitle: 'Le compromis honnête',
+    honestyBody:
+      "Des frais inférieurs signifient que vous assumez le rôle d'opérateur : les taxes locales, les rétrofacturations, les décisions de remboursement et la modération du contenu vous appartiennent. Nous fournissons les outils (intégration de Stripe Tax, workflows de remboursement, modèles AUP) pour rendre cela gérable et non invisible.",
+    learnMoreResponsibilities: "Lire les responsabilités complètes de l'opérateur",
+    disclaimerTitle: 'À propos de ces chiffres',
+    disclaimerBody:
+      'Ce calculateur utilise les pages de tarification publiques de chaque plateforme à la date indiquée sur chaque ligne. Les tarifs externes changent sans préavis – vérifiez toujours par rapport à la source avant de prendre une décision. Les tarifs Mobazha reflètent les frais de protocole pour les comptes hébergés et zéro frais de protocole pour les déploiements auto-hébergés.',
+  },
+  dataExport: {
+    cardTitle: 'Exporter des données',
+    cardDescription: 'Téléchargez vos annonces, ventes et liste de clients',
+    pageTitle: 'Exportez les données de votre boutique',
+    pageDescription:
+      'Votre magasin, vos données, vos clients. Téléchargez un nouvel instantané à tout moment, pour des sauvegardes, des migrations ou pour vos propres rapports.',
+    listingsTitle: 'Annonces',
+    listingsDescription:
+      'Tous les produits que vous vendez, y compris le titre, le prix, la devise et la visibilité.',
+    salesTitle: 'Ventes',
+    salesDescription:
+      "Chaque commande reçue en tant que vendeur, avec l'état de l'acheteur, de l'expédition, du paiement et de la protection.",
+    customersTitle: 'Clients',
+    customersDescription:
+      "Liste d'acheteurs agrégée : une ligne par acheteur avec le nombre de commandes, le premier/dernier achat et la ville d'expédition la plus récente.",
+    csvButton: 'CSV',
+    jsonButton: 'JSON',
+    downloading: 'Téléchargement…',
+    toastSuccess: '{kind} exportation téléchargée',
+    toastError: "Échec de l'exportation",
+    noteTitle: 'Comment fonctionnent les exportations',
+    noteBody:
+      "Chaque clic extrait un instantané en direct de votre boutique. Les CSV s'ouvrent directement dans Excel, Numbers et Google Sheets ; JSON est le meilleur pour les scripts de migration. Nous n’envoyons jamais ces fichiers par courrier électronique – le téléchargement reste sur cet appareil.",
+  },
+  guestCheckout: {
+    cartEmpty: 'Votre panier est vide',
+    cartEmptyHint: 'Parcourez la boutique et ajoutez des articles pour commencer',
+    reviewCart: 'Vérifiez votre panier ({{count}} {{itemWord}})',
+    itemSingular: 'article',
+    itemPlural: 'articles',
+    total: 'Total',
+    continueToShipping: "Continuer vers l'expédition",
+    shippingInfo: "Informations d'expédition",
+    fullName: 'Nom et prénom',
+    emailLabel: 'E-mail (facultatif, pour les mises à jour des commandes)',
+    address: 'Adresse',
+    city: 'Ville',
+    stateProvince: 'État/Province',
+    postalCode: 'Code Postal',
+    country: 'Pays',
+    deliveryNotes: 'Bons de livraison (facultatif)',
+    deliveryNotesPlaceholder: "Numéro d'appartement, instructions de livraison...",
+    back: 'Dos',
+    continueToPayment: 'Continuer vers le paiement',
+    choosePayment: 'Choisissez le mode de paiement',
+    choosePaymentHint:
+      'Sélectionnez une crypto-monnaie avec laquelle payer. Le montant exact sera calculé aux taux de change en vigueur.',
+    sendPayment: 'Envoyer le paiement',
+    sendExactAmount: "Envoyez exactement ce montant à l'adresse ci-dessous :",
+    paymentAddress: 'Adresse de paiement',
+    copyAddress: "Copier l'adresse",
+    timeRemaining: 'Temps restant :',
+    expired: 'Expiré',
+    creatingOrder: 'Création de votre commande...',
+    orderFailed: 'Commande échouée',
+    goBack: 'Retourner',
+    directPaymentDisclaimer:
+      "Après avoir envoyé le paiement, vous pouvez suivre l'état de votre commande en utilisant le lien ci-dessous. Il s’agit d’un paiement direct – sans séquestre ni protection de l’acheteur.",
+    trackOrderStatus: "Suivre l'état de la commande",
+    stepCart: 'Panier',
+    stepShipping: 'Expédition',
+    stepCoin: 'Mode de paiement',
+    stepPay: 'Payer',
+    anonymousBannerTitle: "Vous partez en tant qu'invité",
+    anonymousBannerSubtitle: 'Aucun compte requis : payez directement avec de la crypto-monnaie.',
+    anonymousLearnMore: "Qu'est-ce que cela signifie?",
+    anonymousPointNoAccount: 'Aucun compte ou inscription requis.',
+    anonymousPointDirectPayment:
+      'Le paiement va directement au vendeur – il n’y a pas de séquestre ni de protection de l’acheteur.',
+    anonymousPointEmailOptional:
+      "L'e-mail est facultatif, mais recommandé pour recevoir les mises à jour des commandes.",
+    anonymousPointSaveLink:
+      'Après avoir passé la commande, enregistrez le lien de commande – c’est le seul moyen de revenir.',
+    saveLinkTitle: 'Enregistrez votre lien de commande',
+    saveLinkDescription:
+      "Ajoutez ce lien à vos favoris pour vérifier l’état du paiement, les confirmations et l’expédition. C'est le seul moyen de retrouver cet ordre.",
+    saveLinkCopy: 'Copier le lien',
+    saveLinkCopied: 'Lien copié',
+    digitalSaveLinkTitle: 'Vos téléchargements vivent derrière ce lien',
+    digitalSaveLinkBody:
+      "Votre commande comporte des livraisons numériques (fichiers, clés de licence ou liens d'accès). Après confirmation du paiement, les téléchargements apparaîtront sur cette même page de commande. Sans le lien, les téléchargements ne peuvent pas être récupérés.",
+    paymentAmountHelpTitle: 'Pourquoi ce montant précis ?',
+    paymentAmountHelpBody:
+      'Le montant crypto est verrouillé au taux de change en vigueur au moment de la création de la commande. Envoyez le montant exact : un montant plus ou moins élevé peut entraîner des retards de détection.',
+    expireTimeHelpTitle: 'Minuterie de paiement',
+    expireTimeHelpBody:
+      "Les commandes expirent si le paiement n'est pas reçu avant la fin du délai. N'envoyez pas de paiement après l'expiration de la commande : les fonds pourraient être perdus ou nécessiter une récupération manuelle par le vendeur.",
+  },
+  guestOrder: {
+    title: 'Statut de la commande',
+    tokenLabel: 'Jeton:',
+    notFoundTitle: 'Commande introuvable',
+    paymentAddress: 'Adresse de paiement',
+    copyAddress: "Copier l'adresse",
+    timeRemaining: 'Temps restant :',
+    confirmations: 'Confirmations de la blockchain',
+    txLabel: 'Émission :',
+    trackingInfo: 'Informations de suivi',
+    items: 'Articles',
+    total: 'Total',
+    quantityLabel: 'Quantité :',
+    autoRefreshNote:
+      "Cette page s'actualise automatiquement toutes les 15 secondes. Ajoutez cette URL à vos favoris pour la vérifier plus tard.",
+    stateAwaitingPayment: 'En attente de paiement',
+    stateAwaitingPaymentDesc: "Envoyez le montant exact à l'adresse de paiement ci-dessous.",
+    statePendingConfirmation: 'Paiement détecté',
+    statePendingConfirmationDesc:
+      'Votre paiement a été détecté et attend les confirmations de la blockchain.',
+    stateFunded: 'Paiement confirmé',
+    stateFundedDesc: 'Votre paiement est confirmé. Le vendeur traitera votre commande.',
+    stateProcessing: 'Traitement',
+    stateProcessingDesc: "Le vendeur prépare votre commande pour l'expédition.",
+    stateShipped: 'Expédié',
+    stateShippedDesc: 'Votre commande a été expédiée !',
+    stateCompleted: 'Complété',
+    stateCompletedDesc: 'Votre commande est terminée. Merci pour votre achat!',
+    stateExpired: 'Expiré',
+    stateExpiredDesc: 'Le délai de paiement a expiré. Veuillez créer une nouvelle commande.',
+    stateCancelled: 'Annulé',
+    stateCancelledDesc: 'Cette commande a été annulée.',
+    tokenHelpTitle: 'Votre jeton de commande',
+    tokenHelpBody:
+      "Ce jeton unique donne accès à votre commande – aucun compte ni mot de passe n'est requis. Enregistrez l'URL complète pour revenir à cette page.",
+    saveLinkTitle: 'Enregistrez ce lien',
+    saveLinkDescription:
+      "Ajoutez cette URL à vos favoris pour vérifier l'état de la commande à tout moment. Toute personne disposant de ce lien peut consulter la commande, alors gardez-la privée.",
+    saveLinkCopy: 'Copier le lien',
+    saveLinkCopied: 'Lien copié',
+    expiredHelpTitle: 'Le paiement a déjà été envoyé ?',
+    expiredHelpBody:
+      "Si vous avez financé cette commande avant son expiration, contactez le vendeur avec votre hachage de transaction (TX) ci-dessous. Ils peuvent vérifier et compléter manuellement votre commande. N'envoyez pas de nouveau paiement à l'adresse expirée.",
+    doNotPayAgain: '✓ Votre paiement a été détecté. Veuillez ne pas envoyer un autre paiement.',
+    confirmation: {
+      poolDetected: 'Paiement détecté dans Mempool',
+      poolDetectedDesc:
+        "Votre transaction est visible sur le réseau et attend d'être extraite en bloc.",
+      onChain: 'Transaction confirmée en chaîne',
+      onChainDesc: 'En attente des confirmations de la blockchain {{required}}.',
+      confirming: 'Confirmation ({{current}}/{{required}})',
+      eta: "Estimation d'environ ~{{minutes}} minutes restantes",
+      funded: 'Paiement confirmé',
+    },
+  },
+  stores: {
+    console: {
+      title: 'Mes magasins',
+      subtitle:
+        'Gérez chaque magasin que vous exploitez – hébergé sur Mobazha ou sur votre propre VPS.',
+      loading: 'Chargement de vos magasins…',
+      loadError: 'Impossible de charger vos magasins. Veuillez réessayer.',
+      retry: 'Réessayer',
+      refresh: 'Rafraîchir',
+      emptyTitle: 'Pas encore de magasins',
+      emptyDescription:
+        'Créez une boutique hébergée sur Mobazha ou connectez un nœud auto-hébergé que vous exécutez déjà.',
+      createHosted: 'Créer une boutique hébergée',
+      claimStandalone: 'Connectez une boutique auto-hébergée',
+      totalCount: 'magasin {{count}}',
+      totalCount_plural: '{{count}} magasins',
+      manage: 'Gérer',
+      open: 'Vitrine ouverte',
+      nodeType: {
+        saas: 'Hébergé',
+        standalone: 'Auto-hébergé',
+      },
+      status: {
+        active: 'Actif',
+        suspended: 'Suspendu',
+        archived: 'Archivé',
+      },
+      connectivity: {
+        public: 'En ligne',
+        tunnel: 'En ligne via tunnel',
+        nat: 'Accessible',
+        unknown: 'Statut inconnu',
+      },
+      online: 'En ligne',
+      offline: 'Hors ligne',
+      lastActive: 'Dernière activité {{when}}',
+      neverActive: 'Jamais connecté',
+      role: {
+        owner: 'Propriétaire',
+        member: 'Membre',
+      },
+      claim: {
+        title: 'Vous utilisez déjà votre propre nœud Mobazha ?',
+        subtitle:
+          "Connectez-le à ce compte pour qu'il apparaisse ici à côté de vos magasins hébergés.",
+        step1Title: "Ouvrez le panneau d'administration de votre boutique",
+        step1Body:
+          "Connectez-vous au tableau de bord d'administration sur votre propre serveur (l'URL sur laquelle votre nœud est exécuté).",
+        step2Title: 'Choisissez « Se lier au compte Mobazha »',
+        step2Body:
+          "Sous Paramètres → Compte, démarrez le flux de liaison. Une fenêtre contextuelle s'ouvrira et vous ramènera ici.",
+        step3Title: 'Confirmez la connexion',
+        step3Body:
+          "Connectez-vous à Mobazha dans la fenêtre contextuelle (vous reviendrez à l'administrateur de votre boutique). Votre boutique apparaîtra ici après une actualisation.",
+        learnMore: 'Apprendre encore plus',
+        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+      },
+    },
+  },
+  scan: {
+    prompt: 'Scannez un code QR',
+    unsupported: "La numérisation QR n'est disponible que dans Telegram",
+    paymentDetected: 'Adresse {{coin}} copiée : {{address}}',
+    storeFound: 'Ouverture du magasin...',
+    searchFallback: 'Recherche de contenu numérisé...',
+  },
+  digital: {
+    assetType: {
+      file: 'Téléchargement de fichier',
+      link: "Lien d'accès",
+      license_key: 'Clé de licence',
+    },
   },
 };
 
