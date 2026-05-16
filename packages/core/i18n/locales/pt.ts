@@ -2,11 +2,9 @@
  * Portuguese Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const pt: TranslationResource = deepMergeTranslations(en, {
+export const pt: PartialTranslationResource = {
   common: {
     loading: 'Carregando...',
     redirecting: 'Redirecionando...',
@@ -5579,6 +5577,6 @@ export const pt: TranslationResource = deepMergeTranslations(en, {
     noProducts: 'Não há produtos nesta coleção',
     notFound: 'Coleção não encontrada',
   },
-});
+};
 
 export default pt;

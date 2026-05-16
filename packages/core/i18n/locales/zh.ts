@@ -2,11 +2,9 @@
  * Chinese Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const zh: TranslationResource = deepMergeTranslations(en, {
+export const zh: PartialTranslationResource = {
   common: {
     loading: '加载中...',
     redirecting: '正在跳转...',
@@ -6126,4 +6124,4 @@ export const zh: TranslationResource = deepMergeTranslations(en, {
     tokenHelpTitle: '你的订单令牌',
     tokenHelpBody: '此唯一令牌用于访问你的订单——无需账号或密码。保存完整网址即可返回此页面。',
   },
-});
+};

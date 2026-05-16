@@ -4570,6 +4570,16 @@ export interface TranslationResource {
   digital?: TranslationSection;
 }
 
+type DeepPartialValue<T> = T extends string
+  ? string
+  : T extends Array<infer U>
+    ? Array<DeepPartialValue<U>>
+    : T extends Record<string, unknown>
+      ? { [K in keyof T]?: DeepPartialValue<T[K]> }
+      : T;
+
+export type PartialTranslationResource = DeepPartialValue<TranslationResource>;
+
 // i18n 上下文类型
 export interface I18nContextType {
   locale: Locale;

@@ -21,10 +21,10 @@ import { fr } from './fr';
 import { de } from './de';
 import { ru } from './ru';
 import { pt } from './pt';
-import type { Locale, TranslationResource } from '../types';
+import type { Locale, PartialTranslationResource, TranslationResource } from '../types';
 
 // 所有翻译资源
-export const translations: Record<Locale, TranslationResource> = {
+export const translations: Record<Locale, TranslationResource | PartialTranslationResource> = {
   en,
   zh,
   ja,

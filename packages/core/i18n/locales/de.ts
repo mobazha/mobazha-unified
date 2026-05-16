@@ -2,11 +2,9 @@
  * German Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const de: TranslationResource = deepMergeTranslations(en, {
+export const de: PartialTranslationResource = {
   common: {
     loading: 'Laden...',
     redirecting: 'Weiterleitung...',
@@ -5615,6 +5613,6 @@ export const de: TranslationResource = deepMergeTranslations(en, {
     noProducts: 'Keine Produkte in dieser Kollektion',
     notFound: 'Kollektion nicht gefunden',
   },
-});
+};
 
 export default de;

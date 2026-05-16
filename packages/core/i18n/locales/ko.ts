@@ -2,11 +2,9 @@
  * Korean Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const ko: TranslationResource = deepMergeTranslations(en, {
+export const ko: PartialTranslationResource = {
   common: {
     loading: '로딩 중...',
     redirecting: '리디렉션 중...',
@@ -5473,6 +5471,6 @@ export const ko: TranslationResource = deepMergeTranslations(en, {
     noProducts: '이 컬렉션에는 상품이 없습니다',
     notFound: '컬렉션을 찾을 수 없습니다',
   },
-});
+};
 
 export default ko;

@@ -187,7 +187,7 @@ export function formatRelativeTime(date: Date | string | number): string {
  * 获取翻译资源
  */
 export function getTranslations(): TranslationResource {
-  return translations[currentLocale];
+  return translations[currentLocale] as TranslationResource;
 }
 
 /**
