@@ -208,6 +208,7 @@ function CreateListingContent() {
   const {
     aiLoadingAction,
     aiNotConfigured,
+    aiSupportsVision,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
@@ -777,8 +778,8 @@ function CreateListingContent() {
               {/* AI 未配置引导 */}
               {aiNotConfigured && <AiSetupPrompt />}
 
-              {/* AI 从图片生成 */}
-              {aiImageUrls.length > 0 && !aiNotConfigured && (
+              {/* AI 从图片生成 — 仅当模型支持视觉时显示 */}
+              {aiImageUrls.length > 0 && !aiNotConfigured && aiSupportsVision && (
                 <AiImageGeneratePanel
                   imageUrls={aiImageUrls}
                   contractType={formData.contractType}

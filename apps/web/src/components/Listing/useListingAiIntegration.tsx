@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getImageUrl, useI18n } from '@mobazha/core';
 import type { AiGenerateResponse, Image, ListingFormData } from '@mobazha/core';
+import { getAIStatus } from '@mobazha/core/services/api/aiSettings';
 import { useToast, ToastAction } from '@/components/ui';
 import { useAiAssist } from './AiAssistant';
 
@@ -27,6 +28,19 @@ export function useListingAiIntegration({
     polishDescription,
     suggestTags,
   } = useAiAssist();
+
+  // Check if the configured AI model supports vision (image input).
+  // Defaults to true until confirmed otherwise to avoid flash-hiding the panel.
+  const [aiSupportsVision, setAiSupportsVision] = useState(true);
+  useEffect(() => {
+    getAIStatus()
+      .then(status => {
+        setAiSupportsVision(status.supports_vision !== false);
+      })
+      .catch(() => {
+        // On error keep default (true) — don't hide the panel speculatively.
+      });
+  }, []);
 
   useEffect(() => {
     if (aiError) {
@@ -110,6 +124,7 @@ export function useListingAiIntegration({
   return {
     aiLoadingAction,
     aiNotConfigured,
+    aiSupportsVision,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
