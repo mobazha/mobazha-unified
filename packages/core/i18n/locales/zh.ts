@@ -2,9 +2,11 @@
  * Chinese Translations
  */
 
+import { en } from './en';
 import type { TranslationResource } from '../types';
+import { deepMergeTranslations } from './utils';
 
-export const zh: TranslationResource = {
+export const zh: TranslationResource = deepMergeTranslations(en, {
   common: {
     loading: '加载中...',
     redirecting: '正在跳转...',
@@ -116,6 +118,16 @@ export const zh: TranslationResource = {
     new: '新品',
     moveUp: '上移',
     moveDown: '下移',
+    actions: '操作',
+    anonymous: '匿名',
+    goBack: '返回',
+    login: '登录',
+    moreActions: '更多操作',
+    private: '私密',
+    saved: '已保存',
+    scan: '扫码',
+    unknown: '未知',
+    unknownError: '未知错误',
   },
   share: {
     copyLink: '复制链接',
@@ -165,6 +177,7 @@ export const zh: TranslationResource = {
     openMessages: '打开消息',
     viewCart: '查看购物车',
     openUserMenu: '打开用户菜单',
+    productGroupsDesc: '组织商品并控制其可见性',
   },
   login: {
     title: 'Mobazha',
@@ -299,6 +312,8 @@ export const zh: TranslationResource = {
     claimErrorWrongPassword: '管理员密码错误',
     claimErrorAlreadyClaimed: '该店铺已被认领',
     claimErrorGeneric: '认领失败，请重试',
+    registrationFailedTitle: '注册失败',
+    registrationFailedDesc: '暂时无法完成注册，请稍后重试。',
   },
   product: {
     title: '标题',
@@ -342,6 +357,7 @@ export const zh: TranslationResource = {
     notFound: '商品未找到',
     viewStore: '访问店铺',
     goToStore: '进入店铺',
+    rwaToken: 'RWA 代币',
     editProduct: '编辑商品',
     shareLink: '分享链接',
     linkCopied: '商品链接已复制到剪贴板',
@@ -408,6 +424,7 @@ export const zh: TranslationResource = {
     users: '用户',
     category: '分类',
     allCategories: '全部分类',
+    browseByType: '按类型浏览',
   },
   cart: {
     title: '购物车',
@@ -564,6 +581,7 @@ export const zh: TranslationResource = {
     countryRequired: '请输入国家/地区',
     addressNotes: '配送备注（可选）',
     addressNotesPlaceholder: '特殊配送要求...',
+    noName: '未命名',
   },
   order: {
     title: '订单',
@@ -613,6 +631,7 @@ export const zh: TranslationResource = {
       processing: '处理中',
       partialShipped: '部分发货',
       shipped: '已发货',
+      delivered: '已送达',
       completed: '已完成',
       cancelled: '已取消',
       declined: '已拒绝',
@@ -913,6 +932,9 @@ export const zh: TranslationResource = {
       copyOrderId: '复制订单号',
       viewContract: '查看交易合约',
       copyToClipboard: '复制到剪贴板',
+      acceptFailed: '接受订单失败',
+      operationFailed: '操作失败',
+      walletConnectionRequired: '需要连接钱包',
     },
     table: {
       orderId: '订单号',
@@ -1384,6 +1406,11 @@ export const zh: TranslationResource = {
       errorInvalid:
         '格式无效。请使用以 "Qm"/"12D3Koo" 开头的 Peer ID，或 @user:matrix.org 形式的 Matrix ID。',
     },
+    accept: '接受',
+    decline: '拒绝',
+    newInvite: '新的聊天邀请',
+    acceptFailed: '接受邀请失败',
+    declineFailed: '拒绝邀请失败',
   },
   matrix: {
     events: {
@@ -1399,6 +1426,9 @@ export const zh: TranslationResource = {
       roomTopicChanged: '{{name}} 将话题改为 {{topic}}',
       encryptionEnabled: '已启用端到端加密',
       roomCreated: '{{name}} 创建了此聊天',
+    },
+    verification: {
+      unavailable: '当前无法进行验证，请稍后再试。',
     },
   },
   wallet: {
@@ -2058,6 +2088,7 @@ export const zh: TranslationResource = {
     sortByProducts: '商品最多',
     sortByName: '按字母排序',
     allCategories: '全部分类',
+    allTypes: '全部类型',
     joined: '已成功加入市场！',
     left: '已离开市场',
     applicationSubmitted: '您的卖家申请已提交！审核通过后将通知您。',
@@ -2121,6 +2152,7 @@ export const zh: TranslationResource = {
     resetFilters: '重置筛选',
     moderatorsFound: '找到 {{count}} 位调解员',
     disputesHandled: '已处理 {{count}} 次争议',
+    disputes: '争议',
     success: '{{rate}}% 成功率',
     fee: '费率',
     noModeratorsFound: '未找到符合条件的调解员',
@@ -2171,6 +2203,9 @@ export const zh: TranslationResource = {
     processing: '处理中...',
     success: '支付成功！',
     failed: '支付失败',
+    confirmed: '已确认',
+    confirming: '确认中...',
+    remaining: '剩余待支付',
     securityNote: '安全支付保护',
     connectWalletFirst: '请先连接钱包',
     noPaymentAddress: '无可用的支付地址',
@@ -2284,6 +2319,55 @@ export const zh: TranslationResource = {
     products: '商品',
     stores: '店铺',
   },
+  costCalc: {
+    pageTitle: '数字商品成本计算器',
+    pageSubtitle:
+      '对比 Mobazha、Gumroad、Lemon Squeezy 和 Payhip，看看你每月和每笔订单实际能留下多少收入，并清楚了解其中的权衡。',
+    inputsTitle: '你的假设',
+    unitPriceLabel: '单价',
+    monthlySalesLabel: '月销量',
+    processorLabel: '支付方式',
+    resultsTitle: '你每月实际到手',
+    perSale: '每笔',
+    perMonth: '每月',
+    feeRate: '总费用',
+    morBadge: 'Merchant of record',
+    morPartial: '仅限欧盟/英国',
+    youHandle: '税务由你负责',
+    asOfNote: '费率核对日期 {date}',
+    sourceLink: '来源',
+    bestForYou: '最适合你',
+    highlightLine: '与 {worst} 相比，使用 {best} 每月可多保留 {diff}。',
+    honestyTitle: '真实的权衡',
+    honestyBody:
+      '更低的费用意味着你需要承担经营者责任：本地税务、拒付、退款决策和内容合规都由你负责。我们提供配套工具，例如 Stripe Tax 集成、退款流程和 AUP 模板，帮助你管理这些责任，而不是把它们隐藏起来。',
+    learnMoreResponsibilities: '查看完整的经营者责任说明',
+    disclaimerTitle: '关于这些数字',
+    disclaimerBody:
+      '本计算器基于各平台公开定价页面，并以每行注明的日期为准。外部费率可能随时变动，做决定前请始终回到原始来源再次核实。Mobazha 的费率反映托管账户的平台协议费，以及自托管部署的零协议费。',
+  },
+  dataExport: {
+    cardTitle: '导出数据',
+    cardDescription: '下载你的商品、销售记录和客户列表',
+    pageTitle: '导出你的店铺数据',
+    pageDescription:
+      '你的店铺、你的数据、你的客户。你可以随时下载一份最新快照，用于备份、迁移或自行分析。',
+    listingsTitle: '商品',
+    listingsDescription: '你销售的全部商品，包括标题、价格、币种和可见性。',
+    salesTitle: '销售记录',
+    salesDescription: '作为卖家收到的每一笔订单，包括买家、物流、支付和保障状态。',
+    customersTitle: '客户',
+    customersDescription:
+      '按买家聚合的客户列表，每位买家一行，包含订单数、首次/最近购买时间和最近收货城市。',
+    csvButton: 'CSV',
+    jsonButton: 'JSON',
+    downloading: '下载中…',
+    toastSuccess: '{kind} 导出已下载',
+    toastError: '导出失败',
+    noteTitle: '导出如何工作',
+    noteBody:
+      '每次点击都会从你的店铺实时拉取一份最新快照。CSV 可直接在 Excel、Numbers 和 Google Sheets 中打开；JSON 更适合迁移脚本。我们不会通过邮件发送这些文件，下载只保留在当前设备上。',
+  },
   settingsExtended: {
     profile: '个人资料',
     country: '国家',
@@ -2311,6 +2395,39 @@ export const zh: TranslationResource = {
     shippingOptionsDesc: '配置配送方式和价格',
     storePoliciesSaved: '店铺政策已保存',
     termsDesc: '设置适用于店铺所有交易的条款和条件',
+    digitalReviewWindowTitle: '数字商品审核期',
+    digitalReviewWindowDesc:
+      '数字商品订单在交付后、自动完成前，可供买家审核的开放时长。默认 {default} 天，最长可延长到 {max} 天。更短的值会被忽略，买家始终至少获得默认审核期。',
+    digitalReviewWindowLabel: '审核期',
+    digitalReviewWindowUnit: '天',
+    digitalReviewWindowHelper: '留空则使用协议默认的 {default} 天。仅适用于数字商品。',
+    digitalReviewWindowInvalid: '请输入 0 到 {max} 之间的整数。',
+    operatorResponsibilities: '经营者责任',
+    operatorResponsibilitiesDesc: 'Mobazha 负责什么，以及作为店铺经营者你需要负责什么',
+    operatorResponsibilitiesPageTitle: '店铺经营者责任',
+    operatorResponsibilitiesIntro:
+      '运营 Mobazha 店铺是一种协作关系。我们提供基础设施和工具，而你仍然是 merchant of record。请明确了解双方各自负责的范围，以便清晰地运营你的店铺。',
+    operatorResponsibilitiesPlatformTitle: 'Mobazha 负责的内容',
+    operatorResponsibilitiesPlatformInfra: '托管基础设施、CDN 和支付路由',
+    operatorResponsibilitiesPlatformAUP:
+      '托管（SaaS）部署上的可接受使用政策执行，包括 DMCA 下架处理',
+    operatorResponsibilitiesPlatformCustody: '托管部署中的钱包密钥保管',
+    operatorResponsibilitiesPlatformTech: '订单、交付、退款和争议流程的技术正确性',
+    operatorResponsibilitiesSellerTitle: '作为经营者你负责的内容',
+    operatorResponsibilitiesSellerTax: '本地税务登记与申报（增值税、销售税等）',
+    operatorResponsibilitiesSellerContent: '内容合规：版权、AUP 遵守和地区监管要求',
+    operatorResponsibilitiesSellerProcessor:
+      '支持法币店铺所使用的支付处理商条款（Stripe / PayPal / 等）',
+    operatorResponsibilitiesSellerCustomer:
+      '客户支持、退款决策和拒付应对（我们提供工具，但不代替你仲裁）',
+    operatorResponsibilitiesSellerSelfHost: '自托管部署：全部运维、安全补丁和事故响应由你负责',
+    operatorResponsibilitiesDigitalNoteTitle: '数字商品无法“收回”',
+    operatorResponsibilitiesDigitalNote:
+      '一旦文件被下载或授权码已交付，无论是 Mobazha 还是你自己，都无法从买家设备中撤回。退款和争议结果只能撤销未来访问、授权验证和会员资格；已经交付的内容无法被“取消发送”。',
+    operatorResponsibilitiesAckLabel: '我已阅读并确认以上责任说明。',
+    operatorResponsibilitiesAckedAt: '确认时间：{date}',
+    operatorResponsibilitiesUnacked: '你尚未确认此责任说明。',
+    operatorResponsibilitiesAckSaved: '确认已保存。',
     termsPlaceholder: '输入您的店铺条款和条件，例如：付款条款、争议解决流程、责任限制等...',
     storeModerators: '店铺仲裁人',
     storeModeratorsDesc: '选择仲裁人来处理您店铺交易中的纠纷',
@@ -2806,6 +2923,12 @@ export const zh: TranslationResource = {
       moderatorRemoved: '调解员已移除',
       orderExpired: '订单已过期',
       orderStaleWarning: '订单提醒',
+      paymentCancelled: '支付已取消',
+      paymentExpired: '支付已过期',
+    },
+    payment: {
+      cancelled: '支付已取消',
+      expired: '支付已过期',
     },
     messages: {
       newOrderWithId: '您收到了一个新订单 #{{orderId}}',
@@ -6003,4 +6126,4 @@ export const zh: TranslationResource = {
     tokenHelpTitle: '你的订单令牌',
     tokenHelpBody: '此唯一令牌用于访问你的订单——无需账号或密码。保存完整网址即可返回此页面。',
   },
-};
+});

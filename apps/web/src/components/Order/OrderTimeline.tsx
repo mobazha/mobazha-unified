@@ -298,10 +298,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
                   {icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Order Accepted</p>
+                  <p className="text-sm font-medium">{t('order.orderAccepted')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {data?.description ||
-                      "You received the order and can fulfill it whenever you're ready."}
+                    {data?.description || t('order.acceptedDescSeller')}
                   </p>
                 </div>
               </div>
@@ -325,7 +324,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
                   {icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-error">Dispute opened</p>
+                  <p className="text-sm font-medium text-error">{t('order.disputeOpened')}</p>
                   {data?.claim && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{data.claim}</p>
                   )}
@@ -349,7 +348,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 {icon}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Refunded {data?.refundAmount}</p>
+                <p className="text-sm font-medium">
+                  {t('order.refunded')} {data?.refundAmount}
+                </p>
                 {data?.txHash && (
                   <p className="text-xs text-muted-foreground font-mono truncate">
                     TX: {data.txHash}
