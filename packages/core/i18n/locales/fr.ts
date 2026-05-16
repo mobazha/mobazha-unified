@@ -2,11 +2,9 @@
  * French Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const fr: TranslationResource = deepMergeTranslations(en, {
+export const fr: PartialTranslationResource = {
   common: {
     loading: 'Chargement...',
     redirecting: 'Redirection...',
@@ -5596,6 +5594,6 @@ export const fr: TranslationResource = deepMergeTranslations(en, {
     noProducts: 'Aucun produit dans cette collection',
     notFound: 'Collection introuvable',
   },
-});
+};
 
 export default fr;

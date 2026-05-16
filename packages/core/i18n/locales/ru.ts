@@ -2,11 +2,9 @@
  * Russian Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const ru: TranslationResource = deepMergeTranslations(en, {
+export const ru: PartialTranslationResource = {
   common: {
     loading: 'Загрузка...',
     redirecting: 'Перенаправление...',
@@ -5518,6 +5516,6 @@ export const ru: TranslationResource = deepMergeTranslations(en, {
     noProducts: 'В этой коллекции пока нет товаров',
     notFound: 'Коллекция не найдена',
   },
-});
+};
 
 export default ru;

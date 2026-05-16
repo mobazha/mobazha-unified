@@ -2,11 +2,9 @@
  * Japanese Translations
  */
 
-import { en } from './en';
-import type { TranslationResource } from '../types';
-import { deepMergeTranslations } from './utils';
+import type { PartialTranslationResource } from '../types';
 
-export const ja: TranslationResource = deepMergeTranslations(en, {
+export const ja: PartialTranslationResource = {
   common: {
     loading: '読み込み中...',
     redirecting: 'リダイレクト中...',
@@ -5505,6 +5503,6 @@ export const ja: TranslationResource = deepMergeTranslations(en, {
     noProducts: 'このコレクションには商品がありません',
     notFound: 'コレクションが見つかりません',
   },
-});
+};
 
 export default ja;
