@@ -176,7 +176,7 @@ export const de: TranslationResource = deepMergeTranslations(en, {
     openMessages: 'Nachrichten öffnen',
     viewCart: 'Warenkorb ansehen',
     openUserMenu: 'Benutzermenü öffnen',
-    productGroupsDesc: 'Organize products into groups for your storefront.',
+    productGroupsDesc: 'Organisieren Sie Produkte in Gruppen für Ihre Storefront.',
   },
   login: {
     title: 'Mobazha',
@@ -314,8 +314,8 @@ export const de: TranslationResource = deepMergeTranslations(en, {
     claimErrorWrongPassword: 'Falsches Admin-Passwort',
     claimErrorAlreadyClaimed: 'Dieser Shop wurde bereits beansprucht',
     claimErrorGeneric: 'Shop konnte nicht beansprucht werden. Bitte versuchen Sie es erneut.',
-    registrationFailedTitle: 'Registration failed',
-    registrationFailedDesc: 'Please check your network and try again.',
+    registrationFailedTitle: 'Registrierung fehlgeschlagen',
+    registrationFailedDesc: 'Bitte überprüfe deine Netzwerkverbindung und versuche es erneut.',
   },
   product: {
     title: 'Titel',
@@ -426,7 +426,7 @@ export const de: TranslationResource = deepMergeTranslations(en, {
     users: 'Benutzer',
     category: 'Kategorie',
     allCategories: 'Alle Kategorien',
-    browseByType: 'Browse by type',
+    browseByType: 'Nach Typ durchsuchen',
   },
   cart: {
     title: 'Warenkorb',
