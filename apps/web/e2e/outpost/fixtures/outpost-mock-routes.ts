@@ -40,6 +40,8 @@ const MOCK_GUEST_ORDER_LTC = {
     {
       listingHash: 'QmOutpostHash001',
       listingTitle: 'Privacy VPN Subscription (1 Year)',
+      listingSlug: 'privacy-vpn-subscription-1-year',
+      sellerPeerID: '12D3KooWOutpostPeerID',
       quantity: 1,
       unitPrice: '2800',
     },
@@ -70,6 +72,8 @@ const MOCK_GUEST_ORDER_XMR = {
     {
       listingHash: 'QmOutpostHash002',
       listingTitle: 'Encrypted USB Drive (64GB)',
+      listingSlug: 'encrypted-usb-drive-64gb',
+      sellerPeerID: '12D3KooWOutpostPeerID',
       quantity: 1,
       unitPrice: '2800',
     },

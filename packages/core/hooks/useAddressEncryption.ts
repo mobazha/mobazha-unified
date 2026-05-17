@@ -19,7 +19,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { NODE_API } from '../config/apiPaths';
-import { getGatewayUrl } from '../services/api/config';
 
 export interface AddressEncryptionState {
   /** True when the vendor has a PGP key configured and encryption is ready. */

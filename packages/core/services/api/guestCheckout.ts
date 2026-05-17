@@ -61,6 +61,9 @@ export interface GuestOrderResponse {
 export interface GuestOrderItemResponse {
   listingHash: string;
   listingTitle: string;
+  listingSlug: string;
+  sellerPeerID: string;
+  thumbnail?: string;
   quantity: number;
   unitPrice: string;
 }
@@ -94,18 +97,38 @@ export interface GuestOrderStatus {
 
 export interface GuestCheckoutSettings {
   enabled: boolean;
+  /** All coins the seller has configured (used by admin settings editor). */
   acceptedCoins: string[];
+  /**
+   * Runtime-available subset of acceptedCoins computed by the node.
+   * Coins without the required sidecar (e.g. XMR without monero-wallet-rpc)
+   * are excluded. Buyer-facing payment selectors MUST use this field.
+   * Falls back to acceptedCoins when the server is an older build that
+   * does not yet return this field.
+   */
+  availableCoins: string[];
   maxOrderAmount?: string;
   paymentTimeoutMinutes: number;
 }
 
 function fromGuestCheckoutSettingsDTO(res: GuestCheckoutSettingsDTO): GuestCheckoutSettings {
+  const acceptedCoins = (res.acceptedCoins || '')
+    .split(',')
+    .map(coin => coin.trim())
+    .filter(Boolean);
+  // Prefer the server-computed availableCoins when present; fall back to
+  // acceptedCoins for backward-compatibility with older node builds.
+  const availableCoins =
+    res.availableCoins !== undefined
+      ? (res.availableCoins || '')
+          .split(',')
+          .map(coin => coin.trim())
+          .filter(Boolean)
+      : acceptedCoins;
   return {
     enabled: !!res.enabled,
-    acceptedCoins: (res.acceptedCoins || '')
-      .split(',')
-      .map(coin => coin.trim())
-      .filter(Boolean),
+    acceptedCoins,
+    availableCoins,
     maxOrderAmount: res.maxOrderAmount,
     paymentTimeoutMinutes: res.paymentTimeout,
   };
@@ -114,6 +137,8 @@ function fromGuestCheckoutSettingsDTO(res: GuestCheckoutSettingsDTO): GuestCheck
 interface GuestCheckoutSettingsDTO {
   enabled: boolean;
   acceptedCoins: string;
+  /** Computed by the node at query time; absent on older builds. */
+  availableCoins?: string;
   maxOrderAmount?: string;
   paymentTimeout: number;
 }

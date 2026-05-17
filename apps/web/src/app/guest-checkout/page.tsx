@@ -9,6 +9,7 @@ import {
   buyerPortalTokenStorageKey,
   getGuestCheckoutSettings,
   createGuestOrder,
+  getGuestOrderStatus,
   type CreateGuestOrderRequest,
   type GuestOrderResponse,
 } from '@mobazha/core/services/api/guestCheckout';
@@ -152,7 +153,10 @@ export default function GuestCheckoutPage() {
   useEffect(() => {
     getGuestCheckoutSettings()
       .then(res => {
-        const coins = res.acceptedCoins;
+        // Use availableCoins (runtime-filtered by the node) so payment methods
+        // that lack the required sidecar (e.g. XMR without monero-wallet-rpc)
+        // are never shown to the buyer.
+        const coins = res.availableCoins;
         if (Array.isArray(coins) && coins.length > 0) setAcceptedCoins(coins);
       })
       .catch(() => {});
@@ -195,6 +199,29 @@ export default function GuestCheckoutPage() {
     },
     []
   );
+
+  // Poll order status when in 'awaiting' state. Auto-navigate to the order
+  // status page as soon as the payment is detected or confirmed.
+  useEffect(() => {
+    if (paymentState.status !== 'awaiting') return;
+    const { orderToken, buyerPortalToken } = paymentState.data;
+    let cancelled = false;
+    const interval = setInterval(() => {
+      if (cancelled) return;
+      getGuestOrderStatus(orderToken)
+        .then(res => {
+          if (cancelled) return;
+          if (res.state !== 'AWAITING_PAYMENT') {
+            router.push(buildGuestOrderUrl(orderToken, buyerPortalToken));
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [paymentState, router]);
 
   const submitGuestOrder = useCallback(
     async (coin: string) => {
