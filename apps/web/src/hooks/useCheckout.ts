@@ -53,8 +53,12 @@ const FIAT_CURRENCY_CODES = new Set([
  *
  * Supports two entry modes:
  *  1. Single-item "Buy Now": ?slug=xxx&peerID=yyy&quantity=1
- *  2. Multi-item from cart:  ?vendorPeerID=yyy[&slugs=slug1,slug2]
+ *  2. Multi-item from cart:  ?vendorPeerID=yyy&slugs=slug1,slug2
  *     (quantities and options read from useCartStore)
+ *
+ * Both vendorPeerID and slugs are required for cart mode. A URL with only
+ * vendorPeerID and no slugs does not trigger cart mode — this prevents silently
+ * loading all cart items for that vendor when slugs are absent (e.g. truncated URL).
  */
 export function useCheckout(): UseCheckoutReturn {
   const router = useRouter();
@@ -72,7 +76,9 @@ export function useCheckout(): UseCheckoutReturn {
   const cartVendorPeerID = searchParams.get('vendorPeerID');
   const cartSlugs = searchParams.get('slugs');
 
-  const isCartMode = !!cartVendorPeerID;
+  // Both params are required: vendorPeerID alone must not silently load all vendor
+  // cart items. buildCheckoutUrl always includes slugs for multi-item checkouts.
+  const isCartMode = !!cartVendorPeerID && !!cartSlugs;
 
   // ---- Cart store (for multi-item mode) ----
   const cartItems = useCartStore(s => s.items);
