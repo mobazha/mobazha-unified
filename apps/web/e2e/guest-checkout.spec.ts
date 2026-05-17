@@ -34,6 +34,8 @@ const MOCK_GUEST_ORDER_RESPONSE = {
     {
       listingHash: 'QmTestHash123',
       listingTitle: 'Premium Wireless Headphones',
+      listingSlug: 'premium-wireless-headphones',
+      sellerPeerID: '12D3KooWTestPeerID',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -55,6 +57,8 @@ const MOCK_GUEST_ORDER_STATUS = {
     {
       listingHash: 'QmTestHash123',
       listingTitle: 'Premium Wireless Headphones',
+      listingSlug: 'premium-wireless-headphones',
+      sellerPeerID: '12D3KooWTestPeerID',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -90,6 +94,8 @@ const MOCK_GUEST_ORDERS_LIST = [
       {
         listingHash: 'QmTestHash456',
         listingTitle: 'Vintage Camera',
+        listingSlug: 'vintage-camera',
+        sellerPeerID: '12D3KooWTestPeerID',
         quantity: 1,
         unitPrice: '24500',
       },
