@@ -181,7 +181,7 @@ export function ProductDetailDesktop({
     );
   }
 
-  const purchaseDisabled = isOffline || stock === 0 || !paymentAvailable;
+  const purchaseDisabled = isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable);
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
@@ -249,19 +249,21 @@ export function ProductDetailDesktop({
                 </span>
               </div>
             </Link>
-            <HStack gap="xs" className="flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-11 px-3 text-xs sm:h-9"
-                onClick={() => openChatWithVendor()}
-              >
-                {t('profile.message')}
-              </Button>
-              <Button variant="outline" size="sm" className="h-11 px-3 text-xs sm:h-9">
-                {t('profile.follow')}
-              </Button>
-            </HStack>
+            {!__OUTPOST__ && (
+              <HStack gap="xs" className="flex-shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 px-3 text-xs sm:h-9"
+                  onClick={() => openChatWithVendor()}
+                >
+                  {t('profile.message')}
+                </Button>
+                <Button variant="outline" size="sm" className="h-11 px-3 text-xs sm:h-9">
+                  {t('profile.follow')}
+                </Button>
+              </HStack>
+            )}
           </div>
         </div>
       )}
@@ -436,7 +438,7 @@ export function ProductDetailDesktop({
               )}
             </div>
 
-            <BuyerProtectionBadge variant="inline" className="mt-1" />
+            {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (
@@ -627,10 +629,10 @@ export function ProductDetailDesktop({
             )}
 
             {/* Verified Moderator Badge */}
-            <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
+            {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
             {/* Buyer Protection */}
-            {!isOwnProduct && <BuyerProtectionBanner />}
+            {!isOwnProduct && !__OUTPOST__ && <BuyerProtectionBanner />}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (

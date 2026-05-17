@@ -123,7 +123,7 @@ if (!__OUTPOST__) {
     { path: '/guest-checkout', element: lazyPage(() => import('./app/guest-checkout/page')) },
     {
       path: '/guest-order/:orderToken',
-      element: lazyPage(() => import('./app/guest-order/page')),
+      element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
     },
 
     // 结账流程
@@ -493,7 +493,7 @@ if (__OUTPOST__) {
     { path: '/guest-checkout', element: lazyPage(() => import('./app/guest-checkout/page')) },
     {
       path: '/guest-order/:orderToken',
-      element: lazyPage(() => import('./app/guest-order/page')),
+      element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
     },
 
     // Track Order (buyer entry point)

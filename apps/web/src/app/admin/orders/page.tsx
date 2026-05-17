@@ -39,8 +39,15 @@ import {
   STATUS_FILTER_TO_STATES,
 } from '@/components/admin/orders/utils';
 import type { StatusFilter } from '@/components/admin/orders/utils';
-import { listGuestOrders, type GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
+import {
+  listGuestOrders,
+  getAdminGuestOrderDetail,
+  type GuestOrderSummary,
+  type GuestOrderAdminDetail,
+} from '@mobazha/core/services/api/guestCheckout';
 import { useFeature } from '@mobazha/core/hooks/useFeature';
+import { AdminShippingDecrypt } from '@/components/GuestCheckout/AdminShippingDecrypt';
+import { isOutpostMode } from '@mobazha/core/config/env';
 
 function useAdminOrders() {
   const { t } = useI18n();
@@ -167,14 +174,38 @@ export default function AdminOrdersPage() {
   const [guestLoading, setGuestLoading] = useState(false);
   const guestEnabled = useFeature('guestCheckout');
 
+  // PM-3a: Admin guest order detail drawer state.
+  const [selectedGuestToken, setSelectedGuestToken] = useState<string | null>(null);
+  const [guestDetail, setGuestDetail] = useState<GuestOrderAdminDetail | null>(null);
+  const [guestDetailLoading, setGuestDetailLoading] = useState(false);
+
   useEffect(() => {
     if (orderView !== 'guest') return;
     setGuestLoading(true);
-    listGuestOrders({ limit: 50 })
+    listGuestOrders({ page: 0, pageSize: 50 })
       .then(res => setGuestOrders(res))
       .catch(() => {})
       .finally(() => setGuestLoading(false));
   }, [orderView]);
+
+  const handleGuestOrderClick = useCallback(
+    (token: string) => {
+      // In Outpost mode, open the Admin detail drawer with decryption UI.
+      // In SaaS mode, navigate to the buyer-facing order tracker.
+      if (isOutpostMode()) {
+        setSelectedGuestToken(token);
+        setGuestDetail(null);
+        setGuestDetailLoading(true);
+        getAdminGuestOrderDetail(token)
+          .then(d => setGuestDetail(d))
+          .catch(() => setGuestDetail(null))
+          .finally(() => setGuestDetailLoading(false));
+      } else {
+        router.push(`/guest-order/${token}`);
+      }
+    },
+    [router]
+  );
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -549,7 +580,7 @@ export default function AdminOrdersPage() {
               <GuestOrderRow
                 key={go.orderToken}
                 order={go}
-                onClick={() => router.push(`/guest-order/${go.orderToken}`)}
+                onClick={() => handleGuestOrderClick(go.orderToken)}
               />
             ))
           )}
@@ -790,6 +821,93 @@ export default function AdminOrdersPage() {
             </>
           )}
         </>
+      )}
+
+      {/* PM-3a: Admin guest order detail drawer — outside ternary so it persists on any tab */}
+      {selectedGuestToken && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="flex-1 bg-black/40" onClick={() => setSelectedGuestToken(null)} />
+          <div className="w-full max-w-md bg-background border-l shadow-xl overflow-y-auto p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">
+                {t('admin.orders.guestOrderDetail', { defaultValue: 'Guest Order Detail' })}
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedGuestToken(null)}>
+                ✕
+              </Button>
+            </div>
+
+            {guestDetailLoading && (
+              <div className="flex items-center justify-center h-24">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            )}
+
+            {!guestDetailLoading && guestDetail && (
+              <div className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                  <span>{t('admin.orders.status')}:</span>
+                  <span className="font-medium text-foreground">{guestDetail.state}</span>
+                  <span>{t('admin.orders.coin')}:</span>
+                  <span className="font-medium text-foreground">{guestDetail.paymentCoin}</span>
+                  <span>{t('admin.orders.token')}:</span>
+                  <span className="font-mono text-xs text-foreground break-all">
+                    {guestDetail.orderToken}
+                  </span>
+                  {guestDetail.contactEmail && (
+                    <>
+                      <span>{t('admin.orders.email')}:</span>
+                      <span className="font-medium text-foreground">
+                        {guestDetail.contactEmail}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* Items */}
+                {guestDetail.items.length > 0 && (
+                  <div>
+                    <p className="font-medium mb-1">
+                      {t('admin.orders.items', { defaultValue: 'Items' })}
+                    </p>
+                    <div className="space-y-1">
+                      {guestDetail.items.map((item, i) => (
+                        <div key={i} className="flex justify-between text-muted-foreground">
+                          <span>{item.listingTitle}</span>
+                          <span>×{item.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Shipping address */}
+                <div>
+                  <p className="font-medium mb-2">
+                    {t('admin.orders.shippingAddress', { defaultValue: 'Shipping Address' })}
+                  </p>
+                  {guestDetail.addressEncrypted && guestDetail.shippingAddressCiphertext ? (
+                    <AdminShippingDecrypt ciphertext={guestDetail.shippingAddressCiphertext} />
+                  ) : guestDetail.shippingAddress ? (
+                    <div className="bg-muted rounded-md p-3 font-mono space-y-0.5">
+                      {Object.entries(guestDetail.shippingAddress)
+                        .filter(([, v]) => v)
+                        .map(([k, v]) => (
+                          <p key={k}>{v}</p>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground italic">
+                      {t('admin.orders.noShippingAddress', {
+                        defaultValue: 'No shipping address (digital order)',
+                      })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -137,8 +137,9 @@ export function ProductDetail({
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(peerID || product?.vendorID?.peerID);
 
+  // Outpost: guest checkout via XMR is always available; skip fiat/crypto method check.
   const paymentAvailable =
-    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+    __OUTPOST__ || paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
   const isStorePaused = !isOwnProduct && vendor?.storePaused === true;
 
@@ -830,7 +831,7 @@ export function ProductDetail({
               />
             )}
 
-            <BuyerProtectionBadge variant="inline" className="mt-1" />
+            {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (
@@ -1009,11 +1010,11 @@ export function ProductDetail({
               </div>
             )}
 
-            {/* Verified Moderator Badge */}
-            <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
+            {/* Verified Moderator Badge — hidden in Outpost (no moderator/arbitration system) */}
+            {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
-            {/* Buyer Protection */}
-            {!isOwnProduct && <BuyerProtectionBanner />}
+            {/* Buyer Protection — hidden in Outpost (XMR direct pay, no escrow/arbitration) */}
+            {!isOwnProduct && !__OUTPOST__ && <BuyerProtectionBanner />}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (

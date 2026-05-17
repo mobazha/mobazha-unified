@@ -14,7 +14,8 @@ import {
 } from '@mobazha/core/services/api/guestCheckout';
 import { GUEST_CHECKOUT_DEFAULT_COINS } from '@mobazha/core/config/guestCheckoutCoins';
 import { isOutpostMode } from '@mobazha/core/config/env';
-import { getPaymentMethods } from '@mobazha/core/services/api/fiat';
+import { getGatewayUrl } from '@mobazha/core/services/api/config';
+import { useAddressEncryption } from '@mobazha/core/hooks/useAddressEncryption';
 import type { Address } from '@mobazha/core';
 import { Header } from '@/components';
 import { Container } from '@/components/layouts';
@@ -55,33 +56,49 @@ type PaymentState =
   | { status: 'awaiting'; data: GuestOrderResponse }
   | { status: 'error'; message: string };
 
+function buildAddressPayload(addr: Address): {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  addressNotes?: string;
+} {
+  return {
+    name: addr.name,
+    address: addr.addressLineOne,
+    city: addr.city,
+    state: addr.state,
+    postalCode: addr.postalCode,
+    country: addr.country,
+    addressNotes: addr.addressNotes || undefined,
+  };
+}
+
 function buildOrderRequest(
   items: GuestCartItem[],
   addr: Address | null,
+  encryptedAddr: string | null,
   email: string,
   coin: string
 ): CreateGuestOrderRequest {
   return {
     items: items.map(i => ({
-      slug: i.slug,
+      listingSlug: i.slug,
       listingHash: i.listingHash,
       quantity: i.quantity,
-      options: i.options,
-      shipping: i.shipping,
+      options: i.options?.map(opt => ({ [opt.name]: opt.value })),
+      shippingOption: i.shipping?.name,
+      shippingService: i.shipping?.service,
     })),
     paymentCoin: coin,
     contactEmail: email || undefined,
-    shippingAddress: addr
-      ? {
-          name: addr.name,
-          address: addr.addressLineOne,
-          city: addr.city,
-          state: addr.state,
-          postalCode: addr.postalCode,
-          country: addr.country,
-          addressNotes: addr.addressNotes || undefined,
-        }
-      : undefined,
+    ...(addr !== null && encryptedAddr
+      ? { shippingAddress: encryptedAddr }
+      : addr !== null
+        ? { shippingAddress: buildAddressPayload(addr) }
+        : {}),
   };
 }
 
@@ -115,6 +132,8 @@ export default function GuestCheckoutPage() {
     useGuestCartStore();
   const [step, setStep] = useState<Step>('cart');
   const [addressData, setAddressData] = useState<Address>(EMPTY_ADDRESS);
+  // PM-3a: holds the PGP-encrypted address ciphertext once encryption succeeds.
+  const [encryptedAddress, setEncryptedAddress] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [acceptedCoins, setAcceptedCoins] = useState<string[]>(
@@ -123,26 +142,14 @@ export default function GuestCheckoutPage() {
   const [coinsLoading, setCoinsLoading] = useState(false);
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
 
+  // PM-3a: fetch vendor PGP public key for client-side address encryption.
+  // Only needed for physical goods that require a shipping address.
+  const hasPhysicalItems = items.some(i => i.contractType === 'PHYSICAL_GOOD');
+  const { encryptionAvailable, encryptAddress } = useAddressEncryption(
+    isOutpostMode() && hasPhysicalItems ? getGatewayUrl() : ''
+  );
+
   useEffect(() => {
-    if (isOutpostMode()) {
-      const vendorPeerID = items[0]?.vendorPeerID;
-      if (!vendorPeerID) return;
-      const fetchCoins = async () => {
-        setCoinsLoading(true);
-        try {
-          const data = await getPaymentMethods(vendorPeerID);
-          if (Array.isArray(data.crypto) && data.crypto.length > 0) {
-            setAcceptedCoins(data.crypto);
-          }
-        } catch {
-          // leave acceptedCoins empty → UI shows "no payment methods"
-        } finally {
-          setCoinsLoading(false);
-        }
-      };
-      fetchCoins();
-      return;
-    }
     getGuestCheckoutSettings()
       .then(res => {
         const coins = res.acceptedCoins;
@@ -170,6 +177,8 @@ export default function GuestCheckoutPage() {
 
   const handleAddressChange = (field: keyof Address, value: string) => {
     setAddressData(prev => ({ ...prev, [field]: value }));
+    // Reset cached ciphertext whenever the user edits the address.
+    setEncryptedAddress(null);
   };
 
   const canSubmitShipping =
@@ -191,8 +200,23 @@ export default function GuestCheckoutPage() {
     async (coin: string) => {
       setPaymentState({ status: 'submitting' });
       try {
-        // Pass null for address when all items are digital (no delivery needed)
-        const req = buildOrderRequest(items, isAllDigital ? null : addressData, contactEmail, coin);
+        // PM-3a: for physical orders, try to encrypt the address client-side
+        // before sending. Falls back to plaintext if PGP is not configured.
+        let finalEncrypted: string | null = encryptedAddress;
+        if (!isAllDigital && encryptionAvailable && !finalEncrypted) {
+          finalEncrypted = await encryptAddress(buildAddressPayload(addressData));
+          if (!submitOrderAbortRef.current && finalEncrypted) {
+            setEncryptedAddress(finalEncrypted);
+          }
+        }
+
+        const req = buildOrderRequest(
+          items,
+          isAllDigital ? null : addressData,
+          isAllDigital ? null : finalEncrypted,
+          contactEmail,
+          coin
+        );
         const res = await createGuestOrder(req);
         if (submitOrderAbortRef.current) return;
         if (res.buyerPortalToken && typeof window !== 'undefined') {
@@ -209,7 +233,16 @@ export default function GuestCheckoutPage() {
         setPaymentState({ status: 'error', message: msg });
       }
     },
-    [items, isAllDigital, addressData, contactEmail, clearCart]
+    [
+      items,
+      isAllDigital,
+      addressData,
+      encryptedAddress,
+      encryptionAvailable,
+      encryptAddress,
+      contactEmail,
+      clearCart,
+    ]
   );
 
   const handleCoinSelect = (tokenId: string) => {
@@ -272,6 +305,7 @@ export default function GuestCheckoutPage() {
                           title={item.title}
                           href={`/product/${item.slug}?peerID=${item.vendorPeerID}`}
                           options={item.options}
+                          contractType={item.contractType}
                           unitPrice={item.price.amount}
                           currency={item.price.currency}
                           quantity={item.quantity}
@@ -362,6 +396,30 @@ export default function GuestCheckoutPage() {
                   />
                 </CardContent>
               </Card>
+
+              {/* PM-3a: encryption status indicator */}
+              {isOutpostMode() && (
+                <div
+                  className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
+                    encryptionAvailable
+                      ? 'bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                  }`}
+                >
+                  <span>{encryptionAvailable ? '🔒' : '⚠️'}</span>
+                  <span>
+                    {encryptionAvailable
+                      ? t('guestCheckout.addressWillBeEncrypted', {
+                          defaultValue:
+                            "Your address will be encrypted with the seller's PGP key before sending.",
+                        })
+                      : t('guestCheckout.addressNotEncrypted', {
+                          defaultValue:
+                            'This seller has not configured PGP encryption. Your address will be sent as plaintext.',
+                        })}
+                  </span>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button

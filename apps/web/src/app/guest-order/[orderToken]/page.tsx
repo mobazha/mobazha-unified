@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import { Header } from '@/components';
@@ -64,7 +64,8 @@ function cleanBuyerPortalTokenFromAddressBar(): void {
 }
 
 export default function GuestOrderPage() {
-  const { orderToken } = useParams<{ orderToken: string }>();
+  const params = useParams<{ orderToken: string }>();
+  const orderToken = typeof params?.orderToken === 'string' ? params.orderToken : undefined;
   const { t } = useI18n();
   const [order, setOrder] = useState<GuestOrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);

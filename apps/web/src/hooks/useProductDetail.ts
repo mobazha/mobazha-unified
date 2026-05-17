@@ -382,7 +382,10 @@ export function useProductDetail({
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(vendorPeerID);
   const paymentAvailable =
-    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+    isOutpostMode() ||
+    paymentMethodsLoading ||
+    vendorCrypto.length > 0 ||
+    vendorActiveFiat.length > 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rwaTradeMode = (product?.metadata as any)?.rwaTradeMode;

@@ -61,6 +61,7 @@
     "lucide-react": "^0.562.0",
     "multicoin-address-validator": "^0.5.26",
     "next": "^16.1.1",
+    "openpgp": "^6.3.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -6733,7 +6733,7 @@ export const en: TranslationResource = {
     continueToShipping: 'Continue to Shipping',
     shippingInfo: 'Shipping Information',
     fullName: 'Full Name',
-    emailLabel: 'Email (optional, for order updates)',
+    emailLabel: 'Email (optional — leave blank to stay anonymous)',
     address: 'Address',
     city: 'City',
     stateProvince: 'State / Province',
@@ -6762,15 +6762,16 @@ export const en: TranslationResource = {
     stepShipping: 'Shipping',
     stepCoin: 'Payment Method',
     stepPay: 'Pay',
-    anonymousBannerTitle: "You're checking out as a guest",
-    anonymousBannerSubtitle: 'No account needed — pay directly with cryptocurrency.',
-    anonymousLearnMore: 'What does this mean?',
-    anonymousPointNoAccount: 'No account or signup required.',
+    anonymousBannerTitle: 'Anonymous checkout mode',
+    anonymousBannerSubtitle: 'No account · No tracking · Pay with XMR',
+    anonymousLearnMore: 'Learn more',
+    anonymousPointNoAccount: 'Zero identity — no account, no login, no tracking',
     anonymousPointDirectPayment:
-      'Payment goes directly to the seller — there is no escrow or buyer protection.',
-    anonymousPointEmailOptional: 'Email is optional, but recommended to receive order updates.',
+      'Peer-to-peer direct payment — funds go straight to the seller, no escrow',
+    anonymousPointEmailOptional:
+      'Email is optional — leave blank to stay fully anonymous; enter to receive order notifications',
     anonymousPointSaveLink:
-      'After you place the order, save the order link — it is the only way back.',
+      'Save your order link — it is your only receipt, and contains no personal information',
     saveLinkTitle: 'Save your order link',
     saveLinkDescription:
       "Bookmark this link to check payment status, confirmations and shipping. It's the only way to find this order again.",

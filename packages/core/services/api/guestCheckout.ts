@@ -2,11 +2,11 @@
  * Guest Checkout API service
  *
  * Guest endpoints are public (no auth required for buyers).
- * Settings endpoints require seller authentication.
+ * Guest checkout reads are public; writes require seller authentication.
  */
 
 import { NODE_API } from '../../config/apiPaths';
-import { publicGet, publicPost, authGet, authPut, authPost } from './helpers';
+import { publicGet, publicPost, authGet, authPut, authPost, authDel } from './helpers';
 
 // ========== Types ==========
 
@@ -18,19 +18,31 @@ export interface GuestCartItem {
   shipping?: { name: string; service: string };
 }
 
+export interface CreateGuestOrderItemRequest {
+  listingSlug: string;
+  listingHash: string;
+  quantity: number;
+  options?: Record<string, string>[];
+  shippingOption?: string;
+  shippingService?: string;
+}
+
 export interface CreateGuestOrderRequest {
-  items: GuestCartItem[];
+  items: CreateGuestOrderItemRequest[];
   paymentCoin: string;
   contactEmail?: string;
-  shippingAddress?: {
-    name: string;
-    address: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-    addressNotes?: string;
-  };
+  /** Plaintext address object or PM-3a PGP ciphertext string. */
+  shippingAddress?:
+    | {
+        name: string;
+        address: string;
+        city: string;
+        state: string;
+        postalCode: string;
+        country: string;
+        addressNotes?: string;
+      }
+    | string;
   memo?: string;
 }
 
@@ -87,6 +99,25 @@ export interface GuestCheckoutSettings {
   paymentTimeoutMinutes: number;
 }
 
+function fromGuestCheckoutSettingsDTO(res: GuestCheckoutSettingsDTO): GuestCheckoutSettings {
+  return {
+    enabled: !!res.enabled,
+    acceptedCoins: (res.acceptedCoins || '')
+      .split(',')
+      .map(coin => coin.trim())
+      .filter(Boolean),
+    maxOrderAmount: res.maxOrderAmount,
+    paymentTimeoutMinutes: res.paymentTimeout,
+  };
+}
+
+interface GuestCheckoutSettingsDTO {
+  enabled: boolean;
+  acceptedCoins: string;
+  maxOrderAmount?: string;
+  paymentTimeout: number;
+}
+
 export interface GuestOrderSummary {
   orderToken: string;
   state: string;
@@ -113,29 +144,84 @@ export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
   return publicGet(NODE_API.GUEST_ORDER(token));
 }
 
-// ========== Seller-facing APIs (require auth) ==========
+// ========== Guest checkout settings / seller APIs ==========
 
 export function getGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
-  return authGet(NODE_API.GUEST_CHECKOUT_SETTINGS);
+  return publicGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS).then(
+    fromGuestCheckoutSettingsDTO
+  );
 }
 
 export function updateGuestCheckoutSettings(
   settings: GuestCheckoutSettings
 ): Promise<GuestCheckoutSettings> {
-  return authPut(NODE_API.GUEST_CHECKOUT_SETTINGS, settings);
+  const payload: GuestCheckoutSettingsDTO = {
+    enabled: settings.enabled,
+    acceptedCoins: settings.acceptedCoins.join(','),
+    maxOrderAmount: settings.maxOrderAmount,
+    paymentTimeout: settings.paymentTimeoutMinutes,
+  };
+  return authPut<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS, payload).then(
+    fromGuestCheckoutSettingsDTO
+  );
 }
 
 export function listGuestOrders(params?: {
-  limit?: number;
-  offset?: number;
+  page?: number;
+  pageSize?: number;
   state?: string;
 }): Promise<GuestOrderSummary[]> {
   const query = new URLSearchParams();
-  if (params?.limit) query.set('limit', String(params.limit));
-  if (params?.offset) query.set('offset', String(params.offset));
+  if (params?.page !== undefined) query.set('page', String(params.page));
+  if (params?.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
   if (params?.state) query.set('state', params.state);
   const qs = query.toString();
   return authGet(`${NODE_API.GUEST_ORDERS}${qs ? `?${qs}` : ''}`);
+}
+
+// PM-3a: Admin-only full order detail (includes encrypted shipping address).
+export interface GuestOrderAdminDetail {
+  orderToken: string;
+  state: string;
+  paymentCoin: string;
+  paymentAmount: string;
+  priceCurrency: string;
+  items: GuestOrderItemResponse[];
+  contactEmail?: string;
+  createdAt: string;
+  updatedAt: string;
+  // addressEncrypted=true means shippingAddressCiphertext holds PGP armor.
+  // addressEncrypted=false means shippingAddress holds a parsed JSON object.
+  addressEncrypted: boolean;
+  shippingAddressCiphertext?: string;
+  shippingAddress?: Record<string, string>;
+}
+
+export function getAdminGuestOrderDetail(token: string): Promise<GuestOrderAdminDetail> {
+  return authGet(NODE_API.GUEST_ORDER_ADMIN_DETAIL(token));
+}
+
+// PM-3a: PGP key management APIs (Outpost/seller-side).
+
+/**
+ * Fetches the vendor's PGP public key.
+ * Returns an empty string when no key is configured (404 → "").
+ */
+export async function getPGPPublicKey(): Promise<string> {
+  try {
+    const data = await publicGet<{ publicKey: string }>(NODE_API.SETTINGS_PGP_KEY);
+    return data?.publicKey ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function updatePGPPublicKey(publicKey: string): Promise<{ publicKey: string }> {
+  return authPut(NODE_API.SETTINGS_PGP_KEY, { publicKey });
+}
+
+export function deletePGPPublicKey(): Promise<void> {
+  return authDel(NODE_API.SETTINGS_PGP_KEY);
 }
 
 export function shipGuestOrder(
