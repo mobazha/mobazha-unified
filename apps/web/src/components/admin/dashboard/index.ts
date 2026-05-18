@@ -1,5 +1,6 @@
 export { StatCard } from './StatCard';
 export { RecentOrderRow } from './RecentOrderRow';
+export { AdminRecentOrderRow } from './AdminRecentOrderRow';
 export { TopProductRow } from './TopProductRow';
 export { EmptyState } from './EmptyState';
 export { ListSkeleton } from './ListSkeleton';
