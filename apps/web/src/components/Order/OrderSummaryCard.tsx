@@ -42,6 +42,15 @@ export interface OrderSummaryCardProps {
   className?: string;
 }
 
+function buildProductHref(item: OrderSummaryItem, vendorPeerID?: string): string | undefined {
+  const slug = item.id.trim();
+  if (!slug || slug.startsWith('item-')) return undefined;
+
+  const encodedSlug = encodeURIComponent(slug);
+  const query = vendorPeerID ? `?peerID=${encodeURIComponent(vendorPeerID)}` : '';
+  return `/product/${encodedSlug}${query}`;
+}
+
 /**
  * 订单摘要卡片组件
  * 在支付页面显示订单的只读信息
@@ -72,24 +81,57 @@ export function OrderSummaryCard({
 
         {/* Items */}
         <VStack gap="sm" className="mb-4 pb-4 border-b border-border">
-          {items.map(item => (
-            <HStack key={item.id} gap="sm" align="start">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden flex-shrink-0">
-                <ProductImageNative src={item.image} alt={item.title ?? ''} iconSize="sm" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground line-clamp-2">{item.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('order.quantity')}: {item.quantity}
+          {items.map(item => {
+            const productHref = buildProductHref(item, vendor.peerID);
+            const content = (
+              <>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden flex-shrink-0">
+                  <ProductImageNative
+                    src={item.image}
+                    alt={item.title ?? ''}
+                    className={
+                      productHref ? 'group-hover:scale-105 transition-transform' : undefined
+                    }
+                    iconSize="sm"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={cn(
+                      'text-sm font-medium text-foreground line-clamp-2 transition-colors',
+                      productHref && 'group-hover:text-primary'
+                    )}
+                  >
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t('order.quantity')}: {item.quantity}
+                  </p>
+                </div>
+                <p className="font-medium text-foreground text-sm flex-shrink-0">
+                  {renderPairedPrice(item.price * item.quantity, item.currency, {
+                    isMinimalUnit: false,
+                  })}
                 </p>
+              </>
+            );
+
+            return productHref ? (
+              <Link
+                key={item.id}
+                href={productHref}
+                aria-label={item.title}
+                data-testid="order-summary-product-link"
+                className="group -mx-2 flex min-h-14 items-start gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {content}
+              </Link>
+            ) : (
+              <div key={item.id} className="flex min-h-14 items-start gap-3">
+                {content}
               </div>
-              <p className="font-medium text-foreground text-sm">
-                {renderPairedPrice(item.price * item.quantity, item.currency, {
-                  isMinimalUnit: false,
-                })}
-              </p>
-            </HStack>
-          ))}
+            );
+          })}
         </VStack>
 
         {/* Vendor */}

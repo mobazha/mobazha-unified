@@ -14,7 +14,6 @@ import { isZoneAvailable } from './checkout-utils';
 import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
-import { RefundWalletCard } from './RefundWalletCard';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { usePrimaryCTA, useHaptic } from '@/lib/platform';
 import type { UseCheckoutReturn } from './types';
@@ -46,10 +45,6 @@ export function CheckoutMobile({ checkout }: Props) {
     updateQuantity,
     orderNote,
     setOrderNote,
-    refundAddress,
-    setRefundAddress,
-    requiresRefundAddress,
-    connectedRefundWalletAddress,
     handleCreateOrder,
     isSubmitting,
     canSubmit,
@@ -368,15 +363,6 @@ export function CheckoutMobile({ checkout }: Props) {
                   </VStack>
                 </CardContent>
               </Card>
-            )}
-
-            {requiresRefundAddress && (
-              <RefundWalletCard
-                value={refundAddress}
-                onChange={setRefundAddress}
-                connectedAddress={connectedRefundWalletAddress}
-                compact
-              />
             )}
 
             {/* Discount Code */}

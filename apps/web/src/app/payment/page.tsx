@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
-import { RefundWalletCard } from '@/components/Checkout/RefundWalletCard';
 import { usePaymentSelector } from '@/hooks';
 import {
   useWallet,
@@ -41,6 +40,7 @@ import {
   resolveChainCategory,
   convertCurrency,
   toMinimalUnit,
+  getBaseRateSymbol,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
@@ -129,6 +129,20 @@ function buildFiatPaymentCoin(providerID: string, currency: string): string {
   return `fiat:${provider}:${resolvedCurrency}`;
 }
 
+function hasExchangeRateForConversion(
+  rates: Record<string, number>,
+  fromCurrency?: string,
+  toCurrency?: string
+): boolean {
+  if (!fromCurrency || !toCurrency) return false;
+
+  const fromCode = getBaseRateSymbol(fromCurrency.toUpperCase());
+  const toCode = getBaseRateSymbol(toCurrency.toUpperCase());
+  if (fromCode === toCode) return true;
+
+  return rates[fromCode] > 0 && rates[toCode] > 0;
+}
+
 /**
  * Payment Page - 支付阶段
  *
@@ -146,7 +160,7 @@ function buildFiatPaymentCoin(providerID: string, currency: string): string {
 export default function PaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { renderPairedPrice } = useCurrency();
+  const { renderPairedPrice, rates } = useCurrency();
   const { secondsAgo } = useRateFreshness('payment');
   const { t } = useI18n();
   const { toast } = useToast();
@@ -211,19 +225,6 @@ export default function PaymentPage() {
     ? () => tronWallet.connect().then(() => undefined)
     : evmWallet.connect;
   const getSigner = evmWallet.getSigner;
-  const connectedRefundWalletAddress = useMemo(() => {
-    if (isTronPayment) return tronWallet.address || null;
-    if (chainCategory === 'evm') return evmWallet.walletInfo?.address || null;
-    return null;
-  }, [chainCategory, evmWallet.walletInfo?.address, isTronPayment, tronWallet.address]);
-  const [refundAddress, setRefundAddress] = useState('');
-  const trimmedRefundAddress = refundAddress.trim();
-  const requiresRefundAddress = !selectedFiatProvider && !!selectedPaymentCoin;
-
-  useEffect(() => {
-    if (!requiresRefundAddress || trimmedRefundAddress || !connectedRefundWalletAddress) return;
-    setRefundAddress(connectedRefundWalletAddress);
-  }, [connectedRefundWalletAddress, requiresRefundAddress, trimmedRefundAddress]);
 
   // UTXO 外部钱包支付信息（BTC/LTC/BCH/ZEC）
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
@@ -551,9 +552,16 @@ export default function PaymentPage() {
   const totalWithFee = orderDetails?.total || 0;
 
   const nativeSymbol = selectedTokenId || '';
-  const cryptoAmount = selectedTokenId
-    ? convertCurrency(totalWithFee, orderDetails?.currency || 'USD', selectedTokenId)
-    : 0;
+  const canPreviewCryptoAmount = hasExchangeRateForConversion(
+    rates,
+    orderDetails?.currency,
+    selectedTokenId || undefined
+  );
+  const cryptoAmount = canPreviewCryptoAmount
+    ? convertCurrency(totalWithFee, orderDetails?.currency || 'USD', selectedTokenId!)
+    : null;
+  const cryptoAmountDisplay =
+    cryptoAmount !== null && cryptoAmount > 0 ? cryptoAmount.toFixed(6) : undefined;
 
   // 执行支付（仅加密货币，法币由 FiatPaymentSection 独立处理）
   const handlePayment = useCallback(async () => {
@@ -578,23 +586,6 @@ export default function PaymentPage() {
     if (paymentProtectionEnabled && !paymentModerator) {
       toast({
         title: t('payment.selectModerator'),
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!isUtxoPayment && !isConnected) {
-      toast({
-        title: t('payment.connectWalletFirst'),
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (requiresRefundAddress && !trimmedRefundAddress) {
-      toast({
-        title: t('checkout.refundWalletRequired'),
-        description: t('checkout.refundWalletRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -634,8 +625,8 @@ export default function PaymentPage() {
       const response = await ordersApi.getPaymentInstructions({
         orderId: orderID!,
         coin: selectedPaymentCoin,
-        payerAddress: payerAddress,
-        refundAddress: trimmedRefundAddress,
+        payerAddress,
+        refundAddress: payerAddress,
         moderator: moderatorPeerID,
       });
 
@@ -644,8 +635,12 @@ export default function PaymentPage() {
         paymentAmountForApi = response.paymentData.amount;
       }
 
-      // 5. 检查是否为外部钱包支付（UTXO 链如 BTC/LTC）
-      if (response.paymentType === 'external_wallet' || isUtxoPayment) {
+      // 5. 检查是否为地址监听支付（UTXO: BTC/LTC/BCH/ZEC, Safe: EVM address-monitored）
+      if (
+        response.paymentType === 'external_wallet' ||
+        response.paymentType === 'safe_address_monitored' ||
+        isUtxoPayment
+      ) {
         const addr = response.paymentAddress || response.paymentData?.payerAddress || '';
         const tokenInfo = selectedTokenId ? getTokenById(selectedTokenId) : null;
         setExternalWalletInfo({
@@ -662,7 +657,16 @@ export default function PaymentPage() {
         return;
       }
 
-      // 6. 验证必要的支付数据
+      // 6. client_signed 路径：需要钱包连接和支付指令
+      if (!isConnected) {
+        toast({
+          title: t('payment.connectWalletFirst'),
+          variant: 'destructive',
+        });
+        setPaymentStep('idle');
+        return;
+      }
+
       if (!response.instructions) {
         throw new Error(t('payment.noPaymentInstructions'));
       }
@@ -776,8 +780,6 @@ export default function PaymentPage() {
     isConnected,
     isTronPayment,
     isUtxoPayment,
-    requiresRefundAddress,
-    trimmedRefundAddress,
     tronWallet,
     getSigner,
     router,
@@ -1014,15 +1016,6 @@ export default function PaymentPage() {
                           </Card>
                         )}
 
-                        {/* Refund Wallet (crypto only, validated against actual payment coin) */}
-                        {requiresRefundAddress && (
-                          <RefundWalletCard
-                            value={refundAddress}
-                            onChange={setRefundAddress}
-                            connectedAddress={connectedRefundWalletAddress}
-                          />
-                        )}
-
                         {/* Payment Protection (crypto only) */}
                         {!selectedFiatProvider && (
                           <PaymentProtectionCard
@@ -1106,9 +1099,9 @@ export default function PaymentPage() {
                               )}{' '}
                               {nativeSymbol.toUpperCase()}
                             </p>
-                          ) : selectedTokenId && cryptoAmount > 0 ? (
+                          ) : selectedTokenId && cryptoAmountDisplay ? (
                             <p className="text-xs text-muted-foreground">
-                              ≈ {cryptoAmount.toFixed(6)} {nativeSymbol}
+                              ≈ {cryptoAmountDisplay} {nativeSymbol}
                               {secondsAgo !== null && (
                                 <span className="ml-1.5 opacity-60">
                                   ({t('payment.rateUpdated', { seconds: secondsAgo })})
@@ -1141,19 +1134,13 @@ export default function PaymentPage() {
                         <Button
                           className="w-full touch-feedback hidden sm:flex"
                           size="default"
-                          onClick={
-                            isUtxoPayment ? handlePayment : !isConnected ? connect : handlePayment
-                          }
+                          onClick={handlePayment}
                           disabled={
                             isProcessing ||
                             isConnecting ||
                             paymentExpired ||
                             !selectedTokenId ||
-                            (requiresRefundAddress && !trimmedRefundAddress) ||
-                            (!isUtxoPayment &&
-                              isConnected &&
-                              paymentProtectionEnabled &&
-                              !paymentModerator)
+                            (isConnected && paymentProtectionEnabled && !paymentModerator)
                           }
                         >
                           {isProcessing ? (
@@ -1196,10 +1183,8 @@ export default function PaymentPage() {
                             </HStack>
                           ) : isUtxoPayment ? (
                             t('payment.getPaymentInfo')
-                          ) : !isConnected ? (
-                            t('payment.connectWallet')
-                          ) : cryptoAmount > 0 ? (
-                            `${t('payment.pay')} ${cryptoAmount.toFixed(6)} ${nativeSymbol}`
+                          ) : cryptoAmountDisplay ? (
+                            `${t('payment.pay')} ${cryptoAmountDisplay} ${nativeSymbol}`
                           ) : (
                             t('payment.pay')
                           )}
@@ -1255,19 +1240,16 @@ export default function PaymentPage() {
         <CheckoutBottomBar
           totalAmount={totalWithFee}
           currency={orderDetails.currency}
-          cryptoAmount={cryptoAmount.toFixed(6)}
+          cryptoAmount={cryptoAmountDisplay}
           cryptoCurrency={nativeSymbol}
           paymentMethod={selectedTokenId || undefined}
           onPay={handlePayment}
-          onConnect={isUtxoPayment ? handlePayment : connect}
+          onConnect={handlePayment}
           isLoading={isProcessing}
-          isConnected={isUtxoPayment || isConnected}
+          isConnected={true}
           isConnecting={isConnecting}
           disabled={
-            paymentExpired ||
-            !selectedTokenId ||
-            (requiresRefundAddress && !trimmedRefundAddress) ||
-            (paymentProtectionEnabled && !paymentModerator)
+            paymentExpired || !selectedTokenId || (paymentProtectionEnabled && !paymentModerator)
           }
         />
       )}

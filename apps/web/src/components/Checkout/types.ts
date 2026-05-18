@@ -99,10 +99,6 @@ export interface UseCheckoutReturn {
   updateQuantity: (itemId: string, qty: number) => void;
   orderNote: string;
   setOrderNote: (note: string) => void;
-  refundAddress: string;
-  setRefundAddress: (address: string) => void;
-  requiresRefundAddress: boolean;
-  connectedRefundWalletAddress: string | null;
   handleCreateOrder: () => Promise<void>;
   isSubmitting: boolean;
   canSubmit: boolean;
