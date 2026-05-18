@@ -16,6 +16,7 @@ import { ProductImageNative } from '@/components/ui/product-image';
 import { useI18n, useCurrency } from '@mobazha/core';
 import { Copy } from 'lucide-react';
 import type { Order } from './OrderCard';
+import { OrderSettlementBadge } from './OrderSettlementBadge';
 
 // ============ Types ============
 
@@ -279,9 +280,17 @@ export const OrderTable = memo(function OrderTable({
                         </Button>
                       </>
                     ) : (
-                      <Badge variant="outline" className={cn('text-xs', status.className)}>
-                        {t(status.labelKey)}
-                      </Badge>
+                      <>
+                        <Badge variant="outline" className={cn('text-xs', status.className)}>
+                          {t(status.labelKey)}
+                        </Badge>
+                        <OrderSettlementBadge
+                          settlementState={order.settlementState}
+                          settlementAction={order.settlementAction}
+                          settlementActionId={order.settlementActionId}
+                          settlementTxHash={order.settlementTxHash}
+                        />
+                      </>
                     )}
                   </div>
                 </TableCell>

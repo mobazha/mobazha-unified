@@ -84,6 +84,10 @@ export function transformOrderListItem(
     status: mapOrderState(item.state || 'PENDING'),
     rawState: item.state || 'PENDING',
     paymentCoin: item.paymentCoin,
+    settlementAction: item.settlementAction,
+    settlementActionId: item.settlementActionId,
+    settlementState: item.settlementState,
+    settlementTxHash: item.settlementTxHash,
     items: [
       {
         id: orderId,

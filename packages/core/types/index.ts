@@ -77,6 +77,7 @@ export type {
   PaymentVerificationStatus,
   OrderPaymentState,
   PaymentProgress,
+  SettlementActionSnapshot,
   // 订单操作相关
   OrderReject,
   OrderCancel,
