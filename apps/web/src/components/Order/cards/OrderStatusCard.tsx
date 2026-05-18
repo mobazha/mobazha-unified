@@ -27,6 +27,7 @@ interface StatusConfig {
   color: string;
   bgColor: string;
   progress: number;
+  paymentStepLabel?: string;
 }
 
 export const OrderStatusCard = memo(function OrderStatusCard({
@@ -83,7 +84,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
             hint: failedReasonHint,
             color: 'text-destructive',
             bgColor: 'bg-destructive/8 border-destructive/20',
-            progress: 1,
+            progress: 0,
+            paymentStepLabel: t('order.statusCard.stepPaymentRequired'),
           };
         }
         if (isSubmittedAwaitingVerification) {
@@ -93,7 +95,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
             hint: isBuyer ? submittedHint : undefined,
             color: 'text-warning',
             bgColor: 'bg-warning/8 border-warning/20',
-            progress: 1,
+            progress: 0,
+            paymentStepLabel: t('order.statusCard.stepPaymentReview'),
           };
         }
         return {
@@ -105,6 +108,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           color: 'text-destructive',
           bgColor: 'bg-destructive/8 border-destructive/20',
           progress: 0,
+          paymentStepLabel: t('order.statusCard.stepPaymentRequired'),
         };
       case 'pending':
       case 'paid':
@@ -211,12 +215,12 @@ export const OrderStatusCard = memo(function OrderStatusCard({
 
   const stepLabels = useMemo(
     () => [
-      t('order.statusCard.stepPaid'),
+      config.paymentStepLabel || t('order.statusCard.stepPaid'),
       t('order.statusCard.stepAccepted'),
       t('order.statusCard.stepShipped'),
       t('order.statusCard.stepComplete'),
     ],
-    [t]
+    [config.paymentStepLabel, t]
   );
 
   const Icon = config.icon;

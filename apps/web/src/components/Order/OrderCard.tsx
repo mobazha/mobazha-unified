@@ -36,6 +36,14 @@ export interface Order {
   rawState?: string;
   /** 支付币种（用于判断是否需要链上交易） */
   paymentCoin?: string;
+  /** 最新结算动作类型（backend settlement / settlement projection） */
+  settlementAction?: string;
+  /** 最新结算动作 ID */
+  settlementActionId?: string;
+  /** 最新结算动作状态 */
+  settlementState?: string;
+  /** 最新结算动作链上交易哈希 */
+  settlementTxHash?: string;
   items: OrderItem[];
   total: string;
   currency: string;

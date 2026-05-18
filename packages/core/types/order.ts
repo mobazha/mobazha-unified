@@ -30,6 +30,18 @@ export type OrderRole = 'buyer' | 'vendor';
 
 export type PaymentVerificationStatus = 'pending' | 'verified' | 'failed';
 
+export interface SettlementActionSnapshot {
+  actionId: string;
+  action: string;
+  state: string;
+  txHash?: string;
+  relayTaskId?: string;
+  confirmations?: number;
+  lastError?: string;
+  updatedAt?: string;
+  settlementAction?: string;
+}
+
 /**
  * Running tally of confirmed-and-deduplicated payments toward the order's
  * expected amount. Backend rewrites this on every aggregation pass (Phase
@@ -102,6 +114,10 @@ export interface OrderListItem {
   buyerAvatar?: string;
   paymentCoin: CryptoType;
   coinType: string;
+  settlementAction?: string;
+  settlementActionId?: string;
+  settlementState?: string;
+  settlementTxHash?: string;
   shippingName?: string;
   shippingAddress?: string;
   moderated: boolean;
@@ -114,6 +130,7 @@ export interface OrderListItem {
 export interface Order {
   contract: OrderContract;
   state: OrderState;
+  settlementActions?: SettlementActionSnapshot[];
   paymentState?: OrderPaymentState;
   read: boolean;
   funded: boolean;

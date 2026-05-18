@@ -43,6 +43,7 @@ export interface ReviewSubmitData {
 export interface UseOrderDetailPageReturn {
   displayOrder: ReturnType<typeof useOrderDetail>['displayOrder'];
   coreOrder: ReturnType<typeof useOrderDetail>['coreOrder'];
+  latestSettlementAction: ReturnType<typeof useOrderDetail>['latestSettlementAction'];
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -96,10 +97,8 @@ export function useOrderDetailPage(
   const { t } = useI18n();
   const { toast } = useToast();
 
-  const { displayOrder, coreOrder, isLoading, error, refetch } = useOrderDetail(
-    orderId,
-    viewingContext
-  );
+  const { displayOrder, coreOrder, latestSettlementAction, isLoading, error, refetch } =
+    useOrderDetail(orderId, viewingContext);
 
   const currentUser = useUserStore(state => state.profile);
   const currentUserPeerID = currentUser?.peerID || null;
@@ -116,6 +115,21 @@ export function useOrderDetailPage(
       unsubscribe();
     };
   }, [orderId, refetch]);
+
+  useEffect(() => {
+    const state = (latestSettlementAction?.state || '').trim().toLowerCase();
+    if (state !== 'submitting' && state !== 'submitted') {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      refetch();
+    }, 5000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [latestSettlementAction?.actionId, latestSettlementAction?.state, refetch]);
 
   // --- Computed ---
 
@@ -436,6 +450,7 @@ export function useOrderDetailPage(
   return {
     displayOrder,
     coreOrder,
+    latestSettlementAction,
     isLoading,
     error,
     refetch,

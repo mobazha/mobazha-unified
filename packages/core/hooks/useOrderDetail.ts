@@ -15,6 +15,7 @@ import { transformCoreOrder } from '../utils/transforms/orderTransform';
 import { fetchProfileWithCache } from '../services/profileCache';
 import { getImageUrl } from '../services/api/config';
 import type { Order as CoreOrder } from '../types/order';
+import type { SettlementActionSnapshot } from '../types/order';
 import type { DisplayOrder } from '../types/orderDisplay';
 
 /**
@@ -25,6 +26,8 @@ export interface UseOrderDetailReturn {
   displayOrder: DisplayOrder | null;
   /** 原始 API 订单数据 */
   coreOrder: CoreOrder | null;
+  /** 最新的结算动作快照（如果存在） */
+  latestSettlementAction: SettlementActionSnapshot | null;
   /** 是否正在加载 */
   isLoading: boolean;
   /** 错误信息 */
@@ -87,6 +90,7 @@ export function useOrderDetail(
 
   // 使用 useOrder hook 获取订单数据
   const { order: coreOrder, isLoading, error, refetch } = useOrder(orderId);
+  const latestSettlementAction = coreOrder?.settlementActions?.[0] || null;
 
   // 用于存储异步获取的 profile 增强信息
   const [profileEnhancement, setProfileEnhancement] = useState<ProfileEnhancement>({});
@@ -212,6 +216,7 @@ export function useOrderDetail(
   return {
     displayOrder,
     coreOrder,
+    latestSettlementAction,
     isLoading,
     error,
     refetch,

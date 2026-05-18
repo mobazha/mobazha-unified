@@ -80,6 +80,9 @@ export const NODE_API = {
   ORDER_RATE: (orderId: string) => `/orders/${orderId}/rate`,
   ORDER_SPEND: (orderId: string) => `/orders/${orderId}/spend`,
   ORDER_PAYMENT_REMAINING: (orderId: string) => `/orders/${orderId}/payment/remaining`,
+  /** Backend settlement: `action` is `confirm` or `cancel` (POST body optional addresses). */
+  ORDER_SETTLEMENT_ACTION: (orderId: string, action: 'confirm' | 'cancel') =>
+    `/orders/${orderId}/settlement-actions/${action}`,
 
   // --- Order Instructions (orderID in URL) ---
   ORDER_INSTRUCTIONS_COMPLETE: (orderId: string) => `/orders/${orderId}/instructions/complete`,

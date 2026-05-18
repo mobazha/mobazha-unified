@@ -128,10 +128,14 @@ const mockOrders: OrderListItem[] = [
     buyerID: 'QmBuyer001',
     state: 'SHIPPED',
     read: false,
-    paymentCoin: 'BTC',
-    coinType: 'BTC',
+    paymentCoin: 'ETH',
+    coinType: 'ETH',
     moderated: true,
     unreadChatMessages: 2,
+    settlementAction: 'complete',
+    settlementActionId: 'settlement-action-complete-002',
+    settlementState: 'submitted',
+    settlementTxHash: '0x7d4f4e2f3a1e4b90c8f21938d6fd97cf14cb1db28a62df7df3fd7ab9d0be4202',
   },
   {
     orderID: 'QmOrderMock003',
@@ -234,6 +238,20 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     await mockDelay();
     const orderItem = mockOrders.find(o => o.orderID === orderId);
     if (!orderItem) return null;
+    const settlementActions = orderItem.settlementState
+      ? [
+          {
+            actionId: orderItem.settlementActionId || `settlement-action-${orderItem.orderID}`,
+            action: orderItem.settlementAction || 'complete',
+            settlementAction: orderItem.settlementAction || 'complete',
+            state: orderItem.settlementState,
+            txHash: orderItem.settlementTxHash,
+            relayTaskId: `relay-task-${orderItem.orderID.toLowerCase()}`,
+            confirmations: orderItem.settlementState === 'confirmed' ? 12 : 0,
+            updatedAt: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+          },
+        ]
+      : undefined;
 
     // 构建完整的订单详情（符合 Order 接口）
     const mockOrder: Order = {
@@ -300,6 +318,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
         },
       },
       state: orderItem.state,
+      settlementActions,
       read: orderItem.read,
       funded:
         orderItem.state !== 'PENDING' &&

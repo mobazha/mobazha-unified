@@ -42,6 +42,7 @@ import {
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
+  OrderSettlementCard,
   getStatusLabel,
 } from '@/components/Order/cards';
 import {
@@ -70,6 +71,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     isLoading,
     error,
     refetch,
+    latestSettlementAction,
     currentUserPeerID,
     chatParticipants,
     isActionLoading,
@@ -414,6 +416,12 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
                 {/* Status context card — gives users clear next-step guidance */}
                 <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+
+                {!(
+                  displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
+                ) && (
+                  <OrderSettlementCard settlementAction={latestSettlementAction} className="mb-4" />
+                )}
 
                 {protectionStage && displayOrder.protection && (
                   <OrderProtectionStatus

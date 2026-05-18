@@ -49,6 +49,7 @@ import {
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
+  OrderSettlementCard,
   getStatusLabel,
 } from '@/components/Order/cards';
 import {
@@ -120,6 +121,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const {
     displayOrder,
     coreOrder,
+    latestSettlementAction,
     isLoading,
     error,
     refetch,
@@ -584,6 +586,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         >
           {/* 1. Status + progress bar */}
           <OrderStatusCard displayOrder={displayOrder} />
+
+          {!(displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment') && (
+            <OrderSettlementCard settlementAction={latestSettlementAction} />
+          )}
 
           {/* 2. Product card (vendor merged inline) */}
           <OrderProductCard displayOrder={displayOrder} />

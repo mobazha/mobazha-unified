@@ -10,6 +10,7 @@ import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { MessageCircle, CheckCircle2, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import type { Order } from './OrderCard';
+import { OrderSettlementBadge } from './OrderSettlementBadge';
 
 // ============ Types ============
 
@@ -344,13 +345,19 @@ export const OrderListCompact = memo(function OrderListCompact({
                     </span>
                   </div>
 
-                  <div className="flex items-center mt-0.5">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
                     <Badge
                       variant="outline"
                       className={cn('text-xs px-2 py-0.5 h-5', status.className)}
                     >
                       {t(status.labelKey)}
                     </Badge>
+                    <OrderSettlementBadge
+                      settlementState={order.settlementState}
+                      settlementAction={order.settlementAction}
+                      settlementActionId={order.settlementActionId}
+                      settlementTxHash={order.settlementTxHash}
+                    />
                   </div>
                 </div>
               </div>
