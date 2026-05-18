@@ -9,11 +9,13 @@ import {
   ordersApi,
   useOrderAction,
   batchGetProfileDisplayInfo,
+  getImageUrl,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import type { TranslateFunction } from '@mobazha/core/i18n/types';
 import {
   ShoppingCart,
+  Package,
   Search,
   Download,
   CheckSquare,
@@ -35,6 +37,8 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   transformOrderListItem,
   ordersToExportRows,
+  guestOrderToExportRow,
+  formatGuestPaymentAmount,
   exportToCSV,
   exportToJSON,
   STATUS_FILTER_TO_STATES,
@@ -43,6 +47,7 @@ import type { StatusFilter } from '@/components/admin/orders/utils';
 import {
   listGuestOrders,
   getAdminGuestOrderDetail,
+  guestOrderListThumbnailUrl,
   type GuestOrderSummary,
   type GuestOrderAdminDetail,
 } from '@mobazha/core/services/api/guestCheckout';
@@ -50,7 +55,6 @@ import { useFeature } from '@mobazha/core/hooks/useFeature';
 import { AdminShippingDecrypt } from '@/components/GuestCheckout/AdminShippingDecrypt';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
-import { formatPrice, fromMinimalUnit } from '@mobazha/core/services/currencyService';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 function useAdminOrders() {
@@ -140,28 +144,6 @@ const GUEST_STATUS_FILTER_TO_STATES: Partial<Record<StatusFilter, string[]>> = {
   cancelled: ['EXPIRED'],
 };
 
-function formatGuestPaymentAmount(order: {
-  paymentAmount: string;
-  paymentCoin: string;
-  priceCurrency?: string;
-  priceDivisibility?: number;
-}): string {
-  const coinDisplay = resolveTokenIdForDisplay(order.paymentCoin);
-  const currency = (order.priceCurrency || '').trim() || coinDisplay;
-  let standard: number;
-  if (
-    typeof order.priceDivisibility === 'number' &&
-    Number.isFinite(order.priceDivisibility) &&
-    order.priceDivisibility >= 0
-  ) {
-    const raw = Number(order.paymentAmount);
-    standard = raw / 10 ** order.priceDivisibility;
-  } else {
-    standard = fromMinimalUnit(order.paymentAmount, currency);
-  }
-  return formatPrice(standard, currency, { showSymbol: true, showCode: true });
-}
-
 function truncateOrderToken(token: string, head = 14, tail = 10): string {
   if (token.length <= head + tail + 3) return token;
   return `${token.slice(0, head)}…${token.slice(-tail)}`;
@@ -195,6 +177,7 @@ function formatOrderDate(dateString: string): string {
 
 function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: () => void }) {
   const { t } = useI18n();
+  const thumbUrl = guestOrderListThumbnailUrl(order);
   const title = order.items[0]?.listingTitle || t('admin.orders.guestOrderTitle');
   const qty = order.items.reduce((sum, i) => sum + i.quantity, 0);
   const itemLabel =
@@ -207,8 +190,12 @@ function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: 
       onClick={onClick}
       className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-b-0"
     >
-      <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 shrink-0">
-        <ShoppingCart className="w-4 h-4" />
+      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-amber-500/10 text-amber-600">
+        {thumbUrl ? (
+          <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <ShoppingCart className="w-4 h-4" />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -253,6 +240,7 @@ function UnifiedOrderRow({
 
   if (entry.source === 'guest') {
     const order = entry.guestOrder;
+    const thumbUrl = guestOrderListThumbnailUrl(order);
     const title = order.items[0]?.listingTitle || t('admin.orders.guestOrderTitle');
     const qty = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const sourceLabel = t('admin.orders.sourceGuest');
@@ -263,8 +251,12 @@ function UnifiedOrderRow({
         onClick={() => onGuestOrderClick(order.orderToken)}
         className="w-full flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-b-0"
       >
-        <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 shrink-0 mt-0.5">
-          <ShoppingCart className="w-4 h-4" />
+        <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-amber-500/10 text-amber-600">
+          {thumbUrl ? (
+            <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <ShoppingCart className="w-4 h-4" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -303,6 +295,7 @@ function UnifiedOrderRow({
   }
 
   const order = entry.standardOrder;
+  const lineImage = order.items[0]?.image?.trim() || '';
   const title = order.items[0]?.title || t('order.unknownItem');
   const buyer = order.vendor.name || t('admin.orders.sourceStandard');
 
@@ -312,8 +305,12 @@ function UnifiedOrderRow({
       onClick={() => onStandardOrderClick(order.orderId)}
       className="w-full flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-b-0"
     >
-      <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
-        <ShoppingCart className="w-4 h-4" />
+      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-muted">
+        {lineImage ? (
+          <img src={lineImage} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <Package className="w-4 h-4 text-muted-foreground" />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -492,33 +489,88 @@ export default function AdminOrdersPage() {
     });
   }, [unifiedOrders, orderView, statusFilter, searchTerm, dateFrom, dateTo]);
 
-  const pendingCount = useMemo(
+  const visibleGuestOrders = useMemo(
     () =>
-      orders.filter(
-        o =>
-          o.rawState === 'PENDING' ||
-          o.rawState === 'AWAITING_PAYMENT' ||
-          o.rawState === 'AWAITING_PAYMENT_VERIFICATION'
-      ).length,
-    [orders]
+      unifiedVisibleOrders.flatMap(entry => (entry.source === 'guest' ? [entry.guestOrder] : [])),
+    [unifiedVisibleOrders]
+  );
+
+  const standardOrderCount = orders.length;
+  const guestOrderCount = guestOrders.length;
+
+  const getStatusCount = useCallback(
+    (filter: StatusFilter): number | undefined => {
+      if (filter === 'all') {
+        if (orderView === 'guest') return guestOrderCount;
+        if (orderView === 'all') return standardOrderCount + guestOrderCount;
+        return standardOrderCount;
+      }
+
+      const standardStates = STATUS_FILTER_TO_STATES[filter];
+      const guestStates = GUEST_STATUS_FILTER_TO_STATES[filter];
+      const standardCount = standardStates
+        ? orders.filter(order => order.rawState && standardStates.includes(order.rawState)).length
+        : 0;
+      const guestCount = guestStates
+        ? guestOrders.filter(order => guestStates.includes(order.state)).length
+        : 0;
+
+      if (orderView === 'guest') return guestCount;
+      if (orderView === 'all') return standardCount + guestCount;
+      return standardCount;
+    },
+    [guestOrderCount, guestOrders, orderView, orders, standardOrderCount]
   );
 
   const statusTabs: { value: StatusFilter; label: string; count?: number }[] = useMemo(
     () => [
-      { value: 'all', label: t('admin.orders.filterAll'), count: orders.length },
-      { value: 'pending', label: t('admin.orders.filterPending'), count: pendingCount },
-      { value: 'processing', label: t('admin.orders.filterProcessing') },
-      { value: 'shipped', label: t('admin.orders.filterShipped') },
-      { value: 'completed', label: t('admin.orders.filterCompleted') },
-      { value: 'disputed', label: t('admin.orders.filterDisputed') },
-      { value: 'cancelled', label: t('admin.orders.filterCancelled') },
+      { value: 'all', label: t('admin.orders.filterAll'), count: getStatusCount('all') },
+      {
+        value: 'pending',
+        label: t('admin.orders.filterPending'),
+        count: getStatusCount('pending'),
+      },
+      {
+        value: 'processing',
+        label: t('admin.orders.filterProcessing'),
+        count: getStatusCount('processing'),
+      },
+      {
+        value: 'shipped',
+        label: t('admin.orders.filterShipped'),
+        count: getStatusCount('shipped'),
+      },
+      {
+        value: 'completed',
+        label: t('admin.orders.filterCompleted'),
+        count: getStatusCount('completed'),
+      },
+      {
+        value: 'disputed',
+        label: t('admin.orders.filterDisputed'),
+        count: getStatusCount('disputed'),
+      },
+      {
+        value: 'cancelled',
+        label: t('admin.orders.filterCancelled'),
+        count: getStatusCount('cancelled'),
+      },
     ],
-    [t, orders.length, pendingCount]
+    [getStatusCount, t]
   );
 
   // Selection
-  const isAllSelected = filteredOrders.length > 0 && selectedIds.size === filteredOrders.length;
-  const isSomeSelected = selectedIds.size > 0;
+  const isAllSelected =
+    orderView === 'standard' &&
+    filteredOrders.length > 0 &&
+    selectedIds.size === filteredOrders.length;
+  const isSomeSelected = orderView === 'standard' && selectedIds.size > 0;
+
+  useEffect(() => {
+    if (orderView !== 'standard' && selectedIds.size > 0) {
+      setSelectedIds(new Set());
+    }
+  }, [orderView, selectedIds.size]);
 
   const toggleSelectAll = useCallback(() => {
     if (isAllSelected) {
@@ -585,16 +637,31 @@ export default function AdminOrdersPage() {
   // Export
   const handleExport = useCallback(
     (format: 'csv' | 'json') => {
-      const dataToExport = isSomeSelected
-        ? filteredOrders.filter(o => selectedIds.has(o.id))
-        : filteredOrders;
-      const rows = ordersToExportRows(dataToExport);
+      const rows =
+        orderView === 'guest'
+          ? visibleGuestOrders.map(guestOrderToExportRow)
+          : orderView === 'all'
+            ? unifiedVisibleOrders.map(entry =>
+                entry.source === 'guest'
+                  ? guestOrderToExportRow(entry.guestOrder)
+                  : ordersToExportRows([entry.standardOrder])[0]
+              )
+            : ordersToExportRows(
+                isSomeSelected ? filteredOrders.filter(o => selectedIds.has(o.id)) : filteredOrders
+              );
       const timestamp = new Date().toISOString().slice(0, 10);
       if (format === 'csv') exportToCSV(rows, `orders-${timestamp}.csv`);
       else exportToJSON(rows, `orders-${timestamp}.json`);
       setShowExportMenu(false);
     },
-    [isSomeSelected, filteredOrders, selectedIds]
+    [
+      filteredOrders,
+      isSomeSelected,
+      orderView,
+      selectedIds,
+      unifiedVisibleOrders,
+      visibleGuestOrders,
+    ]
   );
 
   // Order actions
@@ -807,9 +874,112 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
+      {/* Filters */}
+      <div className={`flex flex-col gap-3 ${isEmbeddedApp ? 'mb-2' : 'mb-4 sm:mb-6'}`}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex gap-2 flex-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('admin.orders.searchPlaceholder')}
+                className="pl-10"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button
+              variant={showDateFilter || dateFrom || dateTo ? 'default' : 'outline'}
+              size="icon"
+              className="sm:hidden h-9 w-9 shrink-0"
+              onClick={() => setShowDateFilter(prev => !prev)}
+              aria-label={t('admin.orders.dateFilter')}
+            >
+              <Calendar className="w-4 h-4" />
+            </Button>
+            {isEmbeddedApp && renderExportButton()}
+          </div>
+          <div className="hidden sm:flex gap-2">
+            <div className="relative">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
+                aria-label={t('admin.orders.dateFrom')}
+              />
+            </div>
+            <span className="self-center text-muted-foreground text-sm">–</span>
+            <div className="relative">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
+                aria-label={t('admin.orders.dateTo')}
+              />
+            </div>
+          </div>
+        </div>
+
+        {showDateFilter && (
+          <div className="flex gap-2 sm:hidden">
+            <div className="relative flex-1">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
+                aria-label={t('admin.orders.dateFrom')}
+              />
+            </div>
+            <span className="self-center text-muted-foreground text-sm">–</span>
+            <div className="relative flex-1">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
+                aria-label={t('admin.orders.dateTo')}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
+          {statusTabs.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={`${isEmbeddedApp ? 'px-3 py-1.5' : 'px-4 py-2 sm:px-3 sm:py-1.5'} rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${isEmbeddedApp ? '' : 'min-h-[44px] sm:min-h-0'} snap-start ${
+                statusFilter === tab.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border'
+              }`}
+            >
+              {tab.label}
+              {tab.count != null && tab.count > 0 && (
+                <span className="ml-1.5 text-xs opacity-70">({tab.count})</span>
+              )}
+            </button>
+          ))}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className={`${isEmbeddedApp ? 'px-3 py-1.5' : 'px-4 py-2 sm:px-3 sm:py-1.5'} rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${isEmbeddedApp ? '' : 'min-h-[44px] sm:min-h-0'} snap-start`}
+            >
+              {t('admin.orders.clearFilters')}
+            </button>
+          )}
+        </div>
+      </div>
+
       {orderView === 'all' ? (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-          {guestLoading && isLoading ? (
+          {isLoading || guestLoading ? (
             <div className="p-6 space-y-4">
               {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="flex items-center gap-4">
@@ -855,13 +1025,17 @@ export default function AdminOrdersPage() {
                 </div>
               ))}
             </div>
-          ) : guestOrders.length === 0 ? (
+          ) : visibleGuestOrders.length === 0 ? (
             <div className="text-center py-10">
               <ShoppingCart className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">{t('admin.orders.noGuestOrders')}</p>
+              <p className="text-sm text-muted-foreground">
+                {hasActiveFilters
+                  ? t('admin.orders.noMatchDescription')
+                  : t('admin.orders.noGuestOrders')}
+              </p>
             </div>
           ) : (
-            guestOrders.map(go => (
+            visibleGuestOrders.map(go => (
               <GuestOrderRow
                 key={go.orderToken}
                 order={go}
@@ -903,113 +1077,6 @@ export default function AdminOrdersPage() {
               </Button>
             </div>
           )}
-
-          {/* Filters */}
-          <div className={`flex flex-col gap-3 ${isEmbeddedApp ? 'mb-2' : 'mb-4 sm:mb-6'}`}>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex gap-2 flex-1">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={t('admin.orders.searchPlaceholder')}
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                {/* Mobile: toggle date filter */}
-                <Button
-                  variant={showDateFilter || dateFrom || dateTo ? 'default' : 'outline'}
-                  size="icon"
-                  className="sm:hidden h-9 w-9 shrink-0"
-                  onClick={() => setShowDateFilter(prev => !prev)}
-                  aria-label={t('admin.orders.dateFilter')}
-                >
-                  <Calendar className="w-4 h-4" />
-                </Button>
-                {isEmbeddedApp && renderExportButton()}
-              </div>
-              {/* Desktop: always show date range */}
-              <div className="hidden sm:flex gap-2">
-                <div className="relative">
-                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={e => setDateFrom(e.target.value)}
-                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
-                    aria-label={t('admin.orders.dateFrom')}
-                  />
-                </div>
-                <span className="self-center text-muted-foreground text-sm">–</span>
-                <div className="relative">
-                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={e => setDateTo(e.target.value)}
-                    className="h-9 pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
-                    aria-label={t('admin.orders.dateTo')}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile: collapsible date range */}
-            {showDateFilter && (
-              <div className="flex gap-2 sm:hidden">
-                <div className="relative flex-1">
-                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={e => setDateFrom(e.target.value)}
-                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
-                    aria-label={t('admin.orders.dateFrom')}
-                  />
-                </div>
-                <span className="self-center text-muted-foreground text-sm">–</span>
-                <div className="relative flex-1">
-                  <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={e => setDateTo(e.target.value)}
-                    className="h-11 w-full pl-8 pr-2 text-sm rounded-md border border-input bg-background text-foreground dark:[color-scheme:dark]"
-                    aria-label={t('admin.orders.dateTo')}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Status tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
-              {statusTabs.map(tab => (
-                <button
-                  key={tab.value}
-                  onClick={() => setStatusFilter(tab.value)}
-                  className={`${isEmbeddedApp ? 'px-3 py-1.5' : 'px-4 py-2 sm:px-3 sm:py-1.5'} rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${isEmbeddedApp ? '' : 'min-h-[44px] sm:min-h-0'} snap-start ${
-                    statusFilter === tab.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border'
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count != null && tab.count > 0 && (
-                    <span className="ml-1.5 text-xs opacity-70">({tab.count})</span>
-                  )}
-                </button>
-              ))}
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className={`${isEmbeddedApp ? 'px-3 py-1.5' : 'px-4 py-2 sm:px-3 sm:py-1.5'} rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${isEmbeddedApp ? '' : 'min-h-[44px] sm:min-h-0'} snap-start`}
-                >
-                  {t('admin.orders.clearFilters')}
-                </button>
-              )}
-            </div>
-          </div>
 
           {/* Error */}
           {error && (
@@ -1166,12 +1233,34 @@ export default function AdminOrdersPage() {
                   <div>
                     <p className="font-medium mb-1">{t('admin.orders.guestOrderItems')}</p>
                     <div className="space-y-1">
-                      {guestDetail.items.map((item, i) => (
-                        <div key={i} className="flex justify-between text-muted-foreground">
-                          <span>{item.listingTitle}</span>
-                          <span>×{item.quantity}</span>
-                        </div>
-                      ))}
+                      {guestDetail.items.map((item, i) => {
+                        const thumb = item.thumbnail?.trim();
+                        const thumbSrc = thumb ? getImageUrl(thumb) : '';
+                        return (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between gap-2 text-muted-foreground"
+                          >
+                            <div className="flex min-w-0 items-center gap-2">
+                              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-muted">
+                                {thumbSrc ? (
+                                  <img
+                                    src={thumbSrc}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center">
+                                    <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </div>
+                                )}
+                              </div>
+                              <span className="truncate">{item.listingTitle}</span>
+                            </div>
+                            <span className="shrink-0">×{item.quantity}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -50,7 +50,6 @@ import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
 import { listGuestOrders, type GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
 import { useFeature } from '@mobazha/core/hooks/useFeature';
-import { isOutpostMode } from '@mobazha/core/config/env';
 
 const REVENUE_STATES = new Set(['COMPLETED', 'SHIPPED', 'PAYMENT_FINALIZED']);
 
@@ -114,7 +113,11 @@ function useDashboardData() {
   }, [profile?.peerID]);
 
   useEffect(() => {
-    if (!guestEnabled || !isOutpostMode()) return;
+    if (!guestEnabled) {
+      setGuestOrders([]);
+      setGuestLoading(false);
+      return;
+    }
     let cancelled = false;
     setGuestLoading(true);
     listGuestOrders({ page: 0, pageSize: 10 })

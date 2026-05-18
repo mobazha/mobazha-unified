@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
-import { useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import { useI18n, useCurrency, orderListItemThumbnailDisplayUrl } from '@mobazha/core';
 import type { OrderListItem } from '@mobazha/core';
 import { getOrderCurrencyCode } from './utils';
 
@@ -55,6 +55,7 @@ export function RecentOrderRow({ order }: { order: OrderListItem }) {
   const formattedTotal = order.total?.amount
     ? formatPrice(fromMinimalUnit(order.total.amount, currencyCode), currencyCode)
     : '';
+  const thumbSrc = orderListItemThumbnailDisplayUrl(order);
 
   return (
     <Link
@@ -62,12 +63,8 @@ export function RecentOrderRow({ order }: { order: OrderListItem }) {
       className="flex items-center gap-3 py-3 border-b border-border last:border-0 hover:bg-muted/50 -mx-2 px-2 rounded-md transition-colors"
     >
       <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0">
-        {order.thumbnail?.small ? (
-          <img
-            src={getImageUrl(order.thumbnail.small)}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+        {thumbSrc ? (
+          <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Package className="w-4 h-4 text-muted-foreground" />

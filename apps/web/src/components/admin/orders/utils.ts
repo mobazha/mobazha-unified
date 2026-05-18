@@ -1,5 +1,12 @@
 import type { OrderListItem, ProfileDisplayInfo } from '@mobazha/core';
-import { getImageUrl, fromMinimalUnit } from '@mobazha/core';
+import {
+  fromMinimalUnit,
+  formatPrice,
+  getImageUrl,
+  orderListItemThumbnailDisplayUrl,
+} from '@mobazha/core';
+import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
+import type { GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
 import type { Order } from '@/components/Order/OrderCard';
 
 type OrderType = 'purchases' | 'sales';
@@ -36,26 +43,13 @@ function getPriceCurrency(total: OrderListItem['total']): string {
   );
 }
 
-function getThumbnailUrl(thumbnail: OrderListItem['thumbnail']): string {
-  if (!thumbnail) return '';
-  if (typeof thumbnail === 'string') return getImageUrl(thumbnail) || '';
-  const hash =
-    thumbnail.medium ||
-    thumbnail.small ||
-    thumbnail.tiny ||
-    thumbnail.large ||
-    thumbnail.original ||
-    '';
-  return getImageUrl(hash) || '';
-}
-
 export function transformOrderListItem(
   item: OrderListItem,
   orderType: OrderType,
   profileMap: Map<string, ProfileDisplayInfo>,
   labels: { seller: string; buyer: string }
 ): Order {
-  const imageUrl = getThumbnailUrl(item.thumbnail);
+  const imageUrl = orderListItemThumbnailDisplayUrl(item);
   const itemAny = item as unknown as Record<string, unknown>;
   const orderId = item.orderID || (itemAny.orderId as string) || '';
   const vendorId = item.vendorID || (itemAny.vendorId as string) || '';
@@ -133,6 +127,41 @@ export function ordersToExportRows(orders: Order[]): ExportableOrder[] {
     status: o.rawState || o.status,
     paymentCoin: o.paymentCoin || '',
   }));
+}
+
+export function getGuestPaymentCoin(order: { paymentCoin: string }): string {
+  return resolveTokenIdForDisplay(order.paymentCoin);
+}
+
+export function getGuestPaymentAmountValue(order: {
+  paymentAmount: string;
+  paymentCoin: string;
+}): string {
+  return String(fromMinimalUnit(order.paymentAmount, getGuestPaymentCoin(order)));
+}
+
+export function formatGuestPaymentAmount(order: {
+  paymentAmount: string;
+  paymentCoin: string;
+}): string {
+  const paymentCoin = getGuestPaymentCoin(order);
+  return formatPrice(fromMinimalUnit(order.paymentAmount, paymentCoin), paymentCoin, {
+    showSymbol: true,
+    showCode: true,
+  });
+}
+
+export function guestOrderToExportRow(order: GuestOrderSummary): ExportableOrder {
+  return {
+    orderId: order.orderToken,
+    date: order.createdAt,
+    title: order.items[0]?.listingTitle || '',
+    buyer: order.contactEmail || 'Guest checkout',
+    total: getGuestPaymentAmountValue(order),
+    currency: getGuestPaymentCoin(order),
+    status: order.state,
+    paymentCoin: getGuestPaymentCoin(order),
+  };
 }
 
 export function exportToCSV(rows: ExportableOrder[], filename: string): void {

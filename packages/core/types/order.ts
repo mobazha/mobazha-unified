@@ -87,7 +87,8 @@ export interface OrderListItem {
   orderID: string;
   slug: string;
   title: string;
-  thumbnail: Image;
+  /** API returns a single CID string for list endpoints; Image object appears in mocks / legacy. */
+  thumbnail: Image | string;
   total: Price;
   quantity: number;
   timestamp: string;

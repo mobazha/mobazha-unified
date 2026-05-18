@@ -6,6 +6,7 @@
  */
 
 import { NODE_API } from '../../config/apiPaths';
+import { getImageUrl } from './config';
 import { publicGet, publicPost, authGet, authPut, authPost, authDel } from './helpers';
 
 // ========== Types ==========
@@ -155,6 +156,18 @@ export interface GuestOrderSummary {
   contactEmail?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** First line-item thumbnail as a display URL (IPFS hash or media path → gateway URL). */
+export function guestOrderListThumbnailUrl(order: GuestOrderSummary): string {
+  for (const it of order.items) {
+    const raw = it.thumbnail?.trim();
+    if (raw) {
+      const url = getImageUrl(raw);
+      if (url) return url;
+    }
+  }
+  return '';
 }
 
 /** Matches pkg/models.GuestOrderState ordering on seller-list / admin-detail JSON. */

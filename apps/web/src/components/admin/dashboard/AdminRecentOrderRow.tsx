@@ -3,9 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { Package, ShoppingCart } from 'lucide-react';
-import { useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import { useI18n, useCurrency, orderListItemThumbnailDisplayUrl } from '@mobazha/core';
 import type { OrderListItem } from '@mobazha/core';
-import type { GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
+import {
+  guestOrderListThumbnailUrl,
+  type GuestOrderSummary,
+} from '@mobazha/core/services/api/guestCheckout';
+import { formatGuestPaymentAmount } from '@/components/admin/orders/utils';
 import { getOrderCurrencyCode } from './utils';
 
 export type RecentAdminOrder =
@@ -73,7 +77,8 @@ export function AdminRecentOrderRow({ entry }: { entry: RecentAdminOrder }) {
     const stateColor = STATE_COLORS[order.state] || STATE_COLORS.AWAITING_PAYMENT;
     const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '';
     const title = order.items[0]?.listingTitle || t('admin.orders.guestOrderTitle');
-    const amount = `${order.paymentAmount} ${order.paymentCoin}`;
+    const amount = formatGuestPaymentAmount(order);
+    const thumbSrc = guestOrderListThumbnailUrl(order);
 
     return (
       <Link
@@ -81,7 +86,11 @@ export function AdminRecentOrderRow({ entry }: { entry: RecentAdminOrder }) {
         className="flex items-center gap-3 py-3 border-b border-border last:border-0 hover:bg-muted/50 -mx-2 px-2 rounded-md transition-colors"
       >
         <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-600 overflow-hidden shrink-0 flex items-center justify-center">
-          <ShoppingCart className="w-4 h-4" />
+          {thumbSrc ? (
+            <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <ShoppingCart className="w-4 h-4" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground truncate">{title}</p>
@@ -110,6 +119,7 @@ export function AdminRecentOrderRow({ entry }: { entry: RecentAdminOrder }) {
   const formattedTotal = order.total?.amount
     ? formatPrice(fromMinimalUnit(order.total.amount, currencyCode), currencyCode)
     : '';
+  const thumbSrc = orderListItemThumbnailDisplayUrl(order);
 
   return (
     <Link
@@ -117,12 +127,8 @@ export function AdminRecentOrderRow({ entry }: { entry: RecentAdminOrder }) {
       className="flex items-center gap-3 py-3 border-b border-border last:border-0 hover:bg-muted/50 -mx-2 px-2 rounded-md transition-colors"
     >
       <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0">
-        {order.thumbnail?.small ? (
-          <img
-            src={getImageUrl(order.thumbnail.small)}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+        {thumbSrc ? (
+          <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Package className="w-4 h-4 text-muted-foreground" />
