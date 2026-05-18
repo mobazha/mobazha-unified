@@ -399,7 +399,7 @@ export interface CreateOrderData {
     addressNotes?: string;
   };
   pricingCoin?: string; // 定价币种
-  refundAddress?: string; // 退款钱包地址（加密货币订单必填）
+  refundAddress?: string; // 退款钱包地址（可选；后端会在安全可判定时从付款方补齐）
   moderator?: string; // 仲裁人 ID
 }
 
@@ -1097,7 +1097,7 @@ export async function getPaymentInstructions(requestData: {
   orderId: string;
   coin: string;
   payerAddress?: string; // 付款人地址
-  refundAddress?: string; // 买家控制的退款钱包地址
+  refundAddress?: string; // client_signed 可传 payerAddress；地址监听模式可省略
   moderator?: string; // 仲裁人 peerID
 }): Promise<PaymentInstructionsResponse> {
   const realFn = async () => {
