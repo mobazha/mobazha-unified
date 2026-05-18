@@ -9,13 +9,13 @@ import {
   Scale,
   User,
   Plug,
-  Wallet,
   PauseCircle,
   PlayCircle,
   Megaphone,
   ShoppingBag,
   ShieldCheck,
   Download,
+  Coins,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -219,12 +219,14 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.policiesDesc')}
             href="/admin/settings/policies"
           />
-          <SettingsCard
-            icon={Wallet}
-            title={t('admin.settings.payments')}
-            description={t('admin.settings.paymentsDesc')}
-            href="/admin/settings/payments"
-          />
+          {!isOutpost && (
+            <SettingsCard
+              icon={Coins}
+              title={t('admin.settings.payments')}
+              description={t('admin.settings.paymentsDesc')}
+              href="/admin/settings/payments"
+            />
+          )}
           <SettingsCard
             icon={Truck}
             title={t('admin.settings.shipping')}

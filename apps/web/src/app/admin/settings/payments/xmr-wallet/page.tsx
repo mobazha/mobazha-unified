@@ -91,7 +91,7 @@ function NotOutpostPlaceholder() {
     <div>
       <SettingsPageHeader
         title={t('outpost.xmrWallet.title', { defaultValue: 'Monero Wallet Setup' })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -287,7 +287,7 @@ export default function XMRWalletSetupPage() {
           defaultValue:
             'Provision the Monero wallet that backs incoming XMR payments. You only run this once per outpost.',
         })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
 
       <div className="space-y-6">
@@ -469,11 +469,11 @@ function AlreadyProvisionedCard({
           </div>
         )}
         <Link
-          to="/admin/settings/payments"
+          to="/admin/finance"
           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          {t('outpost.xmrWallet.backToPayments', { defaultValue: 'Back to payment settings' })}
+          {t('outpost.xmrWallet.backToPayments', { defaultValue: 'Back to Funds' })}
         </Link>
       </CardContent>
     </Card>
@@ -844,11 +844,11 @@ function DoneCard({ address, via }: { address: string; via: 'create' | 'restore'
           </div>
         </div>
         <Link
-          to="/admin/settings/payments"
+          to="/admin/finance"
           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          {t('outpost.xmrWallet.backToPayments', { defaultValue: 'Back to payment settings' })}
+          {t('outpost.xmrWallet.backToPayments', { defaultValue: 'Back to Funds' })}
         </Link>
       </CardContent>
     </Card>

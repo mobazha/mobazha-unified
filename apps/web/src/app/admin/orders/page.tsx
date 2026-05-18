@@ -11,6 +11,7 @@ import {
   batchGetProfileDisplayInfo,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
+import type { TranslateFunction } from '@mobazha/core/i18n/types';
 import {
   ShoppingCart,
   Search,
@@ -48,6 +49,9 @@ import {
 import { useFeature } from '@mobazha/core/hooks/useFeature';
 import { AdminShippingDecrypt } from '@/components/GuestCheckout/AdminShippingDecrypt';
 import { isOutpostMode } from '@mobazha/core/config/env';
+import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
+import { formatPrice, fromMinimalUnit } from '@mobazha/core/services/currencyService';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
 
 function useAdminOrders() {
   const { t } = useI18n();
@@ -108,7 +112,86 @@ function useAdminOrders() {
   return { orders, salesOrders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch };
 }
 
-type OrderViewType = 'standard' | 'guest';
+type OrderSourceFilter = 'all' | 'standard' | 'guest';
+
+type UnifiedAdminOrder =
+  | {
+      id: string;
+      source: 'standard';
+      rawState: string;
+      createdAt: string;
+      searchText: string;
+      standardOrder: ReturnType<typeof transformOrderListItem>;
+    }
+  | {
+      id: string;
+      source: 'guest';
+      rawState: string;
+      createdAt: string;
+      searchText: string;
+      guestOrder: GuestOrderSummary;
+    };
+
+const GUEST_STATUS_FILTER_TO_STATES: Partial<Record<StatusFilter, string[]>> = {
+  pending: ['AWAITING_PAYMENT', 'PAYMENT_DETECTED'],
+  processing: ['FUNDED'],
+  shipped: ['SHIPPED'],
+  completed: ['COMPLETED'],
+  cancelled: ['EXPIRED'],
+};
+
+function formatGuestPaymentAmount(order: {
+  paymentAmount: string;
+  paymentCoin: string;
+  priceCurrency?: string;
+  priceDivisibility?: number;
+}): string {
+  const coinDisplay = resolveTokenIdForDisplay(order.paymentCoin);
+  const currency = (order.priceCurrency || '').trim() || coinDisplay;
+  let standard: number;
+  if (
+    typeof order.priceDivisibility === 'number' &&
+    Number.isFinite(order.priceDivisibility) &&
+    order.priceDivisibility >= 0
+  ) {
+    const raw = Number(order.paymentAmount);
+    standard = raw / 10 ** order.priceDivisibility;
+  } else {
+    standard = fromMinimalUnit(order.paymentAmount, currency);
+  }
+  return formatPrice(standard, currency, { showSymbol: true, showCode: true });
+}
+
+function truncateOrderToken(token: string, head = 14, tail = 10): string {
+  if (token.length <= head + tail + 3) return token;
+  return `${token.slice(0, head)}…${token.slice(-tail)}`;
+}
+
+function formatGuestStateLabel(state: string, t: TranslateFunction): string {
+  switch (state) {
+    case 'AWAITING_PAYMENT':
+      return t('admin.orders.guestStateAwaitingPayment');
+    case 'PAYMENT_DETECTED':
+      return t('admin.orders.guestStatePaymentDetected');
+    case 'FUNDED':
+      return t('admin.orders.guestStateFunded');
+    case 'SHIPPED':
+      return t('admin.orders.guestStateShipped');
+    case 'COMPLETED':
+      return t('admin.orders.guestStateCompleted');
+    case 'EXPIRED':
+      return t('admin.orders.guestStateExpired');
+    default:
+      return state
+        .replace(/_/g, ' ')
+        .toLowerCase()
+        .replace(/\b\w/g, char => char.toUpperCase());
+  }
+}
+
+function formatOrderDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString();
+}
 
 function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: () => void }) {
   const { t } = useI18n();
@@ -137,9 +220,7 @@ function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: 
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
           <span>{itemLabel}</span>
           <span>·</span>
-          <span>
-            {order.paymentAmount} {order.paymentCoin}
-          </span>
+          <span>{formatGuestPaymentAmount(order)}</span>
           <span>·</span>
           <span>{new Date(order.createdAt).toLocaleDateString()}</span>
         </div>
@@ -153,7 +234,106 @@ function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: 
               : 'bg-info/15 text-info'
         }`}
       >
-        {order.state.replace(/_/g, ' ')}
+        {formatGuestStateLabel(order.state, t)}
+      </span>
+    </button>
+  );
+}
+
+function UnifiedOrderRow({
+  entry,
+  onStandardOrderClick,
+  onGuestOrderClick,
+}: {
+  entry: UnifiedAdminOrder;
+  onStandardOrderClick: (orderId: string) => void;
+  onGuestOrderClick: (token: string) => void;
+}) {
+  const { t } = useI18n();
+
+  if (entry.source === 'guest') {
+    const order = entry.guestOrder;
+    const title = order.items[0]?.listingTitle || t('admin.orders.guestOrderTitle');
+    const qty = order.items.reduce((sum, item) => sum + item.quantity, 0);
+    const sourceLabel = t('admin.orders.sourceGuest');
+
+    return (
+      <button
+        type="button"
+        onClick={() => onGuestOrderClick(order.orderToken)}
+        className="w-full flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-b-0"
+      >
+        <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 shrink-0 mt-0.5">
+          <ShoppingCart className="w-4 h-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-foreground truncate">{title}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
+              {sourceLabel}
+            </span>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <span>{t('admin.orders.guestItemCount', { count: qty })}</span>
+            <span>·</span>
+            <span>{formatGuestPaymentAmount(order)}</span>
+            <span>·</span>
+            <span>{formatOrderDate(order.createdAt)}</span>
+            {order.contactEmail && (
+              <>
+                <span>·</span>
+                <span className="truncate">{order.contactEmail}</span>
+              </>
+            )}
+          </div>
+        </div>
+        <span
+          className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
+            order.state === 'FUNDED' || order.state === 'COMPLETED'
+              ? 'bg-success/15 text-success'
+              : order.state === 'EXPIRED'
+                ? 'bg-destructive/15 text-destructive'
+                : 'bg-info/15 text-info'
+          }`}
+        >
+          {formatGuestStateLabel(order.state, t)}
+        </span>
+      </button>
+    );
+  }
+
+  const order = entry.standardOrder;
+  const title = order.items[0]?.title || t('order.unknownItem');
+  const buyer = order.vendor.name || t('admin.orders.sourceStandard');
+
+  return (
+    <button
+      type="button"
+      onClick={() => onStandardOrderClick(order.orderId)}
+      className="w-full flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-b-0"
+    >
+      <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+        <ShoppingCart className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-foreground truncate">{title}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+            {t('admin.orders.sourceStandard')}
+          </span>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <span>{buyer}</span>
+          <span>·</span>
+          <span>
+            {order.total} {order.currency}
+          </span>
+          <span>·</span>
+          <span>{formatOrderDate(order.createdAt)}</span>
+        </div>
+      </div>
+      <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0 bg-muted text-muted-foreground">
+        {order.rawState}
       </span>
     </button>
   );
@@ -169,7 +349,7 @@ export default function AdminOrdersPage() {
 
   const { orders, isLoading, isLoadingMore, error, hasMore, loadMore, refetch } = useAdminOrders();
 
-  const [orderView, setOrderView] = useState<OrderViewType>('standard');
+  const [orderView, setOrderView] = useState<OrderSourceFilter>('all');
   const [guestOrders, setGuestOrders] = useState<GuestOrderSummary[]>([]);
   const [guestLoading, setGuestLoading] = useState(false);
   const guestEnabled = useFeature('guestCheckout');
@@ -180,13 +360,13 @@ export default function AdminOrdersPage() {
   const [guestDetailLoading, setGuestDetailLoading] = useState(false);
 
   useEffect(() => {
-    if (orderView !== 'guest') return;
+    if (!guestEnabled) return;
     setGuestLoading(true);
     listGuestOrders({ page: 0, pageSize: 50 })
       .then(res => setGuestOrders(res))
       .catch(() => {})
       .finally(() => setGuestLoading(false));
-  }, [orderView]);
+  }, [guestEnabled]);
 
   const handleGuestOrderClick = useCallback(
     (token: string) => {
@@ -251,6 +431,66 @@ export default function AdminOrdersPage() {
 
     return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [orders, statusFilter, searchTerm, dateFrom, dateTo]);
+
+  const unifiedOrders = useMemo<UnifiedAdminOrder[]>(() => {
+    const standardEntries: UnifiedAdminOrder[] = filteredOrders.map(order => ({
+      id: `std:${order.orderId}`,
+      source: 'standard',
+      rawState: order.rawState || '',
+      createdAt: order.createdAt,
+      searchText:
+        `${order.orderId} ${order.items[0]?.title || ''} ${order.vendor.name || ''}`.toLowerCase(),
+      standardOrder: order,
+    }));
+
+    const guestEntries: UnifiedAdminOrder[] = guestOrders.map(order => ({
+      id: `gst:${order.orderToken}`,
+      source: 'guest',
+      rawState: order.state,
+      createdAt: order.createdAt,
+      searchText:
+        `${order.orderToken} ${order.items.map(item => item.listingTitle).join(' ')} ${order.contactEmail || ''}`.toLowerCase(),
+      guestOrder: order,
+    }));
+
+    return [...standardEntries, ...guestEntries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [filteredOrders, guestOrders]);
+
+  const unifiedVisibleOrders = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return unifiedOrders.filter(entry => {
+      if (orderView !== 'all' && entry.source !== orderView) return false;
+
+      if (statusFilter !== 'all') {
+        if (entry.source === 'standard') {
+          const allowedStandardStates = STATUS_FILTER_TO_STATES[statusFilter];
+          if (allowedStandardStates && !allowedStandardStates.includes(entry.rawState))
+            return false;
+        } else {
+          const allowedGuestStates = GUEST_STATUS_FILTER_TO_STATES[statusFilter];
+          if (!allowedGuestStates || !allowedGuestStates.includes(entry.rawState)) return false;
+        }
+      }
+
+      if (term && !entry.searchText.includes(term)) return false;
+
+      if (dateFrom) {
+        const from = new Date(dateFrom);
+        from.setHours(0, 0, 0, 0);
+        if (new Date(entry.createdAt) < from) return false;
+      }
+
+      if (dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+        if (new Date(entry.createdAt) > to) return false;
+      }
+
+      return true;
+    });
+  }, [unifiedOrders, orderView, statusFilter, searchTerm, dateFrom, dateTo]);
 
   const pendingCount = useMemo(
     () =>
@@ -533,6 +773,17 @@ export default function AdminOrdersPage() {
         >
           <button
             type="button"
+            onClick={() => setOrderView('all')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              orderView === 'all'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t('admin.orders.allOrders')}
+          </button>
+          <button
+            type="button"
             onClick={() => setOrderView('standard')}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               orderView === 'standard'
@@ -556,7 +807,41 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
-      {orderView === 'guest' ? (
+      {orderView === 'all' ? (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {guestLoading && isLoading ? (
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="w-10 h-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : unifiedVisibleOrders.length === 0 ? (
+            <div className="text-center py-10">
+              <ShoppingCart className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">
+                {hasActiveFilters
+                  ? t('admin.orders.noMatchDescription')
+                  : t('admin.orders.emptyDescription')}
+              </p>
+            </div>
+          ) : (
+            unifiedVisibleOrders.map(entry => (
+              <UnifiedOrderRow
+                key={entry.id}
+                entry={entry}
+                onStandardOrderClick={handleViewDetails}
+                onGuestOrderClick={handleGuestOrderClick}
+              />
+            ))
+          )}
+        </div>
+      ) : orderView === 'guest' ? (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           {guestLoading ? (
             <div className="p-6 space-y-4">
@@ -846,17 +1131,29 @@ export default function AdminOrdersPage() {
             {!guestDetailLoading && guestDetail && (
               <div className="space-y-4 text-sm">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                  <span>{t('admin.orders.status')}:</span>
-                  <span className="font-medium text-foreground">{guestDetail.state}</span>
-                  <span>{t('admin.orders.coin')}:</span>
-                  <span className="font-medium text-foreground">{guestDetail.paymentCoin}</span>
-                  <span>{t('admin.orders.token')}:</span>
-                  <span className="font-mono text-xs text-foreground break-all">
-                    {guestDetail.orderToken}
+                  <span>{t('admin.orders.statusLabel')}:</span>
+                  <span className="font-medium text-foreground">
+                    {formatGuestStateLabel(guestDetail.state, t)}
+                  </span>
+                  <span>{t('admin.orders.amountLabel')}:</span>
+                  <span className="font-medium text-foreground flex items-center gap-2 justify-end flex-wrap">
+                    <TokenIcon
+                      token={resolveTokenIdForDisplay(guestDetail.paymentCoin)}
+                      size={18}
+                    />
+                    <span>{formatGuestPaymentAmount(guestDetail)}</span>
+                  </span>
+                  <span>{t('admin.orders.timeLabel')}:</span>
+                  <span className="font-medium text-foreground">
+                    {new Date(guestDetail.createdAt).toLocaleString()}
+                  </span>
+                  <span>{t('admin.orders.buyerTypeLabel')}:</span>
+                  <span className="font-medium text-foreground">
+                    {t('admin.orders.sourceGuest')}
                   </span>
                   {guestDetail.contactEmail && (
                     <>
-                      <span>{t('admin.orders.email')}:</span>
+                      <span>{t('admin.orders.contactLabel')}:</span>
                       <span className="font-medium text-foreground">
                         {guestDetail.contactEmail}
                       </span>
@@ -867,9 +1164,7 @@ export default function AdminOrdersPage() {
                 {/* Items */}
                 {guestDetail.items.length > 0 && (
                   <div>
-                    <p className="font-medium mb-1">
-                      {t('admin.orders.items', { defaultValue: 'Items' })}
-                    </p>
+                    <p className="font-medium mb-1">{t('admin.orders.guestOrderItems')}</p>
                     <div className="space-y-1">
                       {guestDetail.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-muted-foreground">
@@ -898,11 +1193,37 @@ export default function AdminOrdersPage() {
                     </div>
                   ) : (
                     <p className="text-muted-foreground italic">
-                      {t('admin.orders.noShippingAddress', {
-                        defaultValue: 'No shipping address (digital order)',
+                      {t('admin.orders.digitalDelivery', {
+                        defaultValue: 'Digital order, no shipping address required.',
                       })}
                     </p>
                   )}
+                </div>
+
+                <div>
+                  <p className="font-medium mb-2">
+                    {t('admin.orders.technicalInfo', { defaultValue: 'Technical Info' })}
+                  </p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                    <span>{t('admin.orders.paymentRailLabel')}:</span>
+                    <span className="font-mono text-[11px] text-foreground break-all leading-snug">
+                      {guestDetail.paymentCoin}
+                    </span>
+                    <span>{t('admin.orders.listingCurrencyLabel')}:</span>
+                    <span className="font-medium text-foreground">
+                      {(
+                        guestDetail.priceCurrency ||
+                        resolveTokenIdForDisplay(guestDetail.paymentCoin)
+                      ).trim() || '—'}
+                    </span>
+                    <span>{t('admin.orders.tokenLabel')}:</span>
+                    <span
+                      className="font-mono text-xs text-foreground break-all"
+                      title={guestDetail.orderToken}
+                    >
+                      {truncateOrderToken(guestDetail.orderToken)}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}

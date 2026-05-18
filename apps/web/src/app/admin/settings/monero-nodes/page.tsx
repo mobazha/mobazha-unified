@@ -277,6 +277,7 @@ export default function MoneroNodesPage() {
 
   const candidates = useMemo(() => snapshot?.candidates ?? [], [snapshot]);
   const activeAddress = snapshot?.active?.address;
+  const paymentsBackHref = __OUTPOST__ ? '/admin/finance' : '/admin/settings/payments';
 
   // Non-outpost build OR brand has hidden the NodePool surface: render an
   // explanatory placeholder. We don't 404 because the page may still be
@@ -290,7 +291,7 @@ export default function MoneroNodesPage() {
           description={t('outpost.nodes.description', {
             defaultValue: 'Manage the Monero daemon NodePool that backs your wallet.',
           })}
-          backHref="/admin/settings/payments"
+          backHref={paymentsBackHref}
         />
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -315,7 +316,7 @@ export default function MoneroNodesPage() {
         description={t('outpost.nodes.description', {
           defaultValue: 'Manage the Monero daemon NodePool that backs your wallet.',
         })}
-        backHref="/admin/settings/payments"
+        backHref={paymentsBackHref}
       />
 
       <div className="space-y-6">

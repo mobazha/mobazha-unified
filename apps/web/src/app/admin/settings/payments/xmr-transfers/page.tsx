@@ -76,7 +76,7 @@ function NotOutpostPlaceholder() {
     <div>
       <SettingsPageHeader
         title={t('outpost.xmrTransfers.title', { defaultValue: 'Monero Transactions' })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ export default function XMRTransfersPage() {
           defaultValue:
             'All payments seen by your Monero wallet. Live data — fetched from monero-wallet-rpc on every refresh.',
         })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
 
       <BucketFilters
@@ -224,11 +224,11 @@ export default function XMRTransfersPage() {
       ) : null}
 
       <Link
-        to="/admin/settings/payments"
+        to="/admin/finance"
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        {t('outpost.xmrTransfers.backToPayments', { defaultValue: 'Back to payment settings' })}
+        {t('outpost.xmrTransfers.backToPayments', { defaultValue: 'Back to Funds' })}
       </Link>
     </div>
   );

@@ -149,10 +149,38 @@ export interface GuestOrderSummary {
   paymentCoin: string;
   paymentAmount: string;
   priceCurrency: string;
+  /** Listing/payment atomic-unit scale (e.g. XMR = 12); optional on older nodes. */
+  priceDivisibility?: number;
   items: GuestOrderItemResponse[];
   contactEmail?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Matches pkg/models.GuestOrderState ordering on seller-list / admin-detail JSON. */
+const GUEST_ORDER_STATE_NAMES = [
+  'AWAITING_PAYMENT',
+  'PAYMENT_DETECTED',
+  'FUNDED',
+  'SHIPPED',
+  'COMPLETED',
+  'EXPIRED',
+] as const;
+
+/**
+ * Seller-facing guest-order payloads serialize state as int; buyer-facing
+ * APIs use string enum labels. Normalize so UI code can treat state as string.
+ */
+export function normalizeGuestOrderState(state: string | number | undefined | null): string {
+  if (state === undefined || state === null) return '';
+  if (typeof state === 'number' && Number.isFinite(state)) {
+    const idx = Math.trunc(state);
+    if (idx >= 0 && idx < GUEST_ORDER_STATE_NAMES.length) {
+      return GUEST_ORDER_STATE_NAMES[idx];
+    }
+    return `UNKNOWN(${idx})`;
+  }
+  return typeof state === 'string' ? state : String(state);
 }
 
 // ========== Buyer-facing APIs (public, no auth) ==========
@@ -201,7 +229,14 @@ export function listGuestOrders(params?: {
   if (params?.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
   if (params?.state) query.set('state', params.state);
   const qs = query.toString();
-  return authGet(`${NODE_API.GUEST_ORDERS}${qs ? `?${qs}` : ''}`);
+  const path = `${NODE_API.GUEST_ORDERS}${qs ? `?${qs}` : ''}`;
+  return authGet<Array<Omit<GuestOrderSummary, 'state'> & { state?: string | number }>>(path).then(
+    rows =>
+      (rows ?? []).map(({ state, ...rest }) => ({
+        ...rest,
+        state: normalizeGuestOrderState(state),
+      }))
+  );
 }
 
 // PM-3a: Admin-only full order detail (includes encrypted shipping address).
@@ -211,6 +246,7 @@ export interface GuestOrderAdminDetail {
   paymentCoin: string;
   paymentAmount: string;
   priceCurrency: string;
+  priceDivisibility?: number;
   items: GuestOrderItemResponse[];
   contactEmail?: string;
   createdAt: string;
@@ -223,7 +259,12 @@ export interface GuestOrderAdminDetail {
 }
 
 export function getAdminGuestOrderDetail(token: string): Promise<GuestOrderAdminDetail> {
-  return authGet(NODE_API.GUEST_ORDER_ADMIN_DETAIL(token));
+  return authGet<Omit<GuestOrderAdminDetail, 'state'> & { state?: string | number }>(
+    NODE_API.GUEST_ORDER_ADMIN_DETAIL(token)
+  ).then(detail => ({
+    ...detail,
+    state: normalizeGuestOrderState(detail.state),
+  }));
 }
 
 // PM-3a: PGP key management APIs (Outpost/seller-side).

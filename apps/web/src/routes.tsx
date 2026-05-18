@@ -6,7 +6,7 @@
  * - 公开路由：无需登录即可访问
  * - 私有路由：需要登录才能访问，使用 ProtectedRoute 包装
  */
-import { createBrowserRouter, type RouteObject } from 'react-router-dom';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom';
 import { lazy, Suspense, type ComponentType } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -273,6 +273,23 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/products/import-gumroad/page')),
         },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
+        { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
+        {
+          path: 'finance/xmr-wallet',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+        },
+        {
+          path: 'finance/xmr-withdraw',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+        },
+        {
+          path: 'finance/xmr-secrets',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+        },
+        {
+          path: 'finance/xmr-transfers',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+        },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
         {
           path: 'discounts/new',
@@ -327,24 +344,20 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
         {
-          // Outpost-only: XMR wallet setup wizard (OP-MP-2.5)
           path: 'settings/payments/xmr-wallet',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+          element: <Navigate to="/admin/finance/xmr-wallet" replace />,
         },
         {
-          // Outpost-only: XMR withdraw / sweep
           path: 'settings/payments/xmr-withdraw',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+          element: <Navigate to="/admin/finance/xmr-withdraw" replace />,
         },
         {
-          // Outpost-only: XMR secrets export (OP-MP-6)
           path: 'settings/payments/xmr-secrets',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+          element: <Navigate to="/admin/finance/xmr-secrets" replace />,
         },
         {
-          // Outpost-only: XMR transfer history (OP-MP-6)
           path: 'settings/payments/xmr-transfers',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+          element: <Navigate to="/admin/finance/xmr-transfers" replace />,
         },
         {
           path: 'settings/policies',
@@ -526,6 +539,24 @@ if (__OUTPOST__) {
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
+        { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
+        {
+          // Canonical Monero wallet ops under Funds (sidebar); keep registered here for Outpost builds.
+          path: 'finance/xmr-wallet',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+        },
+        {
+          path: 'finance/xmr-withdraw',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+        },
+        {
+          path: 'finance/xmr-secrets',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+        },
+        {
+          path: 'finance/xmr-transfers',
+          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+        },
         {
           path: 'collections',
           element: lazyPage(() => import('./app/admin/collections/page')),
@@ -549,35 +580,27 @@ if (__OUTPOST__) {
         },
         {
           path: 'settings/payments',
-          element: lazyPage(() => import('./app/admin/settings/payments/page')),
+          element: <Navigate to="/admin/finance" replace />,
         },
         {
-          // Outpost-only: XMR wallet setup wizard (OP-MP-2.5) — must be
-          // registered in the Outpost route subset so the link from
-          // OutpostPaymentSettings resolves in real Outpost builds where
-          // the SaaS `routes` block is dead-code eliminated.
+          // Legacy URLs → canonical under /admin/finance/*
           path: 'settings/payments/xmr-wallet',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+          element: <Navigate to="/admin/finance/xmr-wallet" replace />,
         },
         {
-          // Outpost-only: XMR withdraw / sweep
           path: 'settings/payments/xmr-withdraw',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+          element: <Navigate to="/admin/finance/xmr-withdraw" replace />,
         },
         {
-          // Outpost-only: XMR secrets export (OP-MP-6) — sibling of
-          // xmr-wallet so the link from OutpostPaymentSettings resolves
-          // in real Outpost builds.
           path: 'settings/payments/xmr-secrets',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+          element: <Navigate to="/admin/finance/xmr-secrets" replace />,
         },
         {
-          // Outpost-only: XMR transfer history (OP-MP-6)
           path: 'settings/payments/xmr-transfers',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+          element: <Navigate to="/admin/finance/xmr-transfers" replace />,
         },
         {
-          // Outpost-only: Monero NodePool admin (linked from payments page)
+          // Outpost-only: Monero NodePool admin (linked from /admin/finance)
           path: 'settings/monero-nodes',
           element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },

@@ -28,6 +28,7 @@ import {
   Store,
   Bot,
   Compass,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -85,6 +86,7 @@ const outpostNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
+  { id: 'funds', labelKey: 'admin.nav.funds', href: '/admin/finance', icon: Wallet },
   {
     id: 'collections',
     labelKey: 'admin.nav.collections',

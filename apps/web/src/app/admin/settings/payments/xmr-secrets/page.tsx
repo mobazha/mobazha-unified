@@ -58,7 +58,7 @@ function NotOutpostPlaceholder() {
     <div>
       <SettingsPageHeader
         title={t('outpost.xmrSecrets.title', { defaultValue: 'Monero Wallet Secrets' })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -86,18 +86,18 @@ export default function XMRSecretsPage() {
           defaultValue:
             'Export your seed for offline backup, or share view-only keys with a trusted bookkeeper. Both panels reveal data on demand and never persist anything in your browser.',
         })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
 
       <MnemonicPanel />
       <ViewOnlyPanel />
 
       <Link
-        to="/admin/settings/payments"
+        to="/admin/finance"
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        {t('outpost.xmrSecrets.backToPayments', { defaultValue: 'Back to payment settings' })}
+        {t('outpost.xmrSecrets.backToPayments', { defaultValue: 'Back to Funds' })}
       </Link>
     </div>
   );

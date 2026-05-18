@@ -33,7 +33,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { usePlatform } from '@mobazha/ui/hooks';
 import {
   StatCard,
-  RecentOrderRow,
+  AdminRecentOrderRow,
   TopProductRow,
   EmptyState,
   ListSkeleton,
@@ -48,6 +48,9 @@ import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/Onbo
 import StandaloneSetupWizard from '@/components/admin/StandaloneSetupWizard';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
+import { listGuestOrders, type GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
+import { useFeature } from '@mobazha/core/hooks/useFeature';
+import { isOutpostMode } from '@mobazha/core/config/env';
 
 const REVENUE_STATES = new Set(['COMPLETED', 'SHIPPED', 'PAYMENT_FINALIZED']);
 
@@ -55,12 +58,15 @@ function useDashboardData() {
   const { t } = useI18n();
   const { profile } = useUserStore();
   const { formatPrice, fromMinimalUnit, localCurrency, convertToLocal } = useCurrency();
+  const guestEnabled = useFeature('guestCheckout');
 
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [ratingAvg, setRatingAvg] = useState<number | null>(null);
   const [ratingCount, setRatingCount] = useState(0);
+  const [guestOrders, setGuestOrders] = useState<GuestOrderSummary[]>([]);
+  const [guestLoading, setGuestLoading] = useState(false);
 
   const {
     orders: salesOrders,
@@ -107,7 +113,44 @@ function useDashboardData() {
     };
   }, [profile?.peerID]);
 
-  const recentOrders = useMemo(() => salesOrders.slice(0, 5), [salesOrders]);
+  useEffect(() => {
+    if (!guestEnabled || !isOutpostMode()) return;
+    let cancelled = false;
+    setGuestLoading(true);
+    listGuestOrders({ page: 0, pageSize: 10 })
+      .then(rows => {
+        if (!cancelled) setGuestOrders(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setGuestOrders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setGuestLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [guestEnabled]);
+
+  const recentOrders = useMemo(
+    () =>
+      [
+        ...salesOrders.map(order => ({
+          source: 'standard' as const,
+          createdAt: order.timestamp || '',
+          order,
+        })),
+        ...guestOrders.map(order => ({
+          source: 'guest' as const,
+          createdAt: order.createdAt,
+          order,
+        })),
+      ]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5),
+    [salesOrders, guestOrders]
+  );
 
   const topProducts = useMemo(
     () =>
@@ -144,12 +187,14 @@ function useDashboardData() {
     productsError,
     salesOrders,
     salesLoading,
+    guestLoading,
     salesError,
     ratingAvg,
     ratingCount,
     recentOrders,
     topProducts,
     totalSalesDisplay,
+    totalOrderCount: salesOrders.length + guestOrders.length,
   };
 }
 
@@ -190,12 +235,14 @@ export default function AdminDashboardPage() {
     productsError,
     salesOrders,
     salesLoading,
+    guestLoading,
     salesError,
     ratingAvg,
     ratingCount,
     recentOrders,
     topProducts,
     totalSalesDisplay,
+    totalOrderCount,
   } = useDashboardData();
 
   const { hasStore } = useUserContext();
@@ -358,7 +405,11 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.noPaymentMethodsWarning')}
             </p>
             <Link
-              href="/admin/settings/payments"
+              href={
+                typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+                  ? '/admin/finance'
+                  : '/admin/settings/payments'
+              }
               className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
             >
               {t('admin.dashboard.setUpPayments')} →
@@ -384,10 +435,10 @@ export default function AdminDashboardPage() {
         <StatCard
           icon={ShoppingCart}
           label={t('admin.dashboard.totalOrders')}
-          value={String(salesOrders.length)}
+          value={String(totalOrderCount)}
           sublabel={t('admin.dashboard.allTime')}
           color="info"
-          loading={salesLoading}
+          loading={salesLoading || guestLoading}
           href="/admin/orders"
         />
         <StatCard
@@ -548,14 +599,17 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.viewAll')}
             </Link>
           </div>
-          {salesLoading ? (
+          {salesLoading || guestLoading ? (
             <ListSkeleton />
           ) : recentOrders.length > 0 ? (
             <div className="-mx-4 sm:mx-0">
               <div className="flex sm:block overflow-x-auto sm:overflow-visible gap-3 sm:gap-0 px-4 sm:px-0 pb-2 sm:pb-0 snap-x snap-mandatory">
-                {recentOrders.map(order => (
-                  <div key={order.orderID} className="min-w-[260px] sm:min-w-0 snap-start">
-                    <RecentOrderRow order={order} />
+                {recentOrders.map(entry => (
+                  <div
+                    key={entry.source === 'standard' ? entry.order.orderID : entry.order.orderToken}
+                    className="min-w-[260px] sm:min-w-0 snap-start"
+                  >
+                    <AdminRecentOrderRow entry={entry} />
                   </div>
                 ))}
               </div>

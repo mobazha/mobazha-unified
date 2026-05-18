@@ -84,7 +84,7 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
         icon: CreditCard,
         labelKey: 'admin.checklist.setupPayment',
         descKey: 'admin.checklist.setupPaymentDesc',
-        href: '/admin/settings/payments',
+        href: __OUTPOST__ ? '/admin/finance' : '/admin/settings/payments',
         completed: hasPayment,
       },
       {

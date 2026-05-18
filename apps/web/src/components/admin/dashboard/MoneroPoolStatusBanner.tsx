@@ -15,8 +15,8 @@ import { getMoneroNodes, type MoneroNodePoolSnapshot } from '@mobazha/core/servi
  *
  *   - Non-outpost build:        renders nothing
  *   - NodePool not configured:  renders nothing (legacy single-daemon, no
- *                               actionable state — payment status panel
- *                               on /admin/settings/payments covers it)
+ *                               actionable state — Monero status on
+ *                               /admin/finance covers it)
  *   - NodePool + healthy:       compact green chip with active daemon
  *   - NodePool + unhealthy:     full warning banner with CTA
  *   - Fetch failed:             swallow silently (do not stress the

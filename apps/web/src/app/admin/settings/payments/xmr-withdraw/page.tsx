@@ -71,7 +71,7 @@ function NotOutpostPlaceholder() {
     <div>
       <SettingsPageHeader
         title={t('outpost.xmrWithdraw.title', { defaultValue: 'Withdraw Monero' })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -139,10 +139,16 @@ function BalanceCard({
             </div>
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t('outpost.xmrWithdraw.totalBalance', { defaultValue: 'Total (incl. locked)' })}
+                {t('admin.finance.walletTotalBalance', { defaultValue: 'Wallet total' })}
               </p>
               <p className="text-2xl font-semibold tabular-nums text-muted-foreground">
                 {piconeroToXMR(balance.balance)} <span className="text-base font-normal">XMR</span>
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {t('admin.finance.walletTotalBalanceHint', {
+                  defaultValue:
+                    'Includes funds still confirming on-chain. Only "Available now" can be spent or withdrawn.',
+                })}
               </p>
               <p className="text-xs text-muted-foreground">
                 {t('outpost.xmrWithdraw.account', {
@@ -254,11 +260,11 @@ function SuccessCard({ result, onReset }: { result: PostResult; onReset: () => v
 
         <div className="flex items-center justify-between pt-2">
           <Link
-            to="/admin/settings/payments"
+            to="/admin/finance"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            {t('outpost.xmrWithdraw.backToPayments', { defaultValue: 'Back to payments' })}
+            {t('outpost.xmrWithdraw.backToPayments', { defaultValue: 'Back to Funds' })}
           </Link>
           <Button variant="outline" size="sm" onClick={onReset} type="button">
             {t('outpost.xmrWithdraw.sendAnother', { defaultValue: 'Send another' })}
@@ -439,7 +445,7 @@ export default function XMRWithdrawPage() {
       <div data-testid="admin-xmr-withdraw-success">
         <SettingsPageHeader
           title={t('outpost.xmrWithdraw.title', { defaultValue: 'Withdraw Monero' })}
-          backHref="/admin/settings/payments"
+          backHref="/admin/finance"
         />
         <SuccessCard result={result} onReset={handleReset} />
       </div>
@@ -464,7 +470,7 @@ export default function XMRWithdrawPage() {
           defaultValue:
             'Send XMR from this outpost to another wallet. Monero transfers are irreversible — double-check the recipient.',
         })}
-        backHref="/admin/settings/payments"
+        backHref="/admin/finance"
       />
 
       <div className="space-y-6">
