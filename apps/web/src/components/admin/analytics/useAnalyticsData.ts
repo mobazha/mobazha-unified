@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSales, useCurrency, productDataService } from '@mobazha/core';
+import {
+  useSales,
+  useCurrency,
+  productDataService,
+  orderListItemThumbnailHash,
+} from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { getOrderCurrencyCode } from '../dashboard/utils';
 
@@ -172,14 +177,11 @@ export function useAnalyticsData() {
         existing.orders++;
         existing.quantity += order.quantity || 1;
       } else {
-        const thumb = order.thumbnail;
+        const thumb = orderListItemThumbnailHash(order) || undefined;
         map.set(key, {
           slug: order.slug,
           title: order.title || key,
-          thumbnail:
-            (thumb as unknown as Record<string, string>)?.small ||
-            (thumb as unknown as Record<string, string>)?.medium ||
-            undefined,
+          thumbnail: thumb,
           revenue: rev,
           orders: 1,
           quantity: order.quantity || 1,

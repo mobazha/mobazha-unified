@@ -276,7 +276,11 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
                   title: orderItem.title,
                   description: 'Mock product description',
                   price: orderItem.total.amount,
-                  images: [orderItem.thumbnail],
+                  images: [
+                    typeof orderItem.thumbnail === 'string'
+                      ? createMockImage(orderItem.thumbnail)
+                      : orderItem.thumbnail,
+                  ],
                   productType: '',
                   tags: [],
                   grams: 0,

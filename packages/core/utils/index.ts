@@ -8,6 +8,9 @@ export * from './performance';
 // 订单操作工具
 export * from './orderActions';
 
+// 订单列表缩略图（API 可能返回 string CID 或 Image 对象）
+export * from './orderListItemThumbnail';
+
 // Matrix 事件文本生成
 export * from './matrixEventText';
 
