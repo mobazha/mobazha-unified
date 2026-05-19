@@ -41,6 +41,18 @@ const DEFAULT_CONFIG: Required<WebSocketConfig> = {
   connectionTimeout: 15000,
 };
 
+const WEBSOCKET_AUTH_PROTOCOL = 'mbz.auth.v1';
+const WEBSOCKET_AUTH_TOKEN_PROTOCOL_PREFIX = 'mbz.auth.b64.';
+
+function encodeWebSocketTokenProtocol(token: string): string {
+  const bytes = new TextEncoder().encode(token);
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 class WebSocketService {
   private socket: WebSocketImpl | null = null;
   private status: WebSocketStatus = 'disconnected';
@@ -68,15 +80,17 @@ class WebSocketService {
   }
 
   /**
-   * 获取 WebSocket URL（带 token）
+   * 获取 WebSocket URL
    */
   private getWebSocketUrl(): string {
-    const token = getStoredToken();
-    const baseUrl = this.wsUrlOverride ?? getEnvConfig().api.websocket;
+    return this.wsUrlOverride ?? getEnvConfig().api.websocket;
+  }
 
-    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '?Gateway=true';
-
-    return `${baseUrl}${tokenParam}`;
+  private getWebSocketProtocols(token: string): string[] {
+    return [
+      WEBSOCKET_AUTH_PROTOCOL,
+      `${WEBSOCKET_AUTH_TOKEN_PROTOCOL_PREFIX}${encodeWebSocketTokenProtocol(token)}`,
+    ];
   }
 
   /**
@@ -116,11 +130,9 @@ class WebSocketService {
         this.setStatus('connecting');
         const wsUrl = this.getWebSocketUrl();
 
-        // 隐藏 token 的日志
-        const maskedUrl = wsUrl.replace(/token=([^&]{10})[^&]*/, 'token=$1...');
-        console.log('🔌 Connecting WebSocket:', maskedUrl);
+        console.log('🔌 Connecting WebSocket:', wsUrl);
 
-        this.socket = new globalThis.WebSocket(wsUrl);
+        this.socket = new globalThis.WebSocket(wsUrl, this.getWebSocketProtocols(token));
 
         // 连接超时
         this.connectionTimer = setTimeout(() => {
