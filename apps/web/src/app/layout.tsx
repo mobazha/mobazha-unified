@@ -115,6 +115,40 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `window.__OUTPOST__=false;`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var key = 'mbz:last-build-reload';
+                function textOf(value) {
+                  if (!value) return '';
+                  if (typeof value === 'string') return value;
+                  if (value.message) return value.message;
+                  if (value.reason) return textOf(value.reason);
+                  try { return String(value); } catch (e) { return ''; }
+                }
+                function shouldReload(value) {
+                  return /ChunkLoadError|Loading chunk|failed to fetch dynamically imported module|Failed to fetch dynamically imported module|Unable to preload CSS|older or newer deployment|Failed to find Server Action/i.test(textOf(value));
+                }
+                function reloadOnce() {
+                  try {
+                    var now = Date.now();
+                    var last = Number(sessionStorage.getItem(key) || '0');
+                    if (now - last < 30000) return;
+                    sessionStorage.setItem(key, String(now));
+                  } catch (e) {}
+                  location.reload();
+                }
+                window.addEventListener('error', function(event) {
+                  if (shouldReload(event.error || event.message)) reloadOnce();
+                }, true);
+                window.addEventListener('unhandledrejection', function(event) {
+                  if (shouldReload(event.reason)) reloadOnce();
+                }, true);
+              })();
+            `,
+          }}
+        />
         {/* Runtime config — injected by container init at startup (standalone mode).
             Sets window.__RUNTIME_CONFIG__ with SAAS_API_URL and other env-specific values.
             Must load synchronously before React hydration so applyRuntimeConfig() picks it up.

@@ -84,6 +84,18 @@ const nextConfig = {
         ],
       },
       {
+        source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        source: '/runtime-config.js',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        source: '/manifest.json',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
+      },
+      {
         source: '/((?!embed|_next/static|icons).*)',
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },

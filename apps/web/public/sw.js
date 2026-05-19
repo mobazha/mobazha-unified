@@ -5,7 +5,7 @@
  */
 
 // 版本号：每次部署更新时递增此版本号
-const CACHE_VERSION = '3';
+const CACHE_VERSION = '4';
 const CACHE_NAME = `mobazha-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -79,6 +79,17 @@ self.addEventListener('fetch', event => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
+
+  // Let the browser/HTTP cache handle build-hashed Next assets directly.
+  // Service-worker cache-first JS can strand users on a mixed old/new build.
+  if (
+    url.origin === self.location.origin &&
+    (url.pathname === '/sw.js' ||
+      url.pathname === '/runtime-config.js' ||
+      url.pathname.startsWith('/_next/static/'))
+  ) {
+    return;
+  }
 
   // Determine cache strategy
   const strategy = getCacheStrategy(url);
