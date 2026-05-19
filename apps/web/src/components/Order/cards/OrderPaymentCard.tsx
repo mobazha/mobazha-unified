@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { useI18n, type DisplayOrder } from '@mobazha/core';
+import { useI18n, type DisplayOrder, isDirectPaymentOrder } from '@mobazha/core';
 import type { Order as CoreOrder, Product } from '@mobazha/core';
 import { PaymentCard } from '@/components/Order';
 import { RwaAssetDetail } from '@/components/RwaToken';
@@ -92,9 +92,7 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
             chainId={order.chainId}
             timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
             title={t('order.paid')}
-            description={
-              order.paymentProductMode === 'direct' ? t('order.directPaymentDesc') : undefined
-            }
+            description={isDirectPaymentOrder(order) ? t('order.directPaymentDesc') : undefined}
             showDivider={true}
           />
         </>

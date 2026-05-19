@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyPaymentSessionToDisplayOrder } from '../../utils/transforms/paymentSessionDisplay';
+import {
+  applyPaymentSessionToDisplayOrder,
+  isDirectPaymentOrder,
+} from '../../utils/transforms/paymentSessionDisplay';
 import type { DisplayOrder } from '../../types/orderDisplay';
 import type { PaymentSession } from '../../types/paymentSession';
 
@@ -51,6 +54,37 @@ function buildPaymentSession(): PaymentSession {
     },
   };
 }
+
+describe('isDirectPaymentOrder', () => {
+  it('prefers payment session product mode when set', () => {
+    expect(isDirectPaymentOrder({ paymentProductMode: 'direct' })).toBe(true);
+    expect(isDirectPaymentOrder({ paymentProductMode: 'moderated' })).toBe(false);
+    expect(isDirectPaymentOrder({ paymentProductMode: 'cancelable' })).toBe(false);
+  });
+
+  it('falls back to absence of moderator when payment session is unavailable', () => {
+    expect(isDirectPaymentOrder({})).toBe(true);
+    expect(
+      isDirectPaymentOrder({
+        moderator: { id: 'mod', name: 'Mod', avatar: '', fee: 1 },
+      })
+    ).toBe(false);
+  });
+
+  it('uses session product mode over moderator fallback when both are present', () => {
+    expect(
+      isDirectPaymentOrder({
+        paymentProductMode: 'direct',
+        moderator: { id: 'mod', name: 'Mod', avatar: '', fee: 1 },
+      })
+    ).toBe(true);
+    expect(
+      isDirectPaymentOrder({
+        paymentProductMode: 'moderated',
+      })
+    ).toBe(false);
+  });
+});
 
 describe('applyPaymentSessionToDisplayOrder', () => {
   it('prefers canonical payment session coin and formats minimal-unit chain amounts', () => {

@@ -1,52 +1,28 @@
-import { getPaymentCoinDisplayLabel, getTokenByPaymentCoin, getTokenDecimals } from '../../data';
+import { getPaymentCoinDisplayLabel } from '../../data';
 import type { DisplayOrder } from '../../types/orderDisplay';
 import type { PaymentSession } from '../../types/paymentSession';
 import { recoverCryptoPaymentCoin } from './cryptoPaymentRecovery';
+import { formatMinimalUnitExactAmountString } from './minimalUnit';
+
+/** Fields used to decide whether paid-state UI describes a direct (non-moderated) payment. */
+export type DirectPaymentOrderSignals = Pick<DisplayOrder, 'paymentProductMode' | 'moderator'>;
+
+/**
+ * True when funds went directly to the seller (no buyer protection / moderator).
+ * Prefers payment-session `productMode` when present; otherwise falls back to order
+ * contract data (`!moderator`) when the payment-session API is unavailable.
+ */
+export function isDirectPaymentOrder(order: DirectPaymentOrderSignals): boolean {
+  if (order.paymentProductMode === 'direct') return true;
+  if (order.paymentProductMode === 'moderated' || order.paymentProductMode === 'cancelable') {
+    return false;
+  }
+  return !order.moderator;
+}
 
 function normalizeAmount(value?: string): string | undefined {
   const trimmed = (value || '').trim();
   return trimmed ? trimmed : undefined;
-}
-
-function formatMinimalUnitFixed(
-  rawAmount: string,
-  decimals: number,
-  displayDecimals: number
-): string {
-  let amount = BigInt(rawAmount);
-
-  if (decimals > displayDecimals) {
-    const divisor = BigInt(10) ** BigInt(decimals - displayDecimals);
-    const quotient = amount / divisor;
-    const remainder = amount % divisor;
-    amount = remainder * BigInt(2) >= divisor ? quotient + BigInt(1) : quotient;
-  } else if (displayDecimals > decimals) {
-    amount *= BigInt(10) ** BigInt(displayDecimals - decimals);
-  }
-
-  const rendered = amount.toString();
-  if (displayDecimals === 0) return rendered;
-
-  const padded = rendered.padStart(displayDecimals + 1, '0');
-  const integerPart = padded.slice(0, -displayDecimals);
-  const fractionalPart = padded.slice(-displayDecimals).replace(/0+$/, '');
-  return fractionalPart ? `${integerPart}.${fractionalPart}` : integerPart;
-}
-
-function formatMinimalUnitAmountString(rawAmount: string, coin?: string): string | undefined {
-  const trimmed = rawAmount.trim();
-  if (!/^\d+$/.test(trimmed)) {
-    return undefined;
-  }
-
-  const token = coin ? getTokenByPaymentCoin(coin) : undefined;
-  const displayLabel = coin ? getPaymentCoinDisplayLabel(coin) : '';
-  const decimals = Math.max(
-    0,
-    Math.floor(token?.decimals ?? (displayLabel ? getTokenDecimals(displayLabel) : 0))
-  );
-
-  return formatMinimalUnitFixed(trimmed, decimals, decimals);
 }
 
 export function applyPaymentSessionToDisplayOrder(
@@ -71,7 +47,7 @@ export function applyPaymentSessionToDisplayOrder(
   const paymentAmountRaw = observedAmount || expectedAmount;
   const formattedPaymentAmount =
     paymentCoin && paymentAmountRaw
-      ? formatMinimalUnitAmountString(paymentAmountRaw, paymentCoin)
+      ? formatMinimalUnitExactAmountString(paymentAmountRaw, paymentCoin)
       : undefined;
   const paymentAddress = (paymentSession.fundingTarget?.address || '').trim();
 
