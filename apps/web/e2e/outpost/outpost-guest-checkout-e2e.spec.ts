@@ -38,6 +38,14 @@ function exec(cmd: string): string {
   return execSync(cmd, { encoding: 'utf-8', timeout: 30000 }).trim();
 }
 
+function hasBtcRegtest(): boolean {
+  try {
+    return exec(`docker inspect -f '{{.State.Running}}' outpost-e2e-bitcoind`) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 function basicAuth(): string {
   return 'Basic ' + Buffer.from(`admin:${ADMIN_PASS}`).toString('base64');
 }
@@ -72,6 +80,10 @@ let listingSlug: string | null = null;
 
 test.beforeAll(async ({ request }) => {
   test.skip(!ADMIN_PASS, 'OUTPOST_PASSWORD not set — skip E2E payment tests');
+  test.skip(
+    !hasBtcRegtest(),
+    'outpost-e2e-bitcoind is not running — skip legacy BTC payment tests'
+  );
   await waitForHealthy(OUTPOST_URL);
 
   let btcSweepAddress: string | undefined;
