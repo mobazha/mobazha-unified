@@ -5,7 +5,7 @@
 
 /// <reference lib="dom" />
 
-import { getEnvConfig } from '../../config/env';
+import { getEnvConfig, isOutpostMode, isStandaloneMode } from '../../config/env';
 import { getStoredToken } from '../auth/token';
 
 // WebSocket 类型（兼容浏览器和 Node.js）
@@ -53,6 +53,75 @@ function encodeWebSocketTokenProtocol(token: string): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+/**
+ * Direct mobazha3.0 node connections (standalone/outpost seller, local dev)
+ * authenticate via ?token= because Basic Auth uses ?token=basic:... and the
+ * node historically did not read Sec-WebSocket-Protocol. SaaS hosting resolves
+ * auth from the protocol header instead.
+ */
+export function shouldUseQueryTokenWebSocketAuth(wsUrl: string, token: string): boolean {
+  if (token.startsWith('basic:')) {
+    return true;
+  }
+
+  if (isStandaloneMode() || isOutpostMode()) {
+    try {
+      const url = new URL(wsUrl, window.location.origin);
+      // /buyer-api/ws proxies to SaaS hosting — protocol auth is preferred there.
+      if (url.pathname.includes('/buyer-api/')) {
+        return false;
+      }
+    } catch {
+      if (!wsUrl.includes('buyer-api')) {
+        return true;
+      }
+    }
+    return true;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const ws = new URL(wsUrl.replace(/^ws(s)?:/, 'http$1:'));
+      const pageHost = window.location.hostname;
+      if (
+        (ws.hostname === 'localhost' || ws.hostname === '127.0.0.1') &&
+        (pageHost === 'localhost' || pageHost === '127.0.0.1') &&
+        ws.port &&
+        window.location.port &&
+        ws.port !== window.location.port
+      ) {
+        return true;
+      }
+    } catch {
+      // fall through to protocol auth
+    }
+  }
+
+  return false;
+}
+
+export function appendWebSocketTokenQuery(wsUrl: string, token: string): string {
+  const separator = wsUrl.includes('?') ? '&' : '?';
+  return `${wsUrl}${separator}token=${encodeURIComponent(token)}`;
+}
+
+function resolveWebSocketConnection(
+  wsUrl: string,
+  token: string
+): { url: string; protocols?: string[] } {
+  if (shouldUseQueryTokenWebSocketAuth(wsUrl, token)) {
+    return { url: appendWebSocketTokenQuery(wsUrl, token) };
+  }
+  return { url: wsUrl, protocols: getWebSocketProtocols(token) };
+}
+
+function getWebSocketProtocols(token: string): string[] {
+  return [
+    WEBSOCKET_AUTH_PROTOCOL,
+    `${WEBSOCKET_AUTH_TOKEN_PROTOCOL_PREFIX}${encodeWebSocketTokenProtocol(token)}`,
+  ];
+}
+
 class WebSocketService {
   private socket: WebSocketImpl | null = null;
   private status: WebSocketStatus = 'disconnected';
@@ -84,13 +153,6 @@ class WebSocketService {
    */
   private getWebSocketUrl(): string {
     return this.wsUrlOverride ?? getEnvConfig().api.websocket;
-  }
-
-  private getWebSocketProtocols(token: string): string[] {
-    return [
-      WEBSOCKET_AUTH_PROTOCOL,
-      `${WEBSOCKET_AUTH_TOKEN_PROTOCOL_PREFIX}${encodeWebSocketTokenProtocol(token)}`,
-    ];
   }
 
   /**
@@ -128,11 +190,14 @@ class WebSocketService {
     return new Promise(resolve => {
       try {
         this.setStatus('connecting');
-        const wsUrl = this.getWebSocketUrl();
+        const { url: wsUrl, protocols } = resolveWebSocketConnection(this.getWebSocketUrl(), token);
 
         console.log('🔌 Connecting WebSocket:', wsUrl);
 
-        this.socket = new globalThis.WebSocket(wsUrl, this.getWebSocketProtocols(token));
+        this.socket =
+          protocols != null
+            ? new globalThis.WebSocket(wsUrl, protocols)
+            : new globalThis.WebSocket(wsUrl);
 
         // 连接超时
         this.connectionTimer = setTimeout(() => {
