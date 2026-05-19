@@ -71,6 +71,8 @@ function formatMB(mb: number): string {
 
 export default function SystemPage() {
   const { t } = useI18n();
+  const isOutpost = isOutpostMode();
+  const supportsAdvancedSystemConfig = isStandaloneMode() && !isOutpost;
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -140,26 +142,32 @@ export default function SystemPage() {
   }, []);
 
   const fetchRpcStatus = useCallback(async () => {
-    if (!isOutpostMode()) return;
+    if (!isOutpost) return;
     try {
       setRpcStatus(await getPaymentRPCStatus());
     } catch {
       setRpcStatus(null);
     }
-  }, []);
+  }, [isOutpost]);
 
   useEffect(() => {
     if (isAdmin) {
       fetchHealth();
-      fetchNetworkConfig();
-      fetchDomainConfig();
-      fetchUpdateConfig();
-      fetchRpcStatus();
+      if (supportsAdvancedSystemConfig) {
+        fetchNetworkConfig();
+        fetchDomainConfig();
+        fetchUpdateConfig();
+      }
+      if (isOutpost) {
+        fetchRpcStatus();
+      }
       const interval = setInterval(fetchHealth, 30000);
       return () => clearInterval(interval);
     }
   }, [
     isAdmin,
+    supportsAdvancedSystemConfig,
+    isOutpost,
     fetchHealth,
     fetchNetworkConfig,
     fetchDomainConfig,
@@ -610,7 +618,7 @@ export default function SystemPage() {
       )}
 
       {/* RPC Connection Status (Outpost only) */}
-      {isOutpostMode() && rpcStatus && (
+      {isOutpost && rpcStatus && (
         <div className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
             {t('system.rpc.title', { defaultValue: 'Payment RPC Status' })}
@@ -654,7 +662,7 @@ export default function SystemPage() {
       )}
 
       {/* Domain Settings (standalone only, hidden in Outpost) */}
-      {isStandaloneMode() && !isOutpostMode() && (
+      {supportsAdvancedSystemConfig && (
         <div id="domain" className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
             {t('system.domain.title', { defaultValue: 'Custom Domain' })}

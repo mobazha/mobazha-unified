@@ -3,77 +3,66 @@
 /**
  * LocalLlmEnginePanel — Outpost-only.
  *
- * Renders the local LLM runtime options that fulfil the "AI runs locally"
- * promise shown in the Outpost privacy banner above. Without this panel, the
- * banner is a claim with no surface — users see "AI runs locally" but no path
- * to actually install a local LLM.
- *
- * Static MVP (no backend probe):
- * - Three curated engines: Ollama (default recommendation), llama.cpp,
- *   LM Studio. Each card shows install command + recommended starter model.
- * - Footer "Configure endpoint" link is an in-page anchor (`#ai-endpoint-config`)
- *   that scrolls down to the inline `AIConfigSection` rendered below this panel
- *   on `/admin/ai-agents` (Outpost mode). The Settings → Integrations entry
- *   point was retired for Outpost when both surfaces were consolidated onto
- *   the AI Agents page (see Solution B in PROGRESS.md, 2026-05-12).
- *
- * Future enhancement (SCA Foundation): probe `localhost:11434/v1/models` etc.
- * and replace the install card with a "✓ Llama 3.2 already running" status.
- * The panel layout already accommodates per-engine status rendering.
+ * Two states:
+ * - Detected: compact status line (engine + model + endpoint).
+ * - Not detected: single Ollama install guide; other engines collapsed.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useI18n } from '@mobazha/core';
-import { ArrowDown, Box, Check, Copy, Cpu, ExternalLink, Server, Sparkles } from 'lucide-react';
+import { getAIConfig, getAIStatus } from '@mobazha/core/services/api/aiSettings';
+import { Check, ChevronDown, Copy, Cpu, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type EngineId = 'ollama' | 'llamacpp' | 'lmstudio';
 
-interface EngineDef {
-  id: EngineId;
-  Icon: typeof Cpu;
-  /** Anchor color tint for the icon container (Tailwind utility). */
-  accentClass: string;
-  /** Install command shown in the copy block. Empty string falls back to the download link. */
-  installCmd: string;
-  /** Optional follow-up command (e.g., `ollama pull llama3.2`). */
-  pullCmd?: string;
-  /** External download / docs link. */
-  externalUrl: string;
+interface DetectedLocalLLM {
+  engine: EngineId;
+  label: string;
+  model: string;
+  baseURL: string;
 }
 
-const ENGINES: EngineDef[] = [
-  {
-    id: 'ollama',
-    Icon: Cpu,
-    accentClass: 'bg-primary/10 text-primary',
-    installCmd: 'curl -fsSL https://ollama.com/install.sh | sh',
-    pullCmd: 'ollama pull llama3.2',
-    externalUrl: 'https://ollama.com/download',
-  },
-  {
-    id: 'llamacpp',
-    Icon: Server,
-    accentClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    // No single-line install: the project ships prebuilt binaries for Linux /
-    // macOS / Windows on the GitHub releases page. The card's external link
-    // lands on that page so the user picks the binary that matches the host
-    // (Outpost typically runs on a Linux VPS, where `brew` is unavailable).
-    installCmd: '',
-    externalUrl: 'https://github.com/ggml-org/llama.cpp/releases',
-  },
-  {
-    id: 'lmstudio',
-    Icon: Box,
-    accentClass: 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400',
-    installCmd: '',
-    externalUrl: 'https://lmstudio.ai/download',
-  },
+const OLLAMA_INSTALL = 'curl -fsSL https://ollama.com/install.sh | sh';
+const OLLAMA_PULL = 'ollama pull llama3.2';
+
+const ALT_ENGINES: { id: EngineId; url: string }[] = [
+  { id: 'llamacpp', url: 'https://github.com/ggml-org/llama.cpp/releases' },
+  { id: 'lmstudio', url: 'https://lmstudio.ai/download' },
 ];
+
+function normalizeHostname(hostname: string): string {
+  return hostname.replace(/^\[|\]$/g, '').toLowerCase();
+}
+
+function getDetectedLocalEngine(
+  baseURL: string
+): Pick<DetectedLocalLLM, 'engine' | 'label'> | null {
+  try {
+    const url = new URL(baseURL);
+    const hostname = normalizeHostname(url.hostname);
+    const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+
+    if (!isLoopback) {
+      return null;
+    }
+
+    if (url.port === '11434') {
+      return { engine: 'ollama', label: 'Ollama' };
+    }
+
+    return { engine: 'lmstudio', label: 'Local LLM' };
+  } catch {
+    return null;
+  }
+}
 
 export function LocalLlmEnginePanel() {
   const { t } = useI18n();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [detected, setDetected] = useState<DetectedLocalLLM | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [showAltEngines, setShowAltEngines] = useState(false);
 
   const handleCopy = useCallback(async (key: string, text: string) => {
     if (!text) return;
@@ -82,9 +71,80 @@ export function LocalLlmEnginePanel() {
       setCopiedId(key);
       window.setTimeout(() => setCopiedId(null), 1500);
     } catch {
-      // Clipboard may be unavailable (insecure context) — degrade silently.
+      // Clipboard may be unavailable (insecure context).
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function probeLocalLLM() {
+      try {
+        const [status, config] = await Promise.all([getAIStatus(), getAIConfig()]);
+        if (cancelled) return;
+
+        const activeProvider = config.active_provider;
+        const activeConfig = activeProvider ? config.providers?.[activeProvider] : undefined;
+        const baseURL = activeConfig?.base_url || '';
+        const model = activeConfig?.model || '';
+        const detectedEngine = getDetectedLocalEngine(baseURL);
+
+        if (status.available && activeConfig && detectedEngine) {
+          setDetected({ ...detectedEngine, model, baseURL });
+        } else {
+          setDetected(null);
+        }
+      } catch {
+        if (!cancelled) setDetected(null);
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    }
+
+    probeLocalLLM();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (checking) {
+    return (
+      <div
+        className="bg-card border border-border rounded-lg p-4 md:p-5"
+        data-testid="local-llm-engine-panel"
+      >
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          {t('aiAgents.outpost.localLlm.checking', { defaultValue: 'Checking local AI engine…' })}
+        </div>
+      </div>
+    );
+  }
+
+  if (detected) {
+    return (
+      <div
+        className="bg-card border border-border rounded-lg p-4 md:p-5"
+        data-testid="local-llm-engine-panel"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 shrink-0 rounded-md bg-success/10 text-success flex items-center justify-center">
+            <Check className="w-4.5 h-4.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">{detected.label}</span>
+              <span className="text-xs text-muted-foreground font-mono">{detected.model}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">{detected.baseURL}</p>
+          </div>
+          <a href="#ai-endpoint-config" className="text-xs text-primary hover:underline shrink-0">
+            {t('aiAgents.outpost.localLlm.edit', { defaultValue: 'Edit' })}
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -100,113 +160,90 @@ export function LocalLlmEnginePanel() {
             {t('aiAgents.outpost.localLlm.title')}
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t('aiAgents.outpost.localLlm.body')}
+            {t('aiAgents.outpost.localLlm.bodySimple', {
+              defaultValue:
+                'Install Ollama to power on-device AI. Your store data never leaves this machine.',
+            })}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {ENGINES.map(engine => {
-          const installKey = `${engine.id}-install`;
-          const pullKey = `${engine.id}-pull`;
-          const taglineKey = `aiAgents.outpost.localLlm.engines.${engine.id}.tagline` as const;
-          const recModelKey =
-            `aiAgents.outpost.localLlm.engines.${engine.id}.recommendedModel` as const;
-          const ctaKey = `aiAgents.outpost.localLlm.engines.${engine.id}.cta` as const;
-          const nameKey = `aiAgents.outpost.localLlm.engines.${engine.id}.name` as const;
-          const Icon = engine.Icon;
-
-          return (
-            <div
-              key={engine.id}
-              className="border border-border rounded-md p-3 flex flex-col gap-3 bg-background"
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={cn(
-                    'w-9 h-9 shrink-0 rounded-md flex items-center justify-center',
-                    engine.accentClass
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{t(nameKey)}</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{t(taglineKey)}</p>
-                </div>
-              </div>
-
-              {engine.installCmd ? (
-                <div className="rounded-md bg-muted/60 border border-border/60 px-2.5 py-2">
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-[11px] font-mono text-foreground break-all">
-                      {engine.installCmd}
-                    </code>
-                    <button
-                      onClick={() => handleCopy(installKey, engine.installCmd)}
-                      className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 rounded hover:bg-muted transition-colors"
-                      aria-label={t('common.copy')}
-                    >
-                      {copiedId === installKey ? (
-                        <Check className="w-3.5 h-3.5 text-success" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                  {engine.pullCmd && (
-                    <div className="mt-1.5 pt-1.5 border-t border-border/40 flex items-center gap-2">
-                      <code className="flex-1 text-[11px] font-mono text-muted-foreground break-all">
-                        {engine.pullCmd}
-                      </code>
-                      <button
-                        onClick={() => handleCopy(pullKey, engine.pullCmd!)}
-                        className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 rounded hover:bg-muted transition-colors"
-                        aria-label={t('common.copy')}
-                      >
-                        {copiedId === pullKey ? (
-                          <Check className="w-3.5 h-3.5 text-success" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : null}
-
-              <div className="flex items-center justify-between gap-2 mt-auto">
-                <span className="text-xs text-muted-foreground">{t(recModelKey)}</span>
-                <a
-                  href={engine.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                >
-                  {t(ctaKey)}
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          );
-        })}
+      {/* Ollama install commands */}
+      <div className="rounded-md bg-muted/60 border border-border/60 px-3 py-2.5 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-sm font-medium text-foreground">Ollama</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 text-[11px] font-mono text-foreground break-all">
+            {OLLAMA_INSTALL}
+          </code>
+          <button
+            onClick={() => handleCopy('ollama-install', OLLAMA_INSTALL)}
+            className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 rounded hover:bg-muted transition-colors"
+            aria-label={t('common.copy')}
+          >
+            {copiedId === 'ollama-install' ? (
+              <Check className="w-3.5 h-3.5 text-success" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
+        </div>
+        <div className="border-t border-border/40 pt-1.5 flex items-center gap-2">
+          <code className="flex-1 text-[11px] font-mono text-muted-foreground break-all">
+            {OLLAMA_PULL}
+          </code>
+          <button
+            onClick={() => handleCopy('ollama-pull', OLLAMA_PULL)}
+            className="shrink-0 inline-flex items-center justify-center min-h-9 min-w-9 rounded hover:bg-muted transition-colors"
+            aria-label={t('common.copy')}
+          >
+            {copiedId === 'ollama-pull' ? (
+              <Check className="w-3.5 h-3.5 text-success" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between gap-3 text-sm">
-        <span className="text-muted-foreground">
-          {t('aiAgents.outpost.localLlm.alreadyInstalled')}
-        </span>
-        {/* In-page jump to the AIConfigSection rendered below. The anchor id
-            (`ai-endpoint-config`) is set on the AIConfigSection root. Using a
-            native anchor (not next/link) keeps Next.js from triggering a soft
-            navigation for what is purely a scroll. */}
-        <a
-          href="#ai-endpoint-config"
-          className="text-primary hover:underline inline-flex items-center gap-1"
+      <p className="mt-3 text-xs text-muted-foreground">
+        {t('aiAgents.outpost.localLlm.afterInstall', {
+          defaultValue:
+            'After installing, refresh this page — the engine will be detected automatically.',
+        })}
+      </p>
+
+      {/* Other engines — collapsed */}
+      <div className="mt-4 pt-3 border-t border-border/60">
+        <button
+          onClick={() => setShowAltEngines(prev => !prev)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          {t('aiAgents.outpost.localLlm.configureEndpoint')}
-          <ArrowDown className="w-3 h-3" />
-        </a>
+          <ChevronDown
+            className={cn('w-3.5 h-3.5 transition-transform', showAltEngines && 'rotate-180')}
+          />
+          {t('aiAgents.outpost.localLlm.otherEngines', {
+            defaultValue: 'Other engines (llama.cpp, LM Studio)',
+          })}
+        </button>
+        {showAltEngines && (
+          <div className="mt-2 space-y-1.5 pl-5">
+            {ALT_ENGINES.map(eng => (
+              <a
+                key={eng.id}
+                href={eng.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+              >
+                {t(`aiAgents.outpost.localLlm.engines.${eng.id}.name` as const)}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

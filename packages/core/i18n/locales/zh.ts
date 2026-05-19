@@ -5898,9 +5898,16 @@ export const zh: PartialTranslationResource = {
         cloudTooltip:
           '该客户端会把店铺数据发往厂商云端推理。连接会违反 Outpost「AI 仅在本机运行」的承诺。',
       },
+      developerOptions: '开发者选项',
       localLlm: {
         title: '本地 LLM 引擎',
         body: 'Outpost 需要本地 LLM 来驱动设备端 AI。安装下面任意一个引擎即可——店铺数据永远不会离开本机。',
+        bodySimple: '安装 Ollama 来驱动设备端 AI。店铺数据永远不会离开本机。',
+        edit: '编辑',
+        editConfig: '编辑 AI 端点配置',
+        checking: '正在检查本地 AI 引擎…',
+        afterInstall: '安装完成后刷新本页，引擎将被自动检测。',
+        otherEngines: '其他引擎（llama.cpp、LM Studio）',
         alreadyInstalled: '已安装？',
         configureEndpoint: '在 AI Models 配置 endpoint',
         engines: {

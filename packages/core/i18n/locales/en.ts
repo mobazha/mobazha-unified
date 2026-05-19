@@ -6590,9 +6590,18 @@ export const en: TranslationResource = {
         cloudTooltip:
           'This client sends your store data to a vendor cloud for inference. Connecting violates the Outpost "AI runs locally" promise.',
       },
+      developerOptions: 'Developer Options',
       localLlm: {
         title: 'Local LLM engine',
         body: 'Outpost needs a local LLM to power on-device AI. Install one of the engines below — your store data never leaves this machine.',
+        bodySimple:
+          'Install Ollama to power on-device AI. Your store data never leaves this machine.',
+        edit: 'Edit',
+        editConfig: 'Edit AI endpoint configuration',
+        checking: 'Checking local AI engine…',
+        afterInstall:
+          'After installing, refresh this page — the engine will be detected automatically.',
+        otherEngines: 'Other engines (llama.cpp, LM Studio)',
         alreadyInstalled: 'Already installed?',
         configureEndpoint: 'Configure endpoint in AI Models',
         engines: {
