@@ -2,7 +2,7 @@
  * 订单 API 服务
  */
 
-import type { Order, OrderListItem } from '../../types';
+import type { Order, OrderListItem, PaymentSession } from '../../types';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
 import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
@@ -363,6 +363,14 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   };
 
   return withMockFallback(realFn, mockFn, `/orders/${orderId}`);
+}
+
+export async function getOrderPaymentSession(orderId: string): Promise<PaymentSession | null> {
+  try {
+    return await authGet<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(orderId));
+  } catch {
+    return null;
+  }
 }
 
 // ========== 订单创建 API ==========
@@ -1308,6 +1316,7 @@ export const ordersApi = {
   getPurchases,
   getSales,
   getOrderDetails,
+  getOrderPaymentSession,
 
   // 创建
   createOrder,

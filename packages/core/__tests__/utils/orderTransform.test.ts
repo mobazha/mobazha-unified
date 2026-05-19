@@ -100,4 +100,63 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.paymentProgress?.expectedAmountFormatted).toBe('2.00');
     expect(order?.paymentProgress?.percentage).toBe(100);
   });
+
+  it('recovers EVM native payment coin when backend mislabeled it as USD', () => {
+    const order = transformCoreOrder(
+      {
+        state: 'PENDING',
+        paymentState: {
+          verificationStatus: 'verified',
+          progress: {
+            totalReceived: '7022669176100452',
+            expectedAmount: '7018200533383240',
+            percentage: 100,
+          },
+        },
+        contract: {
+          OrderID: 'order-1',
+          orderOpen: {
+            timestamp: '2026-05-15T00:00:00Z',
+            pricingCoin: 'USD',
+            amount: 1500,
+            buyerID: { peerID: 'buyer-peer', name: 'Buyer' },
+            listings: [
+              {
+                listing: {
+                  slug: 'listing-1',
+                  metadata: {
+                    pricingCurrency: { code: 'USD', divisibility: 2 },
+                  },
+                  item: {
+                    title: 'Test Product',
+                    price: 1500,
+                    images: [],
+                  },
+                  vendorID: { peerID: 'vendor-peer', name: 'Vendor' },
+                },
+              },
+            ],
+            items: [{ quantity: 1 }],
+            shipping: {},
+          },
+          paymentSent: {
+            coin: 'USD',
+            amount: 7022669176100452,
+            method: 'CANCELABLE',
+            transactionID: '0x269fffe47a2b1cd4ade027d4d5a70a377434156e4c2179cd87ec389630403d30',
+            toAddress: '0xeb5Ad81338D6AEc8EBC89e681275630dC4A914BE',
+            contractAddress: '0xeb5Ad81338D6AEc8EBC89e681275630dC4A914BE',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.paymentCoin).toBe('crypto:eip155:11155111:native');
+    expect(order?.currency).toBe('ETH');
+    expect(order?.total).toBe('0.007022669176100452');
+    expect(order?.paymentAmount).toBe('0.007022669176100452');
+    expect(order?.chainId).toBe(11155111);
+    expect(order?.paymentProgress?.expectedAmountFormatted).toBe('0.007018');
+  });
 });

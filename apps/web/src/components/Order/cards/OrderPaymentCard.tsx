@@ -71,7 +71,7 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
               onClick={() => {
                 const url = getBlockExplorerUrl(
                   order.paymentTx!,
-                  order.currency || '',
+                  order.paymentCoin || order.currency || '',
                   order.chainId
                 );
                 if (url) window.open(url, '_blank');
@@ -84,12 +84,17 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
           <PaymentCard
             amount={order.total}
             currency={order.currency}
+            paymentCoin={order.paymentCoin}
+            pricingAmount={order.pricingAmount}
+            pricingCurrency={order.pricingCurrency}
             txHash={order.paymentTx}
             confirmations={order.txConfirmations}
             chainId={order.chainId}
             timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
             title={t('order.paid')}
-            description={!order.moderator ? t('order.directPaymentDesc') : undefined}
+            description={
+              order.paymentProductMode === 'direct' ? t('order.directPaymentDesc') : undefined
+            }
             showDivider={true}
           />
         </>
