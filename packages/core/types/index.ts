@@ -131,6 +131,14 @@ export type {
   ProtectionLevel,
 } from './orderDisplay';
 
+export type {
+  PaymentSession,
+  PaymentSessionFundingTarget,
+  PaymentSessionProgress,
+  PaymentSessionSettlementMode,
+  PaymentSessionProductMode,
+} from './paymentSession';
+
 // Wallet types
 export type {
   WalletBalance,

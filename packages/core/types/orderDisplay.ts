@@ -4,6 +4,7 @@
  */
 
 import type { PaymentProgress } from './order';
+import type { PaymentSessionProductMode, PaymentSessionSettlementMode } from './paymentSession';
 
 /**
  * 订单项 - 用于展示
@@ -132,6 +133,10 @@ export interface DisplayOrder {
   paymentCoin?: string;
   /** 实际支付金额（格式化后，如 "0.0002"） */
   paymentAmount?: string;
+  /** Unified payment session settlement mode when available */
+  paymentSettlementMode?: PaymentSessionSettlementMode;
+  /** Unified payment session product mode when available */
+  paymentProductMode?: PaymentSessionProductMode;
   /** 创建时间 */
   createdAt: string;
   /** 取消时间（仅 cancelled 状态） */

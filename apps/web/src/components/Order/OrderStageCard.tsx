@@ -11,6 +11,8 @@ import {
   getChainFromCoin,
   getChainByEVMId,
   getTrackingUrl,
+  getPaymentCoinDisplayLabel,
+  resolveTokenIdForDisplay,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
@@ -115,8 +117,10 @@ export const OrderStageCard = memo(function OrderStageCard({
 export interface PaymentCardProps {
   /** 支付金额（加密货币） */
   amount: string;
-  /** 支付币种（加密货币，如 ETH） */
+  /** 支付币种展示标签（如 ETH） */
   currency: string;
+  /** 原始支付币种（canonical coin / token id），用于图标与 explorer 推断 */
+  paymentCoin?: string;
   /** 原始定价金额（法币，如 "0.60"） */
   pricingAmount?: string;
   /** 原始定价币种（法币，如 "USD"） */
@@ -135,6 +139,7 @@ export interface PaymentCardProps {
 export const PaymentCard = memo(function PaymentCard({
   amount,
   currency,
+  paymentCoin,
   pricingAmount,
   pricingCurrency,
   txHash,
@@ -149,9 +154,11 @@ export const PaymentCard = memo(function PaymentCard({
 }: PaymentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const paymentAsset = paymentCoin || currency;
+  const paymentLabel = paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currency;
 
   // 判断是否有原始定价信息（与支付币种不同时显示）
-  const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== currency;
+  const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== paymentLabel;
 
   // 格式化交易 hash（显示前后各 6 位）
   const formatTxHash = (hash: string) => {
@@ -159,7 +166,9 @@ export const PaymentCard = memo(function PaymentCard({
     return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
   };
 
-  const txUrl = txHash ? getBlockExplorerUrl(txHash, currency, chainId) || blockchainUrl || '' : '';
+  const txUrl = txHash
+    ? getBlockExplorerUrl(txHash, paymentAsset, chainId) || blockchainUrl || ''
+    : '';
 
   return (
     <OrderStageCard
@@ -174,13 +183,15 @@ export const PaymentCard = memo(function PaymentCard({
           {(() => {
             // 优先使用 EVM chainId 获取链，否则从币种名推断
             const chainFromEVM = chainId ? getChainByEVMId(chainId)?.id : null;
-            const chainFromCurrency = getChainFromCoin(currency);
+            const chainFromCurrency = getChainFromCoin(paymentAsset);
             const chainSymbol = chainFromEVM || chainFromCurrency || null;
             // 只有当代币不是原生代币时才显示链徽章（如 ETHUSDT 显示 ETH 徽章，但 ETH 本身不需要）
-            const showBadge = !!chainSymbol && currency.toUpperCase() !== chainSymbol.toUpperCase();
+            const displayTokenId = resolveTokenIdForDisplay(paymentAsset);
+            const showBadge =
+              !!chainSymbol && displayTokenId.toUpperCase() !== chainSymbol.toUpperCase();
             return (
               <TokenIcon
-                token={currency}
+                token={displayTokenId}
                 size={28}
                 className="flex-shrink-0"
                 showChainBadge={showBadge}
@@ -206,7 +217,7 @@ export const PaymentCard = memo(function PaymentCard({
                   : 'text-sm sm:text-base font-semibold'
               )}
             >
-              {showPricingInfo ? `≈ ${amount} ${currency}` : `${amount} ${currency}`}
+              {showPricingInfo ? `≈ ${amount} ${paymentLabel}` : `${amount} ${paymentLabel}`}
               {confirmations !== undefined && confirmations > 0 && (
                 <span className="text-xs text-muted-foreground ml-1">
                   ({confirmations} confirms)

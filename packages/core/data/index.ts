@@ -38,6 +38,8 @@ export {
   getEVMTokenAddressFromPaymentCoin,
   getEVMChainId,
   getChainByEVMId,
+  getPaymentCoinDisplayLabel,
+  resolveTokenIdForDisplay,
   formatTokenAmount,
   parseTokenAmount,
   // 链类型判断工具

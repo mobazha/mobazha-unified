@@ -781,6 +781,26 @@ export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefi
   return CHAINS.find(c => c.evmChainId === evmChainId);
 }
 
+function getNativeSymbolByEVMChainId(evmChainId: number): string | undefined {
+  const nativeSymbols: Record<number, string> = {
+    1: 'ETH',
+    10: 'ETH',
+    56: 'BNB',
+    97: 'BNB',
+    137: 'MATIC',
+    8453: 'ETH',
+    84532: 'ETH',
+    42161: 'ETH',
+    421614: 'ETH',
+    43114: 'AVAX',
+    43113: 'AVAX',
+    1030: 'CFX',
+    11155111: 'ETH',
+    11155420: 'ETH',
+  };
+  return nativeSymbols[evmChainId];
+}
+
 /**
  * Returns a user-friendly display label for a payment coin.
  * Resolves canonical asset IDs (e.g., "crypto:eip155:1:native") to
@@ -800,6 +820,10 @@ export function getPaymentCoinDisplayLabel(coin: string): string {
     if (parsed.namespace === 'eip155') {
       const evmChainID = Number(parsed.chainRef);
       if (!Number.isNaN(evmChainID)) {
+        const nativeSymbol = getNativeSymbolByEVMChainId(evmChainID);
+        if (parsed.standard === 'native' && nativeSymbol) {
+          return nativeSymbol;
+        }
         const chain = getChainByEVMId(evmChainID);
         if (chain) {
           return parsed.standard === 'native' ? chain.name : coin;
@@ -832,7 +856,17 @@ export function getPaymentCoinDisplayLabel(coin: string): string {
 export function resolveTokenIdForDisplay(coin: string): string {
   if (!coin) return '';
   const tokenId = getTokenIdFromPaymentCoin(coin);
-  return tokenId || coin;
+  if (tokenId) return tokenId;
+
+  const parsed = parseCanonicalPaymentCoin(coin);
+  if (parsed?.namespace === 'eip155' && parsed.standard === 'native') {
+    const evmChainID = Number(parsed.chainRef);
+    if (!Number.isNaN(evmChainID)) {
+      return getNativeSymbolByEVMChainId(evmChainID) || coin;
+    }
+  }
+
+  return coin;
 }
 
 /**

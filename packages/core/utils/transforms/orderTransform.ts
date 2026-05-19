@@ -24,8 +24,10 @@ import {
   formatTokenAmount,
   getTokenByPaymentCoin,
   getPaymentCoinDisplayLabel,
+  getTokenDecimals,
 } from '../../data/tokens';
 import { formatUserName } from '../identity';
+import { recoverCryptoPaymentCoin } from './cryptoPaymentRecovery';
 
 // ============ Internal Types ============
 
@@ -118,6 +120,9 @@ interface RealOrderData {
       transactionID?: string;
       timestamp?: string;
       buyerReceiveAddress?: string;
+      contractAddress?: string;
+      paymentTokenAddress?: string;
+      toAddress?: string;
       paymentMethod?: { type?: string; brand?: string; last4?: string };
     };
     orderConfirmation?: {
@@ -280,6 +285,22 @@ function formatMinimalUnitAmountString(
   );
 
   return formatMinimalUnitFixed(trimmed, decimals, displayDecimals);
+}
+
+function formatMinimalUnitExactAmountString(rawAmount: string, coin?: string): string | undefined {
+  const trimmed = rawAmount.trim();
+  if (!/^\d+$/.test(trimmed)) return undefined;
+
+  const token = coin ? getTokenByPaymentCoin(coin) : undefined;
+  const decimals = Math.max(
+    0,
+    Math.floor(
+      token?.decimals ?? getTokenDecimals(getPaymentCoinDisplayLabel(coin || '') || coin || '')
+    )
+  );
+
+  const exact = formatMinimalUnitFixed(trimmed, decimals, decimals);
+  return exact.includes('.') ? exact.replace(/\.?0+$/, '') : exact;
 }
 
 function smartDisplayDecimalsForMinimalUnit(
@@ -729,12 +750,19 @@ export function transformCoreOrder(
   const listingDivisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
   // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
   const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
-  const paymentCoin = paymentSent?.coin || pricingCoin;
+  const recoveredPayment = recoverCryptoPaymentCoin({
+    reportedCoin: paymentSent?.coin,
+    txHash: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
+    toAddress: paymentSent?.toAddress || paymentSent?.address,
+    contractAddress: paymentSent?.contractAddress,
+    paymentTokenAddress: paymentSent?.paymentTokenAddress,
+  });
+  const paymentCoin = recoveredPayment.paymentCoin || paymentSent?.coin || pricingCoin;
   // 支付币种的 divisibility（优先从 token 配置取 decimals）
   const paymentTokenConfig = getTokenByPaymentCoin(paymentCoin);
   const paymentDivisibility = paymentTokenConfig
     ? paymentTokenConfig.decimals
-    : listingDivisibility;
+    : getTokenDecimals(getPaymentCoinDisplayLabel(paymentCoin) || paymentCoin);
   // 判断是否为跨币种订单（定价货币 ≠ 支付币种）
   const isCrossCurrency = listingCurrencyCode.toUpperCase() !== pricingCoin.toUpperCase();
   const timestamp = orderOpen?.timestamp || '';
@@ -887,7 +915,10 @@ export function transformCoreOrder(
   const formattedOrderAmount = formatPriceAmount(pricingAmount, paymentDivisibility, pricingCoin);
   const formattedPaymentAmount =
     paymentAmount !== undefined
-      ? formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
+      ? recoveredPayment.recovered
+        ? formatMinimalUnitExactAmountString(String(paymentAmount), paymentCoin) ||
+          formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
+        : formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
       : formattedOrderAmount;
 
   const paymentCoinFiatProvider = resolveFiatProviderFromCoin(paymentSent?.coin);
@@ -1003,6 +1034,7 @@ export function transformCoreOrder(
     // 支持 RWA 模式和传统交易
     paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
     releaseTx: extractReleaseTx(contract, paymentSent?.transactionID),
+    chainId: recoveredPayment.chainId,
     txConfirmations,
     // RWA 标识
     isRwaInstant,
