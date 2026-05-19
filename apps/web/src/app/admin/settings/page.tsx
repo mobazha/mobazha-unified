@@ -190,14 +190,17 @@ export default function AdminSettingsPage() {
             />
           )}
           {/* DG-1.14: operator responsibilities — surfaces the platform/seller
-              compliance contract so sellers can see the obligations they accept
-              by running a Mobazha store. Available in every deployment. */}
-          <SettingsCard
-            icon={ShieldCheck}
-            title={t('settingsExtended.operatorResponsibilities')}
-            description={t('settingsExtended.operatorResponsibilitiesDesc')}
-            href="/admin/settings/responsibilities"
-          />
+              compliance contract. Hidden in Outpost mode because the content
+              describes a SaaS platform relationship (CDN, Stripe, DMCA) that
+              does not apply to self-hosted I2P nodes. */}
+          {!isOutpost && (
+            <SettingsCard
+              icon={ShieldCheck}
+              title={t('settingsExtended.operatorResponsibilities')}
+              description={t('settingsExtended.operatorResponsibilitiesDesc')}
+              href="/admin/settings/responsibilities"
+            />
+          )}
           {/* DG-1.10: data export — "Your store, your data, your customers".
               Hidden in Outpost mode because the /v1/exports/* backend handlers
               are !outpost-tagged (full OrderService dependency). */}

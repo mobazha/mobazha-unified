@@ -5284,9 +5284,9 @@ export const en: TranslationResource = {
       notApplicable: 'This page is only available on Outpost builds.',
       fetchError: 'Failed to load wallet data',
       availableBalance: 'Available',
-      pendingConfirmation: 'Confirming',
+      pendingConfirmation: 'Temporarily locked',
       pendingHint:
-        'Funds still confirming on-chain. They become available after enough network confirmations.',
+        'Includes incoming funds waiting for confirmations and amounts temporarily locked by recent outgoing transfers.',
       balanceUnavailable: 'Balance unavailable. Check wallet connection or setup below.',
       quickActionsTitle: 'Quick actions',
       withdrawTitle: 'Withdraw',
@@ -5307,7 +5307,7 @@ export const en: TranslationResource = {
       rpcNotAvailable: 'Wallet RPC status not available. Try refreshing the page.',
       walletTotalBalance: 'Wallet total',
       walletTotalBalanceHint:
-        'Includes funds still confirming on-chain. Only "Available now" can be spent or withdrawn.',
+        'Includes funds that are still confirming or temporarily locked. Only "Available now" can be spent or withdrawn.',
     },
     guestCheckout: {
       title: 'Guest Checkout',
@@ -7023,6 +7023,74 @@ export const en: TranslationResource = {
   },
 
   // Digital downloads — shared asset type labels (Supply Chain Phase 1.0)
+  outpost: {
+    rpcConnected: 'Connected',
+    rpcDisconnected: 'Not configured',
+    xmrWithdraw: {
+      title: 'Withdraw Monero',
+      notApplicable: 'This page is only available on Outpost builds.',
+      balanceTitle: 'Wallet balance',
+      refresh: 'Refresh',
+      unlockedBalance: 'Available now',
+      blocksToUnlock: '~{{n}} blocks until next portion unlocks',
+      account: 'Account #{{n}}',
+      balanceUnavailable: 'Balance unavailable — see the error message above.',
+      balanceError: 'Failed to fetch balance',
+      successSendTitle: 'Transfer broadcast',
+      successSweepTitle: 'Sweep broadcast',
+      successDesc:
+        'The transaction is propagating across the Monero network. It typically takes 10-20 minutes for the recipient to see the first confirmation.',
+      recipient: 'Recipient',
+      totalSent: 'Total sent',
+      networkFeeLabel: 'Network fee',
+      txHashes: 'Transaction hashes ({{n}})',
+      txHashNote:
+        'Keep these hashes for your records — they are the only proof of payment until the recipient confirms.',
+      backToPayments: 'Back to Funds',
+      sendAnother: 'Send another',
+      errAddressRequired: 'Recipient address is required',
+      errAddressInvalid: 'Recipient does not look like a valid Monero address',
+      errAccountIndex: 'Account index must be a non-negative integer',
+      errAmountInvalid: 'Invalid amount',
+      errSubmit: 'Transfer failed',
+      feeNote:
+        'Network fee is paid in XMR on top of this amount. To empty the wallet use "Send all" (switches to Sweep mode).',
+      description:
+        'Send XMR from this outpost to another wallet. Monero transfers are irreversible — double-check the recipient.',
+      formTitle: 'Transfer details',
+      modeSend: 'Send amount',
+      modeSweep: 'Sweep all',
+      addressLabel: 'Recipient address',
+      addressPlaceholder: '4... or 8... (standard or subaddress; 95-110 characters)',
+      amountLabel: 'Amount (XMR)',
+      sendAll: 'Send all ({{x}} XMR) →',
+      amountHelp: 'Decimal with up to 12 fractional digits. {{fee}}',
+      sweepWarningTitle: 'Sweep empties your unlocked balance',
+      sweepWarningBody:
+        'All {{x}} XMR of unlocked balance will be sent to the recipient minus network fees. Locked funds (if any) stay in the wallet.',
+      priorityLabel: 'Priority',
+      priorityDefault: 'Default (wallet decides)',
+      priorityLow: 'Low (cheaper, slower)',
+      priorityMedium: 'Medium',
+      priorityHigh: 'High (faster, costlier)',
+      hideAdvanced: 'Hide advanced',
+      showAdvanced: 'Advanced options',
+      accountLabel: 'Account index (optional)',
+      accountPlaceholder: 'Leave empty to use the node default',
+      accountHelp:
+        'Non-negative integer. Most operators leave this empty — the node is launched with --xmraccount.',
+      review: 'Review and send',
+      reviewSweep: 'Review and sweep',
+      confirmSendTitle: 'Confirm Monero transfer',
+      confirmSweepTitle: 'Confirm sweep — empty unlocked balance',
+      confirmIrreversible:
+        'Monero transfers cannot be reversed. Verify the recipient one more time.',
+      confirmSend: 'Send XMR',
+      confirmSweep: 'Sweep wallet',
+      cancel: 'Cancel',
+    },
+  },
+
   digital: {
     assetType: {
       file: 'File download',

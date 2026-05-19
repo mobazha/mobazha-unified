@@ -377,6 +377,24 @@ function TransferRow({ transfer: tr }: { transfer: MoneroTransferEntry }) {
                   })}
             </span>
           </div>
+        ) : tr.direction === 'pending' ? (
+          <div className="flex flex-col">
+            <span className="font-mono tabular-nums">0</span>
+            <span className="text-muted-foreground">
+              {t('outpost.xmrTransfers.awaitingFirstConfirmation', {
+                defaultValue: 'Waiting for first confirmation',
+              })}
+            </span>
+          </div>
+        ) : tr.direction === 'pool' ? (
+          <div className="flex flex-col">
+            <span className="font-mono tabular-nums">0</span>
+            <span className="text-muted-foreground">
+              {t('outpost.xmrTransfers.seenInMempool', {
+                defaultValue: 'Seen in mempool',
+              })}
+            </span>
+          </div>
         ) : (
           <span className="text-muted-foreground">—</span>
         )}

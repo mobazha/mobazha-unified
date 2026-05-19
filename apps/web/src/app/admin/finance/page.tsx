@@ -38,9 +38,7 @@ function StatusBadge({ connected, error }: { connected: boolean; error?: string 
       title={error}
     >
       {connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-      {connected
-        ? t('outpost.rpcConnected', { defaultValue: 'Connected' })
-        : t('outpost.rpcDisconnected', { defaultValue: 'Not configured' })}
+      {connected ? t('outpost.rpcConnected') : t('outpost.rpcDisconnected')}
     </span>
   );
 }
@@ -100,14 +98,8 @@ function NotOutpostPlaceholder() {
   return (
     <div className="space-y-4" data-testid="admin-funds-placeholder">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {t('admin.finance.title', { defaultValue: 'Funds' })}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('admin.finance.notApplicable', {
-            defaultValue: 'This page is only available on Outpost builds.',
-          })}
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t('admin.finance.title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('admin.finance.notApplicable')}</p>
       </div>
     </div>
   );
@@ -143,7 +135,7 @@ export default function AdminFinancePage() {
       setError(
         balanceResult.reason instanceof Error
           ? balanceResult.reason.message
-          : t('admin.finance.fetchError', { defaultValue: 'Failed to load wallet data' })
+          : t('admin.finance.fetchError')
       );
     }
 
@@ -172,14 +164,8 @@ export default function AdminFinancePage() {
       {/* Page header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {t('admin.finance.title', { defaultValue: 'Funds' })}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('admin.finance.subtitle', {
-              defaultValue: 'Monero (XMR) wallet balance and management.',
-            })}
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t('admin.finance.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('admin.finance.subtitle')}</p>
         </div>
         <Button
           type="button"
@@ -221,7 +207,7 @@ export default function AdminFinancePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-border bg-muted/30 p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {t('admin.finance.availableBalance', { defaultValue: 'Available' })}
+                  {t('admin.finance.availableBalance')}
                 </p>
                 <p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">
                   {availableNow}{' '}
@@ -229,35 +215,25 @@ export default function AdminFinancePage() {
                 </p>
                 {balance.blocksToUnlock != null && balance.blocksToUnlock > 0 && (
                   <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                    {t('outpost.xmrWithdraw.blocksToUnlock', {
-                      defaultValue: '~{{n}} blocks until next portion unlocks',
-                      n: balance.blocksToUnlock,
-                    })}
+                    {t('outpost.xmrWithdraw.blocksToUnlock', { n: balance.blocksToUnlock })}
                   </p>
                 )}
               </div>
               <div className="rounded-xl border border-border bg-muted/30 p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {t('admin.finance.pendingConfirmation', { defaultValue: 'Confirming' })}
+                  {t('admin.finance.pendingConfirmation')}
                 </p>
                 <p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">
                   {pendingAmount ?? '0'}{' '}
                   <span className="text-base font-normal text-muted-foreground">XMR</span>
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  {t('admin.finance.pendingHint', {
-                    defaultValue:
-                      'Funds still confirming on-chain. They become available after enough network confirmations.',
-                  })}
+                  {t('admin.finance.pendingHint')}
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              {t('admin.finance.balanceUnavailable', {
-                defaultValue: 'Balance unavailable. Check wallet connection or setup below.',
-              })}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('admin.finance.balanceUnavailable')}</p>
           )}
         </CardContent>
       </Card>
@@ -265,24 +241,20 @@ export default function AdminFinancePage() {
       {/* L2: Quick actions */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('admin.finance.quickActionsTitle', { defaultValue: 'Quick actions' })}
+          {t('admin.finance.quickActionsTitle')}
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
           <ActionCard
             to="/admin/finance/xmr-withdraw"
             icon={ArrowUpRight}
-            title={t('admin.finance.withdrawTitle', { defaultValue: 'Withdraw' })}
-            description={t('admin.finance.withdrawDesc', {
-              defaultValue: 'Send XMR from this wallet to an external address.',
-            })}
+            title={t('admin.finance.withdrawTitle')}
+            description={t('admin.finance.withdrawDesc')}
           />
           <ActionCard
             to="/admin/finance/xmr-transfers"
             icon={History}
-            title={t('admin.finance.transactionsTitle', { defaultValue: 'Transaction history' })}
-            description={t('admin.finance.transactionsDesc', {
-              defaultValue: 'View all incoming and outgoing transfers.',
-            })}
+            title={t('admin.finance.transactionsTitle')}
+            description={t('admin.finance.transactionsDesc')}
           />
         </div>
       </section>
@@ -290,75 +262,52 @@ export default function AdminFinancePage() {
       {/* L3: Wallet management (collapsible) */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('admin.finance.walletManagementTitle', { defaultValue: 'Wallet management' })}
+          {t('admin.finance.walletManagementTitle')}
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
           <ActionCard
             to="/admin/finance/xmr-wallet"
             icon={Wallet}
-            title={t('admin.finance.setupWalletTitle', {
-              defaultValue: 'Create or restore wallet',
-            })}
-            description={t('admin.finance.setupWalletDesc', {
-              defaultValue: 'Set up the Monero wallet used by this outpost.',
-            })}
+            title={t('admin.finance.setupWalletTitle')}
+            description={t('admin.finance.setupWalletDesc')}
           />
           <ActionCard
             to="/admin/finance/xmr-secrets"
             icon={KeyRound}
-            title={t('admin.finance.exportSecretsTitle', {
-              defaultValue: 'Export seed or view-only keys',
-            })}
-            description={t('admin.finance.exportSecretsDesc', {
-              defaultValue:
-                'Back up your recovery seed or share view-only access with a bookkeeper.',
-            })}
+            title={t('admin.finance.exportSecretsTitle')}
+            description={t('admin.finance.exportSecretsDesc')}
           />
           {showNodePoolUI && (
             <ActionCard
               to="/admin/settings/monero-nodes"
               icon={Server}
-              title={t('admin.finance.manageNodesTitle', { defaultValue: 'Monero nodes' })}
-              description={t('admin.finance.manageNodesDesc', {
-                defaultValue: 'Switch or maintain upstream Monero daemon nodes.',
-              })}
+              title={t('admin.finance.manageNodesTitle')}
+              description={t('admin.finance.manageNodesDesc')}
             />
           )}
         </div>
       </section>
 
       {/* L4: Advanced config (collapsed by default) */}
-      <CollapsibleSection
-        title={t('admin.finance.advancedTitle', { defaultValue: 'Advanced configuration' })}
-      >
+      <CollapsibleSection title={t('admin.finance.advancedTitle')}>
         {status !== undefined && status ? (
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <Terminal className="w-4 h-4 mt-0.5 text-muted-foreground flex-shrink-0" />
               <div className="space-y-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">
-                  {t('admin.finance.rpcEndpointLabel', { defaultValue: 'RPC endpoint' })}
+                  {t('admin.finance.rpcEndpointLabel')}
                 </p>
                 <p className="text-sm text-muted-foreground font-mono truncate">
-                  {status.endpoint ||
-                    t('outpost.rpcDisconnected', { defaultValue: 'Not configured' })}
+                  {status.endpoint || t('outpost.rpcDisconnected')}
                 </p>
               </div>
             </div>
             {status.error && <p className="text-xs text-destructive">{status.error}</p>}
-            <p className="text-xs text-muted-foreground">
-              {t('admin.finance.rpcConfigHint', {
-                defaultValue:
-                  'Receiving mode: subaddress generation (no sweep needed). To change the RPC endpoint, update the startup parameters and restart.',
-              })}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('admin.finance.rpcConfigHint')}</p>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            {t('admin.finance.rpcNotAvailable', {
-              defaultValue: 'Wallet RPC status not available. Try refreshing the page.',
-            })}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('admin.finance.rpcNotAvailable')}</p>
         )}
       </CollapsibleSection>
     </div>

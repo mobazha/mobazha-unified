@@ -65,19 +65,20 @@ const PRIORITY_OPTIONS = [
   { value: 3, label: 'priorityHigh' },
 ] as const;
 
+function getPriorityLabel(t: ReturnType<typeof useI18n>['t'], priority: number): string {
+  const option = PRIORITY_OPTIONS.find(item => item.value === priority);
+  const label = option?.label ?? 'priorityDefault';
+  return t(`outpost.xmrWithdraw.${label}`);
+}
+
 function NotOutpostPlaceholder() {
   const { t } = useI18n();
   return (
     <div>
-      <SettingsPageHeader
-        title={t('outpost.xmrWithdraw.title', { defaultValue: 'Withdraw Monero' })}
-        backHref="/admin/finance"
-      />
+      <SettingsPageHeader title={t('outpost.xmrWithdraw.title')} backHref="/admin/finance" />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          {t('outpost.xmrWithdraw.notApplicable', {
-            defaultValue: 'This page is only available on Outpost builds.',
-          })}
+          {t('outpost.xmrWithdraw.notApplicable')}
         </CardContent>
       </Card>
     </div>
@@ -105,7 +106,7 @@ function BalanceCard({
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5" />
-            {t('outpost.xmrWithdraw.balanceTitle', { defaultValue: 'Wallet balance' })}
+            {t('outpost.xmrWithdraw.balanceTitle')}
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={onRefresh} disabled={loading} type="button">
             {loading ? (
@@ -113,7 +114,7 @@ function BalanceCard({
             ) : (
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
             )}
-            {t('outpost.xmrWithdraw.refresh', { defaultValue: 'Refresh' })}
+            {t('outpost.xmrWithdraw.refresh')}
           </Button>
         </div>
       </CardHeader>
@@ -122,7 +123,7 @@ function BalanceCard({
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t('outpost.xmrWithdraw.unlockedBalance', { defaultValue: 'Available now' })}
+                {t('outpost.xmrWithdraw.unlockedBalance')}
               </p>
               <p className="text-2xl font-semibold tabular-nums">
                 {piconeroToXMR(balance.unlockedBalance)}{' '}
@@ -130,31 +131,22 @@ function BalanceCard({
               </p>
               {balance.blocksToUnlock != null && balance.blocksToUnlock > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-400">
-                  {t('outpost.xmrWithdraw.blocksToUnlock', {
-                    defaultValue: '~{{n}} blocks until next portion unlocks',
-                    n: balance.blocksToUnlock,
-                  })}
+                  {t('outpost.xmrWithdraw.blocksToUnlock', { n: balance.blocksToUnlock })}
                 </p>
               )}
             </div>
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t('admin.finance.walletTotalBalance', { defaultValue: 'Wallet total' })}
+                {t('admin.finance.walletTotalBalance')}
               </p>
               <p className="text-2xl font-semibold tabular-nums text-muted-foreground">
                 {piconeroToXMR(balance.balance)} <span className="text-base font-normal">XMR</span>
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {t('admin.finance.walletTotalBalanceHint', {
-                  defaultValue:
-                    'Includes funds still confirming on-chain. Only "Available now" can be spent or withdrawn.',
-                })}
+                {t('admin.finance.walletTotalBalanceHint')}
               </p>
               <p className="text-xs text-muted-foreground">
-                {t('outpost.xmrWithdraw.account', {
-                  defaultValue: 'Account #{{n}}',
-                  n: balance.accountIndex,
-                })}
+                {t('outpost.xmrWithdraw.account', { n: balance.accountIndex })}
               </p>
             </div>
           </div>
@@ -162,9 +154,7 @@ function BalanceCard({
           <div className="h-16 bg-muted animate-pulse rounded" />
         ) : (
           <p className="text-sm text-muted-foreground">
-            {t('outpost.xmrWithdraw.balanceUnavailable', {
-              defaultValue: 'Balance unavailable — see the error message above.',
-            })}
+            {t('outpost.xmrWithdraw.balanceUnavailable')}
           </p>
         )}
       </CardContent>
@@ -201,46 +191,33 @@ function SuccessCard({ result, onReset }: { result: PostResult; onReset: () => v
         <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
           <CheckCircle2 className="w-5 h-5" />
           {result.kind === 'send'
-            ? t('outpost.xmrWithdraw.successSendTitle', { defaultValue: 'Transfer broadcast' })
-            : t('outpost.xmrWithdraw.successSweepTitle', { defaultValue: 'Sweep broadcast' })}
+            ? t('outpost.xmrWithdraw.successSendTitle')
+            : t('outpost.xmrWithdraw.successSweepTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        <p className="text-muted-foreground">
-          {t('outpost.xmrWithdraw.successDesc', {
-            defaultValue:
-              'The transaction is propagating across the Monero network. It typically takes 10-20 minutes for the recipient to see the first confirmation.',
-          })}
-        </p>
+        <p className="text-muted-foreground">{t('outpost.xmrWithdraw.successDesc')}</p>
 
         <div className="grid sm:grid-cols-2 gap-4 p-3 rounded-lg bg-muted/50">
           <div>
-            <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWithdraw.recipient', { defaultValue: 'Recipient' })}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('outpost.xmrWithdraw.recipient')}</p>
             <p className="text-xs font-mono break-all">{result.sentTo}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWithdraw.totalSent', { defaultValue: 'Total sent' })}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('outpost.xmrWithdraw.totalSent')}</p>
             <p className="font-semibold tabular-nums">
               {piconeroToXMR(totalSent)}{' '}
               <span className="text-xs font-normal text-muted-foreground">XMR</span>
             </p>
             <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWithdraw.networkFeeLabel', { defaultValue: 'Network fee' })}:{' '}
-              {piconeroToXMR(totalFee)} XMR
+              {t('outpost.xmrWithdraw.networkFeeLabel')}: {piconeroToXMR(totalFee)} XMR
             </p>
           </div>
         </div>
 
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">
-            {t('outpost.xmrWithdraw.txHashes', {
-              defaultValue: 'Transaction hashes ({{n}})',
-              n: hashes.length,
-            })}
+            {t('outpost.xmrWithdraw.txHashes', { n: hashes.length })}
           </p>
           <ul className="space-y-1">
             {hashes.map((h, i) => (
@@ -251,10 +228,7 @@ function SuccessCard({ result, onReset }: { result: PostResult; onReset: () => v
             ))}
           </ul>
           <p className="mt-2 text-xs text-muted-foreground">
-            {t('outpost.xmrWithdraw.txHashNote', {
-              defaultValue:
-                'Keep these hashes for your records — they are the only proof of payment until the recipient confirms.',
-            })}
+            {t('outpost.xmrWithdraw.txHashNote')}
           </p>
         </div>
 
@@ -264,10 +238,10 @@ function SuccessCard({ result, onReset }: { result: PostResult; onReset: () => v
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            {t('outpost.xmrWithdraw.backToPayments', { defaultValue: 'Back to Funds' })}
+            {t('outpost.xmrWithdraw.backToPayments')}
           </Link>
           <Button variant="outline" size="sm" onClick={onReset} type="button">
-            {t('outpost.xmrWithdraw.sendAnother', { defaultValue: 'Send another' })}
+            {t('outpost.xmrWithdraw.sendAnother')}
           </Button>
         </div>
       </CardContent>
@@ -323,11 +297,7 @@ export default function XMRWithdrawPage() {
       setError(null);
     } catch (err) {
       setBalance(null);
-      setError(
-        err instanceof Error
-          ? err.message
-          : t('outpost.xmrWithdraw.balanceError', { defaultValue: 'Failed to fetch balance' })
-      );
+      setError(err instanceof Error ? err.message : t('outpost.xmrWithdraw.balanceError'));
     } finally {
       setBalanceLoading(false);
     }
@@ -350,27 +320,19 @@ export default function XMRWithdrawPage() {
     (m: Mode, f: FormState): string | null => {
       const addr = f.address.trim();
       if (!addr) {
-        return t('outpost.xmrWithdraw.errAddressRequired', {
-          defaultValue: 'Recipient address is required',
-        });
+        return t('outpost.xmrWithdraw.errAddressRequired');
       }
       if (!isValidXMRAddress(addr)) {
-        return t('outpost.xmrWithdraw.errAddressInvalid', {
-          defaultValue: 'Recipient does not look like a valid Monero address',
-        });
+        return t('outpost.xmrWithdraw.errAddressInvalid');
       }
       if (accountIndexNum === undefined) {
-        return t('outpost.xmrWithdraw.errAccountIndex', {
-          defaultValue: 'Account index must be a non-negative integer',
-        });
+        return t('outpost.xmrWithdraw.errAccountIndex');
       }
       if (m === 'send') {
         try {
           xmrToPiconero(f.amountXMR);
         } catch (e) {
-          return e instanceof Error
-            ? e.message
-            : t('outpost.xmrWithdraw.errAmountInvalid', { defaultValue: 'Invalid amount' });
+          return e instanceof Error ? e.message : t('outpost.xmrWithdraw.errAmountInvalid');
         }
       }
       return null;
@@ -419,11 +381,7 @@ export default function XMRWithdrawPage() {
       // the new spendable amount.
       refreshBalance();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : t('outpost.xmrWithdraw.errSubmit', { defaultValue: 'Transfer failed' })
-      );
+      setError(err instanceof Error ? err.message : t('outpost.xmrWithdraw.errSubmit'));
     } finally {
       setSubmitting(false);
     }
@@ -443,10 +401,7 @@ export default function XMRWithdrawPage() {
   if (result) {
     return (
       <div data-testid="admin-xmr-withdraw-success">
-        <SettingsPageHeader
-          title={t('outpost.xmrWithdraw.title', { defaultValue: 'Withdraw Monero' })}
-          backHref="/admin/finance"
-        />
+        <SettingsPageHeader title={t('outpost.xmrWithdraw.title')} backHref="/admin/finance" />
         <SuccessCard result={result} onReset={handleReset} />
       </div>
     );
@@ -457,19 +412,14 @@ export default function XMRWithdrawPage() {
   // so the user must leave headroom. The "Send all" shortcut intentionally
   // routes to sweep mode instead — sweep_all subtracts the fee from the
   // swept total automatically, which is the only way to empty the wallet.
-  const networkFeeNote = t('outpost.xmrWithdraw.feeNote', {
-    defaultValue:
-      'Network fee is paid in XMR on top of this amount. To empty the wallet use "Send all" (switches to Sweep mode).',
-  });
+  const networkFeeNote = t('outpost.xmrWithdraw.feeNote');
+  const priorityLabel = getPriorityLabel(t, form.priority);
 
   return (
     <div data-testid="admin-xmr-withdraw">
       <SettingsPageHeader
-        title={t('outpost.xmrWithdraw.title', { defaultValue: 'Withdraw Monero' })}
-        description={t('outpost.xmrWithdraw.description', {
-          defaultValue:
-            'Send XMR from this outpost to another wallet. Monero transfers are irreversible — double-check the recipient.',
-        })}
+        title={t('outpost.xmrWithdraw.title')}
+        description={t('outpost.xmrWithdraw.description')}
         backHref="/admin/finance"
       />
 
@@ -487,7 +437,7 @@ export default function XMRWithdrawPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ArrowUpRight className="w-5 h-5" />
-              {t('outpost.xmrWithdraw.formTitle', { defaultValue: 'Transfer details' })}
+              {t('outpost.xmrWithdraw.formTitle')}
             </CardTitle>
           </CardHeader>
           <form onSubmit={handleReview}>
@@ -505,7 +455,7 @@ export default function XMRWithdrawPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {t('outpost.xmrWithdraw.modeSend', { defaultValue: 'Send amount' })}
+                  {t('outpost.xmrWithdraw.modeSend')}
                 </button>
                 <button
                   type="button"
@@ -518,14 +468,14 @@ export default function XMRWithdrawPage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {t('outpost.xmrWithdraw.modeSweep', { defaultValue: 'Sweep all' })}
+                  {t('outpost.xmrWithdraw.modeSweep')}
                 </button>
               </div>
 
               {/* Recipient */}
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="xmr-recipient">
-                  {t('outpost.xmrWithdraw.addressLabel', { defaultValue: 'Recipient address' })}
+                  {t('outpost.xmrWithdraw.addressLabel')}
                 </label>
                 <textarea
                   id="xmr-recipient"
@@ -534,9 +484,7 @@ export default function XMRWithdrawPage() {
                   rows={2}
                   autoComplete="off"
                   spellCheck={false}
-                  placeholder={t('outpost.xmrWithdraw.addressPlaceholder', {
-                    defaultValue: '4... or 8... (standard or subaddress; 95-110 characters)',
-                  })}
+                  placeholder={t('outpost.xmrWithdraw.addressPlaceholder')}
                   className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background font-mono"
                 />
               </div>
@@ -546,7 +494,7 @@ export default function XMRWithdrawPage() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium" htmlFor="xmr-amount">
-                      {t('outpost.xmrWithdraw.amountLabel', { defaultValue: 'Amount (XMR)' })}
+                      {t('outpost.xmrWithdraw.amountLabel')}
                     </label>
                     {balance && (
                       <button
@@ -565,10 +513,7 @@ export default function XMRWithdrawPage() {
                         }}
                         className="text-xs text-primary hover:underline"
                       >
-                        {t('outpost.xmrWithdraw.sendAll', {
-                          defaultValue: 'Send all ({{x}} XMR) →',
-                          x: sweepUnlocked,
-                        })}
+                        {t('outpost.xmrWithdraw.sendAll', { x: sweepUnlocked })}
                       </button>
                     )}
                   </div>
@@ -583,25 +528,16 @@ export default function XMRWithdrawPage() {
                     className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background font-mono"
                   />
                   <p className="text-xs text-muted-foreground">
-                    {t('outpost.xmrWithdraw.amountHelp', {
-                      defaultValue: 'Decimal with up to 12 fractional digits. {{fee}}',
-                      fee: networkFeeNote,
-                    })}
+                    {t('outpost.xmrWithdraw.amountHelp', { fee: networkFeeNote })}
                   </p>
                 </div>
               ) : (
                 <div className="rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm">
                   <p className="font-medium text-amber-900 dark:text-amber-200">
-                    {t('outpost.xmrWithdraw.sweepWarningTitle', {
-                      defaultValue: 'Sweep empties your unlocked balance',
-                    })}
+                    {t('outpost.xmrWithdraw.sweepWarningTitle')}
                   </p>
                   <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
-                    {t('outpost.xmrWithdraw.sweepWarningBody', {
-                      defaultValue:
-                        'All {{x}} XMR of unlocked balance will be sent to the recipient minus network fees. Locked funds (if any) stay in the wallet.',
-                      x: sweepUnlocked,
-                    })}
+                    {t('outpost.xmrWithdraw.sweepWarningBody', { x: sweepUnlocked })}
                   </p>
                 </div>
               )}
@@ -609,7 +545,7 @@ export default function XMRWithdrawPage() {
               {/* Priority */}
               <div className="space-y-1">
                 <label className="text-sm font-medium" htmlFor="xmr-priority">
-                  {t('outpost.xmrWithdraw.priorityLabel', { defaultValue: 'Priority' })}
+                  {t('outpost.xmrWithdraw.priorityLabel')}
                 </label>
                 <select
                   id="xmr-priority"
@@ -619,16 +555,7 @@ export default function XMRWithdrawPage() {
                 >
                   {PRIORITY_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>
-                      {t(`outpost.xmrWithdraw.${opt.label}`, {
-                        defaultValue:
-                          opt.label === 'priorityDefault'
-                            ? 'Default (wallet decides)'
-                            : opt.label === 'priorityLow'
-                              ? 'Low (cheaper, slower)'
-                              : opt.label === 'priorityMedium'
-                                ? 'Medium'
-                                : 'High (faster, costlier)',
-                      })}
+                      {getPriorityLabel(t, opt.value)}
                     </option>
                   ))}
                 </select>
@@ -642,15 +569,13 @@ export default function XMRWithdrawPage() {
                   className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
                 >
                   {showAdvanced
-                    ? t('outpost.xmrWithdraw.hideAdvanced', { defaultValue: 'Hide advanced' })
-                    : t('outpost.xmrWithdraw.showAdvanced', { defaultValue: 'Advanced options' })}
+                    ? t('outpost.xmrWithdraw.hideAdvanced')
+                    : t('outpost.xmrWithdraw.showAdvanced')}
                 </button>
                 {showAdvanced && (
                   <div className="mt-2 space-y-1">
                     <label className="text-sm font-medium" htmlFor="xmr-account">
-                      {t('outpost.xmrWithdraw.accountLabel', {
-                        defaultValue: 'Account index (optional)',
-                      })}
+                      {t('outpost.xmrWithdraw.accountLabel')}
                     </label>
                     <input
                       id="xmr-account"
@@ -660,16 +585,11 @@ export default function XMRWithdrawPage() {
                       onChange={e =>
                         setForm(prev => ({ ...prev, accountIndexRaw: e.target.value }))
                       }
-                      placeholder={t('outpost.xmrWithdraw.accountPlaceholder', {
-                        defaultValue: 'Leave empty to use the node default',
-                      })}
+                      placeholder={t('outpost.xmrWithdraw.accountPlaceholder')}
                       className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background font-mono"
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('outpost.xmrWithdraw.accountHelp', {
-                        defaultValue:
-                          'Non-negative integer. Most operators leave this empty — the node is launched with --xmraccount.',
-                      })}
+                      {t('outpost.xmrWithdraw.accountHelp')}
                     </p>
                   </div>
                 )}
@@ -686,10 +606,8 @@ export default function XMRWithdrawPage() {
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
                   {mode === 'send'
-                    ? t('outpost.xmrWithdraw.review', { defaultValue: 'Review and send' })
-                    : t('outpost.xmrWithdraw.reviewSweep', {
-                        defaultValue: 'Review and sweep',
-                      })}
+                    ? t('outpost.xmrWithdraw.review')
+                    : t('outpost.xmrWithdraw.reviewSweep')}
                 </Button>
               </div>
             </CardContent>
@@ -703,49 +621,40 @@ export default function XMRWithdrawPage() {
         variant="destructive"
         title={
           mode === 'send'
-            ? t('outpost.xmrWithdraw.confirmSendTitle', {
-                defaultValue: 'Confirm Monero transfer',
-              })
-            : t('outpost.xmrWithdraw.confirmSweepTitle', {
-                defaultValue: 'Confirm sweep — empty unlocked balance',
-              })
+            ? t('outpost.xmrWithdraw.confirmSendTitle')
+            : t('outpost.xmrWithdraw.confirmSweepTitle')
         }
         description={
           <div className="space-y-2 text-left">
-            <p>
-              {t('outpost.xmrWithdraw.confirmIrreversible', {
-                defaultValue:
-                  'Monero transfers cannot be reversed. Verify the recipient one more time.',
-              })}
-            </p>
+            <p>{t('outpost.xmrWithdraw.confirmIrreversible')}</p>
             <div className="rounded-md bg-muted p-2 space-y-1 font-mono text-xs">
               <div>
                 <span className="text-muted-foreground">
-                  {t('outpost.xmrWithdraw.recipient', { defaultValue: 'Recipient' })}:{' '}
+                  {t('outpost.xmrWithdraw.recipient')}:{' '}
                 </span>
                 <span title={form.address.trim()}>{shortenAddress(form.address.trim())}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">
-                  {t('outpost.xmrWithdraw.amountLabel', { defaultValue: 'Amount (XMR)' })}:{' '}
+                  {t('outpost.xmrWithdraw.amountLabel')}:{' '}
                 </span>
                 <span>{mode === 'send' ? form.amountXMR : `≤ ${sweepUnlocked} (sweep)`}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">
-                  {t('outpost.xmrWithdraw.priorityLabel', { defaultValue: 'Priority' })}:{' '}
+                  {t('outpost.xmrWithdraw.priorityLabel')}:{' '}
                 </span>
-                <span>{form.priority}</span>
+                <span>{priorityLabel}</span>
               </div>
             </div>
           </div>
         }
         confirmLabel={
           mode === 'send'
-            ? t('outpost.xmrWithdraw.confirmSend', { defaultValue: 'Send XMR' })
-            : t('outpost.xmrWithdraw.confirmSweep', { defaultValue: 'Sweep wallet' })
+            ? t('outpost.xmrWithdraw.confirmSend')
+            : t('outpost.xmrWithdraw.confirmSweep')
         }
-        cancelLabel={t('outpost.xmrWithdraw.cancel', { defaultValue: 'Cancel' })}
+        cancelLabel={t('outpost.xmrWithdraw.cancel')}
         onConfirm={handleConfirm}
         isLoading={submitting}
       />

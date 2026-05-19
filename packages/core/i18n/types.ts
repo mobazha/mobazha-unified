@@ -4520,9 +4520,16 @@ export interface TranslationResource {
         mixedTooltip?: string;
         cloudTooltip?: string;
       };
+      developerOptions?: string;
       localLlm?: {
         title?: string;
         body?: string;
+        bodySimple?: string;
+        edit?: string;
+        editConfig?: string;
+        checking?: string;
+        afterInstall?: string;
+        otherEngines?: string;
         alreadyInstalled?: string;
         configureEndpoint?: string;
         engines?: {
@@ -4619,6 +4626,9 @@ export interface TranslationResource {
     storeFound?: string;
     searchFallback?: string;
   };
+
+  // Outpost-specific shared labels.
+  outpost?: TranslationSection;
 
   // Digital asset shared labels (Supply Chain Phase 1.0)
   digital?: TranslationSection;
