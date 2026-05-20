@@ -555,6 +555,10 @@ function deriveProtectionLevel(method: string | number, isFiat: boolean): Protec
   return 'standard';
 }
 
+function isCancelablePaymentMethod(method: string | number): boolean {
+  return method === 'CANCELABLE' || method === 1;
+}
+
 function normalizeFiatProvider(providerID?: string): DisplayFiatPayment['provider'] | undefined {
   const normalized = (providerID || '').trim().toLowerCase();
   if (normalized === 'stripe' || normalized === 'paypal') {
@@ -662,6 +666,10 @@ export function transformCoreOrder(
   // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
   const paymentMethod = paymentSent?.method || '';
+  const cancelableFundsReleased =
+    isCancelablePaymentMethod(paymentMethod) &&
+    !!contract.orderConfirmation?.transactionID &&
+    data.protection?.stage === 'ESCROWED';
   const moderatorId = paymentSent?.moderator || '';
 
   // --- 货币与 divisibility 解析 ---
@@ -984,17 +992,18 @@ export function transformCoreOrder(
     hasRated:
       Array.isArray(contract.orderComplete?.ratingSignatures) &&
       contract.orderComplete.ratingSignatures.length > 0,
-    protection: data.protection
-      ? ({
-          stage: data.protection.stage,
-          daysRemaining: data.protection.daysRemaining,
-          autoCompleteAt: data.protection.autoCompleteAt,
-          extendable: data.protection.extendable,
-          extended: data.protection.extended,
-          afterSaleWindowDays: data.protection.afterSaleWindowDays,
-          protectionLevel: deriveProtectionLevel(paymentMethod, isFiatPayment),
-        } as DisplayOrderProtection)
-      : undefined,
+    protection:
+      data.protection && !cancelableFundsReleased
+        ? ({
+            stage: data.protection.stage,
+            daysRemaining: data.protection.daysRemaining,
+            autoCompleteAt: data.protection.autoCompleteAt,
+            extendable: data.protection.extendable,
+            extended: data.protection.extended,
+            afterSaleWindowDays: data.protection.afterSaleWindowDays,
+            protectionLevel: deriveProtectionLevel(paymentMethod, isFiatPayment),
+          } as DisplayOrderProtection)
+        : undefined,
     afterSaleDispute: data.afterSaleDisputeAt
       ? ({
           reason: data.afterSaleDisputeReason || '',

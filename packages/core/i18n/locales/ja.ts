@@ -672,6 +672,7 @@ export const ja: PartialTranslationResource = {
       awaitingPaymentSeller: '購入者のお支払い完了を待っています',
       awaitingPaymentHint: '下の「今すぐ支払う」からお進みください',
       pendingBuyer: '出品者が注文を承認するまでお待ちください',
+      pendingBuyerPaidHint: '支払いは確認済みです。出品者が注文を承認すると処理が進みます。',
       pendingBuyerConfirmingHint: 'オンチェーンで確認中です。通常15〜60秒かかります',
       pendingSeller: '新しい注文です — 内容を確認して承認してください',
       processingBuyer: '出品者が注文を準備しています',

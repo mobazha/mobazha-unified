@@ -199,6 +199,12 @@ function OrdersPageContent() {
               decline: false,
               initiatorAddress,
             }),
+          executeBackendSettlementAction: () =>
+            ordersApi.executeSettlementAction({
+              orderID: orderId,
+              action: 'confirm',
+            }),
+          preferBackendSettlementAction: true,
           executeAction: txID =>
             ordersApi.confirmOrder({
               orderID: orderId,

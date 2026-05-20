@@ -677,6 +677,8 @@ export const de: PartialTranslationResource = {
       awaitingPaymentSeller: 'Warten auf Zahlung des Käufers',
       awaitingPaymentHint: 'Tippen Sie unten auf „Jetzt zahlen“, um fortzufahren',
       pendingBuyer: 'Warten auf Annahme Ihrer Bestellung durch den Verkäufer',
+      pendingBuyerPaidHint:
+        'Die Zahlung ist bestätigt. Der Verkäufer nimmt die Bestellung vor dem Versand an.',
       pendingBuyerConfirmingHint: 'On-Chain-Bestätigung, in der Regel 15–60 Sekunden',
       pendingSeller: 'Neue Bestellung eingegangen — prüfen und annehmen, um fortzufahren',
       processingBuyer: 'Der Verkäufer bereitet Ihre Bestellung vor',

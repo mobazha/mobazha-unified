@@ -706,6 +706,7 @@ export const zh: PartialTranslationResource = {
       paymentVerificationFailedReasonProviderFailed: '支付服务商验证失败，请重试或更换支付方式。',
       paymentVerificationFailedReasonUnknown: '验证失败，请重新支付或联系支持。',
       pendingBuyer: '等待卖家接受您的订单',
+      pendingBuyerPaidHint: '付款已确认。卖家接受订单后将继续处理。',
       pendingBuyerConfirmingHint: '链上确认中，通常需 15–60 秒',
       pendingSeller: '收到新订单 — 请确认并接受',
       processingBuyer: '卖家正在准备您的订单',

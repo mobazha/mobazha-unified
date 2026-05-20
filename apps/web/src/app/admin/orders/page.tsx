@@ -602,6 +602,12 @@ export default function AdminOrdersPage() {
           paymentCoin,
           getInstructions: initiatorAddress =>
             ordersApi.getConfirmInstructions({ orderID: id, decline: false, initiatorAddress }),
+          executeBackendSettlementAction: () =>
+            ordersApi.executeSettlementAction({
+              orderID: id,
+              action: 'confirm',
+            }),
+          preferBackendSettlementAction: true,
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: id, decline: false, transactionID: txID }),
           onSuccess: () => {
@@ -678,6 +684,12 @@ export default function AdminOrdersPage() {
               decline: false,
               initiatorAddress: addr,
             }),
+          executeBackendSettlementAction: () =>
+            ordersApi.executeSettlementAction({
+              orderID: orderId,
+              action: 'confirm',
+            }),
+          preferBackendSettlementAction: true,
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: orderId, decline: false, transactionID: txID }),
           onSuccess: async () => {

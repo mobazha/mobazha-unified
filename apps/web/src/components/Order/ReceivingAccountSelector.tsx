@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useI18n, walletApi } from '@mobazha/core';
-import { parseCanonicalPaymentCoin } from '@mobazha/core/data/tokens';
+import { getCompatibleChainTypes, useI18n, walletApi } from '@mobazha/core';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 
 export interface ReceivingAccountSelectorProps {
@@ -18,47 +17,6 @@ export interface ReceivingAccountSelectorProps {
   disabled?: boolean;
   /** 是否必填 */
   required?: boolean;
-}
-
-const NAMESPACE_TO_CHAIN_TYPES: Record<string, string[]> = {
-  eip155: ['ethereum', 'eth', 'evm'],
-  solana: ['solana', 'sol'],
-  bip122: ['bitcoin', 'btc'],
-  bitcoincash: ['bitcoincash', 'bch'],
-  zcash: ['zcash', 'zec'],
-  tron: ['tron', 'trx'],
-};
-
-const BLOCKCHAIN_MAPPING: Record<string, string[]> = {
-  ethereum: ['ethereum', 'eth', 'evm'],
-  solana: ['solana', 'sol'],
-  bitcoin: ['bitcoin', 'btc'],
-};
-
-function getCompatibleChainTypes(paymentCoin?: string, blockchain?: string): string[] | null {
-  if (paymentCoin) {
-    const lower = paymentCoin.toLowerCase();
-    if (lower.startsWith('fiat:')) {
-      const provider = lower.split(':')[1];
-      if (provider) return [`fiat:${provider}`];
-      return ['fiat'];
-    }
-    const parsed = parseCanonicalPaymentCoin(paymentCoin);
-    if (parsed) {
-      return NAMESPACE_TO_CHAIN_TYPES[parsed.namespace] ?? null;
-    }
-  }
-  if (blockchain) {
-    const lower = blockchain.toLowerCase();
-    for (const aliases of Object.values(NAMESPACE_TO_CHAIN_TYPES)) {
-      if (aliases.some(a => a === lower)) return aliases;
-    }
-    for (const aliases of Object.values(BLOCKCHAIN_MAPPING)) {
-      if (aliases.some(a => a === lower)) return aliases;
-    }
-    return [lower];
-  }
-  return null;
 }
 
 /**
@@ -91,7 +49,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
         let activeAccounts = allAccounts.filter(acc => acc.isActive);
 
         const validChainTypes = getCompatibleChainTypes(paymentCoin, blockchain);
-        if (validChainTypes) {
+        if (validChainTypes.length > 0) {
           activeAccounts = activeAccounts.filter(acc =>
             validChainTypes.some(type => acc.chainType.toLowerCase() === type.toLowerCase())
           );

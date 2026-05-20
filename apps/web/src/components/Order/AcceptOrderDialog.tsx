@@ -78,6 +78,13 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
             initiatorAddress,
             payoutAddress,
           }),
+        executeBackendSettlementAction: () =>
+          ordersApi.executeSettlementAction({
+            orderID: orderId,
+            action: 'confirm',
+            payoutAddress,
+          }),
+        preferBackendSettlementAction: true,
         executeAction: txID =>
           ordersApi.confirmOrder({
             orderID: orderId,
@@ -92,9 +99,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
           });
           selectedAccountRef.current = null;
           onOpenChange(false);
-          setTimeout(() => {
-            onSuccess?.();
-          }, 500);
+          onSuccess?.();
         },
         onError: error => {
           toast({

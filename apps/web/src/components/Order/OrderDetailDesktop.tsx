@@ -420,7 +420,12 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 {!(
                   displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
                 ) && (
-                  <OrderSettlementCard settlementAction={latestSettlementAction} className="mb-4" />
+                  <OrderSettlementCard
+                    settlementAction={latestSettlementAction}
+                    paymentCoin={displayOrder.paymentCoin}
+                    chainId={displayOrder.chainId}
+                    className="mb-4"
+                  />
                 )}
 
                 {protectionStage && displayOrder.protection && (

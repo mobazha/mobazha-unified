@@ -1,4 +1,5 @@
 import { getEnvConfig } from '../../config/env';
+import { EVM_CHAIN_IDS } from '../../data/chainMetadata';
 import { parseCanonicalPaymentCoin } from '../../data/tokens';
 
 const EVM_TX_HASH_RE = /^0x[a-fA-F0-9]{64}$/;
@@ -20,7 +21,7 @@ function looksLikeEvmAddress(value?: string): boolean {
 }
 
 function defaultEvmChainId(): number {
-  return getEnvConfig().isTestEnv ? 11155111 : 1;
+  return getEnvConfig().isTestEnv ? EVM_CHAIN_IDS.ETHEREUM_SEPOLIA : EVM_CHAIN_IDS.ETHEREUM;
 }
 
 function buildCanonicalNativeCoin(chainId: number): string {

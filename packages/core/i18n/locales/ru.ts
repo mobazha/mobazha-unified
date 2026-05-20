@@ -675,6 +675,7 @@ export const ru: PartialTranslationResource = {
       awaitingPaymentSeller: 'Ожидание оплаты от покупателя',
       awaitingPaymentHint: 'Нажмите «Оплатить сейчас» ниже, чтобы продолжить',
       pendingBuyer: 'Ожидание подтверждения заказа продавцом',
+      pendingBuyerPaidHint: 'Платёж подтверждён. Продавец примет заказ перед отправкой.',
       pendingBuyerConfirmingHint: 'Подтверждение в сети, обычно 15–60 секунд',
       pendingSeller: 'Новый заказ — проверьте и примите, чтобы продолжить',
       processingBuyer: 'Продавец готовит ваш заказ',

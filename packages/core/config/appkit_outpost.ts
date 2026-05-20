@@ -3,6 +3,8 @@
  * type-compatible with the real appkit.ts but contain no external URLs.
  */
 
+import { EVM_CHAIN_IDS } from '../data/chainMetadata';
+
 export const APPKIT_PROJECT_ID = '';
 
 export const APPKIT_METADATA = {
@@ -38,8 +40,8 @@ export function getContractAddress(_tokenSymbol: string, _chainId?: number): str
 }
 
 export const CHAIN_IDS = {
-  ETHEREUM_MAINNET: 1,
-  SEPOLIA: 11155111,
+  ETHEREUM_MAINNET: EVM_CHAIN_IDS.ETHEREUM,
+  SEPOLIA: EVM_CHAIN_IDS.ETHEREUM_SEPOLIA,
 } as const;
 
 export function getCurrentChainId(): number {

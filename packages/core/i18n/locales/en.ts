@@ -777,6 +777,8 @@ export const en: TranslationResource = {
       paymentVerificationFailedReasonUnknown:
         'Verification failed. Please retry payment or contact support.',
       pendingBuyer: 'Waiting for the seller to accept your order',
+      pendingBuyerPaidHint:
+        'Payment is confirmed. The seller will accept the order before shipping.',
       pendingBuyerConfirmingHint: 'Confirming on-chain, usually takes 15–60 seconds',
       pendingSeller: 'New order received — review and accept to proceed',
       processingBuyer: 'The seller is preparing your order',

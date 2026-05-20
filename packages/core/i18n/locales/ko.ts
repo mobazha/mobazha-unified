@@ -668,6 +668,8 @@ export const ko: PartialTranslationResource = {
       awaitingPaymentSeller: '구매자의 결제 완료를 기다리는 중',
       awaitingPaymentHint: '아래 "지금 결제"를 눌러 진행하세요',
       pendingBuyer: '판매자가 주문을 수락하기를 기다리는 중',
+      pendingBuyerPaidHint:
+        '결제가 확인되었습니다. 판매자가 주문을 수락하면 다음 단계로 진행됩니다.',
       pendingBuyerConfirmingHint: '온체인 확인 중이며 보통 15~60초 소요',
       pendingSeller: '새 주문이 도착했습니다 — 검토 후 수락하세요',
       processingBuyer: '판매자가 주문을 준비 중입니다',

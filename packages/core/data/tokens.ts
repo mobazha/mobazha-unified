@@ -3,6 +3,8 @@
  * 统一的代币和链配置，与移动端和桌面端保持一致
  */
 
+import { getChainTypeAliases, getEvmChainFamily, getEvmNativeSymbol } from './chainMetadata';
+
 /**
  * Token 配置接口
  */
@@ -683,6 +685,71 @@ export function getChainFromCoin(coinOrChain?: string): string {
 }
 
 /**
+ * Returns compatible receiving-account chainType aliases for a payment coin or chain.
+ *
+ * The result is intended for UI/account matching where backend data may store
+ * chainType as either a canonical chain ID (ETH/BTC/SOL/TRON) or a lowercase alias.
+ *
+ * Rules:
+ * - paymentCoin takes priority over blockchain hints
+ * - fiat returns the provider-scoped chainType (fiat:stripe / fiat:paypal) when possible
+ * - unknown paymentCoin fails closed with an empty list
+ */
+export function getCompatibleChainTypes(paymentCoin?: string, blockchain?: string): string[] {
+  if (paymentCoin) {
+    const lower = paymentCoin.toLowerCase();
+    if (lower.startsWith('fiat:')) {
+      const provider = lower.split(':')[1];
+      if (provider) return [`fiat:${provider}`];
+      return ['fiat'];
+    }
+
+    const parsed = parseCanonicalPaymentCoin(paymentCoin);
+    if (parsed) {
+      if (parsed.namespace === 'eip155') {
+        const evmChainID = Number(parsed.chainRef);
+        const chain = Number.isFinite(evmChainID) ? getChainByEVMId(evmChainID)?.id : undefined;
+        return chain ? getChainTypeAliases(chain) : getChainTypeAliases('ETH');
+      }
+
+      if (parsed.namespace === 'bip122') {
+        const chain = BIP122_CHAIN_REF_TO_CHAIN[parsed.chainRef];
+        return chain ? getChainTypeAliases(chain) : [];
+      }
+
+      if (parsed.namespace === 'solana') {
+        return getChainTypeAliases('SOL');
+      }
+
+      if (parsed.namespace === 'tron') {
+        return getChainTypeAliases('TRON');
+      }
+
+      return [];
+    }
+
+    const chain = getChainFromCoin(paymentCoin);
+    if (!chain) {
+      return [];
+    }
+
+    return getChainTypeAliases(chain);
+  }
+
+  if (blockchain) {
+    const chain = getChainFromCoin(blockchain);
+    if (!chain) {
+      const lower = blockchain.toLowerCase();
+      return lower ? [lower] : [];
+    }
+
+    return getChainTypeAliases(chain);
+  }
+
+  return [];
+}
+
+/**
  * 判断是否为 UTXO 链（BTC, LTC, BCH, ZEC）
  * UTXO 链不需要前端钱包签名，后端自动处理
  *
@@ -778,27 +845,17 @@ export function getEVMChainId(chainId: string): number | undefined {
  * 根据 EVM chainId 获取链配置
  */
 export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefined {
-  return CHAINS.find(c => c.evmChainId === evmChainId);
+  const configuredChain = CHAINS.find(c => c.evmChainId === evmChainId);
+  if (configuredChain) {
+    return configuredChain;
+  }
+
+  const fallbackChainId = getEvmChainFamily(evmChainId);
+  return fallbackChainId ? getChainById(fallbackChainId) : undefined;
 }
 
 function getNativeSymbolByEVMChainId(evmChainId: number): string | undefined {
-  const nativeSymbols: Record<number, string> = {
-    1: 'ETH',
-    10: 'ETH',
-    56: 'BNB',
-    97: 'BNB',
-    137: 'MATIC',
-    8453: 'ETH',
-    84532: 'ETH',
-    42161: 'ETH',
-    421614: 'ETH',
-    43114: 'AVAX',
-    43113: 'AVAX',
-    1030: 'CFX',
-    11155111: 'ETH',
-    11155420: 'ETH',
-  };
-  return nativeSymbols[evmChainId];
+  return getEvmNativeSymbol(evmChainId);
 }
 
 /**

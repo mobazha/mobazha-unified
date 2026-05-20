@@ -8,6 +8,23 @@ import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
 import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
 
+async function orderWrite<T>(
+  realFn: () => Promise<T>,
+  mockFn: () => Promise<T>,
+  endpoint: string
+): Promise<T> {
+  if (getApiMode() === 'mock') {
+    await mockDelay();
+    return mockFn();
+  }
+  try {
+    return await realFn();
+  } catch (error) {
+    console.error(`[ordersApi] Real write failed for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
 // ========== 订单类型定义 ==========
 
 /**
@@ -622,7 +639,43 @@ export async function confirmOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/confirm`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/confirm`);
+}
+
+export interface SettlementActionResponse {
+  mode?: string;
+  actionId?: string;
+  escrowAddr?: string;
+  txHash?: string;
+  paymentChain?: string;
+  paymentCoin?: string;
+}
+
+export async function executeSettlementAction(payload: {
+  orderID: string;
+  action: 'confirm' | 'cancel';
+  payoutAddress?: string;
+}): Promise<SettlementActionResponse> {
+  const realFn = async () => {
+    return authPost<SettlementActionResponse>(
+      NODE_API.ORDER_SETTLEMENT_ACTION(payload.orderID, payload.action),
+      { payoutAddress: payload.payoutAddress }
+    );
+  };
+
+  const mockFn = async (): Promise<SettlementActionResponse> => {
+    await mockDelay();
+    return {
+      mode: 'completed',
+      actionId: `mock-${payload.action}-${payload.orderID}`,
+    };
+  };
+
+  return orderWrite(
+    realFn,
+    mockFn,
+    `/orders/${payload.orderID}/settlement-actions/${payload.action}`
+  );
 }
 
 /**
@@ -651,7 +704,7 @@ export async function shipOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/ship`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/ship`);
 }
 
 /**
@@ -683,7 +736,7 @@ export async function completeOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/complete`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/complete`);
 }
 
 /**
@@ -719,8 +772,12 @@ export async function rateOrder(payload: {
 export interface OrderInstructionsResponse {
   /** 支付链类型（如 ETHEREUM, SOLANA, BTC 等） */
   paymentChain?: string;
+  /** 后端恢复出的实际支付币种 */
+  paymentCoin?: string;
   /** 是否需要链上交易 */
   hasInstructions: boolean;
+  /** 是否需要先走后端 Safe/V2 settlement action */
+  settlementActionRequired?: boolean;
   /** 链上交易指令（EVM 或 Solana 格式） */
   instructions?: {
     to: string;
@@ -768,7 +825,7 @@ export async function getCompleteInstructions(params: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/complete`);
+  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/complete`);
 }
 
 /**
@@ -801,7 +858,7 @@ export async function getConfirmInstructions(params: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/confirm`);
+  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/confirm`);
 }
 
 /**
@@ -830,7 +887,7 @@ export async function getCancelInstructions(params: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/cancel`);
+  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/cancel`);
 }
 
 /**
@@ -859,7 +916,7 @@ export async function getRefundInstructions(params: {
     };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/refund`);
+  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/refund`);
 }
 
 /**
@@ -884,7 +941,7 @@ export async function cancelOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/cancel`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/cancel`);
 }
 
 /**
@@ -904,7 +961,7 @@ export async function extendProtection(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${orderID}/extend-protection`);
+  return orderWrite(realFn, mockFn, `/orders/${orderID}/extend-protection`);
 }
 
 /**
@@ -929,7 +986,7 @@ export async function refundOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/refund`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/refund`);
 }
 
 // ========== 支付相关 API ==========
@@ -1326,6 +1383,7 @@ export const ordersApi = {
 
   // 状态操作
   confirmOrder,
+  executeSettlementAction,
   shipOrder,
   completeOrder,
   cancelOrder,

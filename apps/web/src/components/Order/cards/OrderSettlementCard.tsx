@@ -3,11 +3,13 @@
 import React, { memo, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { SettlementActionSnapshot } from '@mobazha/core';
-import { AlertCircle, CheckCircle2, Clock3, Link2, XCircle } from 'lucide-react';
+import { getExplorerResourceUrl, type SettlementActionSnapshot } from '@mobazha/core';
+import { AlertCircle, CheckCircle2, Clock3, ExternalLink, Link2, XCircle } from 'lucide-react';
 
 export interface OrderSettlementCardProps {
   settlementAction?: SettlementActionSnapshot | null;
+  paymentCoin?: string;
+  chainId?: number;
   className?: string;
 }
 
@@ -58,6 +60,8 @@ function truncateMiddle(value: string, head = 10, tail = 8): string {
 
 export const OrderSettlementCard = memo(function OrderSettlementCard({
   settlementAction,
+  paymentCoin,
+  chainId,
   className,
 }: OrderSettlementCardProps) {
   const cfg = useMemo<StateConfig | null>(() => {
@@ -123,6 +127,9 @@ export const OrderSettlementCard = memo(function OrderSettlementCard({
     settlementAction.settlementAction || settlementAction.action
   );
   const txHash = settlementAction.txHash?.trim();
+  const txUrl = txHash
+    ? getExplorerResourceUrl(txHash, 'tx', { coin: paymentCoin, chainId }) || undefined
+    : undefined;
   const updatedAt = settlementAction.updatedAt ? new Date(settlementAction.updatedAt) : null;
 
   return (
@@ -151,7 +158,9 @@ export const OrderSettlementCard = memo(function OrderSettlementCard({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <InfoRow label="Action ID" value={truncateMiddle(settlementAction.actionId)} mono />
         <InfoRow label="Action" value={actionLabel} />
-        {txHash ? <InfoRow label="Tx Hash" value={truncateMiddle(txHash)} mono /> : null}
+        {txHash ? (
+          <InfoRow label="Tx Hash" value={truncateMiddle(txHash)} mono href={txUrl} />
+        ) : null}
         {typeof settlementAction.confirmations === 'number' ? (
           <InfoRow label="Confirmations" value={String(settlementAction.confirmations)} />
         ) : null}
@@ -176,13 +185,40 @@ export const OrderSettlementCard = memo(function OrderSettlementCard({
   );
 });
 
-function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function InfoRow({
+  label,
+  value,
+  mono = false,
+  href,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  href?: string;
+}) {
+  const content = (
+    <div
+      className={cn(
+        'mt-1 truncate text-sm text-foreground',
+        mono && 'font-mono text-xs',
+        href && 'text-primary hover:underline'
+      )}
+    >
+      {value}
+      {href ? <ExternalLink className="ml-1 inline h-3 w-3 align-[-2px]" /> : null}
+    </div>
+  );
+
   return (
     <div className="min-w-0 rounded-md border border-border/60 bg-muted/20 px-3 py-2">
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={cn('mt-1 truncate text-sm text-foreground', mono && 'font-mono text-xs')}>
-        {value}
-      </div>
+      {href ? (
+        <a href={href} target="_blank" rel="noreferrer" aria-label={`${label}: ${value}`}>
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </div>
   );
 }

@@ -676,6 +676,8 @@ export const es: PartialTranslationResource = {
       awaitingPaymentSeller: 'Esperando que el comprador complete el pago',
       awaitingPaymentHint: 'Toca "Pagar ahora" abajo para continuar',
       pendingBuyer: 'Esperando que el vendedor acepte tu pedido',
+      pendingBuyerPaidHint:
+        'El pago está confirmado. El vendedor aceptará el pedido antes del envío.',
       pendingBuyerConfirmingHint: 'Confirmando en cadena; suele tardar 15–60 segundos',
       pendingSeller: 'Nuevo pedido recibido: revísalo y acéptalo para continuar',
       processingBuyer: 'El vendedor está preparando tu pedido',
