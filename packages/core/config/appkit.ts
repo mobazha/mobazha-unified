@@ -11,6 +11,7 @@
  */
 
 import { getExplorerResourceUrl } from '../services/payment/explorers';
+import { EVM_CHAIN_IDS } from '../data/chainMetadata';
 import { getEnvConfig } from './env';
 
 // ============= Project ID =============
@@ -114,8 +115,8 @@ export function getContractAddress(tokenSymbol: string, _chainId?: number): stri
 // ============= 链 ID =============
 
 export const CHAIN_IDS = {
-  ETHEREUM_MAINNET: 1,
-  SEPOLIA: 11155111,
+  ETHEREUM_MAINNET: EVM_CHAIN_IDS.ETHEREUM,
+  SEPOLIA: EVM_CHAIN_IDS.ETHEREUM_SEPOLIA,
 } as const;
 
 /**

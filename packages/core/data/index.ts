@@ -17,6 +17,18 @@ export {
   getCurrencyFlag,
 } from './currencies';
 
+// Chain metadata shared by payment parsing, account matching, and display helpers
+export {
+  EVM_CHAIN_IDS,
+  getChainTypeAliases,
+  getEvmChainMetadata,
+  getEvmChainFamily,
+  getEvmNativeSymbol,
+  isEvmTestnetChain,
+  type ChainFamily,
+  type EvmChainMetadata,
+} from './chainMetadata';
+
 // Token 和 Chain 配置
 export {
   TOKENS,
@@ -44,6 +56,7 @@ export {
   parseTokenAmount,
   // 链类型判断工具
   getChainFromCoin,
+  getCompatibleChainTypes,
   isUTXOChain,
   isEVMChain,
   isSolanaChain,

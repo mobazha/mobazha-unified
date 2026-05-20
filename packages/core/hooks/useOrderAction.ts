@@ -20,7 +20,7 @@ import { useI18n } from './useI18n';
 import { isUTXOChain } from '../data/tokens';
 import { getTransactionService } from '../services/transaction';
 import { getPaymentExecutor } from '../services/transaction/executorRegistry';
-import type { OrderInstructionsResponse } from '../services/api/orders';
+import type { OrderInstructionsResponse, SettlementActionResponse } from '../services/api/orders';
 
 /**
  * 订单操作选项
@@ -43,6 +43,17 @@ export interface OrderActionOptions {
    * @returns 操作结果
    */
   executeAction: (txID?: string) => Promise<{ success: boolean; error?: string }>;
+
+  /**
+   * 执行后端托管的 settlement action（例如 Safe/V2 confirm）。
+   * 这类订单不需要前端钱包签名，但需要先提交链上动作，再写入订单确认消息。
+   */
+  executeBackendSettlementAction?: () => Promise<SettlementActionResponse>;
+
+  /**
+   * 优先走后端托管的 settlement action（Safe/V2 主路径）。
+   */
+  preferBackendSettlementAction?: boolean;
 
   /**
    * 订单的支付币种
@@ -186,6 +197,8 @@ export function useOrderAction(): UseOrderActionReturn {
       const {
         getInstructions,
         executeAction,
+        executeBackendSettlementAction,
+        preferBackendSettlementAction = false,
         paymentCoin,
         onSuccess,
         onError,
@@ -200,6 +213,19 @@ export function useOrderAction(): UseOrderActionReturn {
         if (isUTXOChain(paymentCoin)) {
           // UTXO 链：直接调用 action API，后端处理多签
           const result = await executeAction();
+
+          if (!result.success) {
+            throw new Error(result.error || t('order.actions.operationFailed'));
+          }
+
+          onSuccess?.();
+          return;
+        }
+
+        if (preferBackendSettlementAction && executeBackendSettlementAction) {
+          const settlement = await executeBackendSettlementAction();
+          const txID = settlement.txHash || settlement.actionId;
+          const result = await executeAction(txID);
 
           if (!result.success) {
             throw new Error(result.error || t('order.actions.operationFailed'));
@@ -319,7 +345,14 @@ export function useOrderAction(): UseOrderActionReturn {
             }
           } else {
             // 无需链上交易，直接调用 action API（不需要钱包连接）
-            const result = await executeAction();
+            if (response.settlementActionRequired && !executeBackendSettlementAction) {
+              throw new Error(t('order.actions.operationFailed'));
+            }
+            const settlement = response.settlementActionRequired
+              ? await executeBackendSettlementAction?.()
+              : undefined;
+            const txID = settlement?.txHash || settlement?.actionId;
+            const result = await executeAction(txID);
 
             if (!result.success) {
               throw new Error(result.error || t('order.actions.operationFailed'));

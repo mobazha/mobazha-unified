@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { EVM_CHAIN_IDS, getEvmNativeSymbol } from '../../data/chainMetadata';
 import {
   assetIdFromTokenId,
+  getCompatibleChainTypes,
   getChainFromCoin,
   isCanonicalPaymentCoin,
   mustCanonicalCoin,
@@ -33,7 +35,25 @@ describe('mustCanonicalCoin', () => {
 
   it('resolves canonical native coins to chain symbols', () => {
     expect(getChainFromCoin('crypto:bip122:000000000019d6689c085ae165831e93:native')).toBe('BTC');
+    expect(getChainFromCoin('crypto:eip155:11155111:native')).toBe('ETH');
     expect(getChainFromCoin('crypto:tron:mainnet:native')).toBe('TRON');
+  });
+
+  it('returns compatible chainType aliases for payment matching', () => {
+    expect(getCompatibleChainTypes('ETH', 'BTC')).toEqual(['ethereum', 'eth', 'evm']);
+    expect(
+      getCompatibleChainTypes(`crypto:eip155:${EVM_CHAIN_IDS.ETHEREUM_SEPOLIA}:native`)
+    ).toEqual(['ethereum', 'eth', 'evm']);
+    expect(
+      getCompatibleChainTypes('crypto:bip122:12a765e31ffd4059bada1e25190f6e98:native')
+    ).toEqual(['litecoin', 'ltc']);
+    expect(getCompatibleChainTypes('NOT_A_REAL_CHAIN')).toEqual([]);
+    expect(getCompatibleChainTypes(undefined, 'BTC')).toEqual(['bitcoin', 'btc']);
+  });
+
+  it('centralizes EVM chain metadata used by display and matching helpers', () => {
+    expect(getEvmNativeSymbol(EVM_CHAIN_IDS.ETHEREUM_SEPOLIA)).toBe('ETH');
+    expect(getEvmNativeSymbol(EVM_CHAIN_IDS.BSC_TESTNET)).toBe('BNB');
   });
 
   it('parses canonical payment coin structure', () => {

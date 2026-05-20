@@ -588,7 +588,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           <OrderStatusCard displayOrder={displayOrder} />
 
           {!(displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment') && (
-            <OrderSettlementCard settlementAction={latestSettlementAction} />
+            <OrderSettlementCard
+              settlementAction={latestSettlementAction}
+              paymentCoin={displayOrder.paymentCoin}
+              chainId={displayOrder.chainId}
+            />
           )}
 
           {/* 2. Product card (vendor merged inline) */}

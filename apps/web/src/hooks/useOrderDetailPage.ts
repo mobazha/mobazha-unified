@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import {
   useOrderDetail,
@@ -11,6 +12,7 @@ import {
   onWebSocketMessage,
   useOrderAction,
   type WebSocketMessage,
+  queryKeys,
 } from '@mobazha/core';
 import type { OrderConfirmType } from '@/components/Order';
 import type { OrderChatMessage, OrderChatParticipant } from '@/components/Order';
@@ -96,6 +98,7 @@ export function useOrderDetailPage(
 ): UseOrderDetailPageReturn {
   const { t } = useI18n();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { displayOrder, coreOrder, latestSettlementAction, isLoading, error, refetch } =
     useOrderDetail(orderId, viewingContext);
@@ -370,7 +373,7 @@ export function useOrderDetailPage(
       }
       return succeeded;
     },
-    [coreOrder, displayOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
+    [displayOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
   );
 
   // --- Clipboard helpers ---
@@ -424,15 +427,22 @@ export function useOrderDetailPage(
 
   // --- Dialog props ---
 
+  const handleAcceptOrderSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.orders.sales() });
+    queryClient.invalidateQueries({ queryKey: queryKeys.orders.purchases() });
+
+    void refetch();
+  }, [orderId, queryClient, refetch]);
+
   const acceptOrderProps = useMemo(
     () => ({
       orderId,
-      blockchain: (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing
-        ?.item?.blockchain as string | undefined,
-      paymentCoin: (coreOrder as OrderContractData)?.contract?.paymentSent?.coin,
-      onSuccess: refetch,
+      blockchain: undefined,
+      paymentCoin,
+      onSuccess: handleAcceptOrderSuccess,
     }),
-    [orderId, coreOrder, refetch]
+    [handleAcceptOrderSuccess, orderId, paymentCoin]
   );
 
   const shipOrderProps = useMemo(

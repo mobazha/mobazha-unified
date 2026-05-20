@@ -117,10 +117,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           message: isBuyer
             ? t('order.statusCard.pendingBuyer')
             : t('order.statusCard.pendingSeller'),
-          hint:
-            isBuyer && isCryptoPayment
-              ? t('order.statusCard.pendingBuyerConfirmingHint')
-              : undefined,
+          hint: isBuyer ? t('order.statusCard.pendingBuyerPaidHint') : undefined,
           color: 'text-warning',
           bgColor: 'bg-warning/8 border-warning/20',
           progress: 1,
