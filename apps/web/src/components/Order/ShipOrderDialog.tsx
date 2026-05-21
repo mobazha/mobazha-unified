@@ -32,6 +32,7 @@ export interface ShipOrderDialogProps {
   orderId: string;
   contractType?: string;
   blockchain?: string;
+  itemCount?: number;
   onSuccess?: () => void;
 }
 
@@ -57,6 +58,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
   orderId,
   contractType,
   blockchain,
+  itemCount = 1,
   onSuccess,
 }) => {
   const { t } = useI18n();
@@ -203,25 +205,42 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
     try {
       const payload: Parameters<typeof ordersApi.shipOrder>[0] = {
         orderID: orderId,
-        note: trackingInfo.note || '',
+        shipments: [],
       };
 
       if (deliveryMode === 'physical') {
-        payload.physicalDelivery = {
-          shipper: trackingInfo.shipper || '',
-          trackingNumber: trackingInfo.trackingNumber,
-        };
+        payload.shipments = [
+          {
+            itemIndex: 0,
+            note: trackingInfo.note || '',
+            physicalDelivery: {
+              shipper: trackingInfo.shipper || '',
+              trackingNumber: trackingInfo.trackingNumber,
+            },
+          },
+        ];
       }
 
       if (deliveryMode === 'digital') {
-        payload.digitalDelivery = {
-          url: trackingInfo.fileUrl,
-          password: trackingInfo.filePassword || undefined,
-        };
+        const count = Math.max(itemCount, 1);
+        payload.shipments = Array.from({ length: count }, (_, itemIndex) => ({
+          itemIndex,
+          note: trackingInfo.note || '',
+          digitalDelivery: {
+            url: trackingInfo.fileUrl,
+            password: trackingInfo.filePassword || undefined,
+          },
+        }));
       }
 
       if (deliveryMode === 'rwa' && selectedAccountRef.current) {
         payload.receivingAccountID = selectedAccountRef.current.id;
+        payload.shipments = [
+          {
+            itemIndex: 0,
+            note: trackingInfo.note || '',
+          },
+        ];
       }
 
       const result = await ordersApi.shipOrder(payload);
@@ -263,7 +282,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [orderId, trackingInfo, deliveryMode, onOpenChange, onSuccess, t, toast]);
+  }, [orderId, trackingInfo, deliveryMode, itemCount, onOpenChange, onSuccess, t, toast]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
@@ -454,6 +473,7 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
 
           {deliveryMode === 'digital' && (
             <>
+              <p className="text-sm text-muted-foreground">{t('order.ship.digitalFallbackHint')}</p>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">
                   {t('order.ship.fileUrl')} *
@@ -507,7 +527,11 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? t('common.processing') : t('order.ship.confirm')}
+            {isLoading
+              ? t('common.processing')
+              : deliveryMode === 'digital'
+                ? t('order.ship.deliverNow')
+                : t('order.ship.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

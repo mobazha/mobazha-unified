@@ -370,6 +370,8 @@ export const NODE_API = {
   // --- Digital Assets — Buyer Portal (guest token or authenticated buyer/admin) ---
   ORDER_DIGITAL_ASSETS: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-assets`,
+  ORDER_DIGITAL_DELIVERY_STATUS: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-delivery`,
   ORDER_DIGITAL_DOWNLOAD: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-download`,
 

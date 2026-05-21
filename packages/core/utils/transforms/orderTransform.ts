@@ -12,6 +12,7 @@ import type {
   DisplayFiatDispute,
   DisplayOrderProtection,
   DisplayAfterSaleDispute,
+  DisplayShipmentInfo,
   DisplayTimelineEvent,
   ProtectionLevel,
   DisplayOrderStatus,
@@ -134,7 +135,11 @@ interface RealOrderData {
     orderShipments?: Array<{
       timestamp?: string | { seconds?: number };
       shipments?: Array<{
+        itemIndex?: number;
+        note?: string;
         physicalDelivery?: { shipper?: string; trackingNumber?: string };
+        digitalDelivery?: { url?: string; password?: string };
+        cryptocurrencyDelivery?: { transactionID?: string };
       }>;
     }>;
     /** Legacy field name (pre-shipment rename) */
@@ -147,7 +152,14 @@ interface RealOrderData {
     }>;
     orderComplete?: {
       timestamp?: string;
-      ratingSignatures?: unknown[];
+      ratings?: Array<{
+        slug?: string;
+        overall?: number;
+        review?: string;
+        anonymous?: boolean;
+        imageHashes?: string[];
+        image_hashes?: string[];
+      }>;
       releaseInfo?: { txid?: string };
     };
     transactions?: Array<{ txid?: string; fromID?: string; value?: string; timestamp?: string }>;
@@ -307,6 +319,69 @@ function shipmentMessageTimestamp(msg: { timestamp?: string | { seconds?: number
   return '';
 }
 
+function extractShipmentDetails(contract: RealOrderData['contract']): DisplayShipmentInfo[] {
+  const rows: DisplayShipmentInfo[] = [];
+
+  contract.orderShipments?.forEach(msg => {
+    const timestamp = shipmentMessageTimestamp(msg);
+    msg.shipments?.forEach(item => {
+      if (item.digitalDelivery) {
+        rows.push({
+          type: 'digital',
+          timestamp,
+          itemIndex: item.itemIndex,
+          fileUrl: item.digitalDelivery.url,
+          password: item.digitalDelivery.password,
+          note: item.note,
+        });
+        return;
+      }
+
+      if (item.physicalDelivery) {
+        rows.push({
+          type: 'physical',
+          timestamp,
+          itemIndex: item.itemIndex,
+          shipper: item.physicalDelivery.shipper,
+          trackingNumber: item.physicalDelivery.trackingNumber,
+          note: item.note,
+        });
+        return;
+      }
+
+      if (item.cryptocurrencyDelivery) {
+        rows.push({
+          type: 'cryptocurrency',
+          timestamp,
+          itemIndex: item.itemIndex,
+          transactionID: item.cryptocurrencyDelivery.transactionID,
+          note: item.note,
+        });
+      }
+    });
+  });
+
+  contract.orderFulfillments?.forEach(fulfillment => {
+    const physicalDeliveries = Array.isArray(fulfillment.physicalDelivery)
+      ? fulfillment.physicalDelivery
+      : fulfillment.physicalDelivery
+        ? [fulfillment.physicalDelivery]
+        : [];
+
+    physicalDeliveries.forEach(physicalDelivery => {
+      rows.push({
+        type: 'physical',
+        timestamp: fulfillment.timestamp || '',
+        shipper: physicalDelivery.shipper,
+        trackingNumber: physicalDelivery.trackingNumber,
+        note: fulfillment.note,
+      });
+    });
+  });
+
+  return rows;
+}
+
 function formatShippingAddress(shipping?: {
   name?: string;
   shipTo?: string;
@@ -441,11 +516,16 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   // 完成
   const orderComplete = contract.orderComplete;
   if (orderComplete) {
+    const releasedOnComplete = !!orderComplete.releaseInfo?.txid;
     timeline.push({
       status: 'completed',
       timestamp: orderComplete.timestamp || '',
-      description: 'Order completed - Funds released to seller',
-      descriptionKey: 'order.timeline.orderCompleted',
+      description: releasedOnComplete
+        ? 'Order completed - Funds released to seller'
+        : 'Order completed',
+      descriptionKey: releasedOnComplete
+        ? 'order.timeline.orderCompleted'
+        : 'order.actions.complete',
       actor: 'buyer',
     });
   }
@@ -666,8 +746,9 @@ export function transformCoreOrder(
   // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
   const paymentMethod = paymentSent?.method || '';
+  const isCancelableOrder = isCancelablePaymentMethod(paymentMethod);
   const cancelableFundsReleased =
-    isCancelablePaymentMethod(paymentMethod) &&
+    isCancelableOrder &&
     !!contract.orderConfirmation?.transactionID &&
     data.protection?.stage === 'ESCROWED';
   const moderatorId = paymentSent?.moderator || '';
@@ -710,6 +791,7 @@ export function transformCoreOrder(
   const alternateContactInfo = orderOpen?.alternateContactInfo;
   // 发货商信息
   const shipper = trackingInfo?.shipper;
+  const shipments = extractShipmentDetails(contract);
   // 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD
   const contractType = listingData?.metadata?.contractType;
 
@@ -909,6 +991,22 @@ export function transformCoreOrder(
     : undefined;
 
   const cancelReason = contract.orderCancel?.reason || contract.refund?.memo || undefined;
+  const orderCompleteRatings = contract.orderComplete?.ratings || [];
+  const firstRating = orderCompleteRatings[0];
+  const firstRatingImageHashes = firstRating?.imageHashes || firstRating?.image_hashes || [];
+  const buyerRating = firstRating
+    ? {
+        slug: firstRating.slug,
+        overall: firstRating.overall || 0,
+        review: firstRating.review,
+        anonymous: firstRating.anonymous,
+        imageHashes: firstRatingImageHashes,
+        imageUrls: firstRatingImageHashes
+          .map(hash => getImageUrl(hash, vendorPeerID) || getImageUrl(hash) || '')
+          .filter(Boolean),
+        timestamp: contract.orderComplete?.timestamp || '',
+      }
+    : undefined;
   const paymentVerificationStatus = normalizePaymentVerificationStatus(
     data.paymentState?.verificationStatus
   );
@@ -982,6 +1080,7 @@ export function transformCoreOrder(
     notes: memo,
     alternateContactInfo: alternateContactInfo,
     shipper: shipper,
+    shipments: shipments.length > 0 ? shipments : undefined,
     contractType: contractType,
     timeline: generateTimelineFromRealData(data),
     userRole,
@@ -989,9 +1088,12 @@ export function transformCoreOrder(
     fiatPayment,
     fiatDispute,
     dispute,
-    hasRated:
-      Array.isArray(contract.orderComplete?.ratingSignatures) &&
-      contract.orderComplete.ratingSignatures.length > 0,
+    hasRated: orderCompleteRatings.length > 0,
+    buyerRating,
+    fundsReleasedAtConfirmation:
+      isCancelableOrder &&
+      !!contract.orderConfirmation?.transactionID &&
+      !contract.orderComplete?.releaseInfo?.txid,
     protection:
       data.protection && !cancelableFundsReleased
         ? ({

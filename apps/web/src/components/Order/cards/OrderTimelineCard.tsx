@@ -121,7 +121,8 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
     );
   }
 
-  const releaseTxHash = order.releaseTx || order.paymentTx;
+  const completionReleasesFunds = !order.fundsReleasedAtConfirmation;
+  const releaseTxHash = completionReleasesFunds ? order.releaseTx || order.paymentTx : undefined;
   const completeTxUrl = releaseTxHash
     ? getBlockExplorerUrl(releaseTxHash, order.currency || '', order.chainId) || undefined
     : undefined;
@@ -137,7 +138,9 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
               currency={order.currency}
               txHash={releaseTxHash}
               txUrl={completeTxUrl}
-              description={t('order.fundsReleased')}
+              description={
+                completionReleasesFunds ? t('order.fundsReleased') : t('order.actions.complete')
+              }
               showDivider={false}
             />
           </div>

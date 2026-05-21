@@ -975,6 +975,9 @@ export const en: TranslationResource = {
       accept: 'Accept Order',
       decline: 'Decline',
       ship: 'Ship Order',
+      deliverDigital: 'Deliver access',
+      syncDelivery: 'Sync delivery',
+      deliveryPending: 'Delivery pending',
       refund: 'Refund',
       claim: 'Claim Payment',
       acceptPayout: 'Accept Payout',
@@ -1169,6 +1172,9 @@ export const en: TranslationResource = {
       note: 'Note',
       notePlaceholder: 'Add a note for the buyer...',
       confirm: 'Confirm shipment',
+      deliverNow: 'Deliver now',
+      digitalFallbackHint:
+        'This listing has no pre-configured digital assets. Enter a download link to manually deliver to the buyer.',
       // Receiving account
       receivingAccount: 'Receiving Account',
       selectReceivingAccount: 'Select receiving account',
@@ -1176,6 +1182,28 @@ export const en: TranslationResource = {
       receivingAccountRequired: 'Please select a receiving account',
       noReceivingAccount:
         'No receiving accounts configured. Please add one in Settings to receive payments.',
+    },
+    digitalDelivery: {
+      autoTitle: 'Digital goods delivered automatically',
+      autoDesc:
+        '{{count}} asset(s) are configured for this listing. Buyers receive access through their digital downloads.',
+      readyTitle: 'Digital delivery is ready',
+      readyDesc:
+        '{{count}} asset(s) are configured for this order. Confirming payment will grant buyer access automatically.',
+      deliveredTitle: 'Digital goods delivered automatically',
+      deliveredDesc:
+        '{{count}} asset(s) were delivered to the buyer. They can access them from digital downloads.',
+      pendingTitle: 'Digital delivery pending',
+      pendingDesc:
+        'Digital assets are configured, but buyer access has not been granted yet. Wait for automatic delivery or retry the entitlement job before shipping.',
+      manualTitle: 'Action required: add a download link',
+      manualDesc:
+        'No digital assets are configured for this listing. Use manual delivery only as a fallback, or add assets on the listing for future orders.',
+      checking: 'Checking digital asset configuration...',
+      syncAction: 'Sync delivery',
+      syncSuccess: 'Digital delivery synced',
+      syncSuccessDesc: 'The buyer access link has been attached to this order.',
+      syncFailed: 'Failed to sync digital delivery',
     },
     // Dispute modal
     dispute: {
@@ -1272,7 +1300,7 @@ export const en: TranslationResource = {
     },
     // Shipment display
     shipment: {
-      title: 'Shipment details',
+      title: 'Delivery details',
       packageShipped: 'Package shipped',
       serviceDelivered: 'Service delivered',
       digitalDelivered: 'Digital content delivered',
@@ -2276,7 +2304,7 @@ export const en: TranslationResource = {
       levelFull: 'Arbitration Protected',
       levelStandard: 'Buyer Protection',
       levelPlatform: 'Platform Protected',
-      cancelablePeriodDesc: '{{days}} days to verify — confirm receipt or cancel if needed',
+      cancelablePeriodDesc: '{{days}} days to verify — confirm receipt or report an issue',
       cancelableEscrowedDesc: 'Your payment is held in a secure shared account',
       cancelableEscrowedSellerDesc:
         "The buyer's payment is held securely — funds will be released after delivery",

@@ -462,7 +462,23 @@ export interface ActionButtonConfig {
 /**
  * 获取操作按钮配置
  */
-export function getActionButtonConfig(action: OrderAction, _role: UserRole): ActionButtonConfig {
+export function getActionButtonConfig(
+  action: OrderAction,
+  _role: UserRole,
+  options: {
+    contractType?: string;
+    hasPreconfiguredDigitalAssets?: boolean;
+    digitalDeliveryStatus?: string | null;
+    canSyncDigitalDelivery?: boolean;
+    manualDigitalFallbackAllowed?: boolean;
+  } = {}
+): ActionButtonConfig {
+  const isDigital = options.contractType === 'DIGITAL_GOOD';
+  const digitalShipLabel = options.canSyncDigitalDelivery
+    ? 'Sync delivery'
+    : options.manualDigitalFallbackAllowed
+      ? 'Deliver access'
+      : 'Delivery pending';
   const configs: Record<OrderAction, ActionButtonConfig> = {
     Pay: {
       label: 'Pay Now',
@@ -511,9 +527,9 @@ export function getActionButtonConfig(action: OrderAction, _role: UserRole): Act
       confirmMessage: 'Are you sure you want to decline this order?',
     },
     Ship: {
-      label: 'Ship Order',
+      label: isDigital ? digitalShipLabel : 'Ship Order',
       variant: 'primary',
-      icon: 'package',
+      icon: isDigital ? 'download' : 'package',
     },
     Refund: {
       label: 'Refund',

@@ -58,6 +58,21 @@ export interface DisplayTimelineEvent {
 }
 
 /**
+ * 交付详情 - 用于展示卖家已经提交的物流/数字内容/链上交付信息
+ */
+export interface DisplayShipmentInfo {
+  type: 'physical' | 'digital' | 'cryptocurrency';
+  timestamp: string;
+  itemIndex?: number;
+  shipper?: string;
+  trackingNumber?: string;
+  fileUrl?: string;
+  password?: string;
+  transactionID?: string;
+  note?: string;
+}
+
+/**
  * 订单争议信息 - 用于展示
  */
 export interface DisplayDispute {
@@ -189,6 +204,8 @@ export interface DisplayOrder {
   alternateContactInfo?: string;
   /** 发货商 */
   shipper?: string;
+  /** 卖家提交的交付详情（物流、数字下载、链上交易等） */
+  shipments?: DisplayShipmentInfo[];
   /** 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD */
   contractType?: string;
   /** 订单时间线 */
@@ -221,6 +238,10 @@ export interface DisplayOrder {
   fiatDispute?: DisplayFiatDispute;
   /** Whether the buyer has already submitted a rating for this order */
   hasRated?: boolean;
+  /** Buyer rating submitted with order completion */
+  buyerRating?: DisplayOrderRating;
+  /** True when funds were released during seller confirmation, not buyer completion */
+  fundsReleasedAtConfirmation?: boolean;
 
   /** 取消/退款原因（来自 orderCancel.reason 或 refund.memo） */
   cancelReason?: string;
@@ -230,6 +251,16 @@ export interface DisplayOrder {
   protection?: DisplayOrderProtection;
   /** 售后争议（应用层，资金已释放后的投诉） */
   afterSaleDispute?: DisplayAfterSaleDispute;
+}
+
+export interface DisplayOrderRating {
+  slug?: string;
+  overall: number;
+  review?: string;
+  anonymous?: boolean;
+  imageHashes?: string[];
+  imageUrls?: string[];
+  timestamp?: string;
 }
 
 /**

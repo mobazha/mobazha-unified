@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { HStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { Search, ChevronUp, ChevronDown, X, Download } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { useI18n } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import {
@@ -371,40 +371,22 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         onTyping={onTyping}
       />
 
-      {/* Image lightbox */}
-      <DialogPrimitive.Root
+      <ImageLightbox
+        imageUrls={lightboxSrc ? [lightboxSrc] : []}
         open={!!lightboxSrc}
-        onOpenChange={open => !open && setLightboxSrc(null)}
-      >
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in duration-200" />
-          <DialogPrimitive.Content
-            className="fixed inset-0 z-[200] flex items-center justify-center outline-none"
-            aria-describedby={undefined}
-          >
-            <DialogPrimitive.Title className="sr-only">Image preview</DialogPrimitive.Title>
-            <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-              <a
-                href={lightboxSrc || '#'}
-                download
-                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                aria-label={t('common.download')}
-              >
-                <Download className="w-5 h-5" />
-              </a>
-              <DialogPrimitive.Close className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors">
-                <X className="w-5 h-5" />
-                <span className="sr-only">Close</span>
-              </DialogPrimitive.Close>
-            </div>
-            <img
-              src={lightboxSrc || ''}
-              alt="Preview"
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
-            />
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
+        selectedIndex={0}
+        onSelectIndex={() => {}}
+        onOpenChange={open => {
+          if (!open) setLightboxSrc(null);
+        }}
+        altPrefix="Chat image"
+        ariaLabel="Chat image preview"
+        showThumbnails={false}
+        showCount={false}
+        downloadUrl={lightboxSrc || undefined}
+        className="z-[200]"
+        testIdPrefix="chat-image-preview"
+      />
 
       {/* Delete confirmation */}
       <AlertDialog

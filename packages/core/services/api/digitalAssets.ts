@@ -29,6 +29,7 @@ import type {
   CreateLicenseKeyAssetRequest,
   CreateLinkAssetRequest,
   DigitalAssetInfo,
+  DigitalDeliveryStatus,
   ImportLicenseKeysRequest,
   ImportLicenseKeysResponse,
   LicenseActivateRequest,
@@ -61,6 +62,18 @@ export function getBuyerDigitalAssets(
         'X-Buyer-Portal-Token': buyerPortalToken,
       })
     : nodeAuthGet<BuyerAssetEntry[]>(path);
+}
+
+export function getDigitalDeliveryStatus(
+  orderID: string,
+  buyerPortalToken?: string
+): Promise<DigitalDeliveryStatus> {
+  const path = NODE_API.ORDER_DIGITAL_DELIVERY_STATUS(orderID);
+  return buyerPortalToken
+    ? publicGetWithHeaders<DigitalDeliveryStatus>(path, {
+        'X-Buyer-Portal-Token': buyerPortalToken,
+      })
+    : nodeAuthGet<DigitalDeliveryStatus>(path);
 }
 
 /**

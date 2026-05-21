@@ -48,8 +48,9 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
         const allAccounts = await walletApi.getReceivingAccounts();
         let activeAccounts = allAccounts.filter(acc => acc.isActive);
 
+        const hasChainHint = Boolean(paymentCoin?.trim() || blockchain?.trim());
         const validChainTypes = getCompatibleChainTypes(paymentCoin, blockchain);
-        if (validChainTypes.length > 0) {
+        if (hasChainHint) {
           activeAccounts = activeAccounts.filter(acc =>
             validChainTypes.some(type => acc.chainType.toLowerCase() === type.toLowerCase())
           );

@@ -257,9 +257,14 @@ export const orderDataService = {
    */
   async shipOrder(params: {
     orderID: string;
-    physicalDelivery?: { shipper: string; trackingNumber: string };
-    digitalDelivery?: { url?: string; password?: string };
-    note?: string;
+    receivingAccountID?: number;
+    shipments: Array<{
+      physicalDelivery?: { shipper: string; trackingNumber: string };
+      digitalDelivery?: { url?: string; password?: string };
+      cryptocurrencyDelivery?: { transactionID: string };
+      note?: string;
+      itemIndex?: number;
+    }>;
   }) {
     if (isMockMode()) {
       return mockServices.orders.shipOrder(params.orderID);

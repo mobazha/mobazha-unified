@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
 import {
@@ -758,102 +759,17 @@ export function ProductDetailMobile({
         )}
       </div>
 
-      {/* --- Fullscreen Image Preview --- */}
-      {isImagePreviewOpen && imageUrls.length > 0 && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-          onClick={() => setIsImagePreviewOpen(false)}
-          onKeyDown={e => {
-            if (e.key === 'Escape') setIsImagePreviewOpen(false);
-            else if (e.key === 'ArrowLeft')
-              setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-            else if (e.key === 'ArrowRight')
-              setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-          }}
-          tabIndex={0}
-          ref={el => el?.focus()}
-        >
-          <button
-            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center z-10"
-            onClick={() => setIsImagePreviewOpen(false)}
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          <div className="absolute top-4 left-4 text-white/80 text-sm">
-            {selectedImage + 1} / {imageUrls.length}
-          </div>
-          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img
-              src={imageUrls[selectedImage]}
-              alt={product.item.title}
-              className="max-w-full max-h-[85vh] object-contain"
-            />
-          </div>
-          {imageUrls.length > 1 && (
-            <>
-              <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-                }}
-                aria-label="Previous"
-              >
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </button>
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-                }}
-                aria-label="Next"
-              >
-                <ChevronRight className="w-6 h-6 text-white" />
-              </button>
-            </>
-          )}
-          {imageUrls.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 rounded-lg p-2">
-              {imageUrls.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={e => {
-                    e.stopPropagation();
-                    setSelectedImage(index);
-                  }}
-                  aria-label={`Image ${index + 1}`}
-                  className={cn(
-                    'w-12 h-12 rounded overflow-hidden border-2 transition-all',
-                    selectedImage === index
-                      ? 'border-white'
-                      : 'border-transparent opacity-60 hover:opacity-100'
-                  )}
-                >
-                  <img
-                    src={image}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <ImageLightbox
+        imageUrls={imageUrls}
+        open={isImagePreviewOpen}
+        selectedIndex={selectedImage}
+        onSelectIndex={setSelectedImage}
+        onOpenChange={setIsImagePreviewOpen}
+        variant="product"
+        altPrefix={product.item.title}
+        ariaLabel="Product image preview"
+        testIdPrefix="product-detail-preview"
+      />
     </div>
   );
 }

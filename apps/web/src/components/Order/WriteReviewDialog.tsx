@@ -68,12 +68,16 @@ function ReviewForm({
 
     try {
       const base64 = await imagesApi.fileToBase64(file);
-      const result = await imagesApi.uploadImage({
-        filename: `review_${Date.now()}`,
-        image: base64,
-      });
-      if (result?.small) {
-        return { ...entry, hash: result.small, uploading: false };
+      const [result] = await imagesApi.uploadProductImages([
+        {
+          filename: `review_${Date.now()}`,
+          image: base64,
+        },
+      ]);
+      const hash =
+        result?.original || result?.large || result?.medium || result?.small || result?.tiny;
+      if (hash) {
+        return { ...entry, hash, uploading: false };
       }
       return { ...entry, uploading: false, error: 'Upload failed' };
     } catch {
