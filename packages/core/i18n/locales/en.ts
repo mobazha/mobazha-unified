@@ -1200,6 +1200,8 @@ export const en: TranslationResource = {
       manualDesc:
         'No digital assets are configured for this listing. Use manual delivery only as a fallback, or add assets on the listing for future orders.',
       checking: 'Checking digital asset configuration...',
+      manageAssets: 'Manage Assets',
+      refreshStatus: 'Refresh status',
       syncAction: 'Sync delivery',
       syncSuccess: 'Digital delivery synced',
       syncSuccessDesc: 'The buyer access link has been attached to this order.',
@@ -4107,8 +4109,12 @@ export const en: TranslationResource = {
       keyRevoked: 'License key revoked',
       revokeFailed: 'Failed to revoke license key',
       assetAdded: 'Digital asset added',
+      assetUpdated: 'Digital asset updated',
       assetDeleted: 'Digital asset deleted',
       deleteFailed: 'Failed to delete asset',
+      editLinkTitle: 'Edit access link',
+      editLinkDesc: 'Update the URL. Changes will not affect already-delivered entitlements.',
+      updateLinkFailed: 'Failed to update link',
       confirmDeleteTitle: 'Delete digital asset?',
       confirmDeleteDesc:
         'Existing buyers will no longer receive this asset on new orders. Past entitlements are preserved.',

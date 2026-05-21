@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,6 +24,9 @@ export interface SellerDigitalDeliveryStatusProps {
   error: string | null;
   canSyncDelivery?: boolean;
   onSyncDelivery: () => Promise<boolean>;
+  listingSlug?: string;
+  onManageListing?: (slug: string) => void;
+  refreshStatus?: () => void;
   className?: string;
 }
 
@@ -37,6 +40,9 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
   error,
   canSyncDelivery = true,
   onSyncDelivery,
+  listingSlug,
+  onManageListing,
+  refreshStatus,
   className,
 }: SellerDigitalDeliveryStatusProps) {
   const { t } = useI18n();
@@ -47,9 +53,11 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
 
   const isDelivered = status === 'delivered';
   const isReady = status === 'ready';
-  const isAttention = Boolean(error) || status === 'manual_required' || status === 'restricted';
+  const isManualRequired = status === 'manual_required';
+  const isAttention = Boolean(error) || isManualRequired || status === 'restricted';
   const Icon = isLoading ? Loader2 : isAttention ? AlertCircle : CheckCircle2;
   const showSyncAction = isDelivered && canSyncDelivery;
+  const showManageAction = isManualRequired && listingSlug && onManageListing;
   const title = isDelivered
     ? t('order.digitalDelivery.deliveredTitle')
     : hasPreconfiguredAssets
@@ -92,21 +100,47 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
               <p className="mt-1 text-sm text-muted-foreground">{description}</p>
               {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
             </div>
-            {showSyncAction && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  void onSyncDelivery();
-                }}
-                disabled={isLoading || isSyncing}
-                className="h-10 shrink-0"
-              >
-                <RefreshCw className={cn('w-4 h-4 mr-1.5', isSyncing && 'animate-spin')} />
-                {isSyncing ? t('common.processing') : t('order.digitalDelivery.syncAction')}
-              </Button>
-            )}
+            <div className="flex gap-2 shrink-0">
+              {showManageAction && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onManageListing(listingSlug)}
+                  className="h-10"
+                >
+                  <ExternalLink className="w-4 h-4 mr-1.5" />
+                  {t('order.digitalDelivery.manageAssets')}
+                </Button>
+              )}
+              {isManualRequired && !isLoading && refreshStatus && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={refreshStatus}
+                  className="h-10"
+                  aria-label={t('order.digitalDelivery.refreshStatus')}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              )}
+              {showSyncAction && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void onSyncDelivery();
+                  }}
+                  disabled={isLoading || isSyncing}
+                  className="h-10"
+                >
+                  <RefreshCw className={cn('w-4 h-4 mr-1.5', isSyncing && 'animate-spin')} />
+                  {isSyncing ? t('common.processing') : t('order.digitalDelivery.syncAction')}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

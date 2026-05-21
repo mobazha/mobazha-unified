@@ -11,6 +11,8 @@ import {
   AlertCircle,
   Loader2,
   Info,
+  Pencil,
+  ExternalLink,
 } from 'lucide-react';
 import {
   useI18n,
@@ -92,6 +94,7 @@ export function DigitalAssetsManagerSection({
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showLicenseKeyDialog, setShowLicenseKeyDialog] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [editingLinkAsset, setEditingLinkAsset] = useState<DigitalAssetInfo | null>(null);
 
   const persisted = typeof listingSlug === 'string' && listingSlug.length > 0;
   const variantScoped = Boolean(variantSku?.trim());
@@ -171,6 +174,16 @@ export function DigitalAssetsManagerSection({
       });
     }
   }, [pendingDeleteId, t, toast]);
+
+  const handleLinkUpdated = useCallback(
+    (updated: DigitalAssetInfo) => {
+      setAssets(prev => prev.map(a => (a.id === updated.id ? updated : a)));
+      toast({
+        title: t('listing.digital.assetUpdated', { defaultValue: 'Digital asset updated' }),
+      });
+    },
+    [t, toast]
+  );
 
   // Render gating UI when listing isn't saved yet
   if (!persisted) {
@@ -296,6 +309,7 @@ export function DigitalAssetsManagerSection({
           {assets.map(asset => {
             const meta = TYPE_META[asset.assetType];
             const Icon = meta?.icon ?? FileText;
+            const isLink = asset.assetType === 'link';
             return (
               <div
                 key={asset.id}
@@ -318,6 +332,17 @@ export function DigitalAssetsManagerSection({
                       })}
                     </Badge>
                   </div>
+                  {isLink && asset.url && (
+                    <a
+                      href={asset.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-primary hover:underline mt-0.5 truncate max-w-full"
+                    >
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{asset.url}</span>
+                    </a>
+                  )}
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
                     {asset.fileSize ? <span>{formatBytes(asset.fileSize)}</span> : null}
                     {asset.maxDownloads > 0 && asset.assetType === 'file' && (
@@ -339,15 +364,28 @@ export function DigitalAssetsManagerSection({
                   </div>
                 </div>
                 {!readOnly && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPendingDeleteId(asset.id)}
-                    aria-label={t('common.delete', { defaultValue: 'Delete' })}
-                  >
-                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {isLink && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingLinkAsset(asset)}
+                        aria-label={t('common.edit', { defaultValue: 'Edit' })}
+                      >
+                        <Pencil className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPendingDeleteId(asset.id)}
+                      aria-label={t('common.delete', { defaultValue: 'Delete' })}
+                    >
+                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </div>
                 )}
               </div>
             );
@@ -397,6 +435,17 @@ export function DigitalAssetsManagerSection({
           onCreated={asset => {
             handleAssetCreated(asset);
             setShowLicenseKeyDialog(false);
+          }}
+        />
+      )}
+
+      {editingLinkAsset && (
+        <EditLinkDialog
+          asset={editingLinkAsset}
+          onClose={() => setEditingLinkAsset(null)}
+          onUpdated={updated => {
+            handleLinkUpdated(updated);
+            setEditingLinkAsset(null);
           }}
         />
       )}
@@ -851,6 +900,113 @@ function CreateLicenseKeyAssetDialog({
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
                 {t('listing.digital.createPool', { defaultValue: 'Create pool' })}
               </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =====================================================================
+// Link edit dialog
+// =====================================================================
+
+interface EditLinkDialogProps {
+  asset: DigitalAssetInfo;
+  onClose: () => void;
+  onUpdated: (asset: DigitalAssetInfo) => void;
+}
+
+function EditLinkDialog({ asset, onClose, onUpdated }: EditLinkDialogProps) {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const [url, setUrl] = useState(asset.url ?? '');
+  const [submitting, setSubmitting] = useState(false);
+
+  const isValidUrl = useMemo(() => {
+    try {
+      const parsed = new URL(url.trim());
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }, [url]);
+
+  const hasChanged = url.trim() !== (asset.url ?? '');
+
+  const handleSubmit = async () => {
+    if (!isValidUrl || !hasChanged) return;
+    setSubmitting(true);
+    try {
+      const updated = await digitalAssetsApi.updateAsset(asset.id, { url: url.trim() });
+      onUpdated(updated);
+    } catch (err) {
+      toast({
+        title: t('common.error', { defaultValue: 'Error' }),
+        description:
+          err instanceof Error
+            ? err.message
+            : t('listing.digital.updateLinkFailed', { defaultValue: 'Failed to update link' }),
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={open => !open && !submitting && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {t('listing.digital.editLinkTitle', { defaultValue: 'Edit access link' })}
+          </DialogTitle>
+          <DialogDescription>
+            {t('listing.digital.editLinkDesc', {
+              defaultValue:
+                'Update the URL. Changes will not affect already-delivered entitlements.',
+            })}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="edit-link-url">
+              {t('listing.digital.urlLabel', { defaultValue: 'Access URL' })}
+            </Label>
+            <Input
+              id="edit-link-url"
+              type="url"
+              placeholder="https://drive.example.com/folder/abc"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              disabled={submitting}
+              className="mt-1"
+            />
+            {url && !isValidUrl && (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {t('listing.digital.invalidUrl', {
+                  defaultValue: 'Enter a valid http(s) URL',
+                })}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>
+            {t('common.cancel', { defaultValue: 'Cancel' })}
+          </Button>
+          <Button onClick={handleSubmit} disabled={!isValidUrl || !hasChanged || submitting}>
+            {submitting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                {t('common.saving', { defaultValue: 'Saving…' })}
+              </>
+            ) : (
+              t('common.save', { defaultValue: 'Save' })
             )}
           </Button>
         </DialogFooter>

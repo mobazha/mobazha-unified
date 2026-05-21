@@ -643,6 +643,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 coreOrder?.state === 'AWAITING_SHIPMENT' && sellerDigitalDelivery.canSyncDelivery
               }
               onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+              onManageListing={slug => window.open(`/listing/edit/${slug}?from=orders`, '_blank')}
             />
           )}
 

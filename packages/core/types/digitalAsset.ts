@@ -33,6 +33,8 @@ export interface DigitalAssetInfo {
   fileName?: string;
   fileSize?: number;
   mimeType?: string;
+  /** Decrypted URL for link-type assets (seller-authenticated endpoints only). */
+  url?: string;
   sortOrder: number;
   maxDownloads: number;
   expiryHours: number;
@@ -45,6 +47,8 @@ export interface AssetUpdateInput {
   maxDownloads?: number;
   expiryHours?: number;
   sortOrder?: number;
+  /** Update the URL for link-type assets. */
+  url?: string;
 }
 
 /** License key pool stats — GET /v1/digital-assets/license-keys/stats. */

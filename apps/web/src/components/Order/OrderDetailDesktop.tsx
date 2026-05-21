@@ -538,6 +538,9 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                       sellerDigitalDelivery.canSyncDelivery
                     }
                     onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+                    onManageListing={slug =>
+                      window.open(`/listing/edit/${slug}?from=orders`, '_blank')
+                    }
                     className="mb-4"
                   />
                 )}

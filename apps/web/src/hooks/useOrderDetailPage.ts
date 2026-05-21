@@ -498,6 +498,8 @@ export function useOrderDetailPage(
     error: null,
   });
 
+  const [deliveryStatusVersion, setDeliveryStatusVersion] = useState(0);
+
   useEffect(() => {
     if (!isSellerDigitalOrder) {
       setSellerDigitalDeliveryState(prev =>
@@ -535,7 +537,21 @@ export function useOrderDetailPage(
     return () => {
       cancelled = true;
     };
-  }, [isSellerDigitalOrder, orderId, t]);
+  }, [isSellerDigitalOrder, orderId, t, deliveryStatusVersion]);
+
+  useEffect(() => {
+    if (!isSellerDigitalOrder) return;
+    const bump = () => setDeliveryStatusVersion(v => v + 1);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') bump();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('popstate', bump);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('popstate', bump);
+    };
+  }, [isSellerDigitalOrder]);
 
   const syncDigitalDelivery = useCallback(async (): Promise<boolean> => {
     const deliveryStatus = sellerDigitalDeliveryState.status;
@@ -597,6 +613,10 @@ export function useOrderDetailPage(
     toast,
   ]);
 
+  const refreshDeliveryStatus = useCallback(() => {
+    setDeliveryStatusVersion(v => v + 1);
+  }, []);
+
   const sellerDigitalDelivery = useMemo(() => {
     const deliveryStatus = sellerDigitalDeliveryState.status;
     const assetCount = deliveryStatus?.assetCount || 0;
@@ -615,6 +635,7 @@ export function useOrderDetailPage(
       status: deliveryStatus?.status || null,
       error: sellerDigitalDeliveryState.error,
       syncDelivery: syncDigitalDelivery,
+      refreshStatus: refreshDeliveryStatus,
     };
   }, [
     isSellerDigitalOrder,
@@ -624,6 +645,7 @@ export function useOrderDetailPage(
     sellerDigitalDeliveryState.syncing,
     sellerDigitalListingSlug,
     syncDigitalDelivery,
+    refreshDeliveryStatus,
   ]);
 
   return {
