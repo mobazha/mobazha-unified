@@ -33,6 +33,8 @@ import {
   useRateFreshness,
   useI18n,
   ordersApi,
+  onWebSocketMessage,
+  onWebSocketStatusChange,
   profileApi,
   getImageUrl,
   getTransactionService,
@@ -41,6 +43,7 @@ import {
   convertCurrency,
   toMinimalUnit,
   getBaseRateSymbol,
+  type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
@@ -143,6 +146,12 @@ function hasExchangeRateForConversion(
   return rates[fromCode] > 0 && rates[toCode] > 0;
 }
 
+const PAYMENT_OPEN_STATES = new Set(['AWAITING_PAYMENT', 'AWAITING_PAYMENT_VERIFICATION']);
+
+function isPaymentOpenState(state?: string | null): boolean {
+  return !!state && PAYMENT_OPEN_STATES.has(state);
+}
+
 /**
  * Payment Page - 支付阶段
  *
@@ -221,9 +230,6 @@ export default function PaymentPage() {
   const isUtxoPayment = chainCategory === 'utxo';
   const isConnected = isTronPayment ? tronWallet.isConnected : evmWallet.isConnected;
   const isConnecting = isTronPayment ? tronWallet.isConnecting : evmWallet.isConnecting;
-  const connect = isTronPayment
-    ? () => tronWallet.connect().then(() => undefined)
-    : evmWallet.connect;
   const getSigner = evmWallet.getSigner;
 
   // UTXO 外部钱包支付信息（BTC/LTC/BCH/ZEC）
@@ -249,6 +255,30 @@ export default function PaymentPage() {
   // Payment window countdown (45 min from order creation)
   const [paymentTimeRemaining, setPaymentTimeRemaining] = useState<string | null>(null);
   const [paymentExpired, setPaymentExpired] = useState(false);
+
+  const syncOrderStatus = useCallback(
+    async ({ markSuccess = false }: { markSuccess?: boolean } = {}) => {
+      if (!orderID) return null;
+
+      const order = await ordersApi.getOrderDetails(orderID);
+      const nextState = typeof order?.state === 'string' ? order.state : null;
+
+      setRawOrder(order);
+      if (nextState) {
+        setOrderDetails(prev => (prev ? { ...prev, status: nextState } : prev));
+        if (!isPaymentOpenState(nextState)) {
+          setExternalWalletInfo(null);
+          if (markSuccess) {
+            setPaymentStep('success');
+            haptic.success();
+          }
+        }
+      }
+
+      return order;
+    },
+    [haptic, orderID]
+  );
 
   useEffect(() => {
     if (!rawOrder) return;
@@ -547,6 +577,54 @@ export default function PaymentPage() {
     urlContractType,
     urlImage,
   ]);
+
+  useEffect(() => {
+    if (!orderID || isLoadingOrder || !orderDetails || isPaymentOpenState(orderDetails.status)) {
+      return;
+    }
+
+    router.replace(buildConfirmationUrl(orderDetails));
+  }, [isLoadingOrder, orderDetails, orderID, router]);
+
+  useEffect(() => {
+    if (!orderID || !orderDetails || !isPaymentOpenState(orderDetails.status)) {
+      return;
+    }
+
+    const refreshFromNotification = () => {
+      void syncOrderStatus({ markSuccess: !!externalWalletInfo }).catch(() => {
+        // Real-time refresh is best-effort; visibility/reconnect recovery will retry.
+      });
+    };
+
+    const cleanupMessageSubscription = onWebSocketMessage((message: WebSocketMessage) => {
+      if (message.type !== 'notification') return;
+      const data = message.data as { notification?: { orderID?: string } } | undefined;
+      if (data?.notification?.orderID === orderID) {
+        refreshFromNotification();
+      }
+    });
+
+    const cleanupStatusSubscription = onWebSocketStatusChange(status => {
+      if (status === 'connected') {
+        refreshFromNotification();
+      }
+    });
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshFromNotification();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cleanupMessageSubscription();
+      cleanupStatusSubscription();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [externalWalletInfo, orderDetails, orderID, syncOrderStatus]);
 
   // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入
   const totalWithFee = orderDetails?.total || 0;
