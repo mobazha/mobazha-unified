@@ -11,10 +11,7 @@
  */
 
 import { getExplorerResourceUrl } from '../services/payment/explorers';
-import { EVM_CHAIN_IDS } from '../data/chainMetadata';
 import { getEnvConfig } from './env';
-
-// ============= Project ID =============
 // 从 Reown Dashboard (https://dashboard.reown.com) 获取
 export const APPKIT_PROJECT_ID = 'aee7e021e1d2b5d8e9ec92a4c7e78464';
 
@@ -115,8 +112,8 @@ export function getContractAddress(tokenSymbol: string, _chainId?: number): stri
 // ============= 链 ID =============
 
 export const CHAIN_IDS = {
-  ETHEREUM_MAINNET: EVM_CHAIN_IDS.ETHEREUM,
-  SEPOLIA: EVM_CHAIN_IDS.ETHEREUM_SEPOLIA,
+  ETHEREUM_MAINNET: 1,
+  SEPOLIA: 11155111,
 } as const;
 
 /**
