@@ -35,6 +35,7 @@ import {
   WriteReviewDialog,
   SellerDigitalDeliveryStatus,
   OrderShipment,
+  getDigitalDeliveryTimestamp,
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
@@ -132,6 +133,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     counterparty,
     chatParticipants,
     isActionLoading,
+    isTransitioning,
     executeConfirmAction,
     showReviewDialog,
     reviewProductTitle,
@@ -648,10 +650,20 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           )}
 
           {/* 2b. Buyer digital downloads — License keys, file links, etc. */}
-          {displayOrder.userRole === 'buyer' && <BuyerDigitalAssetsSection orderId={orderId} />}
+          {displayOrder.userRole === 'buyer' && (
+            <BuyerDigitalAssetsSection
+              orderId={orderId}
+              sellerPeerID={displayOrder.vendor.peerID}
+              deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+            />
+          )}
 
           {displayOrder.shipments && displayOrder.shipments.length > 0 && (
-            <OrderShipment shipments={displayOrder.shipments} />
+            <OrderShipment
+              shipments={displayOrder.shipments}
+              orderId={orderId}
+              userRole={displayOrder.userRole}
+            />
           )}
 
           {/* 3. Order summary — total, shipping, status badge */}
@@ -868,6 +880,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           digitalDeliveryStatus={sellerDigitalDelivery.status}
           canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
           manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
+          isTransitioning={isTransitioning}
           onAction={handleOrderAction}
         />
       )}

@@ -29,6 +29,7 @@ import {
   WriteReviewDialog,
   SellerDigitalDeliveryStatus,
   OrderShipment,
+  getDigitalDeliveryTimestamp,
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
@@ -78,6 +79,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     currentUserPeerID,
     chatParticipants,
     isActionLoading,
+    isTransitioning,
     executeConfirmAction,
     showReviewDialog,
     reviewProductTitle,
@@ -546,11 +548,21 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 )}
 
                 {displayOrder.userRole === 'buyer' && (
-                  <BuyerDigitalAssetsSection orderId={orderId} className="mb-4" />
+                  <BuyerDigitalAssetsSection
+                    orderId={orderId}
+                    sellerPeerID={displayOrder.vendor.peerID}
+                    deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+                    className="mb-4"
+                  />
                 )}
 
                 {displayOrder.shipments && displayOrder.shipments.length > 0 && (
-                  <OrderShipment shipments={displayOrder.shipments} className="mb-4" />
+                  <OrderShipment
+                    shipments={displayOrder.shipments}
+                    orderId={orderId}
+                    userRole={displayOrder.userRole}
+                    className="mb-4"
+                  />
                 )}
 
                 <OrderSummaryCard
@@ -670,6 +682,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           digitalDeliveryStatus={sellerDigitalDelivery.status}
           canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
           manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
+          isTransitioning={isTransitioning}
           onAction={handleOrderAction}
         />
       )}
