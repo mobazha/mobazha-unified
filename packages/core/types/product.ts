@@ -260,6 +260,7 @@ export interface ProductRating {
   deliverySpeed?: number;
   customerService?: number;
   review?: string;
+  imageHashes?: string[];
   anonymous?: boolean;
   buyerID?: {
     peerID: string;
@@ -287,6 +288,7 @@ export interface RatingDetail {
   timestamp: string;
   overall: number;
   review?: string;
+  imageHashes?: string[];
   anonymous?: boolean;
   buyerID?: {
     peerID: string;

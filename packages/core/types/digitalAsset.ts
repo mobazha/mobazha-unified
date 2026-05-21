@@ -105,6 +105,28 @@ export interface BuyerAssetEntry {
   restrictedReason?: string;
 }
 
+export type DigitalDeliveryOrderStatus =
+  | 'not_digital'
+  | 'ready'
+  | 'delivered'
+  | 'manual_required'
+  | 'pending'
+  | 'restricted';
+
+export interface DigitalDeliveryStatus {
+  orderId: string;
+  isDigitalOrder: boolean;
+  status: DigitalDeliveryOrderStatus;
+  assetCount: number;
+  grantCount: number;
+  accessibleGrantCount: number;
+  deliveryURL?: string;
+  manualFallbackAllowed: boolean;
+  reason?: string;
+  listingSlugs?: string[];
+  preconfiguredAssetHint: boolean;
+}
+
 /**
  * Public license validation result —
  * POST /v1/stores/{storeID}/licenses/validate.

@@ -11,6 +11,9 @@ import {
   fiatApi,
   onWebSocketMessage,
   useOrderAction,
+  digitalAssetsApi,
+  CONTRACT_TYPES,
+  type DigitalDeliveryStatus,
   type WebSocketMessage,
   queryKeys,
 } from '@mobazha/core';
@@ -84,6 +87,19 @@ export interface UseOrderDetailPageReturn {
     contractType?: string;
     blockchain?: string;
     onSuccess: () => void;
+  };
+  sellerDigitalDelivery: {
+    isDigitalOrder: boolean;
+    listingSlug?: string;
+    isLoading: boolean;
+    isSyncing: boolean;
+    assetCount: number;
+    hasPreconfiguredAssets: boolean;
+    manualFallbackAllowed: boolean;
+    canSyncDelivery: boolean;
+    status: DigitalDeliveryStatus['status'] | null;
+    error: string | null;
+    syncDelivery: () => Promise<boolean>;
   };
 }
 
@@ -457,6 +473,159 @@ export function useOrderDetailPage(
     [orderId, coreOrder, refetch]
   );
 
+  const sellerDigitalListingSlug = useMemo(
+    () =>
+      (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing?.slug ||
+      displayOrder?.slug ||
+      '',
+    [coreOrder, displayOrder?.slug]
+  );
+
+  const isSellerDigitalOrder =
+    displayOrder?.userRole === 'seller' &&
+    (shipOrderProps.contractType === CONTRACT_TYPES.DIGITAL_GOOD ||
+      displayOrder?.contractType === CONTRACT_TYPES.DIGITAL_GOOD);
+
+  const [sellerDigitalDeliveryState, setSellerDigitalDeliveryState] = useState<{
+    loading: boolean;
+    syncing: boolean;
+    status: DigitalDeliveryStatus | null;
+    error: string | null;
+  }>({
+    loading: false,
+    syncing: false,
+    status: null,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!isSellerDigitalOrder) {
+      setSellerDigitalDeliveryState(prev =>
+        prev.loading || prev.status || prev.error
+          ? { loading: false, syncing: prev.syncing, status: null, error: null }
+          : prev
+      );
+      return;
+    }
+
+    let cancelled = false;
+    setSellerDigitalDeliveryState(prev => ({ ...prev, loading: true, error: null }));
+
+    digitalAssetsApi
+      .getDigitalDeliveryStatus(orderId)
+      .then(status => {
+        if (cancelled) return;
+        setSellerDigitalDeliveryState(prev => ({
+          ...prev,
+          loading: false,
+          status,
+          error: null,
+        }));
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setSellerDigitalDeliveryState(prev => ({
+          ...prev,
+          loading: false,
+          status: null,
+          error: err instanceof Error ? err.message : t('common.unknownError'),
+        }));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSellerDigitalOrder, orderId, t]);
+
+  const syncDigitalDelivery = useCallback(async (): Promise<boolean> => {
+    const deliveryStatus = sellerDigitalDeliveryState.status;
+    if (!isSellerDigitalOrder || deliveryStatus?.status !== 'delivered') {
+      return false;
+    }
+
+    setSellerDigitalDeliveryState(prev => ({ ...prev, syncing: true }));
+    try {
+      const itemCount = Math.max(displayOrder?.items?.length || 0, 1);
+      const result = await ordersApi.shipOrder({
+        orderID: orderId,
+        shipments: Array.from({ length: itemCount }, (_, itemIndex) => ({
+          itemIndex,
+          digitalDelivery: {
+            url: `/v1/orders/${orderId}/digital-assets`,
+          },
+        })),
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || t('order.digitalDelivery.syncFailed'));
+      }
+
+      toast({
+        title: t('order.digitalDelivery.syncSuccess'),
+        description: t('order.digitalDelivery.syncSuccessDesc'),
+      });
+      setSellerDigitalDeliveryState(prev => ({
+        ...prev,
+        status: prev.status
+          ? {
+              ...prev.status,
+              status: 'delivered',
+              deliveryURL: prev.status.deliveryURL || `/v1/orders/${orderId}/digital-assets`,
+              manualFallbackAllowed: false,
+            }
+          : prev.status,
+      }));
+      setTimeout(() => refetch(), 500);
+      return true;
+    } catch (err) {
+      toast({
+        title: t('order.actions.error'),
+        description: err instanceof Error ? err.message : t('order.digitalDelivery.syncFailed'),
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setSellerDigitalDeliveryState(prev => ({ ...prev, syncing: false }));
+    }
+  }, [
+    displayOrder?.items?.length,
+    isSellerDigitalOrder,
+    orderId,
+    refetch,
+    sellerDigitalDeliveryState.status,
+    t,
+    toast,
+  ]);
+
+  const sellerDigitalDelivery = useMemo(() => {
+    const deliveryStatus = sellerDigitalDeliveryState.status;
+    const assetCount = deliveryStatus?.assetCount || 0;
+    const hasPreconfiguredAssets =
+      Boolean(deliveryStatus?.preconfiguredAssetHint) || assetCount > 0;
+    const canSyncDelivery = deliveryStatus?.status === 'delivered';
+    return {
+      isDigitalOrder: Boolean(isSellerDigitalOrder),
+      listingSlug: sellerDigitalListingSlug || deliveryStatus?.listingSlugs?.[0] || undefined,
+      isLoading: sellerDigitalDeliveryState.loading,
+      isSyncing: sellerDigitalDeliveryState.syncing,
+      assetCount,
+      hasPreconfiguredAssets,
+      manualFallbackAllowed: deliveryStatus?.manualFallbackAllowed === true,
+      canSyncDelivery,
+      status: deliveryStatus?.status || null,
+      error: sellerDigitalDeliveryState.error,
+      syncDelivery: syncDigitalDelivery,
+    };
+  }, [
+    isSellerDigitalOrder,
+    sellerDigitalDeliveryState.error,
+    sellerDigitalDeliveryState.loading,
+    sellerDigitalDeliveryState.status,
+    sellerDigitalDeliveryState.syncing,
+    sellerDigitalListingSlug,
+    syncDigitalDelivery,
+  ]);
+
   return {
     displayOrder,
     coreOrder,
@@ -481,5 +650,6 @@ export function useOrderDetailPage(
     sendMessage,
     acceptOrderProps,
     shipOrderProps,
+    sellerDigitalDelivery,
   };
 }

@@ -6,7 +6,7 @@ import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { MessageCircle, Package, MapPin, ExternalLink, Printer } from 'lucide-react';
+import { MessageCircle, Package, ExternalLink, Printer } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
@@ -31,7 +31,10 @@ import {
   AcceptOrderDialog,
   ShipOrderDialog,
   OrderConfirmDialog,
+  OrderRating,
   WriteReviewDialog,
+  SellerDigitalDeliveryStatus,
+  OrderShipment,
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
@@ -141,6 +144,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     sendMessage,
     acceptOrderProps,
     shipOrderProps,
+    sellerDigitalDelivery,
   } = useOrderDetailPage(orderId, viewingContext);
 
   // NOTE (MVP-1 partial migration): `haptic` has moved to the platform-abstract
@@ -225,6 +229,40 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setConfirmDialog('decline');
           break;
         case 'Ship':
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.isLoading) {
+            toast({
+              title: t('order.digitalDelivery.checking'),
+            });
+            break;
+          }
+          if (
+            sellerDigitalDelivery.isDigitalOrder &&
+            !sellerDigitalDelivery.status &&
+            sellerDigitalDelivery.error
+          ) {
+            toast({
+              title: t('order.digitalDelivery.syncFailed'),
+              description: sellerDigitalDelivery.error,
+              variant: 'destructive',
+            });
+            haptic.error();
+            break;
+          }
+          if (sellerDigitalDelivery.canSyncDelivery) {
+            void sellerDigitalDelivery.syncDelivery();
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.manualFallbackAllowed) {
+            setShowShipDialog(true);
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder) {
+            toast({
+              title: t('order.digitalDelivery.pendingTitle'),
+              description: t('order.digitalDelivery.pendingDesc'),
+            });
+            break;
+          }
           setShowShipDialog(true);
           break;
         case 'Refund':
@@ -253,7 +291,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           break;
       }
     },
-    [router, orderId, executeConfirmAction, displayOrder]
+    [router, orderId, executeConfirmAction, displayOrder, sellerDigitalDelivery, t, toast, haptic]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -598,8 +636,22 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           {/* 2. Product card (vendor merged inline) */}
           <OrderProductCard displayOrder={displayOrder} />
 
+          {displayOrder.userRole === 'seller' && (
+            <SellerDigitalDeliveryStatus
+              {...sellerDigitalDelivery}
+              canSyncDelivery={
+                coreOrder?.state === 'AWAITING_SHIPMENT' && sellerDigitalDelivery.canSyncDelivery
+              }
+              onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+            />
+          )}
+
           {/* 2b. Buyer digital downloads — License keys, file links, etc. */}
           {displayOrder.userRole === 'buyer' && <BuyerDigitalAssetsSection orderId={orderId} />}
+
+          {displayOrder.shipments && displayOrder.shipments.length > 0 && (
+            <OrderShipment shipments={displayOrder.shipments} />
+          )}
 
           {/* 3. Order summary — total, shipping, status badge */}
           <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
@@ -687,6 +739,22 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                   : undefined
               }
               disputeFiled={hasAfterSaleDispute}
+            />
+          )}
+
+          {displayOrder.buyerRating && (
+            <OrderRating
+              rating={displayOrder.buyerRating}
+              reviewer={
+                displayOrder.buyer?.peerID
+                  ? {
+                      peerID: displayOrder.buyer.peerID,
+                      name: displayOrder.buyer.name,
+                      avatar: displayOrder.buyer.avatar,
+                    }
+                  : undefined
+              }
+              timestamp={displayOrder.buyerRating.timestamp}
             />
           )}
 
@@ -794,6 +862,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           isShipped={isOrderShipped(coreOrder)}
           paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          contractType={shipOrderProps.contractType}
+          hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
+          digitalDeliveryStatus={sellerDigitalDelivery.status}
+          canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+          manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
           onAction={handleOrderAction}
         />
       )}
@@ -835,6 +908,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         orderId={shipOrderProps.orderId}
         contractType={shipOrderProps.contractType}
         blockchain={shipOrderProps.blockchain}
+        itemCount={displayOrder?.items?.length || 1}
         onSuccess={shipOrderProps.onSuccess}
       />
 

@@ -383,12 +383,7 @@ export function useOrderActions() {
     invalidateOrders
   );
   const ship = useMutationAction(
-    (p: {
-      orderID: string;
-      physicalDelivery?: { shipper: string; trackingNumber: string };
-      digitalDelivery?: { url?: string; password?: string };
-      note?: string;
-    }) => ordersApi.shipOrder(p),
+    (p: Parameters<typeof ordersApi.shipOrder>[0]) => ordersApi.shipOrder(p),
     invalidateOrders
   );
   const complete = useMutationAction(
@@ -429,12 +424,7 @@ export function useOrderActions() {
     [confirm]
   );
   const shipOrder = useCallback(
-    (params: {
-      orderID: string;
-      physicalDelivery?: { shipper: string; trackingNumber: string };
-      digitalDelivery?: { url?: string; password?: string };
-      note?: string;
-    }) => ship.execute(params),
+    (params: Parameters<typeof ordersApi.shipOrder>[0]) => ship.execute(params),
     [ship]
   );
   const completeOrder = useCallback(

@@ -159,4 +159,66 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.chainId).toBe(11155111);
     expect(order?.paymentProgress?.expectedAmountFormatted).toBe('0.007018');
   });
+
+  it('exposes manual digital delivery details from order shipments', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'SHIPPED',
+        contract: {
+          ...buildOrder({}).contract,
+          orderOpen: {
+            ...buildOrder({}).contract.orderOpen,
+            listings: [
+              {
+                listing: {
+                  slug: 'listing-1',
+                  metadata: {
+                    contractType: 'DIGITAL_GOOD',
+                    pricingCurrency: { code: 'USD', divisibility: 2 },
+                  },
+                  item: {
+                    title: 'Digital Product',
+                    price: 10000,
+                    images: [],
+                  },
+                  vendorID: { peerID: 'vendor-peer', name: 'Vendor' },
+                },
+              },
+            ],
+          },
+          orderConfirmation: {
+            timestamp: '2026-05-15T00:05:00Z',
+          },
+          orderShipments: [
+            {
+              timestamp: '2026-05-15T00:10:00Z',
+              shipments: [
+                {
+                  itemIndex: 0,
+                  digitalDelivery: {
+                    url: 'https://example.com/download',
+                    password: 'secret',
+                  },
+                  note: 'Use this link within 7 days.',
+                },
+              ],
+            },
+          ],
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.shipments).toEqual([
+      {
+        type: 'digital',
+        timestamp: '2026-05-15T00:10:00Z',
+        itemIndex: 0,
+        fileUrl: 'https://example.com/download',
+        password: 'secret',
+        note: 'Use this link within 7 days.',
+      },
+    ]);
+  });
 });

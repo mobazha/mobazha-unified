@@ -55,6 +55,8 @@ export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDi
 
 // Review
 export { WriteReviewDialog } from './WriteReviewDialog';
+export { OrderRating } from './OrderRating';
+export type { OrderRatingProps, RatingData, ReviewerInfo } from './OrderRating';
 
 // Packing Slip
 export { PackingSlipDialog } from './PackingSlipDialog';
@@ -73,6 +75,10 @@ export * from './cards';
 // Digital assets (buyer entitlement portal)
 export { BuyerDigitalAssetsSection } from './BuyerDigitalAssetsSection';
 export type { BuyerDigitalAssetsSectionProps } from './BuyerDigitalAssetsSection';
+export { SellerDigitalDeliveryStatus } from './SellerDigitalDeliveryStatus';
+export type { SellerDigitalDeliveryStatusProps } from './SellerDigitalDeliveryStatus';
+export { OrderShipment } from './OrderShipment';
+export type { OrderShipmentProps } from './OrderShipment';
 
 // Selectors
 export { ReceivingAccountSelector } from './ReceivingAccountSelector';

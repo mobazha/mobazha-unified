@@ -7,6 +7,7 @@ import {
   getPrimaryAction,
   getSecondaryActions,
   getActionButtonConfig,
+  useI18n,
   type OrderAction,
   type UserRole,
   type OrderState,
@@ -21,6 +22,11 @@ export interface OrderActionSheetProps {
   paymentMethod?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
+  contractType?: string;
+  hasPreconfiguredDigitalAssets?: boolean;
+  digitalDeliveryStatus?: string | null;
+  canSyncDigitalDelivery?: boolean;
+  manualDigitalFallbackAllowed?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -39,9 +45,15 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   paymentMethod,
   hasRated,
   inAfterSaleWindow = false,
+  contractType,
+  hasPreconfiguredDigitalAssets = false,
+  digitalDeliveryStatus,
+  canSyncDigitalDelivery = false,
+  manualDigitalFallbackAllowed = false,
   onAction,
   className,
 }: OrderActionSheetProps) {
+  const { t } = useI18n();
   const actions = useMemo(
     () =>
       getOrderActions(orderState, userRole, {
@@ -60,11 +72,56 @@ export const OrderActionSheet = memo(function OrderActionSheet({
     [actions]
   );
   const primaryConfig = useMemo(
-    () => (primaryAction ? getActionButtonConfig(primaryAction, userRole) : null),
-    [primaryAction, userRole]
+    () =>
+      primaryAction
+        ? getActionButtonConfig(primaryAction, userRole, {
+            contractType,
+            hasPreconfiguredDigitalAssets,
+            digitalDeliveryStatus,
+            canSyncDigitalDelivery,
+            manualDigitalFallbackAllowed,
+          })
+        : null,
+    [
+      primaryAction,
+      userRole,
+      contractType,
+      hasPreconfiguredDigitalAssets,
+      digitalDeliveryStatus,
+      canSyncDigitalDelivery,
+      manualDigitalFallbackAllowed,
+    ]
   );
 
   if (actions.length === 0) return null;
+
+  const getActionLabel = (action: OrderAction, fallback: string): string => {
+    if (action === 'Ship' && contractType === 'DIGITAL_GOOD') {
+      if (canSyncDigitalDelivery) {
+        return t('order.actions.syncDelivery');
+      }
+      if (manualDigitalFallbackAllowed) {
+        return t('order.actions.deliverDigital');
+      }
+      return t('order.actions.deliveryPending');
+    }
+
+    const labelMap: Partial<Record<OrderAction, string>> = {
+      Pay: t('order.actions.pay'),
+      Cancel: t('order.actions.cancel'),
+      Dispute: t('order.actions.dispute'),
+      AfterSaleDispute: t('order.actions.reportIssue'),
+      Complete: t('order.actions.complete'),
+      WriteReview: t('order.actions.writeReview'),
+      Accept: t('order.actions.accept'),
+      Decline: t('order.actions.decline'),
+      Refund: t('order.actions.refund'),
+      Claim: t('order.actions.claim'),
+      AcceptPayout: t('order.actions.acceptPayout'),
+    };
+
+    return labelMap[action] || fallback;
+  };
 
   return (
     <div
@@ -76,14 +133,20 @@ export const OrderActionSheet = memo(function OrderActionSheet({
           variant={primaryConfig.variant as 'default' | 'destructive' | 'outline'}
           className="w-full h-12 text-[15px] font-semibold mb-2"
         >
-          {primaryConfig.label}
+          {getActionLabel(primaryAction, primaryConfig.label)}
         </Button>
       )}
 
       {secondaryActions.length > 0 && (
         <div className="flex gap-2">
           {secondaryActions.map(action => {
-            const config = getActionButtonConfig(action, userRole);
+            const config = getActionButtonConfig(action, userRole, {
+              contractType,
+              hasPreconfiguredDigitalAssets,
+              digitalDeliveryStatus,
+              canSyncDigitalDelivery,
+              manualDigitalFallbackAllowed,
+            });
             return (
               <Button
                 key={action}
@@ -92,7 +155,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
                 size="sm"
                 className="flex-1 h-10 text-sm"
               >
-                {config.label}
+                {getActionLabel(action, config.label)}
               </Button>
             );
           })}

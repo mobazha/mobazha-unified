@@ -684,11 +684,14 @@ export async function executeSettlementAction(payload: {
  */
 export async function shipOrder(payload: {
   orderID: string;
-  physicalDelivery?: { shipper: string; trackingNumber: string };
-  digitalDelivery?: { url?: string; password?: string };
-  note?: string;
-  itemIndex?: number;
   receivingAccountID?: number;
+  shipments: Array<{
+    physicalDelivery?: { shipper: string; trackingNumber: string };
+    digitalDelivery?: { url?: string; password?: string };
+    cryptocurrencyDelivery?: { transactionID: string };
+    note?: string;
+    itemIndex?: number;
+  }>;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     await authPost<Record<string, unknown>>(NODE_API.ORDER_SHIP(payload.orderID), payload);

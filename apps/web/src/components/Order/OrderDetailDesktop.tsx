@@ -25,7 +25,10 @@ import {
   AcceptOrderDialog,
   ShipOrderDialog,
   OrderConfirmDialog,
+  OrderRating,
   WriteReviewDialog,
+  SellerDigitalDeliveryStatus,
+  OrderShipment,
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
@@ -87,6 +90,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     sendMessage,
     acceptOrderProps,
     shipOrderProps,
+    sellerDigitalDelivery,
   } = useOrderDetailPage(orderId, viewingContext);
 
   // --- UI-only state ---
@@ -153,6 +157,39 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setConfirmDialog('decline');
           break;
         case 'Ship':
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.isLoading) {
+            toast({
+              title: t('order.digitalDelivery.checking'),
+            });
+            break;
+          }
+          if (
+            sellerDigitalDelivery.isDigitalOrder &&
+            !sellerDigitalDelivery.status &&
+            sellerDigitalDelivery.error
+          ) {
+            toast({
+              title: t('order.digitalDelivery.syncFailed'),
+              description: sellerDigitalDelivery.error,
+              variant: 'destructive',
+            });
+            break;
+          }
+          if (sellerDigitalDelivery.canSyncDelivery) {
+            void sellerDigitalDelivery.syncDelivery();
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.manualFallbackAllowed) {
+            setShowShipDialog(true);
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder) {
+            toast({
+              title: t('order.digitalDelivery.pendingTitle'),
+              description: t('order.digitalDelivery.pendingDesc'),
+            });
+            break;
+          }
           setShowShipDialog(true);
           break;
         case 'Refund':
@@ -181,7 +218,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           break;
       }
     },
-    [router, orderId, executeConfirmAction, displayOrder]
+    [router, orderId, executeConfirmAction, displayOrder, sellerDigitalDelivery, t, toast]
   );
 
   const handleFiatRefund = useCallback(
@@ -461,6 +498,23 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   />
                 )}
 
+                {displayOrder.buyerRating && (
+                  <OrderRating
+                    rating={displayOrder.buyerRating}
+                    reviewer={
+                      displayOrder.buyer?.peerID
+                        ? {
+                            peerID: displayOrder.buyer.peerID,
+                            name: displayOrder.buyer.name,
+                            avatar: displayOrder.buyer.avatar,
+                          }
+                        : undefined
+                    }
+                    timestamp={displayOrder.buyerRating.timestamp}
+                    className="mb-4"
+                  />
+                )}
+
                 {displayOrder.afterSaleDispute && (
                   <AfterSaleDisputeCard
                     dispute={displayOrder.afterSaleDispute}
@@ -476,8 +530,24 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
 
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
 
+                {displayOrder.userRole === 'seller' && (
+                  <SellerDigitalDeliveryStatus
+                    {...sellerDigitalDelivery}
+                    canSyncDelivery={
+                      coreOrder?.state === 'AWAITING_SHIPMENT' &&
+                      sellerDigitalDelivery.canSyncDelivery
+                    }
+                    onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+                    className="mb-4"
+                  />
+                )}
+
                 {displayOrder.userRole === 'buyer' && (
                   <BuyerDigitalAssetsSection orderId={orderId} className="mb-4" />
+                )}
+
+                {displayOrder.shipments && displayOrder.shipments.length > 0 && (
+                  <OrderShipment shipments={displayOrder.shipments} className="mb-4" />
                 )}
 
                 <OrderSummaryCard
@@ -592,6 +662,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           paymentCoin={coreOrder?.contract?.paymentSent?.coin}
           hasRated={displayOrder.hasRated}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          contractType={shipOrderProps.contractType}
+          hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
+          digitalDeliveryStatus={sellerDigitalDelivery.status}
+          canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+          manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
           onAction={handleOrderAction}
         />
       )}
@@ -633,6 +708,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         orderId={shipOrderProps.orderId}
         contractType={shipOrderProps.contractType}
         blockchain={shipOrderProps.blockchain}
+        itemCount={displayOrder?.items?.length || 1}
         onSuccess={shipOrderProps.onSuccess}
       />
 

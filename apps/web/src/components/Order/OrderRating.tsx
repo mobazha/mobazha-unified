@@ -4,13 +4,16 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { VStack, HStack } from '@/components/layouts';
-import { useI18n } from '@mobazha/core';
+import { ReviewImageGallery } from '@/components/Review/ReviewImageGallery';
+import { getImageUrl, useI18n } from '@mobazha/core';
 import { formatOrderDate } from './utils';
 
 export interface RatingData {
   overall: number;
   review?: string;
   anonymous?: boolean;
+  imageHashes?: string[];
+  imageUrls?: string[];
 }
 
 export interface ReviewerInfo {
@@ -85,6 +88,10 @@ export const OrderRating: React.FC<OrderRatingProps> = ({
     : reviewer?.name ||
       reviewer?.handle ||
       (reviewer?.peerID ? `${reviewer.peerID.slice(0, 8)}...` : t('product.anonymous'));
+  const imageUrls =
+    rating.imageUrls ||
+    rating.imageHashes?.map(hash => getImageUrl(hash) || '').filter(Boolean) ||
+    [];
 
   return (
     <Card className={`p-4 sm:p-6 ${className}`}>
@@ -132,6 +139,13 @@ export const OrderRating: React.FC<OrderRatingProps> = ({
             <p className="text-sm text-foreground whitespace-pre-wrap">{rating.review}</p>
           </div>
         )}
+
+        <ReviewImageGallery
+          imageUrls={imageUrls}
+          altPrefix={`${reviewerName} review image`}
+          size="md"
+          showLabel={imageUrls.length > 1}
+        />
       </VStack>
     </Card>
   );

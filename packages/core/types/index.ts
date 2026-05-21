@@ -120,6 +120,7 @@ export type {
   DisplayOrderProtection,
   DisplayAfterSaleDispute,
   DisplayModerator,
+  DisplayShipmentInfo,
   DisplayTimelineEvent,
   DisplayDispute,
   DisplayFiatDispute,
@@ -444,6 +445,8 @@ export { FULFILLMENT_PROVIDERS } from './fulfillment';
 export type {
   DigitalAssetType,
   BuyerAssetStatus,
+  DigitalDeliveryOrderStatus,
+  DigitalDeliveryStatus,
   DigitalAssetInfo,
   AssetUpdateInput,
   LicenseKeyPoolStats,

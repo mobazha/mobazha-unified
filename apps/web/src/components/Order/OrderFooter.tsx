@@ -28,6 +28,11 @@ export interface OrderFooterProps {
   paymentCoin?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
+  contractType?: string;
+  hasPreconfiguredDigitalAssets?: boolean;
+  digitalDeliveryStatus?: string | null;
+  canSyncDigitalDelivery?: boolean;
+  manualDigitalFallbackAllowed?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -48,6 +53,11 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   paymentCoin,
   hasRated,
   inAfterSaleWindow = false,
+  contractType,
+  hasPreconfiguredDigitalAssets = false,
+  digitalDeliveryStatus,
+  canSyncDigitalDelivery = false,
+  manualDigitalFallbackAllowed = false,
   onAction,
   className = '',
 }) => {
@@ -85,7 +95,14 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       WriteReview: t('order.actions.writeReview'),
       Accept: t('order.actions.accept'),
       Decline: t('order.actions.decline'),
-      Ship: t('order.actions.ship'),
+      Ship:
+        contractType === 'DIGITAL_GOOD'
+          ? canSyncDigitalDelivery
+            ? t('order.actions.syncDelivery')
+            : manualDigitalFallbackAllowed
+              ? t('order.actions.deliverDigital')
+              : t('order.actions.deliveryPending')
+          : t('order.actions.ship'),
       Refund: t('order.actions.refund'),
       Claim: t('order.actions.claim'),
       AcceptPayout: t('order.actions.acceptPayout'),
@@ -141,7 +158,13 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
 
   // 渲染操作按钮
   const renderActionButton = (action: OrderAction, isPrimary: boolean) => {
-    const config = getActionButtonConfig(action, userRole);
+    const config = getActionButtonConfig(action, userRole, {
+      contractType,
+      hasPreconfiguredDigitalAssets,
+      digitalDeliveryStatus,
+      canSyncDigitalDelivery,
+      manualDigitalFallbackAllowed,
+    });
 
     // 按钮变体映射
     const variantMap: Record<
