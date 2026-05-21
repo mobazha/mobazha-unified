@@ -926,6 +926,7 @@ export const pt: PartialTranslationResource = {
       acceptFailed: 'Failed to accept order',
       operationFailed: 'Operation failed',
       walletConnectionRequired: 'Wallet connection required',
+      updatingStatus: 'Atualizando o status do pedido...',
     },
     table: {
       orderId: 'ID do pedido',
@@ -1167,6 +1168,10 @@ export const pt: PartialTranslationResource = {
       trackShipment: 'Rastrear envio',
       copyTracking: 'Copiar código de rastreamento',
       downloadUrl: 'URL de download',
+      digitalAccess: 'Acesso digital',
+      viewDigitalDownloads: 'Ver downloads digitais',
+      managedDigitalDelivery:
+        'O acesso do comprador é gerenciado automaticamente por meio de downloads digitais.',
       password: 'Senha',
       transactionId: 'ID da transação',
       note: 'Observação',
@@ -1319,8 +1324,11 @@ export const pt: PartialTranslationResource = {
     },
     digital: {
       title: 'Downloads digitais',
+      deliveredAt: 'Entregue em {{date}}',
       loading: 'Carregando seus downloads…',
       loadError: 'Não foi possível carregar entregas digitais',
+      invalidPortalToken: 'Este link de acesso digital é inválido ou expirou',
+      downloadFailed: 'Falha ao baixar o ativo digital',
       download: 'Download',
       openLink: 'Abrir link',
       copiedToClipboard: '{{label}} copiado para a área de transferência',

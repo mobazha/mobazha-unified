@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useCallback, useState, useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -59,6 +59,7 @@ export interface UseOrderDetailPageReturn {
   chatParticipants: OrderChatParticipant[];
 
   isActionLoading: boolean;
+  isTransitioning: boolean;
   executeConfirmAction: (
     actionType: OrderConfirmType,
     refundParams?: { amount?: number; currency?: string; reason?: string }
@@ -121,6 +122,28 @@ export function useOrderDetailPage(
 
   const currentUser = useUserStore(state => state.profile);
   const currentUserPeerID = currentUser?.peerID || null;
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+
+  // Clear transitioning state when order state actually changes
+  const orderStateRef = useRef(coreOrder?.state);
+  useEffect(() => {
+    if (coreOrder?.state && coreOrder.state !== orderStateRef.current) {
+      orderStateRef.current = coreOrder.state;
+      setIsTransitioning(false);
+    }
+  }, [coreOrder?.state]);
+
+  // Safety timeout: clear transitioning after 30s if state never changes
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const timer = window.setTimeout(() => {
+      setIsTransitioning(false);
+      refetch();
+    }, 30000);
+    return () => window.clearTimeout(timer);
+  }, [isTransitioning, refetch]);
 
   // --- WebSocket real-time order updates ---
   useEffect(() => {
@@ -202,8 +225,6 @@ export function useOrderDetailPage(
   // --- Order action execution ---
 
   const { execute: executeOrderAction } = useOrderAction();
-  const [isActionLoading, setIsActionLoading] = useState(false);
-  const [showReviewDialog, setShowReviewDialog] = useState(false);
 
   const reviewProductTitle = useMemo(() => {
     const orderData = coreOrder as OrderContractData | null;
@@ -216,6 +237,7 @@ export function useOrderDetailPage(
       setIsActionLoading(true);
 
       const onSuccess = (title: string, desc: string) => {
+        setIsTransitioning(true);
         toast({ title, description: desc });
         setTimeout(() => refetch(), 500);
       };
@@ -294,6 +316,7 @@ export function useOrderDetailPage(
 
       const onSuccess = (title: string, desc: string) => {
         succeeded = true;
+        setIsTransitioning(true);
         toast({ title, description: desc });
         setTimeout(() => refetch(), 500);
       };
@@ -444,6 +467,7 @@ export function useOrderDetailPage(
   // --- Dialog props ---
 
   const handleAcceptOrderSuccess = useCallback(() => {
+    setIsTransitioning(true);
     queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.orders.sales() });
     queryClient.invalidateQueries({ queryKey: queryKeys.orders.purchases() });
@@ -660,6 +684,7 @@ export function useOrderDetailPage(
     counterparty,
     chatParticipants,
     isActionLoading,
+    isTransitioning,
     executeConfirmAction,
     showReviewDialog,
     reviewProductTitle,

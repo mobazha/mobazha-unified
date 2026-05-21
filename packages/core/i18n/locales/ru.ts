@@ -923,6 +923,7 @@ export const ru: PartialTranslationResource = {
       acceptFailed: 'Не удалось принять заказ',
       operationFailed: 'Операция не удалась',
       walletConnectionRequired: 'Требуется подключение кошелька',
+      updatingStatus: 'Обновляем статус заказа...',
     },
     table: {
       orderId: 'ID заказа',
@@ -1157,6 +1158,10 @@ export const ru: PartialTranslationResource = {
       trackShipment: 'Отследить отправление',
       copyTracking: 'Скопировать трек-номер',
       downloadUrl: 'Ссылка для скачивания',
+      digitalAccess: 'Цифровой доступ',
+      viewDigitalDownloads: 'Открыть цифровые загрузки',
+      managedDigitalDelivery:
+        'Доступ покупателя автоматически управляется через цифровые загрузки.',
       password: 'Пароль',
       transactionId: 'ID транзакции',
       note: 'Заметка',
@@ -1308,8 +1313,11 @@ export const ru: PartialTranslationResource = {
     },
     digital: {
       title: 'Цифровые загрузки',
+      deliveredAt: 'Доставлено {{date}}',
       loading: 'Загрузка загрузок…',
       loadError: 'Не удалось загрузить цифровые поставки.',
+      invalidPortalToken: 'Эта ссылка цифрового доступа недействительна или срок ее действия истек',
+      downloadFailed: 'Не удалось загрузить цифровой ресурс',
       download: 'Скачать',
       openLink: 'Открыть ссылку',
       copiedToClipboard: '{{label}} скопировано в буфер обмена.',

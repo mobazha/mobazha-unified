@@ -2,6 +2,7 @@
 
 import React, { memo, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import {
   getOrderActions,
   getPrimaryAction,
@@ -27,6 +28,7 @@ export interface OrderActionSheetProps {
   digitalDeliveryStatus?: string | null;
   canSyncDigitalDelivery?: boolean;
   manualDigitalFallbackAllowed?: boolean;
+  isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -50,6 +52,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   digitalDeliveryStatus,
   canSyncDigitalDelivery = false,
   manualDigitalFallbackAllowed = false,
+  isTransitioning = false,
   onAction,
   className,
 }: OrderActionSheetProps) {
@@ -93,7 +96,20 @@ export const OrderActionSheet = memo(function OrderActionSheet({
     ]
   );
 
-  if (actions.length === 0) return null;
+  if (actions.length === 0 && !isTransitioning) return null;
+
+  if (isTransitioning) {
+    return (
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ${className ?? ''}`}
+      >
+        <div className="flex items-center justify-center gap-2 h-12">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">{t('order.actions.updatingStatus')}</span>
+        </div>
+      </div>
+    );
+  }
 
   const getActionLabel = (action: OrderAction, fallback: string): string => {
     if (action === 'Ship' && contractType === 'DIGITAL_GOOD') {

@@ -22,7 +22,7 @@ import {
   publicGetWithHeaders,
   publicPost,
 } from './helpers';
-import { getAuthHeaders, getMyGatewayUrl } from './config';
+import { getAuthHeaders, getGatewayUrl, getMyGatewayUrl } from './config';
 import type {
   AssetUpdateInput,
   BuyerAssetEntry,
@@ -53,14 +53,14 @@ import type {
 export function getBuyerDigitalAssets(
   orderID: string,
   buyerPortalToken?: string,
-  urlExpirySec = 3600
+  urlExpirySec = 3600,
+  sellerPeerID?: string
 ): Promise<BuyerAssetEntry[]> {
   const query = new URLSearchParams({ urlExpirySec: String(urlExpirySec) });
   const path = `${NODE_API.ORDER_DIGITAL_ASSETS(orderID)}?${query.toString()}`;
-  return buyerPortalToken
-    ? publicGetWithHeaders<BuyerAssetEntry[]>(path, {
-        'X-Buyer-Portal-Token': buyerPortalToken,
-      })
+  const headers = digitalBuyerHeaders(buyerPortalToken, sellerPeerID);
+  return Object.keys(headers).length > 0
+    ? publicGetWithHeaders<BuyerAssetEntry[]>(path, headers)
     : nodeAuthGet<BuyerAssetEntry[]>(path);
 }
 
@@ -87,6 +87,77 @@ export function getDigitalDeliveryStatus(
  */
 export function getDigitalDownloadURL(signedURL: string): string {
   return signedURL;
+}
+
+export interface DigitalAssetDownloadResult {
+  blob: Blob;
+  filename: string;
+}
+
+export async function downloadBuyerDigitalAsset(
+  signedURL: string,
+  fallbackFilename: string,
+  buyerPortalToken?: string,
+  sellerPeerID?: string
+): Promise<DigitalAssetDownloadResult> {
+  const headers = digitalBuyerHeaders(buyerPortalToken, sellerPeerID);
+  const resp = await fetch(buildDigitalDownloadRequestURL(signedURL), {
+    headers: {
+      ...getAuthHeaders(),
+      ...headers,
+    },
+    credentials: 'include',
+  });
+  if (!resp.ok) {
+    throw new Error(`Download failed: ${resp.status} ${resp.statusText}`);
+  }
+  return {
+    blob: await resp.blob(),
+    filename: filenameFromHeaders(resp.headers, fallbackFilename),
+  };
+}
+
+export function triggerDigitalAssetBlobDownload(result: DigitalAssetDownloadResult): void {
+  const url = URL.createObjectURL(result.blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = result.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function digitalBuyerHeaders(
+  buyerPortalToken?: string,
+  sellerPeerID?: string
+): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (buyerPortalToken) {
+    headers['X-Buyer-Portal-Token'] = buyerPortalToken;
+  }
+  if (sellerPeerID) {
+    headers['X-Store-PeerID'] = sellerPeerID;
+  }
+  return headers;
+}
+
+function buildDigitalDownloadRequestURL(signedURL: string): string {
+  const trimmed = signedURL.trim();
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('/v1/')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('/')) {
+    return `${getGatewayUrl()}${trimmed}`;
+  }
+  return `${getGatewayUrl()}/${trimmed}`;
+}
+
+function filenameFromHeaders(headers: Headers, fallbackFilename: string): string {
+  const disposition = headers.get('Content-Disposition') ?? '';
+  const match = /filename="([^"]+)"/i.exec(disposition);
+  if (match && match[1]) return match[1];
+  return fallbackFilename || 'download.bin';
 }
 
 // =====================================================================

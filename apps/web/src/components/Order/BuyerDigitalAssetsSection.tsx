@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 export interface BuyerDigitalAssetsSectionProps {
   orderId: string;
   buyerPortalToken?: string;
+  sellerPeerID?: string;
+  deliveredAt?: string;
   className?: string;
 }
 
@@ -36,7 +38,6 @@ const STATUS_META: Record<
     color: string;
     bgColor: string;
     labelKey: string;
-    defaultLabel: string;
   }
 > = {
   active: {
@@ -44,35 +45,30 @@ const STATUS_META: Record<
     color: 'text-success',
     bgColor: 'bg-success/15',
     labelKey: 'order.digital.status.active',
-    defaultLabel: 'Available',
   },
   protected: {
     icon: CheckCircle2,
     color: 'text-success',
     bgColor: 'bg-success/15',
     labelKey: 'order.digital.status.protected',
-    defaultLabel: 'Available (protected)',
   },
   frozen: {
     icon: Lock,
     color: 'text-warning',
     bgColor: 'bg-warning/15',
     labelKey: 'order.digital.status.frozen',
-    defaultLabel: 'Temporarily paused',
   },
   revoked: {
     icon: ShieldOff,
     color: 'text-destructive',
     bgColor: 'bg-destructive/15',
     labelKey: 'order.digital.status.revoked',
-    defaultLabel: 'Access revoked',
   },
   expired: {
     icon: Clock,
     color: 'text-muted-foreground',
     bgColor: 'bg-muted',
     labelKey: 'order.digital.status.expired',
-    defaultLabel: 'Expired',
   },
 };
 
@@ -116,6 +112,8 @@ function isMissingEntitlementsError(err: unknown, hasBuyerPortalToken: boolean):
 export function BuyerDigitalAssetsSection({
   orderId,
   buyerPortalToken,
+  sellerPeerID,
+  deliveredAt,
   className,
 }: BuyerDigitalAssetsSectionProps) {
   const { t } = useI18n();
@@ -136,7 +134,7 @@ export function BuyerDigitalAssetsSection({
     setError(null);
 
     digitalAssetsApi
-      .getBuyerDigitalAssets(orderId, buyerPortalToken)
+      .getBuyerDigitalAssets(orderId, buyerPortalToken, 3600, sellerPeerID)
       .then(data => {
         if (cancelled) return;
         setAssets(Array.isArray(data) ? data : []);
@@ -155,12 +153,10 @@ export function BuyerDigitalAssetsSection({
         const status = (err as { status?: number })?.status;
         const message =
           buyerPortalToken && (status === 401 || status === 403)
-            ? t('order.digital.invalidPortalToken', {
-                defaultValue: 'This download link is invalid or has expired.',
-              })
+            ? t('order.digital.invalidPortalToken')
             : err instanceof Error
               ? err.message
-              : t('common.unknownError', { defaultValue: 'Unknown error' });
+              : t('common.unknownError');
         setError(message);
       })
       .finally(() => {
@@ -170,7 +166,7 @@ export function BuyerDigitalAssetsSection({
     return () => {
       cancelled = true;
     };
-  }, [orderId, buyerPortalToken, refreshKey, t]);
+  }, [orderId, buyerPortalToken, sellerPeerID, refreshKey, t]);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey(k => k + 1);
@@ -181,17 +177,15 @@ export function BuyerDigitalAssetsSection({
       try {
         await navigator.clipboard.writeText(text);
         toast({
-          title: t('common.copied', { defaultValue: 'Copied' }),
+          title: t('common.copied'),
           description: t('order.digital.copiedToClipboard', {
-            defaultValue: `${labelDefault} copied to clipboard`,
+            label: labelDefault,
           }),
         });
       } catch {
         toast({
-          title: t('common.error', { defaultValue: 'Error' }),
-          description: t('order.digital.copyFailed', {
-            defaultValue: 'Failed to copy to clipboard',
-          }),
+          title: t('common.error'),
+          description: t('order.digital.copyFailed'),
           variant: 'destructive',
         });
       }
@@ -207,13 +201,18 @@ export function BuyerDigitalAssetsSection({
   }
 
   return (
-    <Card className={cn('p-6', className)}>
+    <Card id="digital-downloads" className={cn('p-6 scroll-mt-24', className)}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Download className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">
-            {t('order.digital.title', { defaultValue: 'Digital downloads' })}
-          </h2>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <Download className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">{t('order.digital.title')}</h2>
+          </div>
+          {deliveredAt && (
+            <span className="text-xs text-muted-foreground ml-7">
+              {t('order.digital.deliveredAt', { date: new Date(deliveredAt).toLocaleString() })}
+            </span>
+          )}
         </div>
         {hasAssets && (
           <Button
@@ -222,7 +221,7 @@ export function BuyerDigitalAssetsSection({
             size="sm"
             onClick={handleRefresh}
             disabled={loading}
-            aria-label={t('common.refresh', { defaultValue: 'Refresh' })}
+            aria-label={t('common.refresh')}
           >
             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
           </Button>
@@ -232,9 +231,7 @@ export function BuyerDigitalAssetsSection({
       {loading && !assets && (
         <div className="flex items-center gap-2 py-6 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-sm">
-            {t('order.digital.loading', { defaultValue: 'Loading your downloads…' })}
-          </span>
+          <span className="text-sm">{t('order.digital.loading')}</span>
         </div>
       )}
 
@@ -242,9 +239,7 @@ export function BuyerDigitalAssetsSection({
         <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="font-medium">
-              {t('order.digital.loadError', { defaultValue: 'Could not load digital deliveries' })}
-            </p>
+            <p className="font-medium">{t('order.digital.loadError')}</p>
             <p className="text-xs opacity-80 mt-0.5">{error}</p>
             <Button
               type="button"
@@ -254,7 +249,7 @@ export function BuyerDigitalAssetsSection({
               onClick={handleRefresh}
             >
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
-              {t('common.retry', { defaultValue: 'Retry' })}
+              {t('common.retry')}
             </Button>
           </div>
         </div>
@@ -263,7 +258,13 @@ export function BuyerDigitalAssetsSection({
       {assets && assets.length > 0 && (
         <div className="space-y-3">
           {assets.map(asset => (
-            <DigitalAssetCard key={asset.assetId} asset={asset} onCopy={handleCopy} />
+            <DigitalAssetCard
+              key={asset.assetId}
+              asset={asset}
+              buyerPortalToken={buyerPortalToken}
+              sellerPeerID={sellerPeerID}
+              onCopy={handleCopy}
+            />
           ))}
         </div>
       )}
@@ -273,11 +274,20 @@ export function BuyerDigitalAssetsSection({
 
 interface DigitalAssetCardProps {
   asset: BuyerAssetEntry;
+  buyerPortalToken?: string;
+  sellerPeerID?: string;
   onCopy: (text: string, labelDefault: string) => void;
 }
 
-function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
+function DigitalAssetCard({
+  asset,
+  buyerPortalToken,
+  sellerPeerID,
+  onCopy,
+}: DigitalAssetCardProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
+  const [downloading, setDownloading] = useState(false);
   const meta = STATUS_META[asset.status] ?? STATUS_META.frozen;
   const StatusIcon = meta.icon;
   const accessible = asset.status === 'active' || asset.status === 'protected';
@@ -285,11 +295,11 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
   const typeLabel = useMemo(() => {
     switch (asset.assetType) {
       case 'file':
-        return t('digital.assetType.file', { defaultValue: 'File download' });
+        return t('digital.assetType.file');
       case 'link':
-        return t('digital.assetType.link', { defaultValue: 'Access link' });
+        return t('digital.assetType.link');
       case 'license_key':
-        return t('digital.assetType.license_key', { defaultValue: 'License key' });
+        return t('digital.assetType.license_key');
       default:
         return asset.assetType;
     }
@@ -297,6 +307,28 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
 
   const TypeIcon =
     asset.assetType === 'file' ? FileText : asset.assetType === 'link' ? ExternalLink : Key;
+
+  const handleDownload = useCallback(async () => {
+    if (!asset.downloadURL || downloading) return;
+    setDownloading(true);
+    try {
+      const result = await digitalAssetsApi.downloadBuyerDigitalAsset(
+        asset.downloadURL,
+        asset.fileName || 'download.bin',
+        buyerPortalToken,
+        sellerPeerID
+      );
+      digitalAssetsApi.triggerDigitalAssetBlobDownload(result);
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: err instanceof Error ? err.message : t('order.digital.downloadFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloading(false);
+    }
+  }, [asset.downloadURL, asset.fileName, buyerPortalToken, downloading, sellerPeerID, t, toast]);
 
   return (
     <div className="rounded-lg border border-border p-4 bg-card">
@@ -310,10 +342,10 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
             <span className="text-sm font-medium text-foreground truncate">
               {asset.fileName ||
                 (asset.assetType === 'link'
-                  ? t('digital.assetType.link', { defaultValue: 'Access link' })
+                  ? t('digital.assetType.link')
                   : asset.assetType === 'license_key'
-                    ? t('digital.assetType.license_key', { defaultValue: 'License key' })
-                    : t('digital.assetType.file', { defaultValue: 'File download' }))}
+                    ? t('digital.assetType.license_key')
+                    : t('digital.assetType.file'))}
             </span>
             <Badge variant="outline" className="text-xs">
               {typeLabel}
@@ -326,7 +358,7 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
               )}
             >
               <StatusIcon className="w-3 h-3" />
-              <span>{t(meta.labelKey, { defaultValue: meta.defaultLabel })}</span>
+              <span>{t(meta.labelKey)}</span>
             </div>
           </div>
 
@@ -337,14 +369,12 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
                 {t('order.digital.downloadsUsed', {
                   current: asset.downloadCount,
                   max: asset.maxDownloads,
-                  defaultValue: `${asset.downloadCount} / ${asset.maxDownloads} downloads used`,
                 })}
               </span>
             )}
             {asset.expiresAt && (
               <span>
                 {t('order.digital.expiresAt', {
-                  defaultValue: 'Access expires {{date}}',
                   date: new Date(asset.expiresAt).toLocaleString(),
                 })}
               </span>
@@ -360,12 +390,15 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
               type="button"
               variant="default"
               size="sm"
-              onClick={() => {
-                window.open(asset.downloadURL, '_blank', 'noopener,noreferrer');
-              }}
+              onClick={handleDownload}
+              disabled={downloading}
             >
-              <Download className="w-4 h-4 mr-1" />
-              {t('order.digital.download', { defaultValue: 'Download' })}
+              {downloading ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-1" />
+              )}
+              {t('order.digital.download')}
             </Button>
           )}
 
@@ -380,21 +413,16 @@ function DigitalAssetCard({ asset, onCopy }: DigitalAssetCardProps) {
                 }}
               >
                 <ExternalLink className="w-4 h-4 mr-1" />
-                {t('order.digital.openLink', { defaultValue: 'Open link' })}
+                {t('order.digital.openLink')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  onCopy(
-                    asset.deliveryURL as string,
-                    t('digital.assetType.link', { defaultValue: 'Link' })
-                  )
-                }
+                onClick={() => onCopy(asset.deliveryURL as string, t('digital.assetType.link'))}
               >
                 <Copy className="w-3.5 h-3.5 mr-1" />
-                {t('common.copy', { defaultValue: 'Copy' })}
+                {t('common.copy')}
               </Button>
             </div>
           )}
@@ -435,7 +463,6 @@ function LicenseKeyRow({ entry, onCopy }: LicenseKeyRowProps) {
             {t('order.digital.activationsUsed', {
               current: entry.activations,
               max: entry.maxActivations,
-              defaultValue: `${entry.activations} / ${entry.maxActivations} seats`,
             })}
           </span>
         )}
@@ -444,13 +471,8 @@ function LicenseKeyRow({ entry, onCopy }: LicenseKeyRowProps) {
         type="button"
         variant="ghost"
         size="sm"
-        onClick={() =>
-          onCopy(
-            entry.licenseKey,
-            t('digital.assetType.license_key', { defaultValue: 'License key' })
-          )
-        }
-        aria-label={t('common.copy', { defaultValue: 'Copy' })}
+        onClick={() => onCopy(entry.licenseKey, t('digital.assetType.license_key'))}
+        aria-label={t('common.copy')}
       >
         <Copy className="w-4 h-4" />
       </Button>

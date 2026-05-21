@@ -77,7 +77,7 @@ export { BuyerDigitalAssetsSection } from './BuyerDigitalAssetsSection';
 export type { BuyerDigitalAssetsSectionProps } from './BuyerDigitalAssetsSection';
 export { SellerDigitalDeliveryStatus } from './SellerDigitalDeliveryStatus';
 export type { SellerDigitalDeliveryStatusProps } from './SellerDigitalDeliveryStatus';
-export { OrderShipment } from './OrderShipment';
+export { OrderShipment, getDigitalDeliveryTimestamp } from './OrderShipment';
 export type { OrderShipmentProps } from './OrderShipment';
 
 // Selectors

@@ -939,6 +939,7 @@ export const zh: PartialTranslationResource = {
       acceptFailed: '接受订单失败',
       operationFailed: '操作失败',
       walletConnectionRequired: '需要连接钱包',
+      updatingStatus: '正在更新订单状态...',
     },
     table: {
       orderId: '订单号',
@@ -1181,6 +1182,9 @@ export const zh: PartialTranslationResource = {
       trackShipment: '追踪包裹',
       copyTracking: '复制物流单号',
       downloadUrl: '下载地址',
+      digitalAccess: '数字访问',
+      viewDigitalDownloads: '查看数字下载',
+      managedDigitalDelivery: '买家访问权限已通过数字下载自动管理。',
       password: '密码',
       transactionId: '交易ID',
       note: '备注',
@@ -1307,8 +1311,11 @@ export const zh: PartialTranslationResource = {
     // 数字下载 — 买家权益门户 (Supply Chain Phase 1.0)
     digital: {
       title: '数字下载',
+      deliveredAt: '{{date}} 交付',
       loading: '正在加载下载内容…',
       loadError: '无法加载数字交付内容',
+      invalidPortalToken: '此数字访问链接无效或已过期',
+      downloadFailed: '下载数字资产失败',
       download: '下载',
       openLink: '打开链接',
       copiedToClipboard: '{{label}} 已复制到剪贴板',

@@ -919,6 +919,7 @@ export const ja: PartialTranslationResource = {
       acceptFailed: '注文の承認に失敗しました',
       operationFailed: '操作に失敗しました',
       walletConnectionRequired: 'ウォレット接続が必要です',
+      updatingStatus: '注文ステータスを更新中...',
     },
     table: {
       orderId: '注文ID',
@@ -1149,6 +1150,10 @@ export const ja: PartialTranslationResource = {
       trackShipment: '配送を追跡',
       copyTracking: '追跡番号をコピー',
       downloadUrl: 'ダウンロードURL',
+      digitalAccess: 'デジタルアクセス',
+      viewDigitalDownloads: 'デジタルダウンロードを表示',
+      managedDigitalDelivery:
+        '購入者のアクセス権はデジタルダウンロードを通じて自動的に管理されます。',
       password: 'パスワード',
       transactionId: 'トランザクションID',
       note: 'メモ',
@@ -1300,8 +1305,11 @@ export const ja: PartialTranslationResource = {
     },
     digital: {
       title: 'デジタルダウンロード',
+      deliveredAt: '{{date}} に配信済み',
       loading: 'ダウンロードをロード中…',
       loadError: 'デジタル配信を読み込めませんでした',
+      invalidPortalToken: 'このデジタルアクセスリンクは無効か期限切れです',
+      downloadFailed: 'デジタルアセットのダウンロードに失敗しました',
       download: 'ダウンロード',
       openLink: 'リンクを開く',
       copiedToClipboard: '{{label}} がクリップボードにコピーされました',

@@ -1032,6 +1032,7 @@ export const en: TranslationResource = {
       acceptFailed: 'Failed to accept order',
       operationFailed: 'Operation failed',
       walletConnectionRequired: 'Wallet connection required',
+      updatingStatus: 'Updating order status...',
     },
     // Table headers
     table: {
@@ -1311,6 +1312,9 @@ export const en: TranslationResource = {
       trackShipment: 'Track shipment',
       copyTracking: 'Copy tracking number',
       downloadUrl: 'Download URL',
+      digitalAccess: 'Digital access',
+      viewDigitalDownloads: 'View digital downloads',
+      managedDigitalDelivery: 'Buyer access is managed automatically through digital downloads.',
       password: 'Password',
       transactionId: 'Transaction ID',
       note: 'Note',
@@ -1446,8 +1450,11 @@ export const en: TranslationResource = {
     // Digital downloads — buyer-facing entitlement portal (Supply Chain Phase 1.0)
     digital: {
       title: 'Digital downloads',
+      deliveredAt: 'Delivered {{date}}',
       loading: 'Loading your downloads…',
       loadError: 'Could not load digital deliveries',
+      invalidPortalToken: 'This digital access link is invalid or has expired',
+      downloadFailed: 'Failed to download digital asset',
       download: 'Download',
       openLink: 'Open link',
       copiedToClipboard: '{{label}} copied to clipboard',

@@ -925,6 +925,7 @@ export const es: PartialTranslationResource = {
       acceptFailed: 'Failed to accept order',
       operationFailed: 'Operation failed',
       walletConnectionRequired: 'Wallet connection required',
+      updatingStatus: 'Actualizando el estado del pedido...',
     },
     table: {
       orderId: 'ID del pedido',
@@ -1165,6 +1166,10 @@ export const es: PartialTranslationResource = {
       trackShipment: 'Rastrear envío',
       copyTracking: 'Copiar número de seguimiento',
       downloadUrl: 'URL de descarga',
+      digitalAccess: 'Acceso digital',
+      viewDigitalDownloads: 'Ver descargas digitales',
+      managedDigitalDelivery:
+        'El acceso del comprador se gestiona automáticamente mediante descargas digitales.',
       password: 'Contraseña',
       transactionId: 'ID de transacción',
       note: 'Nota',
@@ -1316,8 +1321,11 @@ export const es: PartialTranslationResource = {
     },
     digital: {
       title: 'Descargas digitales',
+      deliveredAt: 'Entregado el {{date}}',
       loading: 'Cargando tus descargas…',
       loadError: 'No se pudieron cargar entregas digitales',
+      invalidPortalToken: 'Este enlace de acceso digital no es válido o ha caducado',
+      downloadFailed: 'No se pudo descargar el recurso digital',
       download: 'Descargar',
       openLink: 'Abrir enlace',
       copiedToClipboard: '{{label}} copiado al portapapeles',

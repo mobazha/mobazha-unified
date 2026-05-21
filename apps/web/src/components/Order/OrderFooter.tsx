@@ -3,6 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/layouts';
+import { Loader2 } from 'lucide-react';
 import {
   useI18n,
   getOrderActions,
@@ -33,6 +34,7 @@ export interface OrderFooterProps {
   digitalDeliveryStatus?: string | null;
   canSyncDigitalDelivery?: boolean;
   manualDigitalFallbackAllowed?: boolean;
+  isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
   className?: string;
 }
@@ -58,6 +60,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   digitalDeliveryStatus,
   canSyncDigitalDelivery = false,
   manualDigitalFallbackAllowed = false,
+  isTransitioning = false,
   onAction,
   className = '',
 }) => {
@@ -76,8 +79,8 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     inAfterSaleWindow,
   });
 
-  // 没有可用操作时不显示
-  if (actions.length === 0) {
+  // 没有可用操作时：如果正在过渡则显示过渡条，否则不显示
+  if (actions.length === 0 && !isTransitioning) {
     return null;
   }
 
@@ -245,6 +248,24 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   };
 
   const statusLabel = getStatusLabel(orderState);
+
+  // Transitioning state: show a processing indicator instead of action buttons
+  if (isTransitioning) {
+    return (
+      <div
+        className={`fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50 safe-area-inset-bottom ${className}`}
+      >
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+          <HStack justify="center" align="center" className="max-w-screen-xl mx-auto gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">
+              {t('order.actions.updatingStatus')}
+            </span>
+          </HStack>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
