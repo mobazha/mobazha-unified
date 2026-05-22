@@ -543,6 +543,8 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                     onManageListing={slug =>
                       window.open(`/listing/edit/${slug}?from=orders`, '_blank')
                     }
+                    orderId={orderId}
+                    listingSlugs={sellerDigitalDelivery.listingSlugs}
                     className="mb-4"
                   />
                 )}
