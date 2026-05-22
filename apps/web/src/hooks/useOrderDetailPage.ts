@@ -92,6 +92,7 @@ export interface UseOrderDetailPageReturn {
   sellerDigitalDelivery: {
     isDigitalOrder: boolean;
     listingSlug?: string;
+    listingSlugs: string[];
     isLoading: boolean;
     isSyncing: boolean;
     assetCount: number;
@@ -650,6 +651,7 @@ export function useOrderDetailPage(
     return {
       isDigitalOrder: Boolean(isSellerDigitalOrder),
       listingSlug: sellerDigitalListingSlug || deliveryStatus?.listingSlugs?.[0] || undefined,
+      listingSlugs: deliveryStatus?.listingSlugs || [],
       isLoading: sellerDigitalDeliveryState.loading,
       isSyncing: sellerDigitalDeliveryState.syncing,
       assetCount,

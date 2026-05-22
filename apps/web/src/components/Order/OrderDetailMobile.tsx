@@ -646,6 +646,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
               }
               onSyncDelivery={sellerDigitalDelivery.syncDelivery}
               onManageListing={slug => window.open(`/listing/edit/${slug}?from=orders`, '_blank')}
+              orderId={orderId}
+              listingSlugs={sellerDigitalDelivery.listingSlugs}
             />
           )}
 

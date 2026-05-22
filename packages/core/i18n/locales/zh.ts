@@ -1091,6 +1091,9 @@ export const zh: PartialTranslationResource = {
       syncSuccess: '数字交付已同步',
       syncSuccessDesc: '买家的访问入口已关联到此订单。',
       syncFailed: '同步数字交付失败',
+      viewDeliveredItems: '查看交付内容',
+      hideDeliveredItems: '收起交付内容',
+      noItemsFound: '未找到交付记录。',
     },
     dispute: {
       escrowHint:

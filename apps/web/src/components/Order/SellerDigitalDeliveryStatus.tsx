@@ -1,10 +1,24 @@
 'use client';
 
-import React, { memo } from 'react';
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import React, { memo, useCallback, useState } from 'react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  ExternalLink,
+  Key,
+  FileText,
+  Link2,
+  Loader2,
+  RefreshCw,
+} from 'lucide-react';
+import { useI18n, digitalAssetsApi } from '@mobazha/core';
+import type { DigitalAssetInfo, MaskedLicenseKey } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
 export interface SellerDigitalDeliveryStatusProps {
@@ -27,6 +41,8 @@ export interface SellerDigitalDeliveryStatusProps {
   listingSlug?: string;
   onManageListing?: (slug: string) => void;
   refreshStatus?: () => void;
+  orderId?: string;
+  listingSlugs?: string[];
   className?: string;
 }
 
@@ -43,15 +59,81 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
   listingSlug,
   onManageListing,
   refreshStatus,
+  orderId,
+  listingSlugs,
   className,
 }: SellerDigitalDeliveryStatusProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
+  const [expanded, setExpanded] = useState(false);
+  const [assets, setAssets] = useState<DigitalAssetInfo[] | null>(null);
+  const [licenseKeys, setLicenseKeys] = useState<MaskedLicenseKey[] | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const isDelivered = status === 'delivered';
+  const detailListingSlugs = React.useMemo(
+    () => Array.from(new Set([...(listingSlugs ?? []), listingSlug].filter(Boolean) as string[])),
+    [listingSlug, listingSlugs]
+  );
+
+  const handleToggleExpand = useCallback(() => {
+    setExpanded(prev => {
+      const next = !prev;
+      if (next && assets === null && orderId && isDelivered) {
+        setDetailLoading(true);
+        Promise.all(detailListingSlugs.map(slug => digitalAssetsApi.listAssets(slug)))
+          .then(async results => {
+            const mergedAssets = results
+              .flat()
+              .filter((asset, index, arr) => arr.findIndex(item => item.id === asset.id) === index);
+            setAssets(mergedAssets);
+
+            const licenseAssetSlugs = Array.from(
+              new Set(
+                mergedAssets
+                  .filter(asset => asset.assetType === 'license_key')
+                  .map(asset => asset.listingSlug)
+                  .filter(Boolean)
+              )
+            );
+            if (!licenseAssetSlugs.length || !orderId) {
+              setLicenseKeys([]);
+              return;
+            }
+            const licenseResults = await Promise.all(
+              licenseAssetSlugs.map(slug => digitalAssetsApi.listLicenseKeys(slug))
+            );
+            const matching = licenseResults
+              .flat()
+              .filter(key => key.orderId === orderId)
+              .filter((key, index, arr) => arr.findIndex(item => item.id === key.id) === index);
+            setLicenseKeys(matching);
+          })
+          .catch(() => {
+            setAssets([]);
+            setLicenseKeys([]);
+          })
+          .finally(() => setDetailLoading(false));
+      }
+      return next;
+    });
+  }, [assets, detailListingSlugs, isDelivered, orderId]);
+
+  const handleCopy = useCallback(
+    (text: string) => {
+      void navigator.clipboard.writeText(text).then(() => {
+        toast({
+          title: t('common.copied', { defaultValue: 'Copied' }),
+        });
+      });
+    },
+    [t, toast]
+  );
 
   if (!isDigitalOrder) {
     return null;
   }
 
-  const isDelivered = status === 'delivered';
   const isReady = status === 'ready';
   const isManualRequired = status === 'manual_required';
   const isAttention = Boolean(error) || isManualRequired || status === 'restricted';
@@ -142,10 +224,108 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
               )}
             </div>
           </div>
+
+          {/* Progressive disclosure: delivered items detail */}
+          {isDelivered && orderId && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={handleToggleExpand}
+              >
+                {expanded ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+                {expanded
+                  ? t('order.digitalDelivery.hideDeliveredItems', {
+                      defaultValue: 'Hide delivered items',
+                    })
+                  : t('order.digitalDelivery.viewDeliveredItems', {
+                      defaultValue: 'View delivered items',
+                    })}
+              </button>
+
+              {expanded && (
+                <div className="mt-2 space-y-1.5">
+                  {detailLoading && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>{t('common.loading', { defaultValue: 'Loading…' })}</span>
+                    </div>
+                  )}
+                  {assets?.map(asset => (
+                    <DeliveredAssetRow
+                      key={asset.id}
+                      asset={asset}
+                      orderLicenseKeys={licenseKeys ?? []}
+                      onCopy={handleCopy}
+                    />
+                  ))}
+                  {!detailLoading && assets?.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {t('order.digitalDelivery.noItemsFound', {
+                        defaultValue: 'No delivery records found.',
+                      })}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Card>
   );
 });
+
+function DeliveredAssetRow({
+  asset,
+  orderLicenseKeys,
+  onCopy,
+}: {
+  asset: DigitalAssetInfo;
+  orderLicenseKeys: MaskedLicenseKey[];
+  onCopy: (text: string) => void;
+}) {
+  const TypeIcon = asset.assetType === 'file' ? FileText : asset.assetType === 'link' ? Link2 : Key;
+  const matchingLicenseKeys =
+    asset.assetType === 'license_key'
+      ? orderLicenseKeys.filter(key => key.orderId && key.orderId.length > 0)
+      : [];
+  const label =
+    asset.fileName ||
+    (asset.assetType === 'link'
+      ? asset.url
+      : asset.assetType === 'license_key' && matchingLicenseKeys[0]
+        ? matchingLicenseKeys[0].maskedKey
+        : asset.assetType === 'license_key'
+          ? asset.fileName || 'License key'
+          : asset.assetType);
+
+  const copyValue =
+    asset.assetType === 'link'
+      ? asset.url
+      : asset.assetType === 'license_key'
+        ? matchingLicenseKeys[0]?.maskedKey
+        : undefined;
+
+  return (
+    <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-background/60 border border-border/30 text-xs">
+      <TypeIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+      <span className="flex-1 min-w-0 truncate text-foreground">{label}</span>
+      {copyValue && (
+        <button
+          type="button"
+          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => onCopy(copyValue)}
+        >
+          <Copy className="w-3 h-3" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default SellerDigitalDeliveryStatus;

@@ -403,27 +403,25 @@ function DigitalAssetCard({
           )}
 
           {accessible && asset.assetType === 'link' && asset.deliveryURL && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  window.open(asset.deliveryURL, '_blank', 'noopener,noreferrer');
-                }}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 border border-border">
+              <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+              <a
+                href={asset.deliveryURL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-0 flex-1 truncate text-sm text-primary hover:underline"
+                title={asset.deliveryURL}
               >
-                <ExternalLink className="w-4 h-4 mr-1" />
-                {t('order.digital.openLink')}
-              </Button>
-              <Button
+                {asset.deliveryURL}
+              </a>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
+                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => onCopy(asset.deliveryURL as string, t('digital.assetType.link'))}
+                aria-label={t('common.copy')}
               >
-                <Copy className="w-3.5 h-3.5 mr-1" />
-                {t('common.copy')}
-              </Button>
+                <Copy className="w-4 h-4" />
+              </button>
             </div>
           )}
 
