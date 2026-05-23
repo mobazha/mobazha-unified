@@ -801,6 +801,23 @@ export function isSolanaChain(coinOrChain?: string): boolean {
 }
 
 /**
+ * 判断是否为法币支付币种。
+ */
+export function isFiatPaymentCoin(coinOrChain?: string): boolean {
+  return !!coinOrChain && coinOrChain.trim().toLowerCase().startsWith('fiat:');
+}
+
+/**
+ * 判断订单动作是否支持先调用后端 settlement action 面。
+ * 具体是否需要链上结算由后端按订单 method/state 决定；前端只选择
+ * 已迁移到新动作入口的链，不再获取旧 instructions 并签名。
+ */
+export function supportsBackendSettlementActionSurface(coinOrChain?: string): boolean {
+  if (isFiatPaymentCoin(coinOrChain)) return false;
+  return isUTXOChain(coinOrChain) || isEVMChain(coinOrChain) || isSolanaChain(coinOrChain);
+}
+
+/**
  * 判断是否为 TRON 链
  *
  * @param coinOrChain 代币 ID 或链 ID

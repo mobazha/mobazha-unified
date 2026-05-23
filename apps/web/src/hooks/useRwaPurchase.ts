@@ -261,26 +261,11 @@ export function useRwaPurchase({
       const paymentTokenAddress = getPaymentTokenAddress(paymentCoin);
       const paymentAmount = getPaymentAmount();
 
-      // 从后端获取身份地址（buyerAddress 和 vendorAddress 是 Mobazha 系统中的链上统一身份地址）
-      const paymentInstructions = await ordersApi.getPaymentInstructions({
-        orderId: externalOrderId,
-        coin: paymentCoin,
-      });
-
-      if (paymentInstructions.error) {
-        throw new Error(paymentInstructions.error);
-      }
-
-      if (!paymentInstructions.buyerAddress) {
+      // RWA is temporarily not maintained; keep this flow on wallet identity only.
+      const buyerIdentity = walletInfo?.address || '';
+      if (!buyerIdentity) {
         throw new Error(t('rwa.purchase.missingBuyerAddress'));
       }
-
-      if (!paymentInstructions.vendorAddress) {
-        throw new Error(t('rwa.purchase.missingSellerAddress'));
-      }
-
-      // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
-      const buyerIdentity = paymentInstructions.buyerAddress;
 
       // 买家接收 Token 的地址（用户选择的收款账户或当前钱包）
       const buyerReceiveAddress = walletInfo?.address || '';

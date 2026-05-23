@@ -345,8 +345,6 @@ export const NODE_API_PATHS = {
   DISCOUNTS_VALIDATE: (peerID: string) => `/discounts/${encodeURIComponent(peerID)}/validate`,
   DISPUTES_AFTER_SALE: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/after-sale`,
   DISPUTES_CLOSE: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/close`,
-  DISPUTES_INSTRUCTIONS_RELEASE: (orderID: string) =>
-    `/disputes/${encodeURIComponent(orderID)}/instructions/release`,
   DISPUTES_OPEN: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/open`,
   DISPUTES_RELEASE: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/release`,
   DISPUTES_RELEASE_AFTER_TIMEOUT: (orderID: string) =>
@@ -458,18 +456,6 @@ export const NODE_API_PATHS = {
   ORDERS_ESTIMATE: '/orders/estimate',
   ORDERS_EXTEND_PROTECTION: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/extend-protection`,
-  ORDERS_INSTRUCTIONS_CANCEL: (orderID: string) =>
-    `/orders/${encodeURIComponent(orderID)}/instructions/cancel`,
-  ORDERS_INSTRUCTIONS_COMPLETE: (orderID: string) =>
-    `/orders/${encodeURIComponent(orderID)}/instructions/complete`,
-  ORDERS_INSTRUCTIONS_CONFIRM: (orderID: string) =>
-    `/orders/${encodeURIComponent(orderID)}/instructions/confirm`,
-  ORDERS_INSTRUCTIONS_DECLINE: (orderID: string) =>
-    `/orders/${encodeURIComponent(orderID)}/instructions/decline`,
-  ORDERS_INSTRUCTIONS_PAYMENT: (orderID: string) =>
-    `/orders/${encodeURIComponent(orderID)}/instructions/payment`,
-  ORDERS_INSTRUCTIONS_REFUND: (orderID: string) =>
-    `/orders/${encodeURIComponent(orderID)}/instructions/refund`,
   ORDERS_PAYMENT: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/payment`,
   ORDERS_PAYMENT_CANCEL_PARTIAL: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/payment/cancel-partial`,

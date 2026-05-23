@@ -2,7 +2,6 @@ import { getPaymentCoinDisplayLabel } from '../../data';
 import type { DisplayOrder } from '../../types/orderDisplay';
 import type { PaymentSession } from '../../types/paymentSession';
 import { recoverCryptoPaymentCoin } from './cryptoPaymentRecovery';
-import { formatMinimalUnitExactAmountString } from './minimalUnit';
 
 /** Fields used to decide whether paid-state UI describes a direct (non-moderated) payment. */
 export type DirectPaymentOrderSignals = Pick<DisplayOrder, 'paymentProductMode' | 'moderator'>;
@@ -45,18 +44,14 @@ export function applyPaymentSessionToDisplayOrder(
   const observedAmount = normalizeAmount(paymentSession.paymentProgress?.observedAmount);
   const expectedAmount = normalizeAmount(paymentSession.expectedAmount);
   const paymentAmountRaw = observedAmount || expectedAmount;
-  const formattedPaymentAmount =
-    paymentCoin && paymentAmountRaw
-      ? formatMinimalUnitExactAmountString(paymentAmountRaw, paymentCoin)
-      : undefined;
   const paymentAddress = (paymentSession.fundingTarget?.address || '').trim();
 
   return {
     ...order,
     paymentCoin: paymentCoin || order.paymentCoin,
     currency: paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : order.currency,
-    total: formattedPaymentAmount || order.total,
-    paymentAmount: formattedPaymentAmount || order.paymentAmount,
+    total: paymentAmountRaw || order.total,
+    paymentAmount: paymentAmountRaw || order.paymentAmount,
     chainId: recoveredPayment.chainId || order.chainId,
     escrowAddress: paymentAddress || order.escrowAddress,
     paymentSettlementMode: paymentSession.settlementMode,

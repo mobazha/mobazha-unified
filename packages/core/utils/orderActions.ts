@@ -334,6 +334,7 @@ export function getOrderActions(
     paymentMethod?: string | number;
     hasRated?: boolean;
     inAfterSaleWindow?: boolean;
+    hasAfterSaleDispute?: boolean;
     fundsReleasedAtConfirmation?: boolean;
   } = {}
 ): OrderAction[] {
@@ -343,6 +344,7 @@ export function getOrderActions(
     isExpired = false,
     hasRated = false,
     inAfterSaleWindow = false,
+    hasAfterSaleDispute = false,
     fundsReleasedAtConfirmation = false,
   } = options;
 
@@ -398,6 +400,7 @@ export function getOrderActions(
   if (
     role === 'buyer' &&
     inAfterSaleWindow &&
+    !hasAfterSaleDispute &&
     (state === 'COMPLETED' || state === 'PAYMENT_FINALIZED')
   ) {
     actions.push('AfterSaleDispute');

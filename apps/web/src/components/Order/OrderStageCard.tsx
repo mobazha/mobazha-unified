@@ -493,6 +493,7 @@ export interface OrderCompleteCardProps {
   currency?: string;
   txHash?: string;
   txUrl?: string;
+  title?: string;
   description?: string;
   className?: string;
 }
@@ -503,6 +504,7 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   currency,
   txHash,
   txUrl,
+  title,
   description,
   className,
   showDivider = true,
@@ -516,7 +518,7 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
 
   return (
     <OrderStageCard
-      title={t('order.stages.complete')}
+      title={title || t('order.stages.complete')}
       timestamp={timestamp}
       className={className}
       showDivider={showDivider}

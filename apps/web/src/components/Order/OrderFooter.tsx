@@ -30,6 +30,7 @@ export interface OrderFooterProps {
   paymentCoin?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
+  hasAfterSaleDispute?: boolean;
   contractType?: string;
   hasPreconfiguredDigitalAssets?: boolean;
   digitalDeliveryStatus?: string | null;
@@ -57,6 +58,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   paymentCoin,
   hasRated,
   inAfterSaleWindow = false,
+  hasAfterSaleDispute = false,
   contractType,
   hasPreconfiguredDigitalAssets = false,
   digitalDeliveryStatus,
@@ -79,6 +81,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     paymentMethod,
     hasRated,
     inAfterSaleWindow,
+    hasAfterSaleDispute,
     fundsReleasedAtConfirmation,
   });
 

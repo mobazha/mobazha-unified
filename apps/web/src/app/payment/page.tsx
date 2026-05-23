@@ -37,15 +37,13 @@ import {
   onWebSocketStatusChange,
   profileApi,
   getImageUrl,
-  getTransactionService,
-  getPaymentExecutor,
   resolveChainCategory,
   convertCurrency,
   toMinimalUnit,
   getBaseRateSymbol,
   type WebSocketMessage,
 } from '@mobazha/core';
-import type { Order } from '@mobazha/core';
+import type { Order, PaymentSession } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import { useHaptic } from '@/lib/platform';
 
@@ -123,6 +121,13 @@ function formatCryptoAmountForSummary(rawAmount: string, decimals: number): stri
   return result.toFixed(decimals).replace(/\.?0+$/, '') || '0';
 }
 
+function formatExternalPaymentAmountForSummary(info: ExternalWalletPaymentInfo): string {
+  if (info.amountIsDecimal) {
+    return info.amount.replace(/\.?0+$/, '') || '0';
+  }
+  return formatCryptoAmountForSummary(info.amount, info.decimals ?? 8);
+}
+
 function buildFiatPaymentCoin(providerID: string, currency: string): string {
   const provider = (providerID || '').trim().toLowerCase();
   const resolvedCurrency = (currency || '').trim().toUpperCase() || 'USD';
@@ -130,6 +135,34 @@ function buildFiatPaymentCoin(providerID: string, currency: string): string {
     throw new Error('fiat provider is required');
   }
   return `fiat:${provider}:${resolvedCurrency}`;
+}
+
+function externalWalletInfoFromSession(
+  session: PaymentSession,
+  tokenId: string | null,
+  fallbackCoin: string
+): ExternalWalletPaymentInfo {
+  const target = session.fundingTarget;
+  if (session.settlementMode !== 'address_monitored' || target.type !== 'address') {
+    throw new Error('payment session is not address-monitored');
+  }
+  if (!target.address) {
+    throw new Error('payment session has no funding address');
+  }
+
+  const tokenInfo = tokenId ? getTokenById(tokenId) : null;
+  return {
+    paymentAddress: target.address,
+    paymentURI: target.qrPayload,
+    amount:
+      target.amount || session.expectedAmount || session.paymentProgress.requiredAmount || '0',
+    amountIsDecimal: true,
+    coin: tokenId || session.paymentCoin || fallbackCoin,
+    decimals: tokenInfo?.decimals ?? 8,
+    qrCodeData: target.qrPayload,
+    expiresAt: session.expiresAt,
+    orderID: session.orderID,
+  };
 }
 
 function hasExchangeRateForConversion(
@@ -227,12 +260,10 @@ export default function PaymentPage() {
   // 链类别检测与统一钱包状态
   const chainCategory = selectedPaymentCoin ? resolveChainCategory(selectedPaymentCoin) : null;
   const isTronPayment = chainCategory === 'tron';
-  const isUtxoPayment = chainCategory === 'utxo';
-  const isConnected = isTronPayment ? tronWallet.isConnected : evmWallet.isConnected;
+  const usesPaymentSessionFlow = Boolean(chainCategory) && !orderDetails?.isRwaToken;
   const isConnecting = isTronPayment ? tronWallet.isConnecting : evmWallet.isConnecting;
-  const getSigner = evmWallet.getSigner;
 
-  // UTXO 外部钱包支付信息（BTC/LTC/BCH/ZEC）
+  // 地址监听支付信息（UTXO / managed settlement）
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
     null
   );
@@ -674,168 +705,25 @@ export default function PaymentPage() {
     setSubmittedTxHash(undefined);
 
     try {
-      // 1. 计算支付金额（仅 RWA Token 需要客户端计算，普通订单由后端统一计算）
-      let paymentAmountForApi: string | undefined;
-      if (orderDetails?.isRwaToken) {
-        const totalInFiat = orderDetails.total;
-        const isDAI = selectedTokenId.toUpperCase().includes('DAI');
-        const stableCoinDivisibility = isDAI ? 18 : 6;
-        paymentAmountForApi = String(
-          Math.round(totalInFiat * Math.pow(10, stableCoinDivisibility))
-        );
-      }
-
-      // 2. 获取钱包地址（UTXO 链不需要前端钱包地址）
-      let payerAddress: string | undefined;
-      if (!isUtxoPayment) {
-        if (isTronPayment) {
-          payerAddress = tronWallet.address ?? undefined;
-        } else {
-          const signer = await getSigner();
-          payerAddress = signer ? await signer.getAddress() : undefined;
-        }
-      }
-
-      // 3. 获取支付指令（传入金额、付款地址和仲裁人）
+      // 3. 创建统一 PaymentSession。旧支付指令路径已退役。
       const moderatorPeerID =
         paymentProtectionEnabled && paymentModerator?.peerID ? paymentModerator.peerID : undefined;
 
-      const response = await ordersApi.getPaymentInstructions({
-        orderId: orderID!,
-        coin: selectedPaymentCoin,
-        payerAddress,
-        refundAddress: payerAddress,
-        moderator: moderatorPeerID,
-      });
-
-      // 4. Use backend-computed amount for ERC20 approval (non-RWA orders)
-      if (!orderDetails?.isRwaToken && response.paymentData?.amount) {
-        paymentAmountForApi = response.paymentData.amount;
-      }
-
-      // 5. 检查是否为地址监听支付（UTXO: BTC/LTC/BCH/ZEC, Safe: EVM address-monitored）
-      if (
-        response.paymentType === 'external_wallet' ||
-        response.paymentType === 'safe_address_monitored' ||
-        isUtxoPayment
-      ) {
-        const addr = response.paymentAddress || response.paymentData?.payerAddress || '';
-        const tokenInfo = selectedTokenId ? getTokenById(selectedTokenId) : null;
-        setExternalWalletInfo({
-          paymentAddress: addr,
-          paymentURI: response.paymentURI,
-          amount: response.amount || response.paymentData?.amount || '0',
-          coin: selectedTokenId || response.coin || selectedPaymentCoin,
-          decimals: tokenInfo?.decimals ?? 8,
-          qrCodeData: response.qrCodeData,
-          expiresAt: response.expiresAt,
-          orderID: orderID!,
+      if (usesPaymentSessionFlow) {
+        const session = await ordersApi.createOrderPaymentSession({
+          orderId: orderID!,
+          paymentCoin: selectedPaymentCoin,
+          moderator: moderatorPeerID,
         });
-        setPaymentStep('idle');
-        return;
-      }
 
-      // 6. client_signed 路径：需要钱包连接和支付指令
-      if (!isConnected) {
-        toast({
-          title: t('payment.connectWalletFirst'),
-          variant: 'destructive',
-        });
-        setPaymentStep('idle');
-        return;
-      }
-
-      if (!response.instructions) {
-        throw new Error(t('payment.noPaymentInstructions'));
-      }
-
-      const { to, data, value } = response.instructions;
-
-      if (!to) {
-        throw new Error(t('payment.noPaymentAddress'));
-      }
-
-      let txResult;
-
-      if (isTronPayment) {
-        // ── TRON 支付路径 ──
-        const tronWeb = tronWallet.getTronWeb();
-        if (!tronWeb) {
-          throw new Error(t('payment.signerNotAvailable'));
-        }
-
-        const executor = getPaymentExecutor('TRON', selectedPaymentCoin);
-        if (!executor) {
-          throw new Error(t('payment.providerNotAvailable'));
-        }
-
-        const initOk = await executor.initialize(tronWeb);
-        if (!initOk) {
-          throw new Error(t('payment.providerNotAvailable'));
-        }
-
-        const { paymentData } = response;
-        txResult = await executor.executeContractPayment(response.instructions, {
-          tokenAddress: paymentData?.paymentTokenAddress,
-          contractAddress: paymentData?.contractAddress || to,
-          amount: paymentAmountForApi ?? '0',
-        });
-      } else {
-        // ── EVM 支付路径 ──
-        const signer = await getSigner();
-        if (!signer) {
-          throw new Error(t('payment.signerNotAvailable'));
-        }
-
-        const transactionService = getTransactionService();
-        const initResult = await transactionService.initializeWithSigner(signer);
-        if (!initResult) {
-          throw new Error(t('payment.providerNotAvailable'));
-        }
-
-        const { paymentData } = response;
-        const paymentTokenAddress = paymentData?.paymentTokenAddress;
-        const contractAddress = paymentData?.contractAddress || to;
-        const paymentAmount = paymentAmountForApi;
-
-        txResult = await transactionService.executeContractPayment(
-          paymentTokenAddress,
-          contractAddress,
-          paymentAmount?.toString() || '0',
-          { to, data, value: value || '0' }
+        setExternalWalletInfo(
+          externalWalletInfoFromSession(session, selectedTokenId, selectedPaymentCoin)
         );
+        setPaymentStep('idle');
+        return;
       }
 
-      if (!txResult.success) {
-        throw new Error(txResult.error || t('payment.transactionFailed'));
-      }
-
-      const txHash = txResult.transactionHash!;
-      setSubmittedTxHash(txHash);
-      setPaymentStep('submitted');
-
-      // 7. 通知后端支付完成
-      setPaymentStep('completing');
-      try {
-        const { paymentData: pd } = response;
-        if (pd) {
-          const submitData = {
-            ...pd,
-            transactionID: txHash,
-            timestamp: new Date().toISOString(),
-            ...(txResult.blockNumber ? { blockHeight: txResult.blockNumber } : {}),
-          };
-          await ordersApi.submitPayment(submitData);
-        }
-      } catch {
-        // 交易已上链，后端通知失败不影响支付结果
-      }
-
-      // 8. 支付成功，跳转到订单确认页
-      haptic.success();
-      setPaymentStep('success');
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      router.push(buildConfirmationUrl(orderDetails));
+      throw new Error(t('payment.noPaymentInstructions'));
     } catch (error) {
       console.error('[Payment] Payment failed:', error);
 
@@ -855,11 +743,9 @@ export default function PaymentPage() {
     selectedFiatProvider,
     paymentProtectionEnabled,
     paymentModerator,
-    isConnected,
     isTronPayment,
-    isUtxoPayment,
+    usesPaymentSessionFlow,
     tronWallet,
-    getSigner,
     router,
     t,
     toast,
@@ -1170,11 +1056,7 @@ export default function PaymentPage() {
                           </p>
                           {externalWalletInfo ? (
                             <p className="text-xs text-muted-foreground">
-                              ={' '}
-                              {formatCryptoAmountForSummary(
-                                externalWalletInfo.amount,
-                                externalWalletInfo.decimals ?? 8
-                              )}{' '}
+                              = {formatExternalPaymentAmountForSummary(externalWalletInfo)}{' '}
                               {nativeSymbol.toUpperCase()}
                             </p>
                           ) : selectedTokenId && cryptoAmountDisplay ? (
@@ -1218,7 +1100,7 @@ export default function PaymentPage() {
                             isConnecting ||
                             paymentExpired ||
                             !selectedTokenId ||
-                            (isConnected && paymentProtectionEnabled && !paymentModerator)
+                            (paymentProtectionEnabled && !paymentModerator)
                           }
                         >
                           {isProcessing ? (
@@ -1259,7 +1141,7 @@ export default function PaymentPage() {
                               </svg>
                               <span>{t('payment.connecting')}</span>
                             </HStack>
-                          ) : isUtxoPayment ? (
+                          ) : usesPaymentSessionFlow ? (
                             t('payment.getPaymentInfo')
                           ) : cryptoAmountDisplay ? (
                             `${t('payment.pay')} ${cryptoAmountDisplay} ${nativeSymbol}`

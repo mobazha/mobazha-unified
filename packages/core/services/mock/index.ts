@@ -253,14 +253,6 @@ export const mockOrderService = {
     await delay(500);
     return { success: true };
   },
-
-  async getPaymentInstructions(_orderId: string, _coin: string) {
-    await delay();
-    return {
-      address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-      amount: 0.001,
-    };
-  },
 };
 
 // ============ User/Profile Services ============

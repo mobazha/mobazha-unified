@@ -60,6 +60,8 @@ export {
   isUTXOChain,
   isEVMChain,
   isSolanaChain,
+  isFiatPaymentCoin,
+  supportsBackendSettlementActionSurface,
   requiresWalletSignature,
   type CanonicalPaymentCoinParts,
   type TokenConfig,

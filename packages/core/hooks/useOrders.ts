@@ -283,9 +283,15 @@ export function useOrderPayment(orderId: string | null) {
     paid?: string;
   } | null>(null);
 
-  const instructionsMutation = useMutation({
-    mutationFn: (coin: string) => ordersApi.getPaymentInstructions({ orderId: orderId!, coin }),
-    onSuccess: result => setPaymentInfo(prev => ({ ...prev, ...result })),
+  const paymentSessionMutation = useMutation({
+    mutationFn: (paymentCoin: string) =>
+      ordersApi.createOrderPaymentSession({ orderId: orderId!, paymentCoin }),
+    onSuccess: session =>
+      setPaymentInfo(prev => ({
+        ...prev,
+        address: session.fundingTarget?.address,
+        amount: session.fundingTarget?.amount || session.expectedAmount,
+      })),
   });
 
   const fundMutation = useMutation({
@@ -293,16 +299,16 @@ export function useOrderPayment(orderId: string | null) {
       ordersApi.fundOrder({ ...params, orderId: orderId! }),
   });
 
-  const getPaymentInstructions = useCallback(
+  const createPaymentSession = useCallback(
     async (coin: string) => {
       if (!orderId) return null;
       try {
-        return await instructionsMutation.mutateAsync(coin);
+        return await paymentSessionMutation.mutateAsync(coin);
       } catch {
         return null;
       }
     },
-    [orderId, instructionsMutation]
+    [orderId, paymentSessionMutation]
   );
 
   const getPaymentRemaining = useCallback(async () => {
@@ -332,13 +338,13 @@ export function useOrderPayment(orderId: string | null) {
     [orderId, fundMutation]
   );
 
-  const isLoading = instructionsMutation.isPending || fundMutation.isPending;
+  const isLoading = paymentSessionMutation.isPending || fundMutation.isPending;
 
   return {
     isLoading,
-    error: formatQueryError(instructionsMutation.error || fundMutation.error),
+    error: formatQueryError(paymentSessionMutation.error || fundMutation.error),
     paymentInfo,
-    getPaymentInstructions,
+    createPaymentSession,
     getPaymentRemaining,
     fundOrder,
   };

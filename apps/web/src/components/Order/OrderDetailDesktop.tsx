@@ -554,9 +554,12 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                     dispute={displayOrder.afterSaleDispute}
                     userRole={displayOrder.userRole}
                     onMessageCounterparty={() => {
-                      document
-                        .querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')
-                        ?.focus();
+                      setActiveTab('discussion');
+                      window.setTimeout(() => {
+                        document
+                          .querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')
+                          ?.focus();
+                      }, 0);
                     }}
                     className="mb-4"
                   />
@@ -712,6 +715,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           paymentCoin={coreOrder?.contract?.paymentSent?.coin}
           hasRated={displayOrder.hasRated}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          hasAfterSaleDispute={hasAfterSaleDispute}
           contractType={shipOrderProps.contractType}
           hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
           digitalDeliveryStatus={sellerDigitalDelivery.status}

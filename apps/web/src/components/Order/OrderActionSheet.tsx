@@ -24,6 +24,7 @@ export interface OrderActionSheetProps {
   fundsReleasedAtConfirmation?: boolean;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
+  hasAfterSaleDispute?: boolean;
   contractType?: string;
   hasPreconfiguredDigitalAssets?: boolean;
   digitalDeliveryStatus?: string | null;
@@ -49,6 +50,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   fundsReleasedAtConfirmation = false,
   hasRated,
   inAfterSaleWindow = false,
+  hasAfterSaleDispute = false,
   contractType,
   hasPreconfiguredDigitalAssets = false,
   digitalDeliveryStatus,
@@ -67,6 +69,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
         paymentMethod,
         hasRated,
         inAfterSaleWindow,
+        hasAfterSaleDispute,
         fundsReleasedAtConfirmation,
       }),
     [
@@ -77,6 +80,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
       paymentMethod,
       hasRated,
       inAfterSaleWindow,
+      hasAfterSaleDispute,
       fundsReleasedAtConfirmation,
     ]
   );

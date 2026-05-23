@@ -37,17 +37,17 @@ function buildPaymentSession(): PaymentSession {
     settlementMode: 'address_monitored',
     productMode: 'cancelable',
     status: 'verified',
-    expectedAmount: '7022669176100452',
+    expectedAmount: '0.007022669176100452',
     expiresAt: '2026-05-20T00:00:00Z',
     fundingTarget: {
       type: 'address',
       address: '0xeb5Ad81338D6AEc8EBC89e681275630dC4A914BE',
       assetID: 'crypto:eip155:11155111:native',
-      amount: '7022669176100452',
+      amount: '0.007022669176100452',
     },
     paymentProgress: {
-      observedAmount: '7022669176100452',
-      requiredAmount: '7018200533383240',
+      observedAmount: '0.007022669176100452',
+      requiredAmount: '0.00701820053338324',
       remainingAmount: '0',
       observationCount: 1,
       fundingState: 'overfunded',
@@ -87,7 +87,7 @@ describe('isDirectPaymentOrder', () => {
 });
 
 describe('applyPaymentSessionToDisplayOrder', () => {
-  it('prefers canonical payment session coin and formats minimal-unit chain amounts', () => {
+  it('prefers canonical payment session coin and keeps decimal chain amounts', () => {
     const result = applyPaymentSessionToDisplayOrder(buildDisplayOrder(), buildPaymentSession());
 
     expect(result.paymentCoin).toBe('crypto:eip155:11155111:native');
@@ -116,9 +116,9 @@ describe('applyPaymentSessionToDisplayOrder', () => {
 
     const session = buildPaymentSession();
     session.paymentCoin = 'USD';
-    session.expectedAmount = '1500';
+    session.expectedAmount = '0.007022669176100452';
     session.fundingTarget.assetID = 'USD';
-    session.fundingTarget.amount = '1500';
+    session.fundingTarget.amount = '0.007022669176100452';
 
     const result = applyPaymentSessionToDisplayOrder(order, session);
 

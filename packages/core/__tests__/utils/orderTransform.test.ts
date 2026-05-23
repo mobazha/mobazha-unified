@@ -221,4 +221,161 @@ describe('transformCoreOrder payment progress formatting', () => {
       },
     ]);
   });
+
+  it('separates payment, release, and completion for cancelable managed orders', () => {
+    const order = transformCoreOrder(
+      {
+        state: 'COMPLETED',
+        paymentState: {
+          verificationStatus: 'verified',
+        },
+        settlementActions: [
+          {
+            settlementAction: 'cancel',
+            state: 'confirmed',
+          },
+          {
+            settlementAction: 'confirm',
+            state: 'confirmed',
+          },
+        ],
+        contract: {
+          OrderID: 'order-1',
+          orderOpen: {
+            timestamp: '2026-05-15T00:00:00Z',
+            pricingCoin: 'USD',
+            amount: 10000,
+            buyerID: { peerID: 'buyer-peer', name: 'Buyer' },
+            listings: [
+              {
+                listing: {
+                  slug: 'listing-1',
+                  metadata: {
+                    pricingCurrency: { code: 'USD', divisibility: 2 },
+                  },
+                  item: {
+                    title: 'Test Product',
+                    price: 10000,
+                    images: [],
+                  },
+                  vendorID: { peerID: 'vendor-peer', name: 'Vendor' },
+                },
+              },
+            ],
+            items: [{ quantity: 1 }],
+            shipping: {},
+          },
+          paymentSent: {
+            coin: 'crypto:eip155:11155111:native',
+            amount: '33000000000000000',
+            method: 'CANCELABLE',
+            transactionID: '0xpaytx00000000000000000000000000000000000000000000000000000001',
+          },
+          orderConfirmation: {
+            timestamp: '2026-05-15T00:05:00Z',
+            transactionID: '0xreleasetx000000000000000000000000000000000000000000000000000001',
+          },
+          orderComplete: {
+            timestamp: '2026-05-15T00:10:00Z',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.paymentTx).toBe(
+      '0xpaytx00000000000000000000000000000000000000000000000000000001'
+    );
+    expect(order?.releaseTx).toBe(
+      '0xreleasetx000000000000000000000000000000000000000000000000000001'
+    );
+    expect(order?.fundsReleasedAtConfirmation).toBe(true);
+    expect(order?.timeline.map(event => [event.status, event.descriptionKey])).toEqual([
+      ['created', 'order.timeline.orderPlaced'],
+      ['paid', 'order.timeline.paymentConfirmed'],
+      ['processing', 'order.timeline.vendorConfirmed'],
+      ['released', 'order.timeline.fundsReleased'],
+      ['completed', 'order.timeline.orderCompleted'],
+    ]);
+  });
+
+  it('does not treat a confirmed cancel settlement action as seller fund release', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'AWAITING_SHIPMENT',
+        protection: {
+          stage: 'ESCROWED',
+          daysRemaining: 7,
+          extendable: true,
+          extended: false,
+          afterSaleWindowDays: 7,
+        },
+        settlementActions: [
+          {
+            settlementAction: 'cancel',
+            state: 'confirmed',
+            txHash: '0xcanceltx',
+          },
+        ],
+        contract: {
+          ...buildOrder({}).contract,
+          paymentSent: {
+            ...buildOrder({}).contract.paymentSent,
+            method: 'CANCELABLE',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.fundsReleasedAtConfirmation).toBe(false);
+    expect(order?.releaseTx).toBeUndefined();
+    expect(order?.timeline.some(event => event.status === 'released')).toBe(false);
+    expect(order?.protection?.stage).toBe('ESCROWED');
+  });
+
+  it('maps nested after-sale dispute payloads from order details', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        afterSaleDispute: {
+          reason: 'OTHER',
+          description: 'Package arrived damaged',
+          openedAt: '2026-05-23T00:51:10.835Z',
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.afterSaleDispute).toEqual({
+      reason: 'OTHER',
+      description: 'Package arrived damaged',
+      reportedAt: '2026-05-23T00:51:10.835Z',
+    });
+  });
+
+  it('maps after-sale dispute payloads nested under contract for current node responses', () => {
+    const base = buildOrder({});
+    const order = transformCoreOrder(
+      {
+        ...base,
+        contract: {
+          ...base.contract,
+          afterSaleDispute: {
+            reason: 'OTHER',
+            description: 'Feedback from buyer',
+            openedAt: '2026-05-23T00:51:10.844Z',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'vendor-peer', viewingContext: 'sale' }
+    );
+
+    expect(order?.afterSaleDispute).toEqual({
+      reason: 'OTHER',
+      description: 'Feedback from buyer',
+      reportedAt: '2026-05-23T00:51:10.844Z',
+    });
+  });
 });
