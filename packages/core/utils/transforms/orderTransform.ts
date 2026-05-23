@@ -19,6 +19,8 @@ import type {
   DisplayPaymentVerificationStatus,
   DisplayUserRole,
   TransformOrderOptions,
+  CancellationContext,
+  CancellationKind,
 } from '../../types/orderDisplay';
 import { getImageUrl } from '../../services/api/config';
 import {
@@ -180,6 +182,12 @@ interface RealOrderData {
       timestamp?: string;
       reason?: string;
     };
+    orderDecline?: {
+      timestamp?: string;
+      reason?: string;
+      type?: string;
+      transactionID?: string;
+    };
     refund?: {
       timestamp?: string;
       memo?: string;
@@ -248,6 +256,104 @@ function normalizePaymentVerificationStatus(status?: string): DisplayPaymentVeri
   if (normalized === 'verified') return 'verified';
   if (normalized === 'failed') return 'failed';
   return 'pending';
+}
+
+type SettlementActionLike = {
+  action?: string;
+  settlementAction?: string;
+  state?: string;
+};
+
+/** Contract slice used when deriving cancellation semantics. */
+export type CancellationSourceContract = {
+  orderCancel?: { timestamp?: string; reason?: string; transactionID?: string };
+  orderDecline?: { timestamp?: string; reason?: string; type?: string; transactionID?: string };
+  paymentSent?: unknown;
+  refund?: { memo?: string };
+};
+
+export type CancellationSourceData = {
+  state?: string;
+  funded?: boolean;
+  paymentState?: {
+    verificationStatus?: string;
+    progress?: { percentage?: number };
+  };
+  settlementActions?: SettlementActionLike[];
+  contract: CancellationSourceContract;
+};
+
+/** True when a cancel/refund settlement is confirmed on-chain (managed settlement) or recorded on legacy cancel msg. */
+export function isRefundSettlementConfirmed(
+  settlementActions: SettlementActionLike[] | undefined,
+  contract: CancellationSourceContract
+): boolean {
+  const actions = settlementActions || [];
+  const confirmedCancel = actions.some(action => {
+    const name = (action.settlementAction || action.action || '').toLowerCase();
+    return name === 'cancel' && (action.state || '').toLowerCase() === 'confirmed';
+  });
+  if (confirmedCancel) {
+    return true;
+  }
+
+  if (contract.orderCancel?.transactionID?.trim()) {
+    return true;
+  }
+
+  // Decline tx alone is ambiguous when backend settlement surface exists (failed attempts also carry tx).
+  if (actions.length === 0 && contract.orderDecline?.transactionID?.trim()) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Derive structured cancellation context from backend order state + contract.
+ * Keeps UI components free of DECLINED/CANCELED/payment_timeout branching logic.
+ */
+export function deriveCancellationContext(
+  data: CancellationSourceData
+): CancellationContext | undefined {
+  const state = data.state;
+  if (state !== 'CANCELED' && state !== 'CANCELLED' && state !== 'DECLINED') {
+    return undefined;
+  }
+
+  const contract = data.contract;
+  const verificationStatus = normalizePaymentVerificationStatus(
+    data.paymentState?.verificationStatus
+  );
+  const wasFunded = !!(
+    data.funded ||
+    contract.paymentSent ||
+    verificationStatus === 'verified' ||
+    (data.paymentState?.progress?.percentage ?? 0) > 0
+  );
+
+  const orderCancelReason = contract.orderCancel?.reason?.trim() || '';
+  const orderDeclineReason = contract.orderDecline?.reason?.trim() || '';
+  const refundMemo = contract.refund?.memo?.trim() || '';
+  const reason = orderDeclineReason || orderCancelReason || refundMemo || undefined;
+
+  let kind: CancellationKind;
+
+  if (state === 'DECLINED' || contract.orderDecline) {
+    kind = 'seller_decline';
+  } else if (orderCancelReason === 'payment_verification_timeout') {
+    kind = 'payment_verification_timeout';
+  } else if (orderCancelReason === 'payment_timeout') {
+    kind = 'payment_timeout';
+  } else if (wasFunded) {
+    kind = 'cancelled_paid';
+  } else {
+    kind = 'cancelled_unpaid';
+  }
+
+  const refundConfirmed = isRefundSettlementConfirmed(data.settlementActions, contract);
+
+  return { kind, wasFunded, reason, refundConfirmed };
 }
 
 /**
@@ -592,19 +698,28 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     });
   }
 
-  // Cancel
+  // Cancel / decline
   if (
     contract.orderCancel ||
+    contract.orderDecline ||
     data.state === 'CANCELED' ||
     data.state === 'CANCELLED' ||
     data.state === 'DECLINED'
   ) {
+    const isDeclined = data.state === 'DECLINED' || !!contract.orderDecline;
+    const cancelReasonCode = contract.orderCancel?.reason?.trim() || '';
+    const isSystemTimeout =
+      cancelReasonCode === 'payment_timeout' || cancelReasonCode === 'payment_verification_timeout';
+
     timeline.push({
       status: 'cancelled',
-      timestamp: contract.orderCancel?.timestamp || new Date().toISOString(),
-      description: 'Order cancelled',
-      descriptionKey: 'order.timeline.orderCancelled',
-      actor: 'system',
+      timestamp:
+        contract.orderDecline?.timestamp ||
+        contract.orderCancel?.timestamp ||
+        new Date().toISOString(),
+      description: isDeclined ? 'Order declined' : 'Order cancelled',
+      descriptionKey: isDeclined ? 'order.timeline.orderDeclined' : 'order.timeline.orderCancelled',
+      actor: isDeclined ? 'seller' : isSystemTimeout ? 'system' : 'buyer',
     });
   }
 
@@ -1023,7 +1138,16 @@ export function transformCoreOrder(
       }
     : undefined;
 
-  const cancelReason = contract.orderCancel?.reason || contract.refund?.memo || undefined;
+  const cancellation = deriveCancellationContext({
+    ...data,
+    settlementActions: coreOrder.settlementActions,
+  });
+  const cancelReason =
+    cancellation?.reason ||
+    contract.orderCancel?.reason ||
+    contract.orderDecline?.reason ||
+    contract.refund?.memo ||
+    undefined;
   const orderCompleteRatings = contract.orderComplete?.ratings || [];
   const firstRating = orderCompleteRatings[0];
   const firstRatingImageHashes = firstRating?.imageHashes || firstRating?.image_hashes || [];
@@ -1064,7 +1188,7 @@ export function transformCoreOrder(
     paymentCoin: paymentCoin,
     paymentAmount: formattedPaymentAmount,
     createdAt: timestamp,
-    cancelledAt: contract.orderCancel?.timestamp || undefined,
+    cancelledAt: contract.orderDecline?.timestamp || contract.orderCancel?.timestamp || undefined,
     vendor: {
       id: vendorPeerID,
       name: formatUserName({ name: vendorName, peerID: vendorPeerID }, { fallback: 'Seller' }),
@@ -1117,6 +1241,7 @@ export function transformCoreOrder(
     contractType: contractType,
     timeline: generateTimelineFromRealData(data),
     userRole,
+    cancellation,
     cancelReason,
     fiatPayment,
     fiatDispute,

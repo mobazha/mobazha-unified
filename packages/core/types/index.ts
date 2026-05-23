@@ -130,6 +130,8 @@ export type {
   DisplayUserRole,
   TransformOrderOptions,
   ProtectionLevel,
+  CancellationKind,
+  CancellationContext,
 } from './orderDisplay';
 
 export type {

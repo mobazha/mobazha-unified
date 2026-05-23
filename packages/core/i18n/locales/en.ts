@@ -758,6 +758,7 @@ export const en: TranslationResource = {
       disputeClosed: 'Dispute closed: {{verdict}}',
       refunded: 'Order refunded',
       orderCancelled: 'Order cancelled',
+      orderDeclined: 'Order declined by seller',
     },
     // Order status card (mobile redesign)
     statusCard: {
@@ -799,6 +800,39 @@ export const en: TranslationResource = {
       cancelledSeller: 'This order was cancelled — the buyer did not complete payment',
       cancelledHintBuyer: 'No payment was charged. You can place a new order anytime.',
       cancelledHintSeller: 'No payment was received. Inventory has been restored.',
+      declinedBuyerFunded: 'The seller declined this order — your payment will be refunded',
+      declinedBuyerFundedRefunded:
+        'The seller declined this order — your payment has been refunded',
+      declinedBuyerUnfunded: 'The seller declined this order',
+      declinedSellerFunded: 'You declined this order — refund initiated',
+      declinedSellerFundedRefunded: 'You declined this order — refund completed',
+      declinedSellerUnfunded: 'You declined this order',
+      declinedHintBuyerFunded: 'Your payment is being returned. You can place a new order anytime.',
+      declinedHintBuyerFundedRefunded:
+        'Your payment has been returned. You can place a new order anytime.',
+      declinedHintBuyerUnfunded: 'No payment was charged. You can place a new order anytime.',
+      declinedHintSellerFunded: 'The buyer will receive a refund.',
+      declinedHintSellerFundedRefunded: 'The buyer has received a refund.',
+      declinedHintSellerUnfunded: 'No payment was received. Inventory has been restored.',
+      cancelledPaidBuyer: 'This order was cancelled — your payment will be refunded',
+      cancelledPaidBuyerRefunded: 'This order was cancelled — your payment has been refunded',
+      cancelledPaidSeller: 'This order was cancelled — refund initiated',
+      cancelledPaidSellerRefunded: 'This order was cancelled — refund completed',
+      cancelledPaidHintBuyer: 'Your payment is being returned.',
+      cancelledPaidHintBuyerRefunded: 'Your payment has been returned.',
+      cancelledPaidHintSeller: 'The buyer will receive a refund.',
+      cancelledPaidHintSellerRefunded: 'The buyer has received a refund.',
+      cancelledUnpaidBuyer: 'This order was cancelled before payment was completed',
+      cancelledUnpaidSeller: 'This order was cancelled — no payment was received',
+      cancelledUnpaidHintBuyer: 'No payment was charged. You can place a new order anytime.',
+      cancelledUnpaidHintSeller: 'No payment was received. Inventory has been restored.',
+      paymentVerificationTimeoutBuyer:
+        'This order was cancelled because payment verification timed out',
+      paymentVerificationTimeoutSeller:
+        'This order was cancelled — buyer payment verification timed out',
+      paymentVerificationTimeoutHintBuyer:
+        'Please retry payment or contact support if you already paid.',
+      paymentVerificationTimeoutHintSeller: 'Inventory has been restored.',
       cancelled: 'This order has been cancelled',
       refunded: 'This order has been refunded',
       reason: 'Reason',

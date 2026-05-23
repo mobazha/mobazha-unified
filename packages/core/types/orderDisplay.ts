@@ -72,6 +72,24 @@ export interface DisplayShipmentInfo {
   note?: string;
 }
 
+/** 订单取消/拒绝场景（由 orderTransform 从后端 state + contract 推导） */
+export type CancellationKind =
+  | 'payment_timeout'
+  | 'payment_verification_timeout'
+  | 'seller_decline'
+  | 'cancelled_paid'
+  | 'cancelled_unpaid'
+  | 'unknown';
+
+export interface CancellationContext {
+  kind: CancellationKind;
+  wasFunded: boolean;
+  /** 用户填写的拒绝/取消原因，或系统 reason 码 */
+  reason?: string;
+  /** Managed cancel / 链上退款 settlement 已 confirmed */
+  refundConfirmed?: boolean;
+}
+
 /**
  * 订单争议信息 - 用于展示
  */
@@ -243,7 +261,9 @@ export interface DisplayOrder {
   /** True when funds were released during seller confirmation, not buyer completion */
   fundsReleasedAtConfirmation?: boolean;
 
-  /** 取消/退款原因（来自 orderCancel.reason 或 refund.memo） */
+  /** 取消/拒绝语义（DECLINED vs CANCELED、是否已付款等） */
+  cancellation?: CancellationContext;
+  /** 取消/退款原因（来自 orderDecline / orderCancel.reason / refund.memo） */
   cancelReason?: string;
   /** 法币支付信息（仅当 paymentMethod === FIAT 时存在） */
   fiatPayment?: DisplayFiatPayment;

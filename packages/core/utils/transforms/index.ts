@@ -3,7 +3,13 @@
  * 将 API 数据转换为 UI 展示格式
  */
 
-export { transformCoreOrder, mapOrderState } from './orderTransform';
+export {
+  transformCoreOrder,
+  mapOrderState,
+  deriveCancellationContext,
+  isRefundSettlementConfirmed,
+} from './orderTransform';
+export type { CancellationSourceContract, CancellationSourceData } from './orderTransform';
 export { applyPaymentSessionToDisplayOrder, isDirectPaymentOrder } from './paymentSessionDisplay';
 export type { DirectPaymentOrderSignals } from './paymentSessionDisplay';
 export { convertProductToFormData } from './productTransform';
