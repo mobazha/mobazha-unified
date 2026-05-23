@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { transformCoreOrder } from '../../utils/transforms/orderTransform';
+import {
+  deriveCancellationContext,
+  isRefundSettlementConfirmed,
+  transformCoreOrder,
+} from '../../utils/transforms/orderTransform';
 
 function buildOrder(progress: {
   totalReceived?: string;
@@ -377,5 +381,185 @@ describe('transformCoreOrder payment progress formatting', () => {
       description: 'Feedback from buyer',
       reportedAt: '2026-05-23T00:51:10.844Z',
     });
+  });
+});
+
+describe('deriveCancellationContext', () => {
+  it('classifies seller decline after payment as seller_decline + funded', () => {
+    const ctx = deriveCancellationContext({
+      state: 'DECLINED',
+      funded: true,
+      paymentState: { verificationStatus: 'verified' },
+      contract: {
+        orderDecline: {
+          type: 'USER_DECLINE',
+          timestamp: '2026-05-23T04:45:40Z',
+        },
+        paymentSent: { coin: 'crypto:eip155:1:native' },
+      },
+    });
+
+    expect(ctx).toEqual({
+      kind: 'seller_decline',
+      wasFunded: true,
+      reason: undefined,
+      refundConfirmed: false,
+    });
+  });
+
+  it('marks refundConfirmed when settlement cancel is confirmed on-chain', () => {
+    const ctx = deriveCancellationContext({
+      state: 'DECLINED',
+      funded: true,
+      paymentState: { verificationStatus: 'verified' },
+      settlementActions: [
+        {
+          action: 'cancel',
+          settlementAction: 'cancel',
+          state: 'confirmed',
+        },
+      ],
+      contract: {
+        orderDecline: {
+          type: 'USER_DECLINE',
+          timestamp: '2026-05-23T04:45:40Z',
+          transactionID: '0xfailedattempt',
+        },
+        paymentSent: { coin: 'crypto:eip155:1:native' },
+      },
+    });
+
+    expect(ctx?.refundConfirmed).toBe(true);
+  });
+
+  it('does not treat orderDecline tx as refund when settlement actions exist but cancel pending', () => {
+    expect(
+      isRefundSettlementConfirmed([{ action: 'cancel', state: 'pending' }], {
+        orderDecline: { transactionID: '0xfailedattempt' },
+      })
+    ).toBe(false);
+  });
+
+  it('classifies system payment timeout from orderCancel.reason', () => {
+    const ctx = deriveCancellationContext({
+      state: 'CANCELED',
+      funded: false,
+      contract: {
+        orderCancel: { reason: 'payment_timeout', timestamp: '2026-05-23T04:00:00Z' },
+      },
+    });
+
+    expect(ctx).toEqual({
+      kind: 'payment_timeout',
+      wasFunded: false,
+      reason: 'payment_timeout',
+      refundConfirmed: false,
+    });
+  });
+
+  it('classifies funded manual cancel without reason as cancelled_paid', () => {
+    const ctx = deriveCancellationContext({
+      state: 'CANCELED',
+      funded: true,
+      contract: {
+        orderCancel: { timestamp: '2026-05-23T04:00:00Z' },
+        paymentSent: { coin: 'crypto:eip155:1:native' },
+      },
+    });
+
+    expect(ctx?.kind).toBe('cancelled_paid');
+    expect(ctx?.wasFunded).toBe(true);
+  });
+});
+
+describe('transformCoreOrder cancellation display', () => {
+  const baseOpenContract = {
+    OrderID: 'order-declined-1',
+    orderOpen: {
+      timestamp: '2026-05-23T04:22:58Z',
+      pricingCoin: 'USD',
+      amount: 1500,
+      buyerID: { peerID: 'buyer-peer', name: 'Buyer' },
+      listings: [
+        {
+          listing: {
+            slug: 'listing-1',
+            metadata: { pricingCurrency: { code: 'USD', divisibility: 2 } },
+            item: { title: 'Test Product', price: 1500, images: [] },
+            vendorID: { peerID: 'vendor-peer', name: 'Vendor' },
+          },
+        },
+      ],
+      items: [{ quantity: 1 }],
+      shipping: {},
+    },
+  };
+
+  it('surfaces seller decline context for buyer view', () => {
+    const order = transformCoreOrder(
+      {
+        state: 'DECLINED',
+        funded: true,
+        paymentState: {
+          verificationStatus: 'verified',
+          progress: { percentage: 100 },
+        },
+        contract: {
+          ...baseOpenContract,
+          orderDecline: {
+            reason: 'Out of stock',
+            timestamp: '2026-05-23T04:45:40Z',
+            type: 'USER_DECLINE',
+          },
+          paymentSent: { coin: 'crypto:eip155:1:native', amount: '21000000000000000' },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.status).toBe('cancelled');
+    expect(order?.cancellation).toMatchObject({
+      kind: 'seller_decline',
+      wasFunded: true,
+      reason: 'Out of stock',
+      refundConfirmed: false,
+    });
+    expect(order?.cancelReason).toBe('Out of stock');
+    expect(order?.cancelledAt).toBe('2026-05-23T04:45:40Z');
+    expect(order?.timeline.some(e => e.descriptionKey === 'order.timeline.orderDeclined')).toBe(
+      true
+    );
+  });
+
+  it('marks refund confirmed when settlement cancel is on-chain', () => {
+    const order = transformCoreOrder(
+      {
+        state: 'DECLINED',
+        funded: true,
+        paymentState: {
+          verificationStatus: 'verified',
+          progress: { percentage: 100 },
+        },
+        settlementActions: [
+          {
+            action: 'cancel',
+            settlementAction: 'cancel',
+            state: 'confirmed',
+          },
+        ],
+        contract: {
+          ...baseOpenContract,
+          orderDecline: {
+            reason: 'Out of stock',
+            timestamp: '2026-05-23T04:45:40Z',
+            type: 'USER_DECLINE',
+          },
+          paymentSent: { coin: 'crypto:eip155:1:native', amount: '21000000000000000' },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.cancellation?.refundConfirmed).toBe(true);
   });
 });

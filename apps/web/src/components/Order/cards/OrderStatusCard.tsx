@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { useI18n, type DisplayOrder } from '@mobazha/core';
+import { useI18n, type DisplayOrder, type CancellationContext } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 import {
   Clock,
@@ -28,6 +28,94 @@ interface StatusConfig {
   bgColor: string;
   progress: number;
   paymentStepLabel?: string;
+}
+
+function resolveCancellationCopy(
+  cancellation: CancellationContext | undefined,
+  isBuyer: boolean,
+  t: (key: string) => string
+): Pick<StatusConfig, 'message' | 'hint'> {
+  if (!cancellation) {
+    return {
+      message: t('order.statusCard.cancelled'),
+      hint: undefined,
+    };
+  }
+
+  const { kind, wasFunded, refundConfirmed } = cancellation;
+
+  switch (kind) {
+    case 'seller_decline':
+      return {
+        message: isBuyer
+          ? wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedBuyerFundedRefunded')
+              : t('order.statusCard.declinedBuyerFunded')
+            : t('order.statusCard.declinedBuyerUnfunded')
+          : wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedSellerFundedRefunded')
+              : t('order.statusCard.declinedSellerFunded')
+            : t('order.statusCard.declinedSellerUnfunded'),
+        hint: isBuyer
+          ? wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedHintBuyerFundedRefunded')
+              : t('order.statusCard.declinedHintBuyerFunded')
+            : t('order.statusCard.declinedHintBuyerUnfunded')
+          : wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedHintSellerFundedRefunded')
+              : t('order.statusCard.declinedHintSellerFunded')
+            : t('order.statusCard.declinedHintSellerUnfunded'),
+      };
+    case 'payment_verification_timeout':
+      return {
+        message: isBuyer
+          ? t('order.statusCard.paymentVerificationTimeoutBuyer')
+          : t('order.statusCard.paymentVerificationTimeoutSeller'),
+        hint: isBuyer
+          ? t('order.statusCard.paymentVerificationTimeoutHintBuyer')
+          : t('order.statusCard.paymentVerificationTimeoutHintSeller'),
+      };
+    case 'cancelled_paid':
+      return {
+        message: isBuyer
+          ? refundConfirmed
+            ? t('order.statusCard.cancelledPaidBuyerRefunded')
+            : t('order.statusCard.cancelledPaidBuyer')
+          : refundConfirmed
+            ? t('order.statusCard.cancelledPaidSellerRefunded')
+            : t('order.statusCard.cancelledPaidSeller'),
+        hint: isBuyer
+          ? refundConfirmed
+            ? t('order.statusCard.cancelledPaidHintBuyerRefunded')
+            : t('order.statusCard.cancelledPaidHintBuyer')
+          : refundConfirmed
+            ? t('order.statusCard.cancelledPaidHintSellerRefunded')
+            : t('order.statusCard.cancelledPaidHintSeller'),
+      };
+    case 'cancelled_unpaid':
+      return {
+        message: isBuyer
+          ? t('order.statusCard.cancelledUnpaidBuyer')
+          : t('order.statusCard.cancelledUnpaidSeller'),
+        hint: isBuyer
+          ? t('order.statusCard.cancelledUnpaidHintBuyer')
+          : t('order.statusCard.cancelledUnpaidHintSeller'),
+      };
+    case 'payment_timeout':
+    default:
+      return {
+        message: isBuyer
+          ? t('order.statusCard.cancelledBuyer')
+          : t('order.statusCard.cancelledSeller'),
+        hint: isBuyer
+          ? t('order.statusCard.cancelledHintBuyer')
+          : t('order.statusCard.cancelledHintSeller'),
+      };
+  }
 }
 
 export const OrderStatusCard = memo(function OrderStatusCard({
@@ -170,19 +258,17 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           bgColor: 'bg-destructive/8 border-destructive/20',
           progress: -1,
         };
-      case 'cancelled':
+      case 'cancelled': {
+        const cancellationCopy = resolveCancellationCopy(order.cancellation, isBuyer, t);
         return {
           icon: XCircle,
-          message: isBuyer
-            ? t('order.statusCard.cancelledBuyer')
-            : t('order.statusCard.cancelledSeller'),
-          hint: isBuyer
-            ? t('order.statusCard.cancelledHintBuyer')
-            : t('order.statusCard.cancelledHintSeller'),
+          message: cancellationCopy.message,
+          hint: cancellationCopy.hint,
           color: 'text-amber-600 dark:text-amber-400',
           bgColor: 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/40',
           progress: -1,
         };
+      }
       case 'refunded':
         return {
           icon: RotateCcw,
@@ -206,7 +292,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
     order.awaitingPaymentVerification,
     order.paymentVerificationFailed,
     order.paymentVerificationFailureReason,
-    isCryptoPayment,
+    order.cancellation,
     t,
   ]);
 
@@ -223,6 +309,10 @@ export const OrderStatusCard = memo(function OrderStatusCard({
   const Icon = config.icon;
   const isTerminal = config.progress < 0;
   const cancelReason = order.cancelReason;
+  const showUserCancelReason =
+    !!cancelReason &&
+    cancelReason !== 'payment_timeout' &&
+    cancelReason !== 'payment_verification_timeout';
 
   // Payment progress (partial / verified intermediate state) — shown only
   // for crypto payments still in the awaiting/pending verification window
@@ -266,7 +356,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         <div className="flex-1 min-w-0">
           <p className={cn('text-sm font-semibold', config.color)}>{config.message}</p>
           {config.hint && <p className="text-xs text-muted-foreground mt-0.5">{config.hint}</p>}
-          {isTerminal && cancelReason && (
+          {isTerminal && showUserCancelReason && (
             <p className="text-xs text-muted-foreground mt-1">
               {t('order.statusCard.reason')}: {cancelReason}
             </p>
