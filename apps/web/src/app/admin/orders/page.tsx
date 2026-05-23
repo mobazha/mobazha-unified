@@ -10,6 +10,7 @@ import {
   useOrderAction,
   batchGetProfileDisplayInfo,
   getImageUrl,
+  supportsBackendSettlementActionSurface,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import type { TranslateFunction } from '@mobazha/core/i18n/types';
@@ -599,15 +600,12 @@ export default function AdminOrdersPage() {
     for (const { id, paymentCoin } of pendingIds) {
       try {
         await executeOrderAction({
-          paymentCoin,
-          getInstructions: initiatorAddress =>
-            ordersApi.getConfirmInstructions({ orderID: id, decline: false, initiatorAddress }),
           executeBackendSettlementAction: () =>
             ordersApi.executeSettlementAction({
               orderID: id,
               action: 'confirm',
             }),
-          preferBackendSettlementAction: true,
+          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: id, decline: false, transactionID: txID }),
           onSuccess: () => {
@@ -677,19 +675,12 @@ export default function AdminOrdersPage() {
       setIsProcessing(true);
       try {
         await executeOrderAction({
-          paymentCoin,
-          getInstructions: addr =>
-            ordersApi.getConfirmInstructions({
-              orderID: orderId,
-              decline: false,
-              initiatorAddress: addr,
-            }),
           executeBackendSettlementAction: () =>
             ordersApi.executeSettlementAction({
               orderID: orderId,
               action: 'confirm',
             }),
-          preferBackendSettlementAction: true,
+          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: orderId, decline: false, transactionID: txID }),
           onSuccess: async () => {
@@ -723,13 +714,12 @@ export default function AdminOrdersPage() {
       setIsProcessing(true);
       try {
         await executeOrderAction({
-          paymentCoin,
-          getInstructions: addr =>
-            ordersApi.getConfirmInstructions({
+          executeBackendSettlementAction: () =>
+            ordersApi.executeSettlementAction({
               orderID: orderId,
-              decline: true,
-              initiatorAddress: addr,
+              action: 'cancel',
             }),
+          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: orderId, decline: true, transactionID: txID }),
           onSuccess: async () => {

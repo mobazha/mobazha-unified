@@ -85,14 +85,6 @@ export const NODE_API = {
   ORDER_SETTLEMENT_ACTION: (orderId: string, action: 'confirm' | 'cancel') =>
     `/orders/${orderId}/settlement-actions/${action}`,
 
-  // --- Order Instructions (orderID in URL) ---
-  ORDER_INSTRUCTIONS_COMPLETE: (orderId: string) => `/orders/${orderId}/instructions/complete`,
-  ORDER_INSTRUCTIONS_CONFIRM: (orderId: string) => `/orders/${orderId}/instructions/confirm`,
-  ORDER_INSTRUCTIONS_CANCEL: (orderId: string) => `/orders/${orderId}/instructions/cancel`,
-  ORDER_INSTRUCTIONS_REFUND: (orderId: string) => `/orders/${orderId}/instructions/refund`,
-  ORDER_INSTRUCTIONS_PAYMENT: (orderId: string) => `/orders/${orderId}/instructions/payment`,
-  DISPUTE_INSTRUCTIONS_RELEASE: (orderId: string) => `/disputes/${orderId}/instructions/release`,
-
   // --- Disputes (orderID in URL) ---
   DISPUTE_OPEN: (orderId: string) => `/disputes/${orderId}/open`,
   DISPUTE_AFTER_SALE: (orderId: string) => `/disputes/${orderId}/after-sale`,

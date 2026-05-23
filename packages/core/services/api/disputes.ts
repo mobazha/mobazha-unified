@@ -232,26 +232,6 @@ export async function releaseEscrowAfterTimeout(
 }
 
 /**
- * 获取裁决执行指令
- */
-export async function getReleaseFundsInstructions(
-  orderId: string,
-  buyerPercentage: number,
-  vendorPercentage: number,
-  resolution: string
-): Promise<{
-  instructions?: string;
-  signature?: string;
-  error?: string;
-}> {
-  return authPost(NODE_API.DISPUTE_INSTRUCTIONS_RELEASE(orderId), {
-    buyerPercentage,
-    vendorPercentage,
-    resolution,
-  });
-}
-
-/**
  * 争议 API 导出对象
  */
 export const disputesApi = {
@@ -263,5 +243,4 @@ export const disputesApi = {
   resolveDispute,
   acceptDisputeResolution,
   releaseEscrowAfterTimeout,
-  getReleaseFundsInstructions,
 };

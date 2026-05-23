@@ -145,6 +145,12 @@ export interface Order {
     extended: boolean;
     afterSaleWindowDays: number;
   };
+  afterSaleDispute?: {
+    reason?: string;
+    description?: string;
+    openedAt?: string;
+    reportedAt?: string;
+  };
   afterSaleDisputeReason?: string;
   afterSaleDisputeDesc?: string;
   afterSaleDisputeAt?: string;
@@ -182,6 +188,14 @@ export interface OrderContract {
 
   // 错误信息
   errors?: string[];
+
+  // SQL-backed application fields surfaced by the order detail API.
+  afterSaleDispute?: {
+    reason?: string;
+    description?: string;
+    openedAt?: string;
+    reportedAt?: string;
+  };
 }
 
 /**

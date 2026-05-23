@@ -430,6 +430,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        inAfterSaleWindow: displayOrder.protection?.stage === 'AFTER_SALE_WINDOW',
+        hasAfterSaleDispute,
         fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
     );
@@ -447,6 +449,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        inAfterSaleWindow: displayOrder.protection?.stage === 'AFTER_SALE_WINDOW',
+        hasAfterSaleDispute,
         fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
     );
@@ -914,6 +918,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
           fundsReleasedAtConfirmation={shouldBlockAutoRefund}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+          hasAfterSaleDispute={hasAfterSaleDispute}
           contractType={shipOrderProps.contractType}
           hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
           digitalDeliveryStatus={sellerDigitalDelivery.status}

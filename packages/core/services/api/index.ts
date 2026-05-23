@@ -78,7 +78,6 @@ export type { StoreListingsResult } from './products';
 
 // 订单 API
 export * as ordersApi from './orders';
-export type { OrderInstructionsResponse } from './orders';
 
 // 用户/店铺 API
 export * as profileApi from './profile';

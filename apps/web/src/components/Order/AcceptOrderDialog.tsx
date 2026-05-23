@@ -11,7 +11,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n, ordersApi, useOrderAction } from '@mobazha/core';
+import {
+  useI18n,
+  ordersApi,
+  useOrderAction,
+  supportsBackendSettlementActionSurface,
+} from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 import { ReceivingAccountSelector } from './ReceivingAccountSelector';
@@ -70,21 +75,14 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
 
     try {
       await execute({
-        paymentCoin: isFiatPayment ? undefined : paymentCoin,
-        getInstructions: initiatorAddress =>
-          ordersApi.getConfirmInstructions({
-            orderID: orderId,
-            decline: false,
-            initiatorAddress,
-            payoutAddress,
-          }),
         executeBackendSettlementAction: () =>
           ordersApi.executeSettlementAction({
             orderID: orderId,
             action: 'confirm',
             payoutAddress,
           }),
-        preferBackendSettlementAction: true,
+        attemptBackendSettlementAction:
+          !isFiatPayment && supportsBackendSettlementActionSurface(paymentCoin),
         executeAction: txID =>
           ordersApi.confirmOrder({
             orderID: orderId,

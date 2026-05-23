@@ -83,6 +83,53 @@ interface ProfileEnhancement {
   moderatorLocation?: string;
 }
 
+const FINALIZED_STATES = new Set([
+  'COMPLETED',
+  'PAYMENT_FINALIZED',
+  'SHIPPED',
+  'PARTIALLY_SHIPPED',
+]);
+const CANCELLED_STATES = new Set(['CANCELED', 'CANCELLED', 'REFUNDED', 'DECLINED']);
+
+function settlementActionName(action: SettlementActionSnapshot): string {
+  return (action.settlementAction || action.action || '').toLowerCase();
+}
+
+function isConfirmedSettlementAction(action: SettlementActionSnapshot): boolean {
+  return (action.state || '').toLowerCase() === 'confirmed';
+}
+
+export function selectPrimarySettlementAction(
+  order: CoreOrder | null | undefined
+): SettlementActionSnapshot | null {
+  const actions = order?.settlementActions || [];
+  if (actions.length === 0) return null;
+
+  const nonSetupActions = actions.filter(action => settlementActionName(action) !== 'safe_deploy');
+  const candidates = nonSetupActions.length > 0 ? nonSetupActions : actions;
+  const state = order?.state || '';
+
+  if (CANCELLED_STATES.has(state)) {
+    return (
+      candidates.find(action => {
+        const name = settlementActionName(action);
+        return isConfirmedSettlementAction(action) && (name === 'cancel' || name === 'refund');
+      }) || candidates[0]
+    );
+  }
+
+  if (FINALIZED_STATES.has(state)) {
+    return (
+      candidates.find(action => {
+        const name = settlementActionName(action);
+        return isConfirmedSettlementAction(action) && (name === 'confirm' || name === 'complete');
+      }) || candidates[0]
+    );
+  }
+
+  return candidates[0];
+}
+
 export function useOrderDetail(
   orderId: string,
   viewingContext?: 'sale' | 'purchase'
@@ -93,7 +140,7 @@ export function useOrderDetail(
 
   // 使用 useOrder hook 获取订单数据
   const { order: coreOrder, isLoading, error, refetch } = useOrder(orderId);
-  const latestSettlementAction = coreOrder?.settlementActions?.[0] || null;
+  const latestSettlementAction = selectPrimarySettlementAction(coreOrder);
   const {
     data: paymentSession,
     refetch: refetchPaymentSession,

@@ -16,6 +16,7 @@ export interface ExternalWalletPaymentInfo {
   paymentAddress: string;
   paymentURI?: string;
   amount: string;
+  amountIsDecimal?: boolean;
   coin: string;
   decimals?: number;
   qrCodeData?: string;
@@ -37,6 +38,12 @@ function formatCryptoAmount(rawAmount: string, decimals: number): string {
   // toFixed(decimals) 保留精度后再去除末尾的 0
   const formatted = result.toFixed(decimals);
   return formatted.replace(/\.?0+$/, '') || '0';
+}
+
+function formatDecimalAmount(rawAmount: string): string {
+  const bn = new BigNumber(rawAmount);
+  if (!bn.isFinite() || bn.isNaN() || bn.isZero()) return '0';
+  return bn.toFixed().replace(/\.?0+$/, '') || '0';
 }
 
 function getReadableCoinName(coin: string): string {
@@ -112,7 +119,9 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
 
   const qrValue = paymentInfo.qrCodeData || paymentInfo.paymentURI || paymentInfo.paymentAddress;
   const decimals = paymentInfo.decimals ?? getCurrencyDecimals(paymentInfo.coin);
-  const displayAmount = formatCryptoAmount(paymentInfo.amount, decimals);
+  const displayAmount = paymentInfo.amountIsDecimal
+    ? formatDecimalAmount(paymentInfo.amount)
+    : formatCryptoAmount(paymentInfo.amount, decimals);
 
   const coinSymbol = tokenId?.toUpperCase() || getReadableCoinName(paymentInfo.coin) || '';
 

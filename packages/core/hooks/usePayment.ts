@@ -74,11 +74,8 @@ export interface UsePaymentReturn {
     releaseTime?: number;
   }) => Promise<TransactionResult | null>;
 
-  // 扫描支付（BTC/LTC）
-  getPaymentInstructions: (
-    orderId: string,
-    currency: string
-  ) => Promise<PaymentInstructions | null>;
+  // 扫描/外部钱包支付
+  createPaymentSession: (orderId: string, currency: string) => Promise<PaymentInstructions | null>;
   checkPaymentStatus: (orderId: string) => Promise<PaymentResult | null>;
 
   // 直接支付（节点钱包）
@@ -239,30 +236,26 @@ export function usePayment(): UsePaymentReturn {
     [isConnected, walletInfo?.chainId, switchChain, createEscrow]
   );
 
-  /**
-   * 获取扫描支付指令（BTC/LTC）
-   */
-  const getPaymentInstructions = useCallback(
+  const createPaymentSession = useCallback(
     async (orderId: string, currency: string): Promise<PaymentInstructions | null> => {
       setIsLoading(true);
       setError(null);
       setPaymentState('preparing');
 
       try {
-        const response = await ordersApi.getPaymentInstructions({ orderId, coin: currency });
-
-        if (response.error) {
-          throw new Error(response.error);
-        }
+        const session = await ordersApi.createOrderPaymentSession({
+          orderId,
+          paymentCoin: currency,
+        });
+        const target = session.fundingTarget;
 
         const paymentInstructions: PaymentInstructions = {
           orderId,
-          address: response.address || '',
-          amount: response.amount || '0',
+          address: target?.address || '',
+          amount: target?.amount || session.expectedAmount || '0',
           currency,
-          // QR 码可以在前端生成
-          qrCode: `bitcoin:${response.address}?amount=${response.amount}`,
-          expiresAt: Date.now() + 3600000, // 1 小时过期
+          qrCode: target?.qrPayload,
+          expiresAt: session.expiresAt ? new Date(session.expiresAt).getTime() : undefined,
         };
 
         setInstructions(paymentInstructions);
@@ -423,7 +416,7 @@ export function usePayment(): UsePaymentReturn {
     payWithWallet,
 
     // 扫描支付
-    getPaymentInstructions,
+    createPaymentSession,
     checkPaymentStatus,
 
     // 直接支付

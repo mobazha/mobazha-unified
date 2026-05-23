@@ -13,6 +13,8 @@ import {
   useOrderAction,
   digitalAssetsApi,
   CONTRACT_TYPES,
+  isFiatPaymentCoin,
+  supportsBackendSettlementActionSurface,
   type DigitalDeliveryStatus,
   type WebSocketMessage,
   queryKeys,
@@ -184,9 +186,18 @@ export function useOrderDetailPage(
     displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
   const paymentSettlementSpec = (coreOrder as OrderContractData | null)?.contract?.paymentSent
     ?.settlementSpec;
-  const usesBackendSafeSettlement =
-    paymentSettlementSpec?.payMode === 'address_monitored' &&
-    paymentSettlementSpec?.escrowType === 'managed_escrow';
+  const canAttemptBackendSettlementAction = useMemo(() => {
+    if (isFiatPaymentCoin(paymentCoin)) {
+      return false;
+    }
+    if (paymentSettlementSpec?.payMode === 'address_monitored') {
+      return true;
+    }
+    if (displayOrder?.paymentSettlementMode === 'address_monitored') {
+      return true;
+    }
+    return supportsBackendSettlementActionSurface(paymentCoin);
+  }, [displayOrder?.paymentSettlementMode, paymentCoin, paymentSettlementSpec?.payMode]);
 
   const counterparty = useMemo((): {
     peerID?: string;
@@ -281,11 +292,7 @@ export function useOrderDetailPage(
           onSuccess(t('order.actions.rateSuccess'), t('order.actions.rateSuccessDesc'));
         } else {
           await executeOrderAction({
-            paymentCoin,
-            getInstructions: addr =>
-              ordersApi.getCompleteInstructions({ orderID: orderId, initiatorAddress: addr }),
-            executeAction: txID =>
-              ordersApi.completeOrder({ orderID: orderId, txID, ratings, anonymous }),
+            executeAction: () => ordersApi.completeOrder({ orderID: orderId, ratings, anonymous }),
             onSuccess: () =>
               onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc')),
             onError,
@@ -298,7 +305,7 @@ export function useOrderDetailPage(
         setShowReviewDialog(false);
       }
     },
-    [coreOrder, displayOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
+    [coreOrder, displayOrder, executeOrderAction, orderId, refetch, t, toast]
   );
 
   const submitReviewAndComplete = useCallback(
@@ -342,13 +349,12 @@ export function useOrderDetailPage(
         switch (actionType) {
           case 'decline':
             await executeOrderAction({
-              paymentCoin,
-              getInstructions: addr =>
-                ordersApi.getConfirmInstructions({
+              executeBackendSettlementAction: () =>
+                ordersApi.executeSettlementAction({
                   orderID: orderId,
-                  decline: true,
-                  initiatorAddress: addr,
+                  action: 'cancel',
                 }),
+              attemptBackendSettlementAction: canAttemptBackendSettlementAction,
               executeAction: txID =>
                 ordersApi.confirmOrder({ orderID: orderId, decline: true, transactionID: txID }),
               onSuccess: () =>
@@ -358,15 +364,12 @@ export function useOrderDetailPage(
             break;
           case 'cancel':
             await executeOrderAction({
-              paymentCoin,
-              getInstructions: addr =>
-                ordersApi.getCancelInstructions({ orderID: orderId, initiatorAddress: addr }),
               executeBackendSettlementAction: () =>
                 ordersApi.executeSettlementAction({
                   orderID: orderId,
                   action: 'cancel',
                 }),
-              preferBackendSettlementAction: usesBackendSafeSettlement,
+              attemptBackendSettlementAction: canAttemptBackendSettlementAction,
               executeAction: txID =>
                 ordersApi.cancelOrder({ orderID: orderId, transactionID: txID }),
               onSuccess: () =>
@@ -385,15 +388,12 @@ export function useOrderDetailPage(
               }
             } else {
               await executeOrderAction({
-                paymentCoin,
-                getInstructions: addr =>
-                  ordersApi.getRefundInstructions({ orderID: orderId, initiatorAddress: addr }),
                 executeBackendSettlementAction: () =>
                   ordersApi.executeSettlementAction({
                     orderID: orderId,
                     action: 'cancel',
                   }),
-                preferBackendSettlementAction: usesBackendSafeSettlement,
+                attemptBackendSettlementAction: canAttemptBackendSettlementAction,
                 executeAction: txID =>
                   ordersApi.refundOrder({ orderID: orderId, transactionID: txID }),
                 onSuccess: () =>
@@ -404,7 +404,6 @@ export function useOrderDetailPage(
             break;
           case 'claim':
             await executeOrderAction({
-              paymentCoin,
               executeAction: () => ordersApi.claimPayment(orderId),
               onSuccess: () =>
                 onSuccess(t('order.actions.claimSuccess'), t('order.actions.claimSuccessDesc')),
@@ -413,7 +412,6 @@ export function useOrderDetailPage(
             break;
           case 'acceptPayout':
             await executeOrderAction({
-              paymentCoin,
               executeAction: () => ordersApi.acceptDispute(orderId),
               onSuccess: () =>
                 onSuccess(
@@ -438,11 +436,10 @@ export function useOrderDetailPage(
       displayOrder,
       executeOrderAction,
       orderId,
-      paymentCoin,
       refetch,
       t,
       toast,
-      usesBackendSafeSettlement,
+      canAttemptBackendSettlementAction,
     ]
   );
 

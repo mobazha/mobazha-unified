@@ -20,6 +20,7 @@ import {
   useOrderAction,
   batchGetProfileDisplayInfo,
   useRoleStore,
+  supportsBackendSettlementActionSurface,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import { useIsDesktop, useIsMobile } from '@/hooks/useMediaQuery';
@@ -183,8 +184,7 @@ function OrdersPageContent() {
 
   // 接受订单
   // 使用统一的 useOrderAction hook 处理订单操作
-  // - UTXO 链（BTC/LTC/BCH/ZEC）：直接调用 API
-  // - EVM/Solana 链：先获取 instructions，如需要则执行链上交易
+  // - UTXO/EVM/Solana 链：走后端 settlement action
   const handleAccept = useCallback(
     async (orderId: string, paymentCoin?: string) => {
       if (isProcessing || isOrderActionLoading) return;
@@ -192,19 +192,12 @@ function OrdersPageContent() {
       setIsProcessing(true);
       try {
         await executeOrderAction({
-          paymentCoin,
-          getInstructions: initiatorAddress =>
-            ordersApi.getConfirmInstructions({
-              orderID: orderId,
-              decline: false,
-              initiatorAddress,
-            }),
           executeBackendSettlementAction: () =>
             ordersApi.executeSettlementAction({
               orderID: orderId,
               action: 'confirm',
             }),
-          preferBackendSettlementAction: true,
+          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
           executeAction: txID =>
             ordersApi.confirmOrder({
               orderID: orderId,
@@ -239,8 +232,7 @@ function OrdersPageContent() {
 
   // 拒绝订单
   // 使用统一的 useOrderAction hook 处理订单操作
-  // - UTXO 链（BTC/LTC/BCH/ZEC）：直接调用 API
-  // - EVM/Solana 链：先获取 instructions，如需要则执行链上交易退款
+  // - UTXO/EVM/Solana 链：走后端 settlement action
   const handleReject = useCallback(
     async (orderId: string, paymentCoin?: string) => {
       if (isProcessing || isOrderActionLoading) return;
@@ -248,13 +240,12 @@ function OrdersPageContent() {
       setIsProcessing(true);
       try {
         await executeOrderAction({
-          paymentCoin,
-          getInstructions: initiatorAddress =>
-            ordersApi.getConfirmInstructions({
+          executeBackendSettlementAction: () =>
+            ordersApi.executeSettlementAction({
               orderID: orderId,
-              decline: true,
-              initiatorAddress,
+              action: 'cancel',
             }),
+          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
           executeAction: txID =>
             ordersApi.confirmOrder({
               orderID: orderId,

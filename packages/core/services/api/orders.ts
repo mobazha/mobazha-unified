@@ -390,6 +390,68 @@ export async function getOrderPaymentSession(orderId: string): Promise<PaymentSe
   }
 }
 
+export interface CreateOrderPaymentSessionData {
+  orderId: string;
+  paymentCoin: string;
+  refundAddress?: string;
+  buyerPeerID?: string;
+  payerAddress?: string;
+  moderator?: string;
+  fiatAmountCents?: number;
+  fiatDescription?: string;
+  fiatReturnURL?: string;
+  fiatCancelURL?: string;
+}
+
+export async function createOrderPaymentSession(
+  payload: CreateOrderPaymentSessionData
+): Promise<PaymentSession> {
+  const realFn = async () => {
+    const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
+    return authPost<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(payload.orderId), {
+      paymentCoin,
+      ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
+      ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
+      ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
+      ...(payload.moderator ? { moderator: payload.moderator } : {}),
+      ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
+      ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
+      ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
+      ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
+    });
+  };
+
+  const mockFn = async (): Promise<PaymentSession> => {
+    await mockDelay();
+    const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
+    return {
+      sessionID: `ps_${payload.orderId}`,
+      orderID: payload.orderId,
+      paymentCoin,
+      settlementMode: 'address_monitored',
+      productMode: payload.moderator ? 'moderated' : 'cancelable',
+      status: 'awaiting_funds',
+      expectedAmount: '0.015',
+      expiresAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      fundingTarget: {
+        type: 'address',
+        address: 'bc1qmockpaymentaddress0000000000000000000000',
+        assetID: paymentCoin,
+        amount: '0.015',
+      },
+      paymentProgress: {
+        observedAmount: '0',
+        requiredAmount: '0.015',
+        remainingAmount: '0.015',
+        observationCount: 0,
+        fundingState: 'awaiting_funds',
+      },
+    };
+  };
+
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderId}/payment-session`);
+}
+
 // ========== 订单创建 API ==========
 
 /**
@@ -441,18 +503,6 @@ export interface CreateOrderResult {
       divisibility: number;
     };
   };
-}
-
-/**
- * 支付指令响应
- */
-export interface PaymentInstructionsResult {
-  paymentAddress: string;
-  amount: string;
-  buyerAddress?: string;
-  vendorAddress?: string;
-  moderatorAddress?: string;
-  chainId?: number;
 }
 
 /**
@@ -769,160 +819,6 @@ export async function rateOrder(payload: {
 }
 
 /**
- * 通用订单指令响应类型
- * 用于所有需要获取链上交易指令的操作（confirm/reject/cancel/refund/complete）
- */
-export interface OrderInstructionsResponse {
-  /** 支付链类型（如 ETHEREUM, SOLANA, BTC 等） */
-  paymentChain?: string;
-  /** 后端恢复出的实际支付币种 */
-  paymentCoin?: string;
-  /** 是否需要链上交易 */
-  hasInstructions: boolean;
-  /** 是否需要先走后端 Safe/V2 settlement action */
-  settlementActionRequired?: boolean;
-  /** 链上交易指令（EVM 或 Solana 格式） */
-  instructions?: {
-    to: string;
-    data: string;
-    value?: string;
-  };
-}
-
-/**
- * 完成订单的链上交易指令响应类型
- * @deprecated 请使用 OrderInstructionsResponse
- */
-export interface CompleteInstructionsResponse {
-  /** 支付链类型（如 ETHEREUM, SOLANA 等） */
-  paymentChain?: string;
-  /** 是否需要链上交易 */
-  hasInstructions: boolean;
-  /** 链上交易指令（EVM 或 Solana 格式） */
-  instructions?: unknown;
-}
-
-/**
- * 获取完成订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.initiatorAddress - 发起者钱包地址
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getCompleteInstructions(params: {
-  orderID: string;
-  initiatorAddress: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_COMPLETE(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/complete`);
-}
-
-/**
- * 获取确认/拒绝订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.decline - 是否拒绝订单（false=接受，true=拒绝）
- * @param params.initiatorAddress - 发起者钱包地址
- * @param params.payoutAddress - 卖家收款地址（接受订单时使用）
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getConfirmInstructions(params: {
-  orderID: string;
-  decline: boolean;
-  initiatorAddress: string;
-  payoutAddress?: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_CONFIRM(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/confirm`);
-}
-
-/**
- * 获取取消订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.initiatorAddress - 发起者钱包地址
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getCancelInstructions(params: {
-  orderID: string;
-  initiatorAddress: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_CANCEL(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/cancel`);
-}
-
-/**
- * 获取退款订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.initiatorAddress - 发起者钱包地址
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getRefundInstructions(params: {
-  orderID: string;
-  initiatorAddress: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_REFUND(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return orderWrite(realFn, mockFn, `/orders/${params.orderID}/instructions/refund`);
-}
-
-/**
  * 取消订单
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
@@ -998,8 +894,7 @@ export async function refundOrder(payload: {
  * 提交支付数据
  * 用于通知后端支付已完成
  *
- * 注意：推荐直接使用后端 getPaymentInstructions 返回的 paymentData，
- * 只添加 transactionID 和 timestamp 字段（与移动端保持一致）
+ * 旧支付指令路径已退役；新支付入口使用 PaymentSession。
  */
 export interface SubmitPaymentData {
   orderID: string;
@@ -1098,126 +993,6 @@ export async function fundOrder(payload: {
   };
 
   return withMockFallback(realFn, mockFn, `/orders/${payload.orderId}/spend`);
-}
-
-/**
- * 支付指令响应类型
- *
- * 后端返回的完整数据结构，用于 EVM 链的智能合约支付
- */
-export interface PaymentInstructionsResponse {
-  // 交易指令（合约调用）
-  instructions?: {
-    to: string; // 合约地址
-    data: string; // 合约调用数据（ABI 编码）
-    value: string; // ETH 值（通常为 "0"）
-  };
-  // 支付数据（元数据）
-  paymentData?: {
-    orderID: string;
-    transactionID?: string;
-    coin: string;
-    method: number;
-    contractAddress: string; // 托管合约地址
-    payerAddress?: string;
-    moderator?: string;
-    moderatorAddress?: string;
-    amount: string; // 支付金额（最小单位，字符串避免精度丢失）
-    fromID?: string;
-    toAddress?: string;
-    toID?: string;
-    script?: string;
-    unlockHours?: number;
-    paymentTokenAddress?: string; // ERC20 代币地址
-    timestamp?: string;
-  };
-  // 托管账户地址
-  escrowAccount?: string;
-  // 外部钱包支付（UTXO 链: BTC/LTC/BCH/ZEC）
-  paymentType?: string;
-  paymentAddress?: string;
-  paymentURI?: string;
-  coin?: string;
-  chainType?: string;
-  qrCodeData?: string;
-  scriptHash?: string;
-  script?: string;
-  moderator?: string;
-  unlockHours?: number;
-  expiresAt?: string;
-  // 兼容旧字段
-  address?: string;
-  amount?: string;
-  buyerAddress?: string;
-  vendorAddress?: string;
-  // 错误字段
-  error?: string;
-}
-
-/**
- * 获取支付指令
- *
- * 注意：后端 API 期望的参数名是 orderID 和 coinType（大写）
- * 为了与前端代码风格保持一致，这里接受 orderId 和 coin，
- * 然后在内部转换为后端期望的格式
- */
-export async function getPaymentInstructions(requestData: {
-  orderId: string;
-  coin: string;
-  payerAddress?: string; // 付款人地址
-  refundAddress?: string; // client_signed 可传 payerAddress；地址监听模式可省略
-  moderator?: string; // 仲裁人 peerID
-}): Promise<PaymentInstructionsResponse> {
-  const realFn = async () => {
-    const canonicalCoin = resolveCanonicalPaymentCoin(requestData.coin);
-    const backendRequestData: Record<string, unknown> = {
-      orderID: requestData.orderId,
-      coinType: canonicalCoin,
-    };
-    if (requestData.payerAddress) {
-      backendRequestData.payerAddress = requestData.payerAddress;
-    }
-    if (requestData.refundAddress) {
-      backendRequestData.refundAddress = requestData.refundAddress;
-    }
-    if (requestData.moderator) {
-      backendRequestData.moderator = requestData.moderator;
-    }
-    return authPost<PaymentInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_PAYMENT(requestData.orderId),
-      backendRequestData
-    );
-  };
-
-  const mockFn = async () => {
-    await mockDelay();
-    const canonicalCoin = resolveCanonicalPaymentCoin(requestData.coin);
-    const mockContractAddress = '0x' + Math.random().toString(16).slice(2, 42);
-    const mockEscrowAccount = '0x' + Math.random().toString(16).slice(2, 66);
-    return {
-      instructions: {
-        to: mockContractAddress,
-        data: '0x57bced76' + '0'.repeat(256),
-        value: '0',
-      },
-      paymentData: {
-        orderID: requestData.orderId,
-        coin: canonicalCoin,
-        method: 1,
-        contractAddress: mockContractAddress,
-        amount: '1500',
-        unlockHours: 720,
-        paymentTokenAddress: '0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
-      },
-      escrowAccount: mockEscrowAccount,
-    };
-  };
-
-  const mode = getApiMode();
-  if (mode === 'mock') {
-    return mockFn();
-  }
-  return realFn();
 }
 
 /**
@@ -1393,16 +1168,10 @@ export const ordersApi = {
   extendProtection,
   refundOrder,
 
-  // 操作指令（用于获取链上交易指令）
-  getConfirmInstructions,
-  getCancelInstructions,
-  getRefundInstructions,
-  getCompleteInstructions,
-
   // 支付
+  createOrderPaymentSession,
   submitPayment,
   fundOrder,
-  getPaymentInstructions,
   getPaymentRemaining,
 
   // 争议

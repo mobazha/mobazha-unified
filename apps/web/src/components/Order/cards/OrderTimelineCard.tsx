@@ -14,6 +14,13 @@ export interface OrderTimelineCardProps {
   className?: string;
 }
 
+type TimelineCardEntry = {
+  key: string;
+  timestamp?: string;
+  priority: number;
+  node: React.ReactNode;
+};
+
 function CancelledTimeline({ order }: { order: DisplayOrder }) {
   const { t } = useI18n();
   const createdEvent = order.timeline.find(e => e.status === 'created');
@@ -101,15 +108,22 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
   className,
 }: OrderTimelineCardProps) {
   const { t } = useI18n();
+  const paymentEvent = order.timeline.find(e => e.status === 'paid');
+  const acceptedEvent = order.timeline.find(e => e.status === 'processing');
+  const shippedEvent = order.timeline.find(e => e.status === 'shipped');
+  const releasedEvent = order.timeline.find(e => e.status === 'released');
+  const completedEvent = order.timeline.find(e => e.status === 'completed');
 
   const hasHistory = useMemo(() => {
     return (
       order.status === 'completed' ||
       order.status === 'cancelled' ||
+      !!order.paymentTx ||
+      !!order.releaseTx ||
       !!order.trackingNumber ||
       ['processing', 'shipped', 'delivered', 'completed'].includes(order.status)
     );
-  }, [order.status, order.trackingNumber]);
+  }, [order.status, order.trackingNumber, order.paymentTx, order.releaseTx]);
 
   if (!hasHistory) return null;
 
@@ -121,56 +135,131 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
     );
   }
 
-  const completionReleasesFunds = !order.fundsReleasedAtConfirmation;
-  const releaseTxHash = completionReleasesFunds ? order.releaseTx || order.paymentTx : undefined;
-  const completeTxUrl = releaseTxHash
+  const releaseTxHash =
+    order.releaseTx && order.releaseTx !== order.paymentTx ? order.releaseTx : undefined;
+  const releaseTxUrl = releaseTxHash
     ? getBlockExplorerUrl(releaseTxHash, order.currency || '', order.chainId) || undefined
     : undefined;
+  const completedTxHash =
+    !order.fundsReleasedAtConfirmation && !releaseTxHash
+      ? order.releaseTx || order.paymentTx
+      : undefined;
+  const completedTxUrl = completedTxHash
+    ? getBlockExplorerUrl(completedTxHash, order.currency || '', order.chainId) || undefined
+    : undefined;
+
+  const timelineCards: TimelineCardEntry[] = [];
+
+  if (order.paymentTx && paymentEvent) {
+    timelineCards.push({
+      key: 'paid',
+      timestamp: paymentEvent.timestamp,
+      priority: 10,
+      node: (
+        <OrderCompleteCard
+          title={t('order.stages.escrowed')}
+          timestamp={paymentEvent.timestamp}
+          amount={order.total}
+          currency={order.currency}
+          txHash={order.paymentTx}
+          txUrl={
+            getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined
+          }
+          description={t('order.timeline.fundsSecured')}
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  if (['processing', 'shipped', 'delivered', 'completed'].includes(order.status)) {
+    timelineCards.push({
+      key: 'accepted',
+      timestamp: acceptedEvent?.timestamp,
+      priority: 20,
+      node: (
+        <AcceptedCard
+          timestamp={acceptedEvent?.timestamp}
+          description={
+            order.userRole === 'seller'
+              ? t('order.acceptedDescSeller')
+              : t('order.acceptedDescBuyer')
+          }
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  if (releaseTxHash && releasedEvent) {
+    timelineCards.push({
+      key: 'released',
+      timestamp: releasedEvent.timestamp,
+      priority: 30,
+      node: (
+        <OrderCompleteCard
+          title={t('order.stages.released')}
+          timestamp={releasedEvent.timestamp}
+          amount={order.total}
+          currency={order.currency}
+          txHash={releaseTxHash}
+          txUrl={releaseTxUrl}
+          description={t('order.timeline.fundsReleased')}
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  if (order.trackingNumber || ['shipped', 'delivered', 'completed'].includes(order.status)) {
+    timelineCards.push({
+      key: 'shipped',
+      timestamp: shippedEvent?.timestamp,
+      priority: 40,
+      node: (
+        <ShipmentCard
+          timestamp={shippedEvent?.timestamp}
+          shipper={order.shipper}
+          trackingNumber={order.trackingNumber}
+          contractType={order.contractType}
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  if (order.status === 'completed') {
+    timelineCards.push({
+      key: 'completed',
+      timestamp: completedEvent?.timestamp,
+      priority: 50,
+      node: (
+        <OrderCompleteCard
+          timestamp={completedEvent?.timestamp}
+          txHash={completedTxHash}
+          txUrl={completedTxUrl}
+          description={t('order.timeline.orderCompleted')}
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  timelineCards.sort((a, b) => {
+    const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    if (aTime !== bTime) return bTime - aTime;
+    return b.priority - a.priority;
+  });
 
   return (
     <div className={className}>
       <div className="space-y-2">
-        {order.status === 'completed' && (
-          <div className="bg-muted/10 rounded-lg p-2">
-            <OrderCompleteCard
-              timestamp={order.timeline.find(e => e.status === 'completed')?.timestamp}
-              amount={order.total}
-              currency={order.currency}
-              txHash={releaseTxHash}
-              txUrl={completeTxUrl}
-              description={
-                completionReleasesFunds ? t('order.fundsReleased') : t('order.actions.complete')
-              }
-              showDivider={false}
-            />
+        {timelineCards.map(entry => (
+          <div key={entry.key} className="bg-muted/10 rounded-lg p-2">
+            {entry.node}
           </div>
-        )}
-
-        {(order.trackingNumber || ['shipped', 'delivered', 'completed'].includes(order.status)) && (
-          <div className="bg-muted/10 rounded-lg p-2">
-            <ShipmentCard
-              timestamp={order.timeline.find(e => e.status === 'shipped')?.timestamp}
-              shipper={order.shipper}
-              trackingNumber={order.trackingNumber}
-              contractType={order.contractType}
-              showDivider={false}
-            />
-          </div>
-        )}
-
-        {['processing', 'shipped', 'delivered', 'completed'].includes(order.status) && (
-          <div className="bg-muted/10 rounded-lg p-2">
-            <AcceptedCard
-              timestamp={order.timeline.find(e => e.status === 'processing')?.timestamp}
-              description={
-                order.userRole === 'seller'
-                  ? t('order.acceptedDescSeller')
-                  : t('order.acceptedDescBuyer')
-              }
-              showDivider={false}
-            />
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );

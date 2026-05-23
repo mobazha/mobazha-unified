@@ -131,6 +131,9 @@ export const OrderSettlementCard = memo(function OrderSettlementCard({
     ? getExplorerResourceUrl(txHash, 'tx', { coin: paymentCoin, chainId }) || undefined
     : undefined;
   const updatedAt = settlementAction.updatedAt ? new Date(settlementAction.updatedAt) : null;
+  const showConfirmationCount =
+    typeof settlementAction.confirmations === 'number' &&
+    (settlementAction.state || '').trim().toLowerCase() !== 'confirmed';
 
   return (
     <Card className={cn('border-border/60 p-4', className)}>
@@ -161,7 +164,7 @@ export const OrderSettlementCard = memo(function OrderSettlementCard({
         {txHash ? (
           <InfoRow label="Tx Hash" value={truncateMiddle(txHash)} mono href={txUrl} />
         ) : null}
-        {typeof settlementAction.confirmations === 'number' ? (
+        {showConfirmationCount ? (
           <InfoRow label="Confirmations" value={String(settlementAction.confirmations)} />
         ) : null}
         {updatedAt && !Number.isNaN(updatedAt.getTime()) ? (

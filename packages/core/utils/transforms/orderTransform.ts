@@ -184,6 +184,12 @@ interface RealOrderData {
       timestamp?: string;
       memo?: string;
     };
+    afterSaleDispute?: {
+      reason?: string;
+      description?: string;
+      openedAt?: string;
+      reportedAt?: string;
+    };
   };
   protection?: {
     stage: string;
@@ -192,6 +198,12 @@ interface RealOrderData {
     extendable: boolean;
     extended: boolean;
     afterSaleWindowDays: number;
+  };
+  afterSaleDispute?: {
+    reason?: string;
+    description?: string;
+    openedAt?: string;
+    reportedAt?: string;
   };
   afterSaleDisputeReason?: string;
   afterSaleDisputeDesc?: string;
@@ -415,6 +427,9 @@ function formatShippingAddress(shipping?: {
 function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent[] {
   const timeline: DisplayTimelineEvent[] = [];
   const contract = data.contract;
+  const paymentTxid =
+    contract.paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid;
+  const releaseTxid = extractReleaseTx(contract, paymentTxid);
 
   const orderOpen = contract.orderOpen;
   const orderTimestamp = orderOpen?.timestamp;
@@ -474,6 +489,22 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     });
   }
 
+  // 释放（与付款 tx 不同的链上结算 tx）
+  if (releaseTxid) {
+    const releaseAtConfirmation =
+      !!orderConfirmation?.transactionID && orderConfirmation.transactionID === releaseTxid;
+    const releaseTimestamp = releaseAtConfirmation
+      ? orderConfirmation?.timestamp || ''
+      : contract.orderComplete?.timestamp || '';
+    timeline.push({
+      status: 'released',
+      timestamp: releaseTimestamp,
+      description: 'Funds released to seller',
+      descriptionKey: 'order.timeline.fundsReleased',
+      actor: 'system',
+    });
+  }
+
   // 发货（orderShipments 优先，兼容 orderFulfillments）
   const vendorMsgs = contract.orderShipments;
   const legacyFulfillments = contract.orderFulfillments;
@@ -516,16 +547,11 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   // 完成
   const orderComplete = contract.orderComplete;
   if (orderComplete) {
-    const releasedOnComplete = !!orderComplete.releaseInfo?.txid;
     timeline.push({
       status: 'completed',
       timestamp: orderComplete.timestamp || '',
-      description: releasedOnComplete
-        ? 'Order completed - Funds released to seller'
-        : 'Order completed',
-      descriptionKey: releasedOnComplete
-        ? 'order.timeline.orderCompleted'
-        : 'order.actions.complete',
+      description: 'Order completed',
+      descriptionKey: 'order.timeline.orderCompleted',
       actor: 'buyer',
     });
   }
@@ -747,17 +773,12 @@ export function transformCoreOrder(
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
   const paymentMethod = paymentSent?.method || '';
   const isCancelableOrder = isCancelablePaymentMethod(paymentMethod);
-  const latestSettlementAction = coreOrder.settlementActions?.[0];
-  const latestSettlementActionName = (
-    latestSettlementAction?.settlementAction ||
-    latestSettlementAction?.action ||
-    ''
-  ).toLowerCase();
-  const latestSettlementState = (latestSettlementAction?.state || '').toLowerCase();
   const cancelableSettlementFundsReleased =
     isCancelableOrder &&
-    latestSettlementState === 'confirmed' &&
-    (latestSettlementActionName === 'confirm' || latestSettlementActionName === 'cancel');
+    (coreOrder.settlementActions || []).some(action => {
+      const actionName = (action.settlementAction || action.action || '').toLowerCase();
+      return (action.state || '').toLowerCase() === 'confirmed' && actionName === 'confirm';
+    });
   const cancelableFundsReleased =
     (isCancelableOrder &&
       !!contract.orderConfirmation?.transactionID &&
@@ -1119,13 +1140,16 @@ export function transformCoreOrder(
             protectionLevel: deriveProtectionLevel(paymentMethod, isFiatPayment),
           } as DisplayOrderProtection)
         : undefined,
-    afterSaleDispute: data.afterSaleDisputeAt
-      ? ({
-          reason: data.afterSaleDisputeReason || '',
-          description: data.afterSaleDisputeDesc || '',
-          reportedAt: data.afterSaleDisputeAt,
-        } as DisplayAfterSaleDispute)
-      : undefined,
+    afterSaleDispute: (() => {
+      const dispute = data.afterSaleDispute || data.contract.afterSaleDispute;
+      const reportedAt = dispute?.openedAt || dispute?.reportedAt || data.afterSaleDisputeAt;
+      if (!reportedAt) return undefined;
+      return {
+        reason: dispute?.reason || data.afterSaleDisputeReason || '',
+        description: dispute?.description || data.afterSaleDisputeDesc || '',
+        reportedAt,
+      } as DisplayAfterSaleDispute;
+    })(),
   };
 
   return result;

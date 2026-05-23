@@ -337,25 +337,8 @@ export const orderDataService = {
     return await ordersApi.openDispute(orderId, claim, evidenceHashes);
   },
 
-  /**
-   * 获取支付指令
-   * @param params.orderId 订单 ID
-   * @param params.coin 支付币种
-   * @param params.amount 支付金额（最小单位，可选）
-   * @param params.payerAddress 付款人地址（可选）
-   * @param params.moderator 仲裁人 peerID（可选）
-   */
-  async getPaymentInstructions(params: {
-    orderId: string;
-    coin: string;
-    amount?: number;
-    payerAddress?: string;
-    moderator?: string;
-  }) {
-    if (isMockMode()) {
-      return mockServices.orders.getPaymentInstructions(params.orderId, params.coin);
-    }
-    return await ordersApi.getPaymentInstructions(params);
+  async createPaymentSession(params: { orderId: string; paymentCoin: string; moderator?: string }) {
+    return await ordersApi.createOrderPaymentSession(params);
   },
 };
 
