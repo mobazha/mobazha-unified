@@ -111,4 +111,49 @@ describe('OrderTimelineCard', () => {
     expect(completeCards[2]).toHaveTextContent('0xpayment1234567890abcdef');
     expect(completeCards[2]).toHaveTextContent('order.timeline.fundsSecured');
   });
+
+  it('renders funded cancelled orders with payment, decline, and refund cards', () => {
+    render(
+      <OrderTimelineCard
+        displayOrder={makeOrder({
+          status: 'cancelled',
+          cancellation: {
+            kind: 'seller_decline',
+            wasFunded: true,
+            refundConfirmed: true,
+          },
+          timeline: [
+            {
+              status: 'paid',
+              timestamp: '2026-05-15T00:01:00Z',
+              description: 'paid',
+              descriptionKey: 'order.timeline.fundsSecured',
+            },
+            {
+              status: 'cancelled',
+              timestamp: '2026-05-15T00:02:00Z',
+              description: 'declined',
+              descriptionKey: 'order.timeline.orderDeclined',
+            },
+          ],
+        })}
+        settlementAction={{
+          actionId: 'action-1',
+          action: 'cancel',
+          settlementAction: 'cancel',
+          state: 'confirmed',
+          txHash: '0xrefund1234567890abcdef',
+          updatedAt: '2026-05-15T00:03:00Z',
+        }}
+      />
+    );
+
+    const completeCards = screen.getAllByTestId('complete-card');
+    expect(completeCards).toHaveLength(3);
+    expect(completeCards[0]).toHaveTextContent('order.timeline.refunded');
+    expect(completeCards[0]).toHaveTextContent('0xrefund1234567890abcdef');
+    expect(completeCards[1]).toHaveTextContent('order.timeline.orderDeclined');
+    expect(completeCards[2]).toHaveTextContent('order.stages.escrowed');
+    expect(completeCards[2]).toHaveTextContent('0xpayment1234567890abcdef');
+  });
 });
