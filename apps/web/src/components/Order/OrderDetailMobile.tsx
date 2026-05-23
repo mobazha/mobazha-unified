@@ -1,6 +1,16 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui';
 import { useRouter } from 'next/navigation';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
@@ -23,6 +33,7 @@ import {
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
 import { useToast } from '@/components/ui/use-toast';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider/TGMiniAppProvider';
 import { useHaptic } from '@/lib/platform';
@@ -54,6 +65,8 @@ import {
   OrderMemoCard,
   OrderStatusCard,
   OrderSettlementCard,
+  DisputeOverviewCard,
+  DisputeResolutionBar,
   getStatusLabel,
 } from '@/components/Order/cards';
 import {
@@ -115,9 +128,14 @@ function ModeratorBadge({
 export interface OrderDetailMobileProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
+  focusDispute?: boolean;
 }
 
-export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobileProps) {
+export function OrderDetailMobile({
+  orderId,
+  viewingContext,
+  focusDispute = false,
+}: OrderDetailMobileProps) {
   const router = useRouter();
   const { t } = useI18n();
   const supplyChainEnabled = useFeature('supplyChainEnabled');
@@ -171,6 +189,31 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
+  const disputeSectionRef = useRef<HTMLDivElement>(null);
+
+  const {
+    pendingDecision,
+    isResolving,
+    requestResolve,
+    confirmResolve,
+    cancelResolve,
+    confirmDescription,
+  } = useModeratorDisputeResolution(orderId, refetch);
+
+  // Moderator viewing a disputed order → use dedicated dispute view mode
+  const isModeratorDisputeView =
+    !!displayOrder && displayOrder.userRole === 'moderator' && !!displayOrder.dispute;
+
+  useEffect(() => {
+    if (!focusDispute || !displayOrder) return;
+    setActiveTab('details');
+    if (!isModeratorDisputeView) {
+      const timer = window.setTimeout(() => {
+        disputeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 350);
+      return () => window.clearTimeout(timer);
+    }
+  }, [focusDispute, displayOrder, orderId, isModeratorDisputeView]);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
@@ -536,9 +579,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Header — clean title, no hash */}
+      {/* Header — use "Case #XYZ" for moderator dispute view */}
       <MobilePageHeader
-        title={t('order.details')}
+        title={
+          isModeratorDisputeView
+            ? `${t('moderation.caseIdLabel')} ${displayOrder.orderId.length > 12 ? `${displayOrder.orderId.slice(0, 6)}…${displayOrder.orderId.slice(-4)}` : displayOrder.orderId}`
+            : t('order.details')
+        }
+        onBack={isModeratorDisputeView ? () => router.push('/cases') : undefined}
         rightAction={
           <button
             onClick={() => setShowMoreMenu(true)}
@@ -629,7 +677,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            {t('order.tabs.summary')}
+            {isModeratorDisputeView ? t('order.tabs.dispute') : t('order.tabs.summary')}
             {activeTab === 'details' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
@@ -664,233 +712,287 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           aria-labelledby="tab-details"
           className="px-4 pt-3 space-y-4"
         >
-          {/* 1. Status + progress bar */}
-          <OrderStatusCard displayOrder={displayOrder} />
+          {/* ─── MODERATOR DISPUTE VIEW ─── */}
+          {isModeratorDisputeView ? (
+            <>
+              <DisputeOverviewCard displayOrder={displayOrder} />
 
-          {!(displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment') && (
-            <OrderSettlementCard
-              settlementAction={latestSettlementAction}
-              paymentCoin={displayOrder.paymentCoin}
-              chainId={displayOrder.chainId}
-              cancellation={displayOrder.cancellation}
-            />
-          )}
-
-          {/* 2. Product card (vendor merged inline) */}
-          <OrderProductCard displayOrder={displayOrder} />
-
-          {displayOrder.userRole === 'seller' && (
-            <SellerDigitalDeliveryStatus
-              {...sellerDigitalDelivery}
-              canSyncDelivery={
-                coreOrder?.state === 'AWAITING_SHIPMENT' && sellerDigitalDelivery.canSyncDelivery
-              }
-              onSyncDelivery={sellerDigitalDelivery.syncDelivery}
-              onManageListing={slug => window.open(`/listing/edit/${slug}?from=orders`, '_blank')}
-              orderId={orderId}
-              listingSlugs={sellerDigitalDelivery.listingSlugs}
-            />
-          )}
-
-          {/* 2b. Buyer digital downloads — License keys, file links, etc. */}
-          {displayOrder.userRole === 'buyer' && (
-            <BuyerDigitalAssetsSection
-              orderId={orderId}
-              sellerPeerID={displayOrder.vendor.peerID}
-              deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
-            />
-          )}
-
-          {displayOrder.shipments && displayOrder.shipments.length > 0 && (
-            <OrderShipment
-              shipments={displayOrder.shipments}
-              orderId={orderId}
-              userRole={displayOrder.userRole}
-            />
-          )}
-
-          {/* 3. Order summary — total, shipping, status badge */}
-          <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
-
-          {/* 4a. Fiat dispute banner (independent of order state) */}
-          {displayOrder.fiatDispute && (
-            <FiatDisputeBanner
-              fiatDispute={displayOrder.fiatDispute}
-              userRole={displayOrder.userRole}
-            />
-          )}
-
-          {/* 4b. Crypto dispute banner (only when active) */}
-          {displayOrder.dispute && (
-            <OrderDisputeBanner
-              displayOrder={displayOrder}
-              onOpenDispute={() => handleOrderAction('Dispute')}
-            />
-          )}
-
-          {/* 5. Tracking card — shown for shipped/delivered/completed */}
-          {hasTracking && (
-            <div>
-              <SectionTitle>{t('order.trackingSection.title')}</SectionTitle>
-              <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Package className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {displayOrder.shipper && (
-                      <p className="text-sm font-medium text-foreground">{displayOrder.shipper}</p>
-                    )}
-                    {displayOrder.trackingNumber ? (
-                      <p className="text-xs text-muted-foreground font-mono truncate">
-                        {displayOrder.trackingNumber}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {t('order.trackingSection.noTrackingNumber')}
-                      </p>
-                    )}
-                  </div>
-                  {displayOrder.trackingNumber && (
-                    <button
-                      onClick={() => {
-                        const query = encodeURIComponent(displayOrder.trackingNumber || '');
-                        window.open(`https://track24.net/?code=${query}`, '_blank');
-                      }}
-                      className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      {t('order.trackingSection.track')}
-                    </button>
-                  )}
+              {/* Collapsible order context */}
+              <details className="group rounded-xl border border-border/60 overflow-hidden">
+                <summary className="flex items-center justify-between px-4 py-3 bg-muted/30 cursor-pointer select-none text-sm font-medium text-foreground list-none">
+                  {t('order.orderSummary')}
+                  <svg
+                    className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </summary>
+                <div className="p-4 space-y-4">
+                  <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+                  <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+                  <OrderTimelineCard
+                    displayOrder={displayOrder}
+                    coreOrder={coreOrder}
+                    settlementAction={latestSettlementAction}
+                  />
                 </div>
+              </details>
+
+              {/* Spacer to prevent content being hidden behind sticky DisputeResolutionBar */}
+              <div className="h-20" />
+            </>
+          ) : (
+            <>
+              {/* 1. Status + progress bar (buyer/seller only; moderator uses DisputeOverviewCard) */}
+              {!isModeratorDisputeView && <OrderStatusCard displayOrder={displayOrder} />}
+
+              {!(
+                displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
+              ) && (
+                <OrderSettlementCard
+                  settlementAction={latestSettlementAction}
+                  paymentCoin={displayOrder.paymentCoin}
+                  chainId={displayOrder.chainId}
+                  cancellation={displayOrder.cancellation}
+                />
+              )}
+
+              {/* 2. Product card (vendor merged inline) */}
+              <OrderProductCard displayOrder={displayOrder} />
+
+              {displayOrder.userRole === 'seller' && (
+                <SellerDigitalDeliveryStatus
+                  {...sellerDigitalDelivery}
+                  canSyncDelivery={
+                    coreOrder?.state === 'AWAITING_SHIPMENT' &&
+                    sellerDigitalDelivery.canSyncDelivery
+                  }
+                  onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+                  onManageListing={slug =>
+                    window.open(`/listing/edit/${slug}?from=orders`, '_blank')
+                  }
+                  orderId={orderId}
+                  listingSlugs={sellerDigitalDelivery.listingSlugs}
+                />
+              )}
+
+              {/* 2b. Buyer digital downloads — License keys, file links, etc. */}
+              {displayOrder.userRole === 'buyer' && (
+                <BuyerDigitalAssetsSection
+                  orderId={orderId}
+                  sellerPeerID={displayOrder.vendor.peerID}
+                  deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+                />
+              )}
+
+              {displayOrder.shipments && displayOrder.shipments.length > 0 && (
+                <OrderShipment
+                  shipments={displayOrder.shipments}
+                  orderId={orderId}
+                  userRole={displayOrder.userRole}
+                />
+              )}
+
+              {/* 3. Order summary — total, shipping, status badge */}
+              <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+
+              {/* 4a. Fiat dispute banner (independent of order state) */}
+              {displayOrder.fiatDispute && (
+                <FiatDisputeBanner
+                  fiatDispute={displayOrder.fiatDispute}
+                  userRole={displayOrder.userRole}
+                />
+              )}
+
+              {/* 4b. Crypto dispute banner (only for buyer/seller; moderator sees DisputeOverviewCard) */}
+              <div ref={disputeSectionRef}>
+                {displayOrder.dispute && displayOrder.userRole !== 'moderator' && (
+                  <OrderDisputeBanner
+                    displayOrder={displayOrder}
+                    onOpenDispute={() => handleOrderAction('Dispute')}
+                  />
+                )}
               </div>
-            </div>
-          )}
 
-          {/* 5b. Buyer protection — after tracking context */}
-          {protectionStage && displayOrder.protection && (
-            <OrderProtectionStatus
-              stage={protectionStage}
-              daysRemaining={displayOrder.protection.daysRemaining}
-              autoCompleteAt={displayOrder.protection.autoCompleteAt}
-              extendable={displayOrder.protection.extendable}
-              extended={displayOrder.protection.extended}
-              afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
-              userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
-              protectionLevel={displayOrder.protection.protectionLevel}
-              onExtendProtection={handleExtendProtection}
-            />
-          )}
+              {/* 5. Tracking card — shown for shipped/delivered/completed */}
+              {hasTracking && (
+                <div>
+                  <SectionTitle>{t('order.trackingSection.title')}</SectionTitle>
+                  <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Package className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {displayOrder.shipper && (
+                          <p className="text-sm font-medium text-foreground">
+                            {displayOrder.shipper}
+                          </p>
+                        )}
+                        {displayOrder.trackingNumber ? (
+                          <p className="text-xs text-muted-foreground font-mono truncate">
+                            {displayOrder.trackingNumber}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            {t('order.trackingSection.noTrackingNumber')}
+                          </p>
+                        )}
+                      </div>
+                      {displayOrder.trackingNumber && (
+                        <button
+                          onClick={() => {
+                            const query = encodeURIComponent(displayOrder.trackingNumber || '');
+                            window.open(`https://track24.net/?code=${query}`, '_blank');
+                          }}
+                          className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {t('order.trackingSection.track')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {showRatingInvite && (
-            <RatingInviteBanner
-              onWriteReview={() => executeConfirmAction('complete')}
-              onReportIssue={
-                displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
-                  ? () => {
-                      setIsAfterSaleDispute(true);
-                      setShowDisputeModal(true);
-                    }
-                  : undefined
-              }
-              disputeFiled={hasAfterSaleDispute}
-            />
-          )}
+              {/* 5b. Buyer protection — after tracking context */}
+              {protectionStage && displayOrder.protection && (
+                <OrderProtectionStatus
+                  stage={protectionStage}
+                  daysRemaining={displayOrder.protection.daysRemaining}
+                  autoCompleteAt={displayOrder.protection.autoCompleteAt}
+                  extendable={displayOrder.protection.extendable}
+                  extended={displayOrder.protection.extended}
+                  afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
+                  userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
+                  protectionLevel={displayOrder.protection.protectionLevel}
+                  onExtendProtection={handleExtendProtection}
+                />
+              )}
 
-          {displayOrder.buyerRating && (
-            <OrderRating
-              rating={displayOrder.buyerRating}
-              reviewer={
-                displayOrder.buyer?.peerID
-                  ? {
-                      peerID: displayOrder.buyer.peerID,
-                      name: displayOrder.buyer.name,
-                      avatar: displayOrder.buyer.avatar,
-                    }
-                  : undefined
-              }
-              timestamp={displayOrder.buyerRating.timestamp}
-            />
-          )}
+              {showRatingInvite && (
+                <RatingInviteBanner
+                  onWriteReview={() => executeConfirmAction('complete')}
+                  onReportIssue={
+                    displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
+                      ? () => {
+                          setIsAfterSaleDispute(true);
+                          setShowDisputeModal(true);
+                        }
+                      : undefined
+                  }
+                  disputeFiled={hasAfterSaleDispute}
+                />
+              )}
 
-          {displayOrder.afterSaleDispute && (
-            <AfterSaleDisputeCard
-              dispute={displayOrder.afterSaleDispute}
-              userRole={displayOrder.userRole}
-              onMessageCounterparty={() => setActiveTab('discussion')}
-              className="mt-3"
-            />
-          )}
+              {displayOrder.buyerRating && (
+                <OrderRating
+                  rating={displayOrder.buyerRating}
+                  reviewer={
+                    displayOrder.buyer?.peerID
+                      ? {
+                          peerID: displayOrder.buyer.peerID,
+                          name: displayOrder.buyer.name,
+                          avatar: displayOrder.buyer.avatar,
+                        }
+                      : undefined
+                  }
+                  timestamp={displayOrder.buyerRating.timestamp}
+                />
+              )}
 
-          {/* 6. Payment info */}
-          {(displayOrder.paymentTx || displayOrder.paymentLocked || displayOrder.fiatPayment) && (
-            <div>
-              <SectionTitle>{t('order.payment.title')}</SectionTitle>
-              <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
-            </div>
-          )}
+              {displayOrder.afterSaleDispute && (
+                <AfterSaleDisputeCard
+                  dispute={displayOrder.afterSaleDispute}
+                  userRole={displayOrder.userRole}
+                  onMessageCounterparty={() => setActiveTab('discussion')}
+                  className="mt-3"
+                />
+              )}
 
-          {/* 7. Shipping address — physical goods only */}
-          {displayOrder.contractType === 'PHYSICAL_GOOD' &&
-            (displayOrder.shippingRecipient || displayOrder.shippingAddressLine1) && (
+              {/* 6. Payment info */}
+              {(displayOrder.paymentTx ||
+                displayOrder.paymentLocked ||
+                displayOrder.fiatPayment) && (
+                <div>
+                  <SectionTitle>{t('order.payment.title')}</SectionTitle>
+                  <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+                </div>
+              )}
+
+              {/* 7. Shipping address — physical goods only */}
+              {displayOrder.contractType === 'PHYSICAL_GOOD' &&
+                (displayOrder.shippingRecipient || displayOrder.shippingAddressLine1) && (
+                  <div>
+                    <SectionTitle>{t('order.shippingDetails')}</SectionTitle>
+                    <OrderShippingCard displayOrder={displayOrder} />
+                  </div>
+                )}
+
+              {/* 7.5. Fulfillment status — seller-only, supply-chain orders */}
+              {supplyChainEnabled && displayOrder.userRole === 'seller' && (
+                <FulfillmentStatusCard orderId={orderId} />
+              )}
+
+              {/* 8. Parties — buyer (seller view) + moderator */}
+              {((displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID) ||
+                displayOrder.moderator ||
+                displayOrder.notes ||
+                displayOrder.alternateContactInfo) && (
+                <div>
+                  <SectionTitle>{t('order.additionalInfo')}</SectionTitle>
+                  <div className="space-y-2">
+                    {displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID && (
+                      <OrderCounterpartyCard displayOrder={displayOrder} variant="compact" />
+                    )}
+                    {displayOrder.moderator && (
+                      <ModeratorBadge moderator={displayOrder.moderator} />
+                    )}
+                    {(displayOrder.notes || displayOrder.alternateContactInfo) && (
+                      <OrderMemoCard displayOrder={displayOrder} />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 9. Order history timeline */}
               <div>
-                <SectionTitle>{t('order.shippingDetails')}</SectionTitle>
-                <OrderShippingCard displayOrder={displayOrder} />
+                <SectionTitle>{t('order.orderHistory')}</SectionTitle>
+                <OrderTimelineCard
+                  displayOrder={displayOrder}
+                  coreOrder={coreOrder}
+                  settlementAction={latestSettlementAction}
+                />
               </div>
-            )}
 
-          {/* 7.5. Fulfillment status — seller-only, supply-chain orders */}
-          {supplyChainEnabled && displayOrder.userRole === 'seller' && (
-            <FulfillmentStatusCard orderId={orderId} />
-          )}
-
-          {/* 8. Parties — buyer (seller view) + moderator */}
-          {((displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID) ||
-            displayOrder.moderator ||
-            displayOrder.notes ||
-            displayOrder.alternateContactInfo) && (
-            <div>
-              <SectionTitle>{t('order.additionalInfo')}</SectionTitle>
-              <div className="space-y-2">
-                {displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID && (
-                  <OrderCounterpartyCard displayOrder={displayOrder} variant="compact" />
+              {/* 10. Subtle dispute entry — moderated orders only */}
+              {!displayOrder.dispute &&
+                !!displayOrder.moderator &&
+                ((displayOrder.userRole === 'buyer' &&
+                  ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+                  (displayOrder.userRole === 'seller' &&
+                    ['shipped', 'delivered'].includes(displayOrder.status))) && (
+                  <div className="text-center pb-2">
+                    <button
+                      onClick={() => handleOrderAction('Dispute')}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                      data-testid="order-detail-open-dispute"
+                    >
+                      {t('order.dispute.haveProblem')}
+                    </button>
+                  </div>
                 )}
-                {displayOrder.moderator && <ModeratorBadge moderator={displayOrder.moderator} />}
-                {(displayOrder.notes || displayOrder.alternateContactInfo) && (
-                  <OrderMemoCard displayOrder={displayOrder} />
-                )}
-              </div>
-            </div>
+            </>
           )}
-
-          {/* 9. Order history timeline */}
-          <div>
-            <SectionTitle>{t('order.orderHistory')}</SectionTitle>
-            <OrderTimelineCard
-              displayOrder={displayOrder}
-              coreOrder={coreOrder}
-              settlementAction={latestSettlementAction}
-            />
-          </div>
-
-          {/* 10. Subtle dispute entry — moderated orders only */}
-          {!displayOrder.dispute &&
-            !!displayOrder.moderator &&
-            ((displayOrder.userRole === 'buyer' &&
-              ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
-              (displayOrder.userRole === 'seller' &&
-                ['shipped', 'delivered'].includes(displayOrder.status))) && (
-              <div className="text-center pb-2">
-                <button
-                  onClick={() => handleOrderAction('Dispute')}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
-                  data-testid="order-detail-open-dispute"
-                >
-                  {t('order.dispute.haveProblem')}
-                </button>
-              </div>
-            )}
         </div>
       ) : (
         <div
@@ -912,27 +1014,41 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         </div>
       )}
 
-      {/* Fixed bottom action bar — hidden when RatingInviteBanner takes over or TG MainButton active */}
-      {activeTab === 'details' && coreOrder && !tgMainButtonActive && !showRatingInvite && (
-        <OrderActionSheet
-          orderState={coreOrder.state || 'PENDING'}
-          userRole={displayOrder.userRole as CoreUserRole}
-          timestamp={displayOrder.createdAt}
-          isModerated={!!displayOrder.moderator}
-          isShipped={isOrderShipped(coreOrder)}
-          paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
-          fundsReleasedAtConfirmation={shouldBlockAutoRefund}
-          inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
-          hasAfterSaleDispute={hasAfterSaleDispute}
-          contractType={shipOrderProps.contractType}
-          hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
-          digitalDeliveryStatus={sellerDigitalDelivery.status}
-          canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
-          manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
-          isTransitioning={isTransitioning}
-          onAction={handleOrderAction}
+      {/* Sticky bottom DisputeResolutionBar — moderator dispute view only */}
+      {isModeratorDisputeView && activeTab === 'details' && displayOrder.dispute && (
+        <DisputeResolutionBar
+          dispute={displayOrder.dispute}
+          onResolve={requestResolve}
+          isResolving={isResolving}
+          variant="sticky"
         />
       )}
+
+      {/* Fixed bottom action bar — hidden for moderator view, rating invite, or TG MainButton active */}
+      {!isModeratorDisputeView &&
+        activeTab === 'details' &&
+        coreOrder &&
+        !tgMainButtonActive &&
+        !showRatingInvite && (
+          <OrderActionSheet
+            orderState={coreOrder.state || 'PENDING'}
+            userRole={displayOrder.userRole as CoreUserRole}
+            timestamp={displayOrder.createdAt}
+            isModerated={!!displayOrder.moderator}
+            isShipped={isOrderShipped(coreOrder)}
+            paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
+            fundsReleasedAtConfirmation={shouldBlockAutoRefund}
+            inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+            hasAfterSaleDispute={hasAfterSaleDispute}
+            contractType={shipOrderProps.contractType}
+            hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
+            digitalDeliveryStatus={sellerDigitalDelivery.status}
+            canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+            manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
+            isTransitioning={isTransitioning}
+            onAction={handleOrderAction}
+          />
+        )}
 
       {/* Dialogs */}
       {confirmDialog && (
@@ -1012,6 +1128,26 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         onOpenChange={setShowPackingSlip}
         order={displayOrder}
       />
+
+      <AlertDialog
+        open={pendingDecision !== null}
+        onOpenChange={open => {
+          if (!open) cancelResolve();
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('order.resolveDispute')}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResolving}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void confirmResolve()} disabled={isResolving}>
+              {isResolving ? t('common.loading') : t('order.resolveDispute')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

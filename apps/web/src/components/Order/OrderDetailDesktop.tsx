@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
@@ -18,7 +18,18 @@ import {
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui';
 import {
   OrderFooter,
   OrderChat,
@@ -47,6 +58,9 @@ import {
   OrderMemoCard,
   OrderStatusCard,
   OrderSettlementCard,
+  DisputeOverviewCard,
+  DisputeResolutionBar,
+  DisputeEvidencePanel,
   getStatusLabel,
 } from '@/components/Order/cards';
 import {
@@ -61,9 +75,14 @@ import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssets
 export interface OrderDetailDesktopProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
+  focusDispute?: boolean;
 }
 
-export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDesktopProps) {
+export function OrderDetailDesktop({
+  orderId,
+  viewingContext,
+  focusDispute = false,
+}: OrderDetailDesktopProps) {
   const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
@@ -104,7 +123,37 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
+  const [activeTab, setActiveTab] = useState<
+    'summary' | 'discussion' | 'contract' | 'dispute' | 'evidence'
+  >('summary');
+  const disputeSectionRef = useRef<HTMLDivElement>(null);
+
+  const {
+    pendingDecision,
+    isResolving,
+    requestResolve,
+    confirmResolve,
+    cancelResolve,
+    confirmDescription,
+  } = useModeratorDisputeResolution(orderId, refetch);
+
+  // Derived flag: moderator viewing a disputed order → switch to dedicated moderator view
+  const isModeratorDisputeView =
+    !!displayOrder && displayOrder.userRole === 'moderator' && !!displayOrder.dispute;
+
+  useEffect(() => {
+    if (!focusDispute || !displayOrder) return;
+    // For moderators with a dispute, focus the dedicated dispute tab
+    if (isModeratorDisputeView) {
+      setActiveTab('dispute');
+    } else {
+      setActiveTab('summary');
+      const timer = window.setTimeout(() => {
+        disputeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 350);
+      return () => window.clearTimeout(timer);
+    }
+  }, [focusDispute, displayOrder, orderId, isModeratorDisputeView]);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
@@ -404,10 +453,10 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
 
       <main className="py-8">
         <Container size="xl">
-          {/* Back button */}
+          {/* Back button — conditional label/destination for moderator dispute view */}
           <button
-            onClick={() => router.back()}
-            aria-label={t('order.backToOrders')}
+            onClick={() => (isModeratorDisputeView ? router.push('/cases') : router.back())}
+            aria-label={isModeratorDisputeView ? t('order.backToCases') : t('order.backToOrders')}
             className="group flex items-center gap-2 text-muted-foreground hover:text-primary mb-4 text-sm transition-colors"
           >
             <div className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -420,15 +469,15 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 />
               </svg>
             </div>
-            {t('order.backToOrders')}
+            {isModeratorDisputeView ? t('order.backToCases') : t('order.backToOrders')}
           </button>
 
           {/* Main content card */}
           <Card className="mb-6 p-6 border border-border/60 shadow-sm overflow-hidden">
-            {/* Order ID */}
+            {/* Order / Case ID */}
             <div className="flex items-start gap-2 mb-3">
               <h1 className="text-sm font-medium text-muted-foreground flex-shrink-0">
-                {t('order.orderIdLabel')}
+                {isModeratorDisputeView ? t('moderation.caseIdLabel') : t('order.orderIdLabel')}
               </h1>
               <span
                 className="text-sm font-mono text-foreground leading-relaxed"
@@ -456,10 +505,13 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               )}
             </div>
 
-            {/* Tab navigation */}
+            {/* Tab navigation — switches between moderator view and standard view */}
             <div className="border-b border-border mb-4">
               <div className="flex gap-6" role="tablist" aria-label={t('order.tabs.label')}>
-                {(['summary', 'discussion', 'contract'] as const).map(tab => (
+                {(isModeratorDisputeView
+                  ? (['dispute', 'discussion', 'evidence'] as const)
+                  : (['summary', 'discussion', 'contract'] as const)
+                ).map(tab => (
                   <button
                     key={tab}
                     role="tab"
@@ -473,7 +525,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {t(`order.tabs.${tab}`)}
+                    {t(`order.tabs.${tab}`, { fallback: tab })}
                     {activeTab === tab && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                     )}
@@ -482,8 +534,78 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               </div>
             </div>
 
-            {/* Tab content */}
-            {activeTab === 'summary' && (
+            {/* ─── MODERATOR DISPUTE TAB ─── */}
+            {isModeratorDisputeView && activeTab === 'dispute' && (
+              <div
+                role="tabpanel"
+                id="tabpanel-dispute"
+                aria-labelledby="tab-dispute"
+                className="space-y-4"
+              >
+                <DisputeOverviewCard displayOrder={displayOrder} />
+
+                {/* Collapsible order context */}
+                <details className="group rounded-xl border border-border/60 overflow-hidden">
+                  <summary className="flex items-center justify-between px-4 py-3 bg-muted/30 cursor-pointer select-none text-sm font-medium text-foreground list-none">
+                    {t('order.orderSummary')}
+                    <svg
+                      className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </summary>
+                  <div className="p-4 space-y-4">
+                    <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+                    <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+                    <OrderTimelineCard
+                      displayOrder={displayOrder}
+                      coreOrder={coreOrder}
+                      settlementAction={latestSettlementAction}
+                    />
+                  </div>
+                </details>
+
+                {/* Resolution action bar — inline on desktop */}
+                <DisputeResolutionBar
+                  dispute={displayOrder.dispute!}
+                  onResolve={requestResolve}
+                  isResolving={isResolving}
+                  variant="inline"
+                />
+              </div>
+            )}
+
+            {/* ─── EVIDENCE TAB (moderator only) ─── */}
+            {isModeratorDisputeView && activeTab === 'evidence' && (
+              <div role="tabpanel" id="tabpanel-evidence" aria-labelledby="tab-evidence">
+                <DisputeEvidencePanel dispute={displayOrder.dispute!} />
+              </div>
+            )}
+
+            {/* ─── DISCUSSION TAB (shared by both views) ─── */}
+            {activeTab === 'discussion' && (
+              <div role="tabpanel" id="tabpanel-discussion" aria-labelledby="tab-discussion">
+                <OrderChat
+                  orderId={orderId}
+                  participants={chatParticipants}
+                  messages={chatMessages}
+                  currentUserId={currentUserPeerID || ''}
+                  onSendMessage={sendMessage}
+                  className="h-[calc(100vh-400px)] min-h-[400px]"
+                />
+              </div>
+            )}
+
+            {/* ─── STANDARD BUYER/SELLER VIEW ─── */}
+            {!isModeratorDisputeView && activeTab === 'summary' && (
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
                 {/* Status context card — gives users clear next-step guidance */}
                 <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
@@ -617,13 +739,15 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   />
                 )}
 
-                {/* Active crypto dispute banner (only when dispute exists) */}
-                {displayOrder.dispute && (
-                  <OrderDisputeBanner
-                    displayOrder={displayOrder}
-                    onOpenDispute={() => handleOrderAction('Dispute')}
-                  />
-                )}
+                {/* Active crypto dispute banner (only for buyer/seller; moderator sees DisputeOverviewCard) */}
+                <div ref={disputeSectionRef}>
+                  {displayOrder.dispute && displayOrder.userRole !== 'moderator' && (
+                    <OrderDisputeBanner
+                      displayOrder={displayOrder}
+                      onOpenDispute={() => handleOrderAction('Dispute')}
+                    />
+                  )}
+                </div>
 
                 <OrderTimelineCard
                   displayOrder={displayOrder}
@@ -671,20 +795,8 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               </div>
             )}
 
-            {activeTab === 'discussion' && (
-              <div role="tabpanel" id="tabpanel-discussion" aria-labelledby="tab-discussion">
-                <OrderChat
-                  orderId={orderId}
-                  participants={chatParticipants}
-                  messages={chatMessages}
-                  currentUserId={currentUserPeerID || ''}
-                  onSendMessage={sendMessage}
-                  className="h-[calc(100vh-400px)] min-h-[400px]"
-                />
-              </div>
-            )}
-
-            {activeTab === 'contract' && (
+            {/* ─── CONTRACT TAB (buyer/seller only) ─── */}
+            {!isModeratorDisputeView && activeTab === 'contract' && (
               <div role="tabpanel" id="tabpanel-contract" aria-labelledby="tab-contract">
                 <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all p-4 bg-muted/20 rounded-lg">
                   {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
@@ -702,8 +814,8 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         </Container>
       </main>
 
-      {/* Fixed action footer — hidden when RatingInviteBanner takes over */}
-      {!showRatingInvite && (
+      {/* Fixed action footer — hidden for moderator dispute view and when RatingInviteBanner takes over */}
+      {!showRatingInvite && !isModeratorDisputeView && (
         <OrderFooter
           orderState={coreOrder?.state || 'PENDING'}
           userRole={displayOrder.userRole as CoreUserRole}
@@ -792,6 +904,26 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         onOpenChange={setShowPackingSlip}
         order={displayOrder}
       />
+
+      <AlertDialog
+        open={pendingDecision !== null}
+        onOpenChange={open => {
+          if (!open) cancelResolve();
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('order.resolveDispute')}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResolving}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void confirmResolve()} disabled={isResolving}>
+              {isResolving ? t('common.loading') : t('order.resolveDispute')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>

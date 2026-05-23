@@ -409,6 +409,7 @@ export interface TranslationResource {
     noStatusOrders: string;
     // Order detail page
     backToOrders: string;
+    backToCases: string;
     placedOn: string;
     orderNotFound: string;
     orderNotFoundMessage: string;
@@ -461,6 +462,8 @@ export interface TranslationResource {
     actions?: TranslationSection;
     dispute?: TranslationSection;
     disputeDisplay?: TranslationSection;
+    disputeOverview?: TranslationSection;
+    tabs?: TranslationSection;
   };
 
   // 聊天
@@ -1263,6 +1266,7 @@ export interface TranslationResource {
     sales: string;
     purchases: string;
     myOrders?: string;
+    myCases?: string;
     rwaAssets?: string;
     settings: string;
     logout: string;
@@ -2677,6 +2681,10 @@ export interface TranslationResource {
     noCasesFilterHint?: string;
     noCasesDesc?: string;
     caseDetail?: string;
+    caseIdLabel?: string;
+    viewCase?: string;
+    copyCaseId?: string;
+    newMessages?: string;
   };
   admin?: {
     title?: string;

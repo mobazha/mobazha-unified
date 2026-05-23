@@ -6,6 +6,8 @@ import type { Order, OrderListItem, PaymentSession } from '../../types';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
 import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
+import { ApiError } from './client';
+import { caseDetailToOrder } from '../../utils/transforms/caseToOrder';
 import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
 
 async function orderWrite<T>(
@@ -246,7 +248,15 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   const realFn = async () => {
     try {
       return await authGet<Order>(NODE_API.ORDER(orderId));
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        try {
+          const casePayload = await authGet<Record<string, unknown>>(NODE_API.CASE(orderId));
+          return caseDetailToOrder(casePayload);
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   };

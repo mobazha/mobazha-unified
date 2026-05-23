@@ -26,6 +26,7 @@ import {
   soundService,
   getNotificationDisplayData,
 } from '../services/notification';
+import { resolveOrderOrCaseID, resolvePeerID } from '../utils/normalizeIds';
 import type {
   NotificationData,
   NotificationEventType,
@@ -157,16 +158,22 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         read: n.read,
       };
 
-      if (n.data?.orderId) {
-        return {
-          ...base,
-          orderID: n.data.orderId,
-        } as NotificationData;
-      } else if (n.data?.peerID) {
-        return {
-          ...base,
-          peerID: n.data.peerID,
-        } as NotificationData;
+      if (n.data) {
+        const dataRecord = n.data as Record<string, unknown>;
+        const orderID = resolveOrderOrCaseID(dataRecord);
+        if (orderID) {
+          return {
+            ...base,
+            orderID,
+          } as NotificationData;
+        }
+        const peerID = resolvePeerID(dataRecord);
+        if (peerID) {
+          return {
+            ...base,
+            peerID,
+          } as NotificationData;
+        }
       }
 
       return base as NotificationData;

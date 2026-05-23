@@ -14,10 +14,23 @@ export default function OrderDetailPage() {
   const typeFromUrl = searchParams.get('type');
   const viewingContext =
     typeFromUrl === 'sale' ? 'sale' : typeFromUrl === 'purchase' ? 'purchase' : undefined;
+  const focusDispute = searchParams.get('tab') === 'dispute';
 
   if (shouldUseMobileView) {
-    return <OrderDetailMobile orderId={orderId} viewingContext={viewingContext} />;
+    return (
+      <OrderDetailMobile
+        orderId={orderId}
+        viewingContext={viewingContext}
+        focusDispute={focusDispute}
+      />
+    );
   }
 
-  return <OrderDetailDesktop orderId={orderId} viewingContext={viewingContext} />;
+  return (
+    <OrderDetailDesktop
+      orderId={orderId}
+      viewingContext={viewingContext}
+      focusDispute={focusDispute}
+    />
+  );
 }

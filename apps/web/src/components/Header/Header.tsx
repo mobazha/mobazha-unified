@@ -57,6 +57,8 @@ export const Header: React.FC = () => {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
+  const isModerator = profile?.moderator === true;
+  const hideModeration = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
   const { isEmbeddedApp, shouldUseMobileView } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const [peerIdCopied, setPeerIdCopied] = useState(false);
@@ -367,6 +369,21 @@ export const Header: React.FC = () => {
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         {t('userMenu.myOrders')}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+
+                  {/* 注册仲裁人：争议案件收件箱 */}
+                  {isModerator && !hideModeration && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/cases')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-cases"
+                      >
+                        <ClipboardList className="mr-2 h-4 w-4" />
+                        {t('userMenu.myCases')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>

@@ -175,14 +175,11 @@ if (!__OUTPOST__) {
     { path: '/me', element: lazyPage(() => import('./app/me/page')) },
     { path: '/profile', element: protectedPage(() => import('./app/profile/page')) },
 
-    // 仲裁案例管理
+    // 仲裁案件收件箱
+    { path: '/cases', element: protectedPage(() => import('./app/cases/page')) },
     {
-      path: '/moderation/cases',
-      element: protectedPage(() => import('./app/moderation/cases/page')),
-    },
-    {
-      path: '/moderation/cases/:orderId',
-      element: protectedPage(() => import('./app/moderation/cases/[orderId]/page')),
+      path: '/cases/:orderId',
+      element: protectedPage(() => import('./app/cases/[orderId]/page')),
     },
 
     // 帮助与支持

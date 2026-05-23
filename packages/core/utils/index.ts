@@ -38,6 +38,9 @@ export * from './priceUtils';
 // 身份展示工具
 export * from './identity';
 
+// JSON *ID 字段 ingress 归一化
+export * from './normalizeIds';
+
 // 店铺品牌化主题工具 (PG-201)
 export * from './theme';
 

@@ -51,7 +51,35 @@ import {
   Send,
   ShoppingCart,
   Globe,
+  ClipboardList,
 } from 'lucide-react';
+
+function MeCasesEntry() {
+  const { t } = useI18n();
+  const { isAuthenticated, profile } = useUserStore();
+  const hideModeration = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+
+  if (!isAuthenticated || !profile?.moderator || hideModeration) {
+    return null;
+  }
+
+  return (
+    <Link href="/cases" className="block" data-testid="me-cases-link">
+      <div className="bg-background border border-border rounded-xl p-3 flex items-center gap-3 hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+          <ClipboardList className="w-5 h-5 text-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">{t('userMenu.myCases')}</p>
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {t('moderation.description')}
+          </p>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+      </div>
+    </Link>
+  );
+}
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -596,6 +624,8 @@ export default function MePage() {
               </div>
             </Link>
 
+            <MeCasesEntry />
+
             <InlineSettings authenticated={true} />
 
             {/* Logout */}
@@ -711,6 +741,8 @@ export default function MePage() {
                 </div>
               </Link>
             )}
+
+          <MeCasesEntry />
 
           {/* Multi-Store console (Phase MS1) — gated by multistoreMyStoresUIEnabled flag */}
           {showMyStoresEntry && (

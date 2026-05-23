@@ -100,6 +100,10 @@ export interface DisplayDispute {
   status: 'open' | 'in_progress' | 'resolved';
   initiator: 'buyer' | 'seller';
   resolution?: 'buyer' | 'seller' | 'split';
+  /** When the dispute was opened (from contract.disputeOpen.timestamp) */
+  openedAt?: string;
+  /** When the dispute was closed (from contract.disputeClose.timestamp) */
+  resolvedAt?: string;
   evidenceHashes?: string[];
 }
 

@@ -739,6 +739,9 @@ export const en: TranslationResource = {
       summary: 'Summary',
       discussion: 'Discussion',
       contract: 'Contract (JSON)',
+      dispute: 'Dispute',
+      evidence: 'Evidence',
+      details: 'Details',
     },
     discussionPlaceholder: 'Chat with the other party about this order.',
     // Timeline event descriptions
@@ -924,6 +927,7 @@ export const en: TranslationResource = {
     noStatusOrders: 'No {{status}} orders at the moment.',
     // Order detail page
     backToOrders: 'Back to Orders',
+    backToCases: 'Back to Cases',
     placedOn: 'Placed on {{date}}',
     orderNotFound: 'Order not found',
     orderNotFoundMessage: "The order you're looking for doesn't exist.",
@@ -1413,6 +1417,28 @@ export const en: TranslationResource = {
       moderatorHint:
         'As the moderator, you can help resolve this dispute by reviewing the evidence and making a fair decision.',
       evidence: 'Evidence',
+    },
+    disputeOverview: {
+      title: 'Dispute Overview',
+      initiatedBy: 'Initiated by',
+      initiatorBadge: 'Initiator',
+      disputeAmount: 'Dispute Amount',
+      product: 'Product',
+      claim: 'Claim',
+      evidence: 'Evidence',
+      noEvidence: 'No evidence submitted',
+      openedOn: 'Dispute opened',
+      orderStatus: 'Order status',
+      tracking: 'Tracking',
+      resolvedOn: 'Resolved on',
+      resolutionUnknown: 'Marked as resolved; outcome details are still syncing.',
+      prompt: 'How would you resolve this dispute?',
+      favorBuyer: 'Favor Buyer',
+      favorSeller: 'Favor Seller',
+      splitFunds: 'Split 50/50',
+      resolved: 'Resolved',
+      resolvedFavor: 'Resolved in favor of {{party}}',
+      resolvedSplit: 'Funds split between parties',
     },
     // Payment display
     payment: {
@@ -2983,6 +3009,7 @@ export const en: TranslationResource = {
     sales: 'Sales',
     purchases: 'Purchases',
     myOrders: 'My Orders',
+    myCases: 'My Cases',
     rwaAssets: 'RWA Assets',
     settings: 'Settings',
     account: 'Personal Settings',
@@ -4718,7 +4745,7 @@ export const en: TranslationResource = {
   },
 
   moderation: {
-    title: 'Moderation Cases',
+    title: 'Dispute Cases',
     description: 'Review and resolve disputes between buyers and sellers',
     totalCases: 'Total Cases',
     open: 'Open',
@@ -4741,6 +4768,9 @@ export const en: TranslationResource = {
     noCasesFilterHint: 'Try changing the filter to see more cases.',
     noCasesDesc: 'You have no moderation cases at this time.',
     caseDetail: 'Case Detail',
+    caseIdLabel: 'Case #:',
+    viewCase: 'View case {{id}}',
+    copyCaseId: 'Copy case ID',
   },
   admin: {
     title: 'Store Admin',
