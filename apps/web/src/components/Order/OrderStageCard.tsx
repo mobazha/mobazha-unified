@@ -4,7 +4,17 @@ import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl, copyToClipboard } from './utils';
 import { Card } from '@/components/ui/card';
-import { Check, Package, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import {
+  Check,
+  Package,
+  CheckCircle,
+  Copy,
+  ExternalLink,
+  ShieldCheck,
+  CircleDollarSign,
+  RotateCcw,
+  XCircle,
+} from 'lucide-react';
 import {
   useI18n,
   useCurrency,
@@ -484,6 +494,33 @@ export const AcceptedCard = memo(function AcceptedCard({
   );
 });
 
+/** 时间线事件卡标题图标（与 AcceptedCard / ShipmentCard 对齐） */
+export type OrderCompleteStageVariant =
+  | 'escrowed'
+  | 'released'
+  | 'complete'
+  | 'refund'
+  | 'cancelled'
+  | 'declined';
+
+function orderCompleteHeaderIcon(variant?: OrderCompleteStageVariant): React.ReactNode {
+  const className = 'w-4 h-4';
+  switch (variant) {
+    case 'escrowed':
+      return <ShieldCheck className={className} />;
+    case 'released':
+      return <CircleDollarSign className={className} />;
+    case 'refund':
+      return <RotateCcw className={className} />;
+    case 'cancelled':
+    case 'declined':
+      return <XCircle className={className} />;
+    case 'complete':
+    default:
+      return <CheckCircle className={className} />;
+  }
+}
+
 /**
  * 订单完成卡片 - 紧凑版
  */
@@ -495,6 +532,8 @@ export interface OrderCompleteCardProps {
   txUrl?: string;
   title?: string;
   description?: string;
+  /** 标题行左侧图标；未传时按 variant 选择，与 ShipmentCard / AcceptedCard 一致 */
+  stageVariant?: OrderCompleteStageVariant;
   className?: string;
 }
 
@@ -506,6 +545,7 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   txUrl,
   title,
   description,
+  stageVariant,
   className,
   showDivider = true,
 }: OrderCompleteCardProps & { showDivider?: boolean }) {
@@ -516,10 +556,25 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
     return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
   };
 
+  const resolvedVariant =
+    stageVariant ||
+    (title === t('order.stages.escrowed')
+      ? 'escrowed'
+      : title === t('order.stages.released')
+        ? 'released'
+        : title === t('order.timeline.refunded')
+          ? 'refund'
+          : title === t('order.timeline.orderDeclined')
+            ? 'declined'
+            : title === t('order.timeline.orderCancelled')
+              ? 'cancelled'
+              : 'complete');
+
   return (
     <OrderStageCard
       title={title || t('order.stages.complete')}
       timestamp={timestamp}
+      icon={orderCompleteHeaderIcon(resolvedVariant)}
       className={className}
       showDivider={showDivider}
     >

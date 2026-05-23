@@ -495,6 +495,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                     settlementAction={latestSettlementAction}
                     paymentCoin={displayOrder.paymentCoin}
                     chainId={displayOrder.chainId}
+                    cancellation={displayOrder.cancellation}
                     className="mb-4"
                   />
                 )}
@@ -627,6 +628,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 <OrderTimelineCard
                   displayOrder={displayOrder}
                   coreOrder={coreOrder}
+                  settlementAction={latestSettlementAction}
                   className="mb-4"
                 />
 

@@ -672,6 +672,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
               settlementAction={latestSettlementAction}
               paymentCoin={displayOrder.paymentCoin}
               chainId={displayOrder.chainId}
+              cancellation={displayOrder.cancellation}
             />
           )}
 
@@ -866,7 +867,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           {/* 9. Order history timeline */}
           <div>
             <SectionTitle>{t('order.orderHistory')}</SectionTitle>
-            <OrderTimelineCard displayOrder={displayOrder} coreOrder={coreOrder} />
+            <OrderTimelineCard
+              displayOrder={displayOrder}
+              coreOrder={coreOrder}
+              settlementAction={latestSettlementAction}
+            />
           </div>
 
           {/* 10. Subtle dispute entry — moderated orders only */}
