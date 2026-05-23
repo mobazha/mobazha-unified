@@ -902,6 +902,9 @@ export const zh: PartialTranslationResource = {
       cancelSuccessDesc: '订单已成功取消。',
       refundSuccess: '退款已处理',
       refundSuccessDesc: '退款已处理，资金将返还给买家。',
+      manualRefundRequired: '此订单不能自动退款',
+      manualRefundRequiredDesc:
+        '资金已在确认阶段释放给卖家钱包。若需退款，请从卖家钱包手动转账给买家。',
       claimSuccess: '资金已领取',
       claimSuccessDesc: '您已成功领取资金。',
       acceptPayoutSuccess: '裁决已接受',

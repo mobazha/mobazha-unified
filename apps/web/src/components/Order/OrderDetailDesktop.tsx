@@ -138,6 +138,21 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   );
 
   const hasAfterSaleDispute = !!displayOrder?.afterSaleDispute;
+  const shouldBlockAutoRefund = useMemo(() => {
+    if (displayOrder?.fundsReleasedAtConfirmation) return true;
+    const settlementState = (latestSettlementAction?.state || '').trim().toLowerCase();
+    const settlementAction = (
+      latestSettlementAction?.settlementAction ||
+      latestSettlementAction?.action ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
+    return (
+      settlementState === 'confirmed' &&
+      (settlementAction === 'cancel' || settlementAction === 'confirm')
+    );
+  }, [displayOrder?.fundsReleasedAtConfirmation, latestSettlementAction]);
 
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
@@ -195,6 +210,14 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setShowShipDialog(true);
           break;
         case 'Refund':
+          if (shouldBlockAutoRefund) {
+            toast({
+              title: t('order.actions.manualRefundRequired'),
+              description: t('order.actions.manualRefundRequiredDesc'),
+              variant: 'destructive',
+            });
+            break;
+          }
           if (displayOrder?.fiatPayment) {
             setShowFiatRefundDialog(true);
           } else {
@@ -220,7 +243,16 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           break;
       }
     },
-    [router, orderId, executeConfirmAction, displayOrder, sellerDigitalDelivery, t, toast]
+    [
+      router,
+      orderId,
+      executeConfirmAction,
+      displayOrder,
+      sellerDigitalDelivery,
+      shouldBlockAutoRefund,
+      t,
+      toast,
+    ]
   );
 
   const handleFiatRefund = useCallback(
@@ -674,6 +706,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           isModerated={!!displayOrder.moderator}
           isShipped={coreOrder ? isOrderShipped(coreOrder) : false}
           paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
+          fundsReleasedAtConfirmation={shouldBlockAutoRefund}
           totalAmount={displayOrder.total}
           currency={displayOrder.currency}
           paymentCoin={coreOrder?.contract?.paymentSent?.coin}

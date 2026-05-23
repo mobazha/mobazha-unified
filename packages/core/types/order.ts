@@ -278,6 +278,13 @@ export interface PaymentSent {
   timestamp?: string;
   paymentTokenAddress?: string;
   buyerReceiveAddress?: string;
+  settlementSpec?: PaymentSettlementSpec;
+}
+
+export interface PaymentSettlementSpec {
+  method?: PaymentMethod | number;
+  payMode?: string;
+  escrowType?: string;
 }
 
 /**

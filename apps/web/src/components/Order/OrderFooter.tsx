@@ -24,6 +24,7 @@ export interface OrderFooterProps {
   isModerated?: boolean;
   isShipped?: boolean;
   paymentMethod?: string;
+  fundsReleasedAtConfirmation?: boolean;
   totalAmount?: string;
   currency?: string;
   paymentCoin?: string;
@@ -50,6 +51,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   isModerated = false,
   isShipped = false,
   paymentMethod,
+  fundsReleasedAtConfirmation = false,
   totalAmount,
   currency,
   paymentCoin,
@@ -77,6 +79,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     paymentMethod,
     hasRated,
     inAfterSaleWindow,
+    fundsReleasedAtConfirmation,
   });
 
   // 没有可用操作时：如果正在过渡则显示过渡条，否则不显示

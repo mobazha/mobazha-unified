@@ -992,6 +992,9 @@ export const en: TranslationResource = {
       cancelSuccessDesc: 'The order has been cancelled successfully.',
       refundSuccess: 'Refund Processed',
       refundSuccessDesc: 'The refund has been processed. Funds will be returned to the buyer.',
+      manualRefundRequired: 'This order can no longer be auto-refunded',
+      manualRefundRequiredDesc:
+        'Funds were released to the seller wallet during confirmation. Refund this order manually from the seller wallet if needed.',
       claimSuccess: 'Payment Claimed',
       claimSuccessDesc: 'You have successfully claimed the payment.',
       acceptPayoutSuccess: 'Payout Accepted',
