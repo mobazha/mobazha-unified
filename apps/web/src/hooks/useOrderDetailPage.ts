@@ -34,6 +34,10 @@ interface OrderContractData {
     paymentSent?: {
       coin?: string;
       method?: { toString: () => string };
+      settlementSpec?: {
+        payMode?: string;
+        escrowType?: string;
+      };
     };
   };
 }
@@ -178,6 +182,11 @@ export function useOrderDetailPage(
 
   const paymentCoin =
     displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
+  const paymentSettlementSpec = (coreOrder as OrderContractData | null)?.contract?.paymentSent
+    ?.settlementSpec;
+  const usesBackendSafeSettlement =
+    paymentSettlementSpec?.payMode === 'address_monitored' &&
+    paymentSettlementSpec?.escrowType === 'managed_escrow';
 
   const counterparty = useMemo((): {
     peerID?: string;
@@ -352,6 +361,12 @@ export function useOrderDetailPage(
               paymentCoin,
               getInstructions: addr =>
                 ordersApi.getCancelInstructions({ orderID: orderId, initiatorAddress: addr }),
+              executeBackendSettlementAction: () =>
+                ordersApi.executeSettlementAction({
+                  orderID: orderId,
+                  action: 'cancel',
+                }),
+              preferBackendSettlementAction: usesBackendSafeSettlement,
               executeAction: txID =>
                 ordersApi.cancelOrder({ orderID: orderId, transactionID: txID }),
               onSuccess: () =>
@@ -373,6 +388,12 @@ export function useOrderDetailPage(
                 paymentCoin,
                 getInstructions: addr =>
                   ordersApi.getRefundInstructions({ orderID: orderId, initiatorAddress: addr }),
+                executeBackendSettlementAction: () =>
+                  ordersApi.executeSettlementAction({
+                    orderID: orderId,
+                    action: 'cancel',
+                  }),
+                preferBackendSettlementAction: usesBackendSafeSettlement,
                 executeAction: txID =>
                   ordersApi.refundOrder({ orderID: orderId, transactionID: txID }),
                 onSuccess: () =>
@@ -413,7 +434,16 @@ export function useOrderDetailPage(
       }
       return succeeded;
     },
-    [displayOrder, executeOrderAction, orderId, paymentCoin, refetch, t, toast]
+    [
+      displayOrder,
+      executeOrderAction,
+      orderId,
+      paymentCoin,
+      refetch,
+      t,
+      toast,
+      usesBackendSafeSettlement,
+    ]
   );
 
   // --- Clipboard helpers ---

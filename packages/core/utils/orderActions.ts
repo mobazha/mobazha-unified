@@ -331,18 +331,19 @@ export function getOrderActions(
     isModerated?: boolean;
     isShipped?: boolean;
     isExpired?: boolean;
-    paymentMethod?: string;
+    paymentMethod?: string | number;
     hasRated?: boolean;
     inAfterSaleWindow?: boolean;
+    fundsReleasedAtConfirmation?: boolean;
   } = {}
 ): OrderAction[] {
   const {
     isModerated = false,
     isShipped = false,
     isExpired = false,
-    paymentMethod,
     hasRated = false,
     inAfterSaleWindow = false,
+    fundsReleasedAtConfirmation = false,
   } = options;
 
   const config = ORDER_STATUS_CONFIG[state];
@@ -380,8 +381,8 @@ export function getOrderActions(
       return false;
     }
 
-    // Refund 操作：CANCELABLE 支付方式下不能自动退款
-    if (action === 'Refund' && paymentMethod === 'CANCELABLE') {
+    // Refund 操作：只要资金已经在确认阶段释放，就不能再自动退款
+    if (action === 'Refund' && fundsReleasedAtConfirmation) {
       return false;
     }
 

@@ -747,10 +747,22 @@ export function transformCoreOrder(
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
   const paymentMethod = paymentSent?.method || '';
   const isCancelableOrder = isCancelablePaymentMethod(paymentMethod);
-  const cancelableFundsReleased =
+  const latestSettlementAction = coreOrder.settlementActions?.[0];
+  const latestSettlementActionName = (
+    latestSettlementAction?.settlementAction ||
+    latestSettlementAction?.action ||
+    ''
+  ).toLowerCase();
+  const latestSettlementState = (latestSettlementAction?.state || '').toLowerCase();
+  const cancelableSettlementFundsReleased =
     isCancelableOrder &&
-    !!contract.orderConfirmation?.transactionID &&
-    data.protection?.stage === 'ESCROWED';
+    latestSettlementState === 'confirmed' &&
+    (latestSettlementActionName === 'confirm' || latestSettlementActionName === 'cancel');
+  const cancelableFundsReleased =
+    (isCancelableOrder &&
+      !!contract.orderConfirmation?.transactionID &&
+      data.protection?.stage === 'ESCROWED') ||
+    cancelableSettlementFundsReleased;
   const moderatorId = paymentSent?.moderator || '';
 
   // --- 货币与 divisibility 解析 ---
@@ -1091,9 +1103,10 @@ export function transformCoreOrder(
     hasRated: orderCompleteRatings.length > 0,
     buyerRating,
     fundsReleasedAtConfirmation:
-      isCancelableOrder &&
-      !!contract.orderConfirmation?.transactionID &&
-      !contract.orderComplete?.releaseInfo?.txid,
+      (isCancelableOrder &&
+        !!contract.orderConfirmation?.transactionID &&
+        !contract.orderComplete?.releaseInfo?.txid) ||
+      cancelableSettlementFundsReleased,
     protection:
       data.protection && !cancelableFundsReleased
         ? ({

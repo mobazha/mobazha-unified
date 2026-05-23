@@ -208,6 +208,21 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       !displayOrder?.hasRated,
     [displayOrder]
   );
+  const shouldBlockAutoRefund = useMemo(() => {
+    if (displayOrder?.fundsReleasedAtConfirmation) return true;
+    const settlementState = (latestSettlementAction?.state || '').trim().toLowerCase();
+    const settlementAction = (
+      latestSettlementAction?.settlementAction ||
+      latestSettlementAction?.action ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
+    return (
+      settlementState === 'confirmed' &&
+      (settlementAction === 'cancel' || settlementAction === 'confirm')
+    );
+  }, [displayOrder?.fundsReleasedAtConfirmation, latestSettlementAction]);
 
   const hasAfterSaleDispute = !!displayOrder?.afterSaleDispute;
 
@@ -268,6 +283,15 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setShowShipDialog(true);
           break;
         case 'Refund':
+          if (shouldBlockAutoRefund) {
+            toast({
+              title: t('order.actions.manualRefundRequired'),
+              description: t('order.actions.manualRefundRequiredDesc'),
+              variant: 'destructive',
+            });
+            haptic.error();
+            break;
+          }
           if (displayOrder?.fiatPayment) {
             setShowFiatRefundDialog(true);
           } else {
@@ -293,7 +317,17 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           break;
       }
     },
-    [router, orderId, executeConfirmAction, displayOrder, sellerDigitalDelivery, t, toast, haptic]
+    [
+      router,
+      orderId,
+      executeConfirmAction,
+      displayOrder,
+      sellerDigitalDelivery,
+      shouldBlockAutoRefund,
+      t,
+      toast,
+      haptic,
+    ]
   );
 
   const handleConfirmAction = useCallback(async () => {
@@ -396,6 +430,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
     );
     return !!getPrimaryAction(actions);
@@ -412,6 +447,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
     );
     const primary = getPrimaryAction(actions);
@@ -876,6 +912,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           isModerated={!!displayOrder.moderator}
           isShipped={isOrderShipped(coreOrder)}
           paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
+          fundsReleasedAtConfirmation={shouldBlockAutoRefund}
           inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
           contractType={shipOrderProps.contractType}
           hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
