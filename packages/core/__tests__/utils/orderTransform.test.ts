@@ -164,6 +164,52 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.paymentProgress?.expectedAmountFormatted).toBe('0.007018');
   });
 
+  it('formats canonical BTC PaymentSent amounts from satoshis without rounding to zero', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'AWAITING_FULFILLMENT',
+        contract: {
+          ...buildOrder({}).contract,
+          orderOpen: {
+            ...buildOrder({}).contract.orderOpen,
+            pricingCoin: 'crypto:eip155:11155111:native',
+            amount: '11000000000000000',
+            listings: [
+              {
+                listing: {
+                  slug: 'listing-1',
+                  metadata: {
+                    pricingCurrency: { code: 'ETH', divisibility: 18 },
+                  },
+                  item: {
+                    title: 'Test Product',
+                    price: 10000000000000000,
+                    images: [],
+                  },
+                  vendorID: { peerID: 'vendor-peer', name: 'Vendor' },
+                },
+              },
+            ],
+          },
+          paymentSent: {
+            coin: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
+            amount: '29838',
+            method: 'CANCELABLE',
+            transactionID: 'c858f37b43b443e5caf12986cc64fd4ddcb21ecad2dc4a33a3c62f1adb4d70c5',
+            toAddress: 'bcrt1q3gwez4ld5smq9ql44ucyvmrfyhd3ax37rjdz96vy7jzwfk2l380sm5m6cj',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.paymentCoin).toBe('crypto:bip122:000000000019d6689c085ae165831e93:native');
+    expect(order?.currency).toBe('BTC');
+    expect(order?.total).toBe('0.00029838');
+    expect(order?.paymentAmount).toBe('0.00029838');
+  });
+
   it('exposes manual digital delivery details from order shipments', () => {
     const order = transformCoreOrder(
       {

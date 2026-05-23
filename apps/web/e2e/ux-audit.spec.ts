@@ -103,7 +103,7 @@ const authedCheckoutPages: Array<{ name: string; path: string; description: stri
 ];
 
 const authedModeratorPages: Array<{ name: string; path: string; description: string }> = [
-  { name: '50-moderation-cases', path: '/moderation/cases', description: '仲裁案例列表' },
+  { name: '50-cases', path: '/cases', description: '争议案件列表' },
 ];
 
 test.describe('UX Audit - Authenticated Core Pages', () => {

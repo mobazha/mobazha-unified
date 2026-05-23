@@ -12,6 +12,7 @@ export {
 export type { CancellationSourceContract, CancellationSourceData } from './orderTransform';
 export { applyPaymentSessionToDisplayOrder, isDirectPaymentOrder } from './paymentSessionDisplay';
 export type { DirectPaymentOrderSignals } from './paymentSessionDisplay';
+export { caseDetailToOrder } from './caseToOrder';
 export { convertProductToFormData } from './productTransform';
 export { parsePriceFields } from './priceTransform';
 export type { ParsedPrice } from './priceTransform';

@@ -357,7 +357,7 @@ test.describe('Mobile Visual - Authenticated Settings', () => {
 test.describe('Mobile Visual - Authenticated Admin', () => {
   test('authed: moderator-cases', async ({ page }) => {
     await ensureAuthenticated(page);
-    await navigateAndVerify(page, '/moderation/cases');
+    await navigateAndVerify(page, '/cases');
     await expect(page).toHaveScreenshot('mobile-authed-moderator-cases.png', { fullPage: true });
   });
 

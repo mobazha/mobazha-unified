@@ -6,6 +6,14 @@ import { withMockFallback } from './mode';
 import { getI18n } from '../../i18n/i18n';
 import { NODE_API } from '../../config/apiPaths';
 import { authPost, authSafeGet } from './helpers';
+import {
+  readStringField,
+  resolveCaseID,
+  resolveNotificationID,
+  resolveOrderID,
+  resolveOrderOrCaseID,
+  resolvePeerID,
+} from '../../utils/normalizeIds';
 
 // 后端返回的原始通知记录格式
 interface BackendNotificationRecord {
@@ -20,6 +28,7 @@ interface BackendNotificationRecord {
     orderId?: string;
     peerID?: string;
     peerId?: string;
+    caseID?: string;
     caseId?: string;
     txid?: string;
     slug?: string;
@@ -93,10 +102,10 @@ export interface Notification {
   read: boolean;
   timestamp: string;
   data?: {
-    orderId?: string;
+    orderID?: string;
     peerID?: string;
     txid?: string;
-    caseId?: string;
+    caseID?: string;
     slug?: string;
     thumbnail?: {
       tiny?: string;
@@ -119,16 +128,16 @@ export interface Notification {
     };
     vendorName?: string;
     vendorAvatar?: string;
-    vendorId?: string;
+    vendorID?: string;
     buyerName?: string;
     buyerAvatar?: string;
-    buyerId?: string;
+    buyerID?: string;
     disputerName?: string;
     disputerAvatar?: string;
-    disputerId?: string;
+    disputerID?: string;
     disputeeName?: string;
     disputeeAvatar?: string;
-    disputeeId?: string;
+    disputeeID?: string;
     otherPartyName?: string;
     otherPartyAvatar?: string;
     moderatorName?: string;
@@ -153,11 +162,11 @@ const mockNotifications: Notification[] = [
     read: false,
     timestamp: new Date(Date.now() - 3600000).toISOString(),
     data: {
-      orderId: 'QmOrder001',
+      orderID: 'QmOrder001',
       productTitle: 'Vintage T-Shirt',
       price: { amount: 2500, currencyCode: 'USD' },
       buyerName: 'alice_buyer',
-      buyerId: 'QmBuyer001',
+      buyerID: 'QmBuyer001',
       thumbnail: { tiny: '', small: '' },
     },
   },
@@ -169,11 +178,11 @@ const mockNotifications: Notification[] = [
     read: false,
     timestamp: new Date(Date.now() - 7200000).toISOString(),
     data: {
-      orderId: 'QmOrder002',
+      orderID: 'QmOrder002',
       productTitle: 'Handmade Bracelet',
       price: { amount: 1500, currencyCode: 'USD' },
       buyerName: 'bob_shop',
-      buyerId: 'QmBuyer002',
+      buyerID: 'QmBuyer002',
     },
   },
   {
@@ -209,10 +218,10 @@ const mockNotifications: Notification[] = [
     read: false,
     timestamp: new Date(Date.now() - 259200000).toISOString(),
     data: {
-      orderId: 'QmOrder003',
-      caseId: 'QmCase001',
+      orderID: 'QmOrder003',
+      caseID: 'QmCase001',
       disputerName: 'unhappy_buyer',
-      disputerId: 'QmDisputer001',
+      disputerID: 'QmDisputer001',
     },
   },
 ];
@@ -280,7 +289,7 @@ function generateNotificationMessage(
   notification: BackendNotificationRecord['notification']
 ): string {
   const { t } = getI18n();
-  const orderId = notification.orderID || notification.orderId || '';
+  const orderId = resolveOrderOrCaseID(notification);
   const buyerName =
     notification.buyerName ?? (notification as { buyerHandle?: string }).buyerHandle ?? '';
   const shortOrderId = orderId ? orderId.slice(0, 8) : '';
@@ -421,11 +430,12 @@ export async function getNotifications(
     const notifications = (response.notifications || []).map(
       (record: BackendNotificationRecord, index: number): Notification => {
         const notif = record.notification || {};
-        // 确保 ID 唯一：优先使用后端 notificationID（大小写两种），兜底 type-timestamp-index
+        const notifRecord = notif as Record<string, unknown>;
+        const orderID = resolveOrderID(notifRecord);
+        const caseID = resolveCaseID(notifRecord);
+        const orderOrCaseID = resolveOrderOrCaseID(notifRecord);
         const uniqueId =
-          notif.notificationID ||
-          notif.notificationId ||
-          `${record.type}-${record.timestamp}-${index}`;
+          resolveNotificationID(notifRecord) || `${record.type}-${record.timestamp}-${index}`;
         return {
           id: uniqueId,
           type: record.type,
@@ -434,10 +444,10 @@ export async function getNotifications(
           read: record.read,
           timestamp: record.timestamp,
           data: {
-            orderId: notif.orderID || notif.orderId,
-            peerID: notif.peerID || notif.peerId,
+            orderID: orderID || orderOrCaseID || undefined,
+            peerID: resolvePeerID(notifRecord) || undefined,
             txid: notif.txid,
-            caseId: notif.caseId,
+            caseID: caseID || orderOrCaseID || undefined,
             slug: notif.slug,
             thumbnail: notif.thumbnail,
             avatarHashes: notif.avatarHashes,
@@ -445,18 +455,18 @@ export async function getNotifications(
             price: notif.price,
             vendorName: notif.vendorName ?? (notif as { vendorHandle?: string }).vendorHandle,
             vendorAvatar: notif.vendorAvatar,
-            vendorId: notif.vendorId || notif.vendorID,
+            vendorID: readStringField(notifRecord, 'vendorID', 'vendorId') || undefined,
             buyerName: notif.buyerName ?? (notif as { buyerHandle?: string }).buyerHandle,
             buyerAvatar: notif.buyerAvatar,
-            buyerId: notif.buyerId || notif.buyerID,
+            buyerID: readStringField(notifRecord, 'buyerID', 'buyerId') || undefined,
             disputerName:
               notif.disputerName ?? (notif as { disputerHandle?: string }).disputerHandle,
             disputerAvatar: notif.disputerAvatar,
-            disputerId: notif.disputerID,
+            disputerID: readStringField(notifRecord, 'disputerID', 'disputerId') || undefined,
             disputeeName:
               notif.disputeeName ?? (notif as { disputeeHandle?: string }).disputeeHandle,
             disputeeAvatar: notif.disputeeAvatar,
-            disputeeId: notif.disputeeID,
+            disputeeID: readStringField(notifRecord, 'disputeeID', 'disputeeId') || undefined,
             otherPartyName:
               notif.otherPartyName ?? (notif as { otherPartyHandle?: string }).otherPartyHandle,
             otherPartyAvatar: notif.otherPartyAvatar,
@@ -581,20 +591,19 @@ export async function batchNotifications(
 
 export function getNotificationRoute(notification: Notification): string | null {
   const { type, data } = notification;
+  const orderOrCaseId = resolveOrderOrCaseID(data);
 
   if (type.startsWith('order.') || type.startsWith('payment.')) {
-    if (data?.orderId) {
-      return `/orders/${data.orderId}`;
+    if (orderOrCaseId) {
+      return `/orders/${orderOrCaseId}`;
     }
   }
 
   if (type.startsWith('dispute.')) {
-    if (data?.orderId) {
-      return `/orders/${data.orderId}?tab=dispute`;
+    if (!orderOrCaseId) {
+      return null;
     }
-    if (data?.caseId) {
-      return `/moderation/cases/${data.caseId}`;
-    }
+    return `/orders/${orderOrCaseId}?tab=dispute`;
   }
 
   if (type.startsWith('social.')) {

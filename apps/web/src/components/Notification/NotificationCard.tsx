@@ -340,8 +340,8 @@ export function DisputeNotificationCard({
   const { data, read, timestamp } = notification;
 
   const disputerName = data?.disputerName;
-  const disputerId = data?.disputerId;
-  const orderId = data?.orderId;
+  const disputerID = data?.disputerID;
+  const orderID = data?.orderID;
 
   const handleClick = () => {
     if (!read && onMarkAsRead) {
@@ -371,12 +371,12 @@ export function DisputeNotificationCard({
         >
           {notification.message}
         </p>
-        {(disputerName || disputerId) && (
+        {(disputerName || disputerID) && (
           <p className="text-xs text-text-tertiary mt-1">
-            {t('common.by')} {disputerName || formatPeerDisplay(disputerId)}
+            {t('common.by')} {disputerName || formatPeerDisplay(disputerID)}
           </p>
         )}
-        {orderId && <p className="text-xs text-text-tertiary">Order #{orderId.slice(0, 8)}</p>}
+        {orderID && <p className="text-xs text-text-tertiary">Order #{orderID.slice(0, 8)}</p>}
       </div>
 
       {/* 时间戳 */}

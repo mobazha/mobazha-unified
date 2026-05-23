@@ -112,7 +112,7 @@ interface RealOrderData {
         country?: string;
       };
       pricingCoin?: string;
-      amount?: number;
+      amount?: number | string;
       alternateContactInfo?: string;
     };
     paymentSent?: {
@@ -401,15 +401,32 @@ function extractPaymentProgress(
 /**
  * 格式化价格金额（使用统一的 token 配置）
  */
-function formatPriceAmount(amount: number, divisibility: number = 2, coin?: string): string {
+function formatPriceAmount(
+  amount: number | string,
+  divisibility: number = 2,
+  coin?: string
+): string {
+  const numericAmount = Number(amount);
   // 如果提供了 coin，且是已知的加密货币 token，使用 token 配置的 decimals
   if (coin && getTokenByPaymentCoin(coin)) {
-    return formatTokenAmount(amount, coin);
+    return formatTokenAmount(numericAmount, coin);
   }
   // 法币（如 USD）或未知 coin，使用 listing metadata 中的 divisibility
-  const normalAmount = amount / Math.pow(10, divisibility);
+  const normalAmount = numericAmount / Math.pow(10, divisibility);
   const displayDecimals = divisibility >= 6 ? 2 : Math.min(divisibility, 8);
   return normalAmount.toFixed(displayDecimals);
+}
+
+function formatPaymentSentAmount(
+  amount: number | string,
+  paymentDivisibility: number,
+  paymentCoin?: string
+): string {
+  const raw = String(amount).trim();
+  return (
+    formatMinimalUnitExactAmountString(raw, paymentCoin) ||
+    formatPriceAmount(Number(amount), paymentDivisibility, paymentCoin)
+  );
 }
 
 /**
@@ -1073,10 +1090,7 @@ export function transformCoreOrder(
   const formattedOrderAmount = formatPriceAmount(pricingAmount, paymentDivisibility, pricingCoin);
   const formattedPaymentAmount =
     paymentAmount !== undefined
-      ? recoveredPayment.recovered
-        ? formatMinimalUnitExactAmountString(String(paymentAmount), paymentCoin) ||
-          formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
-        : formatPriceAmount(paymentAmount, paymentDivisibility, paymentCoin)
+      ? formatPaymentSentAmount(paymentAmount, paymentDivisibility, paymentCoin)
       : formattedOrderAmount;
 
   const paymentCoinFiatProvider = resolveFiatProviderFromCoin(paymentSent?.coin);
@@ -1133,7 +1147,9 @@ export function transformCoreOrder(
         claim: contract.dispute?.claim || '',
         status: contract.disputeClose ? 'resolved' : 'open',
         initiator: 'buyer',
-        resolution: contract.disputeClose?.verdict as 'buyer' | 'seller' | 'split' | undefined,
+        resolution: normalizeDisputeResolution(contract.disputeClose?.verdict),
+        openedAt: contract.disputeOpen.timestamp || contract.dispute?.timestamp,
+        resolvedAt: contract.disputeClose?.timestamp,
         evidenceHashes: contract.disputeOpen.evidenceHashes,
       }
     : undefined;
@@ -1278,4 +1294,18 @@ export function transformCoreOrder(
   };
 
   return result;
+}
+
+/** Map API / protobuf verdict strings to UI resolution enum */
+export function normalizeDisputeResolution(
+  verdict?: string
+): 'buyer' | 'seller' | 'split' | undefined {
+  if (!verdict) return undefined;
+  const v = verdict.trim().toLowerCase();
+  if (v === 'buyer' || v.includes('buyer')) return 'buyer';
+  if (v === 'seller' || v === 'vendor' || v.includes('seller') || v.includes('vendor')) {
+    return 'seller';
+  }
+  if (v === 'split' || v.includes('split') || v.includes('half')) return 'split';
+  return undefined;
 }

@@ -361,7 +361,7 @@ test.describe('Desktop Visual - Authenticated Settings', () => {
 test.describe('Desktop Visual - Authenticated Admin', () => {
   test('authed: moderator-cases', async ({ page }) => {
     await ensureAuthenticated(page);
-    await navigateAndVerify(page, '/moderation/cases');
+    await navigateAndVerify(page, '/cases');
     await expect(page).toHaveScreenshot('desktop-authed-moderator-cases.png', { fullPage: true });
   });
 
