@@ -539,6 +539,8 @@ export interface OrderCompleteCardProps {
   amount?: string;
   currency?: string;
   paymentCoin?: string;
+  amountLabel?: string;
+  breakdownLines?: Array<{ label: string; amount: string }>;
   txHash?: string;
   txUrl?: string;
   title?: string;
@@ -553,6 +555,8 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   amount,
   currency,
   paymentCoin,
+  amountLabel,
+  breakdownLines,
   txHash,
   txUrl,
   title,
@@ -596,20 +600,42 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
       className={className}
       showDivider={showDivider}
     >
-      <Card className="p-2.5 bg-muted/30">
-        <div className="flex items-center gap-2">
+      <Card className="p-3 bg-muted/30">
+        <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             {paymentDisplay && (
-              <p className="text-sm sm:text-base font-semibold text-foreground">{paymentDisplay}</p>
+              <div className="space-y-0.5">
+                {amountLabel && (
+                  <p className="text-xs font-medium text-muted-foreground">{amountLabel}</p>
+                )}
+                <p className="text-base sm:text-lg font-semibold text-foreground tabular-nums">
+                  {paymentDisplay}
+                </p>
+              </div>
             )}
             <p className="text-xs text-muted-foreground">
               {description || t('order.fundsReleased')}
             </p>
+            {!!breakdownLines?.length && (
+              <div className="mt-2 pt-2 border-t border-border/40 flex flex-wrap gap-x-4 gap-y-1.5">
+                {breakdownLines.map(line => (
+                  <div
+                    key={`${line.label}-${line.amount}`}
+                    className="inline-flex max-w-full items-baseline gap-2 text-xs text-muted-foreground"
+                  >
+                    <span className="shrink-0">{line.label}</span>
+                    <span className="font-medium text-foreground/80 tabular-nums break-all">
+                      {line.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
             {txHash && (
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="flex items-center gap-1.5 mt-2">
                 {txUrl ? (
                   <a
                     href={txUrl}

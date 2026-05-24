@@ -4,6 +4,19 @@ import { useCallback, useState } from 'react';
 import { useI18n } from './useI18n';
 import type { SettlementActionResponse } from '../services/api/orders';
 
+const BACKEND_SETTLEMENT_COMPLETED_TX_ID = 'backend-settlement-completed';
+
+export function resolveBackendSettlementTransactionID(
+  settlement: SettlementActionResponse
+): string | undefined {
+  const settlementMode = (settlement.mode || '').trim().toLowerCase();
+  return (
+    settlement.txHash ||
+    settlement.actionId ||
+    (settlementMode === 'completed' ? BACKEND_SETTLEMENT_COMPLETED_TX_ID : undefined)
+  );
+}
+
 export interface OrderActionOptions {
   executeAction: (txID?: string) => Promise<{ success: boolean; error?: string }>;
   executeBackendSettlementAction?: () => Promise<SettlementActionResponse>;
@@ -55,7 +68,7 @@ export function useOrderAction(): UseOrderActionReturn {
             throw new Error(t('order.actions.operationFailed'));
           }
           const settlement = await executeBackendSettlementAction();
-          txID = settlement.txHash || settlement.actionId;
+          txID = resolveBackendSettlementTransactionID(settlement);
         }
 
         const result = await executeAction(txID);

@@ -257,6 +257,28 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.protection?.protectionLevel).toBe('full');
   });
 
+  it('exposes backend-submitted settlement mode from PaymentSent settlementSpec', () => {
+    const rawOrder = buildOrder({}) as any;
+    rawOrder.state = 'AWAITING_FULFILLMENT';
+    rawOrder.contract.paymentSent = {
+      ...rawOrder.contract.paymentSent,
+      method: undefined,
+      settlementSpec: {
+        method: 'CANCELABLE',
+        payMode: 'address_monitored',
+        escrowType: 'managed_escrow',
+      },
+    };
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'seller-peer',
+      viewingContext: 'sale',
+    });
+
+    expect(order?.paymentSettlementMode).toBe('address_monitored');
+    expect(order?.paymentProductMode).toBe('cancelable');
+  });
+
   it('exposes manual digital delivery details from order shipments', () => {
     const order = transformCoreOrder(
       {

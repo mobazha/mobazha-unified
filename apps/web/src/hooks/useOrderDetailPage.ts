@@ -14,7 +14,6 @@ import {
   digitalAssetsApi,
   CONTRACT_TYPES,
   isFiatPaymentCoin,
-  supportsBackendSettlementActionSurface,
   type DigitalDeliveryStatus,
   type WebSocketMessage,
   queryKeys,
@@ -184,20 +183,9 @@ export function useOrderDetailPage(
 
   const paymentCoin =
     displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
-  const paymentSettlementSpec = (coreOrder as OrderContractData | null)?.contract?.paymentSent
-    ?.settlementSpec;
   const canAttemptBackendSettlementAction = useMemo(() => {
-    if (isFiatPaymentCoin(paymentCoin)) {
-      return false;
-    }
-    if (paymentSettlementSpec?.payMode === 'address_monitored') {
-      return true;
-    }
-    if (displayOrder?.paymentSettlementMode === 'address_monitored') {
-      return true;
-    }
-    return supportsBackendSettlementActionSurface(paymentCoin);
-  }, [displayOrder?.paymentSettlementMode, paymentCoin, paymentSettlementSpec?.payMode]);
+    return !displayOrder?.fiatPayment && !isFiatPaymentCoin(paymentCoin);
+  }, [displayOrder?.fiatPayment, paymentCoin]);
 
   const counterparty = useMemo((): {
     peerID?: string;
