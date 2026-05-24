@@ -47,11 +47,13 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // 获取调解员列表
-  const { moderators, isLoading: isLoadingModerators } = useModerators({ autoFetch: true });
-
   // 卖家 PeerID — 用于获取该卖家支持的支付方式（crypto + fiat）
   const [vendorPeerID, setVendorPeerID] = useState<string | undefined>();
+  // 获取调解员列表
+  const { moderators, isLoading: isLoadingModerators } = useModerators({
+    autoFetch: true,
+    vendorPeerID,
+  });
   const { activeFiat, crypto: acceptedCurrencies } = usePaymentMethods(vendorPeerID);
   const availableFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
 
@@ -131,6 +133,9 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         if (state.selectedModerator?.peerID) {
           url.searchParams.set('selected', state.selectedModerator.peerID);
         }
+        if (vendorPeerID) {
+          url.searchParams.set('vendor', vendorPeerID);
+        }
         if (returnUrl) {
           url.searchParams.set('returnUrl', returnUrl);
         }
@@ -140,7 +145,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         setState(prev => ({ ...prev, isModeratorDrawerOpen: true }));
       }
     },
-    [isMobile, router, state.selectedModerator]
+    [isMobile, router, state.selectedModerator, vendorPeerID]
   );
 
   // 关闭支付方式抽屉

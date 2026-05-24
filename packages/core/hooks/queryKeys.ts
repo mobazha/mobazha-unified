@@ -47,7 +47,11 @@ export const queryKeys = {
   moderators: {
     all: ['moderators'] as const,
     verified: () => [...queryKeys.moderators.all, 'verified'] as const,
+    store: () => [...queryKeys.moderators.all, 'store'] as const,
+    directory: () => [...queryKeys.moderators.all, 'directory'] as const,
     list: (options?: string) => [...queryKeys.moderators.all, 'list', options] as const,
+    detail: (peerID: string) => [...queryKeys.moderators.all, 'detail', peerID] as const,
+    reviews: (peerID: string) => [...queryKeys.moderators.all, 'reviews', peerID] as const,
   },
 
   search: {

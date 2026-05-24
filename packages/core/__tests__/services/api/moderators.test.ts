@@ -16,20 +16,33 @@ vi.mock('../../../services/api/client', () => ({
   },
 }));
 
+vi.mock('../../../services/verifiedModerators', () => ({
+  fetchVerifiedModerators: vi.fn().mockResolvedValue(new Set<string>()),
+}));
+
 // Mock helpers used by getModerators and setAsModerator/unsetAsModerator
 const mockAuthGet = vi.fn();
 const mockAuthPost = vi.fn();
+const mockAuthPut = vi.fn();
 const mockAuthDel = vi.fn();
+const mockPublicGet = vi.fn();
 const mockPublicPost = vi.fn();
+const mockNodeAuthGet = vi.fn();
 vi.mock('../../../services/api/helpers', () => ({
   authGet: (...args: unknown[]) => mockAuthGet(...args),
   authPost: (...args: unknown[]) => mockAuthPost(...args),
+  authPut: (...args: unknown[]) => mockAuthPut(...args),
   authDel: (...args: unknown[]) => mockAuthDel(...args),
+  publicGet: (...args: unknown[]) => mockPublicGet(...args),
   publicPost: (...args: unknown[]) => mockPublicPost(...args),
+  nodeAuthGet: (...args: unknown[]) => mockNodeAuthGet(...args),
 }));
 
 import { apiClient } from '../../../services/api/client';
 import * as moderatorsApi from '../../../services/api/moderators';
+import { fetchVerifiedModerators } from '../../../services/verifiedModerators';
+
+const mockFetchVerified = vi.mocked(fetchVerifiedModerators);
 
 const mockApiClient = apiClient as {
   get: ReturnType<typeof vi.fn>;
@@ -67,6 +80,7 @@ describe('Moderators API', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchVerified.mockResolvedValue(new Set<string>());
     // Default: authGet returns empty storeModerators
     mockAuthGet.mockResolvedValue({ storeModerators: [] });
   });
@@ -116,6 +130,29 @@ describe('Moderators API', () => {
 
       expect(result.moderators).toHaveLength(0);
       expect(result.total).toBe(0);
+    });
+
+    it('should fetch store moderators from the vendor profile when vendorPeerID is provided', async () => {
+      const mockProfile = {
+        peerID: 'QmSellerMod',
+        name: 'Seller Moderator',
+        moderator: true,
+        moderatorInfo: {
+          languages: ['en'],
+          fee: { percentage: 1, feeType: 'PERCENTAGE' },
+        },
+      };
+      mockPublicGet.mockResolvedValueOnce({ peerID: 'QmSeller', storeModerators: ['QmSellerMod'] });
+      mockPublicPost.mockResolvedValueOnce([
+        { id: 'id1', peerID: 'QmSellerMod', profile: mockProfile },
+      ]);
+
+      const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
+
+      expect(mockAuthGet).not.toHaveBeenCalled();
+      expect(mockPublicGet).toHaveBeenCalledWith('/profiles/QmSeller');
+      expect(result.moderators).toHaveLength(1);
+      expect(result.moderators[0].peerID).toBe('QmSellerMod');
     });
   });
 
@@ -234,6 +271,121 @@ describe('Moderators API', () => {
         reason: 'Seller did not respond',
       });
       expect(result.status).toBe('resolved');
+    });
+  });
+
+  describe('store moderators preferences', () => {
+    const mockProfile = {
+      peerID: 'QmMod1',
+      name: 'Trusted Moderator',
+      moderator: true,
+      moderatorInfo: {
+        languages: ['en'],
+        fee: { percentage: 1, feeType: 'PERCENTAGE' },
+      },
+    };
+
+    it('should add store moderator after profile lookup', async () => {
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: [] });
+      mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
+      mockAuthPut.mockResolvedValueOnce(undefined);
+
+      const result = await moderatorsApi.addStoreModerator('QmMod1');
+
+      expect(result.success).toBe(true);
+      expect(mockAuthPut).toHaveBeenCalledWith('/preferences', { storeModerators: ['QmMod1'] });
+    });
+
+    it('should reject duplicate store moderator', async () => {
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1'] });
+
+      const result = await moderatorsApi.addStoreModerator('QmMod1');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Moderator already added');
+    });
+
+    it('should remove store moderator', async () => {
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1', 'QmMod2'] });
+      mockAuthPut.mockResolvedValueOnce(undefined);
+
+      const result = await moderatorsApi.removeStoreModerator('QmMod1');
+
+      expect(result.success).toBe(true);
+      expect(mockAuthPut).toHaveBeenCalledWith('/preferences', { storeModerators: ['QmMod2'] });
+    });
+
+    it('should keep peerID placeholder when profile batch misses an entry', async () => {
+      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1', 'QmMissing'] });
+      mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
+
+      const result = await moderatorsApi.getModerators();
+
+      expect(result.moderators).toHaveLength(2);
+      expect(result.moderators[1].peerID).toBe('QmMissing');
+    });
+  });
+
+  describe('discoverModerators', () => {
+    const mockProfile = {
+      peerID: 'QmMod1',
+      name: 'Network Moderator',
+      moderator: true,
+      moderatorInfo: {
+        languages: ['en'],
+        fee: { percentage: 1, feeType: 'PERCENTAGE' },
+      },
+    };
+
+    it('should merge network scan and verified moderators', async () => {
+      mockFetchVerified.mockResolvedValueOnce(new Set(['QmVerified']));
+      mockNodeAuthGet.mockResolvedValueOnce([mockProfile]);
+      mockPublicPost.mockResolvedValueOnce([
+        {
+          id: 'id2',
+          peerID: 'QmVerified',
+          profile: { ...mockProfile, peerID: 'QmVerified', name: 'Verified Mod' },
+        },
+      ]);
+
+      const result = await moderatorsApi.discoverModerators();
+
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result.some(m => m.peerID === 'QmMod1')).toBe(true);
+    });
+  });
+
+  describe('getModeratorDetail', () => {
+    it('should load moderator from profiles batch', async () => {
+      const mockProfile = {
+        peerID: 'QmMod1',
+        name: 'Detail Moderator',
+        moderator: true,
+        moderatorInfo: {
+          description: 'Detail bio',
+          languages: ['en'],
+          fee: { percentage: 1.5, feeType: 'PERCENTAGE' },
+        },
+      };
+
+      mockFetchVerified.mockResolvedValueOnce(new Set(['QmMod1']));
+      mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
+
+      const result = await moderatorsApi.getModeratorDetail('QmMod1');
+
+      expect(result).not.toBeNull();
+      expect(result?.peerID).toBe('QmMod1');
+      expect(result?.verified).toBe(true);
+    });
+
+    it('should return null when profile not found', async () => {
+      mockFetchVerified.mockResolvedValueOnce(new Set());
+      mockPublicPost.mockResolvedValueOnce([]);
+      mockApiClient.get.mockRejectedValueOnce(new Error('not found'));
+
+      const result = await moderatorsApi.getModeratorDetail('QmMissing');
+
+      expect(result).toBeNull();
     });
   });
 

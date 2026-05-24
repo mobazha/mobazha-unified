@@ -53,6 +53,8 @@ export {
   getPaymentCoinDisplayLabel,
   resolveTokenIdForDisplay,
   formatTokenAmount,
+  formatStandardCryptoAmount,
+  getSmartDecimals,
   parseTokenAmount,
   // 链类型判断工具
   getChainFromCoin,
