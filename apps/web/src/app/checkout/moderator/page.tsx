@@ -19,9 +19,10 @@ export default function ModeratorPage() {
   // 从 URL 获取返回地址和当前选中的仲裁员
   const returnUrl = searchParams.get('returnUrl') || '/checkout';
   const selectedModeratorId = searchParams.get('selected') || undefined;
+  const vendorPeerID = searchParams.get('vendor') || undefined;
 
   // 使用 useModerators hook 获取仲裁员列表
-  const { moderators, isLoading } = useModerators({ autoFetch: true });
+  const { moderators, isLoading } = useModerators({ autoFetch: true, vendorPeerID });
 
   // 获取当前选中的仲裁员对象
   const currentModerator = selectedModeratorId

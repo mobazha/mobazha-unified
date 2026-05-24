@@ -8,6 +8,7 @@ interface UseModeratorsOptions {
   autoFetch?: boolean;
   limit?: number;
   verified?: boolean;
+  vendorPeerID?: string;
 }
 
 interface UseModeratorsResult {
@@ -25,7 +26,7 @@ interface UseModeratorsResult {
  * 调用后端 API: GET /v1/moderators?include=profile
  */
 export function useModerators(options: UseModeratorsOptions = {}): UseModeratorsResult {
-  const { autoFetch = true, limit = 10, verified } = options;
+  const { autoFetch = true, limit = 10, verified, vendorPeerID } = options;
 
   const [moderators, setModerators] = useState<Moderator[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +44,7 @@ export function useModerators(options: UseModeratorsOptions = {}): UseModerators
         verified,
         sortBy: 'rating',
         sortOrder: 'desc',
+        vendorPeerID,
       });
 
       // 转换 API 响应为组件所需格式
@@ -93,7 +95,7 @@ export function useModerators(options: UseModeratorsOptions = {}): UseModerators
     } finally {
       setIsLoading(false);
     }
-  }, [limit, verified]);
+  }, [limit, vendorPeerID, verified]);
 
   useEffect(() => {
     if (autoFetch) {
