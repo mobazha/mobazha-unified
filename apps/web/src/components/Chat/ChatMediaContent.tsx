@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FileText, Download } from 'lucide-react';
-import { useAuthenticatedImage } from '@mobazha/core';
+import { useAuthenticatedImage, isFullPeerID } from '@mobazha/core';
 import type { Message } from './ChatMessages';
 
 export function cleanDisplayName(raw: string): string {
@@ -11,10 +11,7 @@ export function cleanDisplayName(raw: string): string {
   const cameFromMatrixId = trimmed !== name || trimmed.startsWith('@');
   if (name.startsWith('peer_')) name = name.slice(5);
 
-  const looksLikePeerID = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{20,})$/.test(
-    name
-  );
-  if ((cameFromMatrixId || looksLikePeerID) && name.length > 12) {
+  if ((cameFromMatrixId || isFullPeerID(name)) && name.length > 12) {
     name = `${name.slice(0, 6)}…${name.slice(-4)}`;
   }
   return name || 'Chat';

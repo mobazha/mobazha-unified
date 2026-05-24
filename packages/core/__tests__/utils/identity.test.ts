@@ -4,7 +4,24 @@ import {
   truncatePeerId,
   truncateAddress,
   formatNotificationName,
+  isFullPeerID,
 } from '../../utils/identity';
+
+describe('isFullPeerID', () => {
+  it('accepts full libp2p peer IDs', () => {
+    expect(isFullPeerID('12D3KooWLYPUhoYt48FsocbqbD7CntQd1UgdEceZdKV9DVqXG2k8')).toBe(true);
+  });
+
+  it('rejects truncated display IDs', () => {
+    expect(isFullPeerID('.YPUHoYt48FsocbqbD7CntQd1UgdEceZdKV9DVqXG2k8')).toBe(false);
+  });
+
+  it('rejects empty and whitespace input', () => {
+    expect(isFullPeerID('')).toBe(false);
+    expect(isFullPeerID('   ')).toBe(false);
+    expect(isFullPeerID(undefined)).toBe(false);
+  });
+});
 
 describe('formatUserName', () => {
   it('returns name when available', () => {
