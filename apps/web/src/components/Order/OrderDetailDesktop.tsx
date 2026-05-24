@@ -199,7 +199,9 @@ export function OrderDetailDesktop({
       .toLowerCase();
     return (
       settlementState === 'confirmed' &&
-      (settlementAction === 'cancel' || settlementAction === 'confirm')
+      (settlementAction === 'cancel' ||
+        settlementAction === 'confirm' ||
+        settlementAction === 'release')
     );
   }, [displayOrder?.fundsReleasedAtConfirmation, latestSettlementAction]);
 

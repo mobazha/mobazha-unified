@@ -4,7 +4,13 @@ import React, { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { VStack, HStack } from '@/components/layouts';
-import { useI18n, getTimeRemaining, isOrderExpired, ESCROW_TIMEOUT_HOURS } from '@mobazha/core';
+import {
+  useI18n,
+  getTimeRemaining,
+  isOrderExpired,
+  ESCROW_TIMEOUT_HOURS,
+  formatMinimalUnitExactAmountString,
+} from '@mobazha/core';
 import { copyToClipboard, getBlockExplorerUrl } from './utils';
 
 export interface PaymentTransaction {
@@ -56,6 +62,14 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
 
   const timeRemaining = getTimeRemaining(orderTimestamp, ESCROW_TIMEOUT_HOURS);
   const isExpired = isOrderExpired(orderTimestamp, ESCROW_TIMEOUT_HOURS);
+  const formatTransactionAmount = useCallback(
+    (value: string) => {
+      const raw = value.trim();
+      if (!raw || raw.includes('.') || !/^\d+$/.test(raw)) return raw;
+      return formatMinimalUnitExactAmountString(raw, paymentCoin) ?? raw;
+    },
+    [paymentCoin]
+  );
 
   return (
     <Card className={`p-4 sm:p-6 ${className}`}>
@@ -180,7 +194,7 @@ export const PaymentSection: React.FC<PaymentSectionProps> = ({
                           : `${tx.confirmations}/6 ${t('order.payment.confirmations')}`}
                       </span>
                       <span className="text-sm font-medium text-foreground">
-                        {tx.value} {paymentCoin}
+                        {formatTransactionAmount(tx.value)} {currency}
                       </span>
                     </HStack>
                     <HStack justify="between" align="center">

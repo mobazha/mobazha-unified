@@ -23,6 +23,7 @@ import {
   getTrackingUrl,
   getPaymentCoinDisplayLabel,
   resolveTokenIdForDisplay,
+  formatPaymentAmount,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
@@ -164,11 +165,12 @@ export const PaymentCard = memo(function PaymentCard({
 }: PaymentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
-  const paymentAsset = paymentCoin || currency;
   const paymentLabel = paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currency;
-
-  // 判断是否有原始定价信息（与支付币种不同时显示）
-  const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== paymentLabel;
+  const isCrossCurrencyPayment =
+    pricingAmount != null &&
+    pricingCurrency != null &&
+    paymentLabel !== '' &&
+    pricingCurrency.toUpperCase() !== paymentLabel.toUpperCase();
 
   // 格式化交易 hash（显示前后各 6 位）
   const formatTxHash = (hash: string) => {
@@ -177,7 +179,7 @@ export const PaymentCard = memo(function PaymentCard({
   };
 
   const txUrl = txHash
-    ? getBlockExplorerUrl(txHash, paymentAsset, chainId) || blockchainUrl || ''
+    ? getBlockExplorerUrl(txHash, paymentCoin || currency, chainId) || blockchainUrl || ''
     : '';
 
   return (
@@ -193,10 +195,10 @@ export const PaymentCard = memo(function PaymentCard({
           {(() => {
             // 优先使用 EVM chainId 获取链，否则从币种名推断
             const chainFromEVM = chainId ? getChainByEVMId(chainId)?.id : null;
-            const chainFromCurrency = getChainFromCoin(paymentAsset);
+            const chainFromCurrency = getChainFromCoin(paymentCoin || currency);
             const chainSymbol = chainFromEVM || chainFromCurrency || null;
             // 只有当代币不是原生代币时才显示链徽章（如 ETHUSDT 显示 ETH 徽章，但 ETH 本身不需要）
-            const displayTokenId = resolveTokenIdForDisplay(paymentAsset);
+            const displayTokenId = resolveTokenIdForDisplay(paymentCoin || currency);
             const showBadge =
               !!chainSymbol && displayTokenId.toUpperCase() !== chainSymbol.toUpperCase();
             return (
@@ -212,22 +214,30 @@ export const PaymentCard = memo(function PaymentCard({
 
           {/* 支付信息 */}
           <div className="flex-1 min-w-0">
-            {/* 原始定价（法币） */}
-            {showPricingInfo && (
-              <p className="text-sm sm:text-base font-semibold text-foreground">
-                {formatCurrencyPrice(pricingAmount, pricingCurrency)}
+            {/* 跨币种：分别展示 listing 定价与实付金额（不做汇率换算，不用 ≈） */}
+            {isCrossCurrencyPayment && (
+              <p className="text-xs text-muted-foreground">
+                {t('order.payment.listingTotal')}{' '}
+                <span className="font-medium text-foreground">
+                  {formatCurrencyPrice(pricingAmount!, pricingCurrency!)}
+                </span>
               </p>
             )}
-            {/* 实际支付（加密货币） */}
             <p
               className={cn(
                 'text-foreground flex items-center gap-1',
-                showPricingInfo
-                  ? 'text-xs sm:text-sm text-muted-foreground'
+                isCrossCurrencyPayment
+                  ? 'text-sm sm:text-base font-semibold mt-0.5'
                   : 'text-sm sm:text-base font-semibold'
               )}
             >
-              {showPricingInfo ? `≈ ${amount} ${paymentLabel}` : `${amount} ${paymentLabel}`}
+              {isCrossCurrencyPayment && (
+                <span className="text-xs font-normal text-muted-foreground mr-1">
+                  {t('order.payment.paidAmount')}
+                </span>
+              )}
+              {formatPaymentAmount(amount, paymentCoin, paymentLabel) ??
+                formatCurrencyPrice(amount, paymentLabel)}
               {confirmations !== undefined && confirmations > 0 && (
                 <span className="text-xs text-muted-foreground ml-1">
                   ({confirmations} confirms)
@@ -528,6 +538,7 @@ export interface OrderCompleteCardProps {
   timestamp?: string;
   amount?: string;
   currency?: string;
+  paymentCoin?: string;
   txHash?: string;
   txUrl?: string;
   title?: string;
@@ -541,6 +552,7 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   timestamp,
   amount,
   currency,
+  paymentCoin,
   txHash,
   txUrl,
   title,
@@ -550,6 +562,12 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   showDivider = true,
 }: OrderCompleteCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
+  const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const paymentDisplay =
+    amount && currency
+      ? (formatPaymentAmount(amount, paymentCoin, currency) ??
+        formatCurrencyPrice(amount, currency))
+      : null;
 
   const formatTxHash = (hash: string) => {
     if (hash.length <= 16) return hash;
@@ -584,10 +602,8 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            {amount && currency && (
-              <p className="text-sm sm:text-base font-semibold text-foreground">
-                {amount} {currency}
-              </p>
+            {paymentDisplay && (
+              <p className="text-sm sm:text-base font-semibold text-foreground">{paymentDisplay}</p>
             )}
             <p className="text-xs text-muted-foreground">
               {description || t('order.fundsReleased')}

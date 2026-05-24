@@ -67,6 +67,7 @@ function buildCompletedTimelineCards(
           timestamp={paymentEvent.timestamp}
           amount={order.total}
           currency={order.currency}
+          paymentCoin={order.paymentCoin}
           txHash={order.paymentTx}
           txUrl={
             getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined
@@ -181,6 +182,7 @@ function buildCancelledTimelineCards(
           timestamp={paymentEvent?.timestamp}
           amount={order.total}
           currency={order.currency}
+          paymentCoin={order.paymentCoin}
           txHash={order.paymentTx}
           txUrl={
             getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined

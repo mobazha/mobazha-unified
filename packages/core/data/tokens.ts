@@ -956,7 +956,7 @@ export function resolveTokenIdForDisplay(coin: string): string {
  * - 0.00024567 → 0.0002457 (4位有效数字)
  * - 0.000001234 → 0.00000123 (3位有效数字，受 maxDecimals 限制)
  */
-function getSmartDecimals(
+export function getSmartDecimals(
   amount: number,
   desiredDecimals: number,
   maxDecimals = 8,
@@ -991,6 +991,29 @@ function getSmartDecimals(
  * @param tokenId 代币 ID
  * @param displayDecimals 显示的小数位数（默认根据代币类型自动判断，会智能扩展以显示非零值）
  */
+/**
+ * 格式化标准单位的加密货币金额（API / transform 已转换为标准单位时使用）
+ * 参考 Binance/OKX：小额显示 3–4 位有效数字，非零金额绝不四舍五入为 0
+ */
+export function formatStandardCryptoAmount(
+  amount: number | string,
+  currencyOrTokenId: string
+): string {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (!Number.isFinite(numAmount) || numAmount === 0) return '0';
+
+  const decimals =
+    getTokenDecimals(currencyOrTokenId) || getTokenByPaymentCoin(currencyOrTokenId)?.decimals || 8;
+  const baseDisplay = decimals >= 6 ? 2 : Math.min(decimals, 8);
+  const smartDisplay = getSmartDecimals(numAmount, baseDisplay, decimals);
+
+  let formatted = numAmount.toFixed(smartDisplay);
+  if (formatted.includes('.')) {
+    formatted = formatted.replace(/0+$/, '').replace(/\.$/, '');
+  }
+  return formatted;
+}
+
 export function formatTokenAmount(
   amount: number | string,
   tokenId: string,
