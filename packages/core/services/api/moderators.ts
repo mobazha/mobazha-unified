@@ -246,13 +246,19 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
 // API Functions
 
 /**
- * 获取用户偏好设置中的 storeModerators 列表
+ * 获取店铺设置中的 storeModerators 列表
  */
 async function getStoreModerators(vendorPeerID?: string): Promise<string[]> {
   try {
     if (vendorPeerID) {
-      const profile = await publicGet<BackendProfile>(`${NODE_API.PROFILES}/${vendorPeerID}`);
-      return profile.storeModerators || [];
+      const profilePath = `${NODE_API.PROFILES}/${vendorPeerID}`;
+      try {
+        const profile = await authGet<BackendProfile>(profilePath);
+        return profile.storeModerators || [];
+      } catch {
+        const profile = await publicGet<BackendProfile>(profilePath);
+        return profile.storeModerators || [];
+      }
     }
     const preferences = await authGet<{ storeModerators?: string[] }>(NODE_API.PREFERENCES);
     return preferences.storeModerators || [];
