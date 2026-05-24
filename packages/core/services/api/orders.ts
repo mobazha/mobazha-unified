@@ -419,6 +419,7 @@ export async function createOrderPaymentSession(
 ): Promise<PaymentSession> {
   const realFn = async () => {
     const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
+    const vendorPeerID = payload.vendorPeerID?.trim();
     return authPost<PaymentSession>(
       NODE_API.ORDER_PAYMENT_SESSION(payload.orderId),
       {
@@ -432,7 +433,7 @@ export async function createOrderPaymentSession(
         ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
         ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
       },
-      payload.vendorPeerID ? { 'X-Store-PeerID': payload.vendorPeerID } : undefined
+      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
     );
   };
 
