@@ -84,12 +84,10 @@ export const OrderActionSheet = memo(function OrderActionSheet({
       fundsReleasedAtConfirmation,
     ]
   );
+  const visibleActions = useMemo(() => actions.filter(action => action !== 'Dispute'), [actions]);
 
-  const primaryAction = useMemo(() => getPrimaryAction(actions), [actions]);
-  const secondaryActions = useMemo(
-    () => getSecondaryActions(actions).filter(a => a !== 'Dispute'),
-    [actions]
-  );
+  const primaryAction = useMemo(() => getPrimaryAction(visibleActions), [visibleActions]);
+  const secondaryActions = useMemo(() => getSecondaryActions(visibleActions), [visibleActions]);
   const primaryConfig = useMemo(
     () =>
       primaryAction
@@ -112,7 +110,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
     ]
   );
 
-  if (actions.length === 0 && !isTransitioning) return null;
+  if (visibleActions.length === 0 && !isTransitioning) return null;
 
   if (isTransitioning) {
     return (

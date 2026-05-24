@@ -40,7 +40,9 @@ export const OrderMemoCard = memo(function OrderMemoCard({
       )}
       {hasModerator && (
         <div className="p-2.5 bg-muted/20 rounded-lg border border-border/30">
-          <span className="text-xs text-muted-foreground block mb-1">{t('order.moderator')}</span>
+          <span className="text-xs text-muted-foreground block mb-1">
+            {t('order.moderatorStandby')}
+          </span>
           <Link href={`/moderators/${order.moderator!.id}`} className="flex items-center gap-2">
             <Avatar
               src={order.moderator!.avatar}
@@ -52,6 +54,9 @@ export const OrderMemoCard = memo(function OrderMemoCard({
               {order.moderator!.name}
             </span>
           </Link>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('order.moderatorOnlyNotifiedOnDispute')}
+          </p>
         </div>
       )}
     </div>

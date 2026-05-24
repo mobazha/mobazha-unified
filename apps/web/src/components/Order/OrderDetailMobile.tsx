@@ -116,10 +116,12 @@ function ModeratorBadge({
         <p className="text-sm font-semibold text-foreground truncate">
           {moderator.name || t('order.moderator')}
         </p>
-        <p className="text-xs text-muted-foreground">{t('order.moderator')}</p>
+        <p className="text-xs text-muted-foreground">{t('order.moderatorStandby')}</p>
       </div>
       {moderator.fee && (
-        <span className="text-xs text-primary font-medium shrink-0">{moderator.fee}%</span>
+        <span className="text-xs text-primary font-medium shrink-0">
+          {t('order.moderatorFeeOnDispute', { fee: moderator.fee })}
+        </span>
       )}
     </div>
   );
@@ -228,6 +230,27 @@ export function OrderDetailMobile({
       ['shipped', 'delivered', 'completed'].includes(displayOrder.status)
     );
   }, [displayOrder]);
+
+  const isModeratedOrder = useMemo(
+    () =>
+      !!displayOrder &&
+      (displayOrder.isModerated ||
+        !!displayOrder.moderator ||
+        displayOrder.protection?.protectionLevel === 'full'),
+    [displayOrder]
+  );
+
+  const canOpenModeratedDispute = useMemo(
+    () =>
+      !!displayOrder &&
+      isModeratedOrder &&
+      !displayOrder.dispute &&
+      ((displayOrder.userRole === 'buyer' &&
+        ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+        (displayOrder.userRole === 'seller' &&
+          ['shipped', 'delivered'].includes(displayOrder.status))),
+    [displayOrder, isModeratedOrder]
+  );
 
   const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
     if (!displayOrder?.protection) return null;
@@ -471,7 +494,7 @@ export function OrderDetailMobile({
       coreOrder.state || 'PENDING',
       displayOrder.userRole as CoreUserRole,
       {
-        isModerated: !!displayOrder.moderator,
+        isModerated: isModeratedOrder,
         isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
@@ -479,9 +502,17 @@ export function OrderDetailMobile({
         hasAfterSaleDispute,
         fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
-    );
+    ).filter(action => action !== 'Dispute');
     return !!getPrimaryAction(actions);
-  }, [isTG, mainButton, coreOrder, displayOrder]);
+  }, [
+    isTG,
+    mainButton,
+    coreOrder,
+    displayOrder,
+    isModeratedOrder,
+    hasAfterSaleDispute,
+    shouldBlockAutoRefund,
+  ]);
 
   useEffect(() => {
     if (!isTG || !mainButton || !coreOrder || !displayOrder) return;
@@ -490,7 +521,7 @@ export function OrderDetailMobile({
       coreOrder.state || 'PENDING',
       displayOrder.userRole as CoreUserRole,
       {
-        isModerated: !!displayOrder.moderator,
+        isModerated: isModeratedOrder,
         isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
@@ -498,7 +529,7 @@ export function OrderDetailMobile({
         hasAfterSaleDispute,
         fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
-    );
+    ).filter(action => action !== 'Dispute');
     const primary = getPrimaryAction(actions);
     if (!primary) {
       mainButton.hide();
@@ -514,7 +545,15 @@ export function OrderDetailMobile({
       mainButton.offClick(onMain);
       mainButton.hide();
     };
-  }, [isTG, mainButton, coreOrder, displayOrder]);
+  }, [
+    isTG,
+    mainButton,
+    coreOrder,
+    displayOrder,
+    isModeratedOrder,
+    hasAfterSaleDispute,
+    shouldBlockAutoRefund,
+  ]);
 
   // --- Loading state ---
   if (isLoading) {
@@ -877,6 +916,10 @@ export function OrderDetailMobile({
                   afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
                   userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
                   protectionLevel={displayOrder.protection.protectionLevel}
+                  isModerated={isModeratedOrder}
+                  moderatorName={displayOrder.moderator?.name}
+                  canOpenDispute={canOpenModeratedDispute}
+                  onOpenDispute={() => handleOrderAction('Dispute')}
                   onExtendProtection={handleExtendProtection}
                 />
               )}
@@ -977,22 +1020,17 @@ export function OrderDetailMobile({
               </div>
 
               {/* 10. Subtle dispute entry — moderated orders only */}
-              {!displayOrder.dispute &&
-                !!displayOrder.moderator &&
-                ((displayOrder.userRole === 'buyer' &&
-                  ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
-                  (displayOrder.userRole === 'seller' &&
-                    ['shipped', 'delivered'].includes(displayOrder.status))) && (
-                  <div className="text-center pb-2">
-                    <button
-                      onClick={() => handleOrderAction('Dispute')}
-                      className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
-                      data-testid="order-detail-open-dispute"
-                    >
-                      {t('order.dispute.haveProblem')}
-                    </button>
-                  </div>
-                )}
+              {!displayOrder.protection && canOpenModeratedDispute && (
+                <div className="text-center pb-2">
+                  <button
+                    onClick={() => handleOrderAction('Dispute')}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                    data-testid="order-detail-open-dispute"
+                  >
+                    {t('order.dispute.haveProblem')}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -1036,7 +1074,7 @@ export function OrderDetailMobile({
             orderState={coreOrder.state || 'PENDING'}
             userRole={displayOrder.userRole as CoreUserRole}
             timestamp={displayOrder.createdAt}
-            isModerated={!!displayOrder.moderator}
+            isModerated={isModeratedOrder}
             isShipped={isOrderShipped(coreOrder)}
             paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
             fundsReleasedAtConfirmation={shouldBlockAutoRefund}

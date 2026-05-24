@@ -966,8 +966,11 @@ export const en: TranslationResource = {
     seller: 'Seller',
     buyer: 'Buyer',
     moderator: 'Moderator',
+    moderatorStandby: 'Protection moderator',
     viewStore: 'View Store',
     moderatorFeePercent: '{{fee}}% fee',
+    moderatorFeeOnDispute: '{{fee}}% if dispute is handled',
+    moderatorOnlyNotifiedOnDispute: 'Notified only after a dispute is opened',
     // Address and payment
     shippingAddress: 'Shipping Address',
     trackingNumber: 'Tracking Number',
@@ -1013,7 +1016,7 @@ export const en: TranslationResource = {
     // Success/error messages
     receiptConfirmed: 'Order completed successfully! Funds have been released to the seller.',
     receiptConfirmFailed: 'Failed to confirm receipt: ',
-    disputeOpenedSuccess: 'Dispute has been opened. The moderator will review your case.',
+    disputeOpenedSuccess: 'Dispute has been opened. The assigned moderator has now been notified.',
     afterSaleDisputeSuccess: 'Your issue has been reported. The seller will be notified.',
     disputeOpenFailed: 'Failed to open dispute: ',
     provideDisputeReason: 'Please provide a reason for the dispute',
@@ -1286,20 +1289,20 @@ export const en: TranslationResource = {
     // Dispute modal
     dispute: {
       escrowHint:
-        'Funds are being held securely for approximately {{time}} or until the buyer completes the order. If you have any questions about the order, you can open a dispute with the moderator.',
+        'Funds are held securely for approximately {{time}} or until the buyer completes the order. If the seller does not ship or another serious issue occurs, you can open a dispute.',
       title: 'Open Dispute',
       description:
-        'Please describe the issue with your order. The moderator will review your case and help resolve the dispute.',
+        'Describe the issue with your order. Opening a dispute will notify the assigned moderator and share the order details needed for review.',
       placeholder:
         'Explain the issue in detail. Include any relevant information that will help the moderator understand your case.',
       reasonRequired: 'Please provide a reason for the dispute',
       warning: 'Important',
       warningText:
-        'Opening a dispute is a serious action. The moderator will step in to help resolve the issue. This action cannot be undone.',
+        'Opening a dispute is a serious action. Try messaging the other party first when the issue can be resolved directly.',
       submit: 'Submit Dispute',
       confirmTitle: 'Confirm Dispute',
       confirmText:
-        'Are you sure you want to open a dispute? The moderator will be notified and will step in to help resolve the issue.',
+        'Are you sure you want to open a dispute? The assigned moderator will be notified and will receive the order information needed to review the case.',
       confirm: 'Open Dispute',
       viewInProviderDashboard: 'Respond in payment provider dashboard',
       haveProblem: 'Having a problem with this order?',
@@ -2417,6 +2420,9 @@ export const en: TranslationResource = {
       cancelableEscrowedSellerDesc:
         "The buyer's payment is held securely — funds will be released after delivery",
       cancelableSellerCountdown: '{{days}} days for buyer to verify',
+      arbitrationReady: 'Dispute resolution is available if needed',
+      arbitrationReadyDesc:
+        '{{moderator}} is assigned for this order, but is only notified if a dispute is opened. No moderator service fee is charged unless a dispute is handled.',
     },
   },
 

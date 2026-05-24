@@ -84,14 +84,15 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     hasAfterSaleDispute,
     fundsReleasedAtConfirmation,
   });
+  const visibleActions = actions.filter(action => action !== 'Dispute');
 
   // 没有可用操作时：如果正在过渡则显示过渡条，否则不显示
-  if (actions.length === 0 && !isTransitioning) {
+  if (visibleActions.length === 0 && !isTransitioning) {
     return null;
   }
 
-  const primaryAction = getPrimaryAction(actions);
-  const secondaryActions = getSecondaryActions(actions);
+  const primaryAction = getPrimaryAction(visibleActions);
+  const secondaryActions = getSecondaryActions(visibleActions);
 
   // 获取操作标签（支持国际化）
   const getActionLabel = (action: OrderAction): string => {
@@ -186,8 +187,11 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       outline: 'outline',
     };
 
+    const shouldUsePrimaryStyle =
+      isPrimary && action !== 'Dispute' && action !== 'AfterSaleDispute';
+
     // 主要操作按钮 - 醒目的样式
-    if (isPrimary) {
+    if (shouldUsePrimaryStyle) {
       return (
         <Button
           key={action}

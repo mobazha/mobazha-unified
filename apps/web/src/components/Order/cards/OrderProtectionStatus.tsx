@@ -22,7 +22,11 @@ export interface OrderProtectionStatusProps {
   afterSaleWindowDays?: number;
   userRole: 'buyer' | 'seller';
   protectionLevel?: ProtectionLevel;
+  isModerated?: boolean;
+  moderatorName?: string;
+  canOpenDispute?: boolean;
   onExtendProtection?: () => Promise<void>;
+  onOpenDispute?: () => void;
   className?: string;
 }
 
@@ -47,7 +51,11 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   afterSaleWindowDays = 0,
   userRole,
   protectionLevel = 'standard',
+  isModerated = false,
+  moderatorName,
+  canOpenDispute = false,
   onExtendProtection,
+  onOpenDispute,
   className,
 }: OrderProtectionStatusProps) {
   const { t } = useI18n();
@@ -128,13 +136,21 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     return t('trust.protection.afterSaleDesc', { days });
   }, [stage, afterSaleWindowDays, t]);
 
+  const arbitrationTitle = isModerated ? t('trust.protection.arbitrationReady') : null;
+  const arbitrationDesc = isModerated
+    ? t('trust.protection.arbitrationReadyDesc', {
+        moderator: moderatorName || t('order.moderator'),
+      })
+    : null;
+
   const hasContent =
     countdownText ||
     escrowText ||
     afterSaleText ||
     completedText ||
     autoCompleteText ||
-    extensionText;
+    extensionText ||
+    arbitrationTitle;
 
   if (!hasContent && !isDisputed) return null;
 
@@ -207,6 +223,26 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
             {completedText && <p className="text-sm font-medium text-success">{completedText}</p>}
             {afterSaleText && (
               <p className="text-xs text-muted-foreground mt-0.5">{afterSaleText}</p>
+            )}
+            {arbitrationTitle && (
+              <div className="mt-2 rounded-lg border border-primary/15 bg-background/60 px-3 py-2">
+                <p className="text-xs font-semibold text-foreground">{arbitrationTitle}</p>
+                {arbitrationDesc && (
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    {arbitrationDesc}
+                  </p>
+                )}
+                {canOpenDispute && onOpenDispute && (
+                  <button
+                    type="button"
+                    onClick={onOpenDispute}
+                    className="mt-2 text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-destructive transition-colors"
+                    data-testid="order-protection-open-dispute"
+                  >
+                    {t('order.dispute.haveProblem')}
+                  </button>
+                )}
+              </div>
             )}
           </div>
           {hasActions && (

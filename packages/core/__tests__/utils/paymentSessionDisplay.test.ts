@@ -99,6 +99,16 @@ describe('applyPaymentSessionToDisplayOrder', () => {
     expect(result.paymentProductMode).toBe('cancelable');
   });
 
+  it('marks moderated payment sessions as moderated orders', () => {
+    const session = buildPaymentSession();
+    session.productMode = 'moderated';
+
+    const result = applyPaymentSessionToDisplayOrder(buildDisplayOrder(), session);
+
+    expect(result.isModerated).toBe(true);
+    expect(result.paymentProductMode).toBe('moderated');
+  });
+
   it('falls back to funding target asset id when paymentCoin is absent', () => {
     const session = buildPaymentSession();
     session.paymentCoin = '';

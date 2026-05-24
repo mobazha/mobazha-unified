@@ -163,6 +163,27 @@ export function OrderDetailDesktop({
 
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
 
+  const isModeratedOrder = useMemo(
+    () =>
+      !!displayOrder &&
+      (displayOrder.isModerated ||
+        !!displayOrder.moderator ||
+        displayOrder.protection?.protectionLevel === 'full'),
+    [displayOrder]
+  );
+
+  const canOpenModeratedDispute = useMemo(
+    () =>
+      !!displayOrder &&
+      isModeratedOrder &&
+      !displayOrder.dispute &&
+      ((displayOrder.userRole === 'buyer' &&
+        ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+        (displayOrder.userRole === 'seller' &&
+          ['shipped', 'delivered'].includes(displayOrder.status))),
+    [displayOrder, isModeratedOrder]
+  );
+
   const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
     if (!displayOrder?.protection) return null;
     return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
@@ -636,6 +657,10 @@ export function OrderDetailDesktop({
                       displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole
                     }
                     protectionLevel={displayOrder.protection.protectionLevel}
+                    isModerated={isModeratedOrder}
+                    moderatorName={displayOrder.moderator?.name}
+                    canOpenDispute={canOpenModeratedDispute}
+                    onOpenDispute={() => handleOrderAction('Dispute')}
                     onExtendProtection={handleExtendProtection}
                     className="mb-4"
                   />
@@ -778,22 +803,17 @@ export function OrderDetailDesktop({
                 />
 
                 {/* Subtle dispute entry — replaces the aggressive full-width button */}
-                {!displayOrder.dispute &&
-                  !!displayOrder.moderator &&
-                  ((displayOrder.userRole === 'buyer' &&
-                    ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
-                    (displayOrder.userRole === 'seller' &&
-                      ['shipped', 'delivered'].includes(displayOrder.status))) && (
-                    <div className="text-center mt-6 mb-2">
-                      <button
-                        onClick={() => handleOrderAction('Dispute')}
-                        className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
-                        data-testid="order-detail-open-dispute"
-                      >
-                        {t('order.dispute.haveProblem')}
-                      </button>
-                    </div>
-                  )}
+                {!displayOrder.protection && canOpenModeratedDispute && (
+                  <div className="text-center mt-6 mb-2">
+                    <button
+                      onClick={() => handleOrderAction('Dispute')}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                      data-testid="order-detail-open-dispute"
+                    >
+                      {t('order.dispute.haveProblem')}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -822,7 +842,7 @@ export function OrderDetailDesktop({
           orderState={coreOrder?.state || 'PENDING'}
           userRole={displayOrder.userRole as CoreUserRole}
           timestamp={displayOrder.createdAt}
-          isModerated={!!displayOrder.moderator}
+          isModerated={isModeratedOrder}
           isShipped={coreOrder ? isOrderShipped(coreOrder) : false}
           paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
           fundsReleasedAtConfirmation={shouldBlockAutoRefund}
