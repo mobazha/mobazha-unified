@@ -713,6 +713,7 @@ export default function PaymentPage() {
         const session = await ordersApi.createOrderPaymentSession({
           orderId: orderID!,
           paymentCoin: selectedPaymentCoin,
+          vendorPeerID: orderDetails.vendor.peerID,
           moderator: moderatorPeerID,
           vendorPeerID: orderDetails.vendor.peerID,
         });
