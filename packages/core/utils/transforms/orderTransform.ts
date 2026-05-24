@@ -120,6 +120,11 @@ interface RealOrderData {
       coin?: string;
       amount?: number;
       method?: string | number;
+      settlementSpec?: {
+        method?: string | number;
+        payMode?: string;
+        escrowType?: string;
+      };
       address?: string;
       transactionID?: string;
       timestamp?: string;
@@ -787,9 +792,28 @@ function determineUserRole(
   return userRole;
 }
 
+function normalizePaymentMethod(method: string | number | undefined): string | number {
+  if (typeof method === 'number') return method;
+  const normalized = String(method ?? '')
+    .trim()
+    .toUpperCase();
+  if (/^\d+$/.test(normalized)) return Number(normalized);
+  return normalized;
+}
+
+function isModeratedPaymentMethod(method: string | number): boolean {
+  return method === 'MODERATED' || method === 2;
+}
+
+function resolvePaymentMethod(
+  paymentSent: RealOrderData['contract']['paymentSent']
+): string | number {
+  return normalizePaymentMethod(paymentSent?.settlementSpec?.method ?? paymentSent?.method);
+}
+
 function deriveProtectionLevel(method: string | number, isFiat: boolean): ProtectionLevel {
   if (isFiat) return 'platform';
-  if (method === 'MODERATED' || method === 2) return 'full';
+  if (isModeratedPaymentMethod(method)) return 'full';
   return 'standard';
 }
 
@@ -897,14 +921,13 @@ export function transformCoreOrder(
   // 支持 PaymentSent (统一消息)
   const paymentSent = contract.paymentSent;
   // 判断是否为 RWA 托管模式：method === 3 (RWA_ESCROW)
+  const paymentMethod = resolvePaymentMethod(paymentSent);
   const isRwaEscrow =
-    paymentSent?.method === 3 ||
-    paymentSent?.method === 'RWA_ESCROW' ||
-    paymentSent?.method === 'RWA_LOCKED';
+    paymentMethod === 3 || paymentMethod === 'RWA_ESCROW' || paymentMethod === 'RWA_LOCKED';
   // 判断是否为 RWA 即时模式：method === 4 (RWA_INSTANT)
-  const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
-  const paymentMethod = paymentSent?.method || '';
+  const isRwaInstant = paymentMethod === 4 || paymentMethod === 'RWA_INSTANT';
   const isCancelableOrder = isCancelablePaymentMethod(paymentMethod);
+  const isModeratedOrder = isModeratedPaymentMethod(paymentMethod);
   const releaseTx = extractReleaseTx(contract, paymentSent?.transactionID);
   const cancelableSettlementFundsReleased =
     isCancelableOrder &&
@@ -1033,10 +1056,10 @@ export function transformCoreOrder(
         ];
 
   const moderator: DisplayModerator | undefined =
-    paymentMethod === 'MODERATED' && moderatorId
+    isModeratedOrder && moderatorId
       ? {
           id: moderatorId,
-          name: moderatorId.slice(0, 12) + '...',
+          name: formatUserName({ peerID: moderatorId }, { fallback: 'Moderator' }),
           avatar: '',
           fee: 1,
         }
@@ -1105,7 +1128,7 @@ export function transformCoreOrder(
 
   // Fiat payment detection: method === 5 or "FIAT" or canonical fiat coin.
   const isFiatPayment =
-    paymentSent?.method === 5 || paymentSent?.method === 'FIAT' || !!paymentCoinFiatProvider;
+    paymentMethod === 5 || paymentMethod === 'FIAT' || !!paymentCoinFiatProvider;
   let fiatPayment: DisplayFiatPayment | undefined;
   if (isFiatPayment && resolvedFiatProvider) {
     const provider = resolvedFiatProvider;
@@ -1197,6 +1220,9 @@ export function transformCoreOrder(
     orderId: fullOrderId,
     slug: listingSlug,
     status: mapOrderState(data.state as OrderState),
+    isModerated:
+      isModeratedOrder ||
+      (coreOrder as { paymentProductMode?: string }).paymentProductMode === 'moderated',
     items: orderItems, // items[].price 使用 listing 定价货币, items[].currency = listingCurrencyCode
     // total：实际支付金额（支付币种）
     total: formattedPaymentAmount,

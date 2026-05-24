@@ -226,6 +226,37 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.paymentAmount).toBe('100.00');
   });
 
+  it('reads moderated payment method from PaymentSent settlementSpec', () => {
+    const rawOrder = buildOrder({}) as any;
+    rawOrder.state = 'AWAITING_FULFILLMENT';
+    rawOrder.protection = {
+      stage: 'ESCROWED',
+      daysRemaining: 0,
+      extendable: false,
+      extended: false,
+      afterSaleWindowDays: 7,
+    };
+    rawOrder.contract.paymentSent = {
+      ...rawOrder.contract.paymentSent,
+      method: undefined,
+      moderator: '12D3KooWModeratorPeerId',
+      settlementSpec: {
+        method: 'MODERATED',
+        payMode: 'address_monitored',
+        escrowType: 'managed_escrow',
+      },
+    };
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.isModerated).toBe(true);
+    expect(order?.moderator?.id).toBe('12D3KooWModeratorPeerId');
+    expect(order?.protection?.protectionLevel).toBe('full');
+  });
+
   it('exposes manual digital delivery details from order shipments', () => {
     const order = transformCoreOrder(
       {

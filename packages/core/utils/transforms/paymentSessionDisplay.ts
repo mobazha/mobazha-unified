@@ -89,5 +89,6 @@ export function applyPaymentSessionToDisplayOrder(
     escrowAddress: paymentAddress || order.escrowAddress,
     paymentSettlementMode: paymentSession.settlementMode,
     paymentProductMode: paymentSession.productMode,
+    isModerated: paymentSession.productMode === 'moderated' || order.isModerated,
   };
 }

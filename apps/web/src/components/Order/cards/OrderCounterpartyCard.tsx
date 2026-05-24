@@ -67,14 +67,14 @@ export const OrderCounterpartyCard = memo(function OrderCounterpartyCard({
       )}
       {order.moderator && (
         <PartyCard
-          label={t('order.moderator')}
+          label={t('order.moderatorStandby')}
           name={formatUserName(order.moderator, { fallback: t('order.moderator') })}
           avatar={order.moderator.avatar}
           location={order.moderator.location}
           href={`/moderators/${order.moderator.id}`}
           extra={
             <span className="text-xs text-primary font-medium">
-              {t('order.moderatorFeePercent', { fee: order.moderator.fee })}
+              {t('order.moderatorFeeOnDispute', { fee: order.moderator.fee })}
             </span>
           }
         />

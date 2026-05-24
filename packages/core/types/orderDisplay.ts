@@ -174,6 +174,8 @@ export interface DisplayOrder {
   paymentSettlementMode?: PaymentSessionSettlementMode;
   /** Unified payment session product mode when available */
   paymentProductMode?: PaymentSessionProductMode;
+  /** True when the order uses moderated buyer protection. */
+  isModerated?: boolean;
   /** 创建时间 */
   createdAt: string;
   /** 取消时间（仅 cancelled 状态） */
