@@ -18,13 +18,7 @@ import * as msgModule from './messages';
 import * as roomModule from './rooms';
 import * as verificationModule from './verification';
 import { setupChatEventListeners } from './event-listeners';
-
-function looksLikePeerID(value?: string): boolean {
-  if (!value) return false;
-  const v = value.trim();
-  if (!v) return false;
-  return /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{20,})$/.test(v);
-}
+import { isFullPeerID } from '../../utils/identity';
 
 class MatrixClientService {
   private _isInitialized = false;
@@ -292,11 +286,11 @@ class MatrixClientService {
 
   async createDirectRoom(userId: string, displayNameOrPeerID?: string): Promise<string | null> {
     const userIdOrPeerID = userId?.trim();
-    if (looksLikePeerID(userIdOrPeerID)) {
+    if (isFullPeerID(userIdOrPeerID)) {
       return roomModule.createDirectRoom('', userIdOrPeerID);
     }
 
-    const inferredPeerID = looksLikePeerID(displayNameOrPeerID)
+    const inferredPeerID = isFullPeerID(displayNameOrPeerID)
       ? displayNameOrPeerID?.trim()
       : undefined;
     if (inferredPeerID) {

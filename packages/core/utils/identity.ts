@@ -54,6 +54,20 @@ export function formatUserName(
 }
 
 /**
+ * Full (non-truncated) Mobazha peer ID — libp2p `12D3Koo…` or IPFS CIDv0 `Qm…`.
+ * Shared by chat, moderator lookup, matrix routing, etc.
+ */
+export const FULL_PEER_ID_PATTERN =
+  /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{44,50})$/;
+
+/** Whether input looks like a complete peer ID suitable for direct lookup (not a truncated display ID). */
+export function isFullPeerID(input: string | undefined | null): boolean {
+  if (!input) return false;
+  const trimmed = input.trim();
+  return trimmed.length > 0 && FULL_PEER_ID_PATTERN.test(trimmed);
+}
+
+/**
  * Truncate a Peer ID for display: "QmY8…tRnC"
  * Uses ellipsis character (…) to distinguish from address truncation.
  */
