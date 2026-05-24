@@ -105,7 +105,7 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.paymentProgress?.percentage).toBe(100);
   });
 
-  it('recovers EVM native payment coin when backend mislabeled it as USD', () => {
+  it('does not infer a canonical coin when backend mislabeled it', () => {
     const order = transformCoreOrder(
       {
         state: 'PENDING',
@@ -156,12 +156,12 @@ describe('transformCoreOrder payment progress formatting', () => {
       { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
     );
 
-    expect(order?.paymentCoin).toBe('crypto:eip155:11155111:native');
-    expect(order?.currency).toBe('ETH');
-    expect(order?.total).toBe('0.007022669176100452');
-    expect(order?.paymentAmount).toBe('0.007022669176100452');
-    expect(order?.chainId).toBe(11155111);
-    expect(order?.paymentProgress?.expectedAmountFormatted).toBe('0.007018');
+    expect(order?.paymentCoin).toBe('USD');
+    expect(order?.currency).toBe('USD');
+    expect(order?.total).toBe('70226691.76100452');
+    expect(order?.paymentAmount).toBe('70226691.76100452');
+    expect(order?.chainId).toBeUndefined();
+    expect(order?.paymentProgress?.expectedAmountFormatted).toBe('70182005.33');
   });
 
   it('formats canonical BTC PaymentSent amounts from satoshis without rounding to zero', () => {
@@ -208,6 +208,22 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.currency).toBe('BTC');
     expect(order?.total).toBe('0.00029838');
     expect(order?.paymentAmount).toBe('0.00029838');
+  });
+
+  it('uses OrderOpen pricing coin for unpaid display without inventing paymentCoin', () => {
+    const rawOrder = buildOrder({}) as any;
+    delete rawOrder.contract.paymentSent;
+    rawOrder.state = 'AWAITING_PAYMENT';
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.paymentCoin).toBeUndefined();
+    expect(order?.currency).toBe('USD');
+    expect(order?.total).toBe('100.00');
+    expect(order?.paymentAmount).toBe('100.00');
   });
 
   it('exposes manual digital delivery details from order shipments', () => {
@@ -383,6 +399,41 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.releaseTx).toBeUndefined();
     expect(order?.timeline.some(event => event.status === 'released')).toBe(false);
     expect(order?.protection?.stage).toBe('ESCROWED');
+  });
+
+  it('marks funds released when order confirmation carries the release tx even for legacy BTC method values', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'AWAITING_SHIPMENT',
+        protection: {
+          stage: 'ESCROWED',
+          daysRemaining: 7,
+          extendable: true,
+          extended: false,
+          afterSaleWindowDays: 7,
+        },
+        contract: {
+          ...buildOrder({}).contract,
+          paymentSent: {
+            coin: 'crypto:bip122:000000000019d6689c085ae165831e93:native',
+            amount: '29840',
+            method: 'DIRECT',
+            transactionID: 'c858f37b43b443e5caf12986cc64fd4ddcb21ecad2dc4a33a3c62f1adb4d70c5',
+          },
+          orderConfirmation: {
+            timestamp: '2026-05-24T05:37:00Z',
+            transactionID: '92743db043b443e5caf12986cc64fd4ddcb21ecad2dc4a33a3c62f1a15dfc7',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'vendor-peer', viewingContext: 'sale' }
+    );
+
+    expect(order?.releaseTx).toBe('92743db043b443e5caf12986cc64fd4ddcb21ecad2dc4a33a3c62f1a15dfc7');
+    expect(order?.fundsReleasedAtConfirmation).toBe(true);
+    expect(order?.protection).toBeUndefined();
+    expect(order?.timeline.some(event => event.status === 'released')).toBe(true);
   });
 
   it('maps nested after-sale dispute payloads from order details', () => {

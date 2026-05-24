@@ -12,6 +12,7 @@ import {
   isCryptoCurrency,
   getBaseRateSymbol,
 } from '../data/currencies';
+import { formatStandardCryptoAmount, getPaymentCoinDisplayLabel } from '../data/tokens';
 import { getExchangeRates as fetchExchangeRatesApi } from './api/wallet';
 import { isOutpostMode } from '../config/env';
 
@@ -305,11 +306,8 @@ export function formatPrice(
       maximumFractionDigits: 2,
     }).format(numAmount);
   } else if (isCrypto) {
-    // 加密货币格式化
-    formattedAmount = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: minDecimals,
-      maximumFractionDigits: maxDecimals,
-    }).format(numAmount);
+    // 加密货币：有效数字精度，避免 0.00029838 BTC 被 Intl 四舍五入为 0
+    formattedAmount = formatStandardCryptoAmount(numAmount, currency);
   } else {
     // 法币格式化
     try {
@@ -335,18 +333,19 @@ export function formatPrice(
 
   // 添加符号或代码
   const symbol = getCurrencySymbol(currency);
+  const cryptoDisplayCode = getPaymentCoinDisplayLabel(currency) || currency;
 
   if (showSymbol && showCode) {
-    return `${formattedAmount} ${currency}`;
+    return `${formattedAmount} ${isCrypto ? cryptoDisplayCode : currency}`;
   } else if (showSymbol) {
-    // 加密货币符号放后面，法币符号放前面
+    // 加密货币用可读代码（ETH）而非符号（Ξ）；法币符号放前面
     if (isCrypto) {
-      return `${formattedAmount} ${symbol}`;
+      return `${formattedAmount} ${cryptoDisplayCode}`;
     } else {
       return `${symbol}${formattedAmount}`;
     }
   } else if (showCode) {
-    return `${formattedAmount} ${currency}`;
+    return `${formattedAmount} ${isCrypto ? cryptoDisplayCode : currency}`;
   }
 
   return formattedAmount;
@@ -526,6 +525,32 @@ export function formatLocalPrice(
 }
 
 /**
+ * Format a payment amount for UI display (crypto or fiat).
+ * Resolves display label from paymentCoin and/or currencyCode; returns null when
+ * amount or label is missing so callers can fall back to other formatters.
+ */
+export function formatPaymentAmount(
+  amount: string | number | undefined,
+  paymentCoin?: string,
+  currencyCode?: string
+): string | null {
+  if (amount === undefined || amount === null || amount === '') return null;
+
+  const label = paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currencyCode || '';
+  if (!label) return null;
+
+  const numeric = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (!Number.isFinite(numeric)) return null;
+
+  const coinRef = paymentCoin || label;
+  if (isCryptoCurrency(coinRef) || isCryptoCurrency(label)) {
+    return `${formatStandardCryptoAmount(numeric, coinRef)} ${label}`;
+  }
+
+  return formatPrice(numeric, label);
+}
+
+/**
  * 导出服务对象
  */
 export const currencyService = {
@@ -538,6 +563,7 @@ export const currencyService = {
   fromMinimalUnit,
   toMinimalUnit,
   formatPrice,
+  formatPaymentAmount,
   convertAndFormatPrice,
   renderPairedPrice,
   formatLocalPrice,

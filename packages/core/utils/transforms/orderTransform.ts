@@ -28,9 +28,9 @@ import {
   getTokenByPaymentCoin,
   getPaymentCoinDisplayLabel,
   getTokenDecimals,
+  parseCanonicalPaymentCoin,
 } from '../../data/tokens';
 import { formatUserName } from '../identity';
-import { recoverCryptoPaymentCoin } from './cryptoPaymentRecovery';
 import { formatMinimalUnitAmountString, formatMinimalUnitExactAmountString } from './minimalUnit';
 
 // ============ Internal Types ============
@@ -905,16 +905,17 @@ export function transformCoreOrder(
   const isRwaInstant = paymentSent?.method === 4 || paymentSent?.method === 'RWA_INSTANT';
   const paymentMethod = paymentSent?.method || '';
   const isCancelableOrder = isCancelablePaymentMethod(paymentMethod);
+  const releaseTx = extractReleaseTx(contract, paymentSent?.transactionID);
   const cancelableSettlementFundsReleased =
     isCancelableOrder &&
     (coreOrder.settlementActions || []).some(action => {
       const actionName = (action.settlementAction || action.action || '').toLowerCase();
       return (action.state || '').toLowerCase() === 'confirmed' && actionName === 'confirm';
     });
-  const cancelableFundsReleased =
-    (isCancelableOrder &&
-      !!contract.orderConfirmation?.transactionID &&
-      data.protection?.stage === 'ESCROWED') ||
+  const fundsReleasedAtConfirmation =
+    (!!contract.orderConfirmation?.transactionID &&
+      contract.orderConfirmation.transactionID === releaseTx &&
+      !contract.orderComplete?.releaseInfo?.txid) ||
     cancelableSettlementFundsReleased;
   const moderatorId = paymentSent?.moderator || '';
 
@@ -924,19 +925,22 @@ export function transformCoreOrder(
   const listingDivisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
   // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
   const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
-  const recoveredPayment = recoverCryptoPaymentCoin({
-    reportedCoin: paymentSent?.coin,
-    txHash: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
-    toAddress: paymentSent?.toAddress || paymentSent?.address,
-    contractAddress: paymentSent?.contractAddress,
-    paymentTokenAddress: paymentSent?.paymentTokenAddress,
-  });
-  const paymentCoin = recoveredPayment.paymentCoin || paymentSent?.coin || pricingCoin;
+  const paymentCoin = (paymentSent?.coin || '').trim() || undefined;
+  const paymentCoinKey = paymentCoin || '';
+  const amountFormatCoin = paymentCoin || pricingCoin;
+  const displayCurrency = paymentCoin
+    ? getPaymentCoinDisplayLabel(paymentCoinKey)
+    : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin;
+  const parsedPaymentCoin = paymentCoin ? parseCanonicalPaymentCoin(paymentCoin) : null;
+  const paymentChainId =
+    parsedPaymentCoin?.namespace === 'eip155' ? Number(parsedPaymentCoin.chainRef) : undefined;
   // 支付币种的 divisibility（优先从 token 配置取 decimals）
-  const paymentTokenConfig = getTokenByPaymentCoin(paymentCoin);
+  const paymentTokenConfig = getTokenByPaymentCoin(amountFormatCoin);
   const paymentDivisibility = paymentTokenConfig
     ? paymentTokenConfig.decimals
-    : getTokenDecimals(getPaymentCoinDisplayLabel(paymentCoin) || paymentCoin);
+    : paymentCoin || pricingCoin !== listingCurrencyCode
+      ? getTokenDecimals(getPaymentCoinDisplayLabel(amountFormatCoin) || amountFormatCoin)
+      : listingDivisibility;
   // 判断是否为跨币种订单（定价货币 ≠ 支付币种）
   const isCrossCurrency = listingCurrencyCode.toUpperCase() !== pricingCoin.toUpperCase();
   const timestamp = orderOpen?.timestamp || '';
@@ -1086,10 +1090,10 @@ export function transformCoreOrder(
   const listingTotal = isCrossCurrency ? Number(itemPrice) * totalQuantity : Number(pricingAmount);
   const formattedPricingAmount = formatPriceAmount(listingTotal, listingDivisibility);
 
-  // 格式化实际支付金额（支付币种，用于「已付款」显示）
+  // 格式化实际支付金额（支付币种最小单位 → 标准单位，用于「已付款」显示）
   const formattedOrderAmount = formatPriceAmount(pricingAmount, paymentDivisibility, pricingCoin);
   const formattedPaymentAmount =
-    paymentAmount !== undefined
+    paymentAmount !== undefined && paymentAmount !== null
       ? formatPaymentSentAmount(paymentAmount, paymentDivisibility, paymentCoin)
       : formattedOrderAmount;
 
@@ -1194,14 +1198,14 @@ export function transformCoreOrder(
     slug: listingSlug,
     status: mapOrderState(data.state as OrderState),
     items: orderItems, // items[].price 使用 listing 定价货币, items[].currency = listingCurrencyCode
-    // total：实际支付金额（支付币种，用于订单列表等场景）
+    // total：实际支付金额（支付币种）
     total: formattedPaymentAmount,
-    currency: getPaymentCoinDisplayLabel(paymentCoin),
+    currency: displayCurrency,
     // 定价总额（listing 货币，用于订单详情概要「总计」）
     pricingAmount: formattedPricingAmount,
     pricingCurrency: listingCurrencyCode,
     // 支付信息（支付币种，用于订单详情「已付款」）
-    paymentCoin: paymentCoin,
+    paymentCoin,
     paymentAmount: formattedPaymentAmount,
     createdAt: timestamp,
     cancelledAt: contract.orderDecline?.timestamp || contract.orderCancel?.timestamp || undefined,
@@ -1232,8 +1236,8 @@ export function transformCoreOrder(
     shippingMethodName: shippingMethodName || undefined,
     // 支持 RWA 模式和传统交易
     paymentTx: paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid,
-    releaseTx: extractReleaseTx(contract, paymentSent?.transactionID),
-    chainId: recoveredPayment.chainId,
+    releaseTx,
+    chainId: Number.isFinite(paymentChainId) ? paymentChainId : undefined,
     txConfirmations,
     // RWA 标识
     isRwaInstant,
@@ -1264,13 +1268,9 @@ export function transformCoreOrder(
     dispute,
     hasRated: orderCompleteRatings.length > 0,
     buyerRating,
-    fundsReleasedAtConfirmation:
-      (isCancelableOrder &&
-        !!contract.orderConfirmation?.transactionID &&
-        !contract.orderComplete?.releaseInfo?.txid) ||
-      cancelableSettlementFundsReleased,
+    fundsReleasedAtConfirmation,
     protection:
-      data.protection && !cancelableFundsReleased
+      data.protection && !fundsReleasedAtConfirmation
         ? ({
             stage: data.protection.stage,
             daysRemaining: data.protection.daysRemaining,

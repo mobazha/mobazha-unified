@@ -110,7 +110,7 @@ describe('applyPaymentSessionToDisplayOrder', () => {
     expect(result.paymentAmount).toBe('0.007022669176100452');
   });
 
-  it('recovers EVM native payment when payment-session is mislabeled as USD', () => {
+  it('does not guess a canonical coin when payment-session is mislabeled', () => {
     const order = buildDisplayOrder();
     order.paymentTx = '0x269fffe47a2b1cd4ade027d4d5a70a377434156e4c2179cd87ec389630403d30';
 
@@ -122,10 +122,89 @@ describe('applyPaymentSessionToDisplayOrder', () => {
 
     const result = applyPaymentSessionToDisplayOrder(order, session);
 
-    expect(result.paymentCoin).toBe('crypto:eip155:11155111:native');
-    expect(result.currency).toBe('ETH');
-    expect(result.total).toBe('0.007022669176100452');
-    expect(result.paymentAmount).toBe('0.007022669176100452');
-    expect(result.chainId).toBe(11155111);
+    expect(result.paymentCoin).toBe('USD');
+    expect(result.currency).toBe('USD');
+    expect(result.total).toBe('70226691761004.52');
+    expect(result.paymentAmount).toBe('70226691761004.52');
+    expect(result.chainId).toBeUndefined();
+  });
+
+  it('does not clobber contract total when session observedAmount is zero', () => {
+    const order = buildDisplayOrder();
+    order.total = '0.00029838';
+    order.currency = 'BTC';
+    order.paymentCoin = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    order.paymentAmount = '0.00029838';
+
+    const session = buildPaymentSession();
+    session.paymentCoin = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    session.expectedAmount = '29838';
+    session.fundingTarget.assetID = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    session.fundingTarget.amount = '29838';
+    session.paymentProgress = {
+      observedAmount: '0',
+      requiredAmount: '29838',
+      remainingAmount: '29838',
+      observationCount: 0,
+      fundingState: 'pending',
+    };
+
+    const result = applyPaymentSessionToDisplayOrder(order, session);
+
+    expect(result.total).toBe('0.00029838');
+    expect(result.paymentAmount).toBe('0.00029838');
+  });
+
+  it('converts UTXO minimal-unit session amounts to standard units', () => {
+    const order = buildDisplayOrder();
+    order.total = '0.01';
+    order.currency = 'ETH';
+
+    const session = buildPaymentSession();
+    session.paymentCoin = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    session.expectedAmount = '29838';
+    session.fundingTarget.assetID = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    session.fundingTarget.amount = '29838';
+    session.paymentProgress = {
+      observedAmount: '29838',
+      requiredAmount: '29838',
+      remainingAmount: '0',
+      observationCount: 1,
+      fundingState: 'funded',
+    };
+
+    const result = applyPaymentSessionToDisplayOrder(order, session);
+
+    expect(result.currency).toBe('BTC');
+    expect(result.total).toBe('0.00029838');
+    expect(result.paymentAmount).toBe('0.00029838');
+  });
+
+  it('does not overwrite canonical paid order amounts with session fallbacks', () => {
+    const order = buildDisplayOrder();
+    order.total = '0.00029838';
+    order.currency = 'BTC';
+    order.paymentCoin = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    order.paymentAmount = '0.00029838';
+    order.paymentTx = 'btc-tx-1';
+
+    const session = buildPaymentSession();
+    session.paymentCoin = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    session.expectedAmount = '110000000';
+    session.fundingTarget.assetID = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
+    session.fundingTarget.amount = '110000000';
+    session.paymentProgress = {
+      observedAmount: '0',
+      requiredAmount: '110000000',
+      remainingAmount: '110000000',
+      observationCount: 0,
+      fundingState: 'awaiting_funds',
+    };
+
+    const result = applyPaymentSessionToDisplayOrder(order, session);
+
+    expect(result.currency).toBe('BTC');
+    expect(result.total).toBe('0.00029838');
+    expect(result.paymentAmount).toBe('0.00029838');
   });
 });
