@@ -39,6 +39,29 @@ function buildCompletedTimelineCards(
   const shippedEvent = order.timeline.find(e => e.status === 'shipped');
   const releasedEvent = order.timeline.find(e => e.status === 'released');
   const completedEvent = order.timeline.find(e => e.status === 'completed');
+  const releaseAmount = order.settlementBreakdown?.sellerAmount || order.total;
+  const settlementLineLabel = (type: string): string => {
+    switch (type) {
+      case 'buyer':
+        return t('order.buyer');
+      case 'moderator':
+        return t('order.moderatorFee');
+      case 'platform':
+        return t('order.platformFee');
+      case 'network_fee':
+        return t('order.networkFee');
+      case 'seller':
+      default:
+        return t('order.seller');
+    }
+  };
+  const releaseBreakdownLines =
+    order.settlementBreakdown?.lines
+      ?.filter(line => line.type !== 'seller')
+      .map(line => ({
+        label: settlementLineLabel(line.type),
+        amount: `${line.amount} ${order.currency}`,
+      })) || [];
 
   const releaseTxHash =
     order.releaseTx && order.releaseTx !== order.paymentTx ? order.releaseTx : undefined;
@@ -108,8 +131,11 @@ function buildCompletedTimelineCards(
           stageVariant="released"
           title={t('order.stages.released')}
           timestamp={releasedEvent.timestamp}
-          amount={order.total}
+          amount={releaseAmount}
           currency={order.currency}
+          paymentCoin={order.paymentCoin}
+          amountLabel={t('order.sellerPayout')}
+          breakdownLines={releaseBreakdownLines}
           txHash={releaseTxHash}
           txUrl={releaseTxUrl}
           description={t('order.timeline.fundsReleased')}

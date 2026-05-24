@@ -131,6 +131,8 @@ export interface Order {
   contract: OrderContract;
   state: OrderState;
   settlementActions?: SettlementActionSnapshot[];
+  pricingBreakdown?: OrderPricingBreakdown;
+  settlementBreakdown?: OrderSettlementBreakdown;
   paymentState?: OrderPaymentState;
   read: boolean;
   funded: boolean;
@@ -154,6 +156,38 @@ export interface Order {
   afterSaleDisputeReason?: string;
   afterSaleDisputeDesc?: string;
   afterSaleDisputeAt?: string;
+}
+
+export interface OrderPricingBreakdown {
+  subtotal: string;
+  shipping: string;
+  discounts: string;
+  taxes: string;
+  total: string;
+  currency: string;
+}
+
+export interface OrderSettlementBreakdownLine {
+  type: string;
+  amount: string;
+  address?: string;
+}
+
+export interface OrderSettlementBreakdown {
+  source?: string;
+  currency?: string;
+  escrowedAmount?: string;
+  sellerAmount?: string;
+  sellerAddress?: string;
+  buyerAmount?: string;
+  buyerAddress?: string;
+  moderatorAmount?: string;
+  moderatorAddress?: string;
+  platformAmount?: string;
+  platformAddress?: string;
+  transactionFee?: string;
+  txHash?: string;
+  lines?: OrderSettlementBreakdownLine[];
 }
 
 /**
@@ -344,6 +378,9 @@ export interface EscrowRelease {
   outpoints?: { fromID: string; value: string }[];
   toAddress?: string;
   toAmount?: string;
+  platformAddress?: string;
+  platformAmount?: string;
+  transactionFee?: string;
   txid?: string;
 }
 

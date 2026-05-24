@@ -962,6 +962,9 @@ export const en: TranslationResource = {
     shipping: 'Shipping',
     free: 'Free',
     moderatorFee: 'Moderator Fee',
+    platformFee: 'Platform service fee',
+    networkFee: 'Network fee',
+    sellerPayout: 'Seller payout',
     // Parties
     seller: 'Seller',
     buyer: 'Buyer',

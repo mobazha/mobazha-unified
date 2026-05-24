@@ -7,6 +7,8 @@ import type { Order as CoreOrder, OrderState, PaymentProgress } from '../../type
 import type {
   DisplayOrder,
   DisplayOrderItem,
+  DisplayOrderPricingBreakdown,
+  DisplayOrderSettlementBreakdown,
   DisplayModerator,
   DisplayFiatPayment,
   DisplayFiatDispute,
@@ -22,6 +24,10 @@ import type {
   CancellationContext,
   CancellationKind,
 } from '../../types/orderDisplay';
+import type {
+  PaymentSessionProductMode,
+  PaymentSessionSettlementMode,
+} from '../../types/paymentSession';
 import { getImageUrl } from '../../services/api/config';
 import {
   formatTokenAmount,
@@ -41,6 +47,30 @@ import { formatMinimalUnitAmountString, formatMinimalUnitExactAmountString } fro
  */
 interface RealOrderData {
   state: string;
+  pricingBreakdown?: {
+    subtotal?: string;
+    shipping?: string;
+    discounts?: string;
+    taxes?: string;
+    total?: string;
+    currency?: string;
+  };
+  settlementBreakdown?: {
+    source?: string;
+    currency?: string;
+    escrowedAmount?: string;
+    sellerAmount?: string;
+    sellerAddress?: string;
+    buyerAmount?: string;
+    buyerAddress?: string;
+    moderatorAmount?: string;
+    moderatorAddress?: string;
+    platformAmount?: string;
+    platformAddress?: string;
+    transactionFee?: string;
+    txHash?: string;
+    lines?: Array<{ type?: string; amount?: string; address?: string }>;
+  };
   paymentState?: {
     verificationStatus?: string;
     verificationFailureReason?: string;
@@ -400,6 +430,59 @@ function extractPaymentProgress(
     totalReceivedFormatted: formatAmount(total),
     expectedAmountFormatted: formatAmount(expected),
     overpaidAmountFormatted: overpaid ? formatAmount(overpaid) : undefined,
+  };
+}
+
+function formatPricingBreakdown(
+  raw: RealOrderData['pricingBreakdown'],
+  fallbackCurrency: string,
+  divisibility: number
+): DisplayOrderPricingBreakdown | undefined {
+  if (!raw?.total) return undefined;
+  const currency = raw.currency || fallbackCurrency;
+  const format = (amount?: string): string =>
+    amount ? formatPriceAmount(amount, divisibility, currency) : '0';
+  return {
+    subtotal: format(raw.subtotal),
+    shipping: format(raw.shipping),
+    discounts: format(raw.discounts),
+    taxes: format(raw.taxes),
+    total: format(raw.total),
+    currency,
+  };
+}
+
+function formatSettlementBreakdown(
+  raw: RealOrderData['settlementBreakdown'],
+  fallbackCurrency: string,
+  paymentDivisibility: number
+): DisplayOrderSettlementBreakdown | undefined {
+  if (!raw?.escrowedAmount && !raw?.sellerAmount && !raw?.buyerAmount) return undefined;
+  const currency = raw.currency || fallbackCurrency;
+  const format = (amount?: string): string | undefined =>
+    amount ? formatPaymentSentAmount(amount, paymentDivisibility, currency) : undefined;
+
+  return {
+    source: raw.source,
+    currency,
+    escrowedAmount: format(raw.escrowedAmount),
+    sellerAmount: format(raw.sellerAmount),
+    sellerAddress: raw.sellerAddress,
+    buyerAmount: format(raw.buyerAmount),
+    buyerAddress: raw.buyerAddress,
+    moderatorAmount: format(raw.moderatorAmount),
+    moderatorAddress: raw.moderatorAddress,
+    platformAmount: format(raw.platformAmount),
+    platformAddress: raw.platformAddress,
+    transactionFee: format(raw.transactionFee),
+    txHash: raw.txHash,
+    lines: raw.lines
+      ?.map(line => ({
+        type: line.type || '',
+        amount: format(line.amount) || '',
+        address: line.address,
+      }))
+      .filter(line => line.type && line.amount),
   };
 }
 
@@ -821,6 +904,23 @@ function isCancelablePaymentMethod(method: string | number): boolean {
   return method === 'CANCELABLE' || method === 1;
 }
 
+function productModeFromPaymentMethod(
+  method: string | number
+): PaymentSessionProductMode | undefined {
+  if (isCancelablePaymentMethod(method)) return 'cancelable';
+  if (isModeratedPaymentMethod(method)) return 'moderated';
+  if (method === 'DIRECT' || method === 0) return 'direct';
+  return undefined;
+}
+
+function settlementModeFromPayMode(payMode?: string): PaymentSessionSettlementMode | undefined {
+  const normalized = (payMode || '').trim().toLowerCase();
+  if (normalized === 'address_monitored') return 'address_monitored';
+  if (normalized === 'client_signed') return 'escrow_v1';
+  if (normalized === 'provider') return 'provider_checkout';
+  return undefined;
+}
+
 function normalizeFiatProvider(providerID?: string): DisplayFiatPayment['provider'] | undefined {
   const normalized = (providerID || '').trim().toLowerCase();
   if (normalized === 'stripe' || normalized === 'paypal') {
@@ -1119,6 +1219,16 @@ export function transformCoreOrder(
     paymentAmount !== undefined && paymentAmount !== null
       ? formatPaymentSentAmount(paymentAmount, paymentDivisibility, paymentCoin)
       : formattedOrderAmount;
+  const pricingBreakdown = formatPricingBreakdown(
+    data.pricingBreakdown,
+    listingCurrencyCode,
+    listingDivisibility
+  );
+  const settlementBreakdown = formatSettlementBreakdown(
+    data.settlementBreakdown,
+    paymentCoin || pricingCoin,
+    paymentDivisibility
+  );
 
   const paymentCoinFiatProvider = resolveFiatProviderFromCoin(paymentSent?.coin);
   const metadataFiatProvider = normalizeFiatProvider(
@@ -1228,11 +1338,15 @@ export function transformCoreOrder(
     total: formattedPaymentAmount,
     currency: displayCurrency,
     // 定价总额（listing 货币，用于订单详情概要「总计」）
-    pricingAmount: formattedPricingAmount,
+    pricingAmount: pricingBreakdown?.total || formattedPricingAmount,
     pricingCurrency: listingCurrencyCode,
+    pricingBreakdown,
+    settlementBreakdown,
     // 支付信息（支付币种，用于订单详情「已付款」）
     paymentCoin,
     paymentAmount: formattedPaymentAmount,
+    paymentSettlementMode: settlementModeFromPayMode(paymentSent?.settlementSpec?.payMode),
+    paymentProductMode: productModeFromPaymentMethod(paymentMethod),
     createdAt: timestamp,
     cancelledAt: contract.orderDecline?.timestamp || contract.orderCancel?.timestamp || undefined,
     vendor: {
@@ -1257,7 +1371,7 @@ export function transformCoreOrder(
     shippingState,
     shippingPostalCode,
     shippingCountryCode,
-    shippingAmount: formattedShippingAmount,
+    shippingAmount: pricingBreakdown?.shipping || formattedShippingAmount,
     shippingZoneName: shippingZoneName || undefined,
     shippingMethodName: shippingMethodName || undefined,
     // 支持 RWA 模式和传统交易

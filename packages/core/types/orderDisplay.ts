@@ -20,6 +20,38 @@ export interface DisplayOrderItem {
   options?: Array<{ name: string; value: string }>;
 }
 
+export interface DisplayOrderPricingBreakdown {
+  subtotal: string;
+  shipping: string;
+  discounts: string;
+  taxes: string;
+  total: string;
+  currency: string;
+}
+
+export interface DisplayOrderSettlementBreakdownLine {
+  type: string;
+  amount: string;
+  address?: string;
+}
+
+export interface DisplayOrderSettlementBreakdown {
+  source?: string;
+  currency?: string;
+  escrowedAmount?: string;
+  sellerAmount?: string;
+  sellerAddress?: string;
+  buyerAmount?: string;
+  buyerAddress?: string;
+  moderatorAmount?: string;
+  moderatorAddress?: string;
+  platformAmount?: string;
+  platformAddress?: string;
+  transactionFee?: string;
+  txHash?: string;
+  lines?: DisplayOrderSettlementBreakdownLine[];
+}
+
 /**
  * 订单参与者（卖家/买家）- 用于展示
  */
@@ -166,6 +198,10 @@ export interface DisplayOrder {
   pricingAmount?: string;
   /** 原始定价币种（如 "USD"） */
   pricingCurrency?: string;
+  /** Backend-derived pricing breakdown, formatted in pricing currency. */
+  pricingBreakdown?: DisplayOrderPricingBreakdown;
+  /** Backend-derived settlement payout / fee breakdown, formatted in settlement currency. */
+  settlementBreakdown?: DisplayOrderSettlementBreakdown;
   /** 支付币种（用于订单操作，如 "ETH"） */
   paymentCoin?: string;
   /** 实际支付金额（格式化后，如 "0.0002"） */

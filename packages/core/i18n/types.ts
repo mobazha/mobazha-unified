@@ -439,6 +439,9 @@ export interface TranslationResource {
     shipping: string;
     free: string;
     moderatorFee: string;
+    platformFee: string;
+    networkFee: string;
+    sellerPayout: string;
     // Parties
     seller: string;
     buyer: string;
