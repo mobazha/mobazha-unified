@@ -760,6 +760,7 @@ export const ko: PartialTranslationResource = {
     allPurchases: '전체 구매',
     noStatusOrders: '현재 {{status}} 주문이 없습니다.',
     backToOrders: '주문 목록으로',
+    backToCases: '사례 목록으로',
     placedOn: '{{date}}에 주문됨',
     orderNotFound: '주문을 찾을 수 없음',
     orderNotFoundMessage: '찾으시는 주문이 존재하지 않습니다.',
@@ -2202,6 +2203,7 @@ export const ko: PartialTranslationResource = {
     success: '{{rate}}% 성공률',
     fee: '수수료',
     noModeratorsFound: '조건에 맞는 중재자를 찾을 수 없습니다',
+    findModerators: '중재자 찾기',
     disputes: '분쟁',
   },
   payment: {

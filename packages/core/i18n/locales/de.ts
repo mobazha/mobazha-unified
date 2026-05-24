@@ -772,6 +772,7 @@ export const de: PartialTranslationResource = {
     allPurchases: 'Alle Einkäufe',
     noStatusOrders: 'Keine {{status}} Bestellungen vorhanden.',
     backToOrders: 'Zurück zu Bestellungen',
+    backToCases: 'Zurück zu Fällen',
     placedOn: 'Bestellt am {{date}}',
     orderNotFound: 'Bestellung nicht gefunden',
     orderNotFoundMessage: 'Die gesuchte Bestellung existiert nicht.',
@@ -2266,6 +2267,7 @@ export const de: PartialTranslationResource = {
     success: '{{rate}}% Erfolg',
     fee: 'Gebühr',
     noModeratorsFound: 'Keine Moderatoren gefunden, die Ihren Kriterien entsprechen',
+    findModerators: 'Moderatoren finden',
     disputes: 'disputes',
   },
   payment: {

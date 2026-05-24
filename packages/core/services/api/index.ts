@@ -133,6 +133,7 @@ export { getNotificationRoute, NOTIFICATION_FILTER_TYPES } from './notifications
 
 // 争议/仲裁 API
 export * as disputesApi from './disputes';
+export type { CaseListItem } from './disputes';
 
 // 图片上传 API
 export * as imagesApi from './images';

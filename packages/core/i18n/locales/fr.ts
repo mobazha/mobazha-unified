@@ -769,6 +769,7 @@ export const fr: PartialTranslationResource = {
     allPurchases: 'Tous les achats',
     noStatusOrders: 'Aucune commande {{status}} pour le moment.',
     backToOrders: 'Retour aux commandes',
+    backToCases: 'Retour aux dossiers',
     placedOn: 'Passée le {{date}}',
     orderNotFound: 'Commande introuvable',
     orderNotFoundMessage: "La commande que vous recherchez n'existe pas.",
@@ -2262,6 +2263,7 @@ export const fr: PartialTranslationResource = {
     success: '{{rate}}% succès',
     fee: 'frais',
     noModeratorsFound: 'Aucun modérateur ne correspond à vos critères',
+    findModerators: 'Trouver des Modérateurs',
     disputes: 'disputes',
   },
   payment: {

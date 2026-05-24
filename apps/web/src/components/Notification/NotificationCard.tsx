@@ -159,9 +159,9 @@ export function OrderNotificationCard({
   const productTitle = data?.productTitle;
   const price = data?.price;
   const buyerName = data?.buyerName;
-  const buyerId = data?.buyerId;
+  const buyerId = data?.buyerID;
   const vendorName = data?.vendorName;
-  const vendorId = data?.vendorId;
+  const vendorId = data?.vendorID;
   const counterpartyAvatar = data?.buyerAvatar || data?.vendorAvatar;
   const counterpartyName = buyerName || vendorName || formatPeerDisplay(buyerId || vendorId);
 

@@ -763,6 +763,7 @@ export const ja: PartialTranslationResource = {
     allPurchases: 'すべての購入',
     noStatusOrders: '現在{{status}}の注文はありません。',
     backToOrders: '注文一覧に戻る',
+    backToCases: 'ケース一覧に戻る',
     placedOn: '{{date}}に注文',
     orderNotFound: '注文が見つかりません',
     orderNotFoundMessage: 'お探しの注文は存在しません。',
@@ -2219,6 +2220,7 @@ export const ja: PartialTranslationResource = {
     success: '{{rate}}%成功',
     fee: '手数料',
     noModeratorsFound: '条件に合うモデレーターが見つかりません',
+    findModerators: 'モデレーターを探す',
     disputes: '紛争',
   },
   payment: {

@@ -27,8 +27,8 @@ type SortKey = 'newest' | 'oldest' | 'amount';
 function compareAmountMinimal(a: string, b: string): number {
   try {
     const diff = BigInt(b || '0') - BigInt(a || '0');
-    if (diff > 0n) return 1;
-    if (diff < 0n) return -1;
+    if (diff > BigInt(0)) return 1;
+    if (diff < BigInt(0)) return -1;
     return 0;
   } catch {
     return (Number(b) || 0) - (Number(a) || 0);
@@ -318,7 +318,7 @@ export default function CasesPage() {
                               {(caseItem.unreadChatMessages ?? 0) > 0 && (
                                 <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-primary/15 text-primary border border-primary/25">
                                   {t('moderation.newMessages', {
-                                    count: caseItem.unreadChatMessages,
+                                    count: caseItem.unreadChatMessages ?? 0,
                                   })}
                                 </span>
                               )}

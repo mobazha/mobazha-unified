@@ -900,6 +900,29 @@ export interface TranslationResource {
     fee: string;
     noModeratorsFound: string;
     disputes?: string;
+    findModerators: string;
+    sortedBy?: string;
+    maxFeeOption?: string;
+    addToStore?: string;
+    addedToStore?: string;
+    addToStoreBanner?: string;
+    directoryEmpty?: string;
+    directoryEmptyHint?: string;
+    directoryLookupSearching?: string;
+    directoryLookupNotFound?: string;
+    directoryLookupNotModerator?: string;
+    directoryError?: string;
+    backToModerators?: string;
+    backToStoreSettings?: string;
+    backToBrowse?: string;
+    tabAbout?: string;
+    tabReviews?: string;
+    tabTerms?: string;
+    feeOfTransaction?: string;
+    contactInformation?: string;
+    notFound?: string;
+    notFoundDesc?: string;
+    noReviewsForModerator?: string;
   };
 
   // 支付选择
@@ -1089,6 +1112,17 @@ export interface TranslationResource {
     termsPlaceholder?: string;
     storeModerators?: string;
     storeModeratorsDesc?: string;
+    storeModeratorsEmptyDesc?: string;
+    storeModeratorsLoadFailed?: string;
+    moderatorAlreadyAdded?: string;
+    moderatorNotFound?: string;
+    moderatorNotConfigured?: string;
+    moderatorPreviewLoading?: string;
+    moderatorPeerIdFormatHint?: string;
+    profileUnavailable?: string;
+    viewModeratorProfile?: string;
+    addFromMarketplace?: string;
+    storeModeratorExpandHint?: string;
     advanced: string;
     analytics: string;
     analyticsDesc: string;
@@ -2684,7 +2718,6 @@ export interface TranslationResource {
     caseIdLabel?: string;
     viewCase?: string;
     copyCaseId?: string;
-    newMessages?: string;
   };
   admin?: {
     title?: string;

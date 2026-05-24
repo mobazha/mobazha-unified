@@ -1457,6 +1457,8 @@ export const en: TranslationResource = {
       transactions: 'Transactions',
       confirmed: 'Confirmed',
       confirmations: 'confirmations',
+      listingTotal: 'Order total:',
+      paidAmount: 'Paid:',
     },
     // Address display
     address: {
@@ -2509,6 +2511,32 @@ export const en: TranslationResource = {
     fee: 'fee',
     noModeratorsFound: 'No moderators found matching your criteria',
     disputes: 'disputes',
+    findModerators: 'Find Moderators',
+    sortedBy: 'Sorted by: {{label}}',
+    maxFeeOption: 'Up to {{fee}}%',
+    addToStore: 'Add to store',
+    addedToStore: 'Added to store',
+    addToStoreBanner:
+      'Select a moderator and add them to your store for buyer protection on listings.',
+    directoryEmpty: 'No moderators match your filters. Try adjusting search or filters.',
+    directoryEmptyHint:
+      'The catalog lists platform-verified moderators. Paste a full Peer ID (starts with 12D3KooW…) in search to look up others.',
+    directoryLookupSearching: 'Looking up moderator…',
+    directoryLookupNotFound: 'No profile found for this Peer ID. Check the full ID and try again.',
+    directoryLookupNotModerator:
+      'This profile exists but is not registered as a dispute moderator.',
+    directoryError: 'Could not load the moderator directory. Please try again.',
+    backToModerators: 'Back to moderators',
+    backToStoreSettings: 'Back to store settings',
+    backToBrowse: 'Back to browse moderators',
+    tabAbout: 'About',
+    tabReviews: 'Reviews',
+    tabTerms: 'Terms & Conditions',
+    feeOfTransaction: 'of transaction value',
+    contactInformation: 'Contact information',
+    notFound: 'Moderator not found',
+    notFoundDesc: 'This profile may no longer be available or the link is incorrect.',
+    noReviewsForModerator: 'No reviews for this moderator yet.',
   },
 
   payment: {
@@ -2823,6 +2851,20 @@ export const en: TranslationResource = {
       'Enter your store terms and conditions, e.g. payment terms, dispute resolution process, liability limitations...',
     storeModerators: 'Store Moderators',
     storeModeratorsDesc: 'Select moderators to handle disputes for your store transactions',
+    storeModeratorsEmptyDesc:
+      'Add trusted dispute resolution providers so buyers can use buyer protection on your listings.',
+    storeModeratorsLoadFailed: 'Could not load store moderators. Please try again.',
+    moderatorAlreadyAdded: 'This moderator is already on your list.',
+    moderatorNotFound:
+      'No profile found for this ID. Check the ID or browse the moderator directory.',
+    moderatorNotConfigured: 'This profile is not registered as a dispute moderator.',
+    moderatorPreviewLoading: 'Looking up moderator…',
+    moderatorPeerIdFormatHint:
+      'Use the full Peer ID (starts with 12D3KooW…), not a truncated display ID.',
+    profileUnavailable: 'Full profile details are not available for this moderator yet.',
+    viewModeratorProfile: 'View profile',
+    addFromMarketplace: 'Browse the moderator directory instead',
+    storeModeratorExpandHint: 'Click a moderator to view details',
     advanced: 'Advanced',
     analytics: 'Analytics',
     analyticsDesc: 'Help improve the app by sharing anonymous usage data',

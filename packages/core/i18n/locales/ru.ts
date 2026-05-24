@@ -766,6 +766,7 @@ export const ru: PartialTranslationResource = {
     allPurchases: 'Все покупки',
     noStatusOrders: 'Нет заказов со статусом {{status}}.',
     backToOrders: 'К списку заказов',
+    backToCases: 'К списку дел',
     placedOn: 'Оформлен {{date}}',
     orderNotFound: 'Заказ не найден',
     orderNotFoundMessage: 'Заказ, который вы ищете, не существует.',
@@ -2232,6 +2233,7 @@ export const ru: PartialTranslationResource = {
     success: '{{rate}}% успех',
     fee: 'комиссия',
     noModeratorsFound: 'Модераторы, соответствующие вашим критериям, не найдены',
+    findModerators: 'Найти модераторов',
     disputes: 'споры',
   },
   payment: {
