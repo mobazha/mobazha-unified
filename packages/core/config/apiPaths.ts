@@ -34,6 +34,12 @@ export const NODE_API = {
   PREFERENCES: '/preferences',
   PREFERENCES_CURRENCY: '/preferences/currency',
 
+  // --- Store policy ---
+  STORE_POLICY: '/store-policy',
+  STORE_POLICY_MODERATORS: '/store-policy/moderators',
+  STORE_POLICY_MODERATOR: (peerID: string) => `/store-policy/moderators/${peerID}`,
+  STORE_POLICY_PUBLISHED: (peerID: string) => `/store-policy/${peerID}/published`,
+
   // --- Listings ---
   LISTINGS: '/listings',
   LISTING: (slug: string) => `/listings/${slug}`,

@@ -16,6 +16,7 @@ import { authGet, authPost, authPut, authDel, publicGet, publicPost, nodeAuthGet
 export interface Moderator {
   id: string;
   peerID: string;
+  enabled?: boolean;
   name: string;
   handle?: string;
   avatar?: string;
@@ -60,6 +61,17 @@ export interface Moderator {
   updatedAt: string;
 }
 
+interface StorePolicyModeratorEntry {
+  peerID: string;
+  enabled?: boolean;
+  position?: number;
+}
+
+interface StorePolicyPublic {
+  revision: number;
+  moderators?: StorePolicyModeratorEntry[];
+}
+
 /**
  * 后端返回的 Profile 结构
  */
@@ -71,7 +83,6 @@ interface BackendProfile {
   about?: string;
   shortDescription?: string;
   moderator: boolean;
-  storeModerators?: string[];
   moderatorInfo?: {
     description?: string;
     termsAndConditions?: string;
@@ -246,26 +257,31 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
 // API Functions
 
 /**
- * 获取店铺设置中的 storeModerators 列表
+ * 获取 StorePolicy 中的店铺仲裁人列表。
+ *
+ * buyer checkout 使用 seller public StorePolicy；seller admin 使用当前节点
+ * admin StorePolicy。Profile、Listing、Preferences 都不是当前策略来源。
  */
-async function getStoreModerators(vendorPeerID?: string): Promise<string[]> {
+async function getStoreModeratorEntries(
+  vendorPeerID?: string
+): Promise<StorePolicyModeratorEntry[]> {
   try {
     if (vendorPeerID) {
-      const profilePath = `${NODE_API.PROFILES}/${vendorPeerID}`;
-      try {
-        const profile = await authGet<BackendProfile>(profilePath);
-        return profile.storeModerators || [];
-      } catch {
-        const profile = await publicGet<BackendProfile>(profilePath);
-        return profile.storeModerators || [];
-      }
+      const policy = await publicGet<StorePolicyPublic>(
+        NODE_API.STORE_POLICY_PUBLISHED(vendorPeerID)
+      );
+      return policy.moderators || [];
     }
-    const preferences = await authGet<{ storeModerators?: string[] }>(NODE_API.PREFERENCES);
-    return preferences.storeModerators || [];
+    return await authGet<StorePolicyModeratorEntry[]>(NODE_API.STORE_POLICY_MODERATORS);
   } catch (error) {
-    console.warn('Error fetching store moderators:', error);
+    console.warn('Error fetching store policy moderators:', error);
     return [];
   }
+}
+
+async function getStoreModerators(vendorPeerID?: string): Promise<string[]> {
+  const entries = await getStoreModeratorEntries(vendorPeerID);
+  return entries.map(entry => entry.peerID).filter(Boolean);
 }
 
 /**
@@ -311,18 +327,18 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
 }
 
 /**
- * 获取仲裁员列表
+ * 获取仲裁员列表。
  *
- * 实现逻辑（参考桌面端）：
- * 1. 从 GET /v1/preferences 获取 storeModerators 列表（peerID 数组）
- * 2. 用 POST /v1/profiles/batch 批量获取这些 peerID 的 profile 信息
- * 3. 转换为前端 Moderator 格式
+ * seller admin 读取当前节点 StorePolicy；buyer checkout 读取 seller public
+ * StorePolicy，然后用 profiles/batch 补齐展示信息。
  */
 export async function getModerators(
   params: ModeratorListParams = {}
 ): Promise<ModeratorListResponse> {
-  // 步骤 1: 获取 storeModerators 列表
-  const moderatorPeerIDs = await getStoreModerators(params.vendorPeerID);
+  const moderatorEntries = (await getStoreModeratorEntries(params.vendorPeerID)).filter(
+    entry => !params.vendorPeerID || entry.enabled !== false
+  );
+  const moderatorPeerIDs = moderatorEntries.map(entry => entry.peerID).filter(Boolean);
 
   if (moderatorPeerIDs.length === 0) {
     return {
@@ -337,20 +353,25 @@ export async function getModerators(
   // 步骤 2: 批量获取 profile 信息
   const profiles = await fetchProfiles(moderatorPeerIDs);
 
-  // 既然这些 peerID 来自 storeModerators，我们就显示所有成功获取的 profile
+  // 既然这些 peerID 来自 StorePolicy，我们就显示所有成功获取的 profile
   // 即使没有 moderatorInfo，也显示（可能是用户还没设置调解员信息）
   const moderatorProfiles = profiles.filter(p => p && p.peerID);
   const profileByPeer = new Map(moderatorProfiles.map(p => [p.peerID, p]));
 
-  // 转换格式；profile 拉取失败时仍保留 peerID 占位，避免列表与 preferences 不一致
-  let moderators: Moderator[] = moderatorPeerIDs.map(peerID => {
+  // 转换格式；profile 拉取失败时仍保留 peerID 占位，避免列表与 StorePolicy 不一致
+  let moderators: Moderator[] = moderatorEntries.map(entry => {
+    const peerID = entry.peerID;
     const profile = profileByPeer.get(peerID);
     if (profile) {
-      return convertProfileToModerator(profile);
+      return {
+        ...convertProfileToModerator(profile),
+        enabled: entry.enabled ?? true,
+      };
     }
     return {
       id: peerID,
       peerID,
+      enabled: entry.enabled ?? true,
       name: truncatePeerId(peerID, 6),
       languages: [],
       fee: { percentage: 0, feeType: 'percentage' },
@@ -427,7 +448,13 @@ export async function setStoreModerators(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const unique = [...new Set(peerIDs.map(id => id.trim()).filter(Boolean))];
-    await authPut(NODE_API.PREFERENCES, { storeModerators: unique });
+    await authPut(NODE_API.STORE_POLICY_MODERATORS, {
+      moderators: unique.map((peerID, position) => ({
+        peerID,
+        enabled: true,
+        position,
+      })),
+    });
     return { success: true };
   } catch (error) {
     return {
@@ -438,11 +465,11 @@ export async function setStoreModerators(
 }
 
 /**
- * 添加店铺仲裁人（写入 preferences.storeModerators）
+ * 添加店铺仲裁人（写入 StorePolicy）
  */
 export async function addStoreModerator(
   peerID: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; moderator?: Moderator }> {
   const trimmed = peerID.trim();
   if (!trimmed) {
     return { success: false, error: 'Peer ID is required' };
@@ -461,7 +488,13 @@ export async function addStoreModerator(
     return { success: false, error: 'Profile is not a moderator' };
   }
 
-  return setStoreModerators([...current, trimmed]);
+  const saveResult = await setStoreModerators([...current, trimmed]);
+  if (!saveResult.success) {
+    return saveResult;
+  }
+
+  const moderator = convertProfileToModerator(profiles[0]);
+  return { success: true, moderator };
 }
 
 /**
@@ -470,8 +503,19 @@ export async function addStoreModerator(
 export async function removeStoreModerator(
   peerID: string
 ): Promise<{ success: boolean; error?: string }> {
-  const current = await getStoreModerators();
-  return setStoreModerators(current.filter(id => id !== peerID));
+  try {
+    const trimmed = peerID.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Peer ID is required' };
+    }
+    await authDel(NODE_API.STORE_POLICY_MODERATOR(trimmed));
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to remove store moderator',
+    };
+  }
 }
 
 /**

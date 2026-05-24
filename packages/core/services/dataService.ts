@@ -337,7 +337,12 @@ export const orderDataService = {
     return await ordersApi.openDispute(orderId, claim, evidenceHashes);
   },
 
-  async createPaymentSession(params: { orderId: string; paymentCoin: string; moderator?: string }) {
+  async createPaymentSession(params: {
+    orderId: string;
+    paymentCoin: string;
+    moderator?: string;
+    vendorPeerID?: string;
+  }) {
     return await ordersApi.createOrderPaymentSession(params);
   },
 };

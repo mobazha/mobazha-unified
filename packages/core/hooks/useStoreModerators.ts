@@ -33,15 +33,31 @@ export function useStoreModerators(): UseStoreModeratorsReturn {
   });
 
   const invalidate = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.moderators.store() });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.moderators.store(),
+      refetchType: 'active',
+    });
   }, [queryClient]);
 
   const addMutation = useMutation({
     mutationFn: (peerID: string) => moderatorsApi.addStoreModerator(peerID),
-    onSuccess: result => {
-      if (result.success) {
-        void invalidate();
+    onSuccess: (result, peerID) => {
+      if (!result.success) {
+        return;
       }
+      if (result.moderator) {
+        queryClient.setQueryData<moderatorsApi.Moderator[]>(
+          queryKeys.moderators.store(),
+          (current = []) => {
+            const trimmed = peerID.trim();
+            if (current.some(m => m.peerID === trimmed || m.peerID === result.moderator?.peerID)) {
+              return current;
+            }
+            return [...current, result.moderator!];
+          }
+        );
+      }
+      void invalidate();
     },
   });
 
