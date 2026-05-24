@@ -714,6 +714,7 @@ export default function PaymentPage() {
           orderId: orderID!,
           paymentCoin: selectedPaymentCoin,
           moderator: moderatorPeerID,
+          vendorPeerID: orderDetails.vendor.peerID,
         });
 
         setExternalWalletInfo(

@@ -39,8 +39,15 @@ export function nodeAuthGet<T>(path: string): Promise<T> {
   return get<T>(`${getGatewayUrl()}${path}`, getAuthHeaders());
 }
 
-export function authPost<T>(path: string, body?: unknown): Promise<T> {
-  return post<T>(`${getMyGatewayUrl()}${path}`, body, getAuthHeaders());
+export function authPost<T>(
+  path: string,
+  body?: unknown,
+  headers?: Record<string, string>
+): Promise<T> {
+  return post<T>(`${getMyGatewayUrl()}${path}`, body, {
+    ...getAuthHeaders(),
+    ...headers,
+  });
 }
 
 export function authPut<T>(path: string, body?: unknown): Promise<T> {

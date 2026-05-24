@@ -81,8 +81,8 @@ describe('Moderators API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchVerified.mockResolvedValue(new Set<string>());
-    // Default: authGet returns empty storeModerators
-    mockAuthGet.mockResolvedValue({ storeModerators: [] });
+    // Default: authGet returns empty StorePolicy moderators
+    mockAuthGet.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -110,9 +110,9 @@ describe('Moderators API', () => {
         },
       };
 
-      // authGet → preferences with storeModerators
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1'] });
-      // publicPost → fetchProfiles result
+      // authGet -> StorePolicy moderators
+      mockAuthGet.mockResolvedValueOnce([{ peerID: 'QmMod1', enabled: true, position: 0 }]);
+      // publicPost -> fetchProfiles result
       mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
 
       const result = await moderatorsApi.getModerators();
@@ -124,7 +124,7 @@ describe('Moderators API', () => {
     });
 
     it('should return empty when no store moderators configured', async () => {
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: [] });
+      mockAuthGet.mockResolvedValueOnce([]);
 
       const result = await moderatorsApi.getModerators();
 
@@ -132,7 +132,7 @@ describe('Moderators API', () => {
       expect(result.total).toBe(0);
     });
 
-    it('should fetch store moderators from the vendor profile when vendorPeerID is provided', async () => {
+    it('should fetch store moderators from seller public StorePolicy when vendorPeerID is provided', async () => {
       const mockProfile = {
         peerID: 'QmSellerMod',
         name: 'Seller Moderator',
@@ -142,20 +142,33 @@ describe('Moderators API', () => {
           fee: { percentage: 1, feeType: 'PERCENTAGE' },
         },
       };
-      mockAuthGet.mockResolvedValueOnce({ peerID: 'QmSeller', storeModerators: ['QmSellerMod'] });
+      mockPublicGet.mockResolvedValueOnce({
+        revision: 3,
+        moderators: [{ peerID: 'QmSellerMod', enabled: true, position: 0 }],
+      });
       mockPublicPost.mockResolvedValueOnce([
         { id: 'id1', peerID: 'QmSellerMod', profile: mockProfile },
       ]);
 
       const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
 
-      expect(mockAuthGet).toHaveBeenCalledWith('/profiles/QmSeller');
-      expect(mockPublicGet).not.toHaveBeenCalled();
+      expect(mockPublicGet).toHaveBeenCalledWith('/store-policy/QmSeller/published');
+      expect(mockAuthGet).not.toHaveBeenCalled();
       expect(result.moderators).toHaveLength(1);
       expect(result.moderators[0].peerID).toBe('QmSellerMod');
     });
 
-    it('should fall back to the public vendor profile when auth profile lookup fails', async () => {
+    it('should return empty when seller public StorePolicy is unavailable', async () => {
+      mockPublicGet.mockRejectedValueOnce(new Error('Store policy unavailable'));
+
+      const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
+
+      expect(mockPublicGet).toHaveBeenCalledWith('/store-policy/QmSeller/published');
+      expect(mockPublicPost).not.toHaveBeenCalled();
+      expect(result.moderators).toHaveLength(0);
+    });
+
+    it('should filter out disabled public policy moderators before profile lookup', async () => {
       const mockProfile = {
         peerID: 'QmSellerMod',
         name: 'Seller Moderator',
@@ -165,16 +178,20 @@ describe('Moderators API', () => {
           fee: { percentage: 1, feeType: 'PERCENTAGE' },
         },
       };
-      mockAuthGet.mockRejectedValueOnce(new Error('Authentication required'));
-      mockPublicGet.mockResolvedValueOnce({ peerID: 'QmSeller', storeModerators: ['QmSellerMod'] });
+      mockPublicGet.mockResolvedValueOnce({
+        revision: 3,
+        moderators: [
+          { peerID: 'QmSellerMod', enabled: true, position: 0 },
+          { peerID: 'QmDisabled', enabled: false, position: 1 },
+        ],
+      });
       mockPublicPost.mockResolvedValueOnce([
         { id: 'id1', peerID: 'QmSellerMod', profile: mockProfile },
       ]);
 
       const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
 
-      expect(mockAuthGet).toHaveBeenCalledWith('/profiles/QmSeller');
-      expect(mockPublicGet).toHaveBeenCalledWith('/profiles/QmSeller');
+      expect(mockPublicPost).toHaveBeenCalledWith('/profiles/batch', ['QmSellerMod']);
       expect(result.moderators).toHaveLength(1);
       expect(result.moderators[0].peerID).toBe('QmSellerMod');
     });
@@ -204,7 +221,7 @@ describe('Moderators API', () => {
 
   describe('searchModerators', () => {
     it('should search moderators (delegates to getModerators)', async () => {
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: [] });
+      mockAuthGet.mockResolvedValueOnce([]);
 
       const result = await moderatorsApi.searchModerators('trusted');
 
@@ -298,7 +315,7 @@ describe('Moderators API', () => {
     });
   });
 
-  describe('store moderators preferences', () => {
+  describe('store moderators StorePolicy', () => {
     const mockProfile = {
       peerID: 'QmMod1',
       name: 'Trusted Moderator',
@@ -310,18 +327,21 @@ describe('Moderators API', () => {
     };
 
     it('should add store moderator after profile lookup', async () => {
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: [] });
+      mockAuthGet.mockResolvedValueOnce([]);
       mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
       mockAuthPut.mockResolvedValueOnce(undefined);
 
       const result = await moderatorsApi.addStoreModerator('QmMod1');
 
       expect(result.success).toBe(true);
-      expect(mockAuthPut).toHaveBeenCalledWith('/preferences', { storeModerators: ['QmMod1'] });
+      expect(result.moderator?.peerID).toBe('QmMod1');
+      expect(mockAuthPut).toHaveBeenCalledWith('/store-policy/moderators', {
+        moderators: [{ peerID: 'QmMod1', enabled: true, position: 0 }],
+      });
     });
 
     it('should reject duplicate store moderator', async () => {
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1'] });
+      mockAuthGet.mockResolvedValueOnce([{ peerID: 'QmMod1', enabled: true, position: 0 }]);
 
       const result = await moderatorsApi.addStoreModerator('QmMod1');
 
@@ -330,17 +350,19 @@ describe('Moderators API', () => {
     });
 
     it('should remove store moderator', async () => {
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1', 'QmMod2'] });
-      mockAuthPut.mockResolvedValueOnce(undefined);
+      mockAuthDel.mockResolvedValueOnce(undefined);
 
       const result = await moderatorsApi.removeStoreModerator('QmMod1');
 
       expect(result.success).toBe(true);
-      expect(mockAuthPut).toHaveBeenCalledWith('/preferences', { storeModerators: ['QmMod2'] });
+      expect(mockAuthDel).toHaveBeenCalledWith('/store-policy/moderators/QmMod1');
     });
 
     it('should keep peerID placeholder when profile batch misses an entry', async () => {
-      mockAuthGet.mockResolvedValueOnce({ storeModerators: ['QmMod1', 'QmMissing'] });
+      mockAuthGet.mockResolvedValueOnce([
+        { peerID: 'QmMod1', enabled: true, position: 0 },
+        { peerID: 'QmMissing', enabled: true, position: 1 },
+      ]);
       mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
 
       const result = await moderatorsApi.getModerators();

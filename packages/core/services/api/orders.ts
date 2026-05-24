@@ -403,6 +403,7 @@ export async function getOrderPaymentSession(orderId: string): Promise<PaymentSe
 export interface CreateOrderPaymentSessionData {
   orderId: string;
   paymentCoin: string;
+  vendorPeerID?: string;
   refundAddress?: string;
   buyerPeerID?: string;
   payerAddress?: string;
@@ -418,17 +419,21 @@ export async function createOrderPaymentSession(
 ): Promise<PaymentSession> {
   const realFn = async () => {
     const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
-    return authPost<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(payload.orderId), {
-      paymentCoin,
-      ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
-      ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
-      ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
-      ...(payload.moderator ? { moderator: payload.moderator } : {}),
-      ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
-      ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
-      ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
-      ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
-    });
+    return authPost<PaymentSession>(
+      NODE_API.ORDER_PAYMENT_SESSION(payload.orderId),
+      {
+        paymentCoin,
+        ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
+        ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
+        ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
+        ...(payload.moderator ? { moderator: payload.moderator } : {}),
+        ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
+        ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
+        ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
+        ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
+      },
+      payload.vendorPeerID ? { 'X-Store-PeerID': payload.vendorPeerID } : undefined
+    );
   };
 
   const mockFn = async (): Promise<PaymentSession> => {
