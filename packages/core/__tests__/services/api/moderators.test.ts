@@ -142,6 +142,30 @@ describe('Moderators API', () => {
           fee: { percentage: 1, feeType: 'PERCENTAGE' },
         },
       };
+      mockAuthGet.mockResolvedValueOnce({ peerID: 'QmSeller', storeModerators: ['QmSellerMod'] });
+      mockPublicPost.mockResolvedValueOnce([
+        { id: 'id1', peerID: 'QmSellerMod', profile: mockProfile },
+      ]);
+
+      const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
+
+      expect(mockAuthGet).toHaveBeenCalledWith('/profiles/QmSeller');
+      expect(mockPublicGet).not.toHaveBeenCalled();
+      expect(result.moderators).toHaveLength(1);
+      expect(result.moderators[0].peerID).toBe('QmSellerMod');
+    });
+
+    it('should fall back to the public vendor profile when auth profile lookup fails', async () => {
+      const mockProfile = {
+        peerID: 'QmSellerMod',
+        name: 'Seller Moderator',
+        moderator: true,
+        moderatorInfo: {
+          languages: ['en'],
+          fee: { percentage: 1, feeType: 'PERCENTAGE' },
+        },
+      };
+      mockAuthGet.mockRejectedValueOnce(new Error('Authentication required'));
       mockPublicGet.mockResolvedValueOnce({ peerID: 'QmSeller', storeModerators: ['QmSellerMod'] });
       mockPublicPost.mockResolvedValueOnce([
         { id: 'id1', peerID: 'QmSellerMod', profile: mockProfile },
@@ -149,7 +173,7 @@ describe('Moderators API', () => {
 
       const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
 
-      expect(mockAuthGet).not.toHaveBeenCalled();
+      expect(mockAuthGet).toHaveBeenCalledWith('/profiles/QmSeller');
       expect(mockPublicGet).toHaveBeenCalledWith('/profiles/QmSeller');
       expect(result.moderators).toHaveLength(1);
       expect(result.moderators[0].peerID).toBe('QmSellerMod');
