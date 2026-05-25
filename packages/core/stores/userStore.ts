@@ -826,9 +826,23 @@ export const useUserStore = create<UserState>()(
 
             if (is401) {
               console.warn('⚠️ Session restore failed: token invalid (401)');
+              disconnectWebSocket();
+              setWebSocketBaseUrl(null);
+              setStandaloneBuyerAuth(false);
+              clearProfileCache();
+              clearAuth();
               set({
+                profile: null,
+                settings: null,
+                isAuthenticated: false,
                 isLoading: false,
+                token: null,
                 isSessionRestored: true,
+                needsOnboarding: false,
+                sessionExpired: true,
+                authSource: null,
+                isAnonymousMiniAppUser: false,
+                isStoreOwner: false,
               });
               return false;
             }

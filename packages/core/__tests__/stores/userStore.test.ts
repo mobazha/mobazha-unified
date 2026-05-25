@@ -16,6 +16,13 @@ const mockGetSettings = vi.fn();
 const mockSetSettings = vi.fn();
 const mockSetAcceptedCoins = vi.fn();
 const mockCreateProfile = vi.fn();
+const mockGetStoredToken = vi.fn(() => null);
+const mockIsTokenExpired = vi.fn(() => false);
+const mockClearAuth = vi.fn();
+const mockDisconnectWebSocket = vi.fn();
+const mockSetWebSocketBaseUrl = vi.fn();
+const mockSetStandaloneBuyerAuth = vi.fn();
+const mockClearProfileCache = vi.fn();
 
 vi.mock('../../services/api', () => ({
   profileApi: {
@@ -38,16 +45,16 @@ vi.mock('../../services/api', () => ({
   },
   getBuyerWebSocketUrl: vi.fn(() => ''),
   getSellerWebSocketUrl: vi.fn(() => ''),
-  setStandaloneBuyerAuth: vi.fn(),
+  setStandaloneBuyerAuth: (...args: unknown[]) => mockSetStandaloneBuyerAuth(...args),
 }));
 
 vi.mock('../../services/auth', () => ({
   handleOAuthCallback: vi.fn(),
   saveToken: vi.fn(),
   saveUser: vi.fn(),
-  clearAuth: vi.fn(),
-  getStoredToken: vi.fn(() => null),
-  isTokenExpired: vi.fn(() => false),
+  clearAuth: (...args: unknown[]) => mockClearAuth(...args),
+  getStoredToken: (...args: unknown[]) => mockGetStoredToken(...args),
+  isTokenExpired: (...args: unknown[]) => mockIsTokenExpired(...args),
   getAuthService: vi.fn(),
   getCurrentAuthMode: vi.fn(() => 'hosted'),
   parseJwtToken: vi.fn(),
@@ -55,12 +62,12 @@ vi.mock('../../services/auth', () => ({
 
 vi.mock('../../services/websocket', () => ({
   connectWebSocket: vi.fn(),
-  disconnectWebSocket: vi.fn(),
-  setWebSocketBaseUrl: vi.fn(),
+  disconnectWebSocket: (...args: unknown[]) => mockDisconnectWebSocket(...args),
+  setWebSocketBaseUrl: (...args: unknown[]) => mockSetWebSocketBaseUrl(...args),
 }));
 
 vi.mock('../../services/profileCache', () => ({
-  clearProfileCache: vi.fn(),
+  clearProfileCache: (...args: unknown[]) => mockClearProfileCache(...args),
 }));
 
 vi.mock('../../config/env', () => ({
@@ -92,6 +99,8 @@ import { useUserStore } from '../../stores/userStore';
 describe('userStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetStoredToken.mockReturnValue(null);
+    mockIsTokenExpired.mockReturnValue(false);
     // Reset store to initial state
     useUserStore.setState({
       profile: {
@@ -245,6 +254,36 @@ describe('userStore', () => {
       expect(state.needsOnboarding).toBe(false);
       expect(state.sessionExpired).toBe(false);
       expect(state.isSessionRestored).toBe(true);
+    });
+  });
+
+  describe('restoreSession', () => {
+    it('clears stale auth state and marks session expired on 401', async () => {
+      class UnauthorizedError extends Error {
+        status = 401;
+      }
+
+      mockGetStoredToken.mockReturnValue('stale-token');
+      mockGetMyProfile.mockRejectedValueOnce(new UnauthorizedError('Unauthorized'));
+
+      const result = await useUserStore.getState().restoreSession();
+
+      expect(result).toBe(false);
+      expect(mockClearAuth).toHaveBeenCalledTimes(1);
+      expect(mockDisconnectWebSocket).toHaveBeenCalledTimes(1);
+      expect(mockSetWebSocketBaseUrl).toHaveBeenCalledWith(null);
+      expect(mockSetStandaloneBuyerAuth).toHaveBeenCalledWith(false);
+      expect(mockClearProfileCache).toHaveBeenCalledTimes(1);
+
+      const state = useUserStore.getState();
+      expect(state.profile).toBeNull();
+      expect(state.settings).toBeNull();
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.token).toBeNull();
+      expect(state.isSessionRestored).toBe(true);
+      expect(state.needsOnboarding).toBe(false);
+      expect(state.sessionExpired).toBe(true);
+      expect(state.isStoreOwner).toBe(false);
     });
   });
 });
