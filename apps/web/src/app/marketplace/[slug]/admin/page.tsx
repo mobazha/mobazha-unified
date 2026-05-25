@@ -41,82 +41,6 @@ interface Member {
   productCount?: number;
 }
 
-// Mock data
-const mockApplications: Application[] = [
-  {
-    id: 'app1',
-    applicantName: 'NewSeller123',
-    applicantAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=new1',
-    message: 'I want to sell electronics and gadgets in this marketplace.',
-    productCount: 5,
-    status: 'pending',
-    createdAt: '2024-01-20T10:00:00',
-  },
-  {
-    id: 'app2',
-    applicantName: 'TechDeals',
-    applicantAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tech',
-    message: 'Professional seller with experience in computer hardware.',
-    productCount: 12,
-    status: 'pending',
-    createdAt: '2024-01-19T15:30:00',
-  },
-];
-
-const mockPendingProducts: PendingProduct[] = [
-  {
-    id: 'pp1',
-    title: 'Gaming Mouse RGB',
-    image: 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=200&h=200&fit=crop',
-    price: 79.99,
-    sellerName: 'GamerGear',
-    status: 'pending',
-    createdAt: '2024-01-20T12:00:00',
-  },
-  {
-    id: 'pp2',
-    title: 'USB-C Hub 7-in-1',
-    image: 'https://images.unsplash.com/photo-1625723044792-44de16ccb4e8?w=200&h=200&fit=crop',
-    price: 49.99,
-    sellerName: 'TechPro',
-    status: 'pending',
-    createdAt: '2024-01-20T11:30:00',
-  },
-];
-
-const mockMembers: Member[] = [
-  {
-    id: 'm1',
-    name: 'TechAdmin',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-    role: 'owner',
-    joinedAt: '2023-01-01',
-  },
-  {
-    id: 'm2',
-    name: 'ModHelper',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mod',
-    role: 'moderator',
-    joinedAt: '2023-03-15',
-  },
-  {
-    id: 'm3',
-    name: 'AudioPro',
-    avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=audio',
-    role: 'seller',
-    joinedAt: '2023-06-15',
-    productCount: 45,
-  },
-  {
-    id: 'm4',
-    name: 'WatchWorld',
-    avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=watch',
-    role: 'seller',
-    joinedAt: '2023-07-20',
-    productCount: 32,
-  },
-];
-
 export default function MarketplaceAdminPage() {
   const params = useParams();
   const { t } = useI18n();
@@ -126,8 +50,9 @@ export default function MarketplaceAdminPage() {
   const [activeTab, setActiveTab] = useState<'applications' | 'products' | 'members' | 'settings'>(
     'applications'
   );
-  const [applications, setApplications] = useState(mockApplications);
-  const [pendingProducts, setPendingProducts] = useState(mockPendingProducts);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [pendingProducts, setPendingProducts] = useState<PendingProduct[]>([]);
+  const [members] = useState<Member[]>([]);
 
   const handleReviewApplication = (appId: string, approved: boolean) => {
     setApplications(prev =>
@@ -199,7 +124,7 @@ export default function MarketplaceAdminPage() {
                       count: pendingApplicationsCount,
                     },
                     { id: 'products', label: 'Product Approvals', count: pendingProductsCount },
-                    { id: 'members', label: 'Members', count: mockMembers.length },
+                    { id: 'members', label: 'Members', count: members.length },
                     { id: 'settings', label: 'Settings' },
                   ].map(item => (
                     <button
@@ -373,7 +298,7 @@ export default function MarketplaceAdminPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {mockMembers.map(member => (
+                        {members.map(member => (
                           <tr key={member.id} className="border-b border-border">
                             <td className="py-3 px-4">
                               <HStack gap="md" align="center">
@@ -430,7 +355,7 @@ export default function MarketplaceAdminPage() {
                         <label className="block text-sm font-medium text-muted-foreground mb-2">
                           Marketplace Name
                         </label>
-                        <Input defaultValue="Tech Gadgets Hub" />
+                        <Input placeholder="Marketplace name" />
                       </div>
 
                       <div>
@@ -440,7 +365,7 @@ export default function MarketplaceAdminPage() {
                         <textarea
                           rows={4}
                           className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                          defaultValue="Your one-stop shop for the latest tech gadgets..."
+                          placeholder="Public description shown on the community marketplace detail page."
                         />
                       </div>
 

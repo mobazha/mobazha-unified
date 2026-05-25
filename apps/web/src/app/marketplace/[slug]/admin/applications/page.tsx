@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 
 // Types
@@ -27,68 +27,17 @@ interface SellerApplication {
   };
 }
 
-// Mock data
-const mockApplications: SellerApplication[] = [
-  {
-    id: 'app1',
-    applicantPeerID: 'QmUser1',
-    applicantName: 'John Seller',
-    applicantAvatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-    message:
-      'I have 5 years of experience selling handmade crafts. I would love to join your marketplace.',
-    status: 'pending',
-    createdAt: '2024-01-15T10:00:00Z',
-    sellerProfile: {
-      bio: 'Passionate craftsman specializing in handmade jewelry',
-      location: 'New York, USA',
-      businessName: "John's Crafts",
-    },
-  },
-  {
-    id: 'app2',
-    applicantPeerID: 'QmUser2',
-    applicantName: 'Sarah Tech',
-    applicantAvatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-    message: 'Tech enthusiast looking to sell refurbished electronics.',
-    status: 'pending',
-    createdAt: '2024-01-14T15:30:00Z',
-    sellerProfile: {
-      bio: 'Electronics repair specialist',
-      location: 'San Francisco, USA',
-      businessName: 'TechRevive',
-    },
-  },
-  {
-    id: 'app3',
-    applicantPeerID: 'QmUser3',
-    applicantName: 'Mike Fashion',
-    status: 'approved',
-    createdAt: '2024-01-10T09:00:00Z',
-    reviewedAt: '2024-01-11T14:00:00Z',
-  },
-];
-
 export default function MarketplaceApplicationsPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
 
   const [applications, setApplications] = useState<SellerApplication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState('');
   const [selectedApp, setSelectedApp] = useState<SellerApplication | null>(null);
-
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setApplications(mockApplications);
-      setLoading(false);
-    }, 500);
-  }, []);
 
   const filteredApplications = applications.filter(app => {
     if (filter === 'all') return true;

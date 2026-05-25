@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Header, Footer } from '@/components';
 import { Container, VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 
 // Types
@@ -31,84 +31,13 @@ interface ProductForReview {
   reviewNote?: string;
 }
 
-// Mock data
-const mockProducts: ProductForReview[] = [
-  {
-    id: 'prod1',
-    title: 'Handmade Leather Wallet',
-    description: 'Premium quality handcrafted leather wallet with card slots and coin pocket.',
-    price: 49.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&h=400&fit=crop'],
-    category: 'Fashion',
-    seller: {
-      id: 'seller1',
-      peerID: 'QmSeller1',
-      name: 'John Crafts',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-    },
-    status: 'pending',
-    submittedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: 'prod2',
-    title: 'Vintage Camera Collection',
-    description: 'Rare vintage Polaroid camera from the 1970s in working condition.',
-    price: 199.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=400&fit=crop'],
-    category: 'Electronics',
-    seller: {
-      id: 'seller2',
-      peerID: 'QmSeller2',
-      name: 'Vintage Finds',
-    },
-    status: 'pending',
-    submittedAt: '2024-01-14T15:30:00Z',
-  },
-  {
-    id: 'prod3',
-    title: 'Organic Honey Set',
-    description: 'Set of 3 organic honey jars from local beekeepers.',
-    price: 35.0,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop'],
-    category: 'Food',
-    seller: {
-      id: 'seller3',
-      peerID: 'QmSeller3',
-      name: 'Natural Goods',
-    },
-    status: 'approved',
-    submittedAt: '2024-01-10T09:00:00Z',
-    reviewedAt: '2024-01-10T14:00:00Z',
-  },
-  {
-    id: 'prod4',
-    title: 'Suspicious Item',
-    description: 'This listing has been flagged for review due to policy concerns.',
-    price: 999.99,
-    currency: 'USD',
-    images: ['https://images.unsplash.com/photo-1633354931133-27b31e6f8b51?w=400&h=400&fit=crop'],
-    category: 'Other',
-    seller: {
-      id: 'seller4',
-      peerID: 'QmSeller4',
-      name: 'Unknown Seller',
-    },
-    status: 'flagged',
-    submittedAt: '2024-01-13T08:00:00Z',
-    reviewNote: 'Flagged for potential policy violation',
-  },
-];
-
 export default function MarketplaceProductsPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
 
   const [products, setProducts] = useState<ProductForReview[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'flagged'>(
     'pending'
   );
@@ -116,14 +45,6 @@ export default function MarketplaceProductsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<ProductForReview | null>(null);
-
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setProducts(mockProducts);
-      setLoading(false);
-    }, 500);
-  }, []);
 
   const filteredProducts = products.filter(product => {
     const matchesFilter = filter === 'all' || product.status === filter;

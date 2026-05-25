@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
@@ -9,144 +9,155 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
-import { useI18n } from '@mobazha/core';
+import { useCommunityMarketplaces, useI18n, type PublicGroupMarketplace } from '@mobazha/core';
+import { Package, RefreshCw, Search, ShieldCheck, Store, Users } from 'lucide-react';
 
-// Types
-interface Marketplace {
-  id: string;
-  name: string;
-  slug: string;
-  shortDescription: string;
-  logo?: string;
-  banner?: string;
-  memberCount: number;
-  sellerCount: number;
-  productCount: number;
-  categories: string[];
-  featured: boolean;
+type SortMode = 'featured' | 'products' | 'sellers' | 'name' | 'updated';
+
+const platformLabels: Record<string, string> = {
+  telegram: 'Telegram',
+  discord: 'Discord',
+};
+
+function marketplaceHref(marketplace: PublicGroupMarketplace) {
+  return `/marketplace/${marketplace.slug || marketplace.publicID}`;
 }
 
-// Mock data
-const mockMarketplaces: Marketplace[] = [
-  {
-    id: 'mp1',
-    name: 'Tech Gadgets Hub',
-    slug: 'tech-gadgets-hub',
-    shortDescription:
-      'Your one-stop shop for the latest tech gadgets and electronics from trusted sellers worldwide.',
-    logo: 'https://api.dicebear.com/7.x/shapes/svg?seed=tech',
-    banner: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=300&fit=crop',
-    memberCount: 1234,
-    sellerCount: 56,
-    productCount: 892,
-    categories: ['Electronics', 'Gadgets', 'Computers'],
-    featured: true,
-  },
-  {
-    id: 'mp2',
-    name: 'Artisan Crafts Market',
-    slug: 'artisan-crafts',
-    shortDescription:
-      'Handmade crafts and artisanal products from skilled craftspeople around the globe.',
-    logo: 'https://api.dicebear.com/7.x/shapes/svg?seed=craft',
-    banner: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=800&h=300&fit=crop',
-    memberCount: 876,
-    sellerCount: 123,
-    productCount: 2341,
-    categories: ['Handmade', 'Art', 'Crafts'],
-    featured: true,
-  },
-  {
-    id: 'mp3',
-    name: 'Digital Assets Exchange',
-    slug: 'digital-assets',
-    shortDescription:
-      'Trade digital goods, software licenses, and virtual assets securely with crypto.',
-    logo: 'https://api.dicebear.com/7.x/shapes/svg?seed=digital',
-    banner: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=300&fit=crop',
-    memberCount: 2156,
-    sellerCount: 89,
-    productCount: 567,
-    categories: ['Digital', 'Software', 'NFTs'],
-    featured: true,
-  },
-  {
-    id: 'mp4',
-    name: 'Fashion Forward',
-    slug: 'fashion-forward',
-    shortDescription: 'Trendy fashion items and accessories from independent designers.',
-    logo: 'https://api.dicebear.com/7.x/shapes/svg?seed=fashion',
-    banner: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&h=300&fit=crop',
-    memberCount: 654,
-    sellerCount: 34,
-    productCount: 456,
-    categories: ['Fashion', 'Clothing', 'Accessories'],
-    featured: false,
-  },
-  {
-    id: 'mp5',
-    name: 'Home & Living',
-    slug: 'home-living',
-    shortDescription: 'Everything you need to make your house a home.',
-    logo: 'https://api.dicebear.com/7.x/shapes/svg?seed=home',
-    banner: 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=800&h=300&fit=crop',
-    memberCount: 432,
-    sellerCount: 28,
-    productCount: 678,
-    categories: ['Home', 'Furniture', 'Decor'],
-    featured: false,
-  },
-];
+function logoFor(marketplace: PublicGroupMarketplace) {
+  return (
+    marketplace.logoURL ||
+    `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(marketplace.publicID)}`
+  );
+}
 
-const allCategories = [
-  'Electronics',
-  'Gadgets',
-  'Computers',
-  'Handmade',
-  'Art',
-  'Crafts',
-  'Digital',
-  'Software',
-  'NFTs',
-  'Fashion',
-  'Clothing',
-  'Accessories',
-  'Home',
-  'Furniture',
-  'Decor',
-];
+function MarketplaceCard({
+  marketplace,
+  compact = false,
+}: {
+  marketplace: PublicGroupMarketplace;
+  compact?: boolean;
+}) {
+  const description = marketplace.publicDescription || '真实 Telegram/Discord 社区驱动的市场。';
+
+  if (compact) {
+    return (
+      <Link href={marketplaceHref(marketplace)}>
+        <Card className="h-full p-4 transition-all hover:shadow-lg active:scale-[0.99]">
+          <HStack gap="md" align="start">
+            <img
+              src={logoFor(marketplace)}
+              alt={marketplace.name}
+              className="h-14 w-14 flex-shrink-0 rounded-lg bg-muted object-cover"
+            />
+            <div className="min-w-0 flex-1">
+              <HStack gap="xs" align="center" className="mb-1 flex-wrap">
+                <h3 className="truncate text-base font-bold text-foreground">{marketplace.name}</h3>
+                {marketplace.isFeatured && (
+                  <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    精选
+                  </span>
+                )}
+              </HStack>
+              <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">{description}</p>
+              <HStack gap="md" className="flex-wrap text-xs text-muted-foreground">
+                <span>{platformLabels[marketplace.platform] || marketplace.platform}</span>
+                <span>{marketplace.sellerCount} 卖家</span>
+                <span>{marketplace.productCount} 商品</span>
+              </HStack>
+            </div>
+          </HStack>
+        </Card>
+      </Link>
+    );
+  }
+
+  return (
+    <Link href={marketplaceHref(marketplace)}>
+      <Card className="h-full overflow-hidden transition-all hover:shadow-xl active:scale-[0.99]">
+        <div className="relative h-32 overflow-hidden bg-muted">
+          {marketplace.bannerURL ? (
+            <img src={marketplace.bannerURL} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.25),transparent_35%),linear-gradient(135deg,hsl(var(--muted)),hsl(var(--background)))]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <span className="absolute right-3 top-3 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
+            精选
+          </span>
+        </div>
+
+        <div className="relative p-4">
+          <img
+            src={logoFor(marketplace)}
+            alt={marketplace.name}
+            className="-mt-10 mb-3 h-16 w-16 rounded-lg border-4 border-background bg-card object-cover shadow-lg"
+          />
+          <h3 className="mb-2 text-lg font-bold text-foreground">{marketplace.name}</h3>
+          <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{description}</p>
+          <HStack gap="lg" className="flex-wrap">
+            <VStack gap="none" align="center">
+              <span className="text-base font-bold text-foreground">{marketplace.sellerCount}</span>
+              <span className="text-xs text-muted-foreground">卖家</span>
+            </VStack>
+            <VStack gap="none" align="center">
+              <span className="text-base font-bold text-foreground">
+                {marketplace.productCount}
+              </span>
+              <span className="text-xs text-muted-foreground">商品</span>
+            </VStack>
+            <VStack gap="none" align="center">
+              <span className="text-base font-bold text-foreground">
+                {platformLabels[marketplace.platform] || marketplace.platform}
+              </span>
+              <span className="text-xs text-muted-foreground">来源</span>
+            </VStack>
+          </HStack>
+        </div>
+      </Card>
+    </Link>
+  );
+}
 
 export default function MarketplacesPage() {
   const { t } = useI18n();
+  const { marketplaces, loading, error, refresh } = useCommunityMarketplaces();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState<'name' | 'members' | 'products'>('members');
+  const [selectedPlatform, setSelectedPlatform] = useState('all');
+  const [sortBy, setSortBy] = useState<SortMode>('featured');
 
-  // Filter and sort marketplaces
-  const filteredMarketplaces = mockMarketplaces
-    .filter(mp => {
-      if (searchQuery && !mp.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      if (selectedCategory !== 'all' && !mp.categories.includes(selectedCategory)) {
-        return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'members':
-          return b.memberCount - a.memberCount;
-        case 'products':
-          return b.productCount - a.productCount;
-        default:
-          return 0;
-      }
-    });
+  const filteredMarketplaces = useMemo(() => {
+    return marketplaces
+      .filter(marketplace => {
+        const q = searchQuery.trim().toLowerCase();
+        if (q) {
+          const haystack = [
+            marketplace.name,
+            marketplace.publicDescription || '',
+            marketplace.platform,
+            marketplace.slug || '',
+          ]
+            .join(' ')
+            .toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        if (selectedPlatform !== 'all' && marketplace.platform !== selectedPlatform) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'featured') {
+          if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+          return a.sortOrder - b.sortOrder;
+        }
+        if (sortBy === 'products') return b.productCount - a.productCount;
+        if (sortBy === 'sellers') return b.sellerCount - a.sellerCount;
+        if (sortBy === 'updated') return (b.updatedAt || '').localeCompare(a.updatedAt || '');
+        return a.name.localeCompare(b.name);
+      });
+  }, [marketplaces, searchQuery, selectedPlatform, sortBy]);
 
-  const featuredMarketplaces = filteredMarketplaces.filter(mp => mp.featured);
+  const featuredMarketplaces = filteredMarketplaces.filter(marketplace => marketplace.isFeatured);
+  const showFeatured =
+    featuredMarketplaces.length > 0 && !searchQuery.trim() && selectedPlatform === 'all';
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,253 +166,167 @@ export default function MarketplacesPage() {
 
       <main className="py-4 sm:py-8">
         <Container size="xl">
-          {/* Page Header */}
-          <div className="text-center mb-6 sm:mb-12">
-            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2 sm:mb-4">
+          <div className="mb-6 text-center sm:mb-10">
+            <h1 className="mb-2 text-2xl font-bold text-foreground sm:mb-4 sm:text-4xl">
               {t('marketplace.title')}
             </h1>
-            <p className="text-sm sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              {t('marketplace.subtitle')}
+            <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-xl">
+              发现真实 Telegram 和 Discord 社区市场，从可信卖家购买或申请成为卖家。
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <Card className="mb-4 sm:mb-8 p-3 sm:p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-              <div className="sm:col-span-2 md:col-span-2">
+          <Card className="mb-5 p-3 sm:mb-8 sm:p-4">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 md:grid-cols-4">
+              <div className="sm:col-span-2">
                 <Input
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={event => setSearchQuery(event.target.value)}
                   placeholder={t('marketplace.searchPlaceholder')}
-                  className="h-9 sm:h-10 text-sm"
-                  leftIcon={
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  }
+                  className="h-10 text-sm"
+                  leftIcon={<Search className="h-5 w-5 text-muted-foreground" />}
                 />
               </div>
-              <div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="h-9 sm:h-10 text-sm">
-                    <SelectValue placeholder={t('marketplace.allCategories')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('marketplace.allCategories')}</SelectItem>
-                    {allCategories.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Select value={sortBy} onValueChange={value => setSortBy(value as typeof sortBy)}>
-                  <SelectTrigger className="h-9 sm:h-10 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="members">{t('marketplace.sortByMembers')}</SelectItem>
-                    <SelectItem value="products">{t('marketplace.sortByProducts')}</SelectItem>
-                    <SelectItem value="name">{t('marketplace.sortByName')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                <SelectTrigger className="h-10 text-sm">
+                  <SelectValue placeholder="全部平台" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部平台</SelectItem>
+                  <SelectItem value="telegram">Telegram</SelectItem>
+                  <SelectItem value="discord">Discord</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={value => setSortBy(value as SortMode)}>
+                <SelectTrigger className="h-10 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="featured">精选优先</SelectItem>
+                  <SelectItem value="products">{t('marketplace.sortByProducts')}</SelectItem>
+                  <SelectItem value="sellers">卖家最多</SelectItem>
+                  <SelectItem value="updated">最近更新</SelectItem>
+                  <SelectItem value="name">{t('marketplace.sortByName')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </Card>
 
-          {/* Featured Marketplaces */}
-          {featuredMarketplaces.length > 0 && !searchQuery && selectedCategory === 'all' && (
-            <section className="mb-6 sm:mb-12">
-              <h2 className="text-lg sm:text-2xl font-bold text-foreground mb-3 sm:mb-6">
-                {t('marketplace.featuredMarketplaces')}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          {loading && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="h-72 animate-pulse bg-muted/50" />
+              ))}
+            </div>
+          )}
+
+          {!loading && error && (
+            <Card className="p-8 text-center">
+              <VStack gap="md" align="center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                  <RefreshCw className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="mb-2 text-lg font-semibold text-foreground">社区市场暂时不可用</h3>
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                </div>
+                <Button variant="outline" onClick={refresh}>
+                  重新加载
+                </Button>
+              </VStack>
+            </Card>
+          )}
+
+          {!loading && !error && showFeatured && (
+            <section className="mb-8 sm:mb-12">
+              <HStack align="center" gap="sm" className="mb-4">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+                  {t('marketplace.featuredMarketplaces')}
+                </h2>
+              </HStack>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {featuredMarketplaces.map(marketplace => (
-                  <Link key={marketplace.id} href={`/marketplace/${marketplace.slug}`}>
-                    <Card className="overflow-hidden transition-all hover:shadow-xl active:scale-[0.99]">
-                      {/* Banner */}
-                      <div className="h-24 sm:h-32 overflow-hidden relative">
-                        <img
-                          src={marketplace.banner}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        <span className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary text-primary-foreground text-xs font-medium rounded">
-                          {t('marketplace.featured')}
-                        </span>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-3 sm:p-4 relative">
-                        {/* Logo */}
-                        <div className="absolute -top-6 sm:-top-8 left-3 sm:left-4">
-                          <img
-                            src={marketplace.logo}
-                            alt={marketplace.name}
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-card border-3 sm:border-4 border-white dark:border-background shadow-lg"
-                          />
-                        </div>
-
-                        <div className="pt-4 sm:pt-6">
-                          <h3 className="text-base sm:text-lg font-bold text-foreground mb-1 sm:mb-2">
-                            {marketplace.name}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-3 sm:mb-4">
-                            {marketplace.shortDescription}
-                          </p>
-
-                          {/* Stats */}
-                          <HStack gap="md" className="sm:gap-6">
-                            <VStack gap="none" align="center">
-                              <span className="font-bold text-sm sm:text-base text-foreground">
-                                {marketplace.memberCount.toLocaleString()}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {t('marketplace.members')}
-                              </span>
-                            </VStack>
-                            <VStack gap="none" align="center">
-                              <span className="font-bold text-sm sm:text-base text-foreground">
-                                {marketplace.sellerCount}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {t('marketplace.sellers')}
-                              </span>
-                            </VStack>
-                            <VStack gap="none" align="center">
-                              <span className="font-bold text-sm sm:text-base text-foreground">
-                                {marketplace.productCount}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {t('marketplace.products')}
-                              </span>
-                            </VStack>
-                          </HStack>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
+                  <MarketplaceCard key={marketplace.publicID} marketplace={marketplace} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* All Marketplaces */}
-          <section>
-            <HStack justify="between" align="center" className="mb-3 sm:mb-6">
-              <h2 className="text-lg sm:text-2xl font-bold text-foreground">
-                {searchQuery || selectedCategory !== 'all'
-                  ? t('marketplace.searchResults')
-                  : t('marketplace.allMarketplaces')}
-              </h2>
-              <Link href="/marketplace/create">
-                <Button size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
-                  {t('marketplace.createMarketplace')}
-                </Button>
-              </Link>
-            </HStack>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-              {filteredMarketplaces.map(marketplace => (
-                <Link key={marketplace.id} href={`/marketplace/${marketplace.slug}`}>
-                  <Card className="transition-all hover:shadow-lg active:scale-[0.99] h-full p-3 sm:p-4">
-                    <HStack gap="sm" align="start" className="sm:gap-4">
-                      <img
-                        src={marketplace.logo}
-                        alt={marketplace.name}
-                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-muted flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <HStack gap="xs" align="center" className="mb-0.5 sm:mb-1 sm:gap-2">
-                          <h3 className="font-bold text-sm sm:text-base text-foreground">
-                            {marketplace.name}
-                          </h3>
-                          {marketplace.featured && (
-                            <span className="px-1.5 sm:px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
-                              {t('marketplace.featured')}
-                            </span>
-                          )}
-                        </HStack>
-                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-2 sm:mb-3">
-                          {marketplace.shortDescription}
-                        </p>
-                        <HStack
-                          gap="sm"
-                          className="text-xs sm:text-sm text-muted-foreground sm:gap-4"
-                        >
-                          <span>
-                            {marketplace.memberCount.toLocaleString()} {t('marketplace.members')}
-                          </span>
-                          <span className="hidden sm:inline">•</span>
-                          <span className="hidden sm:inline">
-                            {marketplace.productCount} {t('marketplace.products')}
-                          </span>
-                        </HStack>
-                        <HStack gap="xs" className="mt-1.5 sm:mt-2 sm:gap-2">
-                          {marketplace.categories.slice(0, 3).map(cat => (
-                            <span
-                              key={cat}
-                              className="text-xs px-1.5 sm:px-2 py-0.5 bg-muted text-muted-foreground rounded"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </HStack>
-                      </div>
-                    </HStack>
-                  </Card>
+          {!loading && !error && (
+            <section>
+              <HStack justify="between" align="center" className="mb-4 gap-3">
+                <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+                  {searchQuery || selectedPlatform !== 'all'
+                    ? t('marketplace.searchResults')
+                    : t('marketplace.allMarketplaces')}
+                </h2>
+                <Link href="/store/settings/sales-channels">
+                  <Button size="sm">从群组创建/申请</Button>
                 </Link>
-              ))}
-            </div>
+              </HStack>
 
-            {filteredMarketplaces.length === 0 && (
-              <Card className="text-center py-12">
-                <VStack gap="md" align="center">
-                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8 text-muted-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {t('marketplace.noMarketplacesFound')}
-                  </h3>
-                  <p className="text-muted-foreground">{t('empty.tryAdjustingFilters')}</p>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSelectedCategory('all');
-                    }}
-                  >
-                    {t('marketplace.clearFilters')}
-                  </Button>
-                </VStack>
-              </Card>
-            )}
-          </section>
+              {filteredMarketplaces.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {filteredMarketplaces.map(marketplace => (
+                    <MarketplaceCard key={marketplace.publicID} marketplace={marketplace} compact />
+                  ))}
+                </div>
+              ) : (
+                <Card className="py-12 text-center">
+                  <VStack gap="md" align="center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                      <Store className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="mb-2 text-lg font-semibold text-foreground">
+                        {marketplaces.length === 0
+                          ? '暂无公开社区市场'
+                          : t('marketplace.noMarketplacesFound')}
+                      </h3>
+                      <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                        {marketplaces.length === 0
+                          ? '首批市场需要由运营激活后才会公开展示。你可以先从 Telegram 或 Discord 绑定真实社区。'
+                          : t('empty.tryAdjustingFilters')}
+                      </p>
+                    </div>
+                    <HStack gap="sm" className="flex-wrap justify-center">
+                      {marketplaces.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setSearchQuery('');
+                            setSelectedPlatform('all');
+                          }}
+                        >
+                          {t('marketplace.clearFilters')}
+                        </Button>
+                      )}
+                      <Link href="/store/settings/sales-channels">
+                        <Button variant="outline">从群组创建/申请</Button>
+                      </Link>
+                    </HStack>
+                  </VStack>
+                </Card>
+              )}
+            </section>
+          )}
+
+          {!loading && !error && filteredMarketplaces.length > 0 && (
+            <div className="mt-8 grid grid-cols-1 gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+              <HStack gap="sm">
+                <Users className="h-4 w-4 text-primary" />
+                <span>成员资格由 Telegram/Discord 验证</span>
+              </HStack>
+              <HStack gap="sm">
+                <Package className="h-4 w-4 text-primary" />
+                <span>只统计已批准且可见的卖家商品</span>
+              </HStack>
+              <HStack gap="sm">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <span>公开展示需运营激活</span>
+              </HStack>
+            </div>
+          )}
         </Container>
       </main>
 

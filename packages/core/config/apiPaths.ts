@@ -500,6 +500,9 @@ export const HOSTING_API = {
     `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/${sellerId}/review`,
   GROUP_MARKETPLACE_CHECK_ADMIN: (platform: string, chatId: string) =>
     `/platform/v1/group-marketplace/${platform}/${chatId}/check-admin`,
+  GROUP_MARKETPLACE_GROUPS: '/platform/v1/group-marketplace/groups',
+  GROUP_MARKETPLACE_PUBLIC_DETAIL: (identifier: string) =>
+    `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}`,
 
   // --- Marketplaces ---
   MARKETPLACES: '/platform/v1/marketplaces',
