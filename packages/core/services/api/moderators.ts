@@ -2,8 +2,8 @@
  * Moderators API Service
  * 仲裁员 API 服务
  *
- * 后端 API：GET /v1/moderators?include=profile
- * 返回 Profile[] 数组，每个 Profile 包含 moderatorInfo 字段
+ * 店铺仲裁人策略来自 StorePolicy；仲裁员目录仍通过 Node/Search
+ * profile 能力补齐展示信息。
  */
 
 import { apiClient } from './client';
@@ -11,6 +11,7 @@ import { NODE_API, HOSTING_API } from '../../config/apiPaths';
 import { truncatePeerId } from '../../utils/identity';
 import { fetchVerifiedModerators } from '../verifiedModerators';
 import { authGet, authPost, authPut, authDel, publicGet, publicPost, nodeAuthGet } from './helpers';
+import { fetchStoreMetadata, getMetadataEntry } from './storeMetadata';
 
 // Types
 export interface Moderator {
@@ -70,6 +71,18 @@ interface StorePolicyModeratorEntry {
 interface StorePolicyPublic {
   revision: number;
   moderators?: StorePolicyModeratorEntry[];
+}
+
+function normalizeStoreModeratorEntries(
+  value: StorePolicyModeratorEntry[] | StorePolicyPublic | null | undefined
+): StorePolicyModeratorEntry[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (value && typeof value === 'object' && Array.isArray(value.moderators)) {
+    return value.moderators;
+  }
+  return [];
 }
 
 /**
@@ -270,10 +283,21 @@ async function getStoreModeratorEntries(
       const policy = await publicGet<StorePolicyPublic>(
         NODE_API.STORE_POLICY_PUBLISHED(vendorPeerID)
       );
-      return policy.moderators || [];
+      return normalizeStoreModeratorEntries(policy);
     }
-    return await authGet<StorePolicyModeratorEntry[]>(NODE_API.STORE_POLICY_MODERATORS);
+    const response = await authGet<StorePolicyModeratorEntry[] | StorePolicyPublic>(
+      NODE_API.STORE_POLICY_MODERATORS
+    );
+    return normalizeStoreModeratorEntries(response);
   } catch (error) {
+    if (vendorPeerID) {
+      const metadata = await fetchStoreMetadata(vendorPeerID, ['store_policy']);
+      const policy = getMetadataEntry<StorePolicyPublic>(metadata, 'store_policy');
+      const entries = normalizeStoreModeratorEntries(policy);
+      if (policy || entries.length > 0) {
+        return entries;
+      }
+    }
     console.warn('Error fetching store policy moderators:', error);
     return [];
   }

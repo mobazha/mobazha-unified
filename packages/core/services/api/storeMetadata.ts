@@ -7,7 +7,12 @@
 import { SEARCH_API } from '../../config/apiPaths';
 import { searchSafeGet } from './helpers';
 
-export type StoreMetadataType = 'collections' | 'discounts' | 'payment_methods' | 'storefront';
+export type StoreMetadataType =
+  | 'collections'
+  | 'discounts'
+  | 'payment_methods'
+  | 'storefront'
+  | 'store_policy';
 
 export interface StoreMetadataEntry {
   metadataType: StoreMetadataType;
