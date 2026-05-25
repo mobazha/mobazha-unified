@@ -4,6 +4,23 @@ import React from 'react';
 
 vi.mock('@mobazha/core', () => ({
   getExplorerResourceUrl: () => undefined,
+  useI18n: () => ({
+    t: (key: string) =>
+      (
+        ({
+          'order.settlement.actionConfirm': 'Confirm',
+          'order.settlement.hintSubmitted': 'Waiting for confirmation',
+          'order.settlement.hintConfirmConfirmed': 'Confirmed',
+          'order.settlement.labelConfirmations': 'Confirmations',
+          'order.settlement.labelTxHash': 'Transaction',
+          'order.settlement.labelUpdated': 'Updated',
+          'order.settlement.stateConfirmed': 'Confirmed',
+          'order.settlement.stateSubmitted': 'Submitted',
+          'order.settlement.technicalDetails': 'Technical details',
+          'order.settlement.title': 'Settlement',
+        }) as Record<string, string>
+      )[key] || key,
+  }),
 }));
 
 import { OrderSettlementCard } from '@/components/Order/cards/OrderSettlementCard';
