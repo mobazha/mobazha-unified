@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from './client';
+import { hostingGet, hostingPost } from './helpers';
 import type {
   Marketplace,
   MarketplaceListParams,
@@ -17,6 +18,7 @@ import type {
   MarketplaceActivityLog,
   PublicGroupMarketplaceDetail,
   PublicGroupMarketplaceListResponse,
+  PublicMarketplaceSellerApplication,
   CreateMarketplaceRequest,
   UpdateMarketplaceRequest,
   SellerApplicationRequest,
@@ -59,6 +61,29 @@ export async function getPublicGroupMarketplaceDetail(
   return apiClient.get<PublicGroupMarketplaceDetail>(
     `${HOSTING_API.GROUP_MARKETPLACE_PUBLIC_DETAIL(identifier)}${query ? `?${query}` : ''}`
   );
+}
+
+/**
+ * 获取当前租户在公开社区市场的卖家申请状态（通过 slug 或 publicID，不暴露 chatID）。
+ */
+export async function getPublicMarketplaceSellerApplication(
+  identifier: string
+): Promise<PublicMarketplaceSellerApplication> {
+  return hostingGet<PublicMarketplaceSellerApplication>(
+    HOSTING_API.GROUP_MARKETPLACE_PUBLIC_SELLER_APPLICATION(identifier)
+  );
+}
+
+/**
+ * 向公开社区市场提交卖家申请（通过 slug 或 publicID）。
+ */
+export async function applyAsPublicMarketplaceSeller(
+  identifier: string,
+  productGroupIDs: number[]
+): Promise<unknown> {
+  return hostingPost(HOSTING_API.GROUP_MARKETPLACE_PUBLIC_SELLER_APPLY(identifier), {
+    productGroupIDs,
+  });
 }
 
 /**

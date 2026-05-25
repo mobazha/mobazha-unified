@@ -503,6 +503,10 @@ export const HOSTING_API = {
   GROUP_MARKETPLACE_GROUPS: '/platform/v1/group-marketplace/groups',
   GROUP_MARKETPLACE_PUBLIC_DETAIL: (identifier: string) =>
     `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}`,
+  GROUP_MARKETPLACE_PUBLIC_SELLER_APPLICATION: (identifier: string) =>
+    `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}/seller-application`,
+  GROUP_MARKETPLACE_PUBLIC_SELLER_APPLY: (identifier: string) =>
+    `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}/sellers/apply`,
 
   // --- Marketplaces ---
   MARKETPLACES: '/platform/v1/marketplaces',

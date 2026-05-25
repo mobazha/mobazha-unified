@@ -38,6 +38,9 @@ export * from './priceUtils';
 // 身份展示工具
 export * from './identity';
 
+// 社区市场展示工具
+export * from './communityMarketplace';
+
 // JSON *ID 字段 ingress 归一化
 export * from './normalizeIds';
 
