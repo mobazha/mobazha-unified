@@ -1050,7 +1050,7 @@ export const en: TranslationResource = {
       accept: 'Accept Order',
       decline: 'Decline',
       ship: 'Ship Order',
-      deliverDigital: 'Deliver access',
+      deliverDigital: 'Deliver digital content',
       syncDelivery: 'Sync delivery',
       deliveryPending: 'Delivery pending',
       refund: 'Refund',
