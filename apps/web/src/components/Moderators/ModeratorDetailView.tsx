@@ -17,6 +17,8 @@ import {
   isStoreSettingsReturn,
   MODERATOR_ROUTES,
 } from '@/lib/routes/moderators';
+import { ADDED_TO_STORE_BUTTON_CLASS } from '@/components/Moderators/moderatorDisplay';
+import { cn } from '@/lib/utils';
 
 type DetailTab = 'about' | 'reviews' | 'terms';
 
@@ -25,15 +27,29 @@ function formatFeePercent(percentage?: number): string {
   return `${percentage}%`;
 }
 
-export function ModeratorDetailView({ peerID }: { peerID: string }) {
+export interface ModeratorDetailViewProps {
+  peerID: string;
+  returnToOverride?: string;
+  backHrefOverride?: string;
+}
+
+export function ModeratorDetailView({
+  peerID,
+  returnToOverride,
+  backHrefOverride,
+}: ModeratorDetailViewProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get('returnTo') || MODERATOR_ROUTES.storeSettings;
-  const fromStoreFlow = searchParams.get('intent') === 'add-to-store';
+  const returnTo =
+    returnToOverride || searchParams.get('returnTo') || MODERATOR_ROUTES.storeSettings;
+  const fromStoreFlow = Boolean(returnToOverride) || searchParams.get('intent') === 'add-to-store';
   const fromStoreSettings = isStoreSettingsReturn(returnTo);
-  const backNav = resolveModeratorBackNav(searchParams);
+  const resolvedBackNav = resolveModeratorBackNav(searchParams);
+  const backNav = backHrefOverride
+    ? { href: backHrefOverride, labelKey: 'moderator.backToBrowse' as const }
+    : resolvedBackNav;
 
   const { moderator, reviews, isLoading, isReviewsLoading, error } = useModeratorDetail(peerID);
   const { moderators: storeModerators, addModerator, isSaving } = useStoreModerators();
@@ -304,7 +320,11 @@ export function ModeratorDetailView({ peerID }: { peerID: string }) {
               </p>
             </div>
             {isInStore ? (
-              <Button variant="secondary" className="w-full mt-4 min-h-[44px]" disabled>
+              <Button
+                variant="outline"
+                className={cn('w-full mt-4 min-h-[44px]', ADDED_TO_STORE_BUTTON_CLASS)}
+                disabled
+              >
                 <Check className="w-4 h-4 mr-2" />
                 {fromStoreSettings ? t('moderator.inYourStore') : t('moderator.addedToStore')}
               </Button>

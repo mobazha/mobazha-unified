@@ -3,6 +3,7 @@
 export const MODERATOR_ROUTES = {
   directory: '/moderators',
   storeSettings: '/admin/settings/moderators',
+  storeDirectory: '/admin/settings/moderators/find',
 } as const;
 
 export type ModeratorFlowContext = {
@@ -36,11 +37,24 @@ export function moderatorDirectoryHref(ctx?: ModeratorFlowContext): string {
 export function moderatorDirectoryAddFromStoreHref(
   returnTo: string = MODERATOR_ROUTES.storeSettings
 ): string {
-  return moderatorDirectoryHref({ intent: 'add-to-store', returnTo });
+  return `${MODERATOR_ROUTES.storeDirectory}${buildModeratorQuery({
+    intent: 'add-to-store',
+    returnTo,
+  })}`;
 }
 
 export function moderatorDetailHref(peerID: string, ctx?: ModeratorFlowContext): string {
   return `/moderators/${encodeURIComponent(peerID)}${buildModeratorQuery(ctx)}`;
+}
+
+export function storeModeratorDetailHref(
+  peerID: string,
+  returnTo: string = MODERATOR_ROUTES.storeSettings
+): string {
+  return `${MODERATOR_ROUTES.storeDirectory}/${encodeURIComponent(peerID)}${buildModeratorQuery({
+    intent: 'add-to-store',
+    returnTo,
+  })}`;
 }
 
 export function resolveModeratorBackNav(searchParams: URLSearchParams): {
