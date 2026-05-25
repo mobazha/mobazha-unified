@@ -104,9 +104,12 @@ export interface UseOrderDetailPageReturn {
     hasPreconfiguredAssets: boolean;
     manualFallbackAllowed: boolean;
     canSyncDelivery: boolean;
+    canRetryDelivery: boolean;
     status: DigitalDeliveryStatus['status'] | null;
     error: string | null;
     syncDelivery: () => Promise<boolean>;
+    retryDelivery: () => Promise<boolean>;
+    refreshStatus: () => void;
   };
 }
 
@@ -653,6 +656,48 @@ export function useOrderDetailPage(
     toast,
   ]);
 
+  const retryDigitalDelivery = useCallback(async (): Promise<boolean> => {
+    const deliveryStatus = sellerDigitalDeliveryState.status;
+    if (!isSellerDigitalOrder || deliveryStatus?.status !== 'ready') {
+      return false;
+    }
+
+    setSellerDigitalDeliveryState(prev => ({ ...prev, syncing: true }));
+    try {
+      const status = await digitalAssetsApi.retryDigitalDelivery(orderId);
+      setSellerDigitalDeliveryState(prev => ({
+        ...prev,
+        status,
+        error: null,
+      }));
+      const delivered = status.status === 'delivered';
+      toast({
+        title: delivered
+          ? t('order.digitalDelivery.retrySuccess')
+          : status.status === 'manual_required'
+            ? t('order.digitalDelivery.manualTitle')
+            : t('order.digitalDelivery.pendingTitle'),
+        description: delivered
+          ? t('order.digitalDelivery.retrySuccessDesc')
+          : status.status === 'manual_required'
+            ? t('order.digitalDelivery.manualDesc')
+            : t('order.digitalDelivery.pendingDesc'),
+        variant: delivered ? undefined : 'destructive',
+      });
+      setTimeout(() => refetch(), 500);
+      return delivered;
+    } catch (err) {
+      toast({
+        title: t('order.digitalDelivery.retryFailed'),
+        description: err instanceof Error ? err.message : t('order.digitalDelivery.retryFailed'),
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setSellerDigitalDeliveryState(prev => ({ ...prev, syncing: false }));
+    }
+  }, [isSellerDigitalOrder, orderId, refetch, sellerDigitalDeliveryState.status, t, toast]);
+
   const refreshDeliveryStatus = useCallback(() => {
     setDeliveryStatusVersion(v => v + 1);
   }, []);
@@ -663,6 +708,7 @@ export function useOrderDetailPage(
     const hasPreconfiguredAssets =
       Boolean(deliveryStatus?.preconfiguredAssetHint) || assetCount > 0;
     const canSyncDelivery = deliveryStatus?.status === 'delivered';
+    const canRetryDelivery = deliveryStatus?.status === 'ready' && hasPreconfiguredAssets;
     return {
       isDigitalOrder: Boolean(isSellerDigitalOrder),
       listingSlug: sellerDigitalListingSlug || deliveryStatus?.listingSlugs?.[0] || undefined,
@@ -673,9 +719,11 @@ export function useOrderDetailPage(
       hasPreconfiguredAssets,
       manualFallbackAllowed: deliveryStatus?.manualFallbackAllowed === true,
       canSyncDelivery,
+      canRetryDelivery,
       status: deliveryStatus?.status || null,
       error: sellerDigitalDeliveryState.error,
       syncDelivery: syncDigitalDelivery,
+      retryDelivery: retryDigitalDelivery,
       refreshStatus: refreshDeliveryStatus,
     };
   }, [
@@ -685,6 +733,7 @@ export function useOrderDetailPage(
     sellerDigitalDeliveryState.status,
     sellerDigitalDeliveryState.syncing,
     sellerDigitalListingSlug,
+    retryDigitalDelivery,
     syncDigitalDelivery,
     refreshDeliveryStatus,
   ]);

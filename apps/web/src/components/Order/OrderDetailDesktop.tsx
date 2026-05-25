@@ -268,11 +268,16 @@ export function OrderDetailDesktop({
             void sellerDigitalDelivery.syncDelivery();
             break;
           }
+          if (sellerDigitalDelivery.canRetryDelivery) {
+            void sellerDigitalDelivery.retryDelivery();
+            break;
+          }
           if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.manualFallbackAllowed) {
             setShowShipDialog(true);
             break;
           }
           if (sellerDigitalDelivery.isDigitalOrder) {
+            sellerDigitalDelivery.refreshStatus();
             toast({
               title: t('order.digitalDelivery.pendingTitle'),
               description: t('order.digitalDelivery.pendingDesc'),
@@ -856,6 +861,7 @@ export function OrderDetailDesktop({
           hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
           digitalDeliveryStatus={sellerDigitalDelivery.status}
           canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+          canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
           manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
           isTransitioning={isTransitioning}
           onAction={handleOrderAction}

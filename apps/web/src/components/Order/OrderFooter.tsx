@@ -35,6 +35,7 @@ export interface OrderFooterProps {
   hasPreconfiguredDigitalAssets?: boolean;
   digitalDeliveryStatus?: string | null;
   canSyncDigitalDelivery?: boolean;
+  canRetryDigitalDelivery?: boolean;
   manualDigitalFallbackAllowed?: boolean;
   isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
@@ -63,6 +64,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   hasPreconfiguredDigitalAssets = false,
   digitalDeliveryStatus,
   canSyncDigitalDelivery = false,
+  canRetryDigitalDelivery = false,
   manualDigitalFallbackAllowed = false,
   isTransitioning = false,
   onAction,
@@ -109,9 +111,11 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
         contractType === 'DIGITAL_GOOD'
           ? canSyncDigitalDelivery
             ? t('order.actions.syncDelivery')
-            : manualDigitalFallbackAllowed
-              ? t('order.actions.deliverDigital')
-              : t('order.actions.deliveryPending')
+            : canRetryDigitalDelivery
+              ? t('order.actions.retryDigitalDelivery')
+              : manualDigitalFallbackAllowed
+                ? t('order.actions.deliverDigital')
+                : t('order.actions.deliveryPending')
           : t('order.actions.ship'),
       Refund: t('order.actions.refund'),
       Claim: t('order.actions.claim'),
@@ -173,6 +177,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       hasPreconfiguredDigitalAssets,
       digitalDeliveryStatus,
       canSyncDigitalDelivery,
+      canRetryDigitalDelivery,
       manualDigitalFallbackAllowed,
     });
 

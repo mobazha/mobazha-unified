@@ -76,6 +76,10 @@ export function getDigitalDeliveryStatus(
     : nodeAuthGet<DigitalDeliveryStatus>(path);
 }
 
+export function retryDigitalDelivery(orderID: string): Promise<DigitalDeliveryStatus> {
+  return authPost<DigitalDeliveryStatus>(NODE_API.ORDER_DIGITAL_DELIVERY_RETRY(orderID));
+}
+
 /**
  * Build the download URL for a file asset. The signed URL is included in
  * the `BuyerAssetEntry.downloadURL` field — callers typically just open

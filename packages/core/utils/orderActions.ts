@@ -474,15 +474,18 @@ export function getActionButtonConfig(
     hasPreconfiguredDigitalAssets?: boolean;
     digitalDeliveryStatus?: string | null;
     canSyncDigitalDelivery?: boolean;
+    canRetryDigitalDelivery?: boolean;
     manualDigitalFallbackAllowed?: boolean;
   } = {}
 ): ActionButtonConfig {
   const isDigital = options.contractType === 'DIGITAL_GOOD';
   const digitalShipLabel = options.canSyncDigitalDelivery
     ? 'Sync delivery'
-    : options.manualDigitalFallbackAllowed
-      ? 'Deliver access'
-      : 'Delivery pending';
+    : options.canRetryDigitalDelivery
+      ? 'Deliver downloads'
+      : options.manualDigitalFallbackAllowed
+        ? 'Deliver access'
+        : 'Delivery pending';
   const configs: Record<OrderAction, ActionButtonConfig> = {
     Pay: {
       label: 'Pay Now',
