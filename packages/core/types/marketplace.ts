@@ -325,6 +325,13 @@ export interface PublicGroupMarketplaceDetail {
   listings: PublicMarketplaceListings;
 }
 
+/** Current tenant's seller application for a public community marketplace. */
+export interface PublicMarketplaceSellerApplication {
+  hasApplication: boolean;
+  status?: 'pending' | 'approved' | 'rejected' | 'suspended' | string;
+  productGroupIDs?: number[];
+}
+
 // 商品列表参数
 export interface MarketplaceProductListParams {
   marketplaceId: string;

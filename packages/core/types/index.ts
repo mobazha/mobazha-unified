@@ -448,6 +448,7 @@ export type {
   PublicGroupMarketplace,
   PublicGroupMarketplaceListResponse,
   PublicGroupMarketplaceDetail,
+  PublicMarketplaceSellerApplication,
   PublicMarketplaceListingRef,
   PublicMarketplaceSeller,
   PublicMarketplaceProductGroup,

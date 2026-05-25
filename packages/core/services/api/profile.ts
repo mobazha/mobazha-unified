@@ -7,7 +7,7 @@ import { get, post, put, ApiError, isStoreUnavailableError } from './client';
 import { getGatewayUrl, getBuyerGatewayUrl, getSearchUrl, getAuthHeaders } from './config';
 import { isStandaloneMode } from '../../config/env';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
-import { authGet, authPost, authPut, publicGet, searchPost } from './helpers';
+import { authGet, authPost, authPut, publicGet, publicPost, searchPost } from './helpers';
 import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
 
 /**
@@ -62,6 +62,83 @@ async function fetchProfileFromSearch(peerID: string): Promise<UserProfile | nul
   } catch {
     return null;
   }
+}
+
+interface FetchProfilesBatchItem {
+  id?: string;
+  peerID: string;
+  profile?: UserProfile;
+}
+
+export interface PublicProfileSnapshot {
+  peerID: string;
+  name: string;
+  handle?: string;
+  avatarHashes?: UserProfile['avatarHashes'];
+  shortDescription?: string;
+}
+
+function snapshotFromProfile(peerID: string, profile: UserProfile): PublicProfileSnapshot | null {
+  const name = profile.name?.trim() || profile.handle?.trim() || '';
+  if (!name) return null;
+  return {
+    peerID,
+    name,
+    handle: profile.handle,
+    avatarHashes: profile.avatarHashes,
+    shortDescription: profile.shortDescription,
+  };
+}
+
+/**
+ * 批量获取公开店铺资料（POST /v1/profiles/batch，解析嵌套 profile 信封）。
+ */
+export async function fetchPublicProfilesBatch(
+  peerIDs: string[]
+): Promise<PublicProfileSnapshot[]> {
+  const unique = [...new Set(peerIDs.filter(Boolean))];
+  if (!unique.length) return [];
+
+  const snapshots: PublicProfileSnapshot[] = [];
+  const missing: string[] = [];
+
+  try {
+    const data = await publicPost<FetchProfilesBatchItem[]>(NODE_API.PROFILES_BATCH, unique);
+    if (Array.isArray(data)) {
+      const byPeer = new Map<string, UserProfile>();
+      for (const item of data) {
+        const pid = item.profile?.peerID || item.peerID;
+        if (pid && item.profile) {
+          byPeer.set(pid, item.profile);
+        }
+      }
+      for (const peerID of unique) {
+        const profile = byPeer.get(peerID);
+        if (profile) {
+          const snap = snapshotFromProfile(peerID, profile);
+          if (snap) {
+            snapshots.push(snap);
+            continue;
+          }
+        }
+        missing.push(peerID);
+      }
+    } else {
+      missing.push(...unique);
+    }
+  } catch {
+    missing.push(...unique);
+  }
+
+  if (!missing.length) return snapshots;
+
+  const fallbacks = await Promise.all(
+    missing.map(async peerID => {
+      const profile = await getProfile(peerID);
+      return profile ? snapshotFromProfile(peerID, profile) : null;
+    })
+  );
+  return [...snapshots, ...fallbacks.filter((p): p is PublicProfileSnapshot => p !== null)];
 }
 
 /**

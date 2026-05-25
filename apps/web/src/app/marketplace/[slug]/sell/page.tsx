@@ -1,85 +1,166 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
+import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
+import { MarketplaceLogo } from '@/components/CommunityMarketplace';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input-compat';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
-import { useCurrency, useI18n } from '@mobazha/core';
+import { Badge } from '@/components/ui/badge';
+import {
+  useCommunityMarketplaceSell,
+  useProductGroups,
+  useUserStore,
+  useI18n,
+  getCasdoorUserId,
+  marketplacePlatformKey,
+  marketplaceHref,
+  isHosted,
+  startCasdoorLogin,
+  type ProductGroup,
+} from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
+import { ChevronLeft, Loader2, Package, Store } from 'lucide-react';
 
-// Types
-interface SellerProfile {
-  bio: string;
-  location: string;
-  contactEmail: string;
-  website: string;
-  businessName: string;
-  businessType: string;
+function statusLabel(t: (key: string) => string, status?: string): string {
+  switch (status) {
+    case 'approved':
+      return t('marketplace.sell.statusApproved');
+    case 'rejected':
+      return t('marketplace.sell.statusRejected');
+    case 'suspended':
+      return t('marketplace.sell.statusSuspended');
+    case 'pending':
+    default:
+      return t('marketplace.sell.statusPending');
+  }
+}
+
+function ProductGroupPicker({
+  groups,
+  selectedIds,
+  onToggle,
+  disabled,
+  itemCountLabel,
+}: {
+  groups: ProductGroup[];
+  selectedIds: number[];
+  onToggle: (id: number) => void;
+  disabled?: boolean;
+  itemCountLabel: (count: number) => string;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {groups.map(group => {
+        const selected = selectedIds.includes(group.id);
+        return (
+          <button
+            key={group.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onToggle(group.id)}
+            className={`rounded-lg border-2 p-4 text-left transition-all ${
+              selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+            } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+          >
+            <HStack gap="sm" align="start">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                  selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                <Package className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-foreground">{group.name}</p>
+                {group.description && (
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                    {group.description}
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {itemCountLabel(group.itemCount ?? 0)}
+                </p>
+              </div>
+            </HStack>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function MarketplaceSellPage() {
   const params = useParams();
   const router = useRouter();
-  const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { t } = useI18n();
   const { toast } = useToast();
-  const slug = params.slug as string;
+  const { isAuthenticated } = useUserStore();
 
+  const slugParam = params.slug;
+  const identifier = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+
+  const { marketplace, application, loading, error, submitApplication } =
+    useCommunityMarketplaceSell(identifier);
+
+  const marketHref = marketplace
+    ? marketplaceHref(marketplace.slug, marketplace.publicID)
+    : `/marketplace/${identifier}`;
+
+  const casdoorUserId = getCasdoorUserId();
+  const productGroupUserID = casdoorUserId || '';
+  const {
+    groups: productGroups,
+    loading: groupsLoading,
+    loadGroups,
+  } = useProductGroups({ userID: productGroupUserID, autoLoad: false });
+
+  const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
   const [isApplying, setIsApplying] = useState(false);
-  const [applicationMessage, setApplicationMessage] = useState('');
-  const [profile, setProfile] = useState<SellerProfile>({
-    bio: '',
-    location: '',
-    contactEmail: '',
-    website: '',
-    businessName: '',
-    businessType: 'individual',
-  });
 
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  useEffect(() => {
+    if (isAuthenticated && productGroupUserID) {
+      void loadGroups(productGroupUserID);
+    }
+  }, [isAuthenticated, productGroupUserID, loadGroups]);
 
-  // Mock user products
-  const userProducts = [
-    {
-      id: 'up1',
-      title: 'Vintage Camera',
-      image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop',
-      price: 199.99,
-    },
-    {
-      id: 'up2',
-      title: 'Leather Wallet',
-      image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=200&h=200&fit=crop',
-      price: 49.99,
-    },
-    {
-      id: 'up3',
-      title: 'Wireless Speaker',
-      image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=200&h=200&fit=crop',
-      price: 89.99,
-    },
-  ];
+  useEffect(() => {
+    if (application?.productGroupIDs?.length) {
+      setSelectedGroupIds(application.productGroupIDs);
+    }
+  }, [application?.productGroupIDs]);
+
+  const applicationStatus = application?.status;
+  const isApproved = applicationStatus === 'approved';
+  const canSubmit = selectedGroupIds.length > 0 && !isApproved && !isApplying;
+
+  const platformName = marketplace ? t(marketplacePlatformKey(marketplace.platform)) : '';
+
+  const toggleGroup = (id: number) => {
+    if (isApproved) return;
+    setSelectedGroupIds(prev =>
+      prev.includes(id) ? prev.filter(gid => gid !== id) : [...prev, id]
+    );
+  };
 
   const handleApply = async () => {
+    if (!canSubmit) return;
     setIsApplying(true);
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await submitApplication(selectedGroupIds);
       toast({
         title: t('common.success'),
         description: t('marketplace.applicationSubmitted'),
         variant: 'success',
       });
-      router.push(`/marketplace/${slug}`);
-    } catch (error) {
+      router.push(marketHref);
+    } catch (err) {
       toast({
         title: t('common.error'),
-        description: (error as Error).message,
+        description: err instanceof Error ? err.message : t('common.error'),
         variant: 'destructive',
       });
     } finally {
@@ -87,287 +168,221 @@ export default function MarketplaceSellPage() {
     }
   };
 
-  const toggleProduct = (productId: string) => {
-    setSelectedProducts(prev =>
-      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
-    );
-  };
+  const groupsWithItems = useMemo(
+    () => productGroups.filter(g => (g.itemCount ?? 0) > 0),
+    [productGroups]
+  );
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <MobilePageHeader title={t('marketplace.sell.title')} />
 
-      <main className="py-8">
+      <main className="py-6 sm:py-8">
         <Container size="lg">
-          {/* Back Link */}
           <Link
-            href={`/marketplace/${slug}`}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
+            href={marketHref}
+            className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <ChevronLeft className="h-4 w-4" />
             {t('marketplace.sell.backToMarketplace')}
           </Link>
 
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {t('marketplace.sell.title')}
-            </h1>
-            <p className="text-muted-foreground">{t('marketplace.sell.subtitle')}</p>
-          </div>
+          {loading && (
+            <Card className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </Card>
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Seller Profile */}
-              <Card>
-                <h2 className="text-xl font-bold text-foreground mb-6">
-                  {t('marketplace.sell.sellerProfile')}
-                </h2>
+          {!loading && (error || !marketplace) && (
+            <Card className="p-8 text-center">
+              <Store className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {error || t('marketplace.detail.unavailableDesc')}
+              </p>
+              <Link href="/marketplace" className="mt-4 inline-block">
+                <Button variant="outline">{t('marketplace.title')}</Button>
+              </Link>
+            </Card>
+          )}
 
-                <VStack gap="lg">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      {t('marketplace.sell.bioLabel')}
-                    </label>
-                    <textarea
-                      value={profile.bio}
-                      onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
-                      rows={4}
-                      className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      placeholder={t('marketplace.sell.bioPlaceholder')}
-                    />
+          {!loading && marketplace && (
+            <>
+              <div className="mb-6">
+                <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
+                  {t('marketplace.sell.title')}
+                </h1>
+                <p className="text-sm text-muted-foreground sm:text-base">
+                  {t('marketplace.sell.subtitle')}
+                </p>
+              </div>
+
+              <Card className="mb-6 p-4 sm:p-5">
+                <HStack gap="md" align="start">
+                  <MarketplaceLogo
+                    name={marketplace.name}
+                    publicID={marketplace.publicID}
+                    logoURL={marketplace.logoURL}
+                    size="sm"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">
+                      {t('marketplace.sell.applyingTo')}
+                    </p>
+                    <h2 className="text-lg font-bold text-foreground">{marketplace.name}</h2>
+                    <Badge variant="secondary" className="mt-2">
+                      {platformName}
+                    </Badge>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        {t('marketplace.sell.locationLabel')}
-                      </label>
-                      <Input
-                        value={profile.location}
-                        onChange={e => setProfile(prev => ({ ...prev, location: e.target.value }))}
-                        placeholder={t('marketplace.sell.locationPlaceholder')}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        {t('marketplace.sell.emailLabel')}
-                      </label>
-                      <Input
-                        type="email"
-                        value={profile.contactEmail}
-                        onChange={e =>
-                          setProfile(prev => ({ ...prev, contactEmail: e.target.value }))
-                        }
-                        placeholder={t('marketplace.sell.emailPlaceholder')}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        {t('marketplace.sell.websiteLabel')}
-                      </label>
-                      <Input
-                        value={profile.website}
-                        onChange={e => setProfile(prev => ({ ...prev, website: e.target.value }))}
-                        placeholder={t('marketplace.sell.websitePlaceholder')}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        {t('marketplace.sell.businessTypeLabel')}
-                      </label>
-                      <Select
-                        value={profile.businessType}
-                        onValueChange={value =>
-                          setProfile(prev => ({ ...prev, businessType: value }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="individual">
-                            {t('marketplace.sell.businessTypeIndividual')}
-                          </SelectItem>
-                          <SelectItem value="business">
-                            {t('marketplace.sell.businessTypeBusiness')}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {profile.businessType === 'business' && (
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        {t('marketplace.sell.businessNameLabel')}
-                      </label>
-                      <Input
-                        value={profile.businessName}
-                        onChange={e =>
-                          setProfile(prev => ({ ...prev, businessName: e.target.value }))
-                        }
-                        placeholder={t('marketplace.sell.businessNamePlaceholder')}
-                      />
-                    </div>
-                  )}
-                </VStack>
+                </HStack>
               </Card>
 
-              {/* Application Message */}
-              <Card>
-                <h2 className="text-xl font-bold text-foreground mb-4">
-                  {t('marketplace.sell.applicationMessage')}
-                </h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  {t('marketplace.sell.applicationMessageDesc')}
-                </p>
-                <textarea
-                  value={applicationMessage}
-                  onChange={e => setApplicationMessage(e.target.value)}
-                  rows={4}
-                  aria-label={t('marketplace.sell.applicationMessage')}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                  placeholder={t('marketplace.sell.applicationPlaceholder')}
-                />
-              </Card>
+              {!isAuthenticated && (
+                <Card className="mb-6 p-6 text-center">
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    {t('marketplace.sell.loginRequired')}
+                  </p>
+                  <Button
+                    onClick={() => {
+                      if (isHosted()) {
+                        void startCasdoorLogin();
+                      } else {
+                        router.push('/login');
+                      }
+                    }}
+                  >
+                    {t('login.login')}
+                  </Button>
+                </Card>
+              )}
 
-              {/* Select Products to List */}
-              <Card>
-                <h2 className="text-xl font-bold text-foreground mb-4">
-                  {t('marketplace.sell.productsToList')}
-                </h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  {t('marketplace.sell.productsToListDesc')}
-                </p>
+              {isAuthenticated && application?.hasApplication && (
+                <Card className="mb-6 border-primary/20 bg-primary/5 p-4">
+                  <p className="text-sm text-foreground">
+                    {isApproved
+                      ? t('marketplace.sell.alreadyApproved')
+                      : t('marketplace.sell.applicationPending')}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-primary">
+                    {statusLabel(t, applicationStatus)}
+                  </p>
+                </Card>
+              )}
 
-                {userProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {userProducts.map(product => (
-                      <button
-                        key={product.id}
-                        onClick={() => toggleProduct(product.id)}
-                        className={`p-3 rounded-lg border-2 text-left transition-all ${
-                          selectedProducts.includes(product.id)
-                            ? 'border-success bg-success/8'
-                            : 'border-border hover:border-border'
-                        }`}
-                      >
-                        <img
-                          src={product.image}
-                          alt={product.title}
-                          className="w-full aspect-square object-cover rounded-lg mb-2"
+              {isAuthenticated && (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                  <div className="space-y-6 lg:col-span-2">
+                    <Card className="p-4 sm:p-6">
+                      <h2 className="mb-2 text-lg font-semibold text-foreground">
+                        {t('marketplace.sell.selectProductGroups')}
+                      </h2>
+                      <p className="mb-4 text-sm text-muted-foreground">
+                        {t('marketplace.sell.selectProductGroupsDesc')}
+                      </p>
+
+                      {groupsLoading ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                      ) : groupsWithItems.length > 0 ? (
+                        <ProductGroupPicker
+                          groups={groupsWithItems}
+                          selectedIds={selectedGroupIds}
+                          onToggle={toggleGroup}
+                          disabled={isApproved}
+                          itemCountLabel={count => `${count} ${t('marketplace.products')}`}
                         />
-                        <p className="text-sm font-medium text-foreground line-clamp-1">
-                          {product.title}
-                        </p>
-                        <p className="text-sm text-success">
-                          {formatCurrencyPrice(product.price, 'USD')}
-                        </p>
-                        {selectedProducts.includes(product.id) && (
-                          <div className="mt-2 flex items-center gap-1 text-success text-sm">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {t('marketplace.sell.selected')}
+                      ) : (
+                        <VStack gap="md" align="center" className="py-8 text-center">
+                          <Package className="h-10 w-10 text-muted-foreground" />
+                          <div>
+                            <h3 className="font-semibold text-foreground">
+                              {t('marketplace.sell.emptyGroupsTitle')}
+                            </h3>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {t('marketplace.sell.emptyGroupsDesc')}
+                            </p>
                           </div>
+                          <HStack gap="sm" className="flex-wrap justify-center">
+                            <Link href="/settings/product-groups">
+                              <Button>{t('marketplace.sell.manageProductGroups')}</Button>
+                            </Link>
+                            <Link href="/listing/new">
+                              <Button variant="outline">
+                                {t('marketplace.sell.createFirstProduct')}
+                              </Button>
+                            </Link>
+                          </HStack>
+                        </VStack>
+                      )}
+                    </Card>
+                  </div>
+
+                  <div className="space-y-6">
+                    <Card className="sticky top-4 p-4 sm:p-5">
+                      <h3 className="mb-4 font-semibold text-foreground">
+                        {t('marketplace.sell.applicationSummary')}
+                      </h3>
+                      <VStack gap="md" className="mb-4">
+                        <HStack justify="between">
+                          <span className="text-sm text-muted-foreground">
+                            {t('marketplace.sell.productsSelected')}
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {selectedGroupIds.length}
+                          </span>
+                        </HStack>
+                        <HStack justify="between">
+                          <span className="text-sm text-muted-foreground">
+                            {t('marketplace.sell.profileComplete')}
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              selectedGroupIds.length > 0 ? 'text-primary' : 'text-warning'
+                            }`}
+                          >
+                            {selectedGroupIds.length > 0 ? t('common.yes') : t('common.no')}
+                          </span>
+                        </HStack>
+                      </VStack>
+
+                      {!canSubmit && !isApproved && selectedGroupIds.length === 0 && (
+                        <p className="mb-3 text-xs text-muted-foreground">
+                          {t('marketplace.sell.completeHint')}
+                        </p>
+                      )}
+
+                      <Button className="w-full" disabled={!canSubmit} onClick={handleApply}>
+                        {isApplying ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {t('common.submitting')}
+                          </>
+                        ) : (
+                          t('marketplace.sell.submitApplication')
                         )}
-                      </button>
-                    ))}
+                      </Button>
+
+                      <p className="mt-4 text-center text-xs text-muted-foreground">
+                        {t('marketplace.sell.termsAgreement')}
+                      </p>
+                    </Card>
+
+                    <Card className="p-4 sm:p-5">
+                      <h3 className="mb-4 font-semibold text-foreground">
+                        {t('marketplace.sell.whatHappensNext')}
+                      </h3>
+                      <VStack gap="md" className="text-sm text-muted-foreground">
+                        <p>1. {t('marketplace.sell.step1')}</p>
+                        <p>2. {t('marketplace.sell.step2')}</p>
+                        <p>3. {t('marketplace.sell.step3')}</p>
+                      </VStack>
+                    </Card>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">{t('marketplace.sell.noProducts')}</p>
-                    <Link href="/listing/new">
-                      <Button variant="outline">{t('marketplace.sell.createFirstProduct')}</Button>
-                    </Link>
-                  </div>
-                )}
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Summary Card */}
-              <Card className="sticky top-4">
-                <h3 className="font-semibold text-foreground mb-4">
-                  {t('marketplace.sell.applicationSummary')}
-                </h3>
-
-                <VStack gap="md" className="mb-6">
-                  <HStack justify="between">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.sell.productsSelected')}
-                    </span>
-                    <span className="font-medium text-foreground">{selectedProducts.length}</span>
-                  </HStack>
-                  <HStack justify="between">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.sell.profileComplete')}
-                    </span>
-                    <span
-                      className={`font-medium ${profile.bio ? 'text-success' : 'text-warning'}`}
-                    >
-                      {profile.bio ? t('common.yes') : t('common.no')}
-                    </span>
-                  </HStack>
-                </VStack>
-
-                <Button
-                  className="w-full"
-                  onClick={handleApply}
-                  disabled={isApplying || !profile.bio}
-                >
-                  {isApplying ? t('common.submitting') : t('marketplace.sell.submitApplication')}
-                </Button>
-
-                <p className="text-xs text-muted-foreground mt-4 text-center">
-                  {t('marketplace.sell.termsAgreement')}
-                </p>
-              </Card>
-
-              {/* Info Card */}
-              <Card>
-                <h3 className="font-semibold text-foreground mb-4">
-                  {t('marketplace.sell.whatHappensNext')}
-                </h3>
-                <VStack gap="md" className="text-sm text-muted-foreground">
-                  <HStack gap="sm" align="start">
-                    <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
-                      1
-                    </span>
-                    <span>{t('marketplace.sell.step1')}</span>
-                  </HStack>
-                  <HStack gap="sm" align="start">
-                    <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
-                      2
-                    </span>
-                    <span>{t('marketplace.sell.step2')}</span>
-                  </HStack>
-                  <HStack gap="sm" align="start">
-                    <span className="w-6 h-6 rounded-full bg-success/15 text-success flex items-center justify-center flex-shrink-0 text-xs font-medium">
-                      3
-                    </span>
-                    <span>{t('marketplace.sell.step3')}</span>
-                  </HStack>
-                </VStack>
-              </Card>
-            </div>
-          </div>
+                </div>
+              )}
+            </>
+          )}
         </Container>
       </main>
 

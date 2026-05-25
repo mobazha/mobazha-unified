@@ -95,26 +95,43 @@ export async function isFollowing(peerID: string): Promise<boolean> {
 /**
  * 批量获取用户资料
  */
-export async function fetchProfiles(peerIDs: string[]): Promise<
-  Array<{
-    peerID: string;
-    name: string;
+interface FetchProfilesBatchItem {
+  peerID: string;
+  profile?: {
+    peerID?: string;
+    name?: string;
     avatarHashes?: { medium?: string };
     shortDescription?: string;
-  }>
-> {
-  const realFn = async () => {
-    return publicPost<
-      Array<{
-        peerID: string;
-        name: string;
-        avatarHashes?: { medium?: string };
-        shortDescription?: string;
-      }>
-    >(NODE_API.PROFILES_BATCH, peerIDs);
+  };
+}
+
+export interface SocialProfileSummary {
+  peerID: string;
+  name: string;
+  avatarHashes?: { medium?: string };
+  shortDescription?: string;
+}
+
+export async function fetchProfiles(peerIDs: string[]): Promise<SocialProfileSummary[]> {
+  const realFn = async (): Promise<SocialProfileSummary[]> => {
+    const data = await publicPost<FetchProfilesBatchItem[]>(NODE_API.PROFILES_BATCH, peerIDs);
+    if (!Array.isArray(data)) return [];
+    return data
+      .map(item => {
+        const peerID = item.profile?.peerID || item.peerID;
+        const name = item.profile?.name?.trim() || '';
+        if (!peerID || !name) return null;
+        return {
+          peerID,
+          name,
+          avatarHashes: item.profile?.avatarHashes,
+          shortDescription: item.profile?.shortDescription,
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
   };
 
-  const mockFn = async () => {
+  const mockFn = async (): Promise<SocialProfileSummary[]> => {
     // Mock: 返回模拟的用户资料
     return peerIDs.map(peerID => {
       const user = mockUsers.find(u => u.peerID === peerID);

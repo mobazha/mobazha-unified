@@ -82,6 +82,8 @@ export * from './useUserGroups';
 export * from './useProductGroups';
 export * from './useGroupContext';
 export * from './useCommunityMarketplaces';
+export * from './useCommunityMarketplaceEnrichment';
+export * from './useCommunityMarketplaceSell';
 
 // RWA 资产相关
 export * from './useRwaAssets';
