@@ -370,6 +370,8 @@ export const NODE_API = {
     `/orders/${encodeURIComponent(orderID)}/digital-assets`,
   ORDER_DIGITAL_DELIVERY_STATUS: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-delivery`,
+  ORDER_DIGITAL_DELIVERY_RETRY: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-delivery/retry`,
   ORDER_DIGITAL_DOWNLOAD: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-download`,
 

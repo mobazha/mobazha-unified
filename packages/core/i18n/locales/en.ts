@@ -1052,7 +1052,8 @@ export const en: TranslationResource = {
       ship: 'Ship Order',
       deliverDigital: 'Deliver digital content',
       syncDelivery: 'Sync delivery',
-      deliveryPending: 'Delivery pending',
+      retryDigitalDelivery: 'Deliver downloads',
+      deliveryPending: 'Waiting for auto-delivery',
       refund: 'Refund',
       claim: 'Claim Payment',
       acceptPayout: 'Accept Payout',
@@ -1268,13 +1269,13 @@ export const en: TranslationResource = {
         '{{count}} asset(s) are configured for this listing. Buyers receive access through their digital downloads.',
       readyTitle: 'Digital delivery is ready',
       readyDesc:
-        '{{count}} asset(s) are configured for this order. Confirming payment will grant buyer access automatically.',
+        '{{count}} asset(s) are configured for this order, but buyer access has not been generated yet. You can deliver downloads to the buyer now.',
       deliveredTitle: 'Digital goods delivered automatically',
       deliveredDesc:
         '{{count}} asset(s) were delivered to the buyer. They can access them from digital downloads.',
-      pendingTitle: 'Digital delivery pending',
+      pendingTitle: 'Waiting for auto-delivery',
       pendingDesc:
-        'Digital assets are configured, but buyer access has not been granted yet. Wait for automatic delivery or retry the entitlement job before shipping.',
+        'The system is creating the buyer digital downloads. This page will update automatically when access is ready.',
       manualTitle: 'Action required: add a download link',
       manualDesc:
         'No digital assets are configured for this listing. Use manual delivery only as a fallback, or add assets on the listing for future orders.',
@@ -1288,6 +1289,10 @@ export const en: TranslationResource = {
       noItemsFound: 'No delivery records found.',
       syncSuccessDesc: 'The buyer access link has been attached to this order.',
       syncFailed: 'Failed to sync digital delivery',
+      retrySuccess: 'Digital downloads delivered',
+      retrySuccessDesc:
+        'Buyer download access has been generated and the order status will update shortly.',
+      retryFailed: 'Failed to deliver digital downloads',
     },
     // Dispute modal
     dispute: {
@@ -1531,6 +1536,8 @@ export const en: TranslationResource = {
       refunded: 'Refunded',
       disputed: 'Disputed',
       transactionId: 'Transaction ID',
+      timelineTitle: 'Payment confirmed',
+      timelineDescription: 'The buyer paid with fiat. The order can continue.',
     },
     // RWA Payment Locked
     paymentLocked: {
@@ -4290,6 +4297,10 @@ export const en: TranslationResource = {
       saveFirstTitle: 'Save as draft to attach digital assets',
       publishBlockedToast:
         'Save the listing as a draft first. Then attach files, links, or license keys from the edit page before publishing.',
+      publishRequiresAssetTitle: 'Add digital assets before publishing',
+      publishRequiresAssetDesc:
+        'Digital goods need at least one file, access link, or license key pool so buyers can receive downloads automatically after purchase.',
+      publishAssetCheckFailed: 'Failed to check digital assets. Please try again.',
       emptyState: 'No digital downloads yet. Add a file, link, or license key pool.',
       addFile: 'Upload file',
       addLink: 'Add link',

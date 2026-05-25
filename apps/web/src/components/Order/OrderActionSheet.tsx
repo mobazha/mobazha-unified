@@ -29,6 +29,7 @@ export interface OrderActionSheetProps {
   hasPreconfiguredDigitalAssets?: boolean;
   digitalDeliveryStatus?: string | null;
   canSyncDigitalDelivery?: boolean;
+  canRetryDigitalDelivery?: boolean;
   manualDigitalFallbackAllowed?: boolean;
   isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
@@ -55,6 +56,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
   hasPreconfiguredDigitalAssets = false,
   digitalDeliveryStatus,
   canSyncDigitalDelivery = false,
+  canRetryDigitalDelivery = false,
   manualDigitalFallbackAllowed = false,
   isTransitioning = false,
   onAction,
@@ -96,6 +98,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
             hasPreconfiguredDigitalAssets,
             digitalDeliveryStatus,
             canSyncDigitalDelivery,
+            canRetryDigitalDelivery,
             manualDigitalFallbackAllowed,
           })
         : null,
@@ -106,6 +109,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
       hasPreconfiguredDigitalAssets,
       digitalDeliveryStatus,
       canSyncDigitalDelivery,
+      canRetryDigitalDelivery,
       manualDigitalFallbackAllowed,
     ]
   );
@@ -129,6 +133,9 @@ export const OrderActionSheet = memo(function OrderActionSheet({
     if (action === 'Ship' && contractType === 'DIGITAL_GOOD') {
       if (canSyncDigitalDelivery) {
         return t('order.actions.syncDelivery');
+      }
+      if (canRetryDigitalDelivery) {
+        return t('order.actions.retryDigitalDelivery');
       }
       if (manualDigitalFallbackAllowed) {
         return t('order.actions.deliverDigital');
@@ -175,6 +182,7 @@ export const OrderActionSheet = memo(function OrderActionSheet({
               hasPreconfiguredDigitalAssets,
               digitalDeliveryStatus,
               canSyncDigitalDelivery,
+              canRetryDigitalDelivery,
               manualDigitalFallbackAllowed,
             });
             return (

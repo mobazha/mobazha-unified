@@ -44,6 +44,7 @@ import {
   DEFAULT_LOCAL_CURRENCY,
   queryKeys,
   useUserStore,
+  digitalAssetsApi,
 } from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile, Product } from '@mobazha/core';
 import { useQueryClient } from '@tanstack/react-query';
@@ -321,6 +322,29 @@ export default function EditListingPage() {
         return;
       }
 
+      if (formData.contractType === 'DIGITAL_GOOD') {
+        try {
+          const assets = await digitalAssetsApi.listAssets(slug);
+          if (assets.length === 0) {
+            toast({
+              title: t('listing.digital.publishRequiresAssetTitle'),
+              description: t('listing.digital.publishRequiresAssetDesc'),
+              variant: 'destructive',
+            });
+            scrollToSection('files');
+            return;
+          }
+        } catch (err) {
+          toast({
+            title: t('common.error'),
+            description:
+              err instanceof Error ? err.message : t('listing.digital.publishAssetCheckFailed'),
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
       const result = await submit();
 
       if ('error' in result) {
@@ -338,7 +362,18 @@ export default function EditListingPage() {
         router.push(AFTER_LISTING_PATH);
       }
     },
-    [validate, submit, refreshListingCaches, formData.slug, toast, t, router]
+    [
+      validate,
+      submit,
+      refreshListingCaches,
+      formData.slug,
+      formData.contractType,
+      slug,
+      toast,
+      t,
+      router,
+      scrollToSection,
+    ]
   );
 
   // 保存草稿
