@@ -13,6 +13,12 @@ export interface PaymentSessionFundingTarget {
   amount: string;
   memoOrTag?: string;
   qrPayload?: string;
+  displayInstructions?: string[];
+  networkFeeHints?: {
+    feePayer: string;
+    asset: string;
+  };
+  providerData?: Record<string, unknown>;
 }
 
 export interface PaymentSessionProgress {
@@ -36,4 +42,19 @@ export interface PaymentSession {
   expiresAt: string;
   fundingTarget: PaymentSessionFundingTarget;
   paymentProgress: PaymentSessionProgress;
+  capabilities?: {
+    canRefresh?: boolean;
+    canCancel?: boolean;
+    canConfirm?: boolean;
+    canRefund?: boolean;
+    canComplete?: boolean;
+  };
+  userActionRequest?: {
+    type: string;
+    title: string;
+    description?: string;
+    walletHints?: Record<string, unknown>;
+    payload?: Record<string, unknown>;
+    expiresAt?: string;
+  } | null;
 }
