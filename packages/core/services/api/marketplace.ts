@@ -15,6 +15,8 @@ import type {
   MarketplaceApplication,
   MarketplaceAnnouncement,
   MarketplaceActivityLog,
+  PublicGroupMarketplaceDetail,
+  PublicGroupMarketplaceListResponse,
   CreateMarketplaceRequest,
   UpdateMarketplaceRequest,
   SellerApplicationRequest,
@@ -26,6 +28,38 @@ import type {
 import { HOSTING_API } from '../../config/apiPaths';
 
 // ============ 集市基础 API ============
+
+/**
+ * 获取真实群组社区市场公开目录。
+ */
+export async function getPublicGroupMarketplaces(
+  params: {
+    platform?: string;
+  } = {}
+): Promise<PublicGroupMarketplaceListResponse> {
+  const queryParams = new URLSearchParams();
+  if (params.platform) queryParams.set('platform', params.platform);
+  const query = queryParams.toString();
+  return apiClient.get<PublicGroupMarketplaceListResponse>(
+    `${HOSTING_API.GROUP_MARKETPLACE_GROUPS}${query ? `?${query}` : ''}`
+  );
+}
+
+/**
+ * 通过 slug 或 publicID 获取真实群组社区市场公开详情。
+ */
+export async function getPublicGroupMarketplaceDetail(
+  identifier: string,
+  params: { page?: number; pageSize?: number } = {}
+): Promise<PublicGroupMarketplaceDetail> {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.set('page', params.page.toString());
+  if (params.pageSize) queryParams.set('pageSize', params.pageSize.toString());
+  const query = queryParams.toString();
+  return apiClient.get<PublicGroupMarketplaceDetail>(
+    `${HOSTING_API.GROUP_MARKETPLACE_PUBLIC_DETAIL(identifier)}${query ? `?${query}` : ''}`
+  );
+}
 
 /**
  * 获取集市列表

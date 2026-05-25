@@ -443,6 +443,18 @@ export type {
 
 export { FULFILLMENT_PROVIDERS } from './fulfillment';
 
+// Marketplace types
+export type {
+  PublicGroupMarketplace,
+  PublicGroupMarketplaceListResponse,
+  PublicGroupMarketplaceDetail,
+  PublicMarketplaceListingRef,
+  PublicMarketplaceSeller,
+  PublicMarketplaceProductGroup,
+  PublicMarketplaceBanner,
+  PublicMarketplaceListings,
+} from './marketplace';
+
 // Digital asset types (Supply Chain Phase 1.0 — Core MVP)
 export type {
   DigitalAssetType,

@@ -259,6 +259,72 @@ export interface MarketplaceListResponse {
   hasMore: boolean;
 }
 
+// 真实群组社区市场公开投影（来自 mobazha_hosting group-marketplace v1）
+export interface PublicGroupMarketplace {
+  publicID: string;
+  slug?: string;
+  platform: 'telegram' | 'discord' | string;
+  name: string;
+  publicDescription?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  sellerCount: number;
+  productCount: number;
+  joinMode: 'group_member' | string;
+  visibility: 'active' | string;
+  isFeatured: boolean;
+  sortOrder: number;
+  updatedAt?: string;
+}
+
+export interface PublicGroupMarketplaceListResponse {
+  groups: PublicGroupMarketplace[];
+  count: number;
+}
+
+export interface PublicMarketplaceListingRef {
+  slug: string;
+  peerID: string;
+}
+
+export interface PublicMarketplaceProductGroup {
+  id: number;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  itemCount: number;
+}
+
+export interface PublicMarketplaceSeller {
+  sellerID: number;
+  peerID: string;
+  productGroups: PublicMarketplaceProductGroup[];
+  sortOrder: number;
+  updatedAt?: string;
+}
+
+export interface PublicMarketplaceBanner {
+  slug: string;
+  peerID: string;
+  sortOrder: number;
+}
+
+export interface PublicMarketplaceListings {
+  listings: PublicMarketplaceListingRef[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPage: number;
+}
+
+export interface PublicGroupMarketplaceDetail {
+  marketplace: PublicGroupMarketplace;
+  sellers: PublicMarketplaceSeller[];
+  featured: PublicMarketplaceSeller[];
+  banners: PublicMarketplaceBanner[];
+  listings: PublicMarketplaceListings;
+}
+
 // 商品列表参数
 export interface MarketplaceProductListParams {
   marketplaceId: string;
