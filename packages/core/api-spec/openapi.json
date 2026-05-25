@@ -7319,60 +7319,6 @@
         "tags": ["listings"]
       }
     },
-    "/search/v1/listings/{hash}/moderators": {
-      "get": {
-        "operationId": "get-listing-moderators",
-        "parameters": [
-          {
-            "description": "Listing CID hash.",
-            "in": "path",
-            "name": "hash",
-            "required": true,
-            "schema": {
-              "description": "Listing CID hash.",
-              "minLength": 1,
-              "type": "string"
-            }
-          },
-          {
-            "description": "Page number (1-based).",
-            "explode": false,
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "default": 1,
-              "description": "Page number (1-based).",
-              "format": "int64",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Search_ListEnvelope"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Search_InfoEnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Get moderators for a listing",
-        "tags": ["listings"]
-      }
-    },
     "/search/v1/listings/{hash}/shippings": {
       "get": {
         "operationId": "get-listing-shippings",

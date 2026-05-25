@@ -28,6 +28,7 @@ const mockAuthDel = vi.fn();
 const mockPublicGet = vi.fn();
 const mockPublicPost = vi.fn();
 const mockNodeAuthGet = vi.fn();
+const mockFetchStoreMetadata = vi.fn();
 vi.mock('../../../services/api/helpers', () => ({
   authGet: (...args: unknown[]) => mockAuthGet(...args),
   authPost: (...args: unknown[]) => mockAuthPost(...args),
@@ -36,6 +37,14 @@ vi.mock('../../../services/api/helpers', () => ({
   publicGet: (...args: unknown[]) => mockPublicGet(...args),
   publicPost: (...args: unknown[]) => mockPublicPost(...args),
   nodeAuthGet: (...args: unknown[]) => mockNodeAuthGet(...args),
+}));
+
+vi.mock('../../../services/api/storeMetadata', () => ({
+  fetchStoreMetadata: (...args: unknown[]) => mockFetchStoreMetadata(...args),
+  getMetadataEntry: (
+    resp: { metadata?: { metadataType: string; data: unknown }[] } | null,
+    type: string
+  ) => resp?.metadata?.find(m => m.metadataType === type)?.data ?? null,
 }));
 
 import { apiClient } from '../../../services/api/client';
@@ -83,6 +92,7 @@ describe('Moderators API', () => {
     mockFetchVerified.mockResolvedValue(new Set<string>());
     // Default: authGet returns empty StorePolicy moderators
     mockAuthGet.mockResolvedValue([]);
+    mockFetchStoreMetadata.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -166,6 +176,65 @@ describe('Moderators API', () => {
       expect(mockPublicGet).toHaveBeenCalledWith('/store-policy/QmSeller/published');
       expect(mockPublicPost).not.toHaveBeenCalled();
       expect(result.moderators).toHaveLength(0);
+    });
+
+    it('should fallback to search store_policy metadata for seller public StorePolicy', async () => {
+      const mockProfile = {
+        peerID: 'QmSellerMod',
+        name: 'Seller Moderator',
+        moderator: true,
+        moderatorInfo: {
+          languages: ['en'],
+          fee: { percentage: 1, feeType: 'PERCENTAGE' },
+        },
+      };
+      mockPublicGet.mockRejectedValueOnce(new Error('Store policy unavailable'));
+      mockFetchStoreMetadata.mockResolvedValueOnce({
+        peerId: 'QmSeller',
+        metadata: [
+          {
+            metadataType: 'store_policy',
+            data: {
+              revision: 4,
+              moderators: [{ peerID: 'QmSellerMod', enabled: true, position: 0 }],
+            },
+            updatedAt: '2026-05-25T00:00:00Z',
+          },
+        ],
+      });
+      mockPublicPost.mockResolvedValueOnce([
+        { id: 'id1', peerID: 'QmSellerMod', profile: mockProfile },
+      ]);
+
+      const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
+
+      expect(mockFetchStoreMetadata).toHaveBeenCalledWith('QmSeller', ['store_policy']);
+      expect(mockPublicPost).toHaveBeenCalledWith('/profiles/batch', ['QmSellerMod']);
+      expect(result.moderators).toHaveLength(1);
+      expect(result.moderators[0].peerID).toBe('QmSellerMod');
+    });
+
+    it('should accept admin StorePolicy object responses for store moderators', async () => {
+      const mockProfile = {
+        peerID: 'QmMod1',
+        name: 'Trusted Moderator',
+        moderator: true,
+        moderatorInfo: {
+          languages: ['en'],
+          fee: { percentage: 1, feeType: 'PERCENTAGE' },
+        },
+      };
+
+      mockAuthGet.mockResolvedValueOnce({
+        revision: 7,
+        moderators: [{ peerID: 'QmMod1', enabled: true, position: 0 }],
+      });
+      mockPublicPost.mockResolvedValueOnce([{ id: 'id1', peerID: 'QmMod1', profile: mockProfile }]);
+
+      const result = await moderatorsApi.getModerators();
+
+      expect(result.moderators).toHaveLength(1);
+      expect(result.moderators[0].peerID).toBe('QmMod1');
     });
 
     it('should filter out disabled public policy moderators before profile lookup', async () => {

@@ -2592,23 +2592,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/search/v1/listings/{hash}/moderators': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get moderators for a listing */
-    get: operations['get-listing-moderators'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/search/v1/listings/{hash}/shippings': {
     parameters: {
       query?: never;
@@ -13085,41 +13068,6 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Search_InfoEnvelopeError'];
-        };
-      };
-    };
-  };
-  'get-listing-moderators': {
-    parameters: {
-      query?: {
-        /** @description Page number (1-based). */
-        page?: number;
-      };
-      header?: never;
-      path: {
-        /** @description Listing CID hash. */
-        hash: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Search_ListEnvelope'];
         };
       };
       /** @description Error */

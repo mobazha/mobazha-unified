@@ -208,8 +208,6 @@ export const SEARCH_API_PATHS = {
   LISTINGS_BY_HASH: (hash: string) => `/search/v1/listings/${encodeURIComponent(hash)}`,
   LISTINGS_FRESH: '/search/v1/listings/fresh',
   LISTINGS_HOT: '/search/v1/listings/hot',
-  LISTINGS_MODERATORS: (hash: string) =>
-    `/search/v1/listings/${encodeURIComponent(hash)}/moderators`,
   LISTINGS_SHIPPINGS: (hash: string) => `/search/v1/listings/${encodeURIComponent(hash)}/shippings`,
   MEDIA_FILES: (hash: string) => `/search/v1/media/files/${encodeURIComponent(hash)}`,
   MEDIA_IMAGES: (hash: string) => `/search/v1/media/images/${encodeURIComponent(hash)}`,
