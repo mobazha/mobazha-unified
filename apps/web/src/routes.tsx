@@ -377,6 +377,14 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/moderators/page')),
         },
         {
+          path: 'settings/moderators/find',
+          element: lazyPage(() => import('./app/admin/settings/moderators/find/page')),
+        },
+        {
+          path: 'settings/moderators/find/:id',
+          element: lazyPage(() => import('./app/admin/settings/moderators/find/[id]/page')),
+        },
+        {
           path: 'settings/integrations',
           element: lazyPage(() => import('./app/admin/settings/integrations/page')),
         },

@@ -73,6 +73,7 @@ export * from './useCurrencySelection';
 export * from './useVerifiedModerators';
 export * from './useStoreModerators';
 export * from './useModeratorDirectory';
+export * from './useModeratorPeerLookup';
 export * from './useModeratorDetail';
 
 // 访问控制相关

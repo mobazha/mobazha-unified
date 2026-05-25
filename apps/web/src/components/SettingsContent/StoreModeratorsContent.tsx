@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { moderatorDirectoryAddFromStoreHref } from '@/lib/routes/moderators';
 import { cn } from '@/lib/utils';
@@ -28,16 +28,22 @@ import {
   useStoreModerators,
   useVerifiedModerators,
   useModeratorDetail,
-  moderatorsApi,
+  useModeratorPeerLookup,
   getImageUrl,
-  isFullPeerID,
 } from '@mobazha/core';
 import type { Moderator as ApiModerator } from '@mobazha/core/services/api/moderators';
-import { formatUserName } from '@mobazha/core/utils/identity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Moderator } from '@/components/Payment/types';
-import { ModeratorCard } from '@/components/Payment/ModeratorCard';
+import {
+  ADDED_TO_STORE_BUTTON_CLASS,
+  mapApiModeratorToModerator,
+  formatModeratorFee,
+  getModeratorDisplayName,
+  getModeratorTrustMetrics,
+} from '@/components/Moderators/moderatorDisplay';
+import { ModeratorVerificationBadge } from '@/components/Moderators/ModeratorVerificationBadge';
+import { ModeratorProfilePreview } from '@/components/Moderators/ModeratorProfilePreview';
 import {
   Plus,
   Scale,
@@ -45,52 +51,14 @@ import {
   ChevronDown,
   RefreshCw,
   Loader2,
-  Shield,
   Mail,
   Globe,
+  MapPin,
+  Check,
 } from 'lucide-react';
 
 function mapApiModeratorToCard(mod: ApiModerator, verifiedPeerIds: Set<string>): Moderator {
-  return {
-    id: mod.id,
-    peerID: mod.peerID,
-    name: mod.name,
-    handle: mod.handle,
-    avatar: mod.avatar,
-    avatarHashes: mod.avatarHashes,
-    location: mod.location,
-    shortDescription: mod.shortDescription,
-    description: mod.description || mod.shortDescription,
-    languages: mod.languages,
-    verified: mod.verified,
-    verifiedMod: verifiedPeerIds.has(mod.peerID),
-    fee: {
-      percentage: mod.fee.percentage,
-      fixedFee: mod.fee.fixedFee
-        ? {
-            amount: String(mod.fee.fixedFee.amount),
-            currency: mod.fee.fixedFee.currency,
-          }
-        : undefined,
-      feeType: mod.fee.feeType,
-    },
-    stats: mod.stats,
-    termsAndConditions: mod.termsAndConditions,
-    acceptedCurrencies: mod.acceptedCurrencies,
-    contactInfo: mod.contactInfo,
-  };
-}
-
-function formatModeratorFee(moderator: Moderator): string | null {
-  const { fee } = moderator;
-  if (!fee) return null;
-  if (fee.feeType === 'percentage' && fee.percentage !== undefined) {
-    return `${fee.percentage}%`;
-  }
-  if (fee.fixedFee) {
-    return `${fee.fixedFee.amount} ${fee.fixedFee.currency}`;
-  }
-  return null;
+  return mapApiModeratorToModerator(mod, verifiedPeerIds);
 }
 
 function StatCell({
@@ -125,10 +93,19 @@ function StoreModeratorDetailPanel({
   isLoading?: boolean;
 }) {
   const { t } = useI18n();
-  const feeText = formatModeratorFee(moderator) ?? '—';
-  const stats = moderator.stats;
   const languages = moderator.languages ?? [];
   const bodyText = moderator.description || moderator.shortDescription;
+  const showFullDescription =
+    bodyText && bodyText.trim() !== (moderator.shortDescription ?? '').trim();
+  const metrics = getModeratorTrustMetrics(moderator);
+
+  const statItems: { label: string; value: string; highlight?: boolean }[] = [
+    { label: t('moderator.fee'), value: metrics.fee, highlight: true },
+    { label: t('settingsExtended.rating'), value: metrics.rating },
+    { label: t('settingsExtended.disputes'), value: metrics.disputes },
+    { label: t('settingsExtended.successRate'), value: metrics.successRate },
+    { label: t('settingsExtended.avgResolution'), value: metrics.avgResolution },
+  ];
 
   if (isLoading) {
     return (
@@ -141,7 +118,26 @@ function StoreModeratorDetailPanel({
 
   return (
     <div className="space-y-4">
-      {bodyText && (
+      {moderator.peerID && (
+        <div>
+          <p className="text-xs font-medium text-foreground mb-1">
+            {t('moderator.customPeerIdLabel')}
+          </p>
+          <p className="break-all font-mono text-xs text-muted-foreground">{moderator.peerID}</p>
+        </div>
+      )}
+
+      {moderator.location && (
+        <div>
+          <p className="text-xs font-medium text-foreground mb-1">{t('profile.location')}</p>
+          <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
+            <span>{moderator.location}</span>
+          </p>
+        </div>
+      )}
+
+      {showFullDescription && (
         <div>
           <p className="text-xs font-medium text-foreground mb-1.5">
             {t('settingsExtended.detailedDescription')}
@@ -152,27 +148,16 @@ function StoreModeratorDetailPanel({
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-        <StatCell label={t('payment.moderatorFee')} value={feeText} highlight />
-        <StatCell
-          label={t('settingsExtended.rating')}
-          value={stats && stats.ratingCount > 0 ? stats.rating.toFixed(1) : '—'}
-        />
-        <StatCell
-          label={t('settingsExtended.disputes')}
-          value={stats ? String(stats.disputesHandled) : '—'}
-        />
-        <StatCell
-          label={t('settingsExtended.successRate')}
-          value={stats && stats.successRate > 0 ? `${stats.successRate}%` : '—'}
-        />
+      <div className={cn('grid gap-2.5', 'grid-cols-2 md:grid-cols-5')}>
+        {statItems.map(item => (
+          <StatCell
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            highlight={item.highlight}
+          />
+        ))}
       </div>
-
-      {stats && stats.averageResolutionTime > 0 && (
-        <p className="text-xs text-muted-foreground">
-          {t('settingsExtended.avgResolution')}: {stats.averageResolutionTime}h
-        </p>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -279,12 +264,8 @@ function ModeratorListRow({
   const avatarUrl = moderator.avatarHashes?.small
     ? getImageUrl(moderator.avatarHashes.small)
     : undefined;
-  const displayName = formatUserName(
-    { name: moderator.name, handle: moderator.handle, peerID: moderator.peerID },
-    { fallback: 'User' }
-  );
+  const displayName = getModeratorDisplayName(moderator, 'User');
   const feeText = formatModeratorFee(moderator);
-  const rowLanguages = moderator.languages ?? [];
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -308,13 +289,18 @@ function ModeratorListRow({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-medium text-foreground truncate">{displayName}</span>
-              {moderator.verifiedMod && (
-                <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" aria-hidden />
-              )}
+              <ModeratorVerificationBadge moderator={moderator} />
             </div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+              {moderator.location && (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden />
+                  {moderator.location}
+                </span>
+              )}
               {feeText && (
                 <span className="text-xs text-muted-foreground">
+                  {moderator.location ? '· ' : ''}
                   {t('moderator.fee')} {feeText}
                 </span>
               )}
@@ -324,20 +310,6 @@ function ModeratorListRow({
                 </span>
               )}
             </div>
-            {rowLanguages.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {rowLanguages.slice(0, 4).map(lang => (
-                  <Badge key={lang} variant="outline" className="text-[10px] h-5 px-1.5">
-                    {lang.toUpperCase()}
-                  </Badge>
-                ))}
-                {rowLanguages.length > 4 && (
-                  <span className="text-[10px] text-muted-foreground self-center">
-                    +{rowLanguages.length - 4}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
 
           <ChevronDown
@@ -395,10 +367,7 @@ export function StoreModeratorsContent({
   const [expandedPeerID, setExpandedPeerID] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<Moderator | null>(null);
   const [newPeerId, setNewPeerId] = useState('');
-  const [previewModerator, setPreviewModerator] = useState<Moderator | null>(null);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const previewTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const peerLookup = useModeratorPeerLookup(newPeerId, { enabled: showAddModal });
 
   const { moderator: expandedDetail, isLoading: isExpandedDetailLoading } = useModeratorDetail(
     expandedPeerID ?? undefined
@@ -408,72 +377,43 @@ export function StoreModeratorsContent({
     () => moderators.map(m => mapApiModeratorToCard(m, verifiedModerators)),
     [moderators, verifiedModerators]
   );
+  const storePeerIds = useMemo(() => new Set(moderators.map(m => m.peerID)), [moderators]);
 
   const expandedDetailCard = useMemo(
     () => (expandedDetail ? mapApiModeratorToCard(expandedDetail, verifiedModerators) : null),
     [expandedDetail, verifiedModerators]
   );
 
+  const previewModeratorCard = useMemo(
+    () =>
+      peerLookup.moderator ? mapApiModeratorToCard(peerLookup.moderator, verifiedModerators) : null,
+    [peerLookup.moderator, verifiedModerators]
+  );
+  const previewIsAlreadyAdded = previewModeratorCard
+    ? storePeerIds.has(previewModeratorCard.peerID)
+    : false;
+
+  const previewError = useMemo(() => {
+    switch (peerLookup.status) {
+      case 'truncated':
+        return t('settingsExtended.moderatorPeerIdFormatHint');
+      case 'not_found':
+        return t('settingsExtended.moderatorNotFound');
+      case 'not_moderator':
+        return t('settingsExtended.moderatorNotConfigured');
+      default:
+        return null;
+    }
+  }, [peerLookup.status, t]);
+
   const resetAddModalState = useCallback(() => {
     setNewPeerId('');
-    setPreviewModerator(null);
-    setPreviewError(null);
-    setIsPreviewLoading(false);
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
   }, []);
-
-  useEffect(() => {
-    if (!showAddModal) return;
-
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    const trimmed = newPeerId.trim();
-
-    previewTimerRef.current = setTimeout(
-      async () => {
-        if (!trimmed) {
-          setPreviewModerator(null);
-          setPreviewError(null);
-          setIsPreviewLoading(false);
-          return;
-        }
-
-        if (!isFullPeerID(trimmed)) {
-          setPreviewModerator(null);
-          setPreviewError(t('settingsExtended.moderatorPeerIdFormatHint'));
-          setIsPreviewLoading(false);
-          return;
-        }
-
-        setIsPreviewLoading(true);
-        setPreviewError(null);
-
-        const result = await moderatorsApi.lookupModeratorCandidate(trimmed);
-        setIsPreviewLoading(false);
-
-        if (result.status === 'found') {
-          setPreviewModerator(mapApiModeratorToCard(result.moderator, verifiedModerators));
-          setPreviewError(null);
-          return;
-        }
-
-        setPreviewModerator(null);
-        setPreviewError(
-          result.status === 'not_moderator'
-            ? t('settingsExtended.moderatorNotConfigured')
-            : t('settingsExtended.moderatorNotFound')
-        );
-      },
-      trimmed ? 400 : 0
-    );
-
-    return () => {
-      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    };
-  }, [newPeerId, showAddModal, t, verifiedModerators]);
 
   const handleAddModerator = useCallback(async () => {
     const peerID = newPeerId.trim();
-    if (!peerID || !previewModerator) return;
+    if (!peerID || !previewModeratorCard) return;
+    if (previewIsAlreadyAdded) return;
 
     const result = await addModerator(peerID);
     if (!result.success) {
@@ -489,8 +429,19 @@ export function StoreModeratorsContent({
 
     setShowAddModal(false);
     resetAddModalState();
+    await refresh();
     toast({ title: t('common.success'), description: t('settingsModal.moderatorAdded') });
-  }, [newPeerId, previewModerator, addModerator, toast, t, resetAddModalState, setShowAddModal]);
+  }, [
+    newPeerId,
+    previewModeratorCard,
+    previewIsAlreadyAdded,
+    addModerator,
+    refresh,
+    toast,
+    t,
+    resetAddModalState,
+    setShowAddModal,
+  ]);
 
   const handleRemoveModerator = useCallback(async () => {
     if (!removeTarget) return;
@@ -564,19 +515,26 @@ export function StoreModeratorsContent({
         </Card>
       ) : (
         <div className="max-w-2xl space-y-2">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <p className="text-xs text-muted-foreground hidden sm:block">
+          <div className="flex flex-col gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
               {t('settingsExtended.storeModeratorExpandHint')}
             </p>
-            <Button
-              size="sm"
-              onClick={() => setShowAddModal(true)}
-              disabled={isSaving}
-              className="min-h-[44px] ml-auto"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t('settingsModal.addModerator')}
-            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:ml-auto">
+              <Button variant="outline" size="sm" asChild className="min-h-[44px]">
+                <Link href={moderatorDirectoryAddFromStoreHref()}>
+                  {t('moderator.findModerators')}
+                </Link>
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowAddModal(true)}
+                disabled={isSaving}
+                className="min-h-[44px]"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t('settingsModal.addModerator')}
+              </Button>
+            </div>
           </div>
 
           {cardModerators.map(moderator => (
@@ -603,8 +561,8 @@ export function StoreModeratorsContent({
           if (!open) resetAddModalState();
         }}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="!bottom-0 !top-auto max-h-[92dvh] w-full !max-w-none !translate-y-0 rounded-t-2xl p-4 sm:!bottom-auto sm:!top-[50%] sm:max-h-[85vh] sm:!max-w-2xl sm:!translate-y-[-50%] sm:rounded-lg sm:p-6">
+          <DialogHeader className="pr-8">
             <DialogTitle>{t('settingsModal.addModerator')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -623,32 +581,47 @@ export function StoreModeratorsContent({
             <Input
               value={newPeerId}
               onChange={e => setNewPeerId(e.target.value)}
-              placeholder={t('settingsModal.enterPeerId')}
+              placeholder={t('moderator.customPeerIdPlaceholder')}
               disabled={isSaving}
               className="font-mono text-sm"
             />
 
-            {isPreviewLoading && (
+            {peerLookup.isLoading && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 {t('settingsExtended.moderatorPreviewLoading')}
               </div>
             )}
 
-            {previewError && !isPreviewLoading && (
-              <p className="text-sm text-destructive">{previewError}</p>
+            {previewError && !peerLookup.isLoading && (
+              <p className="text-sm text-destructive" role="alert">
+                {previewError}
+              </p>
             )}
 
-            {previewModerator && !isPreviewLoading && (
-              <ModeratorCard moderator={previewModerator} selected={false} onClick={() => {}} />
+            {previewModeratorCard && peerLookup.isReady && (
+              <ModeratorProfilePreview moderator={previewModeratorCard} className="bg-card" />
             )}
 
             <Button
-              className="w-full min-h-[44px]"
+              className={cn(
+                'w-full min-h-[44px]',
+                previewIsAlreadyAdded && ADDED_TO_STORE_BUTTON_CLASS
+              )}
+              variant={previewIsAlreadyAdded ? 'outline' : 'default'}
               onClick={handleAddModerator}
-              disabled={isSaving || isPreviewLoading || !previewModerator}
+              disabled={
+                isSaving || peerLookup.isLoading || !peerLookup.isReady || previewIsAlreadyAdded
+              }
             >
-              {t('common.add')}
+              {previewIsAlreadyAdded ? (
+                <>
+                  <Check className="w-4 h-4 mr-1.5" />
+                  {t('moderator.addedToStore')}
+                </>
+              ) : (
+                t('common.add')
+              )}
             </Button>
           </div>
         </DialogContent>

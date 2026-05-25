@@ -2501,14 +2501,20 @@ export const en: TranslationResource = {
   },
 
   moderator: {
-    title: 'Moderators',
-    subtitle: 'Choose a trusted moderator to protect your transactions with buyer protection',
-    searchPlaceholder: 'Search moderators...',
+    title: 'Moderator directory',
+    subtitle: 'Helps resolve disputes. Not involved in shipping or payouts.',
+    pageIntro:
+      'Sellers build a store list; buyers pick one at checkout. Prefer platform-verified moderators, or enter a full moderator ID you trust.',
+    searchPlaceholder: 'Search by name or language',
+    searchDirectoryLabel: 'Search directory',
+    feeDisputeNote: 'Charged as a percentage of the order when a dispute is resolved',
+    directoryUnavailable: 'No platform-recommended moderators right now.',
+    directoryFilteredEmpty: 'No moderators match your current filters.',
     language: 'Language',
     allLanguages: 'All Languages',
     maxFee: 'Max Fee (%)',
     anyFee: 'Any Fee',
-    verifiedOnly: 'Verified only',
+    verifiedOnly: 'Platform verified',
     sortBy: 'Sort by',
     highestRating: 'Highest Rating',
     lowestFee: 'Lowest Fee',
@@ -2526,10 +2532,21 @@ export const en: TranslationResource = {
     addToStore: 'Add to store',
     addedToStore: 'Added to store',
     addToStoreBanner:
-      'Select a moderator and add them to your store for buyer protection on listings.',
-    directoryEmpty: 'No moderators match your filters. Try adjusting search or filters.',
-    directoryEmptyHint:
-      'The catalog lists platform-verified moderators. Paste a full Peer ID (starts with 12D3KooW…) in search to look up others.',
+      'Selections return to store settings. You can also add someone you trust with their full moderator ID.',
+    recommendedDirectoryTitle: 'Moderator directory',
+    customTabTitle: 'Add by ID',
+    customLookupTitle: 'Add moderator by ID',
+    customLookupHint: 'Paste the full ID provided by the moderator.',
+    customLookupAction: 'Add by ID',
+    customPeerIdLabel: 'Moderator ID',
+    customPeerIdPlaceholder: 'Paste full ID (12D3KooW… or Qm…)',
+    customLookupReady: 'We will show the profile before you confirm.',
+    customLookupNeedFullPeerID: 'Use the complete moderator ID, not a shortened display ID.',
+    customUnverifiedBadge: 'Unverified',
+    customLookupTrustNote:
+      'Custom moderators may not be platform verified. Confirm their identity before adding them.',
+    directoryEmpty: 'No platform-verified moderators match your filters.',
+    directoryEmptyHint: 'Adjust or reset your filters.',
     directoryLookupSearching: 'Looking up moderator…',
     directoryLookupNotFound: 'No profile found for this Peer ID. Check the full ID and try again.',
     directoryLookupNotModerator:
@@ -2869,7 +2886,7 @@ export const en: TranslationResource = {
     moderatorNotConfigured: 'This profile is not registered as a dispute moderator.',
     moderatorPreviewLoading: 'Looking up moderator…',
     moderatorPeerIdFormatHint:
-      'Use the full Peer ID (starts with 12D3KooW…), not a truncated display ID.',
+      'Paste the full moderator ID (e.g. 12D3KooW…), not a shortened display ID.',
     profileUnavailable: 'Full profile details are not available for this moderator yet.',
     viewModeratorProfile: 'View profile',
     addFromMarketplace: 'Browse the moderator directory instead',
@@ -3107,7 +3124,7 @@ export const en: TranslationResource = {
     unblockConfirmDesc: 'Are you sure you want to unblock {{name}}?',
     // Moderation
     addModerator: 'Add Moderator',
-    addModeratorDesc: 'Enter the Peer ID of the moderator to add',
+    addModeratorDesc: 'Paste the full moderator ID to add',
     moderationDesc: 'Moderators help resolve disputes between buyers and sellers',
     noModerators: 'No moderators added yet',
     moderatorAdded: 'Moderator added successfully',
