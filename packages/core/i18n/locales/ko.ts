@@ -4384,11 +4384,17 @@ export const ko: PartialTranslationResource = {
       guestOrderTitle: '손님 주문',
       orderItemCount: '{{count}}개 상품',
       guestActionsTitle: '판매자 작업',
-      guestShipHelp:
-        '결제가 확인되었습니다. 실물 상품은 배송 정보를 추가하고, 디지털 상품은 배달 완료로 표시하세요.',
+      guestDetailLoadFailed: '게스트 주문을 불러오지 못했습니다. 다시 시도해 주세요.',
+      guestDigitalDeliverHelp:
+        '결제가 확인되었습니다. 구매자가 디지털 상품에 접근할 수 있으면 배달 완료로 표시하세요.',
+      guestPhysicalShipHelp:
+        '결제가 확인되었습니다. 추적 정보(선택)를 입력한 뒤 발송 완료로 표시하세요.',
+      guestOrderTypeDigital: '디지털',
+      guestOrderTypePhysical: '실물',
       guestCarrierPlaceholder: '배송사 (선택)',
       guestTrackingPlaceholder: '운송장 번호 (선택)',
-      guestMarkFulfilled: '발송/배달 완료로 표시',
+      guestMarkDelivered: '배달 완료로 표시',
+      guestMarkShipped: '발송 완료로 표시',
       guestCompleteHelp: '배달이 확인되면 이 손님 주문을 완료하세요.',
       guestCompleteOrder: '주문 완료',
       guestShipSuccess: '발송/배달 완료로 표시됨',
@@ -4398,6 +4404,7 @@ export const ko: PartialTranslationResource = {
       guestActionCompleted: '이 주문은 완료되었습니다. 추가 작업이 필요 없습니다.',
       guestActionExpired: '이 주문은 만료되었습니다. 작업이 필요 없습니다.',
       guestActionNoAction: '현재 상태에서는 사용할 수 있는 작업이 없습니다.',
+      guestToggleTracking: '배송 추적 정보 추가(선택)',
       guestItemCount: '{{count}} 항목',
       guestItemCountPlural: '{{count}} 항목',
       noGuestOrders: '아직 손님 주문이 없습니다.',

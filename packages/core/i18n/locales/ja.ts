@@ -4418,11 +4418,17 @@ export const ja: PartialTranslationResource = {
       guestOrderTitle: 'ゲストオーダー',
       orderItemCount: '{{count}} 件の商品',
       guestActionsTitle: '出品者の操作',
-      guestShipHelp:
-        '支払いが確認されました。物理商品は配送情報を追加し、デジタル商品は配信完了としてマークしてください。',
+      guestDetailLoadFailed: 'このゲスト注文を読み込めませんでした。もう一度お試しください。',
+      guestDigitalDeliverHelp:
+        '入金を確認しました。購入者がデジタル商品にアクセスできる状態になったら、配信済みにマークしてください。',
+      guestPhysicalShipHelp:
+        '入金を確認しました。追跡情報（任意）を入力してから、発送済みにマークしてください。',
+      guestOrderTypeDigital: 'デジタル',
+      guestOrderTypePhysical: '物理商品',
       guestCarrierPlaceholder: '配送業者（任意）',
       guestTrackingPlaceholder: '追跡番号（任意）',
-      guestMarkFulfilled: '発送/配信済みにする',
+      guestMarkDelivered: '配信済みにする',
+      guestMarkShipped: '発送済みにする',
       guestCompleteHelp: '配信が確認できたら、このゲスト注文を完了してください。',
       guestCompleteOrder: '注文を完了',
       guestShipSuccess: '発送/配信済みにしました',
@@ -4432,6 +4438,7 @@ export const ja: PartialTranslationResource = {
       guestActionCompleted: 'この注文は完了しています。追加の操作は不要です。',
       guestActionExpired: 'この注文は期限切れです。操作は不要です。',
       guestActionNoAction: '現在の状態では利用できる操作がありません。',
+      guestToggleTracking: '配送情報を追加（任意）',
       guestItemCount: '{{count}} アイテム',
       guestItemCountPlural: '{{count}} 個のアイテム',
       noGuestOrders: 'まだゲストの注文はありません。',

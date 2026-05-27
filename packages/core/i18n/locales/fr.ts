@@ -4511,11 +4511,17 @@ export const fr: PartialTranslationResource = {
       guestOrderTitle: "Commande d'invité",
       orderItemCount: '{{count}} articles',
       guestActionsTitle: 'Actions vendeur',
-      guestShipHelp:
-        'Le paiement est confirmé. Pour les biens physiques, ajoutez les détails d’expédition ; pour le numérique, marquez la livraison comme effectuée.',
+      guestDetailLoadFailed: 'Impossible de charger cette commande invité. Veuillez réessayer.',
+      guestDigitalDeliverHelp:
+        'Paiement reçu. Marquez comme livré une fois que l’acheteur peut accéder au produit numérique.',
+      guestPhysicalShipHelp:
+        'Paiement reçu. Ajoutez un suivi (facultatif), puis marquez comme expédié.',
+      guestOrderTypeDigital: 'Numérique',
+      guestOrderTypePhysical: 'Physique',
       guestCarrierPlaceholder: 'Transporteur (facultatif)',
       guestTrackingPlaceholder: 'Numéro de suivi (facultatif)',
-      guestMarkFulfilled: 'Marquer comme expédié/livré',
+      guestMarkDelivered: 'Marquer comme livré',
+      guestMarkShipped: 'Marquer comme expédié',
       guestCompleteHelp: 'Terminez cette commande invité une fois la livraison confirmée.',
       guestCompleteOrder: 'Terminer la commande',
       guestShipSuccess: 'Marqué comme expédié/livré',
@@ -4525,6 +4531,7 @@ export const fr: PartialTranslationResource = {
       guestActionCompleted: 'Cette commande est terminée. Aucune action requise.',
       guestActionExpired: 'Cette commande a expiré. Aucune action requise.',
       guestActionNoAction: 'Aucune action disponible pour l’état actuel.',
+      guestToggleTracking: 'Ajouter le suivi (facultatif)',
       guestItemCount: '{{count}} article',
       guestItemCountPlural: '{{count}} articles',
       noGuestOrders: "Aucune commande d'invité pour l'instant.",

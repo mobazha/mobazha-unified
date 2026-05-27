@@ -4482,11 +4482,17 @@ export const pt: PartialTranslationResource = {
       guestOrderTitle: 'Pedido de Convidado',
       orderItemCount: '{{count}} itens',
       guestActionsTitle: 'Ações do vendedor',
-      guestShipHelp:
-        'O pagamento foi confirmado. Para produtos físicos, adicione dados de envio; para digitais, marque a entrega como concluída.',
+      guestDetailLoadFailed: 'Não foi possível carregar este pedido de convidado. Tente novamente.',
+      guestDigitalDeliverHelp:
+        'Pagamento recebido. Marque como entregue quando o comprador puder acessar o produto digital.',
+      guestPhysicalShipHelp:
+        'Pagamento recebido. Adicione rastreamento (opcional) e marque como enviado.',
+      guestOrderTypeDigital: 'Digital',
+      guestOrderTypePhysical: 'Físico',
       guestCarrierPlaceholder: 'Transportadora (opcional)',
       guestTrackingPlaceholder: 'Número de rastreamento (opcional)',
-      guestMarkFulfilled: 'Marcar como enviado/entregue',
+      guestMarkDelivered: 'Marcar como entregue',
+      guestMarkShipped: 'Marcar como enviado',
       guestCompleteHelp: 'Conclua este pedido de convidado após confirmar a entrega.',
       guestCompleteOrder: 'Concluir pedido',
       guestShipSuccess: 'Marcado como enviado/entregue',
@@ -4496,6 +4502,7 @@ export const pt: PartialTranslationResource = {
       guestActionCompleted: 'Este pedido está concluído. Nenhuma ação necessária.',
       guestActionExpired: 'Este pedido expirou. Nenhuma ação necessária.',
       guestActionNoAction: 'Nenhuma ação disponível para o estado atual.',
+      guestToggleTracking: 'Adicionar rastreamento (opcional)',
       guestItemCount: '{{count}} item',
       guestItemCountPlural: '{{count}} itens',
       noGuestOrders: 'Nenhum pedido de convidado ainda.',

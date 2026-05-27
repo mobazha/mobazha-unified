@@ -4523,11 +4523,18 @@ export const de: PartialTranslationResource = {
       guestOrderTitle: 'Gastbestellung',
       orderItemCount: '{{count}} Artikel',
       guestActionsTitle: 'Verkäuferaktionen',
-      guestShipHelp:
-        'Zahlung ist eingegangen. Bei physischen Waren Versanddetails hinzufügen oder digitale Lieferung als erfüllt markieren.',
+      guestDetailLoadFailed:
+        'Diese Gastbestellung konnte nicht geladen werden. Bitte erneut versuchen.',
+      guestDigitalDeliverHelp:
+        'Zahlung eingegangen. Als geliefert markieren, sobald der Käufer auf das digitale Produkt zugreifen kann.',
+      guestPhysicalShipHelp:
+        'Zahlung eingegangen. Optional Versanddetails hinzufügen und als versendet markieren.',
+      guestOrderTypeDigital: 'Digital',
+      guestOrderTypePhysical: 'Physisch',
       guestCarrierPlaceholder: 'Versanddienst (optional)',
       guestTrackingPlaceholder: 'Sendungsnummer (optional)',
-      guestMarkFulfilled: 'Als versendet/geliefert markieren',
+      guestMarkDelivered: 'Als geliefert markieren',
+      guestMarkShipped: 'Als versendet markieren',
       guestCompleteHelp: 'Gastbestellung abschließen, sobald die Lieferung bestätigt ist.',
       guestCompleteOrder: 'Bestellung abschließen',
       guestShipSuccess: 'Als versendet/geliefert markiert',
@@ -4537,6 +4544,7 @@ export const de: PartialTranslationResource = {
       guestActionCompleted: 'Diese Bestellung ist abgeschlossen. Keine weitere Aktion nötig.',
       guestActionExpired: 'Diese Bestellung ist abgelaufen. Keine Aktion nötig.',
       guestActionNoAction: 'Für den aktuellen Status ist keine Aktion verfügbar.',
+      guestToggleTracking: 'Sendungsverfolgung hinzufügen (optional)',
       guestItemCount: '{{count}} Artikel',
       guestItemCountPlural: '{{count}} Artikel',
       noGuestOrders: 'Noch keine Gastbestellungen.',

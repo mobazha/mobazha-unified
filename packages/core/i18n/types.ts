@@ -2976,10 +2976,15 @@ export interface TranslationResource {
       paymentRailLabel?: string;
       listingCurrencyLabel?: string;
       guestActionsTitle?: string;
-      guestShipHelp?: string;
+      guestDetailLoadFailed?: string;
+      guestDigitalDeliverHelp?: string;
+      guestPhysicalShipHelp?: string;
+      guestOrderTypeDigital?: string;
+      guestOrderTypePhysical?: string;
       guestCarrierPlaceholder?: string;
       guestTrackingPlaceholder?: string;
-      guestMarkFulfilled?: string;
+      guestMarkDelivered?: string;
+      guestMarkShipped?: string;
       guestCompleteHelp?: string;
       guestCompleteOrder?: string;
       guestShipSuccess?: string;
@@ -2989,12 +2994,7 @@ export interface TranslationResource {
       guestActionCompleted?: string;
       guestActionExpired?: string;
       guestActionNoAction?: string;
-      guestStateAwaitingPayment?: string;
-      guestStatePaymentDetected?: string;
-      guestStateFunded?: string;
-      guestStateShipped?: string;
-      guestStateCompleted?: string;
-      guestStateExpired?: string;
+      guestToggleTracking?: string;
     };
     analytics?: {
       title?: string;

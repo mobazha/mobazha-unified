@@ -4438,11 +4438,17 @@ export const ru: PartialTranslationResource = {
       guestOrderTitle: 'Гостевой заказ',
       orderItemCount: '{{count}} товаров',
       guestActionsTitle: 'Действия продавца',
-      guestShipHelp:
-        'Оплата подтверждена. Для физических товаров укажите доставку; для цифровых отметьте доставку выполненной.',
+      guestDetailLoadFailed: 'Не удалось загрузить этот гостевой заказ. Попробуйте ещё раз.',
+      guestDigitalDeliverHelp:
+        'Оплата получена. Отметьте как доставлено, когда покупатель получит доступ к цифровому товару.',
+      guestPhysicalShipHelp:
+        'Оплата получена. Добавьте данные отслеживания (необязательно) и отметьте как отправлено.',
+      guestOrderTypeDigital: 'Цифровой',
+      guestOrderTypePhysical: 'Физический',
       guestCarrierPlaceholder: 'Перевозчик (необязательно)',
       guestTrackingPlaceholder: 'Номер отслеживания (необязательно)',
-      guestMarkFulfilled: 'Отметить как отправлено/доставлено',
+      guestMarkDelivered: 'Отметить как доставлено',
+      guestMarkShipped: 'Отметить как отправлено',
       guestCompleteHelp: 'Завершите гостевой заказ после подтверждения доставки.',
       guestCompleteOrder: 'Завершить заказ',
       guestShipSuccess: 'Отмечено как отправлено/доставлено',
@@ -4452,6 +4458,7 @@ export const ru: PartialTranslationResource = {
       guestActionCompleted: 'Этот заказ завершён. Дальнейшие действия не нужны.',
       guestActionExpired: 'Срок этого заказа истёк. Действия не нужны.',
       guestActionNoAction: 'Для текущего статуса действий нет.',
+      guestToggleTracking: 'Добавить данные отслеживания (необязательно)',
       guestItemCount: '{{count}} предмет',
       guestItemCountPlural: '{{count}} предметов',
       noGuestOrders: 'Гостевых заказов пока нет.',
