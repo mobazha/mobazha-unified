@@ -18,10 +18,12 @@ export const DEFAULT_SITE_URL: string =
 
 /**
  * Store subdomain base domain (e.g. "mymbz.org" → {handle}.mymbz.org).
- * Override via NEXT_PUBLIC_STORE_SUBDOMAIN_BASE for test environments (e.g. "mobaza.org").
  */
+const DEFAULT_STORE_SUBDOMAIN_BASE = 'mymbz.org';
+let storeSubdomainBase = DEFAULT_STORE_SUBDOMAIN_BASE;
+
 export function getStoreSubdomainBase(): string {
-  return readPublicEnv('NEXT_PUBLIC_STORE_SUBDOMAIN_BASE') || 'mymbz.org';
+  return storeSubdomainBase;
 }
 
 export type AuthMode = 'hosted' | 'basic' | 'standalone';
@@ -84,12 +86,18 @@ export interface EnvConfig {
   discord?: DiscordConfig;
 }
 
-function readPublicEnv(key: string): string | undefined {
-  const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.[
-    key
-  ];
-  if (viteEnv) return viteEnv;
-  return typeof process !== 'undefined' ? process.env?.[key] : undefined;
+export interface PublicEnvConfig {
+  envMode?: string;
+  apiUrl?: string;
+  apiBaseUrl?: string;
+  mediaBaseUrl?: string;
+  casdoorUrl?: string;
+  casdoorClientId?: string;
+  authMode?: string;
+  basicUsername?: string;
+  saasUrl?: string;
+  discordClientId?: string;
+  storeSubdomainBase?: string;
 }
 
 /**
@@ -388,12 +396,13 @@ export function isStandaloneMode(): boolean {
 }
 
 /**
- * 从环境变量初始化配置
+ * 从应用层传入的 public 配置初始化环境。
+ *
+ * Core 不直接读取 bundler 环境变量；Next/Vite 入口负责静态读取
+ * NEXT_PUBLIC_* 后调用此函数，避免动态 key 访问导致 Next.js 无法内联。
  */
-export function initEnvFromProcess(): void {
-  const envMode = readPublicEnv('NEXT_PUBLIC_ENV_MODE');
-
-  switch (envMode) {
+export function initEnvFromPublicConfig(publicEnv: PublicEnvConfig = {}): void {
+  switch (publicEnv.envMode) {
     case 'production':
       switchToProdEnv();
       break;
@@ -409,8 +418,10 @@ export function initEnvFromProcess(): void {
       break;
   }
 
+  storeSubdomainBase = publicEnv.storeSubdomainBase || DEFAULT_STORE_SUBDOMAIN_BASE;
+
   // 允许通过环境变量覆盖 API URL
-  const apiUrl = readPublicEnv('NEXT_PUBLIC_API_URL') || readPublicEnv('NEXT_PUBLIC_API_BASE_URL');
+  const apiUrl = publicEnv.apiUrl || publicEnv.apiBaseUrl;
   if (apiUrl) {
     const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = apiUrl.replace(/^https?:\/\//, '');
@@ -426,7 +437,7 @@ export function initEnvFromProcess(): void {
   }
 
   // CDN 媒体基础 URL（R2 公网 URL，配置后前端直达 CDN 绕过 gateway）
-  const mediaBaseUrl = readPublicEnv('NEXT_PUBLIC_MEDIA_BASE_URL');
+  const mediaBaseUrl = publicEnv.mediaBaseUrl;
   if (mediaBaseUrl) {
     currentEnv = {
       ...currentEnv,
@@ -438,8 +449,8 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量覆盖 Casdoor 配置（本地开发使用）
-  const casdoorUrl = readPublicEnv('NEXT_PUBLIC_CASDOOR_URL');
-  const casdoorClientId = readPublicEnv('NEXT_PUBLIC_CASDOOR_CLIENT_ID');
+  const casdoorUrl = publicEnv.casdoorUrl;
+  const casdoorClientId = publicEnv.casdoorClientId;
   if (casdoorUrl || casdoorClientId) {
     currentEnv = {
       ...currentEnv,
@@ -452,7 +463,7 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量覆盖认证模式
-  const authMode = readPublicEnv('NEXT_PUBLIC_AUTH_MODE');
+  const authMode = publicEnv.authMode;
   if (authMode === 'hosted' || authMode === 'basic' || authMode === 'standalone') {
     currentEnv = {
       ...currentEnv,
@@ -464,7 +475,7 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量设置 Basic Auth 用户名
-  const basicUsername = readPublicEnv('NEXT_PUBLIC_BASIC_AUTH_USERNAME');
+  const basicUsername = publicEnv.basicUsername;
   if (basicUsername) {
     currentEnv = {
       ...currentEnv,
@@ -479,7 +490,7 @@ export function initEnvFromProcess(): void {
   }
 
   // Standalone 模式: SaaS URL 配置
-  const saasUrl = readPublicEnv('NEXT_PUBLIC_SAAS_URL');
+  const saasUrl = publicEnv.saasUrl;
   if (saasUrl) {
     currentEnv = {
       ...currentEnv,
@@ -493,7 +504,7 @@ export function initEnvFromProcess(): void {
   }
 
   // Discord Activity / Mini App 配置
-  const discordClientId = readPublicEnv('NEXT_PUBLIC_DISCORD_CLIENT_ID');
+  const discordClientId = publicEnv.discordClientId;
   if (discordClientId) {
     currentEnv = {
       ...currentEnv,
@@ -502,14 +513,29 @@ export function initEnvFromProcess(): void {
   }
 }
 
-// 自动初始化
-// Vite 的 define 在编译时替换 process.env.NEXT_PUBLIC_* 为字面量，
-// 但 process 对象本身在浏览器中不存在，所以不能用 typeof process 做守卫。
-// 直接调用即可 — 函数内部所有 process.env.NEXT_PUBLIC_* 引用都会被 Vite 替换。
-try {
-  initEnvFromProcess();
-} catch {
-  // Node.js 环境中如果缺少 env var 也能安全降级
+/**
+ * Node.js 脚本/测试兼容入口。Web 应用不要依赖这个函数，避免把 bundler
+ * env 读取规则重新扩散回 core。
+ */
+export function initEnvFromProcess(): void {
+  if (typeof process === 'undefined') {
+    initEnvFromPublicConfig();
+    return;
+  }
+
+  initEnvFromPublicConfig({
+    envMode: process.env.NEXT_PUBLIC_ENV_MODE,
+    apiUrl: process.env.NEXT_PUBLIC_API_URL,
+    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    mediaBaseUrl: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
+    casdoorUrl: process.env.NEXT_PUBLIC_CASDOOR_URL,
+    casdoorClientId: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID,
+    authMode: process.env.NEXT_PUBLIC_AUTH_MODE,
+    basicUsername: process.env.NEXT_PUBLIC_BASIC_AUTH_USERNAME,
+    saasUrl: process.env.NEXT_PUBLIC_SAAS_URL,
+    discordClientId: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
+    storeSubdomainBase: process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE,
+  });
 }
 
 /**
@@ -520,9 +546,9 @@ try {
  * (e.g. SAAS_API_URL). This allows a single generic image to be configured
  * at deploy time without rebuilding the frontend.
  *
- * Runtime values override compile-time defaults set by initEnvFromProcess().
+ * Runtime values override compile-time defaults set by initEnvFromPublicConfig().
  */
-function applyRuntimeConfig(): void {
+export function applyRuntimeConfig(): void {
   if (typeof window === 'undefined') return;
   // Note: feature flags (`rc.features` and the legacy `rc.guestCheckoutEnabled`)
   // are consumed by `services/featureFlags.ts`, not this function. Call sites
@@ -620,10 +646,4 @@ function applyRuntimeConfig(): void {
     // Brand colors are applied by useTheme → applyThemeToDOM → brandColorOverrides()
     // which overlays --color-primary/Light/Dark/accent after the base theme is set.
   }
-}
-
-try {
-  applyRuntimeConfig();
-} catch {
-  // Non-browser or missing runtime config — no-op
 }

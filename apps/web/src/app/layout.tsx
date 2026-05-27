@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import './globals.css';
+import '@/lib/initPublicEnv';
 
 // __OUTPOST__ 是 Vite (apps/web/vite.config.ts) 的编译时 define。
 // Next.js 构建不替换此变量，导致裸引用在运行时抛 ReferenceError。

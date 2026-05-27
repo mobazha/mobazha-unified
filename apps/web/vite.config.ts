@@ -32,8 +32,8 @@ function readBody(req: IncomingMessage): Promise<string> {
 
 /**
  * Serves `/runtime-config.js` in dev when `NEXT_PUBLIC_ENV_MODE=standalone`, matching
- * mobazha3.0 embedded `internal/embedded/frontend/server.go` so `packages/core/config/env.ts`
- * `applyRuntimeConfig()` runs and sets `auth.mode` + API base URLs before React mounts.
+ * mobazha3.0 embedded `internal/embedded/frontend/server.go` so the web app bootstrap
+ * can apply runtime config and set `auth.mode` + API base URLs before React mounts.
  * Without this, Vite returns 404 for the script in index.html and the app can fall back to
  * SaaS homepage even when the shell passes standalone env vars.
  */
@@ -285,6 +285,9 @@ export default defineConfig(({ mode }) => {
         env.NEXT_PUBLIC_USE_MOCK_DATA || 'false'
       ),
       'process.env.NEXT_PUBLIC_API_BASE_URL': JSON.stringify(apiBase),
+      'process.env.NEXT_PUBLIC_MEDIA_BASE_URL': JSON.stringify(
+        env.NEXT_PUBLIC_MEDIA_BASE_URL || ''
+      ),
       'process.env.NEXT_PUBLIC_AUTH_MODE': JSON.stringify(env.NEXT_PUBLIC_AUTH_MODE || ''),
       'process.env.NEXT_PUBLIC_CASDOOR_URL': JSON.stringify(
         isOutpost ? '' : env.NEXT_PUBLIC_CASDOOR_URL || ''
@@ -300,6 +303,9 @@ export default defineConfig(({ mode }) => {
       ),
       'process.env.NEXT_PUBLIC_BASIC_AUTH_USERNAME': JSON.stringify(
         env.NEXT_PUBLIC_BASIC_AUTH_USERNAME || ''
+      ),
+      'process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID': JSON.stringify(
+        isOutpost ? '' : env.NEXT_PUBLIC_DISCORD_CLIENT_ID || ''
       ),
     },
     resolve: {

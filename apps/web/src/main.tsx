@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // 导入全局样式
 import './app/globals.css';
+import '@/lib/initPublicEnv';
 
 // 导入 Provider 组件
 import { AuthProvider, MobileNav, PWAInstall } from '@/components';
