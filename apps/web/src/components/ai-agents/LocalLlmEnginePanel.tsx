@@ -42,6 +42,12 @@ function getDetectedLocalEngine(
     const url = new URL(baseURL);
     const hostname = normalizeHostname(url.hostname);
     const isLoopback = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+    const isDockerBundledOllama =
+      (hostname === 'ollama' || hostname.endsWith('.ollama')) && url.port === '11434';
+
+    if (isDockerBundledOllama) {
+      return { engine: 'ollama', label: 'Ollama (Docker)' };
+    }
 
     if (!isLoopback) {
       return null;

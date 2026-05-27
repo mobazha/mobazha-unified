@@ -4,6 +4,8 @@
  * ChatFloatingButton barrel exports plus individual file imports.
  */
 
+import type { MatrixMessage } from '@mobazha/core';
+
 export function ChatList() {
   return null;
 }
@@ -64,5 +66,10 @@ export function useChatViewLogic(..._args: unknown[]) {
 }
 
 export function useChatEffects() {}
+
+/** Stub for useOrderChat — outpost has no Matrix chat UI. */
+export function toDisplayMessage(_msg: MatrixMessage, _sender?: unknown): Message {
+  return {} as Message;
+}
 
 export default ChatList;
