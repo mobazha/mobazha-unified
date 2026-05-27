@@ -80,6 +80,7 @@ export interface GuestOrderStatus {
   confirmations: number;
   requiredConfs: number;
   chainBlockTimeSec?: number;
+  sellerPeerID?: string;
   expiresAt: string;
   txHash?: string;
   trackingNumber?: string;

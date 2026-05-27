@@ -25,7 +25,16 @@ import {
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { NotificationDropdown } from '../Notification';
-import { ArrowLeft, Eye, User, LogOut, MessageSquare, MessageCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  User,
+  LogOut,
+  MessageSquare,
+  MessageCircle,
+  ShoppingBag,
+} from 'lucide-react';
+import { ordersListPath } from '@/lib/ordersNavigation';
 import { useAIChatStore } from '@mobazha/core/stores';
 import { usePlatform } from '@mobazha/ui/hooks';
 
@@ -217,6 +226,15 @@ export function AdminHeader({ title }: AdminHeaderProps) {
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   {t('userMenu.viewStore')}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => router.push(ordersListPath('admin', 'purchases'))}
+                  className="cursor-pointer"
+                  data-testid="admin-menu-my-purchases"
+                >
+                  <ShoppingBag className="mr-2 h-4 w-4" />
+                  {t('order.myPurchases')}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem

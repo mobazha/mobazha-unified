@@ -74,10 +74,12 @@ import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner'
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
+import { orderDetailPath } from '@/lib/ordersNavigation';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
+  listBackPath?: string;
   focusDispute?: boolean;
   initialTab?: 'summary' | 'discussion' | 'dispute' | 'evidence';
 }
@@ -85,6 +87,7 @@ export interface OrderDetailDesktopProps {
 export function OrderDetailDesktop({
   orderId,
   viewingContext,
+  listBackPath = '/orders',
   focusDispute = false,
   initialTab = 'summary',
 }: OrderDetailDesktopProps) {
@@ -161,11 +164,18 @@ export function OrderDetailDesktop({
 
   const syncTabToUrl = useCallback(
     (tab: 'summary' | 'discussion' | 'dispute' | 'evidence') => {
-      const params = new URLSearchParams({ type: orderViewType });
-      if (tab !== 'summary') params.set('tab', tab);
-      router.replace(`/orders/${orderId}?${params.toString()}`, { scroll: false });
+      const detailRole = orderViewType === 'sale' ? 'sale' : 'purchase';
+      const fromShell =
+        listBackPath.startsWith('/admin/orders') && detailRole === 'purchase' ? 'admin' : undefined;
+      router.replace(
+        orderDetailPath(orderId, detailRole, {
+          fromShell,
+          tab: tab !== 'summary' ? tab : undefined,
+        }),
+        { scroll: false }
+      );
     },
-    [orderId, orderViewType, router]
+    [orderId, orderViewType, listBackPath, router]
   );
 
   const handleTabChange = useCallback(
@@ -517,7 +527,7 @@ export function OrderDetailDesktop({
               {t('order.orderNotFound')}
             </h2>
             <p className="text-muted-foreground mb-4">{t('order.orderNotFoundMessage')}</p>
-            <Button onClick={() => router.push('/orders')}>{t('order.backToOrders')}</Button>
+            <Button onClick={() => router.push(listBackPath)}>{t('order.backToOrders')}</Button>
           </Card>
         </Container>
         <Footer />
@@ -533,7 +543,9 @@ export function OrderDetailDesktop({
         <Container size="xl">
           {/* Back button — conditional label/destination for moderator dispute view */}
           <button
-            onClick={() => (isModeratorDisputeView ? router.push('/cases') : router.back())}
+            onClick={() =>
+              isModeratorDisputeView ? router.push('/cases') : router.push(listBackPath)
+            }
             aria-label={isModeratorDisputeView ? t('order.backToCases') : t('order.backToOrders')}
             className="group flex items-center gap-2 text-muted-foreground hover:text-primary mb-4 text-sm transition-colors"
           >

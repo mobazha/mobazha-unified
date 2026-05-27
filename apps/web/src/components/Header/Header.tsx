@@ -363,7 +363,7 @@ export const Header: React.FC = () => {
                   {!isPureSeller && (
                     <>
                       <DropdownMenuItem
-                        onClick={() => router.push('/orders?tab=purchases')}
+                        onClick={() => router.push('/orders')}
                         className="cursor-pointer"
                         data-testid="header-menu-orders"
                       >

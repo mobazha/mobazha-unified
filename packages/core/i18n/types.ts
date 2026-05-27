@@ -2744,6 +2744,7 @@ export interface TranslationResource {
       dashboard?: string;
       products?: string;
       orders?: string;
+      storeSales?: string;
       funds?: string;
       analytics?: string;
       discounts?: string;
@@ -2956,6 +2957,7 @@ export interface TranslationResource {
       sourceGuest?: string;
       guestBadge?: string;
       guestOrderTitle?: string;
+      orderItemCount?: string;
       guestItemCount?: string;
       guestItemCountPlural?: string;
       noGuestOrders?: string;
@@ -2973,6 +2975,20 @@ export interface TranslationResource {
       guestOrderItems?: string;
       paymentRailLabel?: string;
       listingCurrencyLabel?: string;
+      guestActionsTitle?: string;
+      guestShipHelp?: string;
+      guestCarrierPlaceholder?: string;
+      guestTrackingPlaceholder?: string;
+      guestMarkFulfilled?: string;
+      guestCompleteHelp?: string;
+      guestCompleteOrder?: string;
+      guestShipSuccess?: string;
+      guestCompleteSuccess?: string;
+      guestActionFailed?: string;
+      guestActionWaitingPayment?: string;
+      guestActionCompleted?: string;
+      guestActionExpired?: string;
+      guestActionNoAction?: string;
       guestStateAwaitingPayment?: string;
       guestStatePaymentDetected?: string;
       guestStateFunded?: string;

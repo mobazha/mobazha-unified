@@ -214,7 +214,7 @@ async function screenshot(page, name) {
 async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
   const { ctx, page } = await newPage(browser, viewport);
   await page.route('**/v1/orders/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(order) }));
-  await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?type=purchase${urlSuffix}`);
+  await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?role=purchase${urlSuffix}`);
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(4000);
   return { ctx, page };
@@ -237,7 +237,7 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
       r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ purchases }) });
     });
     await page.route('**/v1/profiles/batch*', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({}) }));
-    await page.goto(`${BASE_URL}/orders?tab=purchases`);
+    await page.goto(`${BASE_URL}/orders`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(4000);
     results.push(await screenshot(page, `ux12-continue-payment-${label}`));
@@ -332,7 +332,7 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
       if (req.method() !== 'GET') return r.fallback();
       r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ purchases: [] }) });
     });
-    await page.goto(`${BASE_URL}/orders?tab=purchases`);
+    await page.goto(`${BASE_URL}/orders`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
@@ -426,7 +426,7 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
     await page.route('**/v1/profiles', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(sellerProfile) }));
     await page.route('**/platform/v1/accounts/me', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ id: 'seller1', name: 'TechStore', properties: { peerID: MOCK_VENDOR_PEER_ID } }) }));
     await page.route('**/v1/orders/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(order) }));
-    await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?type=sale`);
+    await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?role=sale`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(4000);
     return { ctx, page };

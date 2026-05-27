@@ -22,6 +22,24 @@ describe('getNotificationRoute', () => {
     expect(route).toBe('/orders/QmOrder123');
   });
 
+  it('routes guest order notifications to seller guest order detail', () => {
+    const route = getNotificationRoute(
+      makeNotification('order.confirmed', {
+        orderID: 'gst_077de4dd335a5faafdcd5d92ddda122e8c93896d816084c792cec4bf2cf2',
+      })
+    );
+    expect(route).toBe(
+      '/admin/orders?source=guest&guestOrder=gst_077de4dd335a5faafdcd5d92ddda122e8c93896d816084c792cec4bf2cf2'
+    );
+  });
+
+  it('routes guest payment notifications to seller guest order detail', () => {
+    const route = getNotificationRoute(
+      makeNotification('payment.received', { orderID: 'gst_token_with spaces' })
+    );
+    expect(route).toBe('/admin/orders?source=guest&guestOrder=gst_token_with+spaces');
+  });
+
   it('routes buyer/seller dispute notifications to order dispute tab', () => {
     const route = getNotificationRoute(
       makeNotification('dispute.opened', { orderID: 'QmOrder123' })

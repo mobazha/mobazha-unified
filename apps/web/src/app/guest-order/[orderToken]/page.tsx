@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import { formatUserName, isFullPeerID, profileApi, useI18n, type UserProfile } from '@mobazha/core';
 import { Header } from '@/components';
 import {
   buyerPortalTokenStorageKey,
@@ -28,6 +28,19 @@ import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 import { cn } from '@/lib/utils';
+
+function resolveSellerPeerID(order: GuestOrderStatus): string | undefined {
+  if (isFullPeerID(order.sellerPeerID)) return order.sellerPeerID;
+  const itemPeerID = order.items.find(item => isFullPeerID(item.sellerPeerID))?.sellerPeerID;
+  return isFullPeerID(itemPeerID) ? itemPeerID : undefined;
+}
+
+function sellerDisplayName(peerID: string | undefined, profile: UserProfile | null): string {
+  return formatUserName(
+    { name: profile?.name, handle: profile?.handle, peerID },
+    { truncateChars: 6 }
+  );
+}
 
 function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
   return {
@@ -71,6 +84,8 @@ export default function GuestOrderPage() {
   const [order, setOrder] = useState<GuestOrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [buyerPortalToken, setBuyerPortalToken] = useState<string | undefined>();
+  const [sellerProfile, setSellerProfile] = useState<UserProfile | null>(null);
+  const [sellerProfilePeerID, setSellerProfilePeerID] = useState<string | undefined>(undefined);
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
 
   // Keep the recovery token out of Referer headers even for legacy query-link
@@ -140,6 +155,22 @@ export default function GuestOrderPage() {
     };
   }, [orderToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const sellerPeerID = useMemo(() => (order ? resolveSellerPeerID(order) : undefined), [order]);
+
+  useEffect(() => {
+    if (!sellerPeerID) return;
+    let cancelled = false;
+    profileApi.getProfile(sellerPeerID).then(profile => {
+      if (!cancelled) {
+        setSellerProfilePeerID(sellerPeerID);
+        setSellerProfile(profile);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sellerPeerID]);
+
   if (error && !order) {
     return (
       <div className="min-h-screen bg-background">
@@ -167,6 +198,9 @@ export default function GuestOrderPage() {
   const display = resolveStatusDisplay(order.state, guestStatusCfg);
   const coinSymbol = resolveTokenIdForDisplay(order.paymentCoin);
   const priceCur = order.priceCurrency || coinSymbol;
+  const resolvedSellerProfile =
+    sellerPeerID && sellerProfilePeerID === sellerPeerID ? sellerProfile : null;
+  const sellerName = sellerDisplayName(sellerPeerID, resolvedSellerProfile);
 
   const showPaymentInfo = order.state === 'AWAITING_PAYMENT' && !order.poolDetected;
   const isPoolDetected = order.state === 'AWAITING_PAYMENT' && !!order.poolDetected;
@@ -195,6 +229,21 @@ export default function GuestOrderPage() {
               ariaLabel={t('guestOrder.tokenHelpTitle')}
             />
           </div>
+          {(sellerName || !sellerPeerID) && (
+            <div className="mt-2 text-sm text-muted-foreground">
+              <span>{t('common.seller')}: </span>
+              {sellerPeerID ? (
+                <Link
+                  href={`/store/${encodeURIComponent(sellerPeerID)}`}
+                  className="font-medium text-primary"
+                >
+                  {sellerName}
+                </Link>
+              ) : (
+                <span className="font-medium text-foreground">{t('common.store')}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={cn('p-4 rounded-lg text-center', display.color)}>
@@ -281,14 +330,13 @@ export default function GuestOrderPage() {
                 // In Outpost mode the sellerPeerID is the internal sentinel
                 // "default" (StandaloneTenantID), not a real P2P peer ID.
                 // Omit peerID so the product page fetches from the local node.
-                const effectivePeerID =
-                  item.sellerPeerID && item.sellerPeerID !== 'default'
-                    ? item.sellerPeerID
-                    : undefined;
+                const effectivePeerID = isFullPeerID(item.sellerPeerID)
+                  ? item.sellerPeerID
+                  : sellerPeerID;
                 const productHref = item.listingSlug
                   ? effectivePeerID
-                    ? `/product/${item.listingSlug}?peerID=${effectivePeerID}`
-                    : `/product/${item.listingSlug}`
+                    ? `/product/${encodeURIComponent(item.listingSlug)}?peerID=${encodeURIComponent(effectivePeerID)}`
+                    : `/product/${encodeURIComponent(item.listingSlug)}`
                   : undefined;
                 const Inner = (
                   <>
