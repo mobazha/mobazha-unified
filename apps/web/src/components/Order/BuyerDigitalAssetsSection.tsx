@@ -15,8 +15,13 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
-import { useI18n, digitalAssetsApi } from '@mobazha/core';
-import type { BuyerAssetEntry, BuyerAssetStatus, BuyerLicenseEntry } from '@mobazha/core';
+import { useI18n, digitalAssetsApi, onWebSocketMessage } from '@mobazha/core';
+import type {
+  BuyerAssetEntry,
+  BuyerAssetStatus,
+  BuyerLicenseEntry,
+  WebSocketMessage,
+} from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -109,6 +114,11 @@ function isMissingEntitlementsError(err: unknown, hasBuyerPortalToken: boolean):
   return false;
 }
 
+function extractNotificationOrderID(message: WebSocketMessage): string | undefined {
+  const data = message.data as { notification?: { orderID?: string; purchaseOrderID?: string } };
+  return data?.notification?.orderID || data?.notification?.purchaseOrderID;
+}
+
 export function BuyerDigitalAssetsSection({
   orderId,
   buyerPortalToken,
@@ -166,7 +176,27 @@ export function BuyerDigitalAssetsSection({
     return () => {
       cancelled = true;
     };
-  }, [orderId, buyerPortalToken, sellerPeerID, refreshKey, t]);
+  }, [orderId, buyerPortalToken, sellerPeerID, deliveredAt, refreshKey, t]);
+
+  useEffect(() => {
+    const timers = new Set<number>();
+    const unsubscribe = onWebSocketMessage((message: WebSocketMessage) => {
+      if (extractNotificationOrderID(message) !== orderId) {
+        return;
+      }
+
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        setRefreshKey(k => k + 1);
+      }, 500);
+      timers.add(timer);
+    });
+
+    return () => {
+      unsubscribe();
+      timers.forEach(timer => window.clearTimeout(timer));
+    };
+  }, [orderId]);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey(k => k + 1);

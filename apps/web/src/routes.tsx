@@ -197,6 +197,10 @@ if (!__OUTPOST__) {
       path: '/orders/:orderId',
       element: protectedPage(() => import('./app/orders/[orderId]/page')),
     },
+    {
+      path: '/orders/:orderId/discussion',
+      element: protectedPage(() => import('./app/orders/[orderId]/discussion/page')),
+    },
 
     // 支付
     { path: '/payment', element: protectedPage(() => import('./app/payment/page')) },

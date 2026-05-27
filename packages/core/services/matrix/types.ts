@@ -100,6 +100,7 @@ export interface RoomMetadata {
   type?: string;
   orderId?: string;
   orderState?: string;
+  title?: string;
   buyerId?: string;
   vendorId?: string;
   direct_target_peer_id?: string;

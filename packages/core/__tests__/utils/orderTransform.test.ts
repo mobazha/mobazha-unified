@@ -210,6 +210,34 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.paymentAmount).toBe('0.00029838');
   });
 
+  it('formats canonical fiat PaymentSent amounts with fiat divisibility', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'AWAITING_FULFILLMENT',
+        contract: {
+          ...buildOrder({}).contract,
+          paymentSent: {
+            coin: 'fiat:stripe:USD',
+            amount: '2900',
+            method: 'FIAT',
+            transactionID: 'pi_3TatACI000000000000GWsq15',
+          },
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.paymentCoin).toBe('fiat:stripe:USD');
+    expect(order?.currency).toBe('USD');
+    expect(order?.total).toBe('29.00');
+    expect(order?.paymentAmount).toBe('29.00');
+    expect(order?.fiatPayment).toMatchObject({
+      provider: 'stripe',
+      paymentID: 'pi_3TatACI000000000000GWsq15',
+    });
+  });
+
   it('uses OrderOpen pricing coin for unpaid display without inventing paymentCoin', () => {
     const rawOrder = buildOrder({}) as any;
     delete rawOrder.contract.paymentSent;

@@ -14,10 +14,12 @@ import {
   ordersApi,
   disputesApi,
   useFeature,
+  useChatStore,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useOrderChat } from '@/hooks/useOrderChat';
 import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -33,6 +35,7 @@ import {
 import {
   OrderFooter,
   OrderChat,
+  OrderChatContextStrip,
   AcceptOrderDialog,
   ShipOrderDialog,
   OrderConfirmDialog,
@@ -76,17 +79,21 @@ export interface OrderDetailDesktopProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
   focusDispute?: boolean;
+  initialTab?: 'summary' | 'discussion' | 'dispute' | 'evidence';
 }
 
 export function OrderDetailDesktop({
   orderId,
   viewingContext,
   focusDispute = false,
+  initialTab = 'summary',
 }: OrderDetailDesktopProps) {
   const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
   const supplyChainEnabled = useFeature('supplyChainEnabled');
+  const chatDrawerOpen = useChatStore(state => state.drawerOpen);
+  const closeChatDrawer = useChatStore(state => state.closeDrawer);
 
   const {
     displayOrder,
@@ -96,7 +103,6 @@ export function OrderDetailDesktop({
     refetch,
     latestSettlementAction,
     currentUserPeerID,
-    chatParticipants,
     isActionLoading,
     isTransitioning,
     executeConfirmAction,
@@ -107,8 +113,6 @@ export function OrderDetailDesktop({
     closeReviewDialog,
     copyOrderId,
     copyContract,
-    chatMessages,
-    sendMessage,
     acceptOrderProps,
     shipOrderProps,
     sellerDigitalDelivery,
@@ -123,9 +127,9 @@ export function OrderDetailDesktop({
   const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    'summary' | 'discussion' | 'contract' | 'dispute' | 'evidence'
-  >('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'dispute' | 'evidence'>(
+    initialTab
+  );
   const disputeSectionRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -137,23 +141,69 @@ export function OrderDetailDesktop({
     confirmDescription,
   } = useModeratorDisputeResolution(orderId, refetch);
 
+  const orderChat = useOrderChat({
+    orderId,
+    displayOrder,
+    currentUserPeerID,
+    isActive: activeTab === 'discussion',
+  });
+
   // Derived flag: moderator viewing a disputed order → switch to dedicated moderator view
   const isModeratorDisputeView =
     !!displayOrder && displayOrder.userRole === 'moderator' && !!displayOrder.dispute;
+
+  const orderViewType = useMemo((): 'sale' | 'purchase' => {
+    if (viewingContext === 'sale') return 'sale';
+    if (viewingContext === 'purchase') return 'purchase';
+    if (displayOrder?.userRole === 'seller') return 'sale';
+    return 'purchase';
+  }, [viewingContext, displayOrder?.userRole]);
+
+  const syncTabToUrl = useCallback(
+    (tab: 'summary' | 'discussion' | 'dispute' | 'evidence') => {
+      const params = new URLSearchParams({ type: orderViewType });
+      if (tab !== 'summary') params.set('tab', tab);
+      router.replace(`/orders/${orderId}?${params.toString()}`, { scroll: false });
+    },
+    [orderId, orderViewType, router]
+  );
+
+  const handleTabChange = useCallback(
+    (tab: 'summary' | 'discussion' | 'dispute' | 'evidence') => {
+      setActiveTab(tab);
+      syncTabToUrl(tab);
+    },
+    [syncTabToUrl]
+  );
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, orderId]);
+
+  // Order discussion is the embedded workspace — keep global drawer on the inbox list.
+  useEffect(() => {
+    if (activeTab !== 'discussion') return;
+    const store = useChatStore.getState();
+    if (chatDrawerOpen) {
+      closeChatDrawer();
+    } else if (store.currentRoomId) {
+      store.setCurrentRoom(null);
+    }
+  }, [activeTab, chatDrawerOpen, closeChatDrawer]);
 
   useEffect(() => {
     if (!focusDispute || !displayOrder) return;
     // For moderators with a dispute, focus the dedicated dispute tab
     if (isModeratorDisputeView) {
-      setActiveTab('dispute');
+      handleTabChange('dispute');
     } else {
-      setActiveTab('summary');
+      handleTabChange('summary');
       const timer = window.setTimeout(() => {
         disputeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 350);
       return () => window.clearTimeout(timer);
     }
-  }, [focusDispute, displayOrder, orderId, isModeratorDisputeView]);
+  }, [focusDispute, displayOrder, isModeratorDisputeView, handleTabChange]);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
@@ -501,7 +551,11 @@ export function OrderDetailDesktop({
           </button>
 
           {/* Main content card */}
-          <Card className="mb-6 p-6 border border-border/60 shadow-sm overflow-hidden">
+          <Card
+            className={`mb-6 border border-border/60 shadow-sm overflow-hidden ${
+              activeTab === 'discussion' ? 'p-6 flex flex-col min-h-[calc(100vh-10rem)]' : 'p-6'
+            }`}
+          >
             {/* Order / Case ID */}
             <div className="flex items-start gap-2 mb-3">
               <h1 className="text-sm font-medium text-muted-foreground flex-shrink-0">
@@ -538,7 +592,7 @@ export function OrderDetailDesktop({
               <div className="flex gap-6" role="tablist" aria-label={t('order.tabs.label')}>
                 {(isModeratorDisputeView
                   ? (['dispute', 'discussion', 'evidence'] as const)
-                  : (['summary', 'discussion', 'contract'] as const)
+                  : (['summary', 'discussion'] as const)
                 ).map(tab => (
                   <button
                     key={tab}
@@ -546,14 +600,19 @@ export function OrderDetailDesktop({
                     aria-selected={activeTab === tab}
                     aria-controls={`tabpanel-${tab}`}
                     id={`tab-${tab}`}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-2.5 text-sm font-medium transition-colors relative ${
+                    onClick={() => handleTabChange(tab)}
+                    className={`pb-2.5 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
                       activeTab === tab
                         ? 'text-primary'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {t(`order.tabs.${tab}`, { fallback: tab })}
+                    {tab === 'discussion' && orderChat.unreadCount > 0 && (
+                      <span className="px-1.5 py-0.5 min-w-[1.25rem] text-center bg-error text-white text-[10px] font-semibold rounded-full tabular-nums">
+                        {orderChat.unreadCount > 99 ? '99+' : orderChat.unreadCount}
+                      </span>
+                    )}
                     {activeTab === tab && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                     )}
@@ -620,15 +679,27 @@ export function OrderDetailDesktop({
 
             {/* ─── DISCUSSION TAB (shared by both views) ─── */}
             {activeTab === 'discussion' && (
-              <div role="tabpanel" id="tabpanel-discussion" aria-labelledby="tab-discussion">
-                <OrderChat
-                  orderId={orderId}
-                  participants={chatParticipants}
-                  messages={chatMessages}
-                  currentUserId={currentUserPeerID || ''}
-                  onSendMessage={sendMessage}
-                  className="h-[calc(100vh-400px)] min-h-[400px]"
-                />
+              <div
+                role="tabpanel"
+                id="tabpanel-discussion"
+                aria-labelledby="tab-discussion"
+                className="-mx-6 -mb-6 flex flex-1 min-h-[calc(100vh-14rem)]"
+              >
+                <aside className="hidden lg:flex w-72 shrink-0 border-r border-border/60">
+                  <OrderChatContextStrip
+                    displayOrder={displayOrder}
+                    onBackToSummary={() => handleTabChange('summary')}
+                    className="w-full"
+                  />
+                </aside>
+                <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+                  <OrderChat
+                    orderId={orderId}
+                    layout="embedded"
+                    className="flex-1 min-h-0 h-full rounded-none border-0 border-t border-border/60"
+                    {...orderChat}
+                  />
+                </div>
               </div>
             )}
 
@@ -709,12 +780,8 @@ export function OrderDetailDesktop({
                     dispute={displayOrder.afterSaleDispute}
                     userRole={displayOrder.userRole}
                     onMessageCounterparty={() => {
-                      setActiveTab('discussion');
-                      window.setTimeout(() => {
-                        document
-                          .querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')
-                          ?.focus();
-                      }, 0);
+                      handleTabChange('discussion');
+                      orderChat.focusComposer();
                     }}
                     className="mb-4"
                   />
@@ -807,6 +874,38 @@ export function OrderDetailDesktop({
                   className="mt-4"
                 />
 
+                {/* Advanced: raw contract JSON (power users) */}
+                <details className="group mt-4 rounded-xl border border-border/60 overflow-hidden">
+                  <summary className="flex items-center justify-between px-4 py-3 bg-muted/30 cursor-pointer select-none text-sm font-medium text-muted-foreground list-none">
+                    {t('order.contract.advancedTitle')}
+                    <svg
+                      className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </summary>
+                  <div className="p-4 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      {t('order.contract.description')}
+                    </p>
+                    <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all p-4 bg-muted/20 rounded-lg max-h-80 overflow-y-auto">
+                      {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
+                    </pre>
+                    <Button onClick={copyContract} variant="outline" size="sm" className="gap-2">
+                      <Copy className="w-3.5 h-3.5" />
+                      {t('order.actions.copyToClipboard')}
+                    </Button>
+                  </div>
+                </details>
+
                 {/* Subtle dispute entry — replaces the aggressive full-width button */}
                 {!displayOrder.protection && canOpenModeratedDispute && (
                   <div className="text-center mt-6 mb-2">
@@ -821,28 +920,15 @@ export function OrderDetailDesktop({
                 )}
               </div>
             )}
-
-            {/* ─── CONTRACT TAB (buyer/seller only) ─── */}
-            {!isModeratorDisputeView && activeTab === 'contract' && (
-              <div role="tabpanel" id="tabpanel-contract" aria-labelledby="tab-contract">
-                <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all p-4 bg-muted/20 rounded-lg">
-                  {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
-                </pre>
-                <Button onClick={copyContract} variant="outline" size="sm" className="mt-3 gap-2">
-                  <Copy className="w-3.5 h-3.5" />
-                  {t('order.actions.copyToClipboard')}
-                </Button>
-              </div>
-            )}
           </Card>
 
-          {/* Spacer for fixed footer */}
-          <div className="h-16" />
+          {/* Spacer for fixed footer — not needed in discussion fullscreen mode */}
+          {activeTab !== 'discussion' && <div className="h-16" />}
         </Container>
       </main>
 
       {/* Fixed action footer — hidden for moderator dispute view and when RatingInviteBanner takes over */}
-      {!showRatingInvite && !isModeratorDisputeView && (
+      {!showRatingInvite && !isModeratorDisputeView && activeTab !== 'discussion' && (
         <OrderFooter
           orderState={coreOrder?.state || 'PENDING'}
           userRole={displayOrder.userRole as CoreUserRole}
@@ -953,7 +1039,7 @@ export function OrderDetailDesktop({
         </AlertDialogContent>
       </AlertDialog>
 
-      <Footer />
+      {activeTab !== 'discussion' && <Footer />}
     </div>
   );
 }

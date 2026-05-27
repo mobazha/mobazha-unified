@@ -26,4 +26,9 @@ describe('formatPaymentAmount', () => {
   it('formats crypto with significant digits', () => {
     expect(formatPaymentAmount('0.00029838', undefined, 'BTC')).toBe('0.0002984 BTC');
   });
+
+  it('formats canonical fiat payment coins by currency instead of provider', () => {
+    expect(formatPaymentAmount('29.00', 'fiat:stripe:USD', 'USD')).toBe('$29.00');
+    expect(formatPaymentAmount(29, 'fiat:paypal:USD', 'USD')).toBe('$29.00');
+  });
 });

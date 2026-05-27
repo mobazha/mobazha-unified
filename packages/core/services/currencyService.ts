@@ -12,7 +12,11 @@ import {
   isCryptoCurrency,
   getBaseRateSymbol,
 } from '../data/currencies';
-import { formatStandardCryptoAmount, getPaymentCoinDisplayLabel } from '../data/tokens';
+import {
+  formatStandardCryptoAmount,
+  getPaymentCoinDisplayLabel,
+  isFiatPaymentCoin,
+} from '../data/tokens';
 import { getExchangeRates as fetchExchangeRatesApi } from './api/wallet';
 import { isOutpostMode } from '../config/env';
 
@@ -536,18 +540,26 @@ export function formatPaymentAmount(
 ): string | null {
   if (amount === undefined || amount === null || amount === '') return null;
 
-  const label = paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currencyCode || '';
+  const fiatCurrency = resolveFiatPaymentCurrencyCode(paymentCoin);
+  const label =
+    fiatCurrency || (paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currencyCode || '');
   if (!label) return null;
 
   const numeric = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (!Number.isFinite(numeric)) return null;
 
-  const coinRef = paymentCoin || label;
+  const coinRef = isFiatPaymentCoin(paymentCoin) ? label : paymentCoin || label;
   if (isCryptoCurrency(coinRef) || isCryptoCurrency(label)) {
     return `${formatStandardCryptoAmount(numeric, coinRef)} ${label}`;
   }
 
   return formatPrice(numeric, label);
+}
+
+function resolveFiatPaymentCurrencyCode(paymentCoin?: string): string | undefined {
+  if (!paymentCoin || !isFiatPaymentCoin(paymentCoin)) return undefined;
+  const parts = paymentCoin.split(':');
+  return parts.length >= 3 && parts[2] ? parts[2].toUpperCase() : undefined;
 }
 
 /**

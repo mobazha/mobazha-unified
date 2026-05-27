@@ -39,7 +39,7 @@ class MatrixClientServiceStub {
   }
   async startSync(): Promise<void> {}
   stopSync(): void {}
-  async sendMessage(_roomId: string, _content: string): Promise<void> {}
+  async sendMessage(_roomId: string, _content: string, _externalLocalId?: string): Promise<void> {}
   async sendTyping(_roomId: string, _isTyping: boolean): Promise<void> {}
   async markAsRead(_roomId: string): Promise<void> {}
   async startDirectChat(_peerID: string): Promise<string> {

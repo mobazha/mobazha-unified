@@ -21,9 +21,7 @@ export const DEFAULT_SITE_URL: string =
  * Override via NEXT_PUBLIC_STORE_SUBDOMAIN_BASE for test environments (e.g. "mobaza.org").
  */
 export function getStoreSubdomainBase(): string {
-  return (
-    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE) || 'mymbz.org'
-  );
+  return readPublicEnv('NEXT_PUBLIC_STORE_SUBDOMAIN_BASE') || 'mymbz.org';
 }
 
 export type AuthMode = 'hosted' | 'basic' | 'standalone';
@@ -84,6 +82,14 @@ export interface EnvConfig {
   api: ApiEndpoints;
   /** Discord Activity / Mini App 配置 */
   discord?: DiscordConfig;
+}
+
+function readPublicEnv(key: string): string | undefined {
+  const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.[
+    key
+  ];
+  if (viteEnv) return viteEnv;
+  return typeof process !== 'undefined' ? process.env?.[key] : undefined;
 }
 
 /**
@@ -385,7 +391,7 @@ export function isStandaloneMode(): boolean {
  * 从环境变量初始化配置
  */
 export function initEnvFromProcess(): void {
-  const envMode = process.env.NEXT_PUBLIC_ENV_MODE;
+  const envMode = readPublicEnv('NEXT_PUBLIC_ENV_MODE');
 
   switch (envMode) {
     case 'production':
@@ -404,7 +410,7 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量覆盖 API URL
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiUrl = readPublicEnv('NEXT_PUBLIC_API_URL') || readPublicEnv('NEXT_PUBLIC_API_BASE_URL');
   if (apiUrl) {
     const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = apiUrl.replace(/^https?:\/\//, '');
@@ -420,7 +426,7 @@ export function initEnvFromProcess(): void {
   }
 
   // CDN 媒体基础 URL（R2 公网 URL，配置后前端直达 CDN 绕过 gateway）
-  const mediaBaseUrl = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+  const mediaBaseUrl = readPublicEnv('NEXT_PUBLIC_MEDIA_BASE_URL');
   if (mediaBaseUrl) {
     currentEnv = {
       ...currentEnv,
@@ -432,8 +438,8 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量覆盖 Casdoor 配置（本地开发使用）
-  const casdoorUrl = process.env.NEXT_PUBLIC_CASDOOR_URL;
-  const casdoorClientId = process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID;
+  const casdoorUrl = readPublicEnv('NEXT_PUBLIC_CASDOOR_URL');
+  const casdoorClientId = readPublicEnv('NEXT_PUBLIC_CASDOOR_CLIENT_ID');
   if (casdoorUrl || casdoorClientId) {
     currentEnv = {
       ...currentEnv,
@@ -446,7 +452,7 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量覆盖认证模式
-  const authMode = process.env.NEXT_PUBLIC_AUTH_MODE;
+  const authMode = readPublicEnv('NEXT_PUBLIC_AUTH_MODE');
   if (authMode === 'hosted' || authMode === 'basic' || authMode === 'standalone') {
     currentEnv = {
       ...currentEnv,
@@ -458,7 +464,7 @@ export function initEnvFromProcess(): void {
   }
 
   // 允许通过环境变量设置 Basic Auth 用户名
-  const basicUsername = process.env.NEXT_PUBLIC_BASIC_AUTH_USERNAME;
+  const basicUsername = readPublicEnv('NEXT_PUBLIC_BASIC_AUTH_USERNAME');
   if (basicUsername) {
     currentEnv = {
       ...currentEnv,
@@ -473,7 +479,7 @@ export function initEnvFromProcess(): void {
   }
 
   // Standalone 模式: SaaS URL 配置
-  const saasUrl = process.env.NEXT_PUBLIC_SAAS_URL;
+  const saasUrl = readPublicEnv('NEXT_PUBLIC_SAAS_URL');
   if (saasUrl) {
     currentEnv = {
       ...currentEnv,
@@ -487,7 +493,7 @@ export function initEnvFromProcess(): void {
   }
 
   // Discord Activity / Mini App 配置
-  const discordClientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+  const discordClientId = readPublicEnv('NEXT_PUBLIC_DISCORD_CLIENT_ID');
   if (discordClientId) {
     currentEnv = {
       ...currentEnv,

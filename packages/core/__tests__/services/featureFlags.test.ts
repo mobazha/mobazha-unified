@@ -181,11 +181,18 @@ describe('featureFlags', () => {
       delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
     });
 
-    it('treats missing runtime-config as an empty snapshot', () => {
+    it('uses fail-closed frontend defaults when runtime-config is missing', () => {
       delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
 
       const snap = featureFlags.initializeFromRuntimeConfig();
-      expect(snap).toEqual({});
+      expect(snap.supplyChainEnabled).toEqual({
+        effective: false,
+        overridable: ['platform_global', 'tenant', 'node_runtime'],
+      });
+      expect(snap.storefrontsEnabled).toEqual({
+        effective: false,
+        overridable: ['platform_global', 'tenant', 'node_runtime'],
+      });
       expect(featureFlags.isInitialized()).toBe(true);
     });
 

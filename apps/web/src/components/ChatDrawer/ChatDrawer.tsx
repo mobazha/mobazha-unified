@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/Chat/ChatList';
 import { ChatMessages } from '@/components/Chat/ChatMessages';
-import { useChatStore, matrixClient } from '@mobazha/core';
+import { ChatInboxTabs } from '@/components/Chat/ChatInboxTabs';
+import { useChatStore, matrixClient, buildOrderDetailHref } from '@mobazha/core';
 import { UserInfoCard } from '@/components/Chat/UserInfoCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { VerificationDialog } from './VerificationDialog';
 import { RoomSettingsPanel } from './RoomSettingsPanel';
 import { useChatViewLogic, type UseChatViewLogicParams } from './hooks/useChatViewLogic';
+import { getStatusLabel } from '@/components/Order/cards/orderProgressUtils';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -23,6 +26,9 @@ export type ChatDrawerProps = UseChatViewLogicParams;
 // ---------------------------------------------------------------------------
 
 export const ChatDrawer: React.FC<ChatDrawerProps> = props => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const logic = useChatViewLogic(props);
   const {
     t,
@@ -44,6 +50,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = props => {
     currentTypingUsers,
     memberNameMap,
     currentRoomPresentation,
+    currentOrderThread,
     isCreatingRoom,
     isDragging,
     showRoomSettings,
@@ -89,6 +96,41 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = props => {
     () => setDrawerExpanded(!drawerExpanded),
     [drawerExpanded, setDrawerExpanded]
   );
+
+  const orderThreadHeader = useMemo(() => {
+    if (!currentOrderThread) return undefined;
+    const isOnSameOrderDiscussion =
+      pathname === `/orders/${currentOrderThread.orderId}` &&
+      searchParams.get('tab') === 'discussion';
+    return {
+      orderId: currentOrderThread.orderId,
+      productTitle: currentOrderThread.productTitle || currentRoomPresentation?.title,
+      statusLabel: currentOrderThread.orderState
+        ? getStatusLabel(currentOrderThread.orderState, t)
+        : undefined,
+      counterpartLabel: currentOrderThread.counterpartName,
+      onViewOrder: isOnSameOrderDiscussion
+        ? undefined
+        : () => {
+            closeDrawer();
+            router.push(
+              buildOrderDetailHref(
+                currentOrderThread.orderId,
+                currentOrderThread.viewType,
+                'discussion'
+              )
+            );
+          },
+    };
+  }, [
+    closeDrawer,
+    currentOrderThread,
+    currentRoomPresentation?.title,
+    pathname,
+    router,
+    searchParams,
+    t,
+  ]);
 
   // ---- Render helpers ----
   const drawerWidth = drawerExpanded ? 'w-full md:w-[600px]' : 'w-full md:w-[400px]';
@@ -200,27 +242,33 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = props => {
           onBack={handleBack}
           onRoomSettings={handleRoomSettings}
           onAvatarClick={handleAvatarClick}
+          orderThread={orderThreadHeader}
         />
       );
     }
 
     return (
-      <ChatList
-        rooms={displayRooms}
-        invites={displayInvites}
-        activeRoomId={currentRoomId || undefined}
-        isLoading={isInitializing}
-        isConnected={isConnected}
-        searchQuery={searchQuery}
-        embedded
-        onSearchChange={setSearchQuery}
-        onRoomSelect={handleRoomSelect}
-        onInviteSelect={handleInviteSelect}
-        onNewChat={onNewChat}
-        onShareChatId={onShareChatId}
-        onAcceptInvite={handleAcceptInvite}
-        onRejectInvite={handleRejectInvite}
-      />
+      <div className="h-full flex flex-col">
+        <ChatInboxTabs />
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ChatList
+            rooms={displayRooms}
+            invites={displayInvites}
+            activeRoomId={currentRoomId || undefined}
+            isLoading={isInitializing}
+            isConnected={isConnected}
+            searchQuery={searchQuery}
+            embedded
+            onSearchChange={setSearchQuery}
+            onRoomSelect={handleRoomSelect}
+            onInviteSelect={handleInviteSelect}
+            onNewChat={onNewChat}
+            onShareChatId={onShareChatId}
+            onAcceptInvite={handleAcceptInvite}
+            onRejectInvite={handleRejectInvite}
+          />
+        </div>
+      </div>
     );
   };
 
@@ -260,7 +308,9 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = props => {
                 <div className="flex items-center gap-2 mt-0.5">
                   {totalUnread > 0 && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-full shadow-sm shadow-primary/30">
-                      {totalUnread > 99 ? '99+' : totalUnread} new
+                      {t('chat.unreadBadge', {
+                        count: totalUnread > 99 ? '99+' : String(totalUnread),
+                      })}
                     </span>
                   )}
                   {!isConnected && !isInitializing && (
