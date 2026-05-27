@@ -20,7 +20,6 @@ import {
   Layers,
   Palette,
   Eye,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
@@ -241,21 +240,6 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
             <ShoppingBag className="w-4 h-4 shrink-0" />
             {!collapsed && <span>{t('admin.nav.backToShopping')}</span>}
           </Link>
-        )}
-        {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
-          <a
-            href="https://docs.mobazha.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              'flex items-center gap-3 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
-              collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
-            )}
-            title={collapsed ? t('admin.nav.help') : undefined}
-          >
-            <HelpCircle className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>{t('admin.nav.help')}</span>}
-          </a>
         )}
       </div>
     </div>
