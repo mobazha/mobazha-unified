@@ -180,3 +180,23 @@ export function resolveStatusDisplay(
     }
   );
 }
+
+function guestStatusOutlineClass(color: string): string {
+  if (color.includes('text-warning')) return `${color} border border-warning/30`;
+  if (color.includes('text-success')) return `${color} border border-success/30`;
+  if (color.includes('text-primary')) return `${color} border border-primary/30`;
+  if (color.includes('text-error')) return `${color} border border-error/30`;
+  if (color.includes('text-info')) return `${color} border border-info/30`;
+  return `${color} border border-border`;
+}
+
+/** Shared guest-order state label — reuses buyer-facing `guestOrder.state*` i18n keys. */
+export function formatGuestStateLabel(state: string, t: TranslateFn): string {
+  return resolveStatusDisplay(state, getGuestStatusConfig(t)).label;
+}
+
+/** Badge classes aligned with `getGuestStatusConfig` color tokens. */
+export function guestStateBadgeClass(state: string, t: TranslateFn): string {
+  const { color } = resolveStatusDisplay(state, getGuestStatusConfig(t));
+  return guestStatusOutlineClass(color);
+}

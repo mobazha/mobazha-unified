@@ -67,9 +67,13 @@ import {
   type GuestOrderAdminDetail,
 } from '@mobazha/core/services/api/guestCheckout';
 import { useFeature } from '@mobazha/core/hooks/useFeature';
-import { AdminShippingDecrypt } from '@/components/GuestCheckout/AdminShippingDecrypt';
-import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
-import { TokenIcon } from '@/components/Payment/TokenIcon';
+import { GuestOrderDetailDrawer } from '@/components/orders/GuestOrderDetailDrawer';
+import {
+  formatGuestStateLabel,
+  guestStateBadgeClass,
+  isActiveGuestDetailRequest,
+  truncateOrderToken,
+} from '@/components/orders/guestOrderDisplay';
 import {
   orderDetailPath,
   orderListSearchPath,
@@ -166,33 +170,6 @@ const GUEST_STATUS_FILTER_TO_STATES: Partial<Record<StatusFilter, string[]>> = {
   cancelled: ['EXPIRED'],
 };
 
-function truncateOrderToken(token: string, head = 14, tail = 10): string {
-  if (token.length <= head + tail + 3) return token;
-  return `${token.slice(0, head)}…${token.slice(-tail)}`;
-}
-
-function formatGuestStateLabel(state: string, t: TranslateFunction): string {
-  switch (state) {
-    case 'AWAITING_PAYMENT':
-      return t('admin.orders.guestStateAwaitingPayment');
-    case 'PAYMENT_DETECTED':
-      return t('admin.orders.guestStatePaymentDetected');
-    case 'FUNDED':
-      return t('admin.orders.guestStateFunded');
-    case 'SHIPPED':
-      return t('admin.orders.guestStateShipped');
-    case 'COMPLETED':
-      return t('admin.orders.guestStateCompleted');
-    case 'EXPIRED':
-      return t('admin.orders.guestStateExpired');
-    default:
-      return state
-        .replace(/_/g, ' ')
-        .toLowerCase()
-        .replace(/\b\w/g, char => char.toUpperCase());
-  }
-}
-
 function formatOrderDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString();
 }
@@ -214,20 +191,6 @@ function formatGuestContact(order: GuestOrderSummary, t: TranslateFunction): str
 function formatOrderItemCount(count: number | undefined, t: TranslateFunction): string | null {
   if (!count || count <= 1) return null;
   return t('admin.orders.orderItemCount', { count });
-}
-
-function guestActionHelpText(state: string, t: TranslateFunction): string {
-  switch (state) {
-    case 'AWAITING_PAYMENT':
-    case 'PAYMENT_DETECTED':
-      return t('admin.orders.guestActionWaitingPayment');
-    case 'COMPLETED':
-      return t('admin.orders.guestActionCompleted');
-    case 'EXPIRED':
-      return t('admin.orders.guestActionExpired');
-    default:
-      return t('admin.orders.guestActionNoAction');
-  }
 }
 
 function copyToClipboard(text: string): void {
@@ -284,19 +247,6 @@ function statusBadgeClass(kind: string): string {
     default:
       return 'bg-muted text-muted-foreground border-transparent';
   }
-}
-
-function guestStateBadgeClass(state: string): string {
-  if (state === 'FUNDED' || state === 'COMPLETED') {
-    return 'bg-success/15 text-success border-success/30';
-  }
-  if (state === 'EXPIRED' || state === 'CANCELLED') {
-    return 'bg-destructive/10 text-destructive border-destructive/20';
-  }
-  if (state === 'SHIPPED') {
-    return 'bg-primary/15 text-primary border-primary/30';
-  }
-  return 'bg-info/15 text-info border-info/30';
 }
 
 function GuestOrderRow({ order, onClick }: { order: GuestOrderSummary; onClick: () => void }) {
@@ -540,7 +490,7 @@ function AdminOrdersTable({
                 ? t(standardStateLabelKey(standardOrder.rawState || '', standardOrder.status))
                 : '';
             const statusClass = guestOrder
-              ? guestStateBadgeClass(guestOrder.state)
+              ? guestStateBadgeClass(guestOrder.state, t)
               : standardOrder
                 ? statusBadgeClass(standardOrder.status)
                 : statusBadgeClass('');
@@ -725,10 +675,12 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
   const [selectedGuestToken, setSelectedGuestToken] = useState<string | null>(null);
   const [guestDetail, setGuestDetail] = useState<GuestOrderAdminDetail | null>(null);
   const [guestDetailLoading, setGuestDetailLoading] = useState(false);
+  const [guestDetailError, setGuestDetailError] = useState(false);
   const [guestActionLoading, setGuestActionLoading] = useState<'ship' | 'complete' | null>(null);
   const [guestShipCarrier, setGuestShipCarrier] = useState('');
   const [guestShipTracking, setGuestShipTracking] = useState('');
   const suppressedGuestTokenRef = useRef<string | null>(null);
+  const guestDetailRequestTokenRef = useRef<string | null>(null);
 
   const refreshGuestOrders = useCallback(async () => {
     if (!guestEnabled) return;
@@ -747,22 +699,42 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
     void refreshGuestOrders();
   }, [refreshGuestOrders]);
 
-  const refreshGuestOrderDetail = useCallback(async (token: string) => {
-    setGuestDetailLoading(true);
-    try {
-      const detail = await getAdminGuestOrderDetail(token);
-      setGuestDetail(detail);
-    } catch {
-      setGuestDetail(null);
-    } finally {
-      setGuestDetailLoading(false);
-    }
-  }, []);
+  const refreshGuestOrderDetail = useCallback(
+    async (token: string) => {
+      guestDetailRequestTokenRef.current = token;
+      setGuestDetailLoading(true);
+      setGuestDetailError(false);
+      try {
+        const detail = await getAdminGuestOrderDetail(token);
+        if (!isActiveGuestDetailRequest(token, guestDetailRequestTokenRef.current)) {
+          return;
+        }
+        setGuestDetail(detail);
+      } catch {
+        if (!isActiveGuestDetailRequest(token, guestDetailRequestTokenRef.current)) {
+          return;
+        }
+        setGuestDetail(null);
+        setGuestDetailError(true);
+        toast({
+          title: t('common.loadFailed'),
+          description: t('admin.orders.guestDetailLoadFailed'),
+          variant: 'destructive',
+        });
+      } finally {
+        if (isActiveGuestDetailRequest(token, guestDetailRequestTokenRef.current)) {
+          setGuestDetailLoading(false);
+        }
+      }
+    },
+    [t, toast]
+  );
 
   const openGuestOrderDetail = useCallback(
     (token: string) => {
       setSelectedGuestToken(token);
       setGuestDetail(null);
+      setGuestDetailError(false);
       setGuestShipCarrier('');
       setGuestShipTracking('');
       void refreshGuestOrderDetail(token);
@@ -805,6 +777,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
 
   const handleGuestShip = useCallback(async () => {
     if (!selectedGuestToken || guestActionLoading) return;
+    if (guestDetail && guestDetail.orderToken !== selectedGuestToken) return;
 
     setGuestActionLoading('ship');
     try {
@@ -827,6 +800,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
     guestActionLoading,
     guestShipCarrier,
     guestShipTracking,
+    guestDetail,
     refreshGuestOrderDetail,
     refreshGuestOrders,
     selectedGuestToken,
@@ -836,6 +810,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
 
   const handleGuestComplete = useCallback(async () => {
     if (!selectedGuestToken || guestActionLoading) return;
+    if (guestDetail && guestDetail.orderToken !== selectedGuestToken) return;
 
     setGuestActionLoading('complete');
     try {
@@ -853,6 +828,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
     }
   }, [
     guestActionLoading,
+    guestDetail,
     refreshGuestOrderDetail,
     refreshGuestOrders,
     selectedGuestToken,
@@ -869,9 +845,11 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
   );
 
   const dismissGuestOrderDetail = useCallback(() => {
+    guestDetailRequestTokenRef.current = null;
     setSelectedGuestToken(null);
     setGuestDetail(null);
     setGuestDetailLoading(false);
+    setGuestDetailError(false);
     setGuestActionLoading(null);
     setGuestShipCarrier('');
     setGuestShipTracking('');
@@ -1703,206 +1681,25 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
         </>
       )}
 
-      {/* PM-3a: Admin guest order detail drawer — outside ternary so it persists on any tab */}
-      {selectedGuestToken && (
-        <div className="fixed inset-0 z-50 flex sm:justify-end">
-          <div className="hidden flex-1 bg-black/40 sm:block" onClick={closeGuestOrderDetail} />
-          <div className="h-full w-full overflow-y-auto bg-background p-4 shadow-xl sm:max-w-md sm:border-l sm:p-6">
-            <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-5 flex items-center justify-between border-b border-border bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:-mt-6 sm:px-6">
-              <h3 className="text-base font-semibold">
-                {t('admin.orders.guestOrderDetail', { defaultValue: 'Guest Order Detail' })}
-              </h3>
-              <Button variant="ghost" size="icon" onClick={closeGuestOrderDetail}>
-                ✕
-              </Button>
-            </div>
-
-            {guestDetailLoading && (
-              <div className="flex items-center justify-center h-24">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            )}
-
-            {!guestDetailLoading && guestDetail && (
-              <div className="space-y-5 text-sm">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                  <span>{t('admin.orders.statusLabel')}:</span>
-                  <span className="font-medium text-foreground">
-                    {formatGuestStateLabel(guestDetail.state, t)}
-                  </span>
-                  <span>{t('admin.orders.amountLabel')}:</span>
-                  <span className="font-medium text-foreground flex items-center gap-2 justify-end flex-wrap">
-                    <TokenIcon
-                      token={resolveTokenIdForDisplay(guestDetail.paymentCoin)}
-                      size={18}
-                    />
-                    <span>{formatGuestPaymentAmount(guestDetail)}</span>
-                  </span>
-                  <span>{t('admin.orders.timeLabel')}:</span>
-                  <span className="font-medium text-foreground">
-                    {new Date(guestDetail.createdAt).toLocaleString()}
-                  </span>
-                  <span>{t('admin.orders.contactLabel')}:</span>
-                  <span className="font-medium text-foreground">
-                    {guestDetail.contactEmail || t('common.none')}
-                  </span>
-                </div>
-
-                <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium">{t('admin.orders.guestActionsTitle')}</p>
-                    <Badge
-                      variant="outline"
-                      className={`shrink-0 ${guestStateBadgeClass(guestDetail.state)}`}
-                    >
-                      {formatGuestStateLabel(guestDetail.state, t)}
-                    </Badge>
-                  </div>
-
-                  {guestDetail.state === 'FUNDED' ? (
-                    <div className="space-y-3">
-                      <p className="text-xs text-muted-foreground">
-                        {t('admin.orders.guestShipHelp')}
-                      </p>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <Input
-                          value={guestShipCarrier}
-                          onChange={event => setGuestShipCarrier(event.target.value)}
-                          placeholder={t('admin.orders.guestCarrierPlaceholder')}
-                          disabled={guestActionLoading !== null}
-                        />
-                        <Input
-                          value={guestShipTracking}
-                          onChange={event => setGuestShipTracking(event.target.value)}
-                          placeholder={t('admin.orders.guestTrackingPlaceholder')}
-                          disabled={guestActionLoading !== null}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        className="w-full"
-                        onClick={handleGuestShip}
-                        disabled={guestActionLoading !== null}
-                      >
-                        {guestActionLoading === 'ship'
-                          ? t('common.processing')
-                          : t('admin.orders.guestMarkFulfilled')}
-                      </Button>
-                    </div>
-                  ) : guestDetail.state === 'SHIPPED' ? (
-                    <div className="space-y-3">
-                      <p className="text-xs text-muted-foreground">
-                        {t('admin.orders.guestCompleteHelp')}
-                      </p>
-                      <Button
-                        type="button"
-                        className="w-full"
-                        onClick={handleGuestComplete}
-                        disabled={guestActionLoading !== null}
-                      >
-                        {guestActionLoading === 'complete'
-                          ? t('common.processing')
-                          : t('admin.orders.guestCompleteOrder')}
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      {guestActionHelpText(guestDetail.state, t)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Items */}
-                {guestDetail.items.length > 0 && (
-                  <div>
-                    <p className="font-medium mb-1">{t('admin.orders.guestOrderItems')}</p>
-                    <div className="space-y-1">
-                      {guestDetail.items.map((item, i) => {
-                        const thumb = item.thumbnail?.trim();
-                        const thumbSrc = thumb ? getImageUrl(thumb) : '';
-                        return (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between gap-2 text-muted-foreground"
-                          >
-                            <div className="flex min-w-0 items-center gap-2">
-                              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-muted">
-                                {thumbSrc ? (
-                                  <img
-                                    src={thumbSrc}
-                                    alt=""
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center">
-                                    <Package className="h-3.5 w-3.5 text-muted-foreground" />
-                                  </div>
-                                )}
-                              </div>
-                              <span className="truncate">{item.listingTitle}</span>
-                            </div>
-                            <span className="shrink-0">×{item.quantity}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Shipping address */}
-                <div>
-                  <p className="font-medium mb-2">
-                    {t('admin.orders.shippingAddress', { defaultValue: 'Shipping Address' })}
-                  </p>
-                  {guestDetail.addressEncrypted && guestDetail.shippingAddressCiphertext ? (
-                    <AdminShippingDecrypt ciphertext={guestDetail.shippingAddressCiphertext} />
-                  ) : guestDetail.shippingAddress ? (
-                    <div className="bg-muted rounded-md p-3 font-mono space-y-0.5">
-                      {Object.entries(guestDetail.shippingAddress)
-                        .filter(([, v]) => v)
-                        .map(([k, v]) => (
-                          <p key={k}>{v}</p>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      {t('admin.orders.digitalDelivery', {
-                        defaultValue: 'Digital order, no shipping address required.',
-                      })}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="font-medium mb-2">
-                    {t('admin.orders.technicalInfo', { defaultValue: 'Technical Info' })}
-                  </p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                    <span>{t('admin.orders.paymentRailLabel')}:</span>
-                    <span className="font-mono text-[11px] text-foreground break-all leading-snug">
-                      {guestDetail.paymentCoin}
-                    </span>
-                    <span>{t('admin.orders.listingCurrencyLabel')}:</span>
-                    <span className="font-medium text-foreground">
-                      {(
-                        guestDetail.priceCurrency ||
-                        resolveTokenIdForDisplay(guestDetail.paymentCoin)
-                      ).trim() || '—'}
-                    </span>
-                    <span>{t('admin.orders.tokenLabel')}:</span>
-                    <span
-                      className="font-mono text-xs text-foreground break-all"
-                      title={guestDetail.orderToken}
-                    >
-                      {truncateOrderToken(guestDetail.orderToken)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <GuestOrderDetailDrawer
+        open={Boolean(selectedGuestToken)}
+        loading={guestDetailLoading}
+        loadError={guestDetailError}
+        detail={guestDetail}
+        shipCarrier={guestShipCarrier}
+        shipTracking={guestShipTracking}
+        actionLoading={guestActionLoading}
+        onClose={closeGuestOrderDetail}
+        onRetry={() => {
+          if (selectedGuestToken) {
+            void refreshGuestOrderDetail(selectedGuestToken);
+          }
+        }}
+        onShipCarrierChange={setGuestShipCarrier}
+        onShipTrackingChange={setGuestShipTracking}
+        onShip={handleGuestShip}
+        onComplete={handleGuestComplete}
+      />
     </div>
   );
 }

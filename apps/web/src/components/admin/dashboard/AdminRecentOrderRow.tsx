@@ -10,6 +10,7 @@ import {
   type GuestOrderSummary,
 } from '@mobazha/core/services/api/guestCheckout';
 import { formatGuestPaymentAmount } from '@/components/admin/orders/utils';
+import { formatGuestStateLabel, guestStateBadgeClass } from '@/components/orders/guestOrderDisplay';
 import { getOrderCurrencyCode } from './utils';
 
 export type RecentAdminOrder =
@@ -61,20 +62,12 @@ const STATE_TO_I18N_KEY: Record<string, string> = {
   DISPUTE_EXPIRED: 'unknown',
 };
 
-function formatGuestStateLabel(state: string): string {
-  return state
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, char => char.toUpperCase());
-}
-
 export function AdminRecentOrderRow({ entry }: { entry: RecentAdminOrder }) {
   const { t } = useI18n();
   const { formatPrice, fromMinimalUnit } = useCurrency();
 
   if (entry.source === 'guest') {
     const order = entry.order;
-    const stateColor = STATE_COLORS[order.state] || STATE_COLORS.AWAITING_PAYMENT;
     const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '';
     const title = order.items[0]?.listingTitle || t('admin.orders.guestOrderTitle');
     const amount = formatGuestPaymentAmount(order);
@@ -103,8 +96,10 @@ export function AdminRecentOrderRow({ entry }: { entry: RecentAdminOrder }) {
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
             {t('admin.orders.sourceGuest')}
           </span>
-          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${stateColor}`}>
-            {formatGuestStateLabel(order.state)}
+          <span
+            className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${guestStateBadgeClass(order.state, t)}`}
+          >
+            {formatGuestStateLabel(order.state, t)}
           </span>
         </div>
       </Link>
