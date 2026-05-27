@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl, copyToClipboard } from './utils';
 import { Card } from '@/components/ui/card';
@@ -69,6 +69,7 @@ function formatDateTime(dateString: string, locale: string = 'en'): string {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
     });
   } catch {
     return dateString;
@@ -543,6 +544,7 @@ export interface OrderCompleteCardProps {
   breakdownLines?: Array<{ label: string; amount: string }>;
   txHash?: string;
   txUrl?: string;
+  txLabel?: string;
   title?: string;
   description?: string;
   /** 标题行左侧图标；未传时按 variant 选择，与 ShipmentCard / AcceptedCard 一致 */
@@ -559,6 +561,7 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   breakdownLines,
   txHash,
   txUrl,
+  txLabel,
   title,
   description,
   stageVariant,
@@ -572,11 +575,20 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
       ? (formatPaymentAmount(amount, paymentCoin, currency) ??
         formatCurrencyPrice(amount, currency))
       : null;
+  const [copiedTx, setCopiedTx] = useState(false);
 
   const formatTxHash = (hash: string) => {
     if (hash.length <= 16) return hash;
     return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
   };
+
+  const handleCopyTx = useCallback(async () => {
+    if (!txHash) return;
+    const ok = await copyToClipboard(txHash);
+    if (!ok) return;
+    setCopiedTx(true);
+    window.setTimeout(() => setCopiedTx(false), 1600);
+  }, [txHash]);
 
   const resolvedVariant =
     stageVariant ||
@@ -635,22 +647,40 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
               </div>
             )}
             {txHash && (
-              <div className="flex items-center gap-1.5 mt-2">
-                {txUrl ? (
-                  <a
-                    href={txUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-mono text-primary hover:underline"
-                    title={txHash}
-                  >
-                    {formatTxHash(txHash)}
-                  </a>
-                ) : (
-                  <span className="text-xs font-mono text-muted-foreground" title={txHash}>
-                    {formatTxHash(txHash)}
-                  </span>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {txLabel && (
+                  <span className="text-xs font-medium text-muted-foreground">{txLabel}</span>
                 )}
+                <div className="inline-flex items-center gap-1.5 rounded-md bg-background/70 px-2 py-1 ring-1 ring-border/70">
+                  {txUrl ? (
+                    <a
+                      href={txUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-mono text-primary hover:underline"
+                      title={txHash}
+                    >
+                      {formatTxHash(txHash)}
+                    </a>
+                  ) : (
+                    <span className="text-xs font-mono text-muted-foreground" title={txHash}>
+                      {formatTxHash(txHash)}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    onClick={handleCopyTx}
+                    title={copiedTx ? t('common.copied') : t('common.copy')}
+                    aria-label={copiedTx ? t('common.copied') : t('common.copy')}
+                  >
+                    {copiedTx ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>

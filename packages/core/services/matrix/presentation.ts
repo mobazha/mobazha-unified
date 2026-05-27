@@ -1,5 +1,10 @@
 import type { MatrixRoom, MatrixUser } from './types';
 import { isMobazhaUser } from './rooms';
+import {
+  getOrderThreadContext,
+  isOrderThreadRoom,
+  parseProductTitleFromRoomName,
+} from './orderPresentation';
 
 export interface MatrixMemberPresentation {
   userId: string;
@@ -19,6 +24,7 @@ export interface MatrixRoomPresentation {
   peerID?: string;
   isExternal: boolean;
   counterpart?: MatrixMemberPresentation;
+  orderThread?: ReturnType<typeof getOrderThreadContext>;
 }
 
 export interface MatrixSenderFallback {
@@ -189,6 +195,25 @@ export function getRoomPresentation(
   currentUserId?: string | null,
   defaultTitle = 'Chat'
 ): MatrixRoomPresentation {
+  if (isOrderThreadRoom(room)) {
+    const orderThread = getOrderThreadContext(room, currentUserId);
+    const counterpart = resolveOrderCounterpartForPresentation(room, currentUserId);
+    return {
+      roomId: room.roomId,
+      title:
+        orderThread?.productTitle ||
+        parseProductTitleFromRoomName(room.name) ||
+        room.name?.trim() ||
+        defaultTitle,
+      avatarUrl: counterpart?.avatarUrl || room.avatarUrl,
+      rawMxcAvatarUrl: counterpart?.rawMxcAvatarUrl || room.rawMxcAvatarUrl,
+      peerID: counterpart?.peerID,
+      isExternal: counterpart?.isExternal ?? Boolean(room.isExternal),
+      counterpart,
+      orderThread: orderThread ?? undefined,
+    };
+  }
+
   if (!room.isDirect) {
     return {
       roomId: room.roomId,
@@ -216,4 +241,19 @@ export function getRoomPresentation(
     isExternal: counterpartPresentation?.isExternal ?? Boolean(room.isExternal),
     counterpart: counterpartPresentation,
   };
+}
+
+function resolveOrderCounterpartForPresentation(
+  room: MatrixRoom,
+  currentUserId?: string | null
+): MatrixMemberPresentation | undefined {
+  const normalizedCurrentUserID = normalizeUserID(currentUserId);
+  if (normalizedCurrentUserID) {
+    const otherMember = room.members.find(member => member.userId !== normalizedCurrentUserID);
+    if (otherMember) {
+      return getMemberPresentation(otherMember, room);
+    }
+  }
+  const counterpart = getDirectCounterpart(room, currentUserId);
+  return counterpart ? getMemberPresentation(counterpart, room) : undefined;
 }

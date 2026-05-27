@@ -14,7 +14,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { MessageCircle, Package, ExternalLink, Printer } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -29,16 +28,19 @@ import {
   ordersApi,
   disputesApi,
   useFeature,
+  useChatStore,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useOrderChat } from '@/hooks/useOrderChat';
 import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
 import { useToast } from '@/components/ui/use-toast';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider/TGMiniAppProvider';
 import { useHaptic } from '@/lib/platform';
 import {
   OrderChat,
+  OrderChatContextStrip,
   AcceptOrderDialog,
   ShipOrderDialog,
   OrderConfirmDialog,
@@ -66,6 +68,7 @@ import {
   OrderStatusCard,
   OrderSettlementCard,
   DisputeOverviewCard,
+  DisputeEvidencePanel,
   DisputeResolutionBar,
   getStatusLabel,
 } from '@/components/Order/cards';
@@ -131,16 +134,22 @@ export interface OrderDetailMobileProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
   focusDispute?: boolean;
+  initialTab?: 'details' | 'discussion' | 'evidence';
 }
+
+type OrderDetailMobileTab = 'details' | 'discussion' | 'evidence';
 
 export function OrderDetailMobile({
   orderId,
   viewingContext,
   focusDispute = false,
+  initialTab = 'details',
 }: OrderDetailMobileProps) {
   const router = useRouter();
   const { t } = useI18n();
   const supplyChainEnabled = useFeature('supplyChainEnabled');
+  const chatDrawerOpen = useChatStore(state => state.drawerOpen);
+  const closeChatDrawer = useChatStore(state => state.closeDrawer);
 
   const {
     displayOrder,
@@ -151,7 +160,6 @@ export function OrderDetailMobile({
     refetch,
     currentUserPeerID,
     counterparty,
-    chatParticipants,
     isActionLoading,
     isTransitioning,
     executeConfirmAction,
@@ -162,8 +170,6 @@ export function OrderDetailMobile({
     closeReviewDialog,
     copyOrderId,
     copyContract,
-    chatMessages,
-    sendMessage,
     acceptOrderProps,
     shipOrderProps,
     sellerDigitalDelivery,
@@ -190,7 +196,14 @@ export function OrderDetailMobile({
   const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
+  const [activeTab, setActiveTab] = useState<OrderDetailMobileTab>(initialTab);
+
+  const orderChat = useOrderChat({
+    orderId,
+    displayOrder,
+    currentUserPeerID,
+    isActive: activeTab === 'discussion',
+  });
   const disputeSectionRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -206,16 +219,63 @@ export function OrderDetailMobile({
   const isModeratorDisputeView =
     !!displayOrder && displayOrder.userRole === 'moderator' && !!displayOrder.dispute;
 
+  const orderViewType = useMemo((): 'sale' | 'purchase' => {
+    if (viewingContext === 'sale') return 'sale';
+    if (viewingContext === 'purchase') return 'purchase';
+    if (displayOrder?.userRole === 'seller') return 'sale';
+    return 'purchase';
+  }, [viewingContext, displayOrder?.userRole]);
+
+  const syncTabToUrl = useCallback(
+    (tab: OrderDetailMobileTab) => {
+      const params = new URLSearchParams({ type: orderViewType });
+      if (tab === 'discussion') params.set('tab', 'discussion');
+      else if (tab === 'evidence') params.set('tab', 'evidence');
+      else if (isModeratorDisputeView) params.set('tab', 'dispute');
+      router.replace(`/orders/${orderId}?${params.toString()}`, { scroll: false });
+    },
+    [orderId, orderViewType, router, isModeratorDisputeView]
+  );
+
+  const handleTabChange = useCallback(
+    (tab: OrderDetailMobileTab) => {
+      setActiveTab(tab);
+      syncTabToUrl(tab);
+    },
+    [syncTabToUrl]
+  );
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, orderId]);
+
+  useEffect(() => {
+    if (activeTab !== 'evidence') return;
+    if (!displayOrder) return;
+    if (displayOrder.userRole === 'moderator' && displayOrder.dispute) return;
+    handleTabChange('details');
+  }, [activeTab, displayOrder, handleTabChange]);
+
+  useEffect(() => {
+    if (activeTab !== 'discussion') return;
+    const store = useChatStore.getState();
+    if (chatDrawerOpen) {
+      closeChatDrawer();
+    } else if (store.currentRoomId) {
+      store.setCurrentRoom(null);
+    }
+  }, [activeTab, chatDrawerOpen, closeChatDrawer]);
+
   useEffect(() => {
     if (!focusDispute || !displayOrder) return;
-    setActiveTab('details');
+    handleTabChange('details');
     if (!isModeratorDisputeView) {
       const timer = window.setTimeout(() => {
         disputeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 350);
       return () => window.clearTimeout(timer);
     }
-  }, [focusDispute, displayOrder, orderId, isModeratorDisputeView]);
+  }, [focusDispute, displayOrder, isModeratorDisputeView, handleTabChange]);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
@@ -715,7 +775,7 @@ export function OrderDetailMobile({
             aria-selected={activeTab === 'details'}
             aria-controls="tabpanel-details"
             id="tab-details"
-            onClick={() => setActiveTab('details')}
+            onClick={() => handleTabChange('details')}
             className={cn(
               'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative',
               activeTab === 'details'
@@ -728,12 +788,32 @@ export function OrderDetailMobile({
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
+          {isModeratorDisputeView && (
+            <button
+              role="tab"
+              aria-selected={activeTab === 'evidence'}
+              aria-controls="tabpanel-evidence"
+              id="tab-evidence"
+              onClick={() => handleTabChange('evidence')}
+              className={cn(
+                'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative',
+                activeTab === 'evidence'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {t('order.tabs.evidence')}
+              {activeTab === 'evidence' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+          )}
           <button
             role="tab"
             aria-selected={activeTab === 'discussion'}
             aria-controls="tabpanel-discussion"
             id="tab-discussion"
-            onClick={() => setActiveTab('discussion')}
+            onClick={() => handleTabChange('discussion')}
             className={cn(
               'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative flex items-center justify-center gap-1.5',
               activeTab === 'discussion'
@@ -741,8 +821,13 @@ export function OrderDetailMobile({
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            <MessageCircle className="w-4 h-4" />
-            {t('order.tabs.discussion')}
+            <MessageCircle className="w-4 h-4 shrink-0" />
+            <span className="truncate">{t('order.tabs.discussion')}</span>
+            {orderChat.unreadCount > 0 && (
+              <span className="px-1.5 py-0.5 min-w-[1.25rem] text-center bg-error text-white text-[10px] font-semibold rounded-full tabular-nums">
+                {orderChat.unreadCount > 99 ? '99+' : orderChat.unreadCount}
+              </span>
+            )}
             {activeTab === 'discussion' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
@@ -751,7 +836,7 @@ export function OrderDetailMobile({
       </div>
 
       {/* Content */}
-      {activeTab === 'details' ? (
+      {activeTab === 'details' && (
         <div
           role="tabpanel"
           id="tabpanel-details"
@@ -964,7 +1049,10 @@ export function OrderDetailMobile({
                 <AfterSaleDisputeCard
                   dispute={displayOrder.afterSaleDispute}
                   userRole={displayOrder.userRole}
-                  onMessageCounterparty={() => setActiveTab('discussion')}
+                  onMessageCounterparty={() => {
+                    handleTabChange('discussion');
+                    orderChat.focusComposer();
+                  }}
                   className="mt-3"
                 />
               )}
@@ -1039,23 +1127,39 @@ export function OrderDetailMobile({
             </>
           )}
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'evidence' && isModeratorDisputeView && displayOrder.dispute && (
+        <div
+          role="tabpanel"
+          id="tabpanel-evidence"
+          aria-labelledby="tab-evidence"
+          className="px-4 pt-3 pb-6"
+        >
+          <DisputeEvidencePanel dispute={displayOrder.dispute} />
+        </div>
+      )}
+
+      {activeTab === 'discussion' && (
         <div
           role="tabpanel"
           id="tabpanel-discussion"
           aria-labelledby="tab-discussion"
-          className="px-4 pt-3"
+          className="flex flex-col h-[calc(100dvh-7.5rem)] min-h-0"
         >
-          <Card className="border border-border/60 shadow-sm overflow-hidden">
-            <OrderChat
-              orderId={orderId}
-              participants={chatParticipants}
-              messages={chatMessages}
-              currentUserId={currentUserPeerID || ''}
-              onSendMessage={sendMessage}
-              className="h-[calc(100vh-200px)] min-h-[400px]"
+          {displayOrder && (
+            <OrderChatContextStrip
+              displayOrder={displayOrder}
+              onBackToSummary={() => handleTabChange('details')}
+              compact
             />
-          </Card>
+          )}
+          <OrderChat
+            orderId={orderId}
+            layout="embedded"
+            className="flex-1 min-h-0 mx-4 mb-3 rounded-xl"
+            {...orderChat}
+          />
         </div>
       )}
 

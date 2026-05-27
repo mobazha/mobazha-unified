@@ -213,6 +213,9 @@ export interface ChatMessageListProps {
   currentSearchIndex: number;
   onLightbox: (src: string) => void;
   onDeleteConfirm: (id: string) => void;
+  /** Override default empty state copy (e.g. order discussion) */
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export const ChatMessageList: React.FC<ChatMessageListProps> = ({
@@ -235,6 +238,8 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   currentSearchIndex,
   onLightbox,
   onDeleteConfirm,
+  emptyTitle,
+  emptyDescription,
 }) => {
   const { t } = useI18n();
 
@@ -426,9 +431,11 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                 </svg>
               </div>
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-1">{t('chat.noMessages')}</h3>
-            <p className="text-sm text-muted-foreground/70 text-center max-w-[200px]">
-              {t('chat.typeMessage')}
+            <h3 className="text-lg font-bold text-foreground mb-1">
+              {emptyTitle ?? t('chat.noMessages')}
+            </h3>
+            <p className="text-sm text-muted-foreground/70 text-center max-w-[240px]">
+              {emptyDescription ?? t('chat.typeMessage')}
             </p>
             <div className="flex items-center gap-1.5 mt-6">
               <div
@@ -466,10 +473,10 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                     </svg>
                   </div>
                   <span className="text-[12px] font-semibold text-primary">
-                    End-to-End Encrypted
+                    {t('chat.encrypted')}
                   </span>
                 </div>
-                <span className="text-xs text-primary/70">Messages in this chat are secured</span>
+                <span className="text-xs text-primary/70">{t('chat.encryptedDescription')}</span>
               </div>
             </div>
           )}

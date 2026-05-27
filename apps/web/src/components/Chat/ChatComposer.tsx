@@ -17,6 +17,10 @@ export interface ChatComposerProps {
   onSendMessage: (content: string) => void;
   onSendFile?: (file: File) => void;
   onTyping?: (isTyping: boolean) => void;
+  /** Optional external ref for focus management (e.g. order discussion tab) */
+  inputRef?: React.RefCallback<HTMLInputElement | null>;
+  /** When set, shows a status banner above the input (connecting vs reconnecting). */
+  statusHint?: 'connecting' | 'reconnecting' | 'liveUpdatesPending' | null;
 }
 
 export const ChatComposer: React.FC<ChatComposerProps> = ({
@@ -24,18 +28,30 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
   onSendMessage,
   onSendFile,
   onTyping,
+  inputRef: externalInputRef,
+  statusHint = null,
 }) => {
   const { t } = useI18n();
   const [inputValue, setInputValue] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+
+  const setInputRef = useCallback(
+    (el: HTMLInputElement | null) => {
+      internalInputRef.current = el;
+      if (typeof externalInputRef === 'function') {
+        externalInputRef(el);
+      }
+    },
+    [externalInputRef]
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentRef = useRef<number>(0);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    internalInputRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -108,7 +124,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
 
   const handleInsertEmoji = useCallback(
     (emoji: string) => {
-      const input = inputRef.current;
+      const input = internalInputRef.current;
       if (input) {
         const start = input.selectionStart ?? inputValue.length;
         const end = input.selectionEnd ?? start;
@@ -129,7 +145,25 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
 
   return (
     <div className="px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-card border-t border-border/40">
-      {!isConnected && (
+      {statusHint === 'connecting' && (
+        <div className="flex items-center justify-center gap-2 py-1.5 mb-2 text-xs font-medium text-muted-foreground bg-muted/40 rounded-lg">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          {t('order.chat.connectingSecure')}
+        </div>
+      )}
+      {statusHint === 'reconnecting' && (
+        <div className="flex items-center justify-center gap-2 py-1.5 mb-2 text-xs font-medium text-warning bg-warning/10 rounded-lg">
+          <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+          {t('chat.offlineHint')}
+        </div>
+      )}
+      {statusHint === 'liveUpdatesPending' && (
+        <div className="flex items-center justify-center gap-2 py-1 mb-2 text-[11px] text-muted-foreground">
+          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse" />
+          {t('order.chat.liveUpdatesPending')}
+        </div>
+      )}
+      {!statusHint && !isConnected && (
         <div className="flex items-center justify-center gap-2 py-1.5 mb-2 text-xs font-medium text-warning bg-warning/10 rounded-lg">
           <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
           {t('chat.offlineHint')}
@@ -149,7 +183,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={!isConnected}
-              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-muted-foreground/60"
+              className="shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-muted-foreground/60"
               aria-label={t('chat.attachFile')}
             >
               <Paperclip className="w-[18px] h-[18px]" />
@@ -158,7 +192,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
         )}
         <div className="flex-1 relative">
           <input
-            ref={inputRef}
+            ref={setInputRef}
             type="text"
             value={inputValue}
             onChange={handleInputChange}
@@ -174,8 +208,8 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
               type="button"
               onClick={() => setShowEmojiPicker(prev => !prev)}
               disabled={!isConnected}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
-              aria-label="Emoji"
+              className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-full text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 sm:min-h-[44px] sm:min-w-[44px]"
+              aria-label={t('chat.emoji')}
             >
               <Smile className="w-[17px] h-[17px]" />
             </button>
@@ -203,7 +237,8 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
         <button
           onClick={handleSend}
           disabled={!inputValue.trim() || !isConnected}
-          className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-primary transition-all duration-150 enabled:hover:bg-primary/10 enabled:active:scale-95 disabled:text-muted-foreground/30 disabled:cursor-default"
+          className="shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-primary transition-all duration-150 enabled:hover:bg-primary/10 enabled:active:scale-95 disabled:text-muted-foreground/30 disabled:cursor-default"
+          aria-label={t('chat.send')}
           data-testid="chat-send-btn"
         >
           <Send className="w-[18px] h-[18px]" />

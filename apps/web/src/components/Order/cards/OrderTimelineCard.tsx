@@ -1,7 +1,12 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { useI18n, type DisplayOrder, type SettlementActionSnapshot } from '@mobazha/core';
+import {
+  useI18n,
+  isFiatPaymentCoin,
+  type DisplayOrder,
+  type SettlementActionSnapshot,
+} from '@mobazha/core';
 import type { Order as CoreOrder } from '@mobazha/core';
 import { OrderCompleteCard, ShipmentCard, AcceptedCard } from '@/components/Order';
 import { getBlockExplorerUrl } from '@/components/Order/utils';
@@ -28,6 +33,25 @@ function sortTimelineCards(cards: TimelineCardEntry[]): TimelineCardEntry[] {
     if (aTime !== bTime) return bTime - aTime;
     return b.priority - a.priority;
   });
+}
+
+function isFiatOrderPayment(order: DisplayOrder): boolean {
+  return !!order.fiatPayment || isFiatPaymentCoin(order.paymentCoin);
+}
+
+function getPaidTimelineDisplay(order: DisplayOrder, t: (key: string) => string) {
+  const isFiatPayment = isFiatOrderPayment(order);
+  return {
+    title: isFiatPayment ? t('order.fiatPayment.timelineTitle') : t('order.stages.escrowed'),
+    amount: isFiatPayment ? order.pricingAmount || order.total : order.total,
+    currency: isFiatPayment ? order.pricingCurrency || order.currency : order.currency,
+    paymentCoin: isFiatPayment ? undefined : order.paymentCoin,
+    amountLabel: isFiatPayment ? t('order.fiatPayment.amount') : undefined,
+    txLabel: isFiatPayment ? t('order.fiatPayment.transactionId') : undefined,
+    description: isFiatPayment
+      ? t('order.fiatPayment.timelineDescription')
+      : t('order.timeline.fundsSecured'),
+  };
 }
 
 function buildCompletedTimelineCards(
@@ -77,6 +101,7 @@ function buildCompletedTimelineCards(
     : undefined;
 
   const timelineCards: TimelineCardEntry[] = [];
+  const paidTimeline = getPaidTimelineDisplay(order, t);
 
   if (order.paymentTx && paymentEvent) {
     timelineCards.push({
@@ -86,16 +111,18 @@ function buildCompletedTimelineCards(
       node: (
         <OrderCompleteCard
           stageVariant="escrowed"
-          title={t('order.stages.escrowed')}
+          title={paidTimeline.title}
           timestamp={paymentEvent.timestamp}
-          amount={order.total}
-          currency={order.currency}
-          paymentCoin={order.paymentCoin}
+          amount={paidTimeline.amount}
+          currency={paidTimeline.currency}
+          paymentCoin={paidTimeline.paymentCoin}
+          amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
+          txLabel={paidTimeline.txLabel}
           txUrl={
             getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined
           }
-          description={t('order.timeline.fundsSecured')}
+          description={paidTimeline.description}
           showDivider={false}
         />
       ),
@@ -195,6 +222,7 @@ function buildCancelledTimelineCards(
   const isDeclined = cancellation?.kind === 'seller_decline';
 
   const timelineCards: TimelineCardEntry[] = [];
+  const paidTimeline = getPaidTimelineDisplay(order, t);
 
   if (wasFunded && order.paymentTx) {
     timelineCards.push({
@@ -204,16 +232,18 @@ function buildCancelledTimelineCards(
       node: (
         <OrderCompleteCard
           stageVariant="escrowed"
-          title={t('order.stages.escrowed')}
+          title={paidTimeline.title}
           timestamp={paymentEvent?.timestamp}
-          amount={order.total}
-          currency={order.currency}
-          paymentCoin={order.paymentCoin}
+          amount={paidTimeline.amount}
+          currency={paidTimeline.currency}
+          paymentCoin={paidTimeline.paymentCoin}
+          amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
+          txLabel={paidTimeline.txLabel}
           txUrl={
             getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined
           }
-          description={t('order.timeline.fundsSecured')}
+          description={paidTimeline.description}
           showDivider={false}
         />
       ),

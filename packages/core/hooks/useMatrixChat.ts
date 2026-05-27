@@ -192,7 +192,7 @@ export function useMatrixChat(options: UseMatrixChatOptions = {}): UseMatrixChat
       addMessage(roomId, optimisticMessage);
 
       try {
-        const result = await matrixClient.sendMessage(roomId, content);
+        const result = await matrixClient.sendMessage(roomId, content, localId);
         if (result) {
           updateMessage(roomId, localId, {
             id: result.id,

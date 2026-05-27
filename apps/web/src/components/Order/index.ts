@@ -30,7 +30,9 @@ export type {
 } from './OrderStageCard';
 
 export { OrderChat } from './OrderChat';
-export type { OrderChatProps, OrderChatMessage, OrderChatParticipant } from './OrderChat';
+export type { OrderChatProps, OrderChatParticipant } from './OrderChat';
+export { OrderChatContextStrip } from './OrderChatContextStrip';
+export type { OrderChatContextStripProps } from './OrderChatContextStrip';
 
 export { OrderTable } from './OrderTable';
 export type { OrderTableProps } from './OrderTable';

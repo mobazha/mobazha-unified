@@ -18,6 +18,7 @@ import type {
 } from './types';
 
 const pendingDirectRoomCreates = new Map<string, Promise<string | null>>();
+const pendingOrderRoomCreates = new Map<string, Promise<string | null>>();
 
 // ============ Public API ============
 
@@ -190,20 +191,33 @@ export async function createGroupRoom(
 export async function createOrderRoom(
   orderId: string,
   participants: string[],
-  orderInfo?: { title?: string; vendorId?: string; buyerId?: string }
+  orderInfo?: { title?: string; vendorId?: string; buyerId?: string; orderState?: string }
 ): Promise<string | null> {
-  try {
-    const resp = await authPost<{ roomId: string }>(NODE_API.CHAT_ROOMS, {
-      name: orderInfo?.title ? `Order: ${orderInfo.title}` : `Order ${orderId}`,
-      memberIDs: participants,
-      isDM: false,
-      metadata: { orderId, type: 'order', ...orderInfo },
-    });
-    return resp.roomId;
-  } catch (error) {
-    console.error('[Chat] createOrderRoom failed:', error);
-    return null;
+  const key = `${orderId}:${[...participants].sort().join(',')}`;
+  const inFlight = pendingOrderRoomCreates.get(key);
+  if (inFlight) {
+    return inFlight;
   }
+
+  const request = (async (): Promise<string | null> => {
+    try {
+      const resp = await authPost<{ roomId: string }>(NODE_API.CHAT_ROOMS, {
+        name: orderInfo?.title ? `Order: ${orderInfo.title}` : `Order ${orderId}`,
+        memberIDs: participants,
+        isDM: false,
+        metadata: { orderId, type: 'order', ...orderInfo },
+      });
+      return resp.roomId;
+    } catch (error) {
+      console.error('[Chat] createOrderRoom failed:', error);
+      return null;
+    }
+  })();
+
+  pendingOrderRoomCreates.set(key, request);
+  return request.finally(() => {
+    pendingOrderRoomCreates.delete(key);
+  });
 }
 
 export async function getOrderRoom(orderId: string): Promise<MatrixRoom | null> {

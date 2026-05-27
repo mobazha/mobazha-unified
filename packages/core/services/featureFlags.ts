@@ -84,20 +84,37 @@ interface RuntimeConfigWindow {
   };
 }
 
+const FRONTEND_FEATURE_DEFAULTS: FeatureSnapshot = {
+  supplyChainEnabled: {
+    effective: false,
+    overridable: ['platform_global', 'tenant', 'node_runtime'],
+  },
+  storefrontsEnabled: {
+    effective: false,
+    overridable: ['platform_global', 'tenant', 'node_runtime'],
+  },
+};
+
+function mergeWithFrontendDefaults(snapshot: FeatureSnapshot): FeatureSnapshot {
+  return { ...FRONTEND_FEATURE_DEFAULTS, ...snapshot };
+}
+
 function readFromRuntimeConfig(): FeatureSnapshot {
-  if (typeof window === 'undefined') return {};
+  if (typeof window === 'undefined') return mergeWithFrontendDefaults({});
   const rc = (window as unknown as RuntimeConfigWindow).__RUNTIME_CONFIG__;
-  if (!rc) return {};
+  if (!rc) return mergeWithFrontendDefaults({});
   if (rc.features != null) {
-    return normalizeSnapshot(rc.features);
+    return mergeWithFrontendDefaults(normalizeSnapshot(rc.features));
   }
   // Legacy fallback: synthesize a minimal snapshot from the flat field.
   if (typeof rc.guestCheckoutEnabled === 'boolean') {
-    return normalizeSnapshot({
-      guestCheckout: { effective: rc.guestCheckoutEnabled, overridable: [] },
-    });
+    return mergeWithFrontendDefaults(
+      normalizeSnapshot({
+        guestCheckout: { effective: rc.guestCheckoutEnabled, overridable: [] },
+      })
+    );
   }
-  return {};
+  return mergeWithFrontendDefaults({});
 }
 
 /**

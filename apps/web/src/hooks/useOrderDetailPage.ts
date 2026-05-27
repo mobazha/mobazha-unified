@@ -19,7 +19,6 @@ import {
   queryKeys,
 } from '@mobazha/core';
 import type { OrderConfirmType } from '@/components/Order';
-import type { OrderChatMessage, OrderChatParticipant } from '@/components/Order';
 
 interface OrderContractData {
   contract?: {
@@ -61,7 +60,6 @@ export interface UseOrderDetailPageReturn {
 
   paymentCoin: string | undefined;
   counterparty: { peerID?: string; name?: string; avatar?: string; location?: string } | null;
-  chatParticipants: OrderChatParticipant[];
 
   isActionLoading: boolean;
   isTransitioning: boolean;
@@ -78,9 +76,6 @@ export interface UseOrderDetailPageReturn {
 
   copyOrderId: () => Promise<void>;
   copyContract: () => Promise<void>;
-
-  chatMessages: OrderChatMessage[];
-  sendMessage: (content: string) => Promise<void>;
 
   acceptOrderProps: {
     orderId: string;
@@ -199,39 +194,6 @@ export function useOrderDetailPage(
     if (!displayOrder) return null;
     const p = displayOrder.userRole === 'buyer' ? displayOrder.vendor : displayOrder.buyer;
     return p ? { peerID: p.peerID, name: p.name, avatar: p.avatar, location: p.location } : null;
-  }, [displayOrder]);
-
-  const chatParticipants = useMemo<OrderChatParticipant[]>(() => {
-    if (!displayOrder) return [];
-    const list: OrderChatParticipant[] = [];
-    if (displayOrder.vendor) {
-      list.push({
-        id: displayOrder.vendor.peerID || 'vendor',
-        peerID: displayOrder.vendor.peerID || '',
-        name: displayOrder.vendor.name || 'Seller',
-        avatar: displayOrder.vendor.avatar,
-        role: 'seller',
-      });
-    }
-    if (displayOrder.buyer) {
-      list.push({
-        id: displayOrder.buyer.peerID || 'buyer',
-        peerID: displayOrder.buyer.peerID || '',
-        name: displayOrder.buyer.name || 'Buyer',
-        avatar: displayOrder.buyer.avatar,
-        role: 'buyer',
-      });
-    }
-    if (displayOrder.moderator) {
-      list.push({
-        id: displayOrder.moderator.id || 'moderator',
-        peerID: displayOrder.moderator.id || '',
-        name: displayOrder.moderator.name || 'Moderator',
-        avatar: displayOrder.moderator.avatar,
-        role: 'moderator',
-      });
-    }
-    return list;
   }, [displayOrder]);
 
   // --- Order action execution ---
@@ -463,25 +425,6 @@ export function useOrderDetailPage(
       toast({ title: t('order.actions.copyFailed') });
     }
   }, [coreOrder, toast, t]);
-
-  // --- Chat (mock for now, Matrix integration later) ---
-
-  const [chatMessages, setChatMessages] = useState<OrderChatMessage[]>([]);
-  const sendMessage = useCallback(
-    async (content: string) => {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          id: `msg-${Date.now()}`,
-          content,
-          senderId: currentUserPeerID || 'unknown',
-          timestamp: new Date().toISOString(),
-          status: 'sent',
-        },
-      ]);
-    },
-    [currentUserPeerID]
-  );
 
   // --- Dialog props ---
 
@@ -748,7 +691,6 @@ export function useOrderDetailPage(
     currentUserPeerID,
     paymentCoin,
     counterparty,
-    chatParticipants,
     isActionLoading,
     isTransitioning,
     executeConfirmAction,
@@ -759,8 +701,6 @@ export function useOrderDetailPage(
     closeReviewDialog,
     copyOrderId,
     copyContract,
-    chatMessages,
-    sendMessage,
     acceptOrderProps,
     shipOrderProps,
     sellerDigitalDelivery,

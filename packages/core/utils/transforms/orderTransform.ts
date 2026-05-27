@@ -35,6 +35,7 @@ import {
   getPaymentCoinDisplayLabel,
   getTokenDecimals,
   parseCanonicalPaymentCoin,
+  isFiatPaymentCoin,
 } from '../../data/tokens';
 import { formatUserName } from '../identity';
 import { formatMinimalUnitAmountString, formatMinimalUnitExactAmountString } from './minimalUnit';
@@ -511,6 +512,10 @@ function formatPaymentSentAmount(
   paymentCoin?: string
 ): string {
   const raw = String(amount).trim();
+  if (isFiatPaymentCoin(paymentCoin)) {
+    return formatPriceAmount(Number(amount), paymentDivisibility, paymentCoin);
+  }
+
   return (
     formatMinimalUnitExactAmountString(raw, paymentCoin) ||
     formatPriceAmount(Number(amount), paymentDivisibility, paymentCoin)
@@ -942,6 +947,14 @@ function resolveFiatProviderFromCoin(
   return normalizeFiatProvider(parts[1]);
 }
 
+function resolveFiatCurrencyFromCoin(paymentCoin?: string): string | undefined {
+  if (!paymentCoin || !isFiatPaymentCoin(paymentCoin)) {
+    return undefined;
+  }
+  const parts = paymentCoin.split(':');
+  return parts.length >= 3 && parts[2] ? parts[2].toUpperCase() : undefined;
+}
+
 /**
  * 提取释放交易哈希（Escrow → 卖家）
  * 优先级：
@@ -1051,19 +1064,24 @@ export function transformCoreOrder(
   const paymentCoin = (paymentSent?.coin || '').trim() || undefined;
   const paymentCoinKey = paymentCoin || '';
   const amountFormatCoin = paymentCoin || pricingCoin;
-  const displayCurrency = paymentCoin
-    ? getPaymentCoinDisplayLabel(paymentCoinKey)
-    : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin;
+  const paymentFiatCurrency = resolveFiatCurrencyFromCoin(paymentCoin);
+  const displayCurrency =
+    paymentFiatCurrency ||
+    (paymentCoin
+      ? getPaymentCoinDisplayLabel(paymentCoinKey)
+      : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin);
   const parsedPaymentCoin = paymentCoin ? parseCanonicalPaymentCoin(paymentCoin) : null;
   const paymentChainId =
     parsedPaymentCoin?.namespace === 'eip155' ? Number(parsedPaymentCoin.chainRef) : undefined;
   // 支付币种的 divisibility（优先从 token 配置取 decimals）
   const paymentTokenConfig = getTokenByPaymentCoin(amountFormatCoin);
-  const paymentDivisibility = paymentTokenConfig
-    ? paymentTokenConfig.decimals
-    : paymentCoin || pricingCoin !== listingCurrencyCode
-      ? getTokenDecimals(getPaymentCoinDisplayLabel(amountFormatCoin) || amountFormatCoin)
-      : listingDivisibility;
+  const paymentDivisibility = paymentFiatCurrency
+    ? listingDivisibility
+    : paymentTokenConfig
+      ? paymentTokenConfig.decimals
+      : paymentCoin || pricingCoin !== listingCurrencyCode
+        ? getTokenDecimals(getPaymentCoinDisplayLabel(amountFormatCoin) || amountFormatCoin)
+        : listingDivisibility;
   // 判断是否为跨币种订单（定价货币 ≠ 支付币种）
   const isCrossCurrency = listingCurrencyCode.toUpperCase() !== pricingCoin.toUpperCase();
   const timestamp = orderOpen?.timestamp || '';

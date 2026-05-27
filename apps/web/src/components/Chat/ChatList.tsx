@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input-compat';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { useI18n } from '@mobazha/core';
+import { getStatusLabel } from '@/components/Order/cards/orderProgressUtils';
 
 export interface ChatRoom {
   id: string;
@@ -19,6 +20,9 @@ export interface ChatRoom {
   isEncrypted?: boolean;
   isDirect?: boolean;
   roomType?: 'direct' | 'group' | 'order' | 'store' | 'community' | 'moderator';
+  orderId?: string;
+  orderState?: string;
+  orderSubtitle?: string;
   isInvite?: boolean;
   inviterName?: string;
   isExternal?: boolean;
@@ -136,150 +140,171 @@ export const ChatList: React.FC<ChatListProps> = ({
       .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
   }, [rooms, searchQuery]);
 
-  const renderRoomItem = (room: ChatRoom, isInvite = false) => (
-    <button
-      key={room.id}
-      type="button"
-      onClick={() => {
-        if (isInvite) {
-          onInviteSelect?.(room.id);
-        } else {
-          onRoomSelect?.(room.id);
-        }
-      }}
-      className={`w-full text-left group flex items-center gap-3 p-3 sm:p-3.5 transition-all duration-200 relative rounded-lg mx-1 my-0.5 ${
-        activeRoomId === room.id
-          ? 'bg-primary/8 shadow-sm'
-          : isInvite
-            ? 'bg-primary/5 hover:bg-primary/10'
-            : 'hover:bg-muted/60 hover:translate-x-1 hover:-translate-y-0.5 hover:shadow-md'
-      }`}
-      data-testid={isInvite ? 'chat-invite-item' : 'chat-room-item'}
-      data-room-id={room.id}
-    >
-      {/* Active indicator bar */}
-      {activeRoomId === room.id && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-primary to-primary/70 rounded-r-full" />
-      )}
-      {isInvite && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-success to-success/70 rounded-r-full animate-pulse" />
-      )}
+  const renderRoomItem = (room: ChatRoom, isInvite = false) => {
+    const isOrderRoom = room.roomType === 'order' || room.roomType === 'moderator';
+    const statusLabel = room.orderState ? getStatusLabel(room.orderState, t) : null;
+    const orderContext = isOrderRoom
+      ? [
+          statusLabel,
+          room.orderSubtitle ? t('order.chat.withName', { name: room.orderSubtitle }) : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') ||
+        (room.orderId ? t('order.chat.orderRef', { orderId: room.orderId.slice(0, 8) }) : null)
+      : null;
 
-      {/* Avatar with online status */}
-      <div className="relative flex-shrink-0">
-        <Avatar
-          src={room.avatar}
-          rawMxcUrl={room.rawMxcAvatarUrl}
-          name={room.name}
-          size="sm"
-          className="w-12 h-12 ring-2 ring-background shadow-md transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105"
-        />
-        {/* Invite badge */}
-        {isInvite && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-success border-2 border-card rounded-full flex items-center justify-center shadow-md">
-            <svg
-              className="w-2.5 h-2.5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          </span>
+    return (
+      <button
+        key={room.id}
+        type="button"
+        onClick={() => {
+          if (isInvite) {
+            onInviteSelect?.(room.id);
+          } else {
+            onRoomSelect?.(room.id);
+          }
+        }}
+        className={`w-full text-left group flex items-center gap-3 p-3 sm:p-3.5 transition-all duration-200 relative rounded-lg mx-1 my-0.5 ${
+          activeRoomId === room.id
+            ? 'bg-primary/8 shadow-sm'
+            : isInvite
+              ? 'bg-primary/5 hover:bg-primary/10'
+              : 'hover:bg-muted/60 hover:translate-x-1 hover:-translate-y-0.5 hover:shadow-md'
+        }`}
+        data-testid={isInvite ? 'chat-invite-item' : 'chat-room-item'}
+        data-room-id={room.id}
+      >
+        {/* Active indicator bar */}
+        {activeRoomId === room.id && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-primary to-primary/70 rounded-r-full" />
         )}
-      </div>
+        {isInvite && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-[60%] bg-gradient-to-b from-success to-success/70 rounded-r-full animate-pulse" />
+        )}
 
-      <div className="flex-1 min-w-0">
-        <HStack justify="between" align="center">
-          <HStack gap="xs" align="center" className="min-w-0 flex-1">
-            <span className="font-semibold text-[14px] text-foreground truncate group-hover:text-primary transition-colors duration-200">
-              {room.name}
+        {/* Avatar with online status */}
+        <div className="relative flex-shrink-0">
+          <Avatar
+            src={room.avatar}
+            rawMxcUrl={room.rawMxcAvatarUrl}
+            name={room.name}
+            size="sm"
+            className="w-12 h-12 ring-2 ring-background shadow-md transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105"
+          />
+          {/* Invite badge */}
+          {isInvite && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-success border-2 border-card rounded-full flex items-center justify-center shadow-md">
+              <svg
+                className="w-2.5 h-2.5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
             </span>
-            {/* Verified badge */}
-            {room.isVerified && (
-              <svg
-                className="w-4 h-4 text-info flex-shrink-0 drop-shadow-sm"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <HStack justify="between" align="center">
+            <HStack gap="xs" align="center" className="min-w-0 flex-1">
+              <span className="font-semibold text-[14px] text-foreground truncate group-hover:text-primary transition-colors duration-200">
+                {room.name}
+              </span>
+              {/* Verified badge */}
+              {room.isVerified && (
+                <svg
+                  className="w-4 h-4 text-info flex-shrink-0 drop-shadow-sm"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              {/* Encrypted indicator */}
+              {room.isEncrypted && !isInvite && (
+                <svg
+                  className="w-3.5 h-3.5 text-primary flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-label="End-to-end encrypted"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              {/* Type badge */}
+              <RoomTypeBadge type={room.roomType} isExternal={room.isExternal} />
+            </HStack>
+            {room.lastMessageTime && !isInvite && (
+              <span className="text-xs text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
+                {room.lastMessageTime}
+              </span>
             )}
-            {/* Encrypted indicator */}
-            {room.isEncrypted && !isInvite && (
-              <svg
-                className="w-3.5 h-3.5 text-primary flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                aria-label="End-to-end encrypted"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
-            {/* Type badge */}
-            <RoomTypeBadge type={room.roomType} isExternal={room.isExternal} />
           </HStack>
-          {room.lastMessageTime && !isInvite && (
-            <span className="text-xs text-muted-foreground/60 flex-shrink-0 ml-2 font-medium">
-              {room.lastMessageTime}
-            </span>
-          )}
-        </HStack>
-        <HStack justify="between" align="center" className="mt-1">
-          {isInvite ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[12px] text-primary font-semibold">{t('chat.invitedYou')}</span>
+          {orderContext && !isInvite && (
+            <div className="mt-1 text-[11px] font-medium text-primary/80 truncate">
+              {orderContext}
             </div>
-          ) : (
-            <p className="text-[12px] text-muted-foreground/70 truncate leading-relaxed">
-              {room.lastMessage || t('chat.noMessages')}
-            </p>
           )}
-          {isInvite ? (
-            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
-              <button
-                onClick={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onAcceptInvite?.(room.id);
-                }}
-                className="px-3 py-1.5 text-xs font-semibold bg-success hover:bg-success/90 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
-              >
-                {t('chat.accept')}
-              </button>
-              <button
-                onClick={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onRejectInvite?.(room.id);
-                }}
-                className="px-3 py-1.5 text-xs font-semibold bg-muted/80 hover:bg-muted text-muted-foreground rounded-lg transition-all"
-              >
-                {t('chat.decline')}
-              </button>
-            </div>
-          ) : room.unreadCount && room.unreadCount > 0 ? (
-            <span className="flex-shrink-0 min-w-[20px] h-5 px-2 bg-gradient-to-r from-primary to-primary/90 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md shadow-primary/30 animate-pulse">
-              {room.unreadCount > 99 ? '99+' : room.unreadCount}
-            </span>
-          ) : null}
-        </HStack>
-      </div>
-    </button>
-  );
+          <HStack justify="between" align="center" className={orderContext ? 'mt-0.5' : 'mt-1'}>
+            {isInvite ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-primary font-semibold">
+                  {t('chat.invitedYou')}
+                </span>
+              </div>
+            ) : (
+              <p className="text-[12px] text-muted-foreground/70 truncate leading-relaxed">
+                {room.lastMessage || t('chat.noMessages')}
+              </p>
+            )}
+            {isInvite ? (
+              <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                <button
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onAcceptInvite?.(room.id);
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold bg-success hover:bg-success/90 text-white rounded-lg transition-all shadow-sm hover:shadow-md"
+                >
+                  {t('chat.accept')}
+                </button>
+                <button
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRejectInvite?.(room.id);
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold bg-muted/80 hover:bg-muted text-muted-foreground rounded-lg transition-all"
+                >
+                  {t('chat.decline')}
+                </button>
+              </div>
+            ) : room.unreadCount && room.unreadCount > 0 ? (
+              <span className="flex-shrink-0 min-w-[20px] h-5 px-2 bg-gradient-to-r from-primary to-primary/90 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md shadow-primary/30 animate-pulse">
+                {room.unreadCount > 99 ? '99+' : room.unreadCount}
+              </span>
+            ) : null}
+          </HStack>
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div
