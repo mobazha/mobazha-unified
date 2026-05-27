@@ -248,7 +248,7 @@ test.describe('Desktop Visual - Authenticated Main', () => {
   test('authed: orders-sales (mocked)', async ({ page }) => {
     await ensureAuthenticated(page);
     await mockOrdersAPI(page);
-    await page.goto('/orders?tab=sales');
+    await page.goto('/orders?role=sales');
     await waitForDOMStable(page);
     await expect(page).toHaveScreenshot('desktop-authed-orders-sales.png', { fullPage: true });
   });

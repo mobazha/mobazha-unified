@@ -46,6 +46,7 @@ import {
 import type { Order, PaymentSession } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import { useHaptic } from '@/lib/platform';
+import { orderDetailPath } from '@/lib/ordersNavigation';
 
 // Types
 interface OrderDetails {
@@ -895,7 +896,7 @@ export default function PaymentPage() {
                         }}
                         onClose={() => {
                           setExternalWalletInfo(null);
-                          router.push(`/orders/${orderDetails.orderID}`);
+                          router.push(orderDetailPath(orderDetails.orderID, 'purchase'));
                         }}
                       />
                     ) : (

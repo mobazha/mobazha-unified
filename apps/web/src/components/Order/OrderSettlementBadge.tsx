@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Check, Copy, Info } from 'lucide-react';
 import { resolveSettlementStatusDisplay } from './orderSettlementStatus';
+import { useI18n } from '@mobazha/core';
 
 export interface OrderSettlementBadgeProps {
   settlementState?: string;
@@ -15,24 +16,41 @@ export interface OrderSettlementBadgeProps {
   className?: string;
 }
 
-function formatActionLabel(action?: string): string {
+function settlementActionLabelKey(action?: string): string {
   switch ((action || '').trim().toLowerCase()) {
     case 'confirm':
-      return 'Confirm';
+      return 'order.settlementAction.confirm';
     case 'cancel':
-      return 'Cancel';
+      return 'order.settlementAction.cancel';
     case 'complete':
-      return 'Complete';
+      return 'order.settlementAction.complete';
     case 'dispute_release':
-      return 'Dispute release';
+      return 'order.settlementAction.disputeRelease';
     default:
-      return action || 'Settlement';
+      return 'order.settlementAction.default';
   }
 }
 
 function truncateMiddle(value: string, head = 10, tail = 8): string {
   if (value.length <= head + tail + 3) return value;
   return `${value.slice(0, head)}...${value.slice(-tail)}`;
+}
+
+function settlementStateLabelKey(state?: string): string {
+  switch ((state || '').trim().toLowerCase()) {
+    case 'submitting':
+      return 'order.settlementStatus.submitting';
+    case 'submitted':
+      return 'order.settlementStatus.submitted';
+    case 'confirmed':
+      return 'order.settlementStatus.confirmed';
+    case 'failed':
+      return 'order.settlementStatus.failed';
+    case 'abandoned':
+      return 'order.settlementStatus.abandoned';
+    default:
+      return 'order.settlementStatus.unknown';
+  }
 }
 
 export const OrderSettlementBadge = memo(function OrderSettlementBadge({
@@ -42,6 +60,7 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
   settlementTxHash,
   className,
 }: OrderSettlementBadgeProps) {
+  const { t } = useI18n();
   const [copiedField, setCopiedField] = useState<'actionId' | 'txHash' | null>(null);
   const status = resolveSettlementStatusDisplay(settlementState);
   const stopEvent = useCallback((event: React.SyntheticEvent) => {
@@ -66,7 +85,7 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
   return (
     <div className={cn('flex items-center gap-1', className)}>
       <Badge variant="outline" className={cn('text-xs', status.className)}>
-        {status.label}
+        {t(settlementStateLabelKey(settlementState))}
       </Badge>
       {hasDetails ? (
         <Popover>
@@ -74,7 +93,7 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
             <button
               type="button"
               className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="View settlement details"
+              aria-label={t('order.settlementDetails.viewDetails')}
               onClick={stopEvent}
               onMouseDown={stopEvent}
               onKeyDown={stopEvent}
@@ -92,15 +111,19 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
               {settlementAction ? (
                 <div>
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                    Action
+                    {t('order.settlementDetails.action')}
                   </div>
-                  <div className="text-foreground">{formatActionLabel(settlementAction)}</div>
+                  <div className="text-foreground">
+                    {settlementAction
+                      ? t(settlementActionLabelKey(settlementAction))
+                      : t('order.settlementAction.default')}
+                  </div>
                 </div>
               ) : null}
               {settlementActionId ? (
                 <div>
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                    Action ID
+                    {t('order.settlementDetails.actionId')}
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <div className="min-w-0 flex-1 truncate font-mono text-foreground">
@@ -109,7 +132,7 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
                     <button
                       type="button"
                       className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Copy settlement action ID"
+                      aria-label={t('order.settlementDetails.copyActionId')}
                       onClick={event => {
                         stopEvent(event);
                         void copyField('actionId', settlementActionId);
@@ -128,7 +151,7 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
               {settlementTxHash ? (
                 <div>
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                    Tx Hash
+                    {t('order.settlementDetails.txHash')}
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <div className="min-w-0 flex-1 truncate font-mono text-foreground">
@@ -137,7 +160,7 @@ export const OrderSettlementBadge = memo(function OrderSettlementBadge({
                     <button
                       type="button"
                       className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Copy settlement transaction hash"
+                      aria-label={t('order.settlementDetails.copyTxHash')}
                       onClick={event => {
                         stopEvent(event);
                         void copyField('txHash', settlementTxHash);

@@ -19,6 +19,7 @@ import { MessageCircle, Package, ExternalLink, Printer } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
+import { orderDetailPath } from '@/lib/ordersNavigation';
 import {
   useI18n,
   isOrderShipped,
@@ -133,6 +134,7 @@ function ModeratorBadge({
 export interface OrderDetailMobileProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
+  listBackPath?: string;
   focusDispute?: boolean;
   initialTab?: 'details' | 'discussion' | 'evidence';
 }
@@ -142,6 +144,7 @@ type OrderDetailMobileTab = 'details' | 'discussion' | 'evidence';
 export function OrderDetailMobile({
   orderId,
   viewingContext,
+  listBackPath = '/orders',
   focusDispute = false,
   initialTab = 'details',
 }: OrderDetailMobileProps) {
@@ -228,13 +231,18 @@ export function OrderDetailMobile({
 
   const syncTabToUrl = useCallback(
     (tab: OrderDetailMobileTab) => {
-      const params = new URLSearchParams({ type: orderViewType });
-      if (tab === 'discussion') params.set('tab', 'discussion');
-      else if (tab === 'evidence') params.set('tab', 'evidence');
-      else if (isModeratorDisputeView) params.set('tab', 'dispute');
-      router.replace(`/orders/${orderId}?${params.toString()}`, { scroll: false });
+      const detailRole = orderViewType === 'sale' ? 'sale' : 'purchase';
+      const fromShell =
+        listBackPath.startsWith('/admin/orders') && detailRole === 'purchase' ? 'admin' : undefined;
+      let tabParam: string | undefined;
+      if (tab === 'discussion') tabParam = 'discussion';
+      else if (tab === 'evidence') tabParam = 'evidence';
+      else if (isModeratorDisputeView) tabParam = 'dispute';
+      router.replace(orderDetailPath(orderId, detailRole, { fromShell, tab: tabParam }), {
+        scroll: false,
+      });
     },
-    [orderId, orderViewType, router, isModeratorDisputeView]
+    [orderId, orderViewType, listBackPath, router, isModeratorDisputeView]
   );
 
   const handleTabChange = useCallback(
@@ -537,14 +545,14 @@ export function OrderDetailMobile({
   // --- TG BackButton ---
   useEffect(() => {
     if (!isTG || !backButton) return;
-    const onBack = () => router.back();
+    const onBack = () => router.push(listBackPath);
     backButton.onClick(onBack);
     backButton.show();
     return () => {
       backButton.offClick(onBack);
       backButton.hide();
     };
-  }, [isTG, backButton, router]);
+  }, [isTG, backButton, listBackPath, router]);
 
   // --- TG MainButton (maps to primary order action) ---
   const handleOrderActionRef = useRef(handleOrderAction);
@@ -675,7 +683,7 @@ export function OrderDetailMobile({
         <div className="px-4 py-12 text-center">
           <h2 className="text-lg font-semibold text-foreground mb-2">{t('order.orderNotFound')}</h2>
           <p className="text-sm text-muted-foreground mb-4">{t('order.orderNotFoundMessage')}</p>
-          <Button onClick={() => router.push('/orders')} size="sm">
+          <Button onClick={() => router.push(listBackPath)} size="sm">
             {t('order.backToOrders')}
           </Button>
         </div>
@@ -692,7 +700,9 @@ export function OrderDetailMobile({
             ? `${t('moderation.caseIdLabel')} ${displayOrder.orderId.length > 12 ? `${displayOrder.orderId.slice(0, 6)}…${displayOrder.orderId.slice(-4)}` : displayOrder.orderId}`
             : t('order.details')
         }
-        onBack={isModeratorDisputeView ? () => router.push('/cases') : undefined}
+        onBack={
+          isModeratorDisputeView ? () => router.push('/cases') : () => router.push(listBackPath)
+        }
         rightAction={
           <button
             onClick={() => setShowMoreMenu(true)}

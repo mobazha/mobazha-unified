@@ -589,12 +589,21 @@ export async function batchNotifications(
   return authPost(NODE_API.NOTIFICATIONS_BATCH, { action, ids: notificationIds });
 }
 
+const GUEST_ORDER_TOKEN_PREFIX = 'gst_';
+
 export function getNotificationRoute(notification: Notification): string | null {
   const { type, data } = notification;
   const orderOrCaseId = resolveOrderOrCaseID(data);
 
   if (type.startsWith('order.') || type.startsWith('payment.')) {
     if (orderOrCaseId) {
+      if (orderOrCaseId.startsWith(GUEST_ORDER_TOKEN_PREFIX)) {
+        const params = new URLSearchParams({
+          source: 'guest',
+          guestOrder: orderOrCaseId,
+        });
+        return `/admin/orders?${params.toString()}`;
+      }
       return `/orders/${orderOrCaseId}`;
     }
   }
