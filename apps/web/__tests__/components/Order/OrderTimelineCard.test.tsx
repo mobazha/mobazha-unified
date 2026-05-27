@@ -2,11 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-vi.mock('@mobazha/core', () => ({
-  useI18n: () => ({
-    t: (key: string) => key,
-  }),
-}));
+vi.mock('@mobazha/core', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core')>();
+  return {
+    ...actual,
+    useI18n: () => ({
+      t: (key: string) => key,
+    }),
+  };
+});
 
 vi.mock('@/components/Order', () => ({
   OrderCompleteCard: (props: {
