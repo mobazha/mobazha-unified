@@ -11,8 +11,7 @@ import { getBrandConfig, getBrandNetworkConfig } from '../../config/env';
 
 describe('getBrandNetworkConfig', () => {
   it('defaults all flags to false when no brand is configured', () => {
-    // No brand has been applied at module load — applyRuntimeConfig() ran
-    // against an empty window.__RUNTIME_CONFIG__ in the test environment.
+    // No app-level runtime config has been applied in this test environment.
     expect(getBrandConfig()).toBeUndefined();
 
     const network = getBrandNetworkConfig();
