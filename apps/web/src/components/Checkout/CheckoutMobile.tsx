@@ -15,6 +15,7 @@ import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
+import { CheckoutContractTypeAlert } from './CheckoutContractTypeAlert';
 import { usePrimaryCTA, useHaptic } from '@/lib/platform';
 import type { UseCheckoutReturn } from './types';
 
@@ -48,6 +49,8 @@ export function CheckoutMobile({ checkout }: Props) {
     handleCreateOrder,
     isSubmitting,
     canSubmit,
+    hasMixedContractTypes,
+    hasMissingContractType,
     isRwaToken,
     rwaTradeMode,
     needsShippingAddress,
@@ -442,6 +445,11 @@ export function CheckoutMobile({ checkout }: Props) {
                     </HStack>
                   )}
                 </div>
+
+                <CheckoutContractTypeAlert
+                  hasMixedContractTypes={hasMixedContractTypes}
+                  hasMissingContractType={hasMissingContractType}
+                />
 
                 <BuyerProtectionBadge
                   variant="inline"

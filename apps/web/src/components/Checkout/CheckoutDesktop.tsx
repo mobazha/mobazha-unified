@@ -16,6 +16,7 @@ import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
+import { CheckoutContractTypeAlert } from './CheckoutContractTypeAlert';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -49,6 +50,8 @@ export function CheckoutDesktop({ checkout }: Props) {
     handleCreateOrder,
     isSubmitting,
     canSubmit,
+    hasMixedContractTypes,
+    hasMissingContractType,
     isRwaToken,
     rwaTradeMode,
     needsShippingAddress,
@@ -467,6 +470,11 @@ export function CheckoutDesktop({ checkout }: Props) {
                     </div>
 
                     <BuyerProtectionBadge variant="card" className="mt-4" />
+
+                    <CheckoutContractTypeAlert
+                      hasMixedContractTypes={hasMixedContractTypes}
+                      hasMissingContractType={hasMissingContractType}
+                    />
 
                     <Button
                       className="w-full mt-4"

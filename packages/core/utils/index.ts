@@ -53,6 +53,12 @@ export * from './storeConfigValidator';
 // 物流商配置与追踪 URL 工具
 export * from './shipping';
 
+// 结账 contractType 校验（购物车可混放，单笔订单须同类）
+export * from './contractTypeCheckout';
+
+// Guest 订单实物/数字类型推断
+export * from './guestOrderKind';
+
 // 扫码结果解析
 export * from './scanResult';
 
