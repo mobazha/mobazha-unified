@@ -27,6 +27,10 @@ import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
+import { GuestOrderStageStrip } from '@/components/orders/GuestOrderStageStrip';
+import { GuestOrderMilestones } from '@/components/orders/GuestOrderMilestones';
+import { hasGuestPublicTrackingInfo } from '@/components/orders/guestOrderStages';
+import { useGuestBuyerOrderKind } from '@/hooks/useGuestBuyerOrderKind';
 import { cn } from '@/lib/utils';
 
 function resolveSellerPeerID(order: GuestOrderStatus): string | undefined {
@@ -87,6 +91,7 @@ export default function GuestOrderPage() {
   const [sellerProfile, setSellerProfile] = useState<UserProfile | null>(null);
   const [sellerProfilePeerID, setSellerProfilePeerID] = useState<string | undefined>(undefined);
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
+  const { orderKind } = useGuestBuyerOrderKind(order, buyerPortalToken);
 
   // Keep the recovery token out of Referer headers even for legacy query-link
   // visits, then strip it from the visible URL after local recovery.
@@ -205,7 +210,8 @@ export default function GuestOrderPage() {
   const showPaymentInfo = order.state === 'AWAITING_PAYMENT' && !order.poolDetected;
   const isPoolDetected = order.state === 'AWAITING_PAYMENT' && !!order.poolDetected;
   const showConfirmations = order.state === 'PAYMENT_DETECTED' || isPoolDetected;
-  const showTracking = order.state === 'SHIPPED' && order.trackingNumber;
+  const showTracking =
+    (order.state === 'SHIPPED' || order.state === 'COMPLETED') && hasGuestPublicTrackingInfo(order);
   // Digital deliveries become available once the order is FUNDED. For a
   // physical-only order, BuyerDigitalAssetsSection short-circuits to render
   // nothing (no grants found), so it's safe to mount for any post-funded
@@ -253,6 +259,12 @@ export default function GuestOrderPage() {
           </div>
           {display.description && <p className="text-sm mt-1 opacity-80">{display.description}</p>}
         </div>
+
+        <GuestOrderStageStrip state={order.state} orderKind={orderKind} />
+
+        {(order.state === 'FUNDED' || order.state === 'SHIPPED' || order.state === 'COMPLETED') && (
+          <GuestOrderMilestones order={order} />
+        )}
 
         {order.state === 'EXPIRED' && (
           <div
@@ -305,7 +317,22 @@ export default function GuestOrderPage() {
           />
         )}
 
-        {showDigitalDeliveries && buyerPortalToken && (
+        {showDigitalDeliveries && !buyerPortalToken && orderKind === 'digital' && (
+          <div
+            role="note"
+            className="rounded-lg border border-amber-300/60 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/30 p-4 text-sm space-y-2"
+            data-testid="guest-portal-token-missing"
+          >
+            <p className="font-semibold text-amber-900 dark:text-amber-100">
+              {t('guestOrder.portalTokenMissingTitle')}
+            </p>
+            <p className="text-xs text-amber-800/90 dark:text-amber-200/80 leading-relaxed">
+              {t('guestOrder.portalTokenMissingBody')}
+            </p>
+          </div>
+        )}
+
+        {showDigitalDeliveries && buyerPortalToken && orderKind === 'digital' && (
           <BuyerDigitalAssetsSection
             orderId={order.orderToken}
             buyerPortalToken={buyerPortalToken}
@@ -317,7 +344,11 @@ export default function GuestOrderPage() {
             <p className="text-sm font-medium mb-1">{t('guestOrder.trackingInfo')}</p>
             <p className="text-sm">
               {order.carrier && <span className="text-muted-foreground">{order.carrier}: </span>}
-              <span className="font-mono">{order.trackingNumber}</span>
+              {order.trackingNumber ? (
+                <span className="font-mono">{order.trackingNumber}</span>
+              ) : (
+                <span className="text-muted-foreground">{order.carrier}</span>
+              )}
             </p>
           </div>
         )}

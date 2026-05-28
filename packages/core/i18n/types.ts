@@ -2981,6 +2981,9 @@ export interface TranslationResource {
       guestPhysicalShipHelp?: string;
       guestOrderTypeDigital?: string;
       guestOrderTypePhysical?: string;
+      guestOrderTypeUnknown?: string;
+      guestContractTypeMissingTitle?: string;
+      guestContractTypeMissingHelp?: string;
       guestCarrierPlaceholder?: string;
       guestTrackingPlaceholder?: string;
       guestMarkDelivered?: string;
@@ -2995,6 +2998,18 @@ export interface TranslationResource {
       guestActionExpired?: string;
       guestActionNoAction?: string;
       guestToggleTracking?: string;
+      guestFulfillmentTitle?: string;
+      guestFulfillmentDigitalHint?: string;
+      guestMilestoneFunded?: string;
+      guestMilestoneShipped?: string;
+      guestMilestoneCompleted?: string;
+      guestMilestoneTimePending?: string;
+      guestCopyOrderToken?: string;
+      guestCopyOrderLink?: string;
+      guestDigitalStatusAuthFailed?: string;
+      guestTrackingReadonly?: string;
+      guestShareWithBuyerTitle?: string;
+      guestNoContactHint?: string;
     };
     analytics?: {
       title?: string;
@@ -4519,6 +4534,26 @@ export interface TranslationResource {
     expiredHelpTitle?: string;
     expiredHelpBody?: string;
     doNotPayAgain?: string;
+    stageProgress?: string;
+    milestonesTitle?: string;
+    portalTokenMissingTitle?: string;
+    portalTokenMissingBody?: string;
+    milestones?: {
+      funded?: string;
+      shipped?: string;
+      completed?: string;
+      timePending?: string;
+    };
+    stages?: {
+      payment?: string;
+      confirming?: string;
+      paid?: string;
+      delivered?: string;
+      deliveredGeneric?: string;
+      shipped?: string;
+      complete?: string;
+      expired?: string;
+    };
     confirmation?: {
       poolDetected?: string;
       poolDetectedDesc?: string;

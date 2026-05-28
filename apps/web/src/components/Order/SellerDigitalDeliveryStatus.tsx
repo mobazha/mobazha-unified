@@ -37,13 +37,17 @@ export interface SellerDigitalDeliveryStatusProps {
     | null;
   error: string | null;
   canSyncDelivery?: boolean;
+  canRetryDelivery?: boolean;
   onSyncDelivery: () => Promise<boolean>;
+  onRetryDelivery?: () => Promise<boolean>;
   listingSlug?: string;
   onManageListing?: (slug: string) => void;
   refreshStatus?: () => void;
   orderId?: string;
   listingSlugs?: string[];
   className?: string;
+  /** stacked: primary actions below copy (guest order drawer); inline: actions beside title */
+  actionLayout?: 'inline' | 'stacked';
 }
 
 export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliveryStatus({
@@ -55,13 +59,16 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
   status,
   error,
   canSyncDelivery = true,
+  canRetryDelivery = false,
   onSyncDelivery,
+  onRetryDelivery,
   listingSlug,
   onManageListing,
   refreshStatus,
   orderId,
   listingSlugs,
   className,
+  actionLayout = 'inline',
 }: SellerDigitalDeliveryStatusProps) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -136,10 +143,17 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
 
   const isReady = status === 'ready';
   const isManualRequired = status === 'manual_required';
-  const isAttention = Boolean(error) || isManualRequired || status === 'restricted';
+  // Title/description use hasPreconfiguredAssets; keep the manage CTA on the same predicate
+  // so guest orders that infer digital locally but return not_digital/pending still get the button.
+  const needsAssetConfiguration = !hasPreconfiguredAssets && !isDelivered && !isReady && !isLoading;
+  const isAttention =
+    Boolean(error) || isManualRequired || needsAssetConfiguration || status === 'restricted';
   const Icon = isLoading ? Loader2 : isAttention ? AlertCircle : CheckCircle2;
   const showSyncAction = isDelivered && canSyncDelivery;
-  const showManageAction = isManualRequired && listingSlug && onManageListing;
+  const showRetryAction = isReady && canRetryDelivery && onRetryDelivery;
+  const manageListingSlug = listingSlug && onManageListing ? listingSlug : null;
+  const showManageAction =
+    Boolean(manageListingSlug) && (isManualRequired || needsAssetConfiguration);
   const title = isDelivered
     ? t('order.digitalDelivery.deliveredTitle')
     : hasPreconfiguredAssets
@@ -153,9 +167,74 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
       ? t('order.digitalDelivery.deliveredDesc', { count: assetCount })
       : hasPreconfiguredAssets
         ? isReady
-          ? t('order.digitalDelivery.readyDesc', { count: assetCount })
+          ? canRetryDelivery
+            ? t('order.digitalDelivery.readyDesc', { count: assetCount })
+            : t('order.digitalDelivery.readyDescAwaitingPayment', { count: assetCount })
           : t('order.digitalDelivery.pendingDesc')
         : t('order.digitalDelivery.manualDesc');
+
+  const showRefreshAction =
+    (isManualRequired || needsAssetConfiguration) && !isLoading && refreshStatus;
+  const actionButtons = (
+    <>
+      {showManageAction && (
+        <Button
+          type="button"
+          size="sm"
+          variant={actionLayout === 'stacked' ? 'default' : 'outline'}
+          onClick={() => manageListingSlug && onManageListing?.(manageListingSlug)}
+          className={cn('h-10', actionLayout === 'stacked' && 'min-h-[44px] flex-1')}
+        >
+          <ExternalLink className="w-4 h-4 mr-1.5" />
+          {t('order.digitalDelivery.manageAssets')}
+        </Button>
+      )}
+      {showRefreshAction && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={refreshStatus}
+          className={cn('h-10', actionLayout === 'stacked' && 'h-11 w-11 shrink-0 px-0')}
+          aria-label={t('order.digitalDelivery.refreshStatus')}
+        >
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+      )}
+      {showRetryAction && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            void onRetryDelivery();
+          }}
+          disabled={isLoading || isSyncing}
+          className={cn('h-10', actionLayout === 'stacked' && 'min-h-[44px] w-full sm:w-auto')}
+        >
+          <RefreshCw className={cn('w-4 h-4 mr-1.5', isSyncing && 'animate-spin')} />
+          {isSyncing ? t('common.processing') : t('order.actions.retryDigitalDelivery')}
+        </Button>
+      )}
+      {showSyncAction && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            void onSyncDelivery();
+          }}
+          disabled={isLoading || isSyncing}
+          className={cn('h-10', actionLayout === 'stacked' && 'min-h-[44px] w-full sm:w-auto')}
+        >
+          <RefreshCw className={cn('w-4 h-4 mr-1.5', isSyncing && 'animate-spin')} />
+          {isSyncing ? t('common.processing') : t('order.digitalDelivery.syncAction')}
+        </Button>
+      )}
+    </>
+  );
+  const hasActionButtons =
+    showManageAction || showRefreshAction || showRetryAction || showSyncAction;
 
   return (
     <Card
@@ -176,54 +255,23 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
           <Icon className={cn('w-5 h-5', isLoading && 'animate-spin')} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
+          {actionLayout === 'inline' ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+                {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+              </div>
+              {hasActionButtons && <div className="flex gap-2 shrink-0">{actionButtons}</div>}
+            </div>
+          ) : (
+            <>
               <h2 className="text-sm font-semibold text-foreground">{title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{description}</p>
               {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-            </div>
-            <div className="flex gap-2 shrink-0">
-              {showManageAction && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onManageListing(listingSlug)}
-                  className="h-10"
-                >
-                  <ExternalLink className="w-4 h-4 mr-1.5" />
-                  {t('order.digitalDelivery.manageAssets')}
-                </Button>
-              )}
-              {isManualRequired && !isLoading && refreshStatus && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={refreshStatus}
-                  className="h-10"
-                  aria-label={t('order.digitalDelivery.refreshStatus')}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </Button>
-              )}
-              {showSyncAction && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    void onSyncDelivery();
-                  }}
-                  disabled={isLoading || isSyncing}
-                  className="h-10"
-                >
-                  <RefreshCw className={cn('w-4 h-4 mr-1.5', isSyncing && 'animate-spin')} />
-                  {isSyncing ? t('common.processing') : t('order.digitalDelivery.syncAction')}
-                </Button>
-              )}
-            </div>
-          </div>
+              {hasActionButtons && <div className="mt-3 flex gap-2">{actionButtons}</div>}
+            </>
+          )}
 
           {/* Progressive disclosure: delivered items detail */}
           {isDelivered && orderId && (

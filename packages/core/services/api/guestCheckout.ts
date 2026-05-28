@@ -63,6 +63,8 @@ export interface GuestOrderItemResponse {
   listingHash: string;
   listingTitle: string;
   listingSlug: string;
+  /** e.g. PHYSICAL_GOOD | DIGITAL_GOOD — persisted at order creation. */
+  contractType?: string;
   sellerPeerID: string;
   thumbnail?: string;
   quantity: number;
@@ -84,7 +86,12 @@ export interface GuestOrderStatus {
   expiresAt: string;
   txHash?: string;
   trackingNumber?: string;
+  /** Normalized from API `shippingCarrier` (legacy alias `carrier` also accepted). */
   carrier?: string;
+  shippingCarrier?: string;
+  fundedAt?: string;
+  shippedAt?: string;
+  completedAt?: string;
   subtotal?: number;
   shippingCost?: number;
   totalPrice?: number;
@@ -197,6 +204,23 @@ export function normalizeGuestOrderState(state: string | number | undefined | nu
   return typeof state === 'string' ? state : String(state);
 }
 
+type GuestOrderStatusDTO = Omit<GuestOrderStatus, 'state' | 'carrier'> & {
+  state?: string | number;
+  carrier?: string;
+  shippingCarrier?: string;
+};
+
+/** Map public guest-order status payload to UI-friendly shape. */
+export function normalizeGuestOrderStatus(raw: GuestOrderStatusDTO): GuestOrderStatus {
+  const carrier = raw.carrier?.trim() || raw.shippingCarrier?.trim() || undefined;
+  return {
+    ...raw,
+    state: normalizeGuestOrderState(raw.state),
+    carrier,
+    shippingCarrier: raw.shippingCarrier?.trim() || carrier,
+  };
+}
+
 // ========== Buyer-facing APIs (public, no auth) ==========
 
 export function buyerPortalTokenStorageKey(orderToken: string): string {
@@ -208,7 +232,9 @@ export function createGuestOrder(data: CreateGuestOrderRequest): Promise<GuestOr
 }
 
 export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
-  return publicGet(NODE_API.GUEST_ORDER(token));
+  return publicGet<GuestOrderStatusDTO>(NODE_API.GUEST_ORDER(token)).then(
+    normalizeGuestOrderStatus
+  );
 }
 
 // ========== Guest checkout settings / seller APIs ==========
@@ -265,6 +291,12 @@ export interface GuestOrderAdminDetail {
   contactEmail?: string;
   createdAt: string;
   updatedAt: string;
+  fundedAt?: string;
+  shippedAt?: string;
+  completedAt?: string;
+  trackingNumber?: string;
+  shippingCarrier?: string;
+  sellerNote?: string;
   // addressEncrypted=true means shippingAddressCiphertext holds PGP armor.
   // addressEncrypted=false means shippingAddress holds a parsed JSON object.
   addressEncrypted: boolean;
@@ -304,13 +336,16 @@ export function deletePGPPublicKey(): Promise<void> {
   return authDel(NODE_API.SETTINGS_PGP_KEY);
 }
 
-export function shipGuestOrder(
+export async function shipGuestOrder(
   token: string,
   data: { trackingNumber?: string; carrier?: string }
 ): Promise<GuestOrderStatus> {
-  return authPut(NODE_API.GUEST_ORDER_SHIP(token), data);
+  // Backend returns 204 No Content; refetch public status for normalized payload.
+  await authPut(NODE_API.GUEST_ORDER_SHIP(token), data);
+  return getGuestOrderStatus(token);
 }
 
-export function completeGuestOrder(token: string): Promise<GuestOrderStatus> {
-  return authPost(NODE_API.GUEST_ORDER_COMPLETE(token), {});
+export async function completeGuestOrder(token: string): Promise<GuestOrderStatus> {
+  await authPost(NODE_API.GUEST_ORDER_COMPLETE(token), {});
+  return getGuestOrderStatus(token);
 }

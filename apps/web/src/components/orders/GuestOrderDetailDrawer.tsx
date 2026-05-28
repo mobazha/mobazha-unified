@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getImageUrl, useI18n } from '@mobazha/core';
 import type { GuestOrderAdminDetail } from '@mobazha/core/services/api/guestCheckout';
 import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
 import { Copy, Package } from 'lucide-react';
-import { AdminShippingDecrypt } from '@/components/GuestCheckout/AdminShippingDecrypt';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import {
   Accordion,
@@ -29,9 +28,12 @@ import {
   formatGuestStateLabel,
   guestActionHelpText,
   guestStateBadgeClass,
-  isGuestOrderPhysical,
   truncateOrderToken,
+  guestOrderKindLabel,
 } from './guestOrderDisplay';
+import { GuestFulfillmentSection } from './GuestFulfillmentSection';
+import { GuestOrderStageStrip } from './GuestOrderStageStrip';
+import { useGuestOrderKind } from '@/hooks/useGuestOrderKind';
 
 interface GuestOrderDetailDrawerProps {
   open: boolean;
@@ -127,10 +129,18 @@ export function GuestOrderDetailDrawer({
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const isPhysical = detail ? isGuestOrderPhysical(detail) : false;
+  const handleSyncDelivery = useCallback(async (): Promise<boolean> => {
+    if (!detail || detail.state !== 'FUNDED') return false;
+    await Promise.resolve(onShip());
+    return true;
+  }, [detail, onShip]);
+
+  const { orderKind, isPhysical, isUnknown, digitalDelivery } = useGuestOrderKind(detail, {
+    onSyncDelivery: handleSyncDelivery,
+  });
   const isFunded = detail?.state === 'FUNDED';
   const isShipped = detail?.state === 'SHIPPED';
-  const showStickyAction = Boolean(detail && (isFunded || isShipped));
+  const showStickyAction = Boolean(detail && (isFunded || isShipped) && !isUnknown);
 
   useEffect(() => {
     if (!open) return;
@@ -194,7 +204,7 @@ export function GuestOrderDetailDrawer({
   };
 
   const renderDesktopActionSection = () => {
-    if (!detail) return null;
+    if (!detail || isUnknown) return null;
 
     if (isFunded) {
       return (
@@ -276,11 +286,7 @@ export function GuestOrderDetailDrawer({
                   <Badge variant="outline" className={guestStateBadgeClass(detail.state, t)}>
                     {formatGuestStateLabel(detail.state, t)}
                   </Badge>
-                  <Badge variant="secondary">
-                    {isPhysical
-                      ? t('admin.orders.guestOrderTypePhysical')
-                      : t('admin.orders.guestOrderTypeDigital')}
-                  </Badge>
+                  <Badge variant="secondary">{guestOrderKindLabel(orderKind, t)}</Badge>
                 </div>
 
                 {primaryItem && (
@@ -320,8 +326,22 @@ export function GuestOrderDetailDrawer({
                 </dl>
               </div>
 
+              <GuestOrderStageStrip state={detail.state} orderKind={orderKind} />
+
+              <GuestFulfillmentSection
+                detail={detail}
+                orderKind={orderKind}
+                digitalDelivery={digitalDelivery}
+                onCopyOrderToken={handleCopyToken}
+              />
+
               <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
                 <p className="font-medium">{t('admin.orders.guestActionsTitle')}</p>
+                {isUnknown && (isFunded || isShipped) ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.orders.guestContractTypeMissingHelp')}
+                  </p>
+                ) : null}
                 {showStickyAction ? (
                   <p className="text-xs text-muted-foreground sm:hidden">
                     {isFunded ? fundedHelpText : t('admin.orders.guestCompleteHelp')}
@@ -359,23 +379,6 @@ export function GuestOrderDetailDrawer({
                       );
                     })}
                   </div>
-                </div>
-              )}
-
-              {isPhysical && (
-                <div>
-                  <p className="mb-2 font-medium">{t('admin.orders.shippingAddress')}</p>
-                  {detail.addressEncrypted && detail.shippingAddressCiphertext ? (
-                    <AdminShippingDecrypt ciphertext={detail.shippingAddressCiphertext} />
-                  ) : detail.shippingAddress ? (
-                    <div className="space-y-0.5 rounded-md bg-muted p-3 font-mono">
-                      {Object.entries(detail.shippingAddress)
-                        .filter(([, value]) => value)
-                        .map(([key, value]) => (
-                          <p key={key}>{value}</p>
-                        ))}
-                    </div>
-                  ) : null}
                 </div>
               )}
 

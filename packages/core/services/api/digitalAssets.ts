@@ -73,7 +73,7 @@ export function getDigitalDeliveryStatus(
     ? publicGetWithHeaders<DigitalDeliveryStatus>(path, {
         'X-Buyer-Portal-Token': buyerPortalToken,
       })
-    : nodeAuthGet<DigitalDeliveryStatus>(path);
+    : authGet<DigitalDeliveryStatus>(path);
 }
 
 export function retryDigitalDelivery(orderID: string): Promise<DigitalDeliveryStatus> {

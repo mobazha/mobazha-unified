@@ -4425,6 +4425,10 @@ export const ja: PartialTranslationResource = {
         '入金を確認しました。追跡情報（任意）を入力してから、発送済みにマークしてください。',
       guestOrderTypeDigital: 'デジタル',
       guestOrderTypePhysical: '物理商品',
+      guestOrderTypeUnknown: 'Type unknown',
+      guestContractTypeMissingTitle: 'Product type unavailable',
+      guestContractTypeMissingHelp:
+        'This order is missing product type metadata. Fulfillment actions stay disabled until the order data is repaired.',
       guestCarrierPlaceholder: '配送業者（任意）',
       guestTrackingPlaceholder: '追跡番号（任意）',
       guestMarkDelivered: '配信済みにする',
@@ -4439,6 +4443,13 @@ export const ja: PartialTranslationResource = {
       guestActionExpired: 'この注文は期限切れです。操作は不要です。',
       guestActionNoAction: '現在の状態では利用できる操作がありません。',
       guestToggleTracking: '配送情報を追加（任意）',
+      guestFulfillmentTitle: 'Fulfillment',
+      guestMilestoneFunded: 'Payment confirmed',
+      guestMilestoneShipped: 'Shipped',
+      guestMilestoneCompleted: 'Completed',
+      guestMilestoneTimePending: '時刻未定',
+      guestTrackingReadonly: 'Tracking',
+      guestNoContactHint: 'Buyer did not leave an email.',
       guestItemCount: '{{count}} アイテム',
       guestItemCountPlural: '{{count}} 個のアイテム',
       noGuestOrders: 'まだゲストの注文はありません。',
@@ -6494,6 +6505,22 @@ export const ja: PartialTranslationResource = {
     expiredHelpBody:
       '有効期限が切れる前にこの注文に資金を提供した場合は、以下のトランザクション ハッシュ (TX) を販売者に連絡してください。手動で注文を確認して完了することができます。有効期限が切れたアドレスに新しい支払いを送らないでください。',
     doNotPayAgain: '✓ 支払いが検出されました。別の支払いを送らないでください。',
+    stageProgress: 'Step {{current}} of {{total}}',
+    milestonesTitle: 'Order timeline',
+    milestones: {
+      funded: 'Payment confirmed',
+      shipped: 'Shipped',
+      completed: 'Completed',
+    },
+    stages: {
+      payment: 'Payment',
+      confirming: 'Confirming',
+      paid: 'Paid',
+      delivered: 'Delivered',
+      shipped: 'Shipped',
+      complete: 'Complete',
+      expired: 'Payment window expired',
+    },
     confirmation: {
       poolDetected: 'Mempoolで支払いが検出されました',
       poolDetectedDesc:

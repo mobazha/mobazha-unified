@@ -1173,6 +1173,8 @@ export const zh: PartialTranslationResource = {
       autoDesc: '该商品已配置 {{count}} 个数字资产，买家会在数字下载区查看。',
       readyTitle: '数字交付已就绪',
       readyDesc: '该订单已关联 {{count}} 个数字资产，但买家尚未获得下载权限。可点击补发给买家。',
+      readyDescAwaitingPayment:
+        '该订单已关联 {{count}} 个数字资产。买家付款确认后将自动发放下载权限。',
       deliveredTitle: '数字商品已自动交付',
       deliveredDesc: '已向买家交付 {{count}} 个数字资产，买家可在数字下载区访问。',
       pendingTitle: '等待自动交付',
@@ -4780,6 +4782,10 @@ export const zh: PartialTranslationResource = {
       guestPhysicalShipHelp: '付款已入账。可填写物流信息（可选），然后标记为已发货。',
       guestOrderTypeDigital: '数字商品',
       guestOrderTypePhysical: '实物商品',
+      guestOrderTypeUnknown: '类型未确认',
+      guestContractTypeMissingTitle: '商品类型不可用',
+      guestContractTypeMissingHelp:
+        '该订单缺少商品类型元数据。在订单数据修复前，交付相关操作将保持禁用。',
       guestCarrierPlaceholder: '承运商（可选）',
       guestTrackingPlaceholder: '追踪号（可选）',
       guestMarkDelivered: '标记已交付',
@@ -4794,6 +4800,19 @@ export const zh: PartialTranslationResource = {
       guestActionExpired: '订单已过期，无需处理。',
       guestActionNoAction: '当前状态暂无可执行操作。',
       guestToggleTracking: '添加物流信息（可选）',
+      guestFulfillmentTitle: '履约',
+      guestFulfillmentDigitalHint: '配置数字资产后，在下方标记为已交付。',
+      guestMilestoneFunded: '付款已确认',
+      guestMilestoneShipped: '已发货',
+      guestMilestoneCompleted: '已完成',
+      guestMilestoneTimePending: '时间待定',
+      guestTrackingReadonly: '物流信息',
+      guestNoContactHint: '通过 Telegram、聊天等方式分享订单链接，方便买家查看与下载。',
+      guestShareWithBuyerTitle: '联系买家',
+      guestCopyOrderToken: '复制订单令牌',
+      guestCopyOrderLink: '复制订单页链接',
+      guestDigitalStatusAuthFailed:
+        '无法加载数字交付状态。请刷新页面，或确认已以店铺管理员身份登录。',
     },
     discounts: {
       title: '优惠管理',
@@ -6680,6 +6699,27 @@ export const zh: PartialTranslationResource = {
     expiredHelpBody:
       '如果你在订单过期前已经完成付款，请将下方交易哈希（TX）提供给卖家。卖家可以手动核验并完成订单。请不要再向过期地址付款。',
     doNotPayAgain: '✓ 已检测到你的付款，请不要重复付款。',
+    stageProgress: '第 {{current}} / {{total}} 步',
+    milestonesTitle: '订单进度',
+    portalTokenMissingTitle: '需要完整订单链接才能下载',
+    portalTokenMissingBody:
+      '请使用结账时保存的完整订单链接（内含私密访问密钥）。若只有当前页面地址，请联系卖家重新发送结账确认链接，或凭上方订单令牌请卖家协助交付数字商品。',
+    milestones: {
+      funded: '付款已确认',
+      shipped: '已发货',
+      completed: '已完成',
+      timePending: '时间待定',
+    },
+    stages: {
+      payment: '待付款',
+      confirming: '确认中',
+      paid: '已付款',
+      delivered: '已交付',
+      deliveredGeneric: '履约',
+      shipped: '已发货',
+      complete: '已完成',
+      expired: '付款窗口已过期',
+    },
     confirmation: {
       poolDetected: '已在内存池检测到付款',
       poolDetectedDesc: '你的交易已在网络中广播，正在等待被打包进区块。',

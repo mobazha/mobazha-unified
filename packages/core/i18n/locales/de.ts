@@ -4531,6 +4531,10 @@ export const de: PartialTranslationResource = {
         'Zahlung eingegangen. Optional Versanddetails hinzufügen und als versendet markieren.',
       guestOrderTypeDigital: 'Digital',
       guestOrderTypePhysical: 'Physisch',
+      guestOrderTypeUnknown: 'Type unknown',
+      guestContractTypeMissingTitle: 'Product type unavailable',
+      guestContractTypeMissingHelp:
+        'This order is missing product type metadata. Fulfillment actions stay disabled until the order data is repaired.',
       guestCarrierPlaceholder: 'Versanddienst (optional)',
       guestTrackingPlaceholder: 'Sendungsnummer (optional)',
       guestMarkDelivered: 'Als geliefert markieren',
@@ -4545,6 +4549,13 @@ export const de: PartialTranslationResource = {
       guestActionExpired: 'Diese Bestellung ist abgelaufen. Keine Aktion nötig.',
       guestActionNoAction: 'Für den aktuellen Status ist keine Aktion verfügbar.',
       guestToggleTracking: 'Sendungsverfolgung hinzufügen (optional)',
+      guestFulfillmentTitle: 'Fulfillment',
+      guestMilestoneFunded: 'Payment confirmed',
+      guestMilestoneShipped: 'Shipped',
+      guestMilestoneCompleted: 'Completed',
+      guestMilestoneTimePending: 'Zeit ausstehend',
+      guestTrackingReadonly: 'Tracking',
+      guestNoContactHint: 'Buyer did not leave an email.',
       guestItemCount: '{{count}} Artikel',
       guestItemCountPlural: '{{count}} Artikel',
       noGuestOrders: 'Noch keine Gastbestellungen.',
@@ -6647,6 +6658,22 @@ export const de: PartialTranslationResource = {
     expiredHelpBody:
       'Wenn Sie diese Bestellung vor Ablauf bezahlt haben, wenden Sie sich mit Ihrem Transaktions-Hash (TX) unten an den Verkäufer. Sie können Ihre Bestellung manuell überprüfen und abschließen. Senden Sie keine neue Zahlung an die abgelaufene Adresse.',
     doNotPayAgain: '✓ Ihre Zahlung wurde erkannt. Bitte senden Sie keine weitere Zahlung.',
+    stageProgress: 'Step {{current}} of {{total}}',
+    milestonesTitle: 'Order timeline',
+    milestones: {
+      funded: 'Payment confirmed',
+      shipped: 'Shipped',
+      completed: 'Completed',
+    },
+    stages: {
+      payment: 'Payment',
+      confirming: 'Confirming',
+      paid: 'Paid',
+      delivered: 'Delivered',
+      shipped: 'Shipped',
+      complete: 'Complete',
+      expired: 'Payment window expired',
+    },
     confirmation: {
       poolDetected: 'Zahlung in Mempool erkannt',
       poolDetectedDesc:

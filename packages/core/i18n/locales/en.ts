@@ -1293,6 +1293,8 @@ export const en: TranslationResource = {
       readyTitle: 'Digital delivery is ready',
       readyDesc:
         '{{count}} asset(s) are configured for this order, but buyer access has not been generated yet. You can deliver downloads to the buyer now.',
+      readyDescAwaitingPayment:
+        '{{count}} asset(s) are configured for this order. Download access will be granted automatically after payment is confirmed.',
       deliveredTitle: 'Digital goods delivered automatically',
       deliveredDesc:
         '{{count}} asset(s) were delivered to the buyer. They can access them from digital downloads.',
@@ -5260,6 +5262,10 @@ export const en: TranslationResource = {
         'Payment received. Add tracking details (optional), then mark as shipped.',
       guestOrderTypeDigital: 'Digital',
       guestOrderTypePhysical: 'Physical',
+      guestOrderTypeUnknown: 'Type unknown',
+      guestContractTypeMissingTitle: 'Product type unavailable',
+      guestContractTypeMissingHelp:
+        'This order is missing product type metadata. Fulfillment actions stay disabled until the order data is repaired.',
       guestCarrierPlaceholder: 'Carrier (optional)',
       guestTrackingPlaceholder: 'Tracking number (optional)',
       guestMarkDelivered: 'Mark as delivered',
@@ -5274,6 +5280,20 @@ export const en: TranslationResource = {
       guestActionExpired: 'This order expired. No action is needed.',
       guestActionNoAction: 'No action is available for the current state.',
       guestToggleTracking: 'Add tracking details (optional)',
+      guestFulfillmentTitle: 'Fulfillment',
+      guestFulfillmentDigitalHint: 'Configure digital assets, then mark delivery when ready.',
+      guestMilestoneFunded: 'Payment confirmed',
+      guestMilestoneShipped: 'Shipped',
+      guestMilestoneCompleted: 'Completed',
+      guestMilestoneTimePending: 'Time pending',
+      guestTrackingReadonly: 'Tracking',
+      guestNoContactHint:
+        'Share the order link via Telegram, chat, or another channel so the buyer can access their purchase.',
+      guestShareWithBuyerTitle: 'Reach the buyer',
+      guestCopyOrderToken: 'Copy order token',
+      guestCopyOrderLink: 'Copy order page link',
+      guestDigitalStatusAuthFailed:
+        'Could not load digital delivery status. Refresh the page or sign in again as the store admin.',
     },
     discounts: {
       title: 'Discounts',
@@ -7297,6 +7317,27 @@ export const en: TranslationResource = {
     expiredHelpBody:
       "If you funded this order before it expired, contact the seller with your transaction hash (TX) below. They can manually verify and complete your order. Don't send new payment to the expired address.",
     doNotPayAgain: '✓ Your payment has been detected. Please do not send another payment.',
+    stageProgress: 'Step {{current}} of {{total}}',
+    milestonesTitle: 'Order timeline',
+    portalTokenMissingTitle: 'Digital access link required',
+    portalTokenMissingBody:
+      'Open the full order link saved at checkout (it includes a private access key). If you only have this page URL, ask the seller to resend your checkout confirmation link or share delivery details using your order token shown above.',
+    milestones: {
+      funded: 'Payment confirmed',
+      shipped: 'Shipped',
+      completed: 'Completed',
+      timePending: 'Time pending',
+    },
+    stages: {
+      payment: 'Payment',
+      confirming: 'Confirming',
+      paid: 'Paid',
+      delivered: 'Delivered',
+      deliveredGeneric: 'Fulfillment',
+      shipped: 'Shipped',
+      complete: 'Complete',
+      expired: 'Payment window expired',
+    },
     confirmation: {
       poolDetected: 'Payment Detected in Mempool',
       poolDetectedDesc:

@@ -496,28 +496,71 @@ function UploadFileDialog({ listingSlug, variantSku, onClose, onCreated }: Uploa
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [percent, setPercent] = useState<number>(0);
   const [transferred, setTransferred] = useState<{ loaded: number; total: number } | null>(null);
   // Track abort controller in a ref so the cancel handler can reach it.
   const abortRef = useRef<AbortController | null>(null);
 
+  const applySelectedFile = useCallback(
+    (f: File) => {
+      if (f.size > MAX_DIGITAL_ASSET_UPLOAD_BYTES) {
+        toast({
+          title: t('common.error', { defaultValue: 'Error' }),
+          description: t('listing.digital.fileTooLarge', {
+            defaultValue: 'File exceeds 512 MiB upload limit',
+          }),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      setFile(f);
+      setPercent(0);
+      setTransferred(null);
+      return true;
+    },
+    [t, toast]
+  );
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
-    if (f && f.size > MAX_DIGITAL_ASSET_UPLOAD_BYTES) {
-      toast({
-        title: t('common.error', { defaultValue: 'Error' }),
-        description: t('listing.digital.fileTooLarge', {
-          defaultValue: 'File exceeds 512 MiB upload limit',
-        }),
-        variant: 'destructive',
-      });
-      e.target.value = '';
+    if (!f) {
+      setFile(null);
       return;
     }
-    setFile(f);
-    setPercent(0);
-    setTransferred(null);
+    if (!applySelectedFile(f)) {
+      e.target.value = '';
+    }
   };
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (uploading) return;
+      if (e.dataTransfer.types.includes('Files')) setIsDragOver(true);
+    },
+    [uploading]
+  );
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget as HTMLElement)) return;
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+      if (uploading) return;
+      const dropped = e.dataTransfer.files?.[0];
+      if (dropped) applySelectedFile(dropped);
+    },
+    [applySelectedFile, uploading]
+  );
 
   const handleUpload = async () => {
     if (!file) return;
@@ -597,7 +640,13 @@ function UploadFileDialog({ listingSlug, variantSku, onClose, onCreated }: Uploa
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="w-full border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={cn(
+                'w-full border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 hover:bg-muted/30 transition-colors disabled:opacity-50',
+                isDragOver && 'border-primary bg-primary/5 ring-2 ring-primary/30'
+              )}
               disabled={uploading}
             >
               <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
@@ -605,6 +654,11 @@ function UploadFileDialog({ listingSlug, variantSku, onClose, onCreated }: Uploa
                 {t('listing.digital.selectFile', { defaultValue: 'Select file' })}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
+                {t('listing.digital.uploadHint', {
+                  defaultValue: 'Drag and drop or click to select a file',
+                })}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {t('listing.digital.maxSizeHint', {
                   defaultValue: 'Max 512 MiB per file',
                 })}
