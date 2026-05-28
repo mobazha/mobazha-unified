@@ -72,7 +72,10 @@ if (!__OUTPOST__) {
     },
 
     // 产品详情（公开浏览）
-    { path: '/product/:slug', element: lazyPage(() => import('./app/product/[slug]/page')) },
+    {
+      path: '/product/:slug',
+      element: lazyPage(() => import('./app/product/[slug]/ProductPageClient')),
+    },
 
     // 市场列表和详情（公开浏览）
     { path: '/marketplace', element: lazyPage(() => import('./app/marketplace/page')) },
@@ -502,7 +505,10 @@ if (__OUTPOST__) {
     { path: '/store/:peerId', element: lazyPage(() => import('./app/store/[peerId]/page')) },
 
     // Product detail
-    { path: '/product/:slug', element: lazyPage(() => import('./app/product/[slug]/page')) },
+    {
+      path: '/product/:slug',
+      element: lazyPage(() => import('./app/product/[slug]/ProductPageClient')),
+    },
 
     // Collections
     { path: '/collections', element: lazyPage(() => import('./app/collections/page')) },
