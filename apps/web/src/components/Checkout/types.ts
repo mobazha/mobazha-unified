@@ -102,6 +102,8 @@ export interface UseCheckoutReturn {
   handleCreateOrder: () => Promise<void>;
   isSubmitting: boolean;
   canSubmit: boolean;
+  hasMixedContractTypes: boolean;
+  hasMissingContractType: boolean;
 
   appliedDiscounts: AppliedDiscount[];
   applicableDiscounts: ApplicableDiscount[];

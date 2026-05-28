@@ -4493,6 +4493,10 @@ export interface TranslationResource {
     paymentAmountHelpBody?: string;
     expireTimeHelpTitle?: string;
     expireTimeHelpBody?: string;
+    mixedContractTypesTitle?: string;
+    mixedContractTypesBody?: string;
+    missingContractTypeTitle?: string;
+    missingContractTypeBody?: string;
   };
 
   guestOrder?: {

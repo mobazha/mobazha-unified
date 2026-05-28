@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { digitalAssetsApi, useI18n } from '@mobazha/core';
-import type { DigitalDeliveryStatus } from '@mobazha/core';
-import type { GuestOrderItemResponse } from '@mobazha/core/services/api/guestCheckout';
-import { inferGuestOrderKindFromItems } from '@/components/orders/guestOrderDisplay';
+import { digitalAssetsApi } from '../services/api';
+import type { DigitalDeliveryStatus } from '../types/digitalAsset';
+import type { GuestOrderItemResponse } from '../services/api/guestCheckout';
+import { inferGuestOrderKindFromItems } from '../utils/guestOrderKind';
+import { useI18n } from './useI18n';
 
 const POST_FUNDED_STATES = new Set(['FUNDED', 'SHIPPED', 'COMPLETED']);
 
@@ -18,6 +19,8 @@ function mapDigitalDeliveryError(raw: string, t: (key: string) => string): strin
 }
 
 export interface UseGuestDigitalDeliveryOptions {
+  /** Buyer portal token for public guest order pages (admin uses auth session). */
+  buyerPortalToken?: string;
   onSyncDelivery?: () => Promise<boolean>;
 }
 
@@ -29,6 +32,7 @@ export function useGuestDigitalDelivery(
   options: UseGuestDigitalDeliveryOptions = {}
 ) {
   const { t } = useI18n();
+  const { buyerPortalToken, onSyncDelivery } = options;
   const [loading, setLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [status, setStatus] = useState<DigitalDeliveryStatus | null>(null);
@@ -37,6 +41,8 @@ export function useGuestDigitalDelivery(
   const [version, setVersion] = useState(0);
 
   const shouldFetch = Boolean(orderToken && orderState && POST_FUNDED_STATES.has(orderState));
+  const fetchKey = shouldFetch && orderToken ? `${orderToken}:${buyerPortalToken ?? ''}` : null;
+
   const resolvedListingSlugs = status?.listingSlugs?.length
     ? status.listingSlugs
     : fallbackListingSlugs;
@@ -46,7 +52,7 @@ export function useGuestDigitalDelivery(
   const deliveryReason = status?.reason ?? null;
 
   useEffect(() => {
-    if (!shouldFetch || !orderToken) {
+    if (!fetchKey) {
       setStatus(null);
       setError(null);
       setLoading(false);
@@ -61,8 +67,8 @@ export function useGuestDigitalDelivery(
     setFetchState('loading');
 
     digitalAssetsApi
-      .getDigitalDeliveryStatus(orderToken)
-      .then(next => {
+      .getDigitalDeliveryStatus(orderToken!, buyerPortalToken)
+      .then((next: DigitalDeliveryStatus) => {
         if (cancelled) return;
         setStatus(next);
         setFetchState('success');
@@ -81,7 +87,7 @@ export function useGuestDigitalDelivery(
     return () => {
       cancelled = true;
     };
-  }, [orderToken, shouldFetch, t, version]);
+  }, [buyerPortalToken, fetchKey, orderToken, t, version]);
 
   const refresh = useCallback(() => setVersion(v => v + 1), []);
 
@@ -104,11 +110,11 @@ export function useGuestDigitalDelivery(
   }, [orderToken, t]);
 
   const syncDelivery = useCallback(async (): Promise<boolean> => {
-    if (!options.onSyncDelivery || status?.status !== 'delivered') return false;
+    if (!onSyncDelivery || status?.status !== 'delivered') return false;
     setIsSyncing(true);
     setError(null);
     try {
-      const synced = await options.onSyncDelivery();
+      const synced = await onSyncDelivery();
       if (synced) refresh();
       return synced;
     } catch (err: unknown) {
@@ -118,13 +124,13 @@ export function useGuestDigitalDelivery(
     } finally {
       setIsSyncing(false);
     }
-  }, [options.onSyncDelivery, refresh, status?.status, t]);
+  }, [onSyncDelivery, refresh, status?.status, t]);
 
   const deliveryStatus = status?.status ?? null;
   const hasPreconfiguredAssets =
     Boolean(status?.preconfiguredAssetHint) || (status?.assetCount ?? 0) > 0;
   const canRetryDelivery = deliveryStatus === 'ready' && hasPreconfiguredAssets;
-  const canSyncDelivery = deliveryStatus === 'delivered' && Boolean(options.onSyncDelivery);
+  const canSyncDelivery = deliveryStatus === 'delivered' && Boolean(onSyncDelivery);
   const treatAsDigitalOrder = isDigitalFromApi === true || kindFromItems === 'digital';
 
   return useMemo(
@@ -136,6 +142,7 @@ export function useGuestDigitalDelivery(
       deliveryReason,
       deliveryKnown,
       fetchState,
+      kindFromItems,
       assetCount: status?.assetCount ?? 0,
       hasPreconfiguredAssets,
       deliveryStatus,
@@ -173,6 +180,7 @@ export function useGuestDigitalDelivery(
       fetchState,
       hasPreconfiguredAssets,
       isDigitalFromApi,
+      kindFromItems,
       loading,
       isSyncing,
       orderToken,

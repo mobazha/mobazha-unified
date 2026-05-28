@@ -30,7 +30,7 @@ import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssets
 import { GuestOrderStageStrip } from '@/components/orders/GuestOrderStageStrip';
 import { GuestOrderMilestones } from '@/components/orders/GuestOrderMilestones';
 import { hasGuestPublicTrackingInfo } from '@/components/orders/guestOrderStages';
-import { useGuestBuyerOrderKind } from '@/hooks/useGuestBuyerOrderKind';
+import { useGuestOrderKind } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
 function resolveSellerPeerID(order: GuestOrderStatus): string | undefined {
@@ -91,7 +91,7 @@ export default function GuestOrderPage() {
   const [sellerProfile, setSellerProfile] = useState<UserProfile | null>(null);
   const [sellerProfilePeerID, setSellerProfilePeerID] = useState<string | undefined>(undefined);
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
-  const { orderKind } = useGuestBuyerOrderKind(order, buyerPortalToken);
+  const { orderKind } = useGuestOrderKind(order, { buyerPortalToken });
 
   // Keep the recovery token out of Referer headers even for legacy query-link
   // visits, then strip it from the visible URL after local recovery.

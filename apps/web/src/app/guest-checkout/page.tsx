@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getImageUrl, mustAssetIdFromTokenId } from '@mobazha/core';
+import { analyzeContractTypes, useI18n, getImageUrl, mustAssetIdFromTokenId } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
@@ -171,12 +171,14 @@ export default function GuestCheckoutPage() {
 
   const total = getTotal();
   const itemCount = getItemCount();
-  // All items are digital — no physical delivery address needed.
-  const isAllDigital = items.length > 0 && items.every(i => i.contractType === 'DIGITAL_GOOD');
-  // True if any cart item is a digital product. The guest order page is the
-  // only access surface for download links / license keys, so we surface an
-  // emphasized "save this link" notice on top of the generic SaveOrderLinkCard.
-  const hasDigitalItems = items.some(i => i.contractType === 'DIGITAL_GOOD');
+  const contractTypeCheckout = useMemo(() => analyzeContractTypes(items), [items]);
+  const {
+    hasMissing: hasMissingContractType,
+    hasMixed: hasMixedContractTypes,
+    canCheckout: canContinueCart,
+    isAllDigital,
+    hasDigitalItems,
+  } = contractTypeCheckout;
   const STEPS = isAllDigital ? STEPS_DIGITAL : STEPS_WITH_SHIPPING;
 
   const handleAddressChange = (field: keyof Address, value: string) => {
@@ -225,6 +227,16 @@ export default function GuestCheckoutPage() {
 
   const submitGuestOrder = useCallback(
     async (coin: string) => {
+      if (hasMissingContractType || hasMixedContractTypes) {
+        setPaymentState({
+          status: 'error',
+          message: hasMixedContractTypes
+            ? t('order.mixedContractTypesBody')
+            : t('order.missingContractTypeBody'),
+        });
+        setStep('cart');
+        return;
+      }
       setPaymentState({ status: 'submitting' });
       try {
         // PM-3a: for physical orders, try to encrypt the address client-side
@@ -269,6 +281,9 @@ export default function GuestCheckoutPage() {
       encryptAddress,
       contactEmail,
       clearCart,
+      hasMissingContractType,
+      hasMixedContractTypes,
+      t,
     ]
   );
 
@@ -355,6 +370,24 @@ export default function GuestCheckoutPage() {
                     </div>
                   )}
 
+                  {(hasMixedContractTypes || hasMissingContractType) && (
+                    <div
+                      role="alert"
+                      className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm"
+                    >
+                      <p className="font-medium">
+                        {hasMixedContractTypes
+                          ? t('order.mixedContractTypesTitle')
+                          : t('order.missingContractTypeTitle')}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        {hasMixedContractTypes
+                          ? t('order.mixedContractTypesBody')
+                          : t('order.missingContractTypeBody')}
+                      </p>
+                    </div>
+                  )}
+
                   {/* For digital-only orders, show a compact email field before
                       proceeding to coin selection (no shipping address needed). */}
                   {isAllDigital && (
@@ -379,6 +412,7 @@ export default function GuestCheckoutPage() {
                     className="w-full"
                     size="lg"
                     onClick={() => setStep(isAllDigital ? 'coin' : 'shipping')}
+                    disabled={!canContinueCart}
                   >
                     {isAllDigital
                       ? t('guestCheckout.continueToPayment')

@@ -33,7 +33,7 @@ import {
 } from './guestOrderDisplay';
 import { GuestFulfillmentSection } from './GuestFulfillmentSection';
 import { GuestOrderStageStrip } from './GuestOrderStageStrip';
-import { useGuestOrderKind } from '@/hooks/useGuestOrderKind';
+import { useGuestOrderKind } from '@mobazha/core';
 
 interface GuestOrderDetailDrawerProps {
   open: boolean;

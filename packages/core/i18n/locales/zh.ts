@@ -602,6 +602,11 @@ export const zh: PartialTranslationResource = {
     cancelled: '已取消',
     refunded: '已退款',
     disputed: '申诉中',
+    mixedContractTypesTitle: '请按商品类型分开结算',
+    mixedContractTypesBody: '每笔订单只支持一种商品类型。请将实物商品和数字商品分开下单。',
+    missingContractTypeTitle: '商品类型缺失',
+    missingContractTypeBody:
+      '购物车中有商品缺少 contractType。请刷新商品页重新加入，或先移除该商品。',
     viewTransaction: '查看交易',
     summary: '概要',
     orderHistory: '订单历史',

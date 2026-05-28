@@ -659,6 +659,12 @@ export const en: TranslationResource = {
     cancelled: 'Cancelled',
     refunded: 'Refunded',
     disputed: 'Disputed',
+    mixedContractTypesTitle: 'Split this cart by product type',
+    mixedContractTypesBody:
+      'Each order supports one product type only. Check out physical and digital goods separately.',
+    missingContractTypeTitle: 'Product type unavailable',
+    missingContractTypeBody:
+      'One item is missing contractType. Refresh the product page or remove it before checkout.',
     // View transaction
     viewTransaction: 'View Transaction',
     // Summary section

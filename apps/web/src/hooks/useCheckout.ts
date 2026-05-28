@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  analyzeContractTypes,
   convertCurrency,
   fromMinimalUnit,
   toMinimalUnit,
@@ -447,6 +448,9 @@ export function useCheckout(): UseCheckoutReturn {
 
   const total = Math.max(0, subtotal + shippingTotal + taxTotal - discountTotal);
   const currency = checkoutItems[0]?.currency ?? '';
+  const contractTypeCheckout = useMemo(() => analyzeContractTypes(checkoutItems), [checkoutItems]);
+  const { hasMissing: hasMissingContractType, hasMixed: hasMixedContractTypes } =
+    contractTypeCheckout;
   const isRwaToken = useMemo(
     () => checkoutItems.some(i => i.contractType === 'RWA_TOKEN'),
     [checkoutItems]
@@ -456,10 +460,7 @@ export function useCheckout(): UseCheckoutReturn {
     return checkoutItems.find(i => i.contractType === 'RWA_TOKEN')?.rwaTradeMode;
   }, [checkoutItems]);
 
-  const needsShippingAddress = useMemo(() => {
-    if (!checkoutItems.length) return false;
-    return checkoutItems.some(i => i.contractType === 'PHYSICAL_GOOD');
-  }, [checkoutItems]);
+  const needsShippingAddress = contractTypeCheckout.needsShippingAddress;
 
   const selectedCountryCode = useMemo(() => {
     if (!selectedAddress) return undefined;
@@ -476,7 +477,6 @@ export function useCheckout(): UseCheckoutReturn {
   }, [checkoutItems, selectedShipping]);
 
   const canSubmit =
-    checkoutItems.length > 0 &&
     (!needsShippingAddress || !!selectedAddress) &&
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
@@ -622,6 +622,26 @@ export function useCheckout(): UseCheckoutReturn {
 
   // ---- Create order ----
   const handleCreateOrder = useCallback(async () => {
+    if (!checkoutItems.length) {
+      toast({ title: t('checkout.noItems'), variant: 'destructive' });
+      return;
+    }
+    if (hasMissingContractType) {
+      toast({
+        title: t('order.missingContractTypeTitle'),
+        description: t('order.missingContractTypeBody'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (hasMixedContractTypes) {
+      toast({
+        title: t('order.mixedContractTypesTitle'),
+        description: t('order.mixedContractTypesBody'),
+        variant: 'destructive',
+      });
+      return;
+    }
     if (needsShippingAddress && !selectedAddress) {
       toast({ title: t('checkout.selectAddressFirst'), variant: 'destructive' });
       return;
@@ -636,10 +656,6 @@ export function useCheckout(): UseCheckoutReturn {
         description: t('checkout.loadFailedDesc'),
         variant: 'destructive',
       });
-      return;
-    }
-    if (!checkoutItems.length) {
-      toast({ title: t('checkout.noItems'), variant: 'destructive' });
       return;
     }
     setIsSubmitting(true);
@@ -756,6 +772,8 @@ export function useCheckout(): UseCheckoutReturn {
     apiAddresses,
     currency,
     appliedDiscounts,
+    hasMissingContractType,
+    hasMixedContractTypes,
   ]);
 
   return {
@@ -800,6 +818,8 @@ export function useCheckout(): UseCheckoutReturn {
     handleCreateOrder,
     isSubmitting,
     canSubmit,
+    hasMixedContractTypes,
+    hasMissingContractType,
 
     appliedDiscounts,
     applicableDiscounts,

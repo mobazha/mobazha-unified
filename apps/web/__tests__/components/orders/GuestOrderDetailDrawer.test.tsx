@@ -7,36 +7,41 @@ const { mockUseGuestOrderKind } = vi.hoisted(() => ({
   mockUseGuestOrderKind: vi.fn(),
 }));
 
-vi.mock('@mobazha/core', () => ({
-  useI18n: () => ({
-    t: (key: string) => {
-      const translations: Record<string, string> = {
-        'admin.orders.guestOrderDetail': 'Guest Order Detail',
-        'admin.orders.guestActionsTitle': 'Seller actions',
-        'admin.orders.guestDigitalDeliverHelp': 'Mark digital delivery when ready.',
-        'admin.orders.guestMarkDelivered': 'Mark as delivered',
-        'admin.orders.guestOrderTypeDigital': 'Digital',
-        'admin.orders.guestOrderTypeUnknown': 'Type unknown',
-        'admin.orders.guestContractTypeMissingHelp':
-          'Fulfillment actions stay disabled until order data is repaired.',
-        'admin.orders.timeLabel': 'Time',
-        'admin.orders.contactLabel': 'Contact',
-        'admin.orders.technicalInfo': 'Technical Info',
-        'admin.orders.paymentRailLabel': 'Payment rail ID',
-        'admin.orders.listingCurrencyLabel': 'Listing currency',
-        'admin.orders.tokenLabel': 'Order Token',
-        'common.none': 'None',
-        'common.loadFailed': 'Failed to load',
-        'admin.orders.guestDetailLoadFailed': 'Unable to load this guest order.',
-        'common.retry': 'Retry',
-        'common.copy': 'Copy',
-        'guestOrder.stateFunded': 'Payment Confirmed',
-      };
-      return translations[key] ?? key;
-    },
-  }),
-  getImageUrl: (hash: string) => `https://img.test/${hash}`,
-}));
+vi.mock('@mobazha/core', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core')>();
+  return {
+    ...actual,
+    useI18n: () => ({
+      t: (key: string) => {
+        const translations: Record<string, string> = {
+          'admin.orders.guestOrderDetail': 'Guest Order Detail',
+          'admin.orders.guestActionsTitle': 'Seller actions',
+          'admin.orders.guestDigitalDeliverHelp': 'Mark digital delivery when ready.',
+          'admin.orders.guestMarkDelivered': 'Mark as delivered',
+          'admin.orders.guestOrderTypeDigital': 'Digital',
+          'admin.orders.guestOrderTypeUnknown': 'Type unknown',
+          'admin.orders.guestContractTypeMissingHelp':
+            'Fulfillment actions stay disabled until order data is repaired.',
+          'admin.orders.timeLabel': 'Time',
+          'admin.orders.contactLabel': 'Contact',
+          'admin.orders.technicalInfo': 'Technical Info',
+          'admin.orders.paymentRailLabel': 'Payment rail ID',
+          'admin.orders.listingCurrencyLabel': 'Listing currency',
+          'admin.orders.tokenLabel': 'Order Token',
+          'common.none': 'None',
+          'common.loadFailed': 'Failed to load',
+          'admin.orders.guestDetailLoadFailed': 'Unable to load this guest order.',
+          'common.retry': 'Retry',
+          'common.copy': 'Copy',
+          'guestOrder.stateFunded': 'Payment Confirmed',
+        };
+        return translations[key] ?? key;
+      },
+    }),
+    getImageUrl: (hash: string) => `https://img.test/${hash}`,
+    useGuestOrderKind: mockUseGuestOrderKind,
+  };
+});
 
 vi.mock('@mobazha/core/data/tokens', () => ({
   resolveTokenIdForDisplay: (coin: string) => coin,
@@ -52,10 +57,6 @@ vi.mock('@/components/Payment/TokenIcon', () => ({
 
 vi.mock('@/components/admin/orders/utils', () => ({
   formatGuestPaymentAmount: () => '0.01 BTC',
-}));
-
-vi.mock('@/hooks/useGuestOrderKind', () => ({
-  useGuestOrderKind: mockUseGuestOrderKind,
 }));
 
 vi.mock('@/components/orders/GuestFulfillmentSection', () => ({

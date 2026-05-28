@@ -7,9 +7,8 @@ import { AdminShippingDecrypt } from '@/components/GuestCheckout/AdminShippingDe
 import { SellerDigitalDeliveryStatus } from '@/components/Order/SellerDigitalDeliveryStatus';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import type { useGuestDigitalDelivery } from '@/hooks/useGuestDigitalDelivery';
-import { isGuestOrderPhysical, truncateOrderToken } from './guestOrderDisplay';
-import type { GuestOrderKind } from './guestOrderDisplay';
+import type { useGuestDigitalDelivery } from '@mobazha/core';
+import { isGuestOrderPhysical, truncateOrderToken, type GuestOrderKind } from './guestOrderDisplay';
 import { hasGuestTrackingInfo } from './guestOrderStages';
 
 type GuestDigitalDeliveryState = ReturnType<typeof useGuestDigitalDelivery>;
