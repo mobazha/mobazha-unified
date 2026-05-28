@@ -809,6 +809,7 @@ export function OrderDetailDesktop({
                       sellerDigitalDelivery.canSyncDelivery
                     }
                     onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+                    onRetryDelivery={sellerDigitalDelivery.retryDelivery}
                     onManageListing={slug =>
                       window.open(`/listing/edit/${slug}?from=orders`, '_blank')
                     }

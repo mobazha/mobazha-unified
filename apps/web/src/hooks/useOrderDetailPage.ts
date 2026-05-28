@@ -651,7 +651,12 @@ export function useOrderDetailPage(
     const hasPreconfiguredAssets =
       Boolean(deliveryStatus?.preconfiguredAssetHint) || assetCount > 0;
     const canSyncDelivery = deliveryStatus?.status === 'delivered';
-    const canRetryDelivery = deliveryStatus?.status === 'ready' && hasPreconfiguredAssets;
+    const orderState = coreOrder?.state;
+    const canRetryAfterPayment =
+      orderState != null &&
+      !['AWAITING_PAYMENT', 'AWAITING_PAYMENT_VERIFICATION', 'PENDING'].includes(orderState);
+    const canRetryDelivery =
+      deliveryStatus?.status === 'ready' && hasPreconfiguredAssets && canRetryAfterPayment;
     return {
       isDigitalOrder: Boolean(isSellerDigitalOrder),
       listingSlug: sellerDigitalListingSlug || deliveryStatus?.listingSlugs?.[0] || undefined,
@@ -670,6 +675,7 @@ export function useOrderDetailPage(
       refreshStatus: refreshDeliveryStatus,
     };
   }, [
+    coreOrder?.state,
     isSellerDigitalOrder,
     sellerDigitalDeliveryState.error,
     sellerDigitalDeliveryState.loading,

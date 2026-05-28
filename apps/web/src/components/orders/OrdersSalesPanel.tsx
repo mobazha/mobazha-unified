@@ -749,6 +749,12 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
     [openGuestOrderDetail]
   );
 
+  useEffect(() => {
+    if (!guestDetail) return;
+    setGuestShipCarrier(guestDetail.shippingCarrier ?? '');
+    setGuestShipTracking(guestDetail.trackingNumber ?? '');
+  }, [guestDetail?.orderToken, guestDetail?.shippingCarrier, guestDetail?.trackingNumber]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
     return parseOrderListStatusFilter(searchParams) ?? 'all';

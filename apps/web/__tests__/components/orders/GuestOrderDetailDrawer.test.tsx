@@ -1,7 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import type { GuestOrderAdminDetail } from '@mobazha/core/services/api/guestCheckout';
+
+const { mockUseGuestOrderKind } = vi.hoisted(() => ({
+  mockUseGuestOrderKind: vi.fn(),
+}));
 
 vi.mock('@mobazha/core', () => ({
   useI18n: () => ({
@@ -12,6 +16,9 @@ vi.mock('@mobazha/core', () => ({
         'admin.orders.guestDigitalDeliverHelp': 'Mark digital delivery when ready.',
         'admin.orders.guestMarkDelivered': 'Mark as delivered',
         'admin.orders.guestOrderTypeDigital': 'Digital',
+        'admin.orders.guestOrderTypeUnknown': 'Type unknown',
+        'admin.orders.guestContractTypeMissingHelp':
+          'Fulfillment actions stay disabled until order data is repaired.',
         'admin.orders.timeLabel': 'Time',
         'admin.orders.contactLabel': 'Contact',
         'admin.orders.technicalInfo': 'Technical Info',
@@ -47,6 +54,18 @@ vi.mock('@/components/admin/orders/utils', () => ({
   formatGuestPaymentAmount: () => '0.01 BTC',
 }));
 
+vi.mock('@/hooks/useGuestOrderKind', () => ({
+  useGuestOrderKind: mockUseGuestOrderKind,
+}));
+
+vi.mock('@/components/orders/GuestFulfillmentSection', () => ({
+  GuestFulfillmentSection: () => <div data-testid="guest-fulfillment-section" />,
+}));
+
+vi.mock('@/components/orders/GuestOrderStageStrip', () => ({
+  GuestOrderStageStrip: () => <div data-testid="guest-order-stage-strip" />,
+}));
+
 vi.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
@@ -75,6 +94,42 @@ const digitalFundedDetail: GuestOrderAdminDetail = {
   addressEncrypted: false,
 };
 
+const digitalGuestOrderKind = {
+  orderKind: 'digital' as const,
+  isPhysical: false,
+  isUnknown: false,
+  digitalDelivery: {
+    loading: false,
+    error: null,
+    isDigitalOrder: true,
+    deliveryKnown: true,
+    assetCount: 1,
+    hasPreconfiguredAssets: true,
+    deliveryStatus: 'ready',
+    listingSlugs: ['digital-course'],
+    listingSlug: 'digital-course',
+    refresh: vi.fn(),
+    sellerDigitalProps: {
+      isDigitalOrder: true,
+      isLoading: false,
+      isSyncing: false,
+      assetCount: 1,
+      hasPreconfiguredAssets: true,
+      status: 'ready',
+      error: null,
+      canSyncDelivery: false,
+      canRetryDelivery: false,
+      onSyncDelivery: async () => false,
+      onRetryDelivery: async () => false,
+      listingSlug: 'digital-course',
+      listingSlugs: ['digital-course'],
+      orderId: 'guest-token-abc',
+      onManageListing: vi.fn(),
+      refreshStatus: vi.fn(),
+    },
+  },
+};
+
 describe('GuestOrderDetailDrawer', () => {
   const baseProps = {
     open: true,
@@ -90,6 +145,10 @@ describe('GuestOrderDetailDrawer', () => {
     onShip: vi.fn(),
     onComplete: vi.fn(),
   };
+
+  beforeEach(() => {
+    mockUseGuestOrderKind.mockReturnValue(digitalGuestOrderKind);
+  });
 
   it('shows retry UI when detail load fails', () => {
     const onRetry = vi.fn();
@@ -108,5 +167,30 @@ describe('GuestOrderDetailDrawer', () => {
     expect(screen.getByText('Digital')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Mark as delivered' }).length).toBeGreaterThan(0);
     expect(screen.queryByTestId('shipping-decrypt')).not.toBeInTheDocument();
+  });
+
+  it('hides fulfillment actions when order kind is unknown', () => {
+    mockUseGuestOrderKind.mockReturnValue({
+      orderKind: 'unknown',
+      isPhysical: false,
+      isUnknown: true,
+      digitalDelivery: {
+        ...digitalGuestOrderKind.digitalDelivery,
+        isDigitalOrder: false,
+        deliveryStatus: 'pending',
+        sellerDigitalProps: {
+          ...digitalGuestOrderKind.digitalDelivery.sellerDigitalProps,
+          isDigitalOrder: false,
+          status: 'pending',
+        },
+      },
+    });
+
+    render(<GuestOrderDetailDrawer {...baseProps} detail={digitalFundedDetail} />);
+
+    expect(
+      screen.getByText('Fulfillment actions stay disabled until order data is repaired.')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mark as delivered' })).not.toBeInTheDocument();
   });
 });
