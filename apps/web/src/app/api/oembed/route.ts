@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
+import { fetchSsrProduct, getSsrProductMediaUrl } from '@/lib/ssrProduct';
 
 const API_BASE = SSR_API_BASE;
 
@@ -15,11 +16,6 @@ interface OEmbedResponse {
   height: number;
   html: string;
   thumbnail_url?: string;
-}
-
-function getImageUrl(hash?: string): string | undefined {
-  if (!hash) return undefined;
-  return `${API_BASE}/v1/media/images/${hash}`;
 }
 
 function stripHtml(html: string): string {
@@ -84,19 +80,6 @@ function parseUrl(raw: string): { type: 'product' | 'store'; id: string; peerID?
   return null;
 }
 
-async function fetchProduct(slug: string) {
-  try {
-    const res = await fetch(`${API_BASE}/v1/listings/${slug}`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.listing || data || null;
-  } catch {
-    return null;
-  }
-}
-
 async function fetchProfile(peerId: string) {
   try {
     const res = await fetch(`${API_BASE}/v1/profiles/${peerId}`, {
@@ -148,7 +131,7 @@ export async function GET(request: NextRequest) {
   const maxHeight = clampDimension(searchParams.get('maxheight'), 100, 600, 200);
 
   if (parsed.type === 'product') {
-    const product = await fetchProduct(parsed.id);
+    const product = await fetchSsrProduct(parsed.id, parsed.peerID);
     if (!product?.item) {
       return NextResponse.json(
         { error: 'Product not found' },
@@ -158,7 +141,7 @@ export async function GET(request: NextRequest) {
 
     const title = product.item.title || parsed.id;
     const firstImage = product.item.images?.[0];
-    const thumbnailUrl = getImageUrl(
+    const thumbnailUrl = getSsrProductMediaUrl(
       firstImage?.medium || firstImage?.small || firstImage?.original
     );
     const encodedId = encodeURIComponent(parsed.id);
@@ -187,7 +170,7 @@ export async function GET(request: NextRequest) {
 
   const name = profile.name || profile.handle || parsed.id.slice(0, 12);
   const avatarHash = profile.avatarHashes?.medium || profile.avatarHashes?.small;
-  const thumbnailUrl = getImageUrl(avatarHash);
+  const thumbnailUrl = getSsrProductMediaUrl(avatarHash);
   const encodedId = encodeURIComponent(parsed.id);
   const embedSrc = `${SITE_URL}/embed/store/${encodedId}`;
   const storeHeight = Math.min(maxHeight, 120);

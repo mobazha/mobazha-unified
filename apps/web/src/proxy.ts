@@ -11,10 +11,18 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { REQUEST_URL_HEADER } from '@/lib/requestUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
 
 const PROXY_PREFIXES = ['/v1/', '/api/', '/info/'];
+
+/** Forward full request URL to RSC (layouts / opengraph-image cannot use searchParams). */
+function nextWithRequestUrl(request: NextRequest, reqHeaders?: Headers): NextResponse {
+  const headers = reqHeaders ?? new Headers(request.headers);
+  headers.set(REQUEST_URL_HEADER, request.url);
+  return NextResponse.next({ request: { headers } });
+}
 
 function shouldProxyToBackend(pathname: string): boolean {
   return PROXY_PREFIXES.some(prefix => pathname.startsWith(prefix));
@@ -165,6 +173,7 @@ export function proxy(request: NextRequest) {
     const reqHeaders = new Headers(request.headers);
     reqHeaders.set('x-storefront-peerid', storePeerID);
 
+    reqHeaders.set(REQUEST_URL_HEADER, request.url);
     const response = NextResponse.next({ request: { headers: reqHeaders } });
     response.cookies.set('mbz-storefront', storePeerID, {
       path: '/',
@@ -180,12 +189,12 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/internal/') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next();
+    return nextWithRequestUrl(request);
   }
 
   // 公开路由直接放行
   if (isPublicRoute(pathname)) {
-    return NextResponse.next();
+    return nextWithRequestUrl(request);
   }
 
   // 检查是否有认证 cookie
@@ -203,7 +212,7 @@ export function proxy(request: NextRequest) {
     // return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return nextWithRequestUrl(request);
 }
 
 /**
