@@ -81,6 +81,8 @@ export function resolveChainCategory(coin: string): ChainCategory | null {
   if (parsedCanonical) {
     switch (parsedCanonical.namespace) {
       case 'bip122':
+      case 'bitcoincash':
+      case 'zcash':
         return 'utxo';
       case 'eip155':
         return 'evm';

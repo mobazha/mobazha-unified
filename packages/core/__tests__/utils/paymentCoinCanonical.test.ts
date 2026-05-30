@@ -6,6 +6,7 @@ import {
   getCompatibleChainTypes,
   getChainFromCoin,
   isCanonicalPaymentCoin,
+  isPaymentCoinEnabled,
   mustCanonicalCoin,
   getTokenByPaymentCoin,
   getTokenDecimals,
@@ -79,5 +80,12 @@ describe('mustCanonicalCoin', () => {
     expect(isCanonicalPaymentCoin('crypto:eip155:1:native')).toBe(true);
     expect(isCanonicalPaymentCoin('fiat:stripe:USD')).toBe(true);
     expect(isCanonicalPaymentCoin('ETHUSDT')).toBe(false);
+  });
+
+  it('centralizes product-enabled payment coins', () => {
+    expect(isPaymentCoinEnabled('BCH')).toBe(true);
+    expect(isPaymentCoinEnabled('crypto:bitcoincash:mainnet:native')).toBe(true);
+    expect(isPaymentCoinEnabled('ZEC')).toBe(false);
+    expect(isPaymentCoinEnabled('crypto:zcash:mainnet:native')).toBe(false);
   });
 });

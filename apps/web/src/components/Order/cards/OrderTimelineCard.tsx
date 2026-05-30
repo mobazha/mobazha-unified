@@ -9,7 +9,7 @@ import {
 } from '@mobazha/core';
 import type { Order as CoreOrder } from '@mobazha/core';
 import { OrderCompleteCard, ShipmentCard, AcceptedCard } from '@/components/Order';
-import { getBlockExplorerUrl } from '@/components/Order/utils';
+import { getOrderTransactionExplorerUrl } from '@/components/Order/utils';
 
 export interface OrderTimelineCardProps {
   displayOrder: DisplayOrder;
@@ -90,14 +90,14 @@ function buildCompletedTimelineCards(
   const releaseTxHash =
     order.releaseTx && order.releaseTx !== order.paymentTx ? order.releaseTx : undefined;
   const releaseTxUrl = releaseTxHash
-    ? getBlockExplorerUrl(releaseTxHash, order.currency || '', order.chainId) || undefined
+    ? getOrderTransactionExplorerUrl(releaseTxHash, order) || undefined
     : undefined;
   const completedTxHash =
     !order.fundsReleasedAtConfirmation && !releaseTxHash
       ? order.releaseTx || order.paymentTx
       : undefined;
   const completedTxUrl = completedTxHash
-    ? getBlockExplorerUrl(completedTxHash, order.currency || '', order.chainId) || undefined
+    ? getOrderTransactionExplorerUrl(completedTxHash, order) || undefined
     : undefined;
 
   const timelineCards: TimelineCardEntry[] = [];
@@ -119,9 +119,7 @@ function buildCompletedTimelineCards(
           amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
           txLabel={paidTimeline.txLabel}
-          txUrl={
-            getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined
-          }
+          txUrl={getOrderTransactionExplorerUrl(order.paymentTx, order) || undefined}
           description={paidTimeline.description}
           showDivider={false}
         />
@@ -240,9 +238,7 @@ function buildCancelledTimelineCards(
           amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
           txLabel={paidTimeline.txLabel}
-          txUrl={
-            getBlockExplorerUrl(order.paymentTx, order.currency || '', order.chainId) || undefined
-          }
+          txUrl={getOrderTransactionExplorerUrl(order.paymentTx, order) || undefined}
           description={paidTimeline.description}
           showDivider={false}
         />
@@ -279,7 +275,7 @@ function buildCancelledTimelineCards(
           amount={wasFunded ? order.total : undefined}
           currency={wasFunded ? order.currency : undefined}
           txHash={refundTx}
-          txUrl={getBlockExplorerUrl(refundTx, order.currency || '', order.chainId) || undefined}
+          txUrl={getOrderTransactionExplorerUrl(refundTx, order) || undefined}
           description={t('order.timeline.refundOnChain')}
           showDivider={false}
         />

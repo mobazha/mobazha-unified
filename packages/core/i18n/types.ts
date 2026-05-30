@@ -3332,6 +3332,20 @@ export interface TranslationResource {
       acceptedCoinsHelpBody?: string;
       paymentTimeoutHelpTitle?: string;
       paymentTimeoutHelpBody?: string;
+      paymentPolicyNote?: string;
+      paymentPolicyLink?: string;
+    };
+    paymentPolicy?: {
+      title?: string;
+      description?: string;
+      chainConfirmedTitle?: string;
+      chainConfirmedDesc?: string;
+      mempoolAcceptedTitle?: string;
+      mempoolAcceptedDesc?: string;
+      scopeNote?: string;
+      loadError?: string;
+      saveError?: string;
+      saveSuccess?: string;
     };
     integrations?: {
       title?: string;

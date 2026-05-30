@@ -324,6 +324,7 @@ export const NODE_API = {
   // PM-3a: Admin-only full order detail (includes shipping address ciphertext)
   GUEST_ORDER_ADMIN_DETAIL: (token: string) => `/guest/orders/${token}/detail`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
+  SETTINGS_PAYMENT_POLICY: '/settings/payment-policy',
   // PM-3a: Vendor PGP public key (public endpoint for buyer encryption)
   SETTINGS_PGP_KEY: '/settings/pgp-key',
 

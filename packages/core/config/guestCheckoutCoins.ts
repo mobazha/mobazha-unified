@@ -8,7 +8,13 @@
  * CFX is excluded: not supported by KeyDeriver.
  */
 
-import { CHAINS, TOKENS, type PaymentChainConfig, type TokenConfig } from '../data/tokens';
+import {
+  CHAINS,
+  TOKENS,
+  isPaymentCoinEnabled,
+  type PaymentChainConfig,
+  type TokenConfig,
+} from '../data/tokens';
 
 /**
  * Chain IDs (as used in CHAINS / PaymentChainConfig) supported by Guest Checkout KeyDeriver.
@@ -19,7 +25,6 @@ const GUEST_SUPPORTED_CHAIN_IDS = [
   'ETH',
   'LTC',
   'BCH',
-  'ZEC',
   'XMR',
   'BSC',
   'MATIC',
@@ -47,9 +52,11 @@ export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = GUEST_SUPPORTED_CHAIN_IDS.m
     const chain = CHAINS.find(c => c.id === chainId);
     if (!chain) return null;
     const nativeToken = TOKENS.find(t => t.chain === chainId && t.isNative);
+    const paymentCoin = CHAIN_ID_TO_PAYMENT_COIN[chainId] ?? chainId;
+    if (!isPaymentCoinEnabled(paymentCoin)) return null;
     return {
       chainId: chainId as string,
-      paymentCoin: CHAIN_ID_TO_PAYMENT_COIN[chainId] ?? chainId,
+      paymentCoin,
       chain,
       nativeToken,
     };

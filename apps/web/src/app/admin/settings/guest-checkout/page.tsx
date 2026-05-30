@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { useI18n } from '@mobazha/core';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 import {
@@ -139,6 +140,13 @@ export default function GuestCheckoutSettingsPage() {
       />
 
       <div className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          {t('admin.guestCheckout.paymentPolicyNote')}{' '}
+          <Link href="/admin/settings/payments" className="text-primary hover:underline">
+            {t('admin.guestCheckout.paymentPolicyLink')}
+          </Link>
+        </p>
+
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
             {error}

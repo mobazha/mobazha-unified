@@ -2,7 +2,7 @@
  * Order 组件共享工具函数
  */
 
-import { getBlockExplorerUrl } from '@mobazha/core';
+import { getBlockExplorerUrl, getOrderTransactionExplorerUrl } from '@mobazha/core';
 
 /**
  * 格式化日期为本地化字符串
@@ -69,7 +69,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export { getBlockExplorerUrl };
+export { getBlockExplorerUrl, getOrderTransactionExplorerUrl };
 
 /**
  * 角色颜色映射

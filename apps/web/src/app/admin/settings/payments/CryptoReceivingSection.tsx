@@ -127,6 +127,8 @@ const CHAINS: ChainMeta[] = [
   },
 ];
 
+const SELECTABLE_CHAINS = CHAINS.filter(chain => chain.id !== 'ZEC');
+
 type ValidatorNetwork = 'prod' | 'testnet';
 
 const BTC_REGTEST_RE = /^bcrt1[0-9a-z]{39,59}$/i;
@@ -423,7 +425,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
             {t('receivingAccounts.chain')}
           </label>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            {CHAINS.map(c => {
+            {SELECTABLE_CHAINS.map(c => {
               const selected = form.chainType === c.id;
               return (
                 <button

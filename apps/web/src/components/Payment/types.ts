@@ -26,6 +26,7 @@ export interface ChainConfig {
   addressPrefix?: string;
   isExternalWallet?: boolean;
   comingSoon?: boolean;
+  disabled?: boolean;
 }
 
 // 法币支付方式

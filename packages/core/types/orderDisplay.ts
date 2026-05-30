@@ -192,7 +192,7 @@ export interface DisplayOrder {
   items: DisplayOrderItem[];
   /** 订单总金额（支付币种格式化后的值） */
   total: string;
-  /** 货币类型（支付币种） */
+  /** 支付币种展示标签（如 BCH、ETH）；由 paymentCoin 推导，仅用于 UI 格式化 */
   currency: string;
   /** 原始定价金额（格式化后，如 "0.60"） */
   pricingAmount?: string;
@@ -202,7 +202,7 @@ export interface DisplayOrder {
   pricingBreakdown?: DisplayOrderPricingBreakdown;
   /** Backend-derived settlement payout / fee breakdown, formatted in settlement currency. */
   settlementBreakdown?: DisplayOrderSettlementBreakdown;
-  /** 支付币种（用于订单操作，如 "ETH"） */
+  /** 实际支付资产 canonical ID（链识别、explorer、decimals 的唯一输入） */
   paymentCoin?: string;
   /** 实际支付金额（格式化后，如 "0.0002"） */
   paymentAmount?: string;

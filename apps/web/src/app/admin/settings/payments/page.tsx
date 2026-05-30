@@ -6,6 +6,10 @@ import { useI18n } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader } from '@/components/SettingsLayout';
 
+const PaymentConfirmationSection = lazy(() =>
+  import('./PaymentConfirmationSection').then(m => ({ default: m.PaymentConfirmationSection }))
+);
+
 const CryptoReceivingSection = __OUTPOST__
   ? () => null
   : lazy(() =>
@@ -107,6 +111,8 @@ export default function AdminPaymentsPage() {
 
       <div className="space-y-6 md:space-y-10">
         <Suspense fallback={<div className="h-40 animate-pulse bg-muted/30 rounded-xl" />}>
+          <PaymentConfirmationSection />
+          <div className="border-t border-border" />
           <CryptoReceivingSection />
           <div className="border-t border-border" />
           <PaymentProvidersSection />

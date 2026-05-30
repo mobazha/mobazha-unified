@@ -8,6 +8,8 @@ describe('resolveChainCategory (canonical payment coin)', () => {
     expect(resolveChainCategory('crypto:bip122:000000000019d6689c085ae165831e93:native')).toBe(
       'utxo'
     );
+    expect(resolveChainCategory('crypto:bitcoincash:mainnet:native')).toBe('utxo');
+    expect(resolveChainCategory('crypto:zcash:mainnet:native')).toBe('utxo');
   });
 
   it('resolves canonical Solana and TRON coins', () => {

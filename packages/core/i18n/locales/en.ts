@@ -5712,6 +5712,24 @@ export const en: TranslationResource = {
       minutes: 'minutes',
       saving: 'Saving...',
       saveSettings: 'Save Settings',
+      paymentPolicyNote: 'UTXO payment confirmation is configured in',
+      paymentPolicyLink: 'Payments settings',
+    },
+    paymentPolicy: {
+      title: 'Payment confirmation',
+      description:
+        'Choose when Bitcoin and other UTXO payments count as received. Applies to all checkout paths.',
+      chainConfirmedTitle: 'Wait for confirmations',
+      chainConfirmedDesc:
+        'Mark the order as paid only after the transaction is confirmed on-chain. Safer against reorgs or double-spends.',
+      mempoolAcceptedTitle: 'Accept when seen in mempool',
+      mempoolAcceptedDesc:
+        'Advance the order as soon as a matching payment is detected, before block confirmation. Faster checkout with slightly higher risk.',
+      scopeNote:
+        'This setting applies to registered buyers and guest checkout for UTXO coins (e.g. BTC, BCH, LTC).',
+      loadError: 'Failed to load payment policy',
+      saveError: 'Failed to save payment policy',
+      saveSuccess: 'Payment policy updated.',
     },
     integrations: {
       title: 'Integrations',

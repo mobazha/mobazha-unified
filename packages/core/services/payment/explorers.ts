@@ -35,6 +35,11 @@ const NON_EVM_EXPLORERS: Record<string, { base: string; txPath: string; addressP
     txPath: '/transaction/',
     addressPath: '/address/',
   },
+  BCH: {
+    base: 'https://blockchair.com/bitcoin-cash',
+    txPath: '/transaction/',
+    addressPath: '/address/',
+  },
 };
 
 function getEvmExplorerBase(chainId: number): string | null {
@@ -71,7 +76,7 @@ export function getExplorerBaseUrl({ chainId, coin }: ExplorerContext = {}): str
 
   const coinUpper = coin?.toUpperCase();
 
-  // 检查非 EVM 链（BTC, LTC）
+  // 检查非 EVM 链（BTC, LTC, BCH）
   if (coinUpper && NON_EVM_EXPLORERS[coinUpper]) {
     return NON_EVM_EXPLORERS[coinUpper].base;
   }
@@ -107,17 +112,25 @@ function resolveNonEvmKey(coin: string | undefined): string | null {
   const upper = coin.toUpperCase();
   if (NON_EVM_EXPLORERS[upper]) return upper;
 
-  // canonical bip122/bitcoincash/zcash → map to symbol
+  // canonical bip122/bitcoincash → map to UTXO explorer key
   const parsed = parseCanonicalPaymentCoin(coin);
-  if (!parsed) return null;
-  const ns = parsed.namespace;
-  if (ns === 'bip122') {
-    const BIP122_EXPLORER_MAP: Record<string, string> = {
-      '000000000019d6689c085ae165831e93': 'BTC',
-      '12a765e31ffd4059bada1e25190f6e98': 'LTC',
-    };
-    return BIP122_EXPLORER_MAP[parsed.chainRef] ?? null;
+  if (parsed) {
+    if (parsed.namespace === 'bip122') {
+      const BIP122_EXPLORER_MAP: Record<string, string> = {
+        '000000000019d6689c085ae165831e93': 'BTC',
+        '12a765e31ffd4059bada1e25190f6e98': 'LTC',
+      };
+      const mapped = BIP122_EXPLORER_MAP[parsed.chainRef];
+      if (mapped) return mapped;
+    }
+    if (parsed.namespace === 'bitcoincash') return 'BCH';
   }
+
+  const chainSymbol = getChainFromCoin(coin);
+  if (chainSymbol && NON_EVM_EXPLORERS[chainSymbol]) {
+    return chainSymbol;
+  }
+
   return null;
 }
 
@@ -145,4 +158,30 @@ export function getExplorerResourceUrl(
  */
 export function getBlockExplorerUrl(txid: string, coin?: string, chainId?: number): string | null {
   return getExplorerResourceUrl(txid, 'tx', { coin, chainId });
+}
+
+export type OrderExplorerSource = {
+  paymentCoin?: string;
+  chainId?: number;
+};
+
+/** Canonical payment asset used for block explorer links. */
+export function resolveOrderExplorerContext(
+  order: OrderExplorerSource
+): { coin: string; chainId?: number } | null {
+  const coin = order.paymentCoin?.trim();
+  if (!coin) return null;
+  return { coin, chainId: order.chainId };
+}
+
+/** Build a tx explorer URL from order.paymentCoin (+ chainId). No display-label fallback. */
+export function getOrderTransactionExplorerUrl(
+  txHash: string,
+  order: OrderExplorerSource
+): string | null {
+  const hash = txHash.trim();
+  if (!hash) return null;
+  const ctx = resolveOrderExplorerContext(order);
+  if (!ctx) return null;
+  return getBlockExplorerUrl(hash, ctx.coin, ctx.chainId);
 }

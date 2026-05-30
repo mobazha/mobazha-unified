@@ -3,13 +3,13 @@
  * 支付配置 - 代币、链、支付方式
  */
 
-import { TOKENS as CORE_TOKENS } from '@mobazha/core';
+import { TOKENS as CORE_TOKENS, isPaymentCoinEnabled } from '@mobazha/core';
 import { TokenConfig, ChainConfig, FiatMethodConfig } from './types';
 
 // 代币配置统一复用 core 注册表，避免 web 侧手写表漂移。
 export const TOKENS: TokenConfig[] = CORE_TOKENS.map(token => ({
   ...token,
-  disabled: token.disabled ?? false,
+  disabled: token.disabled ?? !isPaymentCoinEnabled(token.assetId),
 }));
 
 // 链配置
@@ -59,7 +59,8 @@ export const CHAINS: ChainConfig[] = [
     type: 'blockchain',
     addressPrefix: '',
     isExternalWallet: true,
-    comingSoon: false,
+    comingSoon: true,
+    disabled: true,
   },
   {
     id: 'BASE',

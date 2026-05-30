@@ -242,6 +242,11 @@ export { resolveStoreShortCode } from './salesChannels';
 
 // Guest Checkout API
 export * as guestCheckoutApi from './guestCheckout';
+
+// Store payment policy API
+export * as paymentPolicyApi from './paymentPolicy';
+export type { StorePaymentPolicy, UtxoConfirmationPolicy } from './paymentPolicy';
+
 export type {
   GuestCartItem as GuestCartItemApi,
   CreateGuestOrderRequest,
