@@ -134,6 +134,10 @@ export interface Order {
   pricingBreakdown?: OrderPricingBreakdown;
   settlementBreakdown?: OrderSettlementBreakdown;
   paymentState?: OrderPaymentState;
+  paidAt?: string;
+  shippedAt?: string;
+  completedAt?: string;
+  lastStateChangeAt?: string;
   read: boolean;
   funded: boolean;
   unreadChatMessages: number;

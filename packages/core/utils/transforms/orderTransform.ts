@@ -48,6 +48,10 @@ import { formatMinimalUnitAmountString, formatMinimalUnitExactAmountString } fro
  */
 interface RealOrderData {
   state: string;
+  paidAt?: string;
+  shippedAt?: string;
+  completedAt?: string;
+  lastStateChangeAt?: string;
   pricingBreakdown?: {
     subtotal?: string;
     shipping?: string;
@@ -92,7 +96,12 @@ interface RealOrderData {
   funded?: boolean;
   read?: boolean;
   unreadChatMessages?: number;
-  paymentAddressTransactions?: { txid: string; value: number; confirmations: number }[];
+  paymentAddressTransactions?: {
+    txid: string;
+    value: number;
+    confirmations: number;
+    timestamp?: string;
+  }[];
   contract: {
     OrderID?: string;
     orderOpen?: {
@@ -228,6 +237,9 @@ interface RealOrderData {
       timestamp?: string;
       memo?: string;
     };
+    refunds?: Array<{
+      timestamp?: string;
+    }>;
     afterSaleDispute?: {
       reason?: string;
       description?: string;
@@ -547,6 +559,10 @@ function shipmentMessageTimestamp(msg: { timestamp?: string | { seconds?: number
   return '';
 }
 
+function firstDefinedTimestamp(...timestamps: Array<string | undefined>): string {
+  return timestamps.find(ts => !!ts && ts.trim() !== '') || '';
+}
+
 function extractShipmentDetails(contract: RealOrderData['contract']): DisplayShipmentInfo[] {
   const rows: DisplayShipmentInfo[] = [];
 
@@ -672,7 +688,12 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     );
     const verificationFailed =
       data.state === 'AWAITING_PAYMENT_VERIFICATION' && verificationStatus === 'failed';
-    const confirmTimestamp = contract.orderConfirmation?.timestamp || orderTimestamp || '';
+    const paymentTimestamp = firstDefinedTimestamp(
+      data.paidAt,
+      contract.paymentSent?.timestamp,
+      data.paymentAddressTransactions?.[0]?.timestamp,
+      orderTimestamp
+    );
     const awaitingVerification = data.state === 'AWAITING_PAYMENT_VERIFICATION';
     const description = verificationFailed
       ? 'Payment verification failed'
@@ -686,7 +707,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
         : 'order.timeline.paymentConfirmed';
     timeline.push({
       status: 'paid',
-      timestamp: confirmTimestamp,
+      timestamp: paymentTimestamp,
       description,
       descriptionKey,
       actor: 'system',
@@ -698,7 +719,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   if (orderConfirmation) {
     timeline.push({
       status: 'processing',
-      timestamp: orderConfirmation.timestamp || '',
+      timestamp: firstDefinedTimestamp(orderConfirmation.timestamp, data.lastStateChangeAt),
       description: 'Vendor confirmed order',
       descriptionKey: 'order.timeline.vendorConfirmed',
       actor: 'seller',
@@ -707,11 +728,11 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
 
   // 释放（与付款 tx 不同的链上结算 tx）
   if (releaseTxid) {
-    const releaseAtConfirmation =
-      !!orderConfirmation?.transactionID && orderConfirmation.transactionID === releaseTxid;
+    const confirmationTxid = normalizeTransactionID(orderConfirmation?.transactionID);
+    const releaseAtConfirmation = !!confirmationTxid && confirmationTxid === releaseTxid;
     const releaseTimestamp = releaseAtConfirmation
-      ? orderConfirmation?.timestamp || ''
-      : contract.orderComplete?.timestamp || '';
+      ? firstDefinedTimestamp(orderConfirmation?.timestamp, data.lastStateChangeAt)
+      : firstDefinedTimestamp(contract.orderComplete?.timestamp, data.completedAt);
     timeline.push({
       status: 'released',
       timestamp: releaseTimestamp,
@@ -726,9 +747,10 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   const legacyFulfillments = contract.orderFulfillments;
   const vendorFirst = vendorMsgs?.[0];
   const legacyFirst = legacyFulfillments?.[0];
-  const fulfillmentTs = vendorFirst
-    ? shipmentMessageTimestamp(vendorFirst)
-    : legacyFirst?.timestamp || '';
+  const fulfillmentTs = firstDefinedTimestamp(
+    vendorFirst ? shipmentMessageTimestamp(vendorFirst) : legacyFirst?.timestamp,
+    data.shippedAt
+  );
   const pdFromVendor = vendorFirst?.shipments?.[0]?.physicalDelivery;
   const pdLegacy = legacyFirst?.physicalDelivery;
   const trackingInfo = pdFromVendor
@@ -736,7 +758,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
     : Array.isArray(pdLegacy)
       ? pdLegacy[0]
       : pdLegacy;
-  if (vendorFirst || legacyFirst) {
+  if (vendorFirst || legacyFirst || data.shippedAt) {
     if (trackingInfo?.shipper || trackingInfo?.trackingNumber) {
       timeline.push({
         status: 'shipped',
@@ -762,10 +784,10 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
 
   // 完成
   const orderComplete = contract.orderComplete;
-  if (orderComplete) {
+  if (orderComplete || data.completedAt) {
     timeline.push({
       status: 'completed',
-      timestamp: orderComplete.timestamp || '',
+      timestamp: firstDefinedTimestamp(orderComplete?.timestamp, data.completedAt),
       description: 'Order completed',
       descriptionKey: 'order.timeline.orderCompleted',
       actor: 'buyer',
@@ -787,7 +809,7 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   if (!contract.disputeOpen && data.state === 'DISPUTED') {
     timeline.push({
       status: 'disputed',
-      timestamp: new Date().toISOString(),
+      timestamp: firstDefinedTimestamp(data.lastStateChangeAt),
       description: 'Payment disputed by buyer',
       descriptionKey: 'order.timeline.fiatDisputeOpened',
       actor: 'buyer',
@@ -823,10 +845,10 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
 
     timeline.push({
       status: 'cancelled',
-      timestamp:
-        contract.orderDecline?.timestamp ||
-        contract.orderCancel?.timestamp ||
-        new Date().toISOString(),
+      timestamp: firstDefinedTimestamp(
+        contract.orderDecline?.timestamp || contract.orderCancel?.timestamp,
+        data.lastStateChangeAt
+      ),
       description: isDeclined ? 'Order declined' : 'Order cancelled',
       descriptionKey: isDeclined ? 'order.timeline.orderDeclined' : 'order.timeline.orderCancelled',
       actor: isDeclined ? 'seller' : isSystemTimeout ? 'system' : 'buyer',
@@ -837,7 +859,11 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   if (data.state === 'REFUNDED') {
     timeline.push({
       status: 'refunded',
-      timestamp: new Date().toISOString(),
+      timestamp: firstDefinedTimestamp(
+        contract.refund?.timestamp,
+        contract.refunds?.[0]?.timestamp,
+        data.lastStateChangeAt
+      ),
       description: 'Order refunded',
       descriptionKey: 'order.timeline.refunded',
       actor: 'seller',
@@ -955,6 +981,11 @@ function resolveFiatCurrencyFromCoin(paymentCoin?: string): string | undefined {
   return parts.length >= 3 && parts[2] ? parts[2].toUpperCase() : undefined;
 }
 
+function normalizeTransactionID(txid?: string): string | undefined {
+  const normalized = txid?.trim();
+  return normalized || undefined;
+}
+
 /**
  * 提取释放交易哈希（Escrow → 卖家）
  * 优先级：
@@ -967,17 +998,21 @@ function extractReleaseTx(
   paymentTxid?: string
 ): string | undefined {
   // CANCELABLE orders: release tx is stored in OrderConfirmation
-  const fromConfirmation = contract.orderConfirmation?.transactionID;
-  if (fromConfirmation && fromConfirmation !== paymentTxid) return fromConfirmation;
+  const fromConfirmation = normalizeTransactionID(contract.orderConfirmation?.transactionID);
+  if (fromConfirmation && fromConfirmation !== paymentTxid) {
+    return fromConfirmation;
+  }
 
   // MODERATED orders: release tx is stored in OrderComplete.releaseInfo
-  const fromReleaseInfo = contract.orderComplete?.releaseInfo?.txid;
+  const fromReleaseInfo = normalizeTransactionID(contract.orderComplete?.releaseInfo?.txid);
   if (fromReleaseInfo) return fromReleaseInfo;
 
   const txs = contract.transactions;
   if (!txs || txs.length < 2 || !paymentTxid) return undefined;
-  const releaseTx = txs.find(t => t.txid && t.txid !== paymentTxid);
-  return releaseTx?.txid || undefined;
+  const releaseTx = txs
+    .map(t => normalizeTransactionID(t.txid))
+    .find(txid => txid && txid !== paymentTxid);
+  return releaseTx || undefined;
 }
 
 // ============ Main Transform Function ============
@@ -1048,9 +1083,10 @@ export function transformCoreOrder(
       const actionName = (action.settlementAction || action.action || '').toLowerCase();
       return (action.state || '').toLowerCase() === 'confirmed' && actionName === 'confirm';
     });
+  const confirmationTx = normalizeTransactionID(contract.orderConfirmation?.transactionID);
   const fundsReleasedAtConfirmation =
-    (!!contract.orderConfirmation?.transactionID &&
-      contract.orderConfirmation.transactionID === releaseTx &&
+    (!!confirmationTx &&
+      confirmationTx === releaseTx &&
       !contract.orderComplete?.releaseInfo?.txid) ||
     cancelableSettlementFundsReleased;
   const moderatorId = paymentSent?.moderator || '';
@@ -1062,14 +1098,15 @@ export function transformCoreOrder(
   // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
   const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
   const paymentSentCoin = (paymentSent?.coin || '').trim();
-  const paymentFiatCurrency = resolveFiatCurrencyFromCoin(paymentSentCoin || pricingCoin);
-  const paymentCoin =
-    paymentSentCoin || (paymentFiatCurrency ? undefined : pricingCoin.trim() || undefined);
+  const paymentFiatCurrency = resolveFiatCurrencyFromCoin(paymentSentCoin);
+  const paymentCoin = paymentSentCoin || undefined;
   const paymentCoinKey = paymentCoin || '';
   const amountFormatCoin = paymentCoin || pricingCoin;
   const displayCurrency =
     paymentFiatCurrency ||
-    (paymentCoin ? getPaymentCoinDisplayLabel(paymentCoinKey) : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin);
+    (paymentCoin
+      ? getPaymentCoinDisplayLabel(paymentCoinKey)
+      : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin);
   const parsedPaymentCoin = paymentCoin ? parseCanonicalPaymentCoin(paymentCoin) : null;
   const paymentChainId =
     parsedPaymentCoin?.namespace === 'eip155' ? Number(parsedPaymentCoin.chainRef) : undefined;

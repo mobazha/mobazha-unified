@@ -13,7 +13,7 @@ import {
   useOrderAction,
   digitalAssetsApi,
   CONTRACT_TYPES,
-  isFiatPaymentCoin,
+  supportsBackendSettlementActionSurface,
   type DigitalDeliveryStatus,
   type WebSocketMessage,
   queryKeys,
@@ -182,7 +182,7 @@ export function useOrderDetailPage(
   const paymentCoin =
     displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
   const canAttemptBackendSettlementAction = useMemo(() => {
-    return !displayOrder?.fiatPayment && !isFiatPaymentCoin(paymentCoin);
+    return !displayOrder?.fiatPayment && supportsBackendSettlementActionSurface(paymentCoin);
   }, [displayOrder?.fiatPayment, paymentCoin]);
 
   const counterparty = useMemo((): {
