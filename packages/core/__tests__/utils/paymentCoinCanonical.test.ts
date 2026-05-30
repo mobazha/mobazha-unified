@@ -10,6 +10,7 @@ import {
   mustCanonicalCoin,
   getTokenByPaymentCoin,
   getTokenDecimals,
+  getTokenIdFromPaymentCoin,
   parseCanonicalPaymentCoin,
 } from '../../data/tokens';
 
@@ -40,6 +41,12 @@ describe('mustCanonicalCoin', () => {
     expect(getChainFromCoin('crypto:tron:mainnet:native')).toBe('TRON');
   });
 
+  it('maps chain-level native payment methods to the displayed token id', () => {
+    expect(getTokenIdFromPaymentCoin('BSC')).toBe('BNB');
+    expect(getTokenIdFromPaymentCoin('BASE')).toBe('BASEETH');
+    expect(getTokenIdFromPaymentCoin('TRON')).toBe('TRX');
+  });
+
   it('returns compatible chainType aliases for payment matching', () => {
     expect(getCompatibleChainTypes('ETH', 'BTC')).toEqual(['ethereum', 'eth', 'evm']);
     expect(
@@ -48,6 +55,10 @@ describe('mustCanonicalCoin', () => {
     expect(
       getCompatibleChainTypes('crypto:bip122:12a765e31ffd4059bada1e25190f6e98:native')
     ).toEqual(['litecoin', 'ltc']);
+    expect(getCompatibleChainTypes('crypto:bitcoincash:mainnet:native')).toEqual([
+      'bitcoincash',
+      'bch',
+    ]);
     expect(getCompatibleChainTypes('NOT_A_REAL_CHAIN')).toEqual([]);
     expect(getCompatibleChainTypes(undefined, 'BTC')).toEqual(['bitcoin', 'btc']);
   });
