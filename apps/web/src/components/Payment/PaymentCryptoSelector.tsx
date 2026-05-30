@@ -3,7 +3,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@mobazha/core';
+import { getTokenIdFromPaymentCoin, useI18n } from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
 import { TOKENS, CHAINS, FIAT_METHODS, groupTokensByCurrency, getChainById } from './config';
@@ -47,11 +47,16 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
     let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain) && !tok.disabled);
     if (acceptedCurrencies) {
-      const accepted = new Set(
-        acceptedCurrencies
-          .map(value => value?.trim().toLowerCase())
-          .filter((value): value is string => Boolean(value))
-      );
+      const accepted = new Set<string>();
+      for (const value of acceptedCurrencies) {
+        const normalized = value?.trim();
+        if (!normalized) continue;
+        accepted.add(normalized.toLowerCase());
+        const tokenID = getTokenIdFromPaymentCoin(normalized);
+        if (tokenID) {
+          accepted.add(tokenID.toLowerCase());
+        }
+      }
       tokens = tokens.filter(token => {
         const tokenID = token.id.trim().toLowerCase();
         const canonical = token.assetId?.trim().toLowerCase();

@@ -388,6 +388,14 @@ export function getTokenIdFromPaymentCoin(coin: string): string | undefined {
     return upper;
   }
 
+  const chain = CHAINS.find(c => c.id.toUpperCase() === upper && c.type === 'blockchain');
+  if (chain) {
+    const nativeToken = TOKENS.find(t => t.chain.toUpperCase() === upper && t.isNative);
+    if (nativeToken) {
+      return nativeToken.id.toUpperCase();
+    }
+  }
+
   if (!isCanonicalPaymentCoin(trimmed)) {
     return undefined;
   }
@@ -734,6 +742,18 @@ export function getCompatibleChainTypes(paymentCoin?: string, blockchain?: strin
 
       if (parsed.namespace === 'tron') {
         return getChainTypeAliases('TRON');
+      }
+
+      if (parsed.namespace === 'bitcoincash') {
+        return getChainTypeAliases('BCH');
+      }
+
+      if (parsed.namespace === 'zcash') {
+        return getChainTypeAliases('ZEC');
+      }
+
+      if (parsed.namespace === 'monero') {
+        return getChainTypeAliases('XMR');
       }
 
       return [];
