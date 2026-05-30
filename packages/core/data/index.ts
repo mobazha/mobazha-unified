@@ -35,6 +35,7 @@ export {
   CHAINS,
   UTXO_CHAINS,
   isCanonicalPaymentCoin,
+  isPaymentCoinEnabled,
   mustCanonicalCoin,
   assetIdFromTokenId,
   mustAssetIdFromTokenId,

@@ -6,7 +6,7 @@ import { useI18n, type DisplayOrder, isDirectPaymentOrder } from '@mobazha/core'
 import type { Order as CoreOrder, Product } from '@mobazha/core';
 import { PaymentCard } from '@/components/Order';
 import { RwaAssetDetail } from '@/components/RwaToken';
-import { getBlockExplorerUrl } from '@/components/Order/utils';
+import { getOrderTransactionExplorerUrl } from '@/components/Order/utils';
 
 export interface OrderPaymentCardProps {
   displayOrder: DisplayOrder & {
@@ -69,11 +69,7 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
             </div>
             <button
               onClick={() => {
-                const url = getBlockExplorerUrl(
-                  order.paymentTx!,
-                  order.paymentCoin || order.currency || '',
-                  order.chainId
-                );
+                const url = getOrderTransactionExplorerUrl(order.paymentTx!, order);
                 if (url) window.open(url, '_blank');
               }}
               className="text-xs text-primary hover:underline"
@@ -154,11 +150,7 @@ function RwaPaymentLockedCard({
           {order.paymentTx && (
             <button
               onClick={() => {
-                const url = getBlockExplorerUrl(
-                  order.paymentTx!,
-                  order.currency || '',
-                  order.chainId
-                );
+                const url = getOrderTransactionExplorerUrl(order.paymentTx!, order);
                 if (url) window.open(url, '_blank');
               }}
               className={`text-xs hover:underline ${textColor}`}

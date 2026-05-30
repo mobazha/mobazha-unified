@@ -179,9 +179,10 @@ export const PaymentCard = memo(function PaymentCard({
     return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
   };
 
-  const txUrl = txHash
-    ? getBlockExplorerUrl(txHash, paymentCoin || currency, chainId) || blockchainUrl || ''
-    : '';
+  const txUrl =
+    txHash && paymentCoin
+      ? getBlockExplorerUrl(txHash, paymentCoin, chainId) || blockchainUrl || ''
+      : blockchainUrl || '';
 
   return (
     <OrderStageCard

@@ -90,6 +90,7 @@ export const TOKENS: TokenConfig[] = [
     chain: 'ZEC',
     isNative: true,
     decimals: 8,
+    disabled: true,
   },
   {
     id: 'XMR',
@@ -314,6 +315,15 @@ export function isCanonicalPaymentCoin(coin: string): boolean {
   return false;
 }
 
+export function isPaymentCoinEnabled(coin: string): boolean {
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return true;
+
+  const token = TOKENS_BY_ID.get(trimmed.toUpperCase());
+  const canonical = token?.assetId ?? trimmed;
+  return !canonical.toLowerCase().startsWith('crypto:zcash:');
+}
+
 export function mustCanonicalCoin(coin: string): string {
   const trimmed = (coin || '').trim();
   if (!trimmed) {
@@ -467,6 +477,7 @@ export const CHAINS: PaymentChainConfig[] = [
     color: '#f4b728',
     type: 'blockchain',
     isExternalWallet: true,
+    disabled: true,
   },
   {
     id: 'XMR',

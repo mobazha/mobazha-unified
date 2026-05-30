@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import {
@@ -115,6 +115,12 @@ function buildConfirmationUrl(details: OrderDetails, fiat?: FiatConfirmationCont
   return url.toString();
 }
 
+function buildConfirmationUrlFromOrderID(orderID: string): string {
+  const url = new URL('/checkout/confirmation', window.location.origin);
+  url.searchParams.set('orderID', orderID);
+  return url.toString();
+}
+
 function formatCryptoAmountForSummary(rawAmount: string, decimals: number): string {
   const num = Number(rawAmount);
   if (!num || !Number.isFinite(num)) return '0';
@@ -186,6 +192,10 @@ function isPaymentOpenState(state?: string | null): boolean {
   return !!state && PAYMENT_OPEN_STATES.has(state);
 }
 
+function isPaymentSessionVerified(session?: PaymentSession | null): boolean {
+  return session?.status?.toLowerCase() === 'verified';
+}
+
 /**
  * Payment Page - 支付阶段
  *
@@ -239,6 +249,16 @@ export default function PaymentPage() {
   const [submittedTxHash, setSubmittedTxHash] = useState<string>();
   const [paymentError, setPaymentError] = useState<string>();
   const isProcessing = paymentStep !== 'idle' && paymentStep !== 'failed';
+  const shouldBlockNavigation =
+    paymentStep === 'confirming' || paymentStep === 'submitted' || paymentStep === 'completing';
+  const navigationGuardRef = useRef<((e: Event) => void) | null>(null);
+
+  const clearNavigationGuard = useCallback(() => {
+    const handler = navigationGuardRef.current;
+    if (!handler) return;
+    window.removeEventListener('beforeunload', handler);
+    navigationGuardRef.current = null;
+  }, []);
   const [paymentProtectionEnabled, setPaymentProtectionEnabled] = useState(true);
 
   // 使用支付选择器 Hook
@@ -276,13 +296,21 @@ export default function PaymentPage() {
 
   // beforeunload: warn user when payment is in progress
   useEffect(() => {
-    if (!isProcessing) return;
-    const handler = (e: Event) => {
+    if (!shouldBlockNavigation) {
+      navigationGuardRef.current = null;
+      return;
+    }
+    const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
+      e.returnValue = '';
     };
+    navigationGuardRef.current = handler;
     window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [isProcessing]);
+    return () => {
+      navigationGuardRef.current = null;
+      window.removeEventListener('beforeunload', handler);
+    };
+  }, [shouldBlockNavigation]);
 
   // Payment window countdown (45 min from order creation)
   const [paymentTimeRemaining, setPaymentTimeRemaining] = useState<string | null>(null);
@@ -293,12 +321,14 @@ export default function PaymentPage() {
       if (!orderID) return null;
 
       const order = await ordersApi.getOrderDetails(orderID);
+      const session = await ordersApi.getOrderPaymentSession(orderID).catch(() => null);
       const nextState = typeof order?.state === 'string' ? order.state : null;
+      const sessionVerified = isPaymentSessionVerified(session);
 
       setRawOrder(order);
       if (nextState) {
         setOrderDetails(prev => (prev ? { ...prev, status: nextState } : prev));
-        if (!isPaymentOpenState(nextState)) {
+        if (!isPaymentOpenState(nextState) || sessionVerified) {
           setExternalWalletInfo(null);
           if (markSuccess) {
             setPaymentStep('success');
@@ -307,9 +337,18 @@ export default function PaymentPage() {
         }
       }
 
+      if (sessionVerified) {
+        clearNavigationGuard();
+        router.replace(
+          orderDetails
+            ? buildConfirmationUrl(orderDetails)
+            : buildConfirmationUrlFromOrderID(orderID)
+        );
+      }
+
       return order;
     },
-    [haptic, orderID]
+    [clearNavigationGuard, haptic, orderDetails, orderID, router]
   );
 
   useEffect(() => {
@@ -615,8 +654,9 @@ export default function PaymentPage() {
       return;
     }
 
+    clearNavigationGuard();
     router.replace(buildConfirmationUrl(orderDetails));
-  }, [isLoadingOrder, orderDetails, orderID, router]);
+  }, [clearNavigationGuard, isLoadingOrder, orderDetails, orderID, router]);
 
   useEffect(() => {
     if (!orderID || !orderDetails || !isPaymentOpenState(orderDetails.status)) {
@@ -656,6 +696,29 @@ export default function PaymentPage() {
       cleanupStatusSubscription();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  }, [externalWalletInfo, orderDetails, orderID, syncOrderStatus]);
+
+  useEffect(() => {
+    if (
+      !orderID ||
+      !orderDetails ||
+      !externalWalletInfo ||
+      !isPaymentOpenState(orderDetails.status)
+    ) {
+      return;
+    }
+
+    void syncOrderStatus({ markSuccess: true }).catch(() => {
+      // Polling is best-effort; the next tick or websocket event will retry.
+    });
+
+    const intervalID = window.setInterval(() => {
+      void syncOrderStatus({ markSuccess: true }).catch(() => {
+        // Keep the payment screen responsive even if one status poll fails.
+      });
+    }, 10_000);
+
+    return () => window.clearInterval(intervalID);
   }, [externalWalletInfo, orderDetails, orderID, syncOrderStatus]);
 
   // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入

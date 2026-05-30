@@ -7,7 +7,7 @@ import { useI18n, useCurrency } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 
 // UTXO 链（不需要钱包连接，使用外部钱包扫码支付）
-const UTXO_CHAINS = ['BTC', 'LTC', 'BCH', 'ZEC'];
+const UTXO_CHAINS = ['BTC', 'LTC', 'BCH'];
 
 export interface CheckoutBottomBarProps {
   totalAmount: number;
@@ -43,7 +43,7 @@ export const CheckoutBottomBar: React.FC<CheckoutBottomBarProps> = ({
 
   const formattedTotal = formatPrice(totalAmount, currency);
 
-  // 检查是否是 UTXO 链（BTC/LTC/BCH/ZEC），这些链不需要连接钱包
+  // 检查是否是开放的 UTXO 支付链（BTC/LTC/BCH），这些链不需要连接钱包
   const isUTXOChain = paymentMethod && UTXO_CHAINS.includes(paymentMethod.toUpperCase());
 
   // 对于 UTXO 链，不需要检查钱包连接状态

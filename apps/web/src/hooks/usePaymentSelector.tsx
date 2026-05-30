@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo, createContext, useContext } from
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from './useMediaQuery';
 import { useModerators } from './useModerators';
-import { usePaymentMethods } from '@mobazha/core';
+import { getTokenById, usePaymentMethods } from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
 type PaymentCategory = 'crypto' | 'fiat';
@@ -40,6 +40,12 @@ interface PaymentSelectorContextValue extends PaymentSelectorState {
 
 const PaymentSelectorContext = createContext<PaymentSelectorContextValue | null>(null);
 
+function enabledTokenID(tokenID: string | null): string | undefined {
+  if (!tokenID) return undefined;
+  const token = getTokenById(tokenID);
+  return token && !token.disabled ? token.id : undefined;
+}
+
 /**
  * 支付选择器 Provider
  */
@@ -69,7 +75,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
       };
     }
 
-    const savedTokenId = sessionStorage.getItem('checkout_selected_token');
+    const savedTokenId = enabledTokenID(sessionStorage.getItem('checkout_selected_token'));
     const savedFiatProvider = sessionStorage.getItem('checkout_selected_fiat_provider');
     const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
     const category: PaymentCategory = savedFiatProvider ? 'fiat' : 'crypto';
@@ -87,7 +93,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const restoreFromSession = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    const savedTokenId = sessionStorage.getItem('checkout_selected_token');
+    const savedTokenId = enabledTokenID(sessionStorage.getItem('checkout_selected_token'));
     const savedFiatProvider = sessionStorage.getItem('checkout_selected_fiat_provider');
     const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
 
@@ -159,6 +165,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   }, []);
 
   const setSelectedTokenId = useCallback((tokenId: string) => {
+    if (!enabledTokenID(tokenId)) return;
     setState(prev => ({
       ...prev,
       paymentCategory: 'crypto',

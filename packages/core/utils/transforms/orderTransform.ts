@@ -1061,15 +1061,15 @@ export function transformCoreOrder(
   const listingDivisibility = listingData?.metadata?.pricingCurrency?.divisibility || 2;
   // 订单的支付币种（买家实际支付的加密货币，如 ETHUSDT）
   const pricingCoin = orderOpen?.pricingCoin || listingCurrencyCode;
-  const paymentCoin = (paymentSent?.coin || '').trim() || undefined;
+  const paymentSentCoin = (paymentSent?.coin || '').trim();
+  const paymentFiatCurrency = resolveFiatCurrencyFromCoin(paymentSentCoin || pricingCoin);
+  const paymentCoin =
+    paymentSentCoin || (paymentFiatCurrency ? undefined : pricingCoin.trim() || undefined);
   const paymentCoinKey = paymentCoin || '';
   const amountFormatCoin = paymentCoin || pricingCoin;
-  const paymentFiatCurrency = resolveFiatCurrencyFromCoin(paymentCoin);
   const displayCurrency =
     paymentFiatCurrency ||
-    (paymentCoin
-      ? getPaymentCoinDisplayLabel(paymentCoinKey)
-      : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin);
+    (paymentCoin ? getPaymentCoinDisplayLabel(paymentCoinKey) : getPaymentCoinDisplayLabel(pricingCoin) || pricingCoin);
   const parsedPaymentCoin = paymentCoin ? parseCanonicalPaymentCoin(paymentCoin) : null;
   const paymentChainId =
     parsedPaymentCoin?.namespace === 'eip155' ? Number(parsedPaymentCoin.chainRef) : undefined;
