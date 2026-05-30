@@ -417,6 +417,7 @@ describe('transformCoreOrder payment progress formatting', () => {
             amount: '33000000000000000',
             method: 'CANCELABLE',
             transactionID: '0xpaytx00000000000000000000000000000000000000000000000000000001',
+            timestamp: '2026-05-15T00:02:00Z',
           },
           orderConfirmation: {
             timestamp: '2026-05-15T00:05:00Z',
@@ -444,6 +445,52 @@ describe('transformCoreOrder payment progress formatting', () => {
       ['released', 'order.timeline.fundsReleased'],
       ['completed', 'order.timeline.orderCompleted'],
     ]);
+    expect(order?.timeline.find(event => event.status === 'paid')?.timestamp).toBe(
+      '2026-05-15T00:02:00Z'
+    );
+    expect(order?.timeline.find(event => event.status === 'processing')?.timestamp).toBe(
+      '2026-05-15T00:05:00Z'
+    );
+  });
+
+  it('uses explicit lifecycle timestamps when message timestamps are missing', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'COMPLETED',
+        paidAt: '2026-05-30T12:55:44Z',
+        shippedAt: '2026-05-30T12:59:45Z',
+        completedAt: '2026-05-30T13:00:40Z',
+        lastStateChangeAt: '2026-05-30T13:00:40Z',
+        contract: {
+          ...buildOrder({}).contract,
+          paymentSent: {
+            coin: 'crypto:bip122:12a765e31ffd4059bada1e25190f6e98:native',
+            amount: '95183',
+            method: 'CANCELABLE',
+            transactionID: 'b0479b51b26baa36ad817134a36b1957cfddba47108dd65b88307a0919d6a201',
+          },
+          orderConfirmation: {
+            timestamp: '2026-05-30T12:59:44Z',
+          },
+          orderComplete: {},
+        },
+      } as any,
+      { currentUserPeerID: 'vendor-peer', viewingContext: 'sale' }
+    );
+
+    expect(order?.timeline.find(event => event.status === 'paid')?.timestamp).toBe(
+      '2026-05-30T12:55:44Z'
+    );
+    expect(order?.timeline.find(event => event.status === 'processing')?.timestamp).toBe(
+      '2026-05-30T12:59:44Z'
+    );
+    expect(order?.timeline.find(event => event.status === 'shipped')?.timestamp).toBe(
+      '2026-05-30T12:59:45Z'
+    );
+    expect(order?.timeline.find(event => event.status === 'completed')?.timestamp).toBe(
+      '2026-05-30T13:00:40Z'
+    );
   });
 
   it('does not treat a confirmed cancel settlement action as seller fund release', () => {
