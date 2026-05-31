@@ -2810,6 +2810,13 @@ export const en: TranslationResource = {
     paymentAddressLabel: 'Payment address',
     copyPaymentURI: 'Copy Payment URI',
     waitingForPayment: 'Waiting for payment confirmation...',
+    observedPayments: 'Observed payments',
+    observationStatus: {
+      pending: 'Confirming',
+      confirmed: 'Confirmed',
+      reverted: 'Reverted',
+      unknown: 'Processing',
+    },
     expiresAt: 'Expires at {{time}}',
     paymentExpired: 'Payment Expired',
     paymentExpiredDesc: 'This payment address has expired. Please request a new one to continue.',

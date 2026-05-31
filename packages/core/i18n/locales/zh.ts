@@ -2565,6 +2565,13 @@ export const zh: PartialTranslationResource = {
     paymentAddressLabel: '支付地址',
     copyPaymentURI: '复制支付链接',
     waitingForPayment: '等待支付确认中...',
+    observedPayments: '已观测支付',
+    observationStatus: {
+      pending: '确认中',
+      confirmed: '已确认',
+      reverted: '已回滚',
+      unknown: '处理中',
+    },
     expiresAt: '过期时间 {{time}}',
     paymentExpired: '支付已过期',
     paymentExpiredDesc: '此支付地址已过期，请重新获取新地址继续支付。',

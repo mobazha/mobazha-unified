@@ -169,6 +169,19 @@ function externalWalletInfoFromSession(
     qrCodeData: target.qrPayload,
     expiresAt: session.expiresAt,
     orderID: session.orderID,
+    observedAmount: session.paymentProgress?.observedAmount,
+    requiredAmount: session.paymentProgress?.requiredAmount,
+    remainingAmount: session.paymentProgress?.remainingAmount,
+    observedPayments: session.paymentProgress?.observations?.map(observation => ({
+      id: observation.id,
+      txHash: observation.txHash,
+      hasChainTxHash: observation.hasChainTxHash,
+      eventIndex: observation.eventIndex,
+      amount: observation.amount,
+      status: observation.status,
+      confirmations: observation.confirmations,
+      observedAt: observation.observedAt,
+    })),
   };
 }
 
@@ -288,6 +301,11 @@ export default function PaymentPage() {
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
     null
   );
+  const externalWalletActiveRef = useRef(false);
+
+  useEffect(() => {
+    externalWalletActiveRef.current = externalWalletInfo !== null;
+  }, [externalWalletInfo]);
 
   // 切换支付方式时清除外部钱包信息
   useEffect(() => {
@@ -300,9 +318,10 @@ export default function PaymentPage() {
       navigationGuardRef.current = null;
       return;
     }
-    const handler = (e: BeforeUnloadEvent) => {
+    const handler = (e: Event) => {
       e.preventDefault();
-      e.returnValue = '';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (e as any).returnValue = '';
     };
     navigationGuardRef.current = handler;
     window.addEventListener('beforeunload', handler);
@@ -326,6 +345,11 @@ export default function PaymentPage() {
       const sessionVerified = isPaymentSessionVerified(session);
 
       setRawOrder(order);
+      if (session && externalWalletActiveRef.current && !sessionVerified) {
+        setExternalWalletInfo(
+          externalWalletInfoFromSession(session, selectedTokenId ?? null, selectedPaymentCoin)
+        );
+      }
       if (nextState) {
         setOrderDetails(prev => (prev ? { ...prev, status: nextState } : prev));
         if (!isPaymentOpenState(nextState) || sessionVerified) {
@@ -348,7 +372,15 @@ export default function PaymentPage() {
 
       return order;
     },
-    [clearNavigationGuard, haptic, orderDetails, orderID, router]
+    [
+      clearNavigationGuard,
+      haptic,
+      orderDetails,
+      orderID,
+      router,
+      selectedPaymentCoin,
+      selectedTokenId,
+    ]
   );
 
   useEffect(() => {

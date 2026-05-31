@@ -28,6 +28,28 @@ export interface PaymentSessionProgress {
   observationCount: number;
   fundingState: string;
   lastObservedAt?: string;
+  observations?: PaymentSessionObservation[];
+}
+
+export interface PaymentSessionObservation {
+  id: string;
+  txHash?: string;
+  txHashSource?: string;
+  hasChainTxHash: boolean;
+  eventIndex: number;
+  eventType: string;
+  amount: string;
+  rawAmount: string;
+  chainNamespace: string;
+  chainReference: string;
+  fromAddress?: string;
+  toAddress: string;
+  tokenAddress?: string;
+  blockNumber: number;
+  confirmations: number;
+  status: string;
+  source: string;
+  observedAt?: string;
 }
 
 export interface PaymentSession {
@@ -37,6 +59,7 @@ export interface PaymentSession {
   settlementMode: PaymentSessionSettlementMode;
   productMode: PaymentSessionProductMode;
   status: string;
+  confirmationPolicy?: string;
   expectedAmount: string;
   refundAddress?: string;
   expiresAt: string;
