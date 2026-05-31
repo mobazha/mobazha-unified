@@ -137,6 +137,7 @@ export type {
 export type {
   PaymentSession,
   PaymentSessionFundingTarget,
+  PaymentSessionObservation,
   PaymentSessionProgress,
   PaymentSessionSettlementMode,
   PaymentSessionProductMode,
