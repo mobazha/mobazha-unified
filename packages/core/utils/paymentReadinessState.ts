@@ -29,11 +29,14 @@ export function isSellerReceiptTimedOut(
 export function derivePaymentReadinessFlags(params: {
   enabled: boolean;
   hasFetchedSession: boolean;
+  /** False when GET succeeded with 404 / empty body. */
+  hasPaymentSession?: boolean;
   status: PaymentReadinessStatus | undefined;
   sellerReceiptTimeoutAt?: string;
   nowMs?: number;
 }): PaymentReadinessFlags {
   const { enabled, hasFetchedSession, status, sellerReceiptTimeoutAt, nowMs } = params;
+  const hasPaymentSession = params.hasPaymentSession !== false;
 
   if (!enabled) {
     return {
@@ -46,8 +49,10 @@ export function derivePaymentReadinessFlags(params: {
   }
 
   const isCheckingReadiness = !hasFetchedSession;
-  const isReadyToPay = hasFetchedSession && status === 'ready_to_pay';
-  const isAwaitingSellerReceipt = hasFetchedSession && !isReadyToPay;
+  const isAwaitingSellerReceipt =
+    hasFetchedSession && hasPaymentSession && status === 'awaiting_seller_receipt';
+  const isReadyToPay =
+    hasFetchedSession && hasPaymentSession && (status === 'ready_to_pay' || status === undefined);
   const sellerReceiptTimedOut =
     isAwaitingSellerReceipt && isSellerReceiptTimedOut(sellerReceiptTimeoutAt, nowMs);
   const shouldPoll = isCheckingReadiness || isAwaitingSellerReceipt;
