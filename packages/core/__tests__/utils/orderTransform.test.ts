@@ -493,6 +493,30 @@ describe('transformCoreOrder payment progress formatting', () => {
     );
   });
 
+  it('uses paidAt to create a paid timeline event without PaymentSent', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'PENDING',
+        paidAt: '2026-06-02T09:40:00Z',
+        paymentState: {
+          verificationStatus: 'verified',
+        },
+        contract: {
+          ...buildOrder({}).contract,
+          paymentSent: undefined,
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    expect(order?.paymentTx).toBeUndefined();
+    expect(order?.timeline.find(event => event.status === 'paid')).toMatchObject({
+      timestamp: '2026-06-02T09:40:00Z',
+      descriptionKey: 'order.timeline.paymentConfirmed',
+    });
+  });
+
   it('does not treat a confirmed cancel settlement action as seller fund release', () => {
     const order = transformCoreOrder(
       {

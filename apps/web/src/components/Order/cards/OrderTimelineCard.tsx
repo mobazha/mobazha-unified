@@ -127,7 +127,10 @@ function buildCompletedTimelineCards(
   const timelineCards: TimelineCardEntry[] = [];
   const paidTimeline = getPaidTimelineDisplay(order, t);
 
-  if (order.paymentTx && paymentEvent) {
+  if (paymentEvent) {
+    const paymentTxUrl = order.paymentTx
+      ? getOrderTransactionExplorerUrl(order.paymentTx, order) || undefined
+      : undefined;
     timelineCards.push({
       key: 'paid',
       timestamp: paymentEvent.timestamp,
@@ -143,7 +146,7 @@ function buildCompletedTimelineCards(
           amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
           txLabel={paidTimeline.txLabel}
-          txUrl={getOrderTransactionExplorerUrl(order.paymentTx, order) || undefined}
+          txUrl={paymentTxUrl}
           description={paidTimeline.description}
           showDivider={false}
         />
