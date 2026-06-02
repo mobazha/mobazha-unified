@@ -54,6 +54,12 @@ export interface DisputeCase {
       amount: number;
     };
   };
+  /** Seller-side contract snapshot — used to detect missing orderConfirmation. */
+  vendorContract?: {
+    orderConfirmation?: { timestamp?: string };
+    orderOpen?: unknown;
+    paymentSent?: unknown;
+  };
   claim: string;
   resolution?: {
     buyerPercentage: number;
@@ -270,6 +276,8 @@ export async function getCaseDetails(orderId: string): Promise<DisputeCase | nul
             ?.timestamp ||
           new Date().toISOString(),
         buyerContract: (raw.buyerContract || raw.buyer_contract) as DisputeCase['buyerContract'],
+        vendorContract: (raw.vendorContract ||
+          raw.vendor_contract) as DisputeCase['vendorContract'],
         claim:
           readStringField(
             raw.disputeOpen as Record<string, unknown>,
@@ -371,7 +379,7 @@ export async function closeDispute(orderId: string): Promise<{ success: boolean;
 }
 
 /**
- * 仲裁人裁决 - 释放资金
+ * 仲裁人裁决 - 生成裁决并通知买卖双方
  */
 export async function resolveDispute(
   orderId: string,
@@ -379,7 +387,7 @@ export async function resolveDispute(
   vendorPercentage: number,
   resolution: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_RELEASE(orderId), {
+  return authPost(NODE_API.DISPUTE_CLOSE(orderId), {
     buyerPercentage,
     vendorPercentage,
     resolution,
@@ -387,7 +395,7 @@ export async function resolveDispute(
 }
 
 /**
- * 接受裁决 - 释放托管资金
+ * 接受裁决 - 按仲裁人的裁决释放托管资金
  */
 export async function acceptDisputeResolution(
   orderId: string

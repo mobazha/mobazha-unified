@@ -15,23 +15,15 @@ import {
   disputesApi,
   useFeature,
   useChatStore,
+  formatUserName,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
+import { ModeratorDisputeRulingDialog } from '@/components/Order/ModeratorDisputeRulingDialog';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui';
 import {
   OrderFooter,
   OrderChat,
@@ -137,13 +129,39 @@ export function OrderDetailDesktop({
   const disputeSectionRef = useRef<HTMLDivElement>(null);
 
   const {
-    pendingDecision,
+    isSheetOpen,
     isResolving,
-    requestResolve,
-    confirmResolve,
-    cancelResolve,
-    confirmDescription,
+    isOpeningSheet,
+    draft: rulingDraft,
+    activePreset,
+    validationErrors: rulingValidationErrors,
+    vendorNotConfirmed,
+    constraints: rulingConstraints,
+    openRulingSheet,
+    applyPreset,
+    closeSheet,
+    setBuyerPercentage,
+    setVendorPercentage,
+    setResolution,
+    submitRuling,
   } = useModeratorDisputeResolution(orderId, refetch);
+
+  const moderatorRulingBuyerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.buyer?.name, peerID: displayOrder?.buyer?.peerID },
+        { fallback: t('order.buyer') }
+      ),
+    [displayOrder?.buyer, t]
+  );
+  const moderatorRulingSellerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.vendor?.name, peerID: displayOrder?.vendor?.peerID },
+        { fallback: t('order.seller') }
+      ),
+    [displayOrder?.vendor, t]
+  );
 
   const orderChat = useOrderChat({
     orderId,
@@ -678,8 +696,9 @@ export function OrderDetailDesktop({
                 {/* Resolution action bar — inline on desktop */}
                 <DisputeResolutionBar
                   dispute={displayOrder.dispute!}
-                  onResolve={requestResolve}
+                  onOpenRuling={openRulingSheet}
                   isResolving={isResolving}
+                  isOpeningSheet={isOpeningSheet}
                   variant="inline"
                 />
               </div>
@@ -1035,25 +1054,25 @@ export function OrderDetailDesktop({
         order={displayOrder}
       />
 
-      <AlertDialog
-        open={pendingDecision !== null}
+      <ModeratorDisputeRulingDialog
+        open={isSheetOpen}
         onOpenChange={open => {
-          if (!open) cancelResolve();
+          if (!open) closeSheet();
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.resolveDispute')}</AlertDialogTitle>
-            <AlertDialogDescription>{confirmDescription}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isResolving}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmResolve()} disabled={isResolving}>
-              {isResolving ? t('common.loading') : t('order.resolveDispute')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        draft={rulingDraft}
+        validationErrors={rulingValidationErrors}
+        activePreset={activePreset}
+        vendorNotConfirmed={vendorNotConfirmed}
+        constraints={rulingConstraints}
+        buyerLabel={moderatorRulingBuyerLabel}
+        sellerLabel={moderatorRulingSellerLabel}
+        isSubmitting={isResolving}
+        onApplyPreset={applyPreset}
+        onBuyerPercentageChange={setBuyerPercentage}
+        onVendorPercentageChange={setVendorPercentage}
+        onResolutionChange={setResolution}
+        onSubmit={submitRuling}
+      />
 
       {activeTab !== 'discussion' && <Footer />}
     </div>

@@ -3,11 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  disputesApi,
-  type CaseListItem,
-  type DisputeCase,
-} from '../services/api/disputes';
+import { disputesApi, type CaseListItem, type DisputeCase } from '../services/api/disputes';
 
 interface DisputesState {
   cases: CaseListItem[];
@@ -95,7 +91,7 @@ export function useDisputes() {
   }, []);
 
   /**
-   * 仲裁人裁决 - 释放资金
+   * 仲裁人裁决 - 提交 close（广播 DISPUTE_CLOSE，非链上 release）
    */
   const resolveDispute = useCallback(
     async (
@@ -176,4 +172,3 @@ export function useDisputes() {
 }
 
 export default useDisputes;
-

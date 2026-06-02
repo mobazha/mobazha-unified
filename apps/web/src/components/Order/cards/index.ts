@@ -17,9 +17,5 @@ export { AfterSaleDisputeCard, type AfterSaleDisputeCardProps } from './AfterSal
 export { FulfillmentStatusCard } from './FulfillmentStatusCard';
 export { getStatusLabel } from './orderProgressUtils';
 export { DisputeOverviewCard, type DisputeOverviewCardProps } from './DisputeOverviewCard';
-export {
-  DisputeResolutionBar,
-  type DisputeResolutionBarProps,
-  type ModeratorResolveDecision,
-} from './DisputeResolutionBar';
+export { DisputeResolutionBar, type DisputeResolutionBarProps } from './DisputeResolutionBar';
 export { DisputeEvidencePanel, type DisputeEvidencePanelProps } from './DisputeEvidencePanel';
