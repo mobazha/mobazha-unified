@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ function buildFiatPaymentCoin(providerID: string, currency: string): string {
 }
 
 function ConfirmationContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { renderPairedPrice } = useCurrency();
@@ -179,11 +180,14 @@ function ConfirmationContent() {
                 {/* Actions */}
                 <VStack gap="sm" className="w-full">
                   {orderID && (
-                    <Link href={`/orders/${orderID}`} className="w-full">
-                      <Button size="lg" className="w-full" data-testid="view-order-btn">
-                        {t('checkout.viewOrder')}
-                      </Button>
-                    </Link>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      data-testid="view-order-btn"
+                      onClick={() => router.push(`/orders/${encodeURIComponent(orderID)}`)}
+                    >
+                      {t('checkout.viewOrder')}
+                    </Button>
                   )}
                   <Link href="/" className="w-full">
                     <Button variant="outline" size="lg" className="w-full">
