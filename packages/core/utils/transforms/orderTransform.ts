@@ -665,6 +665,9 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
 
   const orderOpen = contract.orderOpen;
   const orderTimestamp = orderOpen?.timestamp;
+  const verificationStatus = normalizePaymentVerificationStatus(
+    data.paymentState?.verificationStatus
+  );
 
   // 订单创建
   if (orderTimestamp) {
@@ -680,12 +683,11 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   // 资金状态 (使用 PaymentSent 统一消息)
   if (
     data.funded ||
+    data.paidAt ||
     contract.paymentSent ||
-    (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0)
+    (data.paymentAddressTransactions && data.paymentAddressTransactions.length > 0) ||
+    verificationStatus === 'verified'
   ) {
-    const verificationStatus = normalizePaymentVerificationStatus(
-      data.paymentState?.verificationStatus
-    );
     const verificationFailed =
       data.state === 'AWAITING_PAYMENT_VERIFICATION' && verificationStatus === 'failed';
     const paymentTimestamp = firstDefinedTimestamp(
