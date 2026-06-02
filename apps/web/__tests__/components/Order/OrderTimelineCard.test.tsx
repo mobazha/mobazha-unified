@@ -36,6 +36,7 @@ vi.mock('@/components/Order', () => ({
 
 vi.mock('@/components/Order/utils', () => ({
   getBlockExplorerUrl: () => undefined,
+  getOrderTransactionExplorerUrl: () => undefined,
 }));
 
 import type { DisplayOrder } from '@mobazha/core';

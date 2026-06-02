@@ -28,6 +28,8 @@ export interface UsePaymentReadinessPollReturn {
   status: PaymentReadinessPollStatus;
   /** Set when payment-session fetch failed; must not be shown as seller-receipt waiting. */
   readinessFetchError: string | null;
+  /** True while a payment-session request is in flight (distinct from blocked/waiting UX). */
+  isFetchingSession: boolean;
   isCheckingReadiness: boolean;
   isAwaitingSellerReceipt: boolean;
   isReadyToPay: boolean;
@@ -51,6 +53,7 @@ export function usePaymentReadinessPoll(
   const enabled = options.enabled !== false && Boolean(orderId);
   const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
   const [hasFetchedSession, setHasFetchedSession] = useState(false);
+  const [isFetchingSession, setIsFetchingSession] = useState(false);
   const [readinessFetchError, setReadinessFetchError] = useState<string | null>(null);
   const [waitingStartedAtMs, setWaitingStartedAtMs] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -58,8 +61,15 @@ export function usePaymentReadinessPoll(
 
   const refresh = useCallback(async (): Promise<PaymentSession | null> => {
     if (!orderId) return null;
+    setIsFetchingSession(true);
     try {
       const session = await ordersApi.getOrderPaymentSession(orderId);
+      if (session == null) {
+        setReadinessFetchError('payment session not found');
+        setHasFetchedSession(false);
+        setPaymentSession(null);
+        return null;
+      }
       setReadinessFetchError(null);
       setHasFetchedSession(true);
       setPaymentSession(session);
@@ -69,6 +79,8 @@ export function usePaymentReadinessPoll(
       setHasFetchedSession(false);
       setPaymentSession(null);
       return null;
+    } finally {
+      setIsFetchingSession(false);
     }
   }, [orderId]);
 
@@ -98,6 +110,7 @@ export function usePaymentReadinessPoll(
   const activeSession = enabled ? paymentSession : null;
   const activeFetchError = enabled ? readinessFetchError : null;
   const activeHasFetchedSession = enabled && hasFetchedSession;
+  const activeIsFetchingSession = enabled && isFetchingSession;
 
   const paymentReadiness = activeSession?.paymentReadiness;
   const status = paymentReadiness?.status;
@@ -105,20 +118,28 @@ export function usePaymentReadinessPoll(
   const sellerReceiptTimeoutAt = paymentReadiness?.sellerReceiptTimeoutAt;
 
   const {
-    isCheckingReadiness,
+    isCheckingReadiness: baseCheckingReadiness,
     isAwaitingSellerReceipt,
     isReadyToPay,
     sellerReceiptTimedOut,
-    shouldPoll,
+    shouldPoll: baseShouldPoll,
   } = derivePaymentReadinessFlags({
     enabled,
     hasFetchedSession: activeHasFetchedSession,
+    hasPaymentSession: activeSession != null,
     status,
     sellerReceiptTimeoutAt,
     nowMs,
   });
 
-  const isPaymentBlocked = isCheckingReadiness || isAwaitingSellerReceipt;
+  const isCheckingReadiness = activeFetchError
+    ? false
+    : baseCheckingReadiness || activeIsFetchingSession;
+  const shouldPoll = activeFetchError ? false : baseShouldPoll;
+
+  const isPaymentBlocked =
+    !activeFetchError &&
+    (baseCheckingReadiness || activeIsFetchingSession || isAwaitingSellerReceipt);
 
   useEffect(() => {
     if (!isPaymentBlocked) {
@@ -200,6 +221,7 @@ export function usePaymentReadinessPoll(
     paymentReadiness,
     status,
     readinessFetchError: activeFetchError,
+    isFetchingSession: activeIsFetchingSession,
     isCheckingReadiness,
     isAwaitingSellerReceipt,
     isReadyToPay,

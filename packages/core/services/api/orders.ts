@@ -395,8 +395,13 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
 export async function getOrderPaymentSession(orderId: string): Promise<PaymentSession | null> {
   try {
     return await authGet<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(orderId));
-  } catch {
-    return null;
+  } catch (err) {
+    // 404 = no session yet (order detail may treat as absent). Network/5xx must propagate
+    // so payment readiness polling can show a retryable error, not seller-receipt waiting.
+    if (err instanceof ApiError && err.status === 404) {
+      return null;
+    }
+    throw err;
   }
 }
 

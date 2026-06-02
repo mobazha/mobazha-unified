@@ -301,6 +301,7 @@ export default function PaymentPage() {
     isAwaitingSellerReceipt,
     isReadyToPay,
     readinessFetchError,
+    isFetchingSession,
     readinessUxTier,
     showReadinessRecovery,
     refresh: refreshPaymentReadiness,
@@ -308,7 +309,8 @@ export default function PaymentPage() {
     enabled: paymentReadinessPollEnabled,
   });
 
-  const isPaymentBlocked = isCheckingReadiness || isAwaitingSellerReceipt;
+  const isPaymentBlocked =
+    Boolean(readinessFetchError) || isCheckingReadiness || isAwaitingSellerReceipt;
 
   const readinessBlockedCopy = useMemo(
     () =>
@@ -873,6 +875,14 @@ export default function PaymentPage() {
       return;
     }
 
+    if (readinessFetchError) {
+      toast({
+        title: t('payment.sessionFetchError'),
+        description: t('payment.sessionFetchErrorHint'),
+      });
+      return;
+    }
+
     if (!isReadyToPay) {
       toast({
         title: t(readinessBlockedCopy.titleKey),
@@ -954,6 +964,7 @@ export default function PaymentPage() {
     paymentModerator,
     isTronPayment,
     isReadyToPay,
+    readinessFetchError,
     readinessUxTier,
     readinessBlockedCopy,
     refreshPaymentReadiness,
@@ -1027,9 +1038,9 @@ export default function PaymentPage() {
                 size="sm"
                 className="min-h-11 touch-feedback mt-4"
                 onClick={() => void refreshPaymentReadiness()}
-                disabled={isCheckingReadiness}
+                disabled={isFetchingSession}
               >
-                {isCheckingReadiness ? t('common.loading') : t('payment.retrySessionFetch')}
+                {isFetchingSession ? t('common.loading') : t('payment.retrySessionFetch')}
               </Button>
             </div>
           )}

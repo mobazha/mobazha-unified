@@ -37,16 +37,29 @@ describe('derivePaymentReadinessFlags', () => {
     expect(flags.shouldPoll).toBe(true);
   });
 
-  it('blocks payment when session fetch succeeded without readiness status', () => {
+  it('allows payment for legacy sessions without paymentReadiness projection', () => {
     const flags = derivePaymentReadinessFlags({
       enabled: true,
       hasFetchedSession: true,
       status: undefined,
     });
 
+    expect(flags.isReadyToPay).toBe(true);
+    expect(flags.isAwaitingSellerReceipt).toBe(false);
+    expect(flags.shouldPoll).toBe(false);
+  });
+
+  it('does not infer awaiting seller when session body is missing', () => {
+    const flags = derivePaymentReadinessFlags({
+      enabled: true,
+      hasFetchedSession: true,
+      hasPaymentSession: false,
+      status: undefined,
+    });
+
     expect(flags.isReadyToPay).toBe(false);
-    expect(flags.isAwaitingSellerReceipt).toBe(true);
-    expect(flags.shouldPoll).toBe(true);
+    expect(flags.isAwaitingSellerReceipt).toBe(false);
+    expect(flags.shouldPoll).toBe(false);
   });
 
   it('allows payment only after ready_to_pay', () => {
