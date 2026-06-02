@@ -4,6 +4,23 @@
 
 import { getBlockExplorerUrl, getOrderTransactionExplorerUrl } from '@mobazha/core';
 
+const DATE_LOCALE_MAP: Record<string, string> = {
+  en: 'en-US',
+  zh: 'zh-CN',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  pt: 'pt-BR',
+  ru: 'ru-RU',
+};
+
+export function resolveOrderDateLocale(locale?: string): string {
+  if (!locale) return DATE_LOCALE_MAP.en;
+  return DATE_LOCALE_MAP[locale] || DATE_LOCALE_MAP.en;
+}
+
 /**
  * 格式化日期为本地化字符串
  * @param dateString - ISO 日期字符串
@@ -14,12 +31,15 @@ export function formatOrderDate(
   options: {
     includeTime?: boolean;
     short?: boolean;
+    includeSeconds?: boolean;
+    locale?: string;
   } = {}
 ): string {
-  const { includeTime = true, short = false } = options;
+  const { includeTime = true, short = false, includeSeconds = false, locale } = options;
+  const dateLocale = resolveOrderDateLocale(locale);
 
   if (short) {
-    return new Date(dateString).toLocaleDateString(undefined, {
+    return new Date(dateString).toLocaleDateString(dateLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -27,16 +47,17 @@ export function formatOrderDate(
   }
 
   if (includeTime) {
-    return new Date(dateString).toLocaleDateString(undefined, {
+    return new Date(dateString).toLocaleDateString(dateLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      ...(includeSeconds ? { second: '2-digit' } : {}),
     });
   }
 
-  return new Date(dateString).toLocaleDateString(undefined, {
+  return new Date(dateString).toLocaleDateString(dateLocale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -47,8 +68,8 @@ export function formatOrderDate(
  * 格式化时间
  * @param dateString - ISO 日期字符串
  */
-export function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleTimeString(undefined, {
+export function formatTime(dateString: string, locale?: string): string {
+  return new Date(dateString).toLocaleTimeString(resolveOrderDateLocale(locale), {
     hour: '2-digit',
     minute: '2-digit',
   });

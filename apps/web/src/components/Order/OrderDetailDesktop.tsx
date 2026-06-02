@@ -61,6 +61,7 @@ import {
   OrderMemoCard,
   OrderStatusCard,
   OrderSettlementCard,
+  OrderCreatedAtMeta,
   DisputeOverviewCard,
   DisputeResolutionBar,
   DisputeEvidencePanel,
@@ -598,6 +599,8 @@ export function OrderDetailDesktop({
                 </button>
               )}
             </div>
+
+            <OrderCreatedAtMeta createdAt={displayOrder.createdAt} className="mb-3" />
 
             {/* Tab navigation — switches between moderator view and standard view */}
             <div className="border-b border-border mb-4">

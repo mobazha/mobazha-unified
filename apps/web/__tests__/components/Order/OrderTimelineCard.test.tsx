@@ -115,6 +115,9 @@ describe('OrderTimelineCard', () => {
     expect(completeCards[2]).toHaveTextContent('order.stages.escrowed');
     expect(completeCards[2]).toHaveTextContent('0xpayment1234567890abcdef');
     expect(completeCards[2]).toHaveTextContent('order.timeline.fundsSecured');
+
+    expect(completeCards[3]).toHaveTextContent('order.timeline.orderPlaced');
+    expect(completeCards[3]).toHaveTextContent('2026-05-15T00:00:00Z');
   });
 
   it('renders funded cancelled orders with payment, decline, and refund cards', () => {
@@ -154,11 +157,49 @@ describe('OrderTimelineCard', () => {
     );
 
     const completeCards = screen.getAllByTestId('complete-card');
-    expect(completeCards).toHaveLength(3);
+    expect(completeCards).toHaveLength(4);
     expect(completeCards[0]).toHaveTextContent('order.timeline.refunded');
     expect(completeCards[0]).toHaveTextContent('0xrefund1234567890abcdef');
     expect(completeCards[1]).toHaveTextContent('order.timeline.orderDeclined');
     expect(completeCards[2]).toHaveTextContent('order.stages.escrowed');
     expect(completeCards[2]).toHaveTextContent('0xpayment1234567890abcdef');
+    expect(completeCards[3]).toHaveTextContent('order.timeline.orderPlaced');
+  });
+
+  it('renders unfunded cancelled orders with placed and cancelled timeline cards', () => {
+    render(
+      <OrderTimelineCard
+        displayOrder={makeOrder({
+          status: 'cancelled',
+          paymentTx: undefined,
+          cancellation: {
+            kind: 'payment_timeout',
+            wasFunded: false,
+            refundConfirmed: false,
+          },
+          timeline: [
+            {
+              status: 'created',
+              timestamp: '2026-06-01T14:26:13Z',
+              description: 'placed',
+              descriptionKey: 'order.timeline.orderPlaced',
+            },
+            {
+              status: 'cancelled',
+              timestamp: '2026-06-01T15:26:59Z',
+              description: 'payment_timeout',
+              descriptionKey: 'order.timeline.orderCancelled',
+            },
+          ],
+        })}
+      />
+    );
+
+    const completeCards = screen.getAllByTestId('complete-card');
+    expect(completeCards).toHaveLength(2);
+    expect(completeCards[0]).toHaveTextContent('order.timeline.orderCancelled');
+    expect(completeCards[0]).toHaveTextContent('2026-06-01T15:26:59Z');
+    expect(completeCards[1]).toHaveTextContent('order.timeline.orderPlaced');
+    expect(completeCards[1]).toHaveTextContent('2026-06-01T14:26:13Z');
   });
 });

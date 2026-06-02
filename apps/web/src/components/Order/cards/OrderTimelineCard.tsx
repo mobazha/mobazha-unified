@@ -39,6 +39,30 @@ function isFiatOrderPayment(order: DisplayOrder): boolean {
   return !!order.fiatPayment || isFiatPaymentCoin(order.paymentCoin);
 }
 
+function buildOrderPlacedCard(
+  order: DisplayOrder,
+  t: (key: string) => string
+): TimelineCardEntry | null {
+  const createdEvent = order.timeline.find(event => event.status === 'created');
+  const timestamp = createdEvent?.timestamp || order.createdAt;
+  if (!timestamp) return null;
+
+  return {
+    key: 'placed',
+    timestamp,
+    priority: 0,
+    node: (
+      <OrderCompleteCard
+        stageVariant="complete"
+        title={t('order.timeline.orderPlaced')}
+        timestamp={timestamp}
+        description={t('order.orderPlaced')}
+        showDivider={false}
+      />
+    ),
+  };
+}
+
 function getPaidTimelineDisplay(order: DisplayOrder, t: (key: string) => string) {
   const isFiatPayment = isFiatOrderPayment(order);
   return {
@@ -205,6 +229,9 @@ function buildCompletedTimelineCards(
     });
   }
 
+  const placedCard = buildOrderPlacedCard(order, t);
+  if (placedCard) timelineCards.push(placedCard);
+
   return sortTimelineCards(timelineCards);
 }
 
@@ -283,6 +310,9 @@ function buildCancelledTimelineCards(
     });
   }
 
+  const placedCard = buildOrderPlacedCard(order, t);
+  if (placedCard) timelineCards.push(placedCard);
+
   return sortTimelineCards(timelineCards);
 }
 
@@ -295,6 +325,7 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
 
   const hasHistory = useMemo(() => {
     return (
+      !!order.createdAt ||
       order.status === 'completed' ||
       order.status === 'cancelled' ||
       !!order.paymentTx ||
@@ -302,7 +333,7 @@ export const OrderTimelineCard = memo(function OrderTimelineCard({
       !!order.trackingNumber ||
       ['processing', 'shipped', 'delivered', 'completed'].includes(order.status)
     );
-  }, [order.status, order.trackingNumber, order.paymentTx, order.releaseTx]);
+  }, [order.createdAt, order.status, order.trackingNumber, order.paymentTx, order.releaseTx]);
 
   if (!hasHistory) return null;
 

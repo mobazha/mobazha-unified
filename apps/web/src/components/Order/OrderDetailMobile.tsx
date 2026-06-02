@@ -68,6 +68,7 @@ import {
   OrderMemoCard,
   OrderStatusCard,
   OrderSettlementCard,
+  OrderCreatedAtMeta,
   DisputeOverviewCard,
   DisputeEvidencePanel,
   DisputeResolutionBar,
@@ -853,6 +854,8 @@ export function OrderDetailMobile({
           aria-labelledby="tab-details"
           className="px-4 pt-3 space-y-4"
         >
+          <OrderCreatedAtMeta createdAt={displayOrder.createdAt} />
+
           {/* ─── MODERATOR DISPUTE VIEW ─── */}
           {isModeratorDisputeView ? (
             <>
