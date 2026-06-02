@@ -11,7 +11,9 @@ import {
   getTokenByPaymentCoin,
   getTokenDecimals,
   getTokenIdFromPaymentCoin,
+  getPaymentCoinDisplayLabel,
   parseCanonicalPaymentCoin,
+  resolveTokenIdForDisplay,
 } from '../../data/tokens';
 
 describe('mustCanonicalCoin', () => {
@@ -28,11 +30,23 @@ describe('mustCanonicalCoin', () => {
   });
 
   it('resolves canonical eip155 token coin to token config and decimals', () => {
+    const canonicalEthUsdt = 'crypto:eip155:1:erc20:0xdAC17F958D2ee523a2206206994597C13D831ec7';
+    const ethUsdt = getTokenByPaymentCoin(canonicalEthUsdt);
+    expect(ethUsdt?.id).toBe('ETHUSDT');
+    expect(getTokenDecimals(canonicalEthUsdt)).toBe(6);
+    expect(getPaymentCoinDisplayLabel(canonicalEthUsdt)).toBe('USDT');
+    expect(resolveTokenIdForDisplay(canonicalEthUsdt)).toBe('ETHUSDT');
+
     const canonicalBscUsdt = 'crypto:eip155:56:erc20:0x55d398326f99059fF775485246999027B3197955';
     const token = getTokenByPaymentCoin(canonicalBscUsdt);
     expect(token?.id).toBe('BSCUSDT');
-    expect(getTokenDecimals(canonicalBscUsdt)).toBe(6);
+    expect(getTokenDecimals(canonicalBscUsdt)).toBe(18);
     expect(getChainFromCoin(canonicalBscUsdt)).toBe('BSC');
+  });
+
+  it('does not expose raw canonical IDs as the display label for unknown EVM tokens', () => {
+    const unknownErc20 = 'crypto:eip155:1:erc20:0x1111111111111111111111111111111111111111';
+    expect(getPaymentCoinDisplayLabel(unknownErc20)).toBe('ERC20 on Ethereum');
   });
 
   it('resolves canonical native coins to chain symbols', () => {
@@ -96,6 +110,8 @@ describe('mustCanonicalCoin', () => {
   it('centralizes product-enabled payment coins', () => {
     expect(isPaymentCoinEnabled('BCH')).toBe(true);
     expect(isPaymentCoinEnabled('crypto:bitcoincash:mainnet:native')).toBe(true);
+    expect(isPaymentCoinEnabled('SOL')).toBe(true);
+    expect(isPaymentCoinEnabled('crypto:solana:mainnet:native')).toBe(true);
     expect(isPaymentCoinEnabled('ZEC')).toBe(false);
     expect(isPaymentCoinEnabled('crypto:zcash:mainnet:native')).toBe(false);
   });

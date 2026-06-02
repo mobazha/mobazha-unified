@@ -14,9 +14,29 @@ export const EVM_CHAIN_IDS = {
   AVALANCHE: 43114,
   AVALANCHE_FUJI: 43113,
   CONFLUX: 1030,
+  GNOSIS: 100,
+  CELO: 42220,
+  MANTLE: 5000,
+  ZKSYNC: 324,
+  SCROLL: 534352,
+  LINEA: 59144,
 } as const;
 
-export type ChainFamily = 'ETH' | 'BSC' | 'MATIC' | 'BASE' | 'ARB' | 'OP' | 'AVAX' | 'CFX';
+export type ChainFamily =
+  | 'ETH'
+  | 'BSC'
+  | 'MATIC'
+  | 'BASE'
+  | 'ARBITRUM'
+  | 'OP'
+  | 'AVAX'
+  | 'CFX'
+  | 'GNOSIS'
+  | 'CELO'
+  | 'MANTLE'
+  | 'ZKSYNC'
+  | 'SCROLL'
+  | 'LINEA';
 
 export interface EvmChainMetadata {
   chainId: number;
@@ -76,13 +96,13 @@ const EVM_CHAIN_METADATA: Record<number, EvmChainMetadata> = {
   },
   [EVM_CHAIN_IDS.ARBITRUM]: {
     chainId: EVM_CHAIN_IDS.ARBITRUM,
-    family: 'ARB',
+    family: 'ARBITRUM',
     nativeSymbol: 'ETH',
     isTestnet: false,
   },
   [EVM_CHAIN_IDS.ARBITRUM_SEPOLIA]: {
     chainId: EVM_CHAIN_IDS.ARBITRUM_SEPOLIA,
-    family: 'ARB',
+    family: 'ARBITRUM',
     nativeSymbol: 'ETH',
     isTestnet: true,
   },
@@ -116,6 +136,42 @@ const EVM_CHAIN_METADATA: Record<number, EvmChainMetadata> = {
     nativeSymbol: 'CFX',
     isTestnet: false,
   },
+  [EVM_CHAIN_IDS.GNOSIS]: {
+    chainId: EVM_CHAIN_IDS.GNOSIS,
+    family: 'GNOSIS',
+    nativeSymbol: 'xDAI',
+    isTestnet: false,
+  },
+  [EVM_CHAIN_IDS.CELO]: {
+    chainId: EVM_CHAIN_IDS.CELO,
+    family: 'CELO',
+    nativeSymbol: 'CELO',
+    isTestnet: false,
+  },
+  [EVM_CHAIN_IDS.MANTLE]: {
+    chainId: EVM_CHAIN_IDS.MANTLE,
+    family: 'MANTLE',
+    nativeSymbol: 'MNT',
+    isTestnet: false,
+  },
+  [EVM_CHAIN_IDS.ZKSYNC]: {
+    chainId: EVM_CHAIN_IDS.ZKSYNC,
+    family: 'ZKSYNC',
+    nativeSymbol: 'ETH',
+    isTestnet: false,
+  },
+  [EVM_CHAIN_IDS.SCROLL]: {
+    chainId: EVM_CHAIN_IDS.SCROLL,
+    family: 'SCROLL',
+    nativeSymbol: 'ETH',
+    isTestnet: false,
+  },
+  [EVM_CHAIN_IDS.LINEA]: {
+    chainId: EVM_CHAIN_IDS.LINEA,
+    family: 'LINEA',
+    nativeSymbol: 'ETH',
+    isTestnet: false,
+  },
 };
 
 const CHAIN_TYPE_ALIASES: Record<string, string[]> = {
@@ -126,6 +182,16 @@ const CHAIN_TYPE_ALIASES: Record<string, string[]> = {
   BCH: ['bitcoincash', 'bch'],
   ZEC: ['zcash', 'zec'],
   TRON: ['tron', 'trx'],
+  ARBITRUM: ['arbitrum', 'arb'],
+  OP: ['optimism', 'op'],
+  AVAX: ['avalanche', 'avax'],
+  CFX: ['conflux', 'cfx'],
+  GNOSIS: ['gnosis', 'xdai'],
+  CELO: ['celo'],
+  MANTLE: ['mantle', 'mnt'],
+  ZKSYNC: ['zksync', 'zk-sync'],
+  SCROLL: ['scroll'],
+  LINEA: ['linea'],
 };
 
 export function getEvmChainMetadata(chainId: number): EvmChainMetadata | undefined {

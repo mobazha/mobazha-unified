@@ -2,6 +2,7 @@
 
 import React, { memo, useMemo } from 'react';
 import { useI18n, type DisplayOrder, type CancellationContext } from '@mobazha/core';
+import { formatOrderDate } from '@/components/Order/utils';
 import { cn } from '@/lib/utils';
 import {
   Clock,
@@ -122,7 +123,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
   displayOrder: order,
   className,
 }: OrderStatusCardProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const isCryptoPayment = !order.fiatPayment;
 
@@ -361,19 +362,12 @@ export const OrderStatusCard = memo(function OrderStatusCard({
               {t('order.statusCard.reason')}: {cancelReason}
             </p>
           )}
-          {isTerminal && order.status === 'cancelled' && (order.createdAt || order.cancelledAt) && (
+          {isTerminal && order.status === 'cancelled' && order.cancelledAt && (
             <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-2">
-              {order.createdAt && (
-                <span>
-                  {t('order.statusCard.orderedAt')}: {new Date(order.createdAt).toLocaleString()}
-                </span>
-              )}
-              {order.cancelledAt && (
-                <span>
-                  {t('order.statusCard.cancelledAt')}:{' '}
-                  {new Date(order.cancelledAt).toLocaleString()}
-                </span>
-              )}
+              <span>
+                {t('order.statusCard.cancelledAt')}:{' '}
+                {formatOrderDate(order.cancelledAt, { locale, includeSeconds: true })}
+              </span>
             </div>
           )}
         </div>

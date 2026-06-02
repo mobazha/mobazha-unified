@@ -29,6 +29,22 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   BASEETH: 'eth',
   BASEUSDC: 'usdc',
   BASEUSDT: 'usdt',
+  ARBITRUM: 'arbitrum',
+  ARBETH: 'eth',
+  OP: 'op',
+  OPETH: 'eth',
+  AVAX: 'avax',
+  XDAI: 'xdai',
+  GNOSIS: 'gnosis',
+  CELO: 'celo',
+  MNT: 'mnt',
+  MANTLE: 'mnt',
+  ZKSETH: 'eth',
+  ZKSYNC: 'zksync',
+  SCRETH: 'eth',
+  SCROLL: 'scroll',
+  LINETH: 'eth',
+  LINEA: 'linea',
   // Polygon
   MATIC: 'matic',
   MATICUSDT: 'usdt',
@@ -89,6 +105,17 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   busd: 'BUSD',
   cfx: 'CFX',
   base: 'BASE',
+  arbitrum: 'Arbitrum',
+  op: 'Optimism',
+  avax: 'AVAX',
+  xdai: 'XDAI',
+  gnosis: 'Gnosis',
+  celo: 'CELO',
+  mnt: 'MNT',
+  mantle: 'MNT',
+  zksync: 'zkSync',
+  scroll: 'Scroll',
+  linea: 'Linea',
   bsc: 'BSC',
   trx: 'TRX',
   tron: 'TRX',
@@ -156,23 +183,35 @@ const getSymbol = (tokenId: string | undefined | null): string => {
  * 本地图标失败时显示默认图标
  * 法币（USD、EUR等）直接显示默认图标
  */
-export const TokenIcon: React.FC<TokenIconProps> = ({
+type IconLoadState = 'cdn' | 'local' | 'default';
+
+interface TokenIconBodyProps {
+  token: string;
+  symbol: string;
+  initialState: IconLoadState;
+  size: number;
+  className?: string;
+  showChainBadge: boolean;
+  chainId?: string;
+  chainSymbol: string | null;
+  initialChainState: IconLoadState;
+}
+
+const TokenIconBody: React.FC<TokenIconBodyProps> = ({
   token,
-  size = 24,
+  symbol,
+  initialState,
+  size,
   className,
-  showChainBadge = false,
+  showChainBadge,
   chainId,
+  chainSymbol,
+  initialChainState,
 }) => {
-  const symbol = getSymbol(token);
-  const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
-  const skipCdn = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
-  const initialState = isFiat ? 'default' : skipCdn || CDN_MISSING.has(symbol) ? 'local' : 'cdn';
-  const [iconState, setIconState] = useState<'cdn' | 'local' | 'default'>(initialState);
+  const [iconState, setIconState] = useState<IconLoadState>(initialState);
+  const [chainIconState, setChainIconState] = useState<IconLoadState>(initialChainState);
 
-  const chainSymbol = chainId ? getSymbol(chainId) : null;
-
-  // 根据当前状态获取图标 URL
-  const getIconSrc = useCallback((sym: string, state: 'cdn' | 'local' | 'default'): string => {
+  const getIconSrc = useCallback((sym: string, state: IconLoadState): string => {
     switch (state) {
       case 'cdn':
         return getCDNIconUrl(sym);
@@ -185,18 +224,18 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
   }, []);
 
   const handleError = useCallback(() => {
-    if (iconState === 'cdn') {
-      setIconState('local');
-    } else if (iconState === 'local') {
-      setIconState('default');
-    }
-  }, [iconState]);
+    setIconState(current => {
+      if (current === 'cdn') return 'local';
+      if (current === 'local') return 'default';
+      return current;
+    });
+  }, []);
 
   const iconSrc = getIconSrc(symbol, iconState);
+  const chainIconSrc = chainSymbol ? getIconSrc(chainSymbol, chainIconState) : '';
 
   return (
     <div className={cn('relative inline-flex', className)} style={{ width: size, height: size }}>
-      {/* 使用 img 标签以支持 CDN 的 SVG 和本地 PNG，并允许 onError fallback */}
       <img
         src={iconSrc}
         alt={token}
@@ -206,26 +245,65 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
         onError={handleError}
         loading="lazy"
       />
-      {/* 链图标徽章 - 增大比例以便看清 */}
       {showChainBadge && chainSymbol && (
         <div
           className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-[1px] ring-1 ring-background"
           style={{ width: Math.max(size * 0.6, 12), height: Math.max(size * 0.6, 12) }}
         >
           <img
-            src={skipCdn ? getLocalIconUrl(chainSymbol) : getCDNIconUrl(chainSymbol)}
+            src={chainIconSrc}
             alt={chainId || 'chain'}
             width={Math.max(Math.round(size * 0.55), 10)}
             height={Math.max(Math.round(size * 0.55), 10)}
             className="rounded-full object-cover w-full h-full"
-            onError={e => {
-              (e.target as HTMLImageElement).src = getLocalIconUrl(chainSymbol);
+            onError={() => {
+              setChainIconState(current => {
+                if (current === 'cdn') return 'local';
+                if (current === 'local') return 'default';
+                return current;
+              });
             }}
             loading="lazy"
           />
         </div>
       )}
     </div>
+  );
+};
+
+export const TokenIcon: React.FC<TokenIconProps> = ({
+  token,
+  size = 24,
+  className,
+  showChainBadge = false,
+  chainId,
+}) => {
+  const symbol = getSymbol(token);
+  const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
+  const skipCdn = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const initialState: IconLoadState = isFiat
+    ? 'default'
+    : skipCdn || CDN_MISSING.has(symbol)
+      ? 'local'
+      : 'cdn';
+
+  const chainSymbol = chainId ? getSymbol(chainId) : null;
+  const initialChainState: IconLoadState =
+    skipCdn || (chainSymbol ? CDN_MISSING.has(chainSymbol) : false) ? 'local' : 'cdn';
+
+  return (
+    <TokenIconBody
+      key={`${symbol}|${chainSymbol ?? ''}`}
+      token={token}
+      symbol={symbol}
+      initialState={initialState}
+      size={size}
+      className={className}
+      showChainBadge={showChainBadge}
+      chainId={chainId}
+      chainSymbol={chainSymbol}
+      initialChainState={initialChainState}
+    />
   );
 };
 
