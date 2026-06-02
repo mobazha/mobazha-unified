@@ -1,16 +1,6 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui';
 import { useRouter } from 'next/navigation';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
@@ -30,12 +20,14 @@ import {
   disputesApi,
   useFeature,
   useChatStore,
+  formatUserName,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
+import { ModeratorDisputeRulingDialog } from '@/components/Order/ModeratorDisputeRulingDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider/TGMiniAppProvider';
 import { useHaptic } from '@/lib/platform';
@@ -211,13 +203,39 @@ export function OrderDetailMobile({
   const disputeSectionRef = useRef<HTMLDivElement>(null);
 
   const {
-    pendingDecision,
+    isSheetOpen,
     isResolving,
-    requestResolve,
-    confirmResolve,
-    cancelResolve,
-    confirmDescription,
+    isOpeningSheet,
+    draft: rulingDraft,
+    activePreset,
+    validationErrors: rulingValidationErrors,
+    vendorNotConfirmed,
+    constraints: rulingConstraints,
+    openRulingSheet,
+    applyPreset,
+    closeSheet,
+    setBuyerPercentage,
+    setVendorPercentage,
+    setResolution,
+    submitRuling,
   } = useModeratorDisputeResolution(orderId, refetch);
+
+  const moderatorRulingBuyerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.buyer?.name, peerID: displayOrder?.buyer?.peerID },
+        { fallback: t('order.buyer') }
+      ),
+    [displayOrder?.buyer, t]
+  );
+  const moderatorRulingSellerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.vendor?.name, peerID: displayOrder?.vendor?.peerID },
+        { fallback: t('order.seller') }
+      ),
+    [displayOrder?.vendor, t]
+  );
 
   // Moderator viewing a disputed order → use dedicated dispute view mode
   const isModeratorDisputeView =
@@ -1181,8 +1199,9 @@ export function OrderDetailMobile({
       {isModeratorDisputeView && activeTab === 'details' && displayOrder.dispute && (
         <DisputeResolutionBar
           dispute={displayOrder.dispute}
-          onResolve={requestResolve}
+          onOpenRuling={openRulingSheet}
           isResolving={isResolving}
+          isOpeningSheet={isOpeningSheet}
           variant="sticky"
         />
       )}
@@ -1293,25 +1312,25 @@ export function OrderDetailMobile({
         order={displayOrder}
       />
 
-      <AlertDialog
-        open={pendingDecision !== null}
+      <ModeratorDisputeRulingDialog
+        open={isSheetOpen}
         onOpenChange={open => {
-          if (!open) cancelResolve();
+          if (!open) closeSheet();
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('order.resolveDispute')}</AlertDialogTitle>
-            <AlertDialogDescription>{confirmDescription}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isResolving}>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmResolve()} disabled={isResolving}>
-              {isResolving ? t('common.loading') : t('order.resolveDispute')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        draft={rulingDraft}
+        validationErrors={rulingValidationErrors}
+        activePreset={activePreset}
+        vendorNotConfirmed={vendorNotConfirmed}
+        constraints={rulingConstraints}
+        buyerLabel={moderatorRulingBuyerLabel}
+        sellerLabel={moderatorRulingSellerLabel}
+        isSubmitting={isResolving}
+        onApplyPreset={applyPreset}
+        onBuyerPercentageChange={setBuyerPercentage}
+        onVendorPercentageChange={setVendorPercentage}
+        onResolutionChange={setResolution}
+        onSubmit={submitRuling}
+      />
     </div>
   );
 }

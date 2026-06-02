@@ -1482,6 +1482,46 @@ export const en: TranslationResource = {
       resolved: 'Resolved',
       resolvedFavor: 'Resolved in favor of {{party}}',
       resolvedSplit: 'Funds split between parties',
+      customSplit: 'Custom split',
+    },
+    moderatorRuling: {
+      title: 'Submit ruling',
+      openSheet: 'Submit ruling',
+      presetGroup: 'Quick split presets',
+      chipBuyer: 'Buyer 100%',
+      chipSplit: '50 / 50',
+      chipSeller: 'Seller 100%',
+      vendorNotConfirmed:
+        'The seller never confirmed this order. The buyer must receive 100% of escrowed funds.',
+      presetHint:
+        'Starting from {{preset}}. Adjust amounts and add your written decision before submitting.',
+      presetBuyer: 'favor buyer (100%)',
+      presetSeller: 'favor seller (100%)',
+      presetSplit: '50/50 split',
+      buyerShare: 'Buyer share (%)',
+      sellerShare: 'Seller share (%)',
+      sumHint: 'Buyer and seller shares must total 100%.',
+      resolutionLabel: 'Ruling explanation',
+      resolutionPlaceholder:
+        'Explain your decision for both parties (required, at least 10 characters).',
+      submit: 'Submit ruling',
+      submitHint:
+        'This sends your ruling to both parties. Funds are released only after they accept the ruling or the timeout path applies.',
+      errors: {
+        required: 'This field is required.',
+        range: 'Enter a percentage from 0 to 100.',
+        sum: 'Buyer and seller shares must add up to 100%.',
+        minLength: 'Please write at least 10 characters explaining your ruling.',
+        vendorUnconfirmed: 'Seller share must be 0% because the seller never confirmed this order.',
+        vendorContractRequired:
+          'The seller has not provided their contract copy yet. Award 100% to the buyer, or wait until the seller syncs their order.',
+        generic: 'Could not submit the ruling. Please try again.',
+        caseDetailsUnavailable: 'Could not load dispute case details. Refresh and try again.',
+        orderDataUnavailable:
+          'Settlement data for this order is not available on your node. If you already submitted a ruling, wait for the buyer or seller to accept it.',
+        timeout: 'The request timed out. Please try again.',
+        unauthorized: 'You are not authorized to rule on this dispute.',
+      },
     },
     // Payment display
     payment: {

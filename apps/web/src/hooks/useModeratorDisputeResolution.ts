@@ -1,46 +1,118 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { disputesApi, useI18n } from '@mobazha/core';
+import {
+  disputesApi,
+  useI18n,
+  type ModeratorRulingConstraints,
+  type ModeratorRulingDraft,
+  type ModeratorRulingPreset,
+  type ModeratorRulingValidationErrors,
+  createRulingDraftForConstraints,
+  createRulingDraftFromPresetWithConstraints,
+  isModeratorRulingDraftValid,
+  isVendorOrderUnconfirmedFromCase,
+  mapModeratorDisputeApiError,
+  rulingDraftWithBuyerPercentage,
+  rulingDraftWithVendorPercentage,
+  validateModeratorRulingDraft,
+} from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 
-export type ModeratorResolveDecision = 'buyer' | 'seller' | 'split';
+export type ModeratorResolveDecision = ModeratorRulingPreset;
 
 export function useModeratorDisputeResolution(orderId: string, onSuccess?: () => void) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const [pendingDecision, setPendingDecision] = useState<ModeratorResolveDecision | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [activePreset, setActivePreset] = useState<ModeratorRulingPreset | null>(null);
+  const [draft, setDraft] = useState<ModeratorRulingDraft>(createRulingDraftForConstraints());
+  const [constraints, setConstraints] = useState<ModeratorRulingConstraints>({
+    lockVendorShareAboveZero: false,
+  });
+  const [vendorNotConfirmed, setVendorNotConfirmed] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ModeratorRulingValidationErrors>({});
   const [isResolving, setIsResolving] = useState(false);
+  const [isOpeningSheet, setIsOpeningSheet] = useState(false);
 
-  const requestResolve = useCallback((decision: ModeratorResolveDecision) => {
-    setPendingDecision(decision);
+  const openRulingSheet = useCallback(async () => {
+    setIsOpeningSheet(true);
+    setValidationErrors({});
+    try {
+      const caseDetails = await disputesApi.getCaseDetails(orderId);
+      if (!caseDetails) {
+        throw new Error('case details unavailable');
+      }
+      const lock = isVendorOrderUnconfirmedFromCase(caseDetails);
+      const nextConstraints: ModeratorRulingConstraints = { lockVendorShareAboveZero: lock };
+      setVendorNotConfirmed(lock);
+      setConstraints(nextConstraints);
+      setDraft(createRulingDraftForConstraints(nextConstraints));
+      setActivePreset(lock ? 'buyer' : null);
+      setIsSheetOpen(true);
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('order.moderatorRuling.errors.caseDetailsUnavailable'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsOpeningSheet(false);
+    }
+  }, [orderId, t, toast]);
+
+  const applyPreset = useCallback(
+    (preset: ModeratorRulingPreset) => {
+      setActivePreset(preset);
+      setDraft(createRulingDraftFromPresetWithConstraints(preset, constraints));
+      setValidationErrors({});
+    },
+    [constraints]
+  );
+
+  const closeSheet = useCallback(() => {
+    if (isResolving) return;
+    setIsSheetOpen(false);
+    setActivePreset(null);
+    setValidationErrors({});
+  }, [isResolving]);
+
+  const setBuyerPercentage = useCallback(
+    (value: number) => {
+      setDraft(prev => rulingDraftWithBuyerPercentage(prev, value, constraints));
+      setValidationErrors({});
+    },
+    [constraints]
+  );
+
+  const setVendorPercentage = useCallback(
+    (value: number) => {
+      setDraft(prev => rulingDraftWithVendorPercentage(prev, value, constraints));
+      setValidationErrors({});
+    },
+    [constraints]
+  );
+
+  const setResolution = useCallback((value: string) => {
+    setDraft(prev => ({ ...prev, resolution: value }));
+    setValidationErrors({});
   }, []);
 
-  const cancelResolve = useCallback(() => {
-    setPendingDecision(null);
-  }, []);
-
-  const confirmResolve = useCallback(async () => {
-    if (!pendingDecision) return;
-
-    const buyerPercentage =
-      pendingDecision === 'buyer' ? 100 : pendingDecision === 'seller' ? 0 : 50;
-    const vendorPercentage =
-      pendingDecision === 'seller' ? 100 : pendingDecision === 'buyer' ? 0 : 50;
-    const resolution =
-      pendingDecision === 'buyer'
-        ? t('order.resolveDisputeBuyerDesc')
-        : pendingDecision === 'seller'
-          ? t('order.resolveDisputeSellerDesc')
-          : t('order.resolveDisputeSplitDesc');
+  const submitRuling = useCallback(async () => {
+    const errors = validateModeratorRulingDraft(draft, constraints);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+    if (!isModeratorRulingDraftValid(draft, constraints)) return;
 
     setIsResolving(true);
     try {
       const result = await disputesApi.resolveDispute(
         orderId,
-        buyerPercentage,
-        vendorPercentage,
-        resolution
+        draft.buyerPercentage,
+        draft.vendorPercentage,
+        draft.resolution.trim()
       );
       if (!result.success) {
         throw new Error(result.error || t('order.resolveDisputeFailed'));
@@ -49,36 +121,37 @@ export function useModeratorDisputeResolution(orderId: string, onSuccess?: () =>
         title: t('order.resolveDispute'),
         description: t('order.disputeResolvedSuccess'),
       });
+      setIsSheetOpen(false);
+      setActivePreset(null);
       onSuccess?.();
     } catch (err) {
+      const raw = err instanceof Error ? err.message : String(err);
+      const errorKey = mapModeratorDisputeApiError(raw);
       toast({
         title: t('common.error'),
-        description: `${t('order.resolveDisputeFailed')}${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        description: t(errorKey),
         variant: 'destructive',
       });
     } finally {
       setIsResolving(false);
-      setPendingDecision(null);
     }
-  }, [pendingDecision, orderId, t, toast, onSuccess]);
-
-  const confirmDescription =
-    pendingDecision === 'buyer'
-      ? t('order.resolveDisputeBuyerDesc')
-      : pendingDecision === 'seller'
-        ? t('order.resolveDisputeSellerDesc')
-        : pendingDecision === 'split'
-          ? t('order.resolveDisputeSplitDesc')
-          : '';
+  }, [constraints, draft, orderId, t, toast, onSuccess]);
 
   return {
-    pendingDecision,
+    isSheetOpen,
     isResolving,
-    requestResolve,
-    confirmResolve,
-    cancelResolve,
-    confirmDescription,
+    isOpeningSheet,
+    draft,
+    activePreset,
+    validationErrors,
+    vendorNotConfirmed,
+    constraints,
+    openRulingSheet,
+    applyPreset,
+    closeSheet,
+    setBuyerPercentage,
+    setVendorPercentage,
+    setResolution,
+    submitRuling,
   };
 }
