@@ -59,6 +59,9 @@ export * from './contractTypeCheckout';
 // Guest 订单实物/数字类型推断
 export * from './guestOrderKind';
 
+// Payment readiness gate UX helpers
+export * from './paymentReadinessState';
+
 // 扫码结果解析
 export * from './scanResult';
 

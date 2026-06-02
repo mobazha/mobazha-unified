@@ -141,6 +141,8 @@ export type {
   PaymentSessionProgress,
   PaymentSessionSettlementMode,
   PaymentSessionProductMode,
+  PaymentReadinessView,
+  PaymentReadinessStatus,
 } from './paymentSession';
 
 // Wallet types
