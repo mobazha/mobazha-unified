@@ -2861,6 +2861,25 @@ export const en: TranslationResource = {
     payNow: 'Pay Now',
     paymentWindowRemaining: 'Time remaining to pay',
     paymentWindowExpired: 'Payment window expired',
+    preparingPayment: 'Preparing payment…',
+    preparingPaymentHint: 'Setting up checkout. This usually takes a moment.',
+    confirmingOrder: 'Confirming your order…',
+    confirmingOrderHint: 'Almost ready. Payment options will appear shortly.',
+    awaitingSellerReceipt: 'Waiting for the seller to receive your order',
+    awaitingSellerReceiptHint:
+      'Payment instructions will appear once the seller confirms the order. This usually takes a few seconds.',
+    sellerReceiptTimedOut: 'The seller has not received your order yet',
+    sellerReceiptTimedOutHint:
+      'Delivery is still being retried automatically. You can check again or cancel this order.',
+    checkSellerReceiptAgain: 'Check again',
+    checkSellerReceiptAgainHint: 'Still waiting for the seller to receive your order.',
+    sessionFetchError: 'Could not load payment status',
+    sessionFetchErrorHint:
+      'Check your connection and try again. This is not a seller confirmation delay.',
+    retrySessionFetch: 'Try again',
+    cancelUnpaidOrderConfirmTitle: 'Cancel this order?',
+    cancelUnpaidOrderConfirmDescription:
+      'The seller has not confirmed your order yet. Canceling will stop payment and return you to the order page.',
     rateUpdated: 'updated {{seconds}}s ago',
     leaveWarning:
       'Your payment is being processed. Leaving this page may result in a failed transaction.',

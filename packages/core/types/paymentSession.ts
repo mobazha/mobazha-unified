@@ -6,6 +6,15 @@ export type PaymentSessionSettlementMode =
 
 export type PaymentSessionProductMode = 'cancelable' | 'moderated' | 'direct';
 
+export type PaymentReadinessStatus = 'awaiting_seller_receipt' | 'ready_to_pay';
+
+export interface PaymentReadinessView {
+  status: PaymentReadinessStatus;
+  readyAt?: string;
+  retryAfterSeconds?: number;
+  sellerReceiptTimeoutAt?: string;
+}
+
 export interface PaymentSessionFundingTarget {
   type: 'address' | 'provider_session';
   address?: string;
@@ -80,4 +89,5 @@ export interface PaymentSession {
     payload?: Record<string, unknown>;
     expiresAt?: string;
   } | null;
+  paymentReadiness?: PaymentReadinessView;
 }
