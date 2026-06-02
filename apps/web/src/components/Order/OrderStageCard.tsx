@@ -17,15 +17,13 @@ import {
 } from 'lucide-react';
 import {
   useI18n,
-  useCurrency,
   getChainFromCoin,
   getChainByEVMId,
   getTrackingUrl,
-  getPaymentCoinDisplayLabel,
   resolveTokenIdForDisplay,
-  formatPaymentAmount,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
+import { CrossCurrencyAmountBlock } from './CrossCurrencyAmountBlock';
 
 export interface OrderStageCardProps {
   /** 阶段标题 */
@@ -165,13 +163,6 @@ export const PaymentCard = memo(function PaymentCard({
   showDivider = true,
 }: PaymentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
-  const { formatPrice: formatCurrencyPrice } = useCurrency();
-  const paymentLabel = paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currency;
-  const isCrossCurrencyPayment =
-    pricingAmount != null &&
-    pricingCurrency != null &&
-    paymentLabel !== '' &&
-    pricingCurrency.toUpperCase() !== paymentLabel.toUpperCase();
 
   // 格式化交易 hash（显示前后各 6 位）
   const formatTxHash = (hash: string) => {
@@ -216,36 +207,21 @@ export const PaymentCard = memo(function PaymentCard({
 
           {/* 支付信息 */}
           <div className="flex-1 min-w-0">
-            {/* 跨币种：分别展示 listing 定价与实付金额（不做汇率换算，不用 ≈） */}
-            {isCrossCurrencyPayment && (
-              <p className="text-xs text-muted-foreground">
-                {t('order.payment.listingTotal')}{' '}
-                <span className="font-medium text-foreground">
-                  {formatCurrencyPrice(pricingAmount!, pricingCurrency!)}
-                </span>
-              </p>
-            )}
-            <p
-              className={cn(
-                'text-foreground flex items-center gap-1',
-                isCrossCurrencyPayment
-                  ? 'text-sm sm:text-base font-semibold mt-0.5'
-                  : 'text-sm sm:text-base font-semibold'
-              )}
-            >
-              {isCrossCurrencyPayment && (
-                <span className="text-xs font-normal text-muted-foreground mr-1">
-                  {t('order.payment.paidAmount')}
-                </span>
-              )}
-              {formatPaymentAmount(amount, paymentCoin, paymentLabel) ??
-                formatCurrencyPrice(amount, paymentLabel)}
-              {confirmations !== undefined && confirmations > 0 && (
-                <span className="text-xs text-muted-foreground ml-1">
-                  ({confirmations} confirms)
-                </span>
-              )}
-            </p>
+            <CrossCurrencyAmountBlock
+              amount={amount}
+              currency={currency}
+              paymentCoin={paymentCoin}
+              pricingAmount={pricingAmount}
+              pricingCurrency={pricingCurrency}
+              variant="payment-card"
+              suffix={
+                confirmations !== undefined && confirmations > 0 ? (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({confirmations} confirms)
+                  </span>
+                ) : undefined
+              }
+            />
             {/* 交易 hash */}
             {txHash && (
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -541,6 +517,8 @@ export interface OrderCompleteCardProps {
   amount?: string;
   currency?: string;
   paymentCoin?: string;
+  pricingAmount?: string;
+  pricingCurrency?: string;
   amountLabel?: string;
   breakdownLines?: Array<{ label: string; amount: string }>;
   txHash?: string;
@@ -558,6 +536,8 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   amount,
   currency,
   paymentCoin,
+  pricingAmount,
+  pricingCurrency,
   amountLabel,
   breakdownLines,
   txHash,
@@ -570,12 +550,6 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   showDivider = true,
 }: OrderCompleteCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
-  const { formatPrice: formatCurrencyPrice } = useCurrency();
-  const paymentDisplay =
-    amount && currency
-      ? (formatPaymentAmount(amount, paymentCoin, currency) ??
-        formatCurrencyPrice(amount, currency))
-      : null;
   const [copiedTx, setCopiedTx] = useState(false);
 
   const formatTxHash = (hash: string) => {
@@ -619,14 +593,19 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            {paymentDisplay && (
+            {amount && currency && (
               <div className="space-y-0.5">
                 {amountLabel && (
                   <p className="text-xs font-medium text-muted-foreground">{amountLabel}</p>
                 )}
-                <p className="text-base sm:text-lg font-semibold text-foreground tabular-nums">
-                  {paymentDisplay}
-                </p>
+                <CrossCurrencyAmountBlock
+                  amount={amount}
+                  currency={currency}
+                  paymentCoin={paymentCoin}
+                  pricingAmount={pricingAmount}
+                  pricingCurrency={pricingCurrency}
+                  variant="timeline"
+                />
               </div>
             )}
             <p className="text-xs text-muted-foreground">

@@ -62,6 +62,9 @@ export * from './guestOrderKind';
 // Payment readiness gate UX helpers
 export * from './paymentReadinessState';
 
+// Order payment amount display (cross-currency listing vs settlement)
+export * from './orderPaymentDisplay';
+
 // 扫码结果解析
 export * from './scanResult';
 

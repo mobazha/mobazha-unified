@@ -18,8 +18,16 @@ vi.mock('@/components/Order', () => ({
     txHash?: string;
     description?: string;
     timestamp?: string;
+    pricingAmount?: string;
+    pricingCurrency?: string;
+    stageVariant?: string;
   }) => (
-    <div data-testid="complete-card">
+    <div
+      data-testid="complete-card"
+      data-stage={props.stageVariant}
+      data-pricing-amount={props.pricingAmount ?? ''}
+      data-pricing-currency={props.pricingCurrency ?? ''}
+    >
       <span>{props.title || 'order.stages.complete'}</span>
       <span>{props.txHash}</span>
       <span>{props.description}</span>
@@ -118,6 +126,85 @@ describe('OrderTimelineCard', () => {
 
     expect(completeCards[3]).toHaveTextContent('order.timeline.orderPlaced');
     expect(completeCards[3]).toHaveTextContent('2026-05-15T00:00:00Z');
+  });
+
+  it('passes pricing props only to escrowed cards, not release', () => {
+    render(
+      <OrderTimelineCard
+        displayOrder={makeOrder({
+          pricingAmount: '29.00',
+          pricingCurrency: 'USD',
+          settlementBreakdown: {
+            currency: 'ETH',
+            sellerAmount: '0.032',
+          },
+          fundsReleasedAtConfirmation: false,
+        })}
+      />
+    );
+
+    const escrowed = screen
+      .getAllByTestId('complete-card')
+      .find(card => card.getAttribute('data-stage') === 'escrowed');
+    const released = screen
+      .getAllByTestId('complete-card')
+      .find(card => card.getAttribute('data-stage') === 'released');
+
+    expect(escrowed).toHaveAttribute('data-pricing-amount', '29.00');
+    expect(escrowed).toHaveAttribute('data-pricing-currency', 'USD');
+    expect(released).toHaveAttribute('data-pricing-amount', '');
+    expect(released).toHaveAttribute('data-pricing-currency', '');
+  });
+
+  it('passes pricing props only to escrowed cards, not refund', () => {
+    render(
+      <OrderTimelineCard
+        displayOrder={makeOrder({
+          status: 'cancelled',
+          pricingAmount: '29.00',
+          pricingCurrency: 'USD',
+          cancellation: {
+            kind: 'seller_decline',
+            wasFunded: true,
+            refundConfirmed: true,
+          },
+          timeline: [
+            {
+              status: 'paid',
+              timestamp: '2026-05-15T00:01:00Z',
+              description: 'paid',
+              descriptionKey: 'order.timeline.fundsSecured',
+            },
+            {
+              status: 'cancelled',
+              timestamp: '2026-05-15T00:02:00Z',
+              description: 'declined',
+              descriptionKey: 'order.timeline.orderDeclined',
+            },
+          ],
+        })}
+        settlementAction={{
+          actionId: 'action-1',
+          action: 'cancel',
+          settlementAction: 'cancel',
+          state: 'confirmed',
+          txHash: '0xrefund1234567890abcdef',
+          updatedAt: '2026-05-15T00:03:00Z',
+        }}
+      />
+    );
+
+    const escrowed = screen
+      .getAllByTestId('complete-card')
+      .find(card => card.getAttribute('data-stage') === 'escrowed');
+    const refund = screen
+      .getAllByTestId('complete-card')
+      .find(card => card.getAttribute('data-stage') === 'refund');
+
+    expect(escrowed).toHaveAttribute('data-pricing-amount', '29.00');
+    expect(escrowed).toHaveAttribute('data-pricing-currency', 'USD');
+    expect(refund).toHaveAttribute('data-pricing-amount', '');
+    expect(refund).toHaveAttribute('data-pricing-currency', '');
   });
 
   it('renders funded cancelled orders with payment, decline, and refund cards', () => {
