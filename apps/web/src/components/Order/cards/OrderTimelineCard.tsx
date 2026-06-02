@@ -4,6 +4,7 @@ import React, { memo, useMemo } from 'react';
 import {
   useI18n,
   isFiatPaymentCoin,
+  resolveOrderPricingDisplay,
   type DisplayOrder,
   type SettlementActionSnapshot,
 } from '@mobazha/core';
@@ -37,6 +38,18 @@ function sortTimelineCards(cards: TimelineCardEntry[]): TimelineCardEntry[] {
 
 function isFiatOrderPayment(order: DisplayOrder): boolean {
   return !!order.fiatPayment || isFiatPaymentCoin(order.paymentCoin);
+}
+
+function getOrderPricingProps(order: DisplayOrder) {
+  const pricing = resolveOrderPricingDisplay({
+    pricingBreakdown: order.pricingBreakdown,
+    pricingAmount: order.pricingAmount,
+    pricingCurrency: order.pricingCurrency,
+  });
+  return {
+    pricingAmount: pricing?.amount,
+    pricingCurrency: pricing?.currency,
+  };
 }
 
 function buildOrderPlacedCard(
@@ -126,6 +139,7 @@ function buildCompletedTimelineCards(
 
   const timelineCards: TimelineCardEntry[] = [];
   const paidTimeline = getPaidTimelineDisplay(order, t);
+  const pricingProps = getOrderPricingProps(order);
 
   if (paymentEvent) {
     const paymentTxUrl = order.paymentTx
@@ -143,6 +157,7 @@ function buildCompletedTimelineCards(
           amount={paidTimeline.amount}
           currency={paidTimeline.currency}
           paymentCoin={paidTimeline.paymentCoin}
+          {...pricingProps}
           amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
           txLabel={paidTimeline.txLabel}
@@ -251,6 +266,7 @@ function buildCancelledTimelineCards(
 
   const timelineCards: TimelineCardEntry[] = [];
   const paidTimeline = getPaidTimelineDisplay(order, t);
+  const pricingProps = getOrderPricingProps(order);
 
   if (wasFunded && order.paymentTx) {
     timelineCards.push({
@@ -265,6 +281,7 @@ function buildCancelledTimelineCards(
           amount={paidTimeline.amount}
           currency={paidTimeline.currency}
           paymentCoin={paidTimeline.paymentCoin}
+          {...pricingProps}
           amountLabel={paidTimeline.amountLabel}
           txHash={order.paymentTx}
           txLabel={paidTimeline.txLabel}
@@ -304,6 +321,7 @@ function buildCancelledTimelineCards(
           timestamp={settlementAction?.updatedAt || cancelledEvent?.timestamp}
           amount={wasFunded ? order.total : undefined}
           currency={wasFunded ? order.currency : undefined}
+          paymentCoin={wasFunded ? order.paymentCoin : undefined}
           txHash={refundTx}
           txUrl={getOrderTransactionExplorerUrl(refundTx, order) || undefined}
           description={t('order.timeline.refundOnChain')}

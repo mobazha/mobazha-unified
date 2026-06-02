@@ -20,6 +20,8 @@ export {
   AcceptedCard,
   OrderCompleteCard,
 } from './OrderStageCard';
+export { CrossCurrencyAmountBlock } from './CrossCurrencyAmountBlock';
+export type { CrossCurrencyAmountBlockProps } from './CrossCurrencyAmountBlock';
 export type {
   OrderStageCardProps,
   PaymentCardProps,
