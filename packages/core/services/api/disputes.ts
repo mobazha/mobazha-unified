@@ -61,6 +61,14 @@ export interface DisputeCase {
     paymentSent?: unknown;
   };
   claim: string;
+  /** Raw dispute open message from GET /v1/cases/{orderID} (includes evidenceHashes). */
+  disputeOpen?: {
+    reason?: string;
+    claim?: string;
+    evidenceHashes?: string[];
+    openedBy?: string;
+    timestamp?: string;
+  };
   resolution?: {
     buyerPercentage: number;
     vendorPercentage: number;
@@ -278,6 +286,7 @@ export async function getCaseDetails(orderId: string): Promise<DisputeCase | nul
         buyerContract: (raw.buyerContract || raw.buyer_contract) as DisputeCase['buyerContract'],
         vendorContract: (raw.vendorContract ||
           raw.vendor_contract) as DisputeCase['vendorContract'],
+        disputeOpen: raw.disputeOpen as DisputeCase['disputeOpen'],
         claim:
           readStringField(
             raw.disputeOpen as Record<string, unknown>,

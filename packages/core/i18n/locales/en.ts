@@ -855,6 +855,10 @@ export const en: TranslationResource = {
       completed: 'Transaction complete — funds released',
       disputed: 'This order is under dispute',
       disputedHint: 'A moderator is reviewing this case',
+      disputedHintBuyer:
+        'Funds are on hold while dispute resolution reviews your case. You can add context in Discussion.',
+      disputedHintSeller:
+        'Payout is paused while dispute resolution reviews this case. Respond in Discussion and keep delivery records handy.',
       cancelledBuyer: 'This order was cancelled because payment was not completed in time',
       cancelledSeller: 'This order was cancelled — the buyer did not complete payment',
       cancelledHintBuyer: 'No payment was charged. You can place a new order anytime.',
@@ -985,6 +989,16 @@ export const en: TranslationResource = {
     disputeResolved: 'Dispute resolved',
     // Order items
     orderSummary: 'Order Summary',
+    footer: {
+      disputeReviewing: 'Dispute under review',
+    },
+    disputeSummary: {
+      title: 'Dispute in progress',
+      fundsHeld: 'Payment is held securely until dispute resolution completes.',
+      evidence: 'Submitted evidence ({{count}})',
+      noEvidenceBuyer:
+        'No image evidence was attached to this dispute. You can still explain in Discussion.',
+    },
     orderItems: 'Order Items',
     quantity: 'Quantity',
     orderNote: 'Order Note',
@@ -1087,6 +1101,7 @@ export const en: TranslationResource = {
       refund: 'Refund',
       claim: 'Claim Payment',
       acceptPayout: 'Accept Payout',
+      openDiscussion: 'Open discussion',
       chat: 'Chat',
       confirmDelivery: 'Confirm',
       // Success messages
@@ -1371,8 +1386,11 @@ export const en: TranslationResource = {
         other: 'Other',
       },
       addEvidence: 'Add evidence image',
+      removeEvidence: 'Remove evidence image',
       evidence: 'Evidence (optional)',
       evidenceHint: 'Up to {{maxImages}} images, {{maxSizeMb}} MB each',
+      evidenceUploadFailed:
+        'One or more images failed to upload. Remove them or try again before submitting.',
     },
     afterSaleDispute: {
       buyerTitle: 'You reported an issue with this order',
@@ -1484,6 +1502,8 @@ export const en: TranslationResource = {
       claim: 'Claim',
       evidence: 'Evidence',
       noEvidence: 'No evidence submitted',
+      noEvidenceHint:
+        'Image evidence may not appear here if it was only shared in chat, or if this node has not synced dispute data yet. Review the claim below and use Discussion for full context.',
       openedOn: 'Dispute opened',
       orderStatus: 'Order status',
       tracking: 'Tracking',
@@ -1708,6 +1728,14 @@ export const en: TranslationResource = {
       downloadsUsed: '{{current}} / {{max}} downloads used',
       activationsUsed: '{{current}} / {{max}} seats',
       expiresAt: 'Access expires {{date}}',
+      disputeFrozenNote:
+        'Downloads are paused while dispute resolution is in progress. Access may resume after the case is closed.',
+      restrictedReason: {
+        frozen: 'Temporarily unavailable',
+        disputed: 'Paused during dispute resolution',
+        revoked: 'Access was revoked',
+        expired: 'Access has expired',
+      },
       status: {
         active: 'Available',
         protected: 'Available (protected)',
@@ -2555,6 +2583,8 @@ export const en: TranslationResource = {
       completedSellerDesc: 'Order complete — funds have been released to your account.',
       disputed: 'Dispute In Progress',
       disputedDesc: 'Countdown paused — under review',
+      disputedModeratorAssigned:
+        '{{moderator}} is reviewing this dispute. Funds stay on hold until a ruling is accepted.',
       afterSale: 'After-Sale Window',
       afterSaleDesc: '{{days}} days remaining for after-sale support',
       daysRemaining: '{{days}} days left',

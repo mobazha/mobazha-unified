@@ -212,7 +212,10 @@ interface RealOrderData {
     transactions?: Array<{ txid?: string; fromID?: string; value?: string; timestamp?: string }>;
     disputeOpen?: {
       timestamp?: string;
+      reason?: string;
+      claim?: string;
       evidenceHashes?: string[];
+      openedBy?: string;
     };
     dispute?: {
       timestamp?: string;
@@ -1338,13 +1341,23 @@ export function transformCoreOrder(
   const dispute: DisplayOrder['dispute'] = contract.disputeOpen
     ? {
         id: fullOrderId,
-        claim: contract.dispute?.claim || '',
+        claim:
+          contract.disputeOpen.reason?.trim() ||
+          contract.disputeOpen.claim?.trim() ||
+          contract.dispute?.claim?.trim() ||
+          '',
         status: contract.disputeClose ? 'resolved' : 'open',
-        initiator: 'buyer',
+        initiator:
+          contract.disputeOpen.openedBy === 'VENDOR' || contract.disputeOpen.openedBy === '1'
+            ? 'seller'
+            : 'buyer',
         resolution: normalizeDisputeResolution(contract.disputeClose?.verdict),
         openedAt: contract.disputeOpen.timestamp || contract.dispute?.timestamp,
         resolvedAt: contract.disputeClose?.timestamp,
-        evidenceHashes: contract.disputeOpen.evidenceHashes,
+        evidenceHashes:
+          contract.disputeOpen.evidenceHashes?.filter(
+            (h): h is string => typeof h === 'string' && h.length > 0
+          ) ?? [],
       }
     : undefined;
 

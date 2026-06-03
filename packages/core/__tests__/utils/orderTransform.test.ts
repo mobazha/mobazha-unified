@@ -811,4 +811,29 @@ describe('transformCoreOrder cancellation display', () => {
 
     expect(order?.cancellation?.refundConfirmed).toBe(true);
   });
+
+  it('maps disputeOpen.reason and evidenceHashes into display dispute', () => {
+    const rawOrder = {
+      ...buildOrder({}),
+      state: 'DISPUTED',
+      contract: {
+        ...buildOrder({}).contract,
+        disputeOpen: {
+          timestamp: '2026-06-03T12:00:00Z',
+          reason: 'Product not as described',
+          evidenceHashes: ['QmEvidenceA', 'QmEvidenceB'],
+          openedBy: 'BUYER',
+        },
+      },
+    } as any;
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.dispute?.claim).toBe('Product not as described');
+    expect(order?.dispute?.evidenceHashes).toEqual(['QmEvidenceA', 'QmEvidenceB']);
+    expect(order?.dispute?.initiator).toBe('buyer');
+  });
 });
