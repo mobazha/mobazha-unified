@@ -1412,6 +1412,7 @@ export function OrderDetailMobile({
         onAfterSaleSubmit={handleAfterSaleDisputeSubmit}
         isAfterSale={isAfterSaleDispute}
         isLoading={isDisputeLoading}
+        vendorPeerID={displayOrder.vendor?.id}
       />
 
       <PackingSlipDialog

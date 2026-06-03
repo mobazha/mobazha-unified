@@ -1148,6 +1148,7 @@ export function OrderDetailDesktop({
         onAfterSaleSubmit={handleAfterSaleDisputeSubmit}
         isAfterSale={isAfterSaleDispute}
         isLoading={isDisputeLoading}
+        vendorPeerID={displayOrder.vendor?.id}
       />
 
       <PackingSlipDialog
