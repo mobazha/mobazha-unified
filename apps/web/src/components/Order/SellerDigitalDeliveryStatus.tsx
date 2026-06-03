@@ -15,7 +15,11 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useI18n, digitalAssetsApi } from '@mobazha/core';
-import type { DigitalAssetInfo, MaskedLicenseKey } from '@mobazha/core';
+import type { DigitalAssetInfo, MaskedLicenseKey, DisplayOrderStatus } from '@mobazha/core';
+import {
+  shouldHideSellerDigitalInProgress,
+  type DigitalEntitlementDisputePhase,
+} from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
@@ -48,6 +52,8 @@ export interface SellerDigitalDeliveryStatusProps {
   className?: string;
   /** When true, hide in-progress auto-delivery messaging during dispute review. */
   orderInDispute?: boolean;
+  orderStatus?: DisplayOrderStatus;
+  disputePhase?: DigitalEntitlementDisputePhase;
   /** stacked: primary actions below copy (guest order drawer); inline: actions beside title */
   actionLayout?: 'inline' | 'stacked';
 }
@@ -71,6 +77,8 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
   listingSlugs,
   className,
   orderInDispute = false,
+  orderStatus,
+  disputePhase = 'none',
   actionLayout = 'inline',
 }: SellerDigitalDeliveryStatusProps) {
   const { t } = useI18n();
@@ -144,7 +152,15 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
     return null;
   }
 
-  if (orderInDispute && !isDelivered) {
+  if (
+    shouldHideSellerDigitalInProgress({
+      status,
+      orderStatus,
+      disputePhase: orderInDispute ? 'active' : disputePhase,
+      orderInDispute,
+      isDelivered,
+    })
+  ) {
     return null;
   }
 

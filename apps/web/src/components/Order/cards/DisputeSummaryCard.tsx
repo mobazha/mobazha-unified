@@ -3,10 +3,17 @@
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useI18n, getGatewayUrl, NODE_API, type DisplayOrder } from '@mobazha/core';
+import {
+  useI18n,
+  getGatewayUrl,
+  NODE_API,
+  isDisputeRulingAvailable,
+  type DisplayOrder,
+} from '@mobazha/core';
 import { formatUserName } from '@mobazha/core/utils/identity';
-import { MessageSquare, ShieldAlert } from 'lucide-react';
+import { MessageSquare, ShieldAlert, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DisputeRulingSection } from './DisputeRulingSection';
 
 export interface DisputeSummaryCardProps {
   displayOrder: DisplayOrder;
@@ -22,6 +29,8 @@ export const DisputeSummaryCard = memo(function DisputeSummaryCard({
   const { t } = useI18n();
   const dispute = displayOrder.dispute;
   if (!dispute) return null;
+
+  const isRulingIssued = isDisputeRulingAvailable(dispute);
 
   const isBuyer = displayOrder.userRole === 'buyer';
   const isSeller = displayOrder.userRole === 'seller';
@@ -40,19 +49,38 @@ export const DisputeSummaryCard = memo(function DisputeSummaryCard({
 
   return (
     <Card
-      className={cn('overflow-hidden border-error/25', className)}
+      className={cn(
+        'overflow-hidden',
+        isRulingIssued ? 'border-primary/25' : 'border-error/25',
+        className
+      )}
       data-testid="order-dispute-summary"
     >
-      <div className="bg-error/8 border-b border-error/15 px-4 py-3 flex items-start gap-2.5">
-        <ShieldAlert className="w-5 h-5 text-error shrink-0 mt-0.5" />
+      <div
+        className={cn(
+          'border-b px-4 py-3 flex items-start gap-2.5',
+          isRulingIssued ? 'bg-primary/8 border-primary/15' : 'bg-error/8 border-error/15'
+        )}
+      >
+        {isRulingIssued ? (
+          <Scale className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        ) : (
+          <ShieldAlert className="w-5 h-5 text-error shrink-0 mt-0.5" />
+        )}
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-foreground">
-            {t('order.disputeSummary.title')}
+            {isRulingIssued
+              ? t('order.disputeSummary.titleDecided')
+              : t('order.disputeSummary.title')}
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{t(hintKey)}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {t('order.disputeSummary.fundsHeld')}
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isRulingIssued ? t('order.disputeSummary.awaitingAcceptance') : t(hintKey)}
           </p>
+          {!isRulingIssued ? (
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('order.disputeSummary.fundsHeld')}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -99,6 +127,14 @@ export const DisputeSummaryCard = memo(function DisputeSummaryCard({
           <p className="text-xs text-muted-foreground">
             {t('order.disputeSummary.noEvidenceBuyer')}
           </p>
+        ) : null}
+
+        {isRulingIssued ? (
+          <DisputeRulingSection
+            dispute={dispute}
+            settlementBreakdown={displayOrder.settlementBreakdown}
+            className="mt-1"
+          />
         ) : null}
 
         <Button

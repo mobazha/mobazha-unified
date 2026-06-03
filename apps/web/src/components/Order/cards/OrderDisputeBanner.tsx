@@ -7,6 +7,7 @@ import {
   getDisputeTimeoutDetails,
   getGatewayUrl,
   NODE_API,
+  isDisputeRulingAvailable,
   type DisplayOrder,
 } from '@mobazha/core';
 // onResolve prop is kept for backward compat but no longer rendered (moved to DisputeResolutionBar)
@@ -36,8 +37,8 @@ export const OrderDisputeBanner = memo(function OrderDisputeBanner({
 
   return (
     <div className={className}>
-      {/* Active dispute banner — shown to buyers and sellers only; moderators see DisputeOverviewCard instead */}
-      {order.dispute && !isModeratorView && (
+      {/* Open dispute only — resolved disputes use DisputeHistoryCard / DisputeSummaryCard */}
+      {order.dispute && !isModeratorView && !isDisputeRulingAvailable(order.dispute) && (
         <div className="p-3 sm:p-4 bg-error/8 border border-error/20 rounded-lg mb-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>

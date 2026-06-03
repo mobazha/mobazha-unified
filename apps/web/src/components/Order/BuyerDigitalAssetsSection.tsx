@@ -20,9 +20,11 @@ import type {
   BuyerAssetEntry,
   BuyerAssetStatus,
   BuyerLicenseEntry,
-  TranslateFunction,
+  DigitalEntitlementDisputePhase,
+  DisplayDispute,
   WebSocketMessage,
 } from '@mobazha/core';
+import { formatDigitalEntitlementRestrictedReason } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,33 +36,20 @@ export interface BuyerDigitalAssetsSectionProps {
   buyerPortalToken?: string;
   sellerPeerID?: string;
   deliveredAt?: string;
-  /** When true, frozen assets show dispute-specific guidance instead of raw API reason text. */
+  /** @deprecated Prefer disputePhase — kept for callers that only know active dispute. */
   orderInDispute?: boolean;
+  disputePhase?: DigitalEntitlementDisputePhase;
+  disputeResolution?: DisplayDispute['resolution'];
+  buyerPayoutPercent?: number;
   className?: string;
 }
 
-function formatRestrictedReason(
-  reason: string | undefined,
-  t: TranslateFunction,
+function resolveDisputePhase(
+  disputePhase: DigitalEntitlementDisputePhase | undefined,
   orderInDispute: boolean
-): string | undefined {
-  if (!reason?.trim()) {
-    return orderInDispute ? t('order.digital.disputeFrozenNote') : undefined;
-  }
-  const normalized = reason.trim().toLowerCase();
-  const knownKeys: Record<string, string> = {
-    frozen: 'order.digital.restrictedReason.frozen',
-    disputed: 'order.digital.restrictedReason.disputed',
-    dispute: 'order.digital.restrictedReason.disputed',
-    revoked: 'order.digital.restrictedReason.revoked',
-    expired: 'order.digital.restrictedReason.expired',
-  };
-  const key = knownKeys[normalized];
-  if (key) return t(key);
-  if (orderInDispute && (normalized.includes('dispute') || normalized === 'frozen')) {
-    return t('order.digital.disputeFrozenNote');
-  }
-  return reason;
+): DigitalEntitlementDisputePhase {
+  if (disputePhase) return disputePhase;
+  return orderInDispute ? 'active' : 'none';
 }
 
 const STATUS_META: Record<
@@ -152,10 +141,14 @@ export function BuyerDigitalAssetsSection({
   sellerPeerID,
   deliveredAt,
   orderInDispute = false,
+  disputePhase,
+  disputeResolution,
+  buyerPayoutPercent,
   className,
 }: BuyerDigitalAssetsSectionProps) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const effectiveDisputePhase = resolveDisputePhase(disputePhase, orderInDispute);
   const [assets, setAssets] = useState<BuyerAssetEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -321,7 +314,9 @@ export function BuyerDigitalAssetsSection({
               asset={asset}
               buyerPortalToken={buyerPortalToken}
               sellerPeerID={sellerPeerID}
-              orderInDispute={orderInDispute}
+              disputePhase={effectiveDisputePhase}
+              disputeResolution={disputeResolution}
+              buyerPayoutPercent={buyerPayoutPercent}
               onCopy={handleCopy}
             />
           ))}
@@ -335,7 +330,9 @@ interface DigitalAssetCardProps {
   asset: BuyerAssetEntry;
   buyerPortalToken?: string;
   sellerPeerID?: string;
-  orderInDispute?: boolean;
+  disputePhase: DigitalEntitlementDisputePhase;
+  disputeResolution?: DisplayDispute['resolution'];
+  buyerPayoutPercent?: number;
   onCopy: (text: string, labelDefault: string) => void;
 }
 
@@ -343,7 +340,9 @@ function DigitalAssetCard({
   asset,
   buyerPortalToken,
   sellerPeerID,
-  orderInDispute = false,
+  disputePhase,
+  disputeResolution,
+  buyerPayoutPercent,
   onCopy,
 }: DigitalAssetCardProps) {
   const { t } = useI18n();
@@ -354,8 +353,14 @@ function DigitalAssetCard({
   const accessible = asset.status === 'active' || asset.status === 'protected';
   const restrictedNote = useMemo(
     () =>
-      !accessible ? formatRestrictedReason(asset.restrictedReason, t, orderInDispute) : undefined,
-    [accessible, asset.restrictedReason, orderInDispute, t]
+      !accessible
+        ? formatDigitalEntitlementRestrictedReason(asset.restrictedReason, t, {
+            disputePhase,
+            resolution: disputeResolution,
+            buyerPayoutPercent,
+          })
+        : undefined,
+    [accessible, asset.restrictedReason, buyerPayoutPercent, disputePhase, disputeResolution, t]
   );
 
   const typeLabel = useMemo(() => {

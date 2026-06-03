@@ -14,6 +14,7 @@ import {
   XCircle,
   RotateCcw,
   ShieldAlert,
+  Gavel,
 } from 'lucide-react';
 
 export interface OrderStatusCardProps {
@@ -261,6 +262,19 @@ export const OrderStatusCard = memo(function OrderStatusCard({
               : t('order.statusCard.disputedHint'),
           color: 'text-destructive',
           bgColor: 'bg-destructive/8 border-destructive/20',
+          progress: -1,
+        };
+      case 'decided':
+        return {
+          icon: Gavel,
+          message: t('order.statusCard.decided'),
+          hint: isBuyer
+            ? t('order.statusCard.decidedHintBuyer')
+            : order.userRole === 'seller'
+              ? t('order.statusCard.decidedHintSeller')
+              : t('order.statusCard.decidedHint'),
+          color: 'text-primary',
+          bgColor: 'bg-primary/8 border-primary/20',
           progress: -1,
         };
       case 'cancelled': {

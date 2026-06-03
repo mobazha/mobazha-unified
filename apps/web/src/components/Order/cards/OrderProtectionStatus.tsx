@@ -3,7 +3,7 @@
 import React, { memo, useMemo, useState, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
 import { cn } from '@/lib/utils';
-import { ShieldCheck, AlertTriangle, Shield } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Shield, Scale } from 'lucide-react';
 
 export type ProtectionLevel = 'full' | 'standard' | 'platform';
 
@@ -27,6 +27,8 @@ export interface OrderProtectionStatusProps {
   canOpenDispute?: boolean;
   onExtendProtection?: () => Promise<void>;
   onOpenDispute?: () => void;
+  /** Moderator ruling submitted; parties must accept before funds release */
+  disputeRulingPendingAcceptance?: boolean;
   className?: string;
 }
 
@@ -56,14 +58,19 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
   canOpenDispute = false,
   onExtendProtection,
   onOpenDispute,
+  disputeRulingPendingAcceptance = false,
   className,
 }: OrderProtectionStatusProps) {
   const { t } = useI18n();
   const isDisputed = stage === 'DISPUTED';
+  const isRulingAwaitingAcceptance = isDisputed && disputeRulingPendingAcceptance;
   const isCancelable = protectionLevel === 'standard';
 
   const countdownText = useMemo(() => {
     if (stage !== 'PROTECTION_PERIOD' && stage !== 'DISPUTED') return null;
+    if (isRulingAwaitingAcceptance) {
+      return t('trust.protection.disputeRulingIssued');
+    }
     if (isDisputed) return t('trust.protection.disputedDesc');
     const days = daysRemaining ?? 0;
     if (userRole === 'buyer') {
@@ -74,7 +81,7 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     return isCancelable
       ? t('trust.protection.cancelableSellerCountdown', { days })
       : t('trust.protection.sellerCountdown', { days });
-  }, [stage, daysRemaining, userRole, isDisputed, isCancelable, t]);
+  }, [stage, daysRemaining, userRole, isDisputed, isRulingAwaitingAcceptance, isCancelable, t]);
 
   const escrowText = useMemo(() => {
     if (stage !== 'ESCROWED') return null;
@@ -145,10 +152,13 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
         })
       : null;
 
-  const disputedModeratorNote =
-    isDisputed && isModerated && moderatorName
-      ? t('trust.protection.disputedModeratorAssigned', { moderator: moderatorName })
-      : null;
+  const disputedModeratorNote = useMemo(() => {
+    if (!isDisputed || !isModerated || !moderatorName) return null;
+    if (isRulingAwaitingAcceptance) {
+      return t('trust.protection.disputeRulingIssuedModeratorNote', { moderator: moderatorName });
+    }
+    return t('trust.protection.disputedModeratorAssigned', { moderator: moderatorName });
+  }, [isDisputed, isModerated, isRulingAwaitingAcceptance, moderatorName, t]);
 
   const hasContent =
     countdownText ||
@@ -162,9 +172,23 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
 
   if (!hasContent && !isDisputed) return null;
 
-  const Icon = isDisputed ? AlertTriangle : protectionLevel === 'full' ? ShieldCheck : Shield;
-  const iconColor = isDisputed ? 'text-warning' : 'text-primary';
-  const bgStyle = isDisputed ? 'bg-warning/8 border-warning/20' : 'bg-primary/5 border-primary/15';
+  const Icon = isRulingAwaitingAcceptance
+    ? Scale
+    : isDisputed
+      ? AlertTriangle
+      : protectionLevel === 'full'
+        ? ShieldCheck
+        : Shield;
+  const iconColor = isRulingAwaitingAcceptance
+    ? 'text-primary'
+    : isDisputed
+      ? 'text-warning'
+      : 'text-primary';
+  const bgStyle = isRulingAwaitingAcceptance
+    ? 'bg-primary/8 border-primary/20'
+    : isDisputed
+      ? 'bg-warning/8 border-warning/20'
+      : 'bg-primary/5 border-primary/15';
 
   const hasActions =
     stage === 'PROTECTION_PERIOD' &&
@@ -209,10 +233,19 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
               <p
                 className={cn(
                   'text-sm font-medium',
-                  isDisputed ? 'text-warning' : 'text-foreground'
+                  isRulingAwaitingAcceptance
+                    ? 'text-primary'
+                    : isDisputed
+                      ? 'text-warning'
+                      : 'text-foreground'
                 )}
               >
                 {countdownText}
+              </p>
+            )}
+            {isRulingAwaitingAcceptance && (
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                {t('trust.protection.disputeRulingIssuedDesc')}
               </p>
             )}
             {autoCompleteText && (

@@ -4,8 +4,10 @@ import React from 'react';
 
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
+  const disputeRuling = await import('@mobazha/core/utils/disputeRulingDisplay');
   return {
     ...actual,
+    ...disputeRuling,
     useI18n: () => ({
       t: (key: string) => key,
     }),
@@ -21,12 +23,14 @@ vi.mock('@/components/Order', () => ({
     pricingAmount?: string;
     pricingCurrency?: string;
     stageVariant?: string;
+    breakdownLines?: Array<{ label: string; amount: string }>;
   }) => (
     <div
       data-testid="complete-card"
       data-stage={props.stageVariant}
       data-pricing-amount={props.pricingAmount ?? ''}
       data-pricing-currency={props.pricingCurrency ?? ''}
+      data-breakdown-count={props.breakdownLines?.length ?? 0}
     >
       <span>{props.title || 'order.stages.complete'}</span>
       <span>{props.txHash}</span>
@@ -288,5 +292,40 @@ describe('OrderTimelineCard', () => {
     expect(completeCards[0]).toHaveTextContent('2026-06-01T15:26:59Z');
     expect(completeCards[1]).toHaveTextContent('order.timeline.orderPlaced');
     expect(completeCards[1]).toHaveTextContent('2026-06-01T14:26:13Z');
+  });
+
+  it('omits dispute ruling breakdown when dispute archive card is shown on completed orders', () => {
+    render(
+      <OrderTimelineCard
+        displayOrder={makeOrder({
+          status: 'completed',
+          dispute: {
+            id: 'd1',
+            claim: 'test dispute',
+            status: 'resolved',
+            initiator: 'buyer',
+            resolution: 'split',
+            buyerPayoutPercent: 59,
+            vendorPayoutPercent: 41,
+            buyerPayoutAmount: '0.009236 ETH',
+            vendorPayoutAmount: '0.006157 ETH',
+            moderatorPayoutAmount: '0.0001555 ETH',
+            resolvedAt: '2026-06-03T15:50:59Z',
+          },
+          settlementBreakdown: {
+            source: 'settlement_action',
+            currency: 'ETH',
+            txHash: '0x44ec455388ba',
+          },
+        })}
+      />
+    );
+
+    const rulingCard = screen
+      .getAllByTestId('complete-card')
+      .find(card => card.textContent?.includes('order.timeline.disputeRulingIssued'));
+    expect(rulingCard).toBeDefined();
+    expect(rulingCard).toHaveAttribute('data-breakdown-count', '0');
+    expect(rulingCard).toHaveTextContent('0x44ec455388ba');
   });
 });

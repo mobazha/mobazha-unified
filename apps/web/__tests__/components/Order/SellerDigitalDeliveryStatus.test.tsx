@@ -2,19 +2,30 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SellerDigitalDeliveryStatus } from '@/components/Order/SellerDigitalDeliveryStatus';
 
-vi.mock('@mobazha/core', () => ({
-  useI18n: () => ({
-    t: (key: string, opts?: { defaultValue?: string }) => opts?.defaultValue ?? key,
-  }),
-  digitalAssetsApi: {
-    listAssets: vi.fn().mockResolvedValue([]),
-    listLicenseKeys: vi.fn().mockResolvedValue([]),
-  },
-}));
-
 vi.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
+
+vi.mock('@mobazha/core', async () => {
+  const [actual, disputeDisplay] = await Promise.all([
+    vi.importActual<typeof import('@mobazha/core')>('@mobazha/core'),
+    vi.importActual<typeof import('@mobazha/core/utils/disputeRulingDisplay')>(
+      '@mobazha/core/utils/disputeRulingDisplay'
+    ),
+  ]);
+
+  return {
+    ...(actual as Record<string, unknown>),
+    ...(disputeDisplay as Record<string, unknown>),
+    useI18n: () => ({
+      t: (key: string, opts?: { defaultValue?: string }) => opts?.defaultValue ?? key,
+    }),
+    digitalAssetsApi: {
+      listAssets: vi.fn().mockResolvedValue([]),
+      listLicenseKeys: vi.fn().mockResolvedValue([]),
+    },
+  };
+});
 
 const baseProps = {
   isDigitalOrder: true,
@@ -99,5 +110,19 @@ describe('SellerDigitalDeliveryStatus', () => {
     expect(
       screen.queryByRole('button', { name: 'order.actions.retryDigitalDelivery' })
     ).not.toBeInTheDocument();
+  });
+
+  it('hides stale pending banner on completed orders after dispute resolution', () => {
+    const { container } = render(
+      <SellerDigitalDeliveryStatus
+        {...baseProps}
+        hasPreconfiguredAssets
+        status="pending"
+        orderStatus="completed"
+        disputePhase="resolved"
+      />
+    );
+
+    expect(container.firstChild).toBeNull();
   });
 });

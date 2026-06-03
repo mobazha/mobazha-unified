@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { useI18n, type DisplayDispute } from '@mobazha/core';
+import { useI18n, type DisplayDispute, getDisputeResolutionHeadline } from '@mobazha/core';
 import { CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,17 +27,12 @@ export const DisputeResolutionBar = memo(function DisputeResolutionBar({
   const { t } = useI18n();
   const isResolved = dispute.status === 'resolved' || !!dispute.resolution;
 
-  const resolutionLabel =
-    dispute.resolution === 'buyer'
-      ? t('order.disputeOverview.resolvedFavor', { party: t('order.buyer') })
-      : dispute.resolution === 'seller'
-        ? t('order.disputeOverview.resolvedFavor', { party: t('order.seller') })
-        : dispute.resolution === 'split'
-          ? t('order.disputeOverview.resolvedSplit')
-          : null;
+  const resolutionLabel = getDisputeResolutionHeadline(dispute, t);
 
   const resolvedSubtext =
-    resolutionLabel ?? (isResolved ? t('order.disputeOverview.resolutionUnknown') : null);
+    resolutionLabel ??
+    dispute.resolutionText ??
+    (isResolved ? t('order.disputeOverview.resolutionUnknown') : null);
 
   const wrapperClass =
     variant === 'sticky'
