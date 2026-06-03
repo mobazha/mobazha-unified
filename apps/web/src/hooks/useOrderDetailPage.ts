@@ -485,6 +485,7 @@ export function useOrderDetailPage(
   });
 
   const [deliveryStatusVersion, setDeliveryStatusVersion] = useState(0);
+  const digitalDeliveryOrderStateRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!isSellerDigitalOrder) {
@@ -524,6 +525,24 @@ export function useOrderDetailPage(
       cancelled = true;
     };
   }, [isSellerDigitalOrder, orderId, t, deliveryStatusVersion]);
+
+  useEffect(() => {
+    const nextOrderState = coreOrder?.state;
+    if (!isSellerDigitalOrder) {
+      digitalDeliveryOrderStateRef.current = nextOrderState;
+      return;
+    }
+    if (!nextOrderState) {
+      return;
+    }
+    if (
+      digitalDeliveryOrderStateRef.current &&
+      digitalDeliveryOrderStateRef.current !== nextOrderState
+    ) {
+      setDeliveryStatusVersion(v => v + 1);
+    }
+    digitalDeliveryOrderStateRef.current = nextOrderState;
+  }, [coreOrder?.state, isSellerDigitalOrder]);
 
   useEffect(() => {
     if (!isSellerDigitalOrder) return;
