@@ -188,6 +188,27 @@ export function useOrderDetailPage(
     };
   }, [latestSettlementAction?.actionId, latestSettlementAction?.state, refetch]);
 
+  // Seller fallback: poll for buyer rating when WS notification is missed
+  useEffect(() => {
+    if (displayOrder?.userRole !== 'seller') return;
+    if (displayOrder?.status !== 'completed') return;
+    if (displayOrder?.buyerRating) return;
+
+    let attempts = 0;
+    const maxAttempts = 20;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      refetch();
+      if (attempts >= maxAttempts) {
+        window.clearInterval(timer);
+      }
+    }, 15000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [displayOrder?.buyerRating, displayOrder?.status, displayOrder?.userRole, refetch]);
+
   // --- Computed ---
 
   const paymentCoin =

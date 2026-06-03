@@ -17,6 +17,7 @@ export type OrderNotificationType =
   | 'order.refunded'
   | 'order.shipped'
   | 'order.completed'
+  | 'order.rated'
   | 'order.vendor_finalized'
   | 'order.stale_warning'
   | 'order.expired';
@@ -238,6 +239,7 @@ export const ORDER_NOTIFICATION_TYPES: OrderNotificationType[] = [
   'order.refunded',
   'order.shipped',
   'order.completed',
+  'order.rated',
   'order.vendor_finalized',
   'order.stale_warning',
   'order.expired',
@@ -371,6 +373,7 @@ export function eventTypeToSoundType(eventType: NotificationEventType): SoundNot
     case 'order.vendor_finalized':
       return 'dispute';
     case 'order.completed':
+    case 'order.rated':
     case 'order.shipped':
       return 'order_complete';
     default:

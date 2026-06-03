@@ -137,6 +137,11 @@ function getOrderNotificationDisplay(
       text = i18n.t('notifications.order.completedOrder');
       break;
 
+    case 'order.rated':
+      name = buyerName;
+      text = i18n.t('notifications.order.ratedOrder');
+      break;
+
     case 'order.vendor_finalized':
       name = vendorName;
       text = i18n.t('notifications.dispute.claimedPayment');
@@ -391,6 +396,7 @@ class NotificationService {
     'order.refunded',
     'order.shipped',
     'order.completed',
+    'order.rated',
     'order.vendor_finalized',
     'dispute.opened',
     'dispute.closed',

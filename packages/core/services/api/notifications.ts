@@ -83,7 +83,7 @@ export type NotificationFilter = 'all' | 'orders' | 'followers';
 export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
   all: '',
   orders:
-    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.shipped,order.completed,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
+    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.shipped,order.completed,order.rated,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
   followers: 'social.follow,social.moderator_add,social.moderator_remove',
 };
 
@@ -250,6 +250,8 @@ function generateNotificationTitle(
       return t('notifications.titles.orderShipped');
     case 'order.completed':
       return t('notifications.titles.orderCompleted');
+    case 'order.rated':
+      return t('notifications.titles.orderRated');
     case 'order.vendor_finalized':
       return t('notifications.titles.paymentFinalized');
     case 'dispute.opened':
@@ -329,6 +331,10 @@ function generateNotificationMessage(
       return orderId
         ? t('notifications.messages.orderCompleteWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderCompleteNoId');
+    case 'order.rated':
+      return orderId
+        ? t('notifications.messages.orderRatedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderRatedNoId');
     case 'order.vendor_finalized':
       return orderId
         ? t('notifications.messages.paymentFinalizedWithId', { orderId: shortOrderId })
