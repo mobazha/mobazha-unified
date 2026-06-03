@@ -49,6 +49,8 @@ export interface ReviewSubmitData {
   imageHashes?: string[];
 }
 
+export type CompletePhase = 'idle' | 'confirming' | 'releasing' | 'completing' | 'syncing-rating';
+
 export interface UseOrderDetailPageReturn {
   displayOrder: ReturnType<typeof useOrderDetail>['displayOrder'];
   coreOrder: ReturnType<typeof useOrderDetail>['coreOrder'];
@@ -63,15 +65,22 @@ export interface UseOrderDetailPageReturn {
 
   isActionLoading: boolean;
   isTransitioning: boolean;
+  completePhase: CompletePhase;
+  isModeratedOrder: boolean;
   executeConfirmAction: (
     actionType: OrderConfirmType,
     refundParams?: { amount?: number; currency?: string; reason?: string }
   ) => Promise<boolean>;
 
+  showConfirmReceiptDialog: boolean;
+  openConfirmReceiptDialog: () => void;
+  closeConfirmReceiptDialog: () => void;
+  confirmReceipt: () => Promise<void>;
+
   showReviewDialog: boolean;
+  openReviewDialog: () => void;
   reviewProductTitle: string;
-  submitReviewAndComplete: (data: ReviewSubmitData) => Promise<void>;
-  skipReviewAndComplete: () => Promise<void>;
+  submitRating: (data: ReviewSubmitData) => Promise<void>;
   closeReviewDialog: () => void;
 
   copyOrderId: () => Promise<void>;
@@ -129,6 +138,8 @@ export function useOrderDetailPage(
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [showConfirmReceiptDialog, setShowConfirmReceiptDialog] = useState(false);
+  const [completePhase, setCompletePhase] = useState<CompletePhase>('idle');
 
   // Clear transitioning state when order state actually changes
   const orderStateRef = useRef(coreOrder?.state);
@@ -185,6 +196,15 @@ export function useOrderDetailPage(
     return !displayOrder?.fiatPayment && supportsBackendSettlementActionSurface(paymentCoin);
   }, [displayOrder?.fiatPayment, paymentCoin]);
 
+  const isModeratedOrder = useMemo(
+    () =>
+      !!displayOrder &&
+      (displayOrder.isModerated ||
+        !!displayOrder.moderator ||
+        displayOrder.protection?.protectionLevel === 'full'),
+    [displayOrder]
+  );
+
   const counterparty = useMemo((): {
     peerID?: string;
     name?: string;
@@ -200,18 +220,164 @@ export function useOrderDetailPage(
 
   const { execute: executeOrderAction } = useOrderAction();
 
+  const clearCompletePhaseTimers = useCallback((timers: number[]) => {
+    timers.forEach(timer => window.clearTimeout(timer));
+  }, []);
+
+  const startCompletePhaseProgress = useCallback(
+    (options: {
+      moderated: boolean;
+      rateOnly: boolean;
+      deferCompletingUntilReleaseDone?: boolean;
+    }) => {
+      const timers: number[] = [];
+      const { moderated, rateOnly, deferCompletingUntilReleaseDone = false } = options;
+
+      if (rateOnly) {
+        setCompletePhase('syncing-rating');
+        return timers;
+      }
+
+      setCompletePhase('confirming');
+
+      if (moderated) {
+        timers.push(
+          window.setTimeout(() => {
+            setCompletePhase(current => (current === 'idle' ? current : 'releasing'));
+          }, 400) as unknown as number
+        );
+        if (!deferCompletingUntilReleaseDone) {
+          timers.push(
+            window.setTimeout(() => {
+              setCompletePhase(current =>
+                current === 'releasing' || current === 'confirming' ? 'completing' : current
+              );
+            }, 3500) as unknown as number
+          );
+        }
+      } else {
+        timers.push(
+          window.setTimeout(() => {
+            setCompletePhase(current => (current === 'idle' ? current : 'completing'));
+          }, 600) as unknown as number
+        );
+      }
+
+      return timers;
+    },
+    []
+  );
+
   const reviewProductTitle = useMemo(() => {
     const orderData = coreOrder as OrderContractData | null;
     const listings = orderData?.contract?.orderOpen?.listings || [];
     return listings[0]?.listing?.slug || '';
   }, [coreOrder]);
 
-  const doCompleteOrder = useCallback(
-    async (reviewData?: ReviewSubmitData) => {
+  const buildRatings = useCallback(
+    (reviewData: ReviewSubmitData) => {
+      const orderData = coreOrder as OrderContractData | null;
+      const listings = orderData?.contract?.orderOpen?.listings || [];
+      return listings.map((item: { listing?: { slug?: string } }) => ({
+        slug: item.listing?.slug || '',
+        overall: reviewData.overall || 5,
+        review: reviewData.review || '',
+        imageHashes: reviewData.imageHashes,
+      }));
+    },
+    [coreOrder]
+  );
+
+  const confirmReceipt = useCallback(async () => {
+    setIsActionLoading(true);
+
+    const onSuccess = (title: string, desc: string) => {
+      setIsTransitioning(true);
+      toast({ title, description: desc });
+      setTimeout(() => refetch(), 500);
+    };
+    const onError = (err: Error) => {
+      toast({
+        title: t('order.actions.error'),
+        description: err.message,
+        variant: 'destructive',
+      });
+    };
+
+    const usesBackendSettlementComplete = canAttemptBackendSettlementAction && isModeratedOrder;
+
+    const phaseTimers = startCompletePhaseProgress({
+      moderated: isModeratedOrder,
+      rateOnly: false,
+      deferCompletingUntilReleaseDone: usesBackendSettlementComplete,
+    });
+
+    let succeeded = false;
+
+    try {
+      await executeOrderAction({
+        executeBackendSettlementAction: async () => {
+          const settlement = await ordersApi.executeSettlementAction({
+            orderID: orderId,
+            action: 'complete',
+          });
+          let resolved = settlement;
+          if (settlement.mode === 'submitted' && settlement.actionId && !settlement.txHash) {
+            resolved = await ordersApi.awaitSettlementActionTxHash({
+              orderID: orderId,
+              action: 'complete',
+              actionId: settlement.actionId,
+            });
+          }
+          if (usesBackendSettlementComplete) {
+            setCompletePhase('completing');
+          }
+          return resolved;
+        },
+        attemptBackendSettlementAction: usesBackendSettlementComplete,
+        executeAction: txID => ordersApi.completeOrder({ orderID: orderId, txID }),
+        onSuccess: () => {
+          succeeded = true;
+          onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc'));
+        },
+        onError,
+      });
+    } catch {
+      // useOrderAction already surfaces the error via onError; keep the dialog open.
+    } finally {
+      clearCompletePhaseTimers(phaseTimers);
+      setCompletePhase('idle');
+      setIsActionLoading(false);
+      if (succeeded) {
+        setShowConfirmReceiptDialog(false);
+      }
+    }
+  }, [
+    clearCompletePhaseTimers,
+    executeOrderAction,
+    canAttemptBackendSettlementAction,
+    isModeratedOrder,
+    orderId,
+    refetch,
+    startCompletePhaseProgress,
+    t,
+    toast,
+  ]);
+
+  const submitRating = useCallback(
+    async (reviewData: ReviewSubmitData) => {
+      if (displayOrder?.status !== 'completed') {
+        toast({
+          title: t('order.actions.error'),
+          description: t('order.actions.operationFailed'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
       setIsActionLoading(true);
 
       const onSuccess = (title: string, desc: string) => {
-        setIsTransitioning(true);
         toast({ title, description: desc });
         setTimeout(() => refetch(), 500);
       };
@@ -223,58 +389,62 @@ export function useOrderDetailPage(
         });
       };
 
+      const phaseTimers = startCompletePhaseProgress({
+        moderated: false,
+        rateOnly: true,
+      });
+
+      let succeeded = false;
+
       try {
-        const orderData = coreOrder as OrderContractData | null;
-        const listings = orderData?.contract?.orderOpen?.listings || [];
-        const overall = reviewData?.overall || 5;
-        const reviewText = reviewData?.review || '';
-        const anonymous = reviewData?.anonymous || false;
-
-        const imageHashes = reviewData?.imageHashes;
-        const ratings = listings.map((item: { listing?: { slug?: string } }) => ({
-          slug: item.listing?.slug || '',
-          overall,
-          review: reviewText,
-          imageHashes,
-        }));
-
-        const isAlreadyCompleted = displayOrder?.status === 'completed';
-
-        if (isAlreadyCompleted && reviewData) {
-          await ordersApi.rateOrder({ orderID: orderId, ratings, anonymous });
-          onSuccess(t('order.actions.rateSuccess'), t('order.actions.rateSuccessDesc'));
-        } else {
-          await executeOrderAction({
-            executeAction: () => ordersApi.completeOrder({ orderID: orderId, ratings, anonymous }),
-            onSuccess: () =>
-              onSuccess(t('order.actions.completeSuccess'), t('order.actions.completeSuccessDesc')),
-            onError,
-          });
-        }
+        const ratings = buildRatings(reviewData);
+        await ordersApi.rateOrder({
+          orderID: orderId,
+          ratings,
+          anonymous: reviewData.anonymous,
+        });
+        succeeded = true;
+        onSuccess(t('order.actions.rateSuccess'), t('order.actions.rateSuccessDesc'));
       } catch (err) {
         onError(err instanceof Error ? err : new Error(String(err)));
       } finally {
+        clearCompletePhaseTimers(phaseTimers);
+        setCompletePhase('idle');
         setIsActionLoading(false);
-        setShowReviewDialog(false);
+        if (succeeded) {
+          setShowReviewDialog(false);
+        }
       }
     },
-    [coreOrder, displayOrder, executeOrderAction, orderId, refetch, t, toast]
+    [
+      buildRatings,
+      clearCompletePhaseTimers,
+      displayOrder?.status,
+      orderId,
+      refetch,
+      startCompletePhaseProgress,
+      t,
+      toast,
+    ]
   );
 
-  const submitReviewAndComplete = useCallback(
-    async (data: { overall: number; review: string; anonymous: boolean }) => {
-      await doCompleteOrder(data);
-    },
-    [doCompleteOrder]
-  );
+  const openConfirmReceiptDialog = useCallback(() => {
+    setShowConfirmReceiptDialog(true);
+  }, []);
 
-  const skipReviewAndComplete = useCallback(async () => {
-    await doCompleteOrder();
-  }, [doCompleteOrder]);
+  const closeConfirmReceiptDialog = useCallback(() => {
+    if (isActionLoading) return;
+    setShowConfirmReceiptDialog(false);
+  }, [isActionLoading]);
+
+  const openReviewDialog = useCallback(() => {
+    setShowReviewDialog(true);
+  }, []);
 
   const closeReviewDialog = useCallback(() => {
+    if (isActionLoading) return;
     setShowReviewDialog(false);
-  }, []);
+  }, [isActionLoading]);
 
   const executeConfirmAction = useCallback(
     async (
@@ -374,9 +544,6 @@ export function useOrderDetailPage(
               onError,
             });
             break;
-          case 'complete':
-            setShowReviewDialog(true);
-            return true;
         }
       } catch {
         // Unexpected error not handled by onError
@@ -718,11 +885,17 @@ export function useOrderDetailPage(
     counterparty,
     isActionLoading,
     isTransitioning,
+    completePhase,
+    isModeratedOrder,
     executeConfirmAction,
+    showConfirmReceiptDialog,
+    openConfirmReceiptDialog,
+    closeConfirmReceiptDialog,
+    confirmReceipt,
     showReviewDialog,
+    openReviewDialog,
     reviewProductTitle,
-    submitReviewAndComplete,
-    skipReviewAndComplete,
+    submitRating,
     closeReviewDialog,
     copyOrderId,
     copyContract,

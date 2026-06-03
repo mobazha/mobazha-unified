@@ -39,6 +39,7 @@ import {
   OrderConfirmDialog,
   OrderRating,
   WriteReviewDialog,
+  ConfirmReceiptDialog,
   SellerDigitalDeliveryStatus,
   OrderShipment,
   getDigitalDeliveryTimestamp,
@@ -158,11 +159,17 @@ export function OrderDetailMobile({
     counterparty,
     isActionLoading,
     isTransitioning,
+    completePhase,
+    isModeratedOrder,
     executeConfirmAction,
+    showConfirmReceiptDialog,
+    openConfirmReceiptDialog,
+    closeConfirmReceiptDialog,
+    confirmReceipt,
     showReviewDialog,
+    openReviewDialog,
     reviewProductTitle,
-    submitReviewAndComplete,
-    skipReviewAndComplete,
+    submitRating,
     closeReviewDialog,
     copyOrderId,
     copyContract,
@@ -318,15 +325,6 @@ export function OrderDetailMobile({
     );
   }, [displayOrder]);
 
-  const isModeratedOrder = useMemo(
-    () =>
-      !!displayOrder &&
-      (displayOrder.isModerated ||
-        !!displayOrder.moderator ||
-        displayOrder.protection?.protectionLevel === 'full'),
-    [displayOrder]
-  );
-
   const canOpenModeratedDispute = useMemo(
     () =>
       !!displayOrder &&
@@ -392,7 +390,7 @@ export function OrderDetailMobile({
           setConfirmDialog('cancel');
           break;
         case 'Complete':
-          executeConfirmAction('complete');
+          openConfirmReceiptDialog();
           break;
         case 'Accept':
           setShowAcceptDialog(true);
@@ -473,14 +471,15 @@ export function OrderDetailMobile({
           setShowDisputeModal(true);
           break;
         case 'WriteReview':
-          executeConfirmAction('complete');
+          openReviewDialog();
           break;
       }
     },
     [
       router,
       orderId,
-      executeConfirmAction,
+      openConfirmReceiptDialog,
+      openReviewDialog,
       displayOrder,
       sellerDigitalDelivery,
       shouldBlockAutoRefund,
@@ -1048,7 +1047,7 @@ export function OrderDetailMobile({
 
               {showRatingInvite && (
                 <RatingInviteBanner
-                  onWriteReview={() => executeConfirmAction('complete')}
+                  onWriteReview={openReviewDialog}
                   onReportIssue={
                     displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
                       ? () => {
@@ -1211,7 +1210,9 @@ export function OrderDetailMobile({
         activeTab === 'details' &&
         coreOrder &&
         !tgMainButtonActive &&
-        !showRatingInvite && (
+        !showRatingInvite &&
+        !showReviewDialog &&
+        !showConfirmReceiptDialog && (
           <OrderActionSheet
             orderState={coreOrder.state || 'PENDING'}
             userRole={displayOrder.userRole as CoreUserRole}
@@ -1281,19 +1282,27 @@ export function OrderDetailMobile({
         onCopy={copyContract}
       />
 
+      <ConfirmReceiptDialog
+        open={showConfirmReceiptDialog}
+        onOpenChange={open => !open && closeConfirmReceiptDialog()}
+        onConfirm={() => void confirmReceipt()}
+        isLoading={isActionLoading}
+        completePhase={completePhase}
+        isModerated={isModeratedOrder}
+      />
+
       <WriteReviewDialog
         open={showReviewDialog}
         productTitle={reviewProductTitle}
         onSubmit={async data => {
-          await submitReviewAndComplete(data);
+          await submitRating(data);
           haptic.success();
         }}
-        onSkip={async () => {
-          await skipReviewAndComplete();
-          haptic.success();
-        }}
+        onSkip={closeReviewDialog}
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
+        completePhase={completePhase}
+        isRateOnly
         isMobile
       />
 

@@ -59,6 +59,8 @@ export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDi
 
 // Review
 export { WriteReviewDialog } from './WriteReviewDialog';
+export { ConfirmReceiptDialog } from './ConfirmReceiptDialog';
+export type { ConfirmReceiptDialogProps } from './ConfirmReceiptDialog';
 export { OrderRating } from './OrderRating';
 export type { OrderRatingProps, RatingData, ReviewerInfo } from './OrderRating';
 

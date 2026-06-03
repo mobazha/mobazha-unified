@@ -884,6 +884,7 @@ export const zh: PartialTranslationResource = {
     message: '消息',
     confirmReceipt: '确认收货',
     confirmingReceipt: '处理中...',
+    releasingFunds: '释放托管资金中…',
     openDispute: '订单争议',
     disputeTimeoutHint:
       '可以在 {{blocksRemaining}} 区块 或者大约 {{timeRemaining}} 内对该订单开立争议。',
@@ -1012,6 +1013,7 @@ export const zh: PartialTranslationResource = {
       shipSuccessDesc: '订单已标记为已发货，买家将收到通知。',
       completeSuccess: '订单已完成',
       completeSuccessDesc: '订单已完成，资金已释放给卖家。',
+      releasingFunds: '释放托管资金中…',
       rateSuccess: '评价已提交',
       rateSuccessDesc: '您的评价已成功提交。',
       walletRequired: '需要连接钱包',
@@ -1095,6 +1097,7 @@ export const zh: PartialTranslationResource = {
       completeOrder: {
         title: '确认收货',
         description: '确定要确认收货吗？确认后资金将释放给卖家，订单将标记为完成。',
+        moderatedDescription: '确认收货后将释放买家保障资金给卖家，可能需要几十秒，请稍候。',
       },
     },
     fiatRefund: {
@@ -1111,6 +1114,13 @@ export const zh: PartialTranslationResource = {
         fraudulent: '欺诈交易',
       },
     },
+    complete: {
+      phase: {
+        releasing: '正在释放买家保障资金…',
+        completing: '正在完成订单…',
+        syncingRating: '正在同步评价…',
+      },
+    },
     review: {
       title: '留下评价',
       rateExperience: '体验如何？',
@@ -1118,6 +1128,8 @@ export const zh: PartialTranslationResource = {
       reviewPlaceholder: '分享您对这个商品的体验...',
       anonymous: '匿名发布',
       submit: '提交评价',
+      submitAndRelease: '确认收货并释放资金',
+      releaseHint: '确认收货后将释放托管资金给卖家，可能需要几十秒。',
       skip: '暂时跳过',
       confirmTitle: '确认收货并评价',
       confirmDesc: '确认完成前是否要留下评价？',

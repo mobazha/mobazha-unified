@@ -965,6 +965,7 @@ export const en: TranslationResource = {
     message: 'Message',
     confirmReceipt: 'Confirm Receipt',
     confirmingReceipt: 'Processing...',
+    releasingFunds: 'Releasing escrow funds...',
     openDispute: 'Open Dispute',
     disputeTimeoutHint:
       'This order can be disputed for {{blocksRemaining}} blocks or approximately {{timeRemaining}}.',
@@ -1108,6 +1109,7 @@ export const en: TranslationResource = {
       shipSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
       completeSuccess: 'Order Completed',
       completeSuccessDesc: 'The order has been completed. Funds have been released to the seller.',
+      releasingFunds: 'Releasing escrow funds...',
       rateSuccess: 'Review Submitted',
       rateSuccessDesc: 'Your review has been submitted successfully.',
       walletRequired: 'Wallet Required',
@@ -1206,6 +1208,8 @@ export const en: TranslationResource = {
         title: 'Confirm Receipt',
         description:
           'Are you sure you want to confirm receipt of this order? This will release the funds to the seller and mark the order as complete.',
+        moderatedDescription:
+          'Confirming receipt releases buyer protection funds to the seller. This may take up to a minute.',
       },
     },
     // Fiat refund dialog
@@ -1225,6 +1229,13 @@ export const en: TranslationResource = {
       },
     },
     // Write review
+    complete: {
+      phase: {
+        releasing: 'Releasing buyer protection funds...',
+        completing: 'Completing order...',
+        syncingRating: 'Syncing your review...',
+      },
+    },
     review: {
       title: 'Leave a Review',
       rateExperience: 'How was your experience?',
@@ -1232,6 +1243,9 @@ export const en: TranslationResource = {
       reviewPlaceholder: 'Share your experience with this product...',
       anonymous: 'Post anonymously',
       submit: 'Submit Review',
+      submitAndRelease: 'Confirm receipt & release funds',
+      releaseHint:
+        'Confirming receipt releases escrow funds to the seller. This may take up to a minute.',
       skip: 'Rate Later',
       confirmTitle: 'Confirm Receipt & Review',
       confirmDesc: 'Would you like to leave a review before completing this order?',

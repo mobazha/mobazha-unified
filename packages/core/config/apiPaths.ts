@@ -88,8 +88,14 @@ export const NODE_API = {
   ORDER_SPEND: (orderId: string) => `/orders/${orderId}/spend`,
   ORDER_PAYMENT_REMAINING: (orderId: string) => `/orders/${orderId}/payment/remaining`,
   /** Backend settlement: `action` is `confirm` or `cancel` (POST body optional addresses). */
-  ORDER_SETTLEMENT_ACTION: (orderId: string, action: 'confirm' | 'cancel') =>
+  ORDER_SETTLEMENT_ACTION: (orderId: string, action: 'confirm' | 'cancel' | 'complete') =>
     `/orders/${orderId}/settlement-actions/${action}`,
+  ORDER_SETTLEMENT_ACTION_STATUS: (
+    orderId: string,
+    action: 'confirm' | 'cancel' | 'complete' | 'dispute_release',
+    actionId: string
+  ) =>
+    `/orders/${orderId}/settlement-actions/${action}/status?actionId=${encodeURIComponent(actionId)}`,
 
   // --- Disputes (orderID in URL) ---
   DISPUTE_OPEN: (orderId: string) => `/disputes/${orderId}/open`,

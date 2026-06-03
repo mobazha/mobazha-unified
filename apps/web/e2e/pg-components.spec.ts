@@ -140,27 +140,11 @@ standaloneTest.describe('WriteReviewDialog', () => {
       if (await confirmBtn.isVisible().catch(() => false)) {
         await confirmBtn.click();
 
-        // Review dialog should appear
-        const reviewDialog = page.getByTestId('write-review-dialog');
-        await expect(reviewDialog).toBeVisible({ timeout: 10000 });
-
-        // Star rating buttons should be present
-        for (let i = 1; i <= 5; i++) {
-          const star = page.getByTestId(`star-${i}`);
-          await expect(star).toBeVisible();
-        }
-
-        // Star buttons should be >= 44px touch target
-        const star1 = page.getByTestId('star-1');
-        const box = await star1.boundingBox();
-        expect(box).toBeTruthy();
-        if (box) {
-          expect(box.width).toBeGreaterThanOrEqual(44);
-          expect(box.height).toBeGreaterThanOrEqual(44);
-        }
+        const confirmDialog = page.getByTestId('confirm-receipt-dialog');
+        await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
         await page.screenshot({
-          path: 'test-results/pg-review-dialog.png',
+          path: 'test-results/pg-confirm-receipt-dialog.png',
           fullPage: true,
         });
       }
