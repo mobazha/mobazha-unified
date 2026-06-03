@@ -1090,6 +1090,7 @@ export const ja: PartialTranslationResource = {
       description: '注文の問題を説明してください。モデレーターが確認し、紛争の解決を支援します。',
       placeholder:
         '問題を詳しく説明してください。モデレーターが理解するための関連情報を含めてください。',
+      claimLabel: '問題の説明',
       reasonRequired: '紛争の理由を入力してください',
       warning: '重要',
       warningText:
@@ -1112,8 +1113,20 @@ export const ja: PartialTranslationResource = {
         other: 'その他',
       },
       addEvidence: '証拠画像を追加',
+      removeEvidence: '証拠画像 {{index}} を削除',
       evidence: '証拠（任意）',
-      evidenceHint: '最大{{maxImages}}枚、各{{maxSizeMb}}MBまで',
+      evidenceHint:
+        '最大{{maxImages}}枚、各{{maxSizeMb}}MBまで。スクリーンショットがあると審査がスムーズです。',
+      evidenceUploading: '証拠をアップロード中（{{done}}/{{total}}）…',
+      evidenceUploadingStatus: '画像をアップロード中',
+      evidenceUploaded: 'アップロード済み',
+      evidenceUploadItemFailed: 'アップロード失敗',
+      evidenceImageAlt: '証拠画像 {{index}}',
+      waitForEvidenceUpload: 'アップロード完了後に送信できます',
+      evidenceFileRejected:
+        '一部のファイルは追加されませんでした。{{maxSizeMb}}MB以下の画像、最大{{maxImages}}枚まで。',
+      evidenceUploadFailed:
+        '一部の画像のアップロードに失敗しました。削除して再試行するか、テキストのみで提出できます。',
     },
     afterSaleDispute: {
       buyerTitle: 'この注文について問題を報告しました',

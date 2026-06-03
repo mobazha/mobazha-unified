@@ -1098,6 +1098,7 @@ export const ru: PartialTranslationResource = {
         'Опишите проблему с заказом. Модератор рассмотрит ваше дело и поможет разрешить спор.',
       placeholder:
         'Подробно опишите проблему. Укажите информацию, которая поможет модератору разобраться.',
+      claimLabel: 'Описание проблемы',
       reasonRequired: 'Укажите причину спора',
       warning: 'Важно',
       warningText:
@@ -1118,9 +1119,21 @@ export const ru: PartialTranslationResource = {
         qualityIssue: 'Проблема с качеством',
         other: 'Другое',
       },
-      addEvidence: 'Добавить изображение доказательства',
+      addEvidence: 'Добавить изображение',
+      removeEvidence: 'Удалить изображение {{index}}',
       evidence: 'Доказательства (необязательно)',
-      evidenceHint: 'До {{maxImages}} изображений, по {{maxSizeMb}} МБ каждое',
+      evidenceHint:
+        'До {{maxImages}} изображений, по {{maxSizeMb}} МБ. Скриншоты помогают модератору.',
+      evidenceUploading: 'Загрузка доказательств ({{done}}/{{total}})…',
+      evidenceUploadingStatus: 'Загрузка изображения',
+      evidenceUploaded: 'Загружено',
+      evidenceUploadItemFailed: 'Ошибка загрузки',
+      evidenceImageAlt: 'Изображение {{index}}',
+      waitForEvidenceUpload: 'Отправка будет доступна после загрузки',
+      evidenceFileRejected:
+        'Некоторые файлы пропущены. Изображения до {{maxSizeMb}} МБ, не более {{maxImages}}.',
+      evidenceUploadFailed:
+        'Не удалось загрузить некоторые изображения. Удалите их или отправьте только текст.',
     },
     afterSaleDispute: {
       buyerTitle: 'Вы сообщили о проблеме с этим заказом',

@@ -1109,6 +1109,7 @@ export const fr: PartialTranslationResource = {
         'Veuillez décrire le problème avec votre commande. Le modérateur examinera votre dossier et aidera à résoudre le litige.',
       placeholder:
         'Expliquez le problème en détail. Incluez toute information pertinente pour aider le modérateur à comprendre votre cas.',
+      claimLabel: 'Description du problème',
       reasonRequired: 'Veuillez fournir une raison pour le litige',
       warning: 'Important',
       warningText:
@@ -1131,9 +1132,21 @@ export const fr: PartialTranslationResource = {
         qualityIssue: 'Problème de qualité',
         other: 'Autre',
       },
-      addEvidence: 'Add evidence image',
-      evidence: 'Evidence (optional)',
-      evidenceHint: 'Up to {{maxImages}} images, {{maxSizeMb}} MB each',
+      addEvidence: 'Ajouter une image',
+      removeEvidence: "Supprimer l'image {{index}}",
+      evidence: 'Preuves (facultatif)',
+      evidenceHint:
+        "Jusqu'à {{maxImages}} images, {{maxSizeMb}} Mo chacune. Les captures aident le modérateur.",
+      evidenceUploading: 'Envoi des preuves ({{done}}/{{total}})…',
+      evidenceUploadingStatus: 'Envoi de l’image',
+      evidenceUploaded: 'Envoyée',
+      evidenceUploadItemFailed: 'Échec de l’envoi',
+      evidenceImageAlt: 'Image de preuve {{index}}',
+      waitForEvidenceUpload: 'Envoi possible une fois les téléversements terminés',
+      evidenceFileRejected:
+        'Certains fichiers ont été ignorés. Images jusqu’à {{maxSizeMb}} Mo, max. {{maxImages}}.',
+      evidenceUploadFailed:
+        'Certaines images n’ont pas pu être envoyées. Supprimez-les ou soumettez avec le texte seul.',
     },
     afterSaleDispute: {
       buyerTitle: 'Vous avez signalé un problème pour cette commande',

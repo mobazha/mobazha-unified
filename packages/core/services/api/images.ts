@@ -60,11 +60,16 @@ export async function uploadProductImages(images: ImageUploadData[]): Promise<Im
  * @param imageData - 图片数据
  * @returns 上传后的图片哈希
  */
-export async function uploadImage(imageData: ImageUploadData): Promise<Image | null> {
+export async function uploadImage(
+  imageData: ImageUploadData,
+  extraHeaders?: Record<string, string>
+): Promise<Image | null> {
   try {
-    const result = await authPost<Array<Image | MediaFileHashResponse>>(NODE_API.MEDIA_IMAGES, [
-      imageData,
-    ]);
+    const result = await authPost<Array<Image | MediaFileHashResponse>>(
+      NODE_API.MEDIA_IMAGES,
+      [imageData],
+      extraHeaders
+    );
     const first = result?.[0];
     return first ? imageFromUploadResponse(first) : null;
   } catch {

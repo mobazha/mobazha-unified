@@ -1116,6 +1116,7 @@ export const de: PartialTranslationResource = {
         'Bitte beschreiben Sie das Problem mit Ihrer Bestellung. Der Moderator wird Ihren Fall prüfen und bei der Lösung helfen.',
       placeholder:
         'Erklären Sie das Problem im Detail. Fügen Sie relevante Informationen hinzu, die dem Moderator helfen, Ihren Fall zu verstehen.',
+      claimLabel: 'Problembeschreibung',
       reasonRequired: 'Bitte geben Sie einen Grund für den Streitfall an',
       warning: 'Wichtig',
       warningText:
@@ -1138,9 +1139,21 @@ export const de: PartialTranslationResource = {
         qualityIssue: 'Qualitätsproblem',
         other: 'Sonstiges',
       },
-      addEvidence: 'Add evidence image',
-      evidence: 'Evidence (optional)',
-      evidenceHint: 'Up to {{maxImages}} images, {{maxSizeMb}} MB each',
+      addEvidence: 'Beweisfoto hinzufügen',
+      removeEvidence: 'Beweisfoto {{index}} entfernen',
+      evidence: 'Beweise (optional)',
+      evidenceHint:
+        'Bis zu {{maxImages}} Bilder, je max. {{maxSizeMb}} MB. Screenshots helfen dem Moderator.',
+      evidenceUploading: 'Beweise werden hochgeladen ({{done}}/{{total}})…',
+      evidenceUploadingStatus: 'Bild wird hochgeladen',
+      evidenceUploaded: 'Hochgeladen',
+      evidenceUploadItemFailed: 'Upload fehlgeschlagen',
+      evidenceImageAlt: 'Beweisbild {{index}}',
+      waitForEvidenceUpload: 'Absenden nach Abschluss der Uploads möglich',
+      evidenceFileRejected:
+        'Einige Dateien wurden übersprungen. Bilder max. {{maxSizeMb}} MB, höchstens {{maxImages}} Stück.',
+      evidenceUploadFailed:
+        'Einige Bilder konnten nicht hochgeladen werden. Entfernen und erneut versuchen, oder nur mit Text einreichen.',
     },
     afterSaleDispute: {
       buyerTitle: 'Sie haben ein Problem mit dieser Bestellung gemeldet',

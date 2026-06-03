@@ -1083,6 +1083,7 @@ export const ko: PartialTranslationResource = {
       description: '주문 문제를 설명해 주세요. 중재자가 검토하고 분쟁 해결을 도와드립니다.',
       placeholder:
         '문제를 자세히 설명해 주세요. 중재자가 사건을 이해하는 데 도움이 되는 관련 정보를 포함하세요.',
+      claimLabel: '문제 설명',
       reasonRequired: '분쟁 사유를 입력해 주세요',
       warning: '중요',
       warningText:
@@ -1104,8 +1105,20 @@ export const ko: PartialTranslationResource = {
         other: '기타',
       },
       addEvidence: '증거 이미지 추가',
+      removeEvidence: '증거 이미지 {{index}} 삭제',
       evidence: '증거(선택)',
-      evidenceHint: '최대 {{maxImages}}장, 각 {{maxSizeMb}}MB',
+      evidenceHint:
+        '최대 {{maxImages}}장, 각 {{maxSizeMb}}MB. 스크린샷이 있으면 중재자가 더 빨리 확인할 수 있습니다.',
+      evidenceUploading: '증거 업로드 중 ({{done}}/{{total}})…',
+      evidenceUploadingStatus: '이미지 업로드 중',
+      evidenceUploaded: '업로드 완료',
+      evidenceUploadItemFailed: '업로드 실패',
+      evidenceImageAlt: '증거 이미지 {{index}}',
+      waitForEvidenceUpload: '업로드가 끝나면 제출할 수 있습니다',
+      evidenceFileRejected:
+        '일부 파일은 추가되지 않았습니다. {{maxSizeMb}}MB 이하 이미지, 최대 {{maxImages}}장.',
+      evidenceUploadFailed:
+        '일부 이미지 업로드에 실패했습니다. 삭제 후 다시 시도하거나 텍스트만으로 제출할 수 있습니다.',
     },
     afterSaleDispute: {
       buyerTitle: '이 주문에 문제를 신고했습니다',

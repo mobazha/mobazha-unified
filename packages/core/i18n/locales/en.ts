@@ -1376,6 +1376,7 @@ export const en: TranslationResource = {
         'Describe the issue with your order. Opening a dispute will notify the assigned moderator and share the order details needed for review.',
       placeholder:
         'Explain the issue in detail. Include any relevant information that will help the moderator understand your case.',
+      claimLabel: 'Describe the issue',
       reasonRequired: 'Please provide a reason for the dispute',
       warning: 'Important',
       warningText:
@@ -1399,11 +1400,20 @@ export const en: TranslationResource = {
         other: 'Other',
       },
       addEvidence: 'Add evidence image',
-      removeEvidence: 'Remove evidence image',
+      removeEvidence: 'Remove evidence image {{index}}',
       evidence: 'Evidence (optional)',
-      evidenceHint: 'Up to {{maxImages}} images, {{maxSizeMb}} MB each',
+      evidenceHint:
+        'Up to {{maxImages}} images, {{maxSizeMb}} MB each. Screenshots or photos help the moderator review your case.',
+      evidenceUploading: 'Uploading evidence ({{done}}/{{total}})…',
+      evidenceUploadingStatus: 'Uploading image',
+      evidenceUploaded: 'Uploaded',
+      evidenceUploadItemFailed: 'Upload failed',
+      evidenceImageAlt: 'Evidence image {{index}}',
+      waitForEvidenceUpload: 'Submit will unlock when uploads finish',
+      evidenceFileRejected:
+        'Some files were skipped. Use images up to {{maxSizeMb}} MB each (max {{maxImages}} images).',
       evidenceUploadFailed:
-        'One or more images failed to upload. Remove them or try again before submitting.',
+        'Some images failed to upload. Remove them to retry, or submit your dispute with text only.',
     },
     afterSaleDispute: {
       buyerTitle: 'You reported an issue with this order',
