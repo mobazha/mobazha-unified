@@ -16,6 +16,7 @@ export { RatingInviteBanner, type RatingInviteBannerProps } from './RatingInvite
 export { AfterSaleDisputeCard, type AfterSaleDisputeCardProps } from './AfterSaleDisputeCard';
 export { FulfillmentStatusCard } from './FulfillmentStatusCard';
 export { getStatusLabel } from './orderProgressUtils';
+export { DisputeSummaryCard, type DisputeSummaryCardProps } from './DisputeSummaryCard';
 export { DisputeOverviewCard, type DisputeOverviewCardProps } from './DisputeOverviewCard';
 export { DisputeResolutionBar, type DisputeResolutionBarProps } from './DisputeResolutionBar';
 export { DisputeEvidencePanel, type DisputeEvidencePanelProps } from './DisputeEvidencePanel';

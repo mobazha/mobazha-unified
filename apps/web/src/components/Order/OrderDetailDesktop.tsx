@@ -55,6 +55,7 @@ import {
   OrderStatusCard,
   OrderSettlementCard,
   OrderCreatedAtMeta,
+  DisputeSummaryCard,
   DisputeOverviewCard,
   DisputeResolutionBar,
   DisputeEvidencePanel,
@@ -265,6 +266,32 @@ export function OrderDetailDesktop({
     if (!displayOrder?.protection) return null;
     return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
   }, [displayOrder]);
+
+  const hasActiveCryptoDispute = useMemo(
+    () => !!displayOrder?.dispute && displayOrder.status === 'disputed',
+    [displayOrder]
+  );
+
+  const moderatorTabs = useMemo((): Array<'dispute' | 'discussion' | 'evidence'> => {
+    const base: Array<'dispute' | 'discussion' | 'evidence'> = ['dispute', 'discussion'];
+    if ((displayOrder?.dispute?.evidenceHashes?.length ?? 0) > 0) {
+      base.push('evidence');
+    }
+    return base;
+  }, [displayOrder?.dispute?.evidenceHashes]);
+
+  useEffect(() => {
+    if (!displayOrder) return;
+    if (isModeratorDisputeView) {
+      if (!moderatorTabs.includes(activeTab as 'dispute' | 'discussion' | 'evidence')) {
+        handleTabChange('dispute');
+      }
+      return;
+    }
+    if (activeTab === 'dispute' || activeTab === 'evidence') {
+      handleTabChange('summary');
+    }
+  }, [activeTab, displayOrder, handleTabChange, isModeratorDisputeView, moderatorTabs]);
 
   const handleExtendProtection = useCallback(async () => {
     try {
@@ -623,7 +650,7 @@ export function OrderDetailDesktop({
             <div className="border-b border-border mb-4">
               <div className="flex gap-6" role="tablist" aria-label={t('order.tabs.label')}>
                 {(isModeratorDisputeView
-                  ? (['dispute', 'discussion', 'evidence'] as const)
+                  ? moderatorTabs
                   : (['summary', 'discussion'] as const)
                 ).map(tab => (
                   <button
@@ -704,9 +731,12 @@ export function OrderDetailDesktop({
             )}
 
             {/* ─── EVIDENCE TAB (moderator only) ─── */}
-            {isModeratorDisputeView && activeTab === 'evidence' && (
+            {isModeratorDisputeView && activeTab === 'evidence' && displayOrder.dispute && (
               <div role="tabpanel" id="tabpanel-evidence" aria-labelledby="tab-evidence">
-                <DisputeEvidencePanel dispute={displayOrder.dispute!} />
+                <DisputeEvidencePanel
+                  dispute={displayOrder.dispute}
+                  onOpenDiscussion={() => handleTabChange('discussion')}
+                />
               </div>
             )}
 
@@ -739,8 +769,15 @@ export function OrderDetailDesktop({
             {/* ─── STANDARD BUYER/SELLER VIEW ─── */}
             {!isModeratorDisputeView && activeTab === 'summary' && (
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
-                {/* Status context card — gives users clear next-step guidance */}
-                <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                {hasActiveCryptoDispute ? (
+                  <DisputeSummaryCard
+                    displayOrder={displayOrder}
+                    onOpenDiscussion={() => handleTabChange('discussion')}
+                    className="mb-4"
+                  />
+                ) : (
+                  <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                )}
 
                 {!(
                   displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
@@ -825,6 +862,7 @@ export function OrderDetailDesktop({
                 {displayOrder.userRole === 'seller' && (
                   <SellerDigitalDeliveryStatus
                     {...sellerDigitalDelivery}
+                    orderInDispute={hasActiveCryptoDispute}
                     canSyncDelivery={
                       coreOrder?.state === 'AWAITING_SHIPMENT' &&
                       sellerDigitalDelivery.canSyncDelivery
@@ -845,6 +883,7 @@ export function OrderDetailDesktop({
                     orderId={orderId}
                     sellerPeerID={displayOrder.vendor.peerID}
                     deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+                    orderInDispute={hasActiveCryptoDispute}
                     className="mb-4"
                   />
                 )}
@@ -874,12 +913,14 @@ export function OrderDetailDesktop({
 
                 {/* Active crypto dispute banner (only for buyer/seller; moderator sees DisputeOverviewCard) */}
                 <div ref={disputeSectionRef}>
-                  {displayOrder.dispute && displayOrder.userRole !== 'moderator' && (
-                    <OrderDisputeBanner
-                      displayOrder={displayOrder}
-                      onOpenDispute={() => handleOrderAction('Dispute')}
-                    />
-                  )}
+                  {displayOrder.dispute &&
+                    displayOrder.userRole !== 'moderator' &&
+                    !hasActiveCryptoDispute && (
+                      <OrderDisputeBanner
+                        displayOrder={displayOrder}
+                        onOpenDispute={() => handleOrderAction('Dispute')}
+                      />
+                    )}
                 </div>
 
                 <OrderTimelineCard
@@ -989,6 +1030,9 @@ export function OrderDetailDesktop({
             manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
             isTransitioning={isTransitioning}
             onAction={handleOrderAction}
+            onOpenDiscussion={
+              coreOrder?.state === 'DISPUTED' ? () => handleTabChange('discussion') : undefined
+            }
           />
         )}
 

@@ -10,7 +10,6 @@ import {
   getPrimaryAction,
   getSecondaryActions,
   getActionButtonConfig,
-  getTimeRemaining,
   isOrderExpired,
   type OrderAction,
   type UserRole,
@@ -39,6 +38,7 @@ export interface OrderFooterProps {
   manualDigitalFallbackAllowed?: boolean;
   isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
+  onOpenDiscussion?: () => void;
   className?: string;
 }
 
@@ -68,9 +68,34 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   manualDigitalFallbackAllowed = false,
   isTransitioning = false,
   onAction,
+  onOpenDiscussion,
   className = '',
 }) => {
   const { t } = useI18n();
+
+  if (orderState === 'DISPUTED' && onOpenDiscussion) {
+    return (
+      <div
+        className={`fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50 safe-area-inset-bottom ${className}`}
+      >
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+          <HStack justify="between" align="center" className="max-w-screen-xl mx-auto gap-3">
+            <span className="text-xs sm:text-sm font-medium text-warning truncate">
+              {t('order.footer.disputeReviewing')}
+            </span>
+            <Button
+              size="sm"
+              onClick={onOpenDiscussion}
+              className="h-11 sm:h-10 rounded-full font-semibold"
+              data-testid="order-footer-open-discussion"
+            >
+              {t('order.actions.openDiscussion')}
+            </Button>
+          </HStack>
+        </div>
+      </div>
+    );
+  }
 
   // 检查是否过期
   const expired = isOrderExpired(timestamp);
@@ -124,36 +149,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     return labelMap[action] || action;
   };
 
-  // 渲染争议状态倒计时
-  const renderDisputeCountdown = () => {
-    if (orderState === 'DISPUTED') {
-      const remaining = getTimeRemaining(timestamp);
-      return (
-        <div
-          className="flex items-center gap-1.5 text-warning"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="text-sm font-medium">{remaining}</span>
-        </div>
-      );
-    }
-    return null;
-  };
+  const renderDisputeCountdown = () => null;
 
   // 渲染价格信息（仅在 AWAITING_PAYMENT 状态显示）
   const renderPriceInfo = () => {

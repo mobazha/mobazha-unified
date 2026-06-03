@@ -136,12 +136,19 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     return t('trust.protection.afterSaleDesc', { days });
   }, [stage, afterSaleWindowDays, t]);
 
-  const arbitrationTitle = isModerated ? t('trust.protection.arbitrationReady') : null;
-  const arbitrationDesc = isModerated
-    ? t('trust.protection.arbitrationReadyDesc', {
-        moderator: moderatorName || t('order.moderator'),
-      })
-    : null;
+  const arbitrationTitle =
+    isModerated && !isDisputed ? t('trust.protection.arbitrationReady') : null;
+  const arbitrationDesc =
+    isModerated && !isDisputed
+      ? t('trust.protection.arbitrationReadyDesc', {
+          moderator: moderatorName || t('order.moderator'),
+        })
+      : null;
+
+  const disputedModeratorNote =
+    isDisputed && isModerated && moderatorName
+      ? t('trust.protection.disputedModeratorAssigned', { moderator: moderatorName })
+      : null;
 
   const hasContent =
     countdownText ||
@@ -150,7 +157,8 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
     completedText ||
     autoCompleteText ||
     extensionText ||
-    arbitrationTitle;
+    arbitrationTitle ||
+    disputedModeratorNote;
 
   if (!hasContent && !isDisputed) return null;
 
@@ -243,6 +251,11 @@ export const OrderProtectionStatus = memo(function OrderProtectionStatus({
                   </button>
                 )}
               </div>
+            )}
+            {disputedModeratorNote && (
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                {disputedModeratorNote}
+              </p>
             )}
           </div>
           {hasActions && (
