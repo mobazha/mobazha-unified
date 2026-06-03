@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { useI18n, imagesApi } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { VStack } from '@/components/layouts';
 import { StarRating } from '@/components/ui/star-rating';
 import { ImagePlus, X, Loader2 } from 'lucide-react';
+import type { CompletePhase } from '@/hooks/useOrderDetailPage';
 import {
   Sheet,
   SheetContent,
@@ -46,21 +47,119 @@ interface WriteReviewDialogProps {
   onSkip: () => void;
   onClose: () => void;
   isSubmitting?: boolean;
+  completePhase?: CompletePhase;
+  isModerated?: boolean;
+  isRateOnly?: boolean;
   isMobile?: boolean;
+}
+
+function getSubmitButtonLabel(
+  t: ReturnType<typeof useI18n>['t'],
+  options: {
+    isSubmitting: boolean;
+    completePhase: CompletePhase;
+    isModerated: boolean;
+    isRateOnly: boolean;
+  }
+): string {
+  const { isSubmitting, completePhase, isModerated, isRateOnly } = options;
+
+  if (!isSubmitting) {
+    if (isRateOnly) {
+      return t('order.review.submit');
+    }
+    return isModerated ? t('order.review.submitAndRelease') : t('order.review.submit');
+  }
+
+  if (isRateOnly || completePhase === 'syncing-rating') {
+    return t('order.complete.phase.syncingRating');
+  }
+  if (completePhase === 'releasing') {
+    return t('order.complete.phase.releasing');
+  }
+  if (completePhase === 'completing') {
+    return t('order.complete.phase.completing');
+  }
+  if (isModerated) {
+    return t('order.complete.phase.releasing');
+  }
+  return t('order.complete.phase.completing');
+}
+
+function getPhaseHint(
+  t: ReturnType<typeof useI18n>['t'],
+  options: {
+    isSubmitting: boolean;
+    completePhase: CompletePhase;
+    isModerated: boolean;
+    isRateOnly: boolean;
+  }
+): string | null {
+  const { isSubmitting, completePhase, isModerated, isRateOnly } = options;
+  if (!isSubmitting) {
+    return null;
+  }
+  if (isRateOnly || completePhase === 'syncing-rating') {
+    return t('order.complete.phase.syncingRating');
+  }
+  if (completePhase === 'releasing') {
+    return t('order.complete.phase.releasing');
+  }
+  if (completePhase === 'completing') {
+    return t('order.complete.phase.completing');
+  }
+  if (isModerated) {
+    return t('order.complete.phase.releasing');
+  }
+  return t('order.complete.phase.completing');
 }
 
 function ReviewForm({
   productTitle,
   onSubmit,
   onSkip,
-  isSubmitting,
-}: Pick<WriteReviewDialogProps, 'productTitle' | 'onSubmit' | 'onSkip' | 'isSubmitting'>) {
+  isSubmitting = false,
+  completePhase = 'idle',
+  isModerated = false,
+  isRateOnly = false,
+}: Pick<
+  WriteReviewDialogProps,
+  | 'productTitle'
+  | 'onSubmit'
+  | 'onSkip'
+  | 'isSubmitting'
+  | 'completePhase'
+  | 'isModerated'
+  | 'isRateOnly'
+>) {
   const { t } = useI18n();
   const [overall, setOverall] = useState(0);
   const [review, setReview] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [images, setImages] = useState<ReviewImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const submitLabel = useMemo(
+    () =>
+      getSubmitButtonLabel(t, {
+        isSubmitting,
+        completePhase,
+        isModerated,
+        isRateOnly,
+      }),
+    [completePhase, isModerated, isRateOnly, isSubmitting, t]
+  );
+
+  const phaseHint = useMemo(
+    () =>
+      getPhaseHint(t, {
+        isSubmitting,
+        completePhase,
+        isModerated,
+        isRateOnly,
+      }),
+    [completePhase, isModerated, isRateOnly, isSubmitting, t]
+  );
 
   const uploadFile = useCallback(async (file: File): Promise<ReviewImage> => {
     const preview = URL.createObjectURL(file);
@@ -241,6 +340,19 @@ function ReviewForm({
         <span className="text-sm text-muted-foreground">{t('order.review.anonymous')}</span>
       </label>
 
+      {!isSubmitting && isModerated && !isRateOnly && (
+        <p className="text-xs text-muted-foreground text-center">{t('order.review.releaseHint')}</p>
+      )}
+
+      {phaseHint && (
+        <p
+          className="text-xs text-primary text-center animate-in fade-in duration-200"
+          aria-live="polite"
+        >
+          {phaseHint}
+        </p>
+      )}
+
       <div className="flex gap-3 w-full pt-2">
         <Button
           size="lg"
@@ -248,7 +360,8 @@ function ReviewForm({
           onClick={handleSubmit}
           disabled={isSubmitting || anyUploading}
         >
-          {isSubmitting ? t('common.processing') : t('order.review.submit')}
+          {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {submitLabel}
         </Button>
         <Button
           size="lg"
@@ -271,9 +384,22 @@ export function WriteReviewDialog({
   onSkip,
   onClose,
   isSubmitting,
+  completePhase,
+  isModerated,
+  isRateOnly,
   isMobile,
 }: WriteReviewDialogProps) {
   const { t } = useI18n();
+
+  const formProps = {
+    productTitle,
+    onSubmit,
+    onSkip,
+    isSubmitting,
+    completePhase,
+    isModerated,
+    isRateOnly,
+  };
 
   if (isMobile) {
     return (
@@ -286,17 +412,13 @@ export function WriteReviewDialog({
         <SheetContent
           side="bottom"
           className="px-4 pb-8 pt-6 rounded-t-2xl max-h-[85vh] overflow-y-auto"
+          data-testid="write-review-dialog"
         >
           <SheetHeader className="mb-4">
             <SheetTitle className="text-center">{t('order.review.title')}</SheetTitle>
             <SheetDescription className="sr-only">{t('order.review.title')}</SheetDescription>
           </SheetHeader>
-          <ReviewForm
-            productTitle={productTitle}
-            onSubmit={onSubmit}
-            onSkip={onSkip}
-            isSubmitting={isSubmitting}
-          />
+          <ReviewForm {...formProps} />
         </SheetContent>
       </Sheet>
     );
@@ -309,17 +431,12 @@ export function WriteReviewDialog({
         if (!isOpen && !isSubmitting) onClose();
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" data-testid="write-review-dialog">
         <DialogHeader>
           <DialogTitle className="text-center">{t('order.review.title')}</DialogTitle>
           <DialogDescription className="sr-only">{t('order.review.title')}</DialogDescription>
         </DialogHeader>
-        <ReviewForm
-          productTitle={productTitle}
-          onSubmit={onSubmit}
-          onSkip={onSkip}
-          isSubmitting={isSubmitting}
-        />
+        <ReviewForm {...formProps} />
       </DialogContent>
     </Dialog>
   );

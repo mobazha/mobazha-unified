@@ -33,6 +33,7 @@ import {
   OrderConfirmDialog,
   OrderRating,
   WriteReviewDialog,
+  ConfirmReceiptDialog,
   SellerDigitalDeliveryStatus,
   OrderShipment,
   getDigitalDeliveryTimestamp,
@@ -101,11 +102,17 @@ export function OrderDetailDesktop({
     currentUserPeerID,
     isActionLoading,
     isTransitioning,
+    completePhase,
+    isModeratedOrder,
     executeConfirmAction,
+    showConfirmReceiptDialog,
+    openConfirmReceiptDialog,
+    closeConfirmReceiptDialog,
+    confirmReceipt,
     showReviewDialog,
+    openReviewDialog,
     reviewProductTitle,
-    submitReviewAndComplete,
-    skipReviewAndComplete,
+    submitRating,
     closeReviewDialog,
     copyOrderId,
     copyContract,
@@ -242,15 +249,6 @@ export function OrderDetailDesktop({
 
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
 
-  const isModeratedOrder = useMemo(
-    () =>
-      !!displayOrder &&
-      (displayOrder.isModerated ||
-        !!displayOrder.moderator ||
-        displayOrder.protection?.protectionLevel === 'full'),
-    [displayOrder]
-  );
-
   const canOpenModeratedDispute = useMemo(
     () =>
       !!displayOrder &&
@@ -316,7 +314,7 @@ export function OrderDetailDesktop({
           setConfirmDialog('cancel');
           break;
         case 'Complete':
-          executeConfirmAction('complete');
+          openConfirmReceiptDialog();
           break;
         case 'Accept':
           setShowAcceptDialog(true);
@@ -395,14 +393,15 @@ export function OrderDetailDesktop({
           setShowDisputeModal(true);
           break;
         case 'WriteReview':
-          executeConfirmAction('complete');
+          openReviewDialog();
           break;
       }
     },
     [
       router,
       orderId,
-      executeConfirmAction,
+      openConfirmReceiptDialog,
+      openReviewDialog,
       displayOrder,
       sellerDigitalDelivery,
       shouldBlockAutoRefund,
@@ -778,7 +777,7 @@ export function OrderDetailDesktop({
 
                 {showRatingInvite && (
                   <RatingInviteBanner
-                    onWriteReview={() => executeConfirmAction('complete')}
+                    onWriteReview={openReviewDialog}
                     onReportIssue={
                       displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
                         ? () => {
@@ -963,31 +962,35 @@ export function OrderDetailDesktop({
       </main>
 
       {/* Fixed action footer — hidden for moderator dispute view and when RatingInviteBanner takes over */}
-      {!showRatingInvite && !isModeratorDisputeView && activeTab !== 'discussion' && (
-        <OrderFooter
-          orderState={coreOrder?.state || 'PENDING'}
-          userRole={displayOrder.userRole as CoreUserRole}
-          timestamp={displayOrder.createdAt}
-          isModerated={isModeratedOrder}
-          isShipped={coreOrder ? isOrderShipped(coreOrder) : false}
-          paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
-          fundsReleasedAtConfirmation={shouldBlockAutoRefund}
-          totalAmount={displayOrder.total}
-          currency={displayOrder.currency}
-          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
-          hasRated={displayOrder.hasRated}
-          inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
-          hasAfterSaleDispute={hasAfterSaleDispute}
-          contractType={shipOrderProps.contractType}
-          hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
-          digitalDeliveryStatus={sellerDigitalDelivery.status}
-          canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
-          canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
-          manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
-          isTransitioning={isTransitioning}
-          onAction={handleOrderAction}
-        />
-      )}
+      {!showRatingInvite &&
+        !showReviewDialog &&
+        !showConfirmReceiptDialog &&
+        !isModeratorDisputeView &&
+        activeTab !== 'discussion' && (
+          <OrderFooter
+            orderState={coreOrder?.state || 'PENDING'}
+            userRole={displayOrder.userRole as CoreUserRole}
+            timestamp={displayOrder.createdAt}
+            isModerated={isModeratedOrder}
+            isShipped={coreOrder ? isOrderShipped(coreOrder) : false}
+            paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
+            fundsReleasedAtConfirmation={shouldBlockAutoRefund}
+            totalAmount={displayOrder.total}
+            currency={displayOrder.currency}
+            paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+            hasRated={displayOrder.hasRated}
+            inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+            hasAfterSaleDispute={hasAfterSaleDispute}
+            contractType={shipOrderProps.contractType}
+            hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
+            digitalDeliveryStatus={sellerDigitalDelivery.status}
+            canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+            canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
+            manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
+            isTransitioning={isTransitioning}
+            onAction={handleOrderAction}
+          />
+        )}
 
       {/* Dialogs */}
       {confirmDialog && (
@@ -1030,13 +1033,24 @@ export function OrderDetailDesktop({
         onSuccess={shipOrderProps.onSuccess}
       />
 
+      <ConfirmReceiptDialog
+        open={showConfirmReceiptDialog}
+        onOpenChange={open => !open && closeConfirmReceiptDialog()}
+        onConfirm={() => void confirmReceipt()}
+        isLoading={isActionLoading}
+        completePhase={completePhase}
+        isModerated={isModeratedOrder}
+      />
+
       <WriteReviewDialog
         open={showReviewDialog}
         productTitle={reviewProductTitle}
-        onSubmit={submitReviewAndComplete}
-        onSkip={skipReviewAndComplete}
+        onSubmit={submitRating}
+        onSkip={closeReviewDialog}
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
+        completePhase={completePhase}
+        isRateOnly
       />
 
       <DisputeModal

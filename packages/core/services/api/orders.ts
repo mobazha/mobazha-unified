@@ -724,7 +724,7 @@ export interface SettlementActionResponse {
 
 export async function executeSettlementAction(payload: {
   orderID: string;
-  action: 'confirm' | 'cancel';
+  action: 'confirm' | 'cancel' | 'complete';
   payoutAddress?: string;
 }): Promise<SettlementActionResponse> {
   const realFn = async () => {
@@ -747,6 +747,89 @@ export async function executeSettlementAction(payload: {
     mockFn,
     `/orders/${payload.orderID}/settlement-actions/${payload.action}`
   );
+}
+
+export interface SettlementActionStatusResponse {
+  actionId?: string;
+  state?: string;
+  txHash?: string;
+  confirmations?: number;
+  lastError?: string;
+  relayTaskId?: string;
+  orderId?: string;
+  settlementAction?: string;
+  paymentChain?: string;
+  paymentCoin?: string;
+}
+
+export async function getSettlementActionStatus(payload: {
+  orderID: string;
+  action: 'confirm' | 'cancel' | 'complete' | 'dispute_release';
+  actionId: string;
+}): Promise<SettlementActionStatusResponse> {
+  return authGet<SettlementActionStatusResponse>(
+    NODE_API.ORDER_SETTLEMENT_ACTION_STATUS(payload.orderID, payload.action, payload.actionId)
+  );
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableSettlementStatusError(err: unknown): boolean {
+  if (err instanceof ApiError) {
+    const status = err.status;
+    if (status === 404 || status === 429 || status === 503) {
+      return true;
+    }
+    return status != null && status >= 500;
+  }
+  return true;
+}
+
+/** Poll settlement status until a tx hash is available. */
+export async function awaitSettlementActionTxHash(payload: {
+  orderID: string;
+  action: 'confirm' | 'cancel' | 'complete';
+  actionId: string;
+  intervalMs?: number;
+  timeoutMs?: number;
+}): Promise<SettlementActionResponse> {
+  const intervalMs = payload.intervalMs ?? 2000;
+  const timeoutMs = payload.timeoutMs ?? 120_000;
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const status = await getSettlementActionStatus({
+        orderID: payload.orderID,
+        action: payload.action,
+        actionId: payload.actionId,
+      });
+      const state = (status.state || '').trim().toLowerCase();
+      if (status.txHash) {
+        return {
+          mode: 'submitted',
+          actionId: payload.actionId,
+          txHash: status.txHash,
+          paymentChain: status.paymentChain,
+          paymentCoin: status.paymentCoin,
+        };
+      }
+      if (state === 'failed' || state === 'abandoned' || state === 'error') {
+        throw new Error(status.lastError || 'Settlement action failed');
+      }
+    } catch (err) {
+      if (isRetryableSettlementStatusError(err)) {
+        await sleep(intervalMs);
+        continue;
+      }
+      throw err;
+    }
+    await sleep(intervalMs);
+  }
+
+  throw new Error('Timed out waiting for settlement transaction');
 }
 
 /**
