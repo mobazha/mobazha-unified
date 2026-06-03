@@ -393,7 +393,11 @@ export interface EscrowRelease {
  */
 export interface DisputeOpen {
   timestamp?: string;
+  /** Protobuf/API field for dispute reason text */
+  reason?: string;
   claim?: string;
+  evidenceHashes?: string[];
+  openedBy?: string;
 }
 
 /**

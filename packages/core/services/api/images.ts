@@ -11,6 +11,34 @@ interface ImageUploadData {
   image: string; // base64 encoded image data
 }
 
+/** POST /v1/media/images returns a single CID per file (no variant resize). */
+type MediaFileHashResponse = {
+  name?: string;
+  hash: string;
+};
+
+/**
+ * Normalize upload responses: generic /media/images returns { hash, name };
+ * product-images and profile slots return full Image { tiny, small, ... }.
+ */
+export function imageFromUploadResponse(item: Image | MediaFileHashResponse): Image | null {
+  if ('hash' in item && typeof item.hash === 'string' && item.hash.length > 0) {
+    const h = item.hash;
+    return {
+      tiny: h,
+      small: h,
+      medium: h,
+      large: h,
+      original: h,
+      filename: item.name,
+    };
+  }
+  if ('small' in item && item.small) {
+    return item as Image;
+  }
+  return null;
+}
+
 const MAX_IMAGE_DIMENSION = 2048;
 
 /**
@@ -34,8 +62,11 @@ export async function uploadProductImages(images: ImageUploadData[]): Promise<Im
  */
 export async function uploadImage(imageData: ImageUploadData): Promise<Image | null> {
   try {
-    const result = await authPost<Image[]>(NODE_API.MEDIA_IMAGES, [imageData]);
-    return result?.[0] || null;
+    const result = await authPost<Array<Image | MediaFileHashResponse>>(NODE_API.MEDIA_IMAGES, [
+      imageData,
+    ]);
+    const first = result?.[0];
+    return first ? imageFromUploadResponse(first) : null;
   } catch {
     return null;
   }
