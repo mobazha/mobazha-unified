@@ -1618,6 +1618,7 @@ export interface TranslationResource {
       shippedYourOrder: string;
       youShippedOrder: string;
       completedOrder: string;
+      ratedOrder?: string;
       staleWarning: string;
       expired: string;
     };

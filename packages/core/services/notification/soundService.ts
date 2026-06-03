@@ -428,6 +428,7 @@ class SoundService {
       'order.vendor_finalized': 'dispute',
       'order.refunded': 'dispute',
       'order.completed': 'order_complete',
+      'order.rated': 'order_complete',
       'order.shipped': 'order_complete',
     };
 

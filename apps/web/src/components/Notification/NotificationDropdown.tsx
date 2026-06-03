@@ -44,6 +44,7 @@ function getNotificationIcon(type: string) {
       return <CreditCard className={cn(iconClass, 'text-primary')} />;
     case 'order.confirmed':
     case 'order.completed':
+    case 'order.rated':
       return <CheckCircle className={cn(iconClass, 'text-success')} />;
     case 'order.declined':
     case 'order.cancelled':

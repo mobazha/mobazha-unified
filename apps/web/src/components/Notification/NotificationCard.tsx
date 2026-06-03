@@ -80,6 +80,7 @@ function getNotificationIcon(type: string): React.ReactNode {
     case 'order.shipped':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'order.completed':
+    case 'order.rated':
       return <CheckCircle className={cn(iconClass, 'text-primary')} />;
     case 'dispute.opened':
     case 'dispute.case_open':
