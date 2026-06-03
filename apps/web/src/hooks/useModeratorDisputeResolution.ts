@@ -11,6 +11,7 @@ import {
   createRulingDraftForConstraints,
   createRulingDraftFromPresetWithConstraints,
   isModeratorRulingDraftValid,
+  isDisputeClosedFromCase,
   isVendorOrderUnconfirmedFromCase,
   mapModeratorDisputeApiError,
   rulingDraftWithBuyerPercentage,
@@ -43,6 +44,14 @@ export function useModeratorDisputeResolution(orderId: string, onSuccess?: () =>
       if (!caseDetails) {
         throw new Error('case details unavailable');
       }
+      if (isDisputeClosedFromCase(caseDetails)) {
+        toast({
+          title: t('order.moderatorRuling.title'),
+          description: t('order.moderatorRuling.errors.alreadyClosed'),
+        });
+        onSuccess?.();
+        return;
+      }
       const lock = isVendorOrderUnconfirmedFromCase(caseDetails);
       const nextConstraints: ModeratorRulingConstraints = { lockVendorShareAboveZero: lock };
       setVendorNotConfirmed(lock);
@@ -59,7 +68,7 @@ export function useModeratorDisputeResolution(orderId: string, onSuccess?: () =>
     } finally {
       setIsOpeningSheet(false);
     }
-  }, [orderId, t, toast]);
+  }, [orderId, t, toast, onSuccess]);
 
   const applyPreset = useCallback(
     (preset: ModeratorRulingPreset) => {
@@ -127,6 +136,16 @@ export function useModeratorDisputeResolution(orderId: string, onSuccess?: () =>
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err);
       const errorKey = mapModeratorDisputeApiError(raw);
+      if (errorKey === 'order.moderatorRuling.errors.alreadyClosed') {
+        toast({
+          title: t('order.moderatorRuling.title'),
+          description: t(errorKey),
+        });
+        setIsSheetOpen(false);
+        setActivePreset(null);
+        onSuccess?.();
+        return;
+      }
       toast({
         title: t('common.error'),
         description: t(errorKey),

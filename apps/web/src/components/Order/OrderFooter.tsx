@@ -39,6 +39,8 @@ export interface OrderFooterProps {
   isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
   onOpenDiscussion?: () => void;
+  /** Hide "under review" footer when moderator ruling awaits acceptance */
+  disputeRulingPendingAcceptance?: boolean;
   className?: string;
 }
 
@@ -69,11 +71,12 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   isTransitioning = false,
   onAction,
   onOpenDiscussion,
+  disputeRulingPendingAcceptance = false,
   className = '',
 }) => {
   const { t } = useI18n();
 
-  if (orderState === 'DISPUTED' && onOpenDiscussion) {
+  if (orderState === 'DISPUTED' && onOpenDiscussion && !disputeRulingPendingAcceptance) {
     return (
       <div
         className={`fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50 safe-area-inset-bottom ${className}`}

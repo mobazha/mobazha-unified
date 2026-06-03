@@ -304,19 +304,25 @@ function FiatPaymentCard({ order }: { order: DisplayOrder }) {
       ? 'text-warning'
       : order.status === 'disputed'
         ? 'text-error'
-        : 'text-success';
+        : order.status === 'decided'
+          ? 'text-info'
+          : 'text-success';
   const statusBadgeColor =
     order.status === 'refunded'
       ? 'bg-warning'
       : order.status === 'disputed'
         ? 'bg-error'
-        : 'bg-success';
+        : order.status === 'decided'
+          ? 'bg-info'
+          : 'bg-success';
   const statusText =
     order.status === 'refunded'
       ? t('order.fiatPayment.refunded')
       : order.status === 'disputed'
         ? t('order.fiatPayment.disputed')
-        : t('order.fiatPayment.paid');
+        : order.status === 'decided'
+          ? t('order.fiatPayment.rulingPending')
+          : t('order.fiatPayment.paid');
 
   return (
     <div className="bg-gradient-to-r from-primary/5 to-primary/5 border border-primary/15 rounded-lg p-4 mb-4">

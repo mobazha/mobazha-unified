@@ -5,11 +5,19 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { useI18n, useCurrency, getGatewayUrl, NODE_API, type DisplayOrder } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getGatewayUrl,
+  NODE_API,
+  isDisputeRulingAvailable,
+  type DisplayOrder,
+} from '@mobazha/core';
 import { formatUserName } from '@mobazha/core/utils/identity';
 import { ShieldAlert, ChevronRight, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getStatusLabel } from './orderProgressUtils';
+import { DisputeRulingSection } from './DisputeRulingSection';
 
 export interface DisputeOverviewCardProps {
   displayOrder: DisplayOrder;
@@ -122,15 +130,6 @@ export const DisputeOverviewCard = memo(function DisputeOverviewCard({
       : dispute.status === 'in_progress'
         ? t('order.disputeDisplay.statusInProgress')
         : t('order.disputeDisplay.statusResolved');
-
-  const resolutionLabel =
-    dispute.resolution === 'buyer'
-      ? t('order.disputeOverview.resolvedFavor', { party: t('order.buyer') })
-      : dispute.resolution === 'seller'
-        ? t('order.disputeOverview.resolvedFavor', { party: t('order.seller') })
-        : dispute.resolution === 'split'
-          ? t('order.disputeOverview.resolvedSplit')
-          : null;
 
   const openedAt =
     dispute.openedAt ||
@@ -305,23 +304,12 @@ export const DisputeOverviewCard = memo(function DisputeOverviewCard({
           />
         </div>
 
-        {/* Resolution — show outcome or honest empty state */}
-        {(dispute.status === 'resolved' || dispute.resolution) && (
-          <div className="bg-primary/5 rounded-lg p-3 border border-primary/20 space-y-1">
-            <p className="text-xs text-muted-foreground">{t('order.disputeDisplay.resolution')}</p>
-            {resolutionLabel ? (
-              <p className="text-sm font-semibold text-primary">{resolutionLabel}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {t('order.disputeOverview.resolutionUnknown')}
-              </p>
-            )}
-            {dispute.resolvedAt && (
-              <p className="text-xs text-muted-foreground">
-                {t('order.disputeOverview.resolvedOn')}: {formatDate(dispute.resolvedAt)}
-              </p>
-            )}
-          </div>
+        {isDisputeRulingAvailable(dispute) && (
+          <DisputeRulingSection
+            dispute={dispute}
+            settlementBreakdown={displayOrder.settlementBreakdown}
+            paymentCoin={displayOrder.paymentCoin}
+          />
         )}
       </div>
     </Card>

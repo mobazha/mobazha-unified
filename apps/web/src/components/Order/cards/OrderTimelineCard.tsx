@@ -5,6 +5,10 @@ import {
   useI18n,
   isFiatPaymentCoin,
   resolveOrderPricingDisplay,
+  isDisputeRulingAvailable,
+  getDisputeResolutionHeadline,
+  getDisputeSettlementPayoutLines,
+  shouldShowDisputeArchiveCard,
   type DisplayOrder,
   type SettlementActionSnapshot,
 } from '@mobazha/core';
@@ -250,7 +254,76 @@ function buildCompletedTimelineCards(
   const placedCard = buildOrderPlacedCard(order, t);
   if (placedCard) timelineCards.push(placedCard);
 
+  timelineCards.push(...buildDisputeTimelineCards(order, t));
+
   return sortTimelineCards(timelineCards);
+}
+
+function buildDisputeTimelineCards(
+  order: DisplayOrder,
+  t: (key: string, params?: Record<string, string | number>) => string
+): TimelineCardEntry[] {
+  const dispute = order.dispute;
+  if (!dispute) return [];
+
+  const cards: TimelineCardEntry[] = [];
+  const compactRulingTimeline = shouldShowDisputeArchiveCard(dispute, order.status);
+  const payoutBreakdown =
+    isDisputeRulingAvailable(dispute) && !compactRulingTimeline
+      ? getDisputeSettlementPayoutLines(dispute, order.settlementBreakdown, t, {
+          paymentCoin: order.paymentCoin,
+        }).map(line => ({
+          label: line.label,
+          amount: line.amount,
+        }))
+      : [];
+
+  if (dispute.resolvedAt && isDisputeRulingAvailable(dispute)) {
+    const headline = getDisputeResolutionHeadline(dispute, t);
+    const releaseTx =
+      order.settlementBreakdown?.source === 'dispute' ||
+      order.settlementBreakdown?.source === 'settlement_action'
+        ? order.settlementBreakdown.txHash
+        : order.releaseTx;
+    cards.push({
+      key: 'dispute-ruling',
+      timestamp: dispute.resolvedAt,
+      priority: 36,
+      node: (
+        <OrderCompleteCard
+          stageVariant="released"
+          title={t('order.timeline.disputeRulingIssued')}
+          timestamp={dispute.resolvedAt}
+          description={headline || dispute.resolutionText}
+          breakdownLines={payoutBreakdown.length > 0 ? payoutBreakdown : undefined}
+          txHash={releaseTx}
+          txUrl={
+            releaseTx ? getOrderTransactionExplorerUrl(releaseTx, order) || undefined : undefined
+          }
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  if (dispute.openedAt) {
+    cards.push({
+      key: 'dispute-opened',
+      timestamp: dispute.openedAt,
+      priority: 12,
+      node: (
+        <OrderCompleteCard
+          stageVariant="escrowed"
+          title={t('order.timeline.disputeOpened')}
+          timestamp={dispute.openedAt}
+          description={dispute.claim}
+          showDivider={false}
+        />
+      ),
+    });
+  }
+
+  return cards;
 }
 
 function buildCancelledTimelineCards(

@@ -16,6 +16,10 @@ import {
   useFeature,
   useChatStore,
   formatUserName,
+  isDisputeRulingAvailable,
+  isActiveCryptoDisputeStatus,
+  shouldShowDisputeArchiveCard,
+  resolveDigitalEntitlementDisputePhase,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
@@ -56,6 +60,7 @@ import {
   OrderSettlementCard,
   OrderCreatedAtMeta,
   DisputeSummaryCard,
+  DisputeHistoryCard,
   DisputeOverviewCard,
   DisputeResolutionBar,
   DisputeEvidencePanel,
@@ -268,7 +273,28 @@ export function OrderDetailDesktop({
   }, [displayOrder]);
 
   const hasActiveCryptoDispute = useMemo(
-    () => !!displayOrder?.dispute && displayOrder.status === 'disputed',
+    () => !!displayOrder?.dispute && isActiveCryptoDisputeStatus(displayOrder.status),
+    [displayOrder]
+  );
+
+  const showDisputeArchive = useMemo(
+    () =>
+      displayOrder
+        ? shouldShowDisputeArchiveCard(displayOrder.dispute, displayOrder.status)
+        : false,
+    [displayOrder]
+  );
+
+  const disputeRulingPendingAcceptance = useMemo(
+    () => (displayOrder?.dispute ? isDisputeRulingAvailable(displayOrder.dispute) : false),
+    [displayOrder?.dispute]
+  );
+
+  const digitalEntitlementDisputePhase = useMemo(
+    () =>
+      displayOrder
+        ? resolveDigitalEntitlementDisputePhase(displayOrder.status, displayOrder.dispute)
+        : 'none',
     [displayOrder]
   );
 
@@ -808,6 +834,7 @@ export function OrderDetailDesktop({
                     canOpenDispute={canOpenModeratedDispute}
                     onOpenDispute={() => handleOrderAction('Dispute')}
                     onExtendProtection={handleExtendProtection}
+                    disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
                     className="mb-4"
                   />
                 )}
@@ -863,6 +890,8 @@ export function OrderDetailDesktop({
                   <SellerDigitalDeliveryStatus
                     {...sellerDigitalDelivery}
                     orderInDispute={hasActiveCryptoDispute}
+                    orderStatus={displayOrder.status}
+                    disputePhase={digitalEntitlementDisputePhase}
                     canSyncDelivery={
                       coreOrder?.state === 'AWAITING_SHIPMENT' &&
                       sellerDigitalDelivery.canSyncDelivery
@@ -883,7 +912,9 @@ export function OrderDetailDesktop({
                     orderId={orderId}
                     sellerPeerID={displayOrder.vendor.peerID}
                     deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
-                    orderInDispute={hasActiveCryptoDispute}
+                    disputePhase={digitalEntitlementDisputePhase}
+                    disputeResolution={displayOrder.dispute?.resolution}
+                    buyerPayoutPercent={displayOrder.dispute?.buyerPayoutPercent}
                     className="mb-4"
                   />
                 )}
@@ -915,7 +946,17 @@ export function OrderDetailDesktop({
                 <div ref={disputeSectionRef}>
                   {displayOrder.dispute &&
                     displayOrder.userRole !== 'moderator' &&
-                    !hasActiveCryptoDispute && (
+                    showDisputeArchive && (
+                      <DisputeHistoryCard
+                        displayOrder={displayOrder}
+                        onOpenDiscussion={() => handleTabChange('discussion')}
+                        className="mb-4"
+                      />
+                    )}
+                  {displayOrder.dispute &&
+                    displayOrder.userRole !== 'moderator' &&
+                    !hasActiveCryptoDispute &&
+                    !showDisputeArchive && (
                       <OrderDisputeBanner
                         displayOrder={displayOrder}
                         onOpenDispute={() => handleOrderAction('Dispute')}
@@ -1030,8 +1071,11 @@ export function OrderDetailDesktop({
             manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
             isTransitioning={isTransitioning}
             onAction={handleOrderAction}
+            disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
             onOpenDiscussion={
-              coreOrder?.state === 'DISPUTED' ? () => handleTabChange('discussion') : undefined
+              coreOrder?.state === 'DISPUTED' && !disputeRulingPendingAcceptance
+                ? () => handleTabChange('discussion')
+                : undefined
             }
           />
         )}

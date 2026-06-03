@@ -21,6 +21,10 @@ import {
   useFeature,
   useChatStore,
   formatUserName,
+  isDisputeRulingAvailable,
+  isActiveCryptoDisputeStatus,
+  shouldShowDisputeArchiveCard,
+  resolveDigitalEntitlementDisputePhase,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
@@ -58,6 +62,7 @@ import {
   OrderContractView,
   OrderDisputeBanner,
   DisputeSummaryCard,
+  DisputeHistoryCard,
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
@@ -350,7 +355,28 @@ export function OrderDetailMobile({
   }, [displayOrder]);
 
   const hasActiveCryptoDispute = useMemo(
-    () => !!displayOrder?.dispute && displayOrder.status === 'disputed',
+    () => !!displayOrder?.dispute && isActiveCryptoDisputeStatus(displayOrder.status),
+    [displayOrder]
+  );
+
+  const showDisputeArchive = useMemo(
+    () =>
+      displayOrder
+        ? shouldShowDisputeArchiveCard(displayOrder.dispute, displayOrder.status)
+        : false,
+    [displayOrder]
+  );
+
+  const disputeRulingPendingAcceptance = useMemo(
+    () => (displayOrder?.dispute ? isDisputeRulingAvailable(displayOrder.dispute) : false),
+    [displayOrder?.dispute]
+  );
+
+  const digitalEntitlementDisputePhase = useMemo(
+    () =>
+      displayOrder
+        ? resolveDigitalEntitlementDisputePhase(displayOrder.status, displayOrder.dispute)
+        : 'none',
     [displayOrder]
   );
 
@@ -363,9 +389,10 @@ export function OrderDetailMobile({
     () =>
       !!coreOrder &&
       coreOrder.state === 'DISPUTED' &&
+      !disputeRulingPendingAcceptance &&
       !isModeratorDisputeView &&
       activeTab === 'details',
-    [coreOrder, isModeratorDisputeView, activeTab]
+    [coreOrder, disputeRulingPendingAcceptance, isModeratorDisputeView, activeTab]
   );
 
   const handleExtendProtection = useCallback(async () => {
@@ -978,6 +1005,8 @@ export function OrderDetailMobile({
                   orderId={orderId}
                   listingSlugs={sellerDigitalDelivery.listingSlugs}
                   orderInDispute={hasActiveCryptoDispute}
+                  orderStatus={displayOrder.status}
+                  disputePhase={digitalEntitlementDisputePhase}
                 />
               )}
 
@@ -987,7 +1016,9 @@ export function OrderDetailMobile({
                   orderId={orderId}
                   sellerPeerID={displayOrder.vendor.peerID}
                   deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
-                  orderInDispute={hasActiveCryptoDispute}
+                  disputePhase={digitalEntitlementDisputePhase}
+                  disputeResolution={displayOrder.dispute?.resolution}
+                  buyerPayoutPercent={displayOrder.dispute?.buyerPayoutPercent}
                 />
               )}
 
@@ -1010,11 +1041,21 @@ export function OrderDetailMobile({
                 />
               )}
 
-              {/* 4b. Legacy dispute banner — hidden when DisputeSummaryCard is shown */}
+              {/* 4b. Dispute — archive for resolved, open banner only while active */}
               <div ref={disputeSectionRef}>
                 {displayOrder.dispute &&
                   displayOrder.userRole !== 'moderator' &&
-                  !hasActiveCryptoDispute && (
+                  showDisputeArchive && (
+                    <DisputeHistoryCard
+                      displayOrder={displayOrder}
+                      onOpenDiscussion={() => handleTabChange('discussion')}
+                      className="mb-4"
+                    />
+                  )}
+                {displayOrder.dispute &&
+                  displayOrder.userRole !== 'moderator' &&
+                  !hasActiveCryptoDispute &&
+                  !showDisputeArchive && (
                     <OrderDisputeBanner
                       displayOrder={displayOrder}
                       onOpenDispute={() => handleOrderAction('Dispute')}
@@ -1080,6 +1121,7 @@ export function OrderDetailMobile({
                   canOpenDispute={canOpenModeratedDispute}
                   onOpenDispute={() => handleOrderAction('Dispute')}
                   onExtendProtection={handleExtendProtection}
+                  disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
                 />
               )}
 
