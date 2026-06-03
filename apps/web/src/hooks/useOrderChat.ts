@@ -214,6 +214,7 @@ export function useOrderChat({
   const setHasMoreMessages = useChatStore(state => state.setHasMoreMessages);
   const updateRoom = useChatStore(state => state.updateRoom);
   const addRoom = useChatStore(state => state.addRoom);
+  const setEmbeddedVisibleRoomId = useChatStore(state => state.setEmbeddedVisibleRoomId);
 
   const effectiveCurrentUserId = matrixClient.getUserId() || currentUserPeerID || '';
 
@@ -262,7 +263,16 @@ export function useOrderChat({
     [rooms, roomId, orderId]
   );
 
-  const unreadCount = matrixRoom?.unreadCount ?? 0;
+  const unreadCount = isActive && roomId ? 0 : (matrixRoom?.unreadCount ?? 0);
+
+  // Tell Matrix sync that order-detail discussion is an active read surface (not drawer).
+  useEffect(() => {
+    if (isActive && roomId) {
+      setEmbeddedVisibleRoomId(roomId);
+      return () => setEmbeddedVisibleRoomId(null);
+    }
+    setEmbeddedVisibleRoomId(null);
+  }, [isActive, roomId, setEmbeddedVisibleRoomId]);
 
   // Re-check REST readiness when connection state changes (init may complete without WS).
   useEffect(() => {
@@ -425,6 +435,26 @@ export function useOrderChat({
       cancelled = true;
     };
   }, [isActive, roomId, matrixAvailable, setMessages, setHasMoreMessages, updateRoom]);
+
+  const lastIncomingMessageId = useMemo(() => {
+    if (!roomId) return undefined;
+    const roomMessages = allMessages[roomId];
+    if (!roomMessages?.length) return undefined;
+    for (let i = roomMessages.length - 1; i >= 0; i--) {
+      const msg = roomMessages[i];
+      if (msg.sender !== effectiveCurrentUserId && msg.id) return msg.id;
+    }
+    return undefined;
+  }, [roomId, allMessages, effectiveCurrentUserId]);
+
+  // Mark read when new messages arrive while discussion tab is open
+  useEffect(() => {
+    if (!isActive || !roomId || !matrixAvailable || !lastIncomingMessageId) return;
+
+    updateRoom(roomId, { unreadCount: 0 });
+    useChatStore.getState().markRoomAsRead(roomId);
+    matrixClient.markRoomAsRead(roomId, lastIncomingMessageId).catch(() => {});
+  }, [isActive, roomId, matrixAvailable, lastIncomingMessageId, updateRoom]);
 
   // Read receipts for active room
   useEffect(() => {
