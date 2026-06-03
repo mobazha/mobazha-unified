@@ -46,6 +46,8 @@ export interface SellerDigitalDeliveryStatusProps {
   orderId?: string;
   listingSlugs?: string[];
   className?: string;
+  /** When true, hide in-progress auto-delivery messaging during dispute review. */
+  orderInDispute?: boolean;
   /** stacked: primary actions below copy (guest order drawer); inline: actions beside title */
   actionLayout?: 'inline' | 'stacked';
 }
@@ -68,6 +70,7 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
   orderId,
   listingSlugs,
   className,
+  orderInDispute = false,
   actionLayout = 'inline',
 }: SellerDigitalDeliveryStatusProps) {
   const { t } = useI18n();
@@ -138,6 +141,10 @@ export const SellerDigitalDeliveryStatus = memo(function SellerDigitalDeliverySt
   );
 
   if (!isDigitalOrder) {
+    return null;
+  }
+
+  if (orderInDispute && !isDelivered) {
     return null;
   }
 

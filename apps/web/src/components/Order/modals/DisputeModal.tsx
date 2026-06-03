@@ -84,8 +84,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
     onClose();
   }, [onClose, resetState]);
 
-  const uploadFile = useCallback(async (file: File): Promise<EvidenceImage> => {
-    const preview = URL.createObjectURL(file);
+  const uploadFile = useCallback(async (file: File, preview: string): Promise<EvidenceImage> => {
     const entry: EvidenceImage = { file, preview, uploading: true };
 
     try {
@@ -94,8 +93,9 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
         filename: `evidence_${Date.now()}`,
         image: base64,
       });
-      if (result?.small) {
-        return { ...entry, hash: result.small, uploading: false };
+      const cid = result?.small || result?.original;
+      if (cid) {
+        return { ...entry, hash: cid, uploading: false };
       }
       return { ...entry, uploading: false, error: 'Upload failed' };
     } catch {
@@ -114,19 +114,18 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
         if (!f.type.startsWith('image/')) return false;
         return true;
       });
+      if (toAdd.length === 0) return;
 
       const placeholders: EvidenceImage[] = toAdd.map(f => ({
         file: f,
         preview: URL.createObjectURL(f),
         uploading: true,
       }));
+      const previewKeys = new Set(placeholders.map(p => p.preview));
       setImages(prev => [...prev, ...placeholders]);
 
-      const uploaded = await Promise.all(toAdd.map(uploadFile));
-      setImages(prev => {
-        const existing = prev.filter(img => !placeholders.some(p => p.preview === img.preview));
-        return [...existing, ...uploaded];
-      });
+      const uploaded = await Promise.all(placeholders.map(p => uploadFile(p.file, p.preview)));
+      setImages(prev => [...prev.filter(img => !previewKeys.has(img.preview)), ...uploaded]);
     },
     [images.length, uploadFile]
   );
@@ -150,6 +149,15 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
       return;
     }
     if (images.some(img => img.uploading)) return;
+    const failedUploads = images.filter(img => !img.uploading && !img.hash);
+    if (failedUploads.length > 0) {
+      setValidationError(
+        t('order.dispute.evidenceUploadFailed', {
+          fallback: 'One or more images failed to upload. Remove them or try again.',
+        })
+      );
+      return;
+    }
     setValidationError('');
     setShowConfirm(true);
   }, [claim, t, images, isAfterSale, selectedReason]);
@@ -265,36 +273,43 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
                   {t('order.dispute.evidence', { fallback: 'Evidence (optional)' })}
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {images.map((img, idx) => (
-                    <div
-                      key={img.preview}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden border border-border group"
-                    >
-                      <img
-                        src={img.preview}
-                        alt={`Evidence ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {img.uploading && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <Loader2 className="w-4 h-4 text-white animate-spin" />
-                        </div>
-                      )}
-                      {img.error && (
-                        <div className="absolute inset-0 bg-destructive/40 flex items-center justify-center">
-                          <X className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label={`Remove image ${idx + 1}`}
+                  {images.map((img, idx) => {
+                    const removeButtonVisible = img.error
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100';
+                    return (
+                      <div
+                        key={img.preview}
+                        className="relative w-16 h-16 rounded-lg overflow-hidden border border-border group"
                       >
-                        <X className="w-3 h-3 text-white" />
-                      </button>
-                    </div>
-                  ))}
+                        <img
+                          src={img.preview}
+                          alt={`Evidence ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {img.uploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="w-4 h-4 text-white animate-spin" />
+                          </div>
+                        )}
+                        {img.error && (
+                          <div className="absolute inset-0 bg-destructive/40 flex items-center justify-center">
+                            <X className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className={`absolute top-0 right-0 w-11 h-11 rounded-bl-lg bg-black/70 flex items-center justify-center transition-opacity ${removeButtonVisible}`}
+                          aria-label={t('order.dispute.removeEvidence', {
+                            fallback: `Remove image ${idx + 1}`,
+                          })}
+                        >
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    );
+                  })}
                   {images.length < MAX_EVIDENCE_IMAGES && (
                     <button
                       type="button"
@@ -343,7 +358,11 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
               variant="destructive"
               onClick={handleSubmitClick}
               disabled={
-                isLoading || !claim.trim() || anyUploading || (isAfterSale && !selectedReason)
+                isLoading ||
+                !claim.trim() ||
+                anyUploading ||
+                images.some(img => !img.uploading && !img.hash) ||
+                (isAfterSale && !selectedReason)
               }
             >
               {isLoading ? t('common.loading') : t('order.dispute.submit')}

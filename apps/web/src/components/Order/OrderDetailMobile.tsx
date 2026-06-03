@@ -57,6 +57,7 @@ import {
   OrderCounterpartyCard,
   OrderContractView,
   OrderDisputeBanner,
+  DisputeSummaryCard,
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
@@ -286,7 +287,13 @@ export function OrderDetailMobile({
   useEffect(() => {
     if (activeTab !== 'evidence') return;
     if (!displayOrder) return;
-    if (displayOrder.userRole === 'moderator' && displayOrder.dispute) return;
+    if (
+      displayOrder.userRole === 'moderator' &&
+      displayOrder.dispute &&
+      (displayOrder.dispute.evidenceHashes?.length ?? 0) > 0
+    ) {
+      return;
+    }
     handleTabChange('details');
   }, [activeTab, displayOrder, handleTabChange]);
 
@@ -341,6 +348,25 @@ export function OrderDetailMobile({
     if (!displayOrder?.protection) return null;
     return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
   }, [displayOrder]);
+
+  const hasActiveCryptoDispute = useMemo(
+    () => !!displayOrder?.dispute && displayOrder.status === 'disputed',
+    [displayOrder]
+  );
+
+  const showModeratorEvidenceTab = useMemo(
+    () => (displayOrder?.dispute?.evidenceHashes?.length ?? 0) > 0,
+    [displayOrder?.dispute?.evidenceHashes]
+  );
+
+  const showDisputeDiscussionBar = useMemo(
+    () =>
+      !!coreOrder &&
+      coreOrder.state === 'DISPUTED' &&
+      !isModeratorDisputeView &&
+      activeTab === 'details',
+    [coreOrder, isModeratorDisputeView, activeTab]
+  );
 
   const handleExtendProtection = useCallback(async () => {
     try {
@@ -816,7 +842,7 @@ export function OrderDetailMobile({
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
-          {isModeratorDisputeView && (
+          {isModeratorDisputeView && showModeratorEvidenceTab && (
             <button
               role="tab"
               aria-selected={activeTab === 'evidence'}
@@ -912,8 +938,16 @@ export function OrderDetailMobile({
             </>
           ) : (
             <>
-              {/* 1. Status + progress bar (buyer/seller only; moderator uses DisputeOverviewCard) */}
-              {!isModeratorDisputeView && <OrderStatusCard displayOrder={displayOrder} />}
+              {/* 1. Status — dispute summary for active crypto disputes */}
+              {!isModeratorDisputeView &&
+                (hasActiveCryptoDispute ? (
+                  <DisputeSummaryCard
+                    displayOrder={displayOrder}
+                    onOpenDiscussion={() => handleTabChange('discussion')}
+                  />
+                ) : (
+                  <OrderStatusCard displayOrder={displayOrder} />
+                ))}
 
               {!(
                 displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
@@ -943,6 +977,7 @@ export function OrderDetailMobile({
                   }
                   orderId={orderId}
                   listingSlugs={sellerDigitalDelivery.listingSlugs}
+                  orderInDispute={hasActiveCryptoDispute}
                 />
               )}
 
@@ -952,6 +987,7 @@ export function OrderDetailMobile({
                   orderId={orderId}
                   sellerPeerID={displayOrder.vendor.peerID}
                   deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+                  orderInDispute={hasActiveCryptoDispute}
                 />
               )}
 
@@ -974,14 +1010,16 @@ export function OrderDetailMobile({
                 />
               )}
 
-              {/* 4b. Crypto dispute banner (only for buyer/seller; moderator sees DisputeOverviewCard) */}
+              {/* 4b. Legacy dispute banner — hidden when DisputeSummaryCard is shown */}
               <div ref={disputeSectionRef}>
-                {displayOrder.dispute && displayOrder.userRole !== 'moderator' && (
-                  <OrderDisputeBanner
-                    displayOrder={displayOrder}
-                    onOpenDispute={() => handleOrderAction('Dispute')}
-                  />
-                )}
+                {displayOrder.dispute &&
+                  displayOrder.userRole !== 'moderator' &&
+                  !hasActiveCryptoDispute && (
+                    <OrderDisputeBanner
+                      displayOrder={displayOrder}
+                      onOpenDispute={() => handleOrderAction('Dispute')}
+                    />
+                  )}
               </div>
 
               {/* 5. Tracking card — shown for shipped/delivered/completed */}
@@ -1167,7 +1205,10 @@ export function OrderDetailMobile({
           aria-labelledby="tab-evidence"
           className="px-4 pt-3 pb-6"
         >
-          <DisputeEvidencePanel dispute={displayOrder.dispute} />
+          <DisputeEvidencePanel
+            dispute={displayOrder.dispute}
+            onOpenDiscussion={() => handleTabChange('discussion')}
+          />
         </div>
       )}
 
@@ -1205,8 +1246,24 @@ export function OrderDetailMobile({
         />
       )}
 
+      {showDisputeDiscussionBar && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <p className="text-xs font-medium text-warning mb-2">
+            {t('order.footer.disputeReviewing')}
+          </p>
+          <Button
+            className="w-full h-12 text-[15px] font-semibold"
+            onClick={() => handleTabChange('discussion')}
+            data-testid="order-mobile-footer-open-discussion"
+          >
+            {t('order.actions.openDiscussion')}
+          </Button>
+        </div>
+      )}
+
       {/* Fixed bottom action bar — hidden for moderator view, rating invite, or TG MainButton active */}
-      {!isModeratorDisputeView &&
+      {!showDisputeDiscussionBar &&
+        !isModeratorDisputeView &&
         activeTab === 'details' &&
         coreOrder &&
         !tgMainButtonActive &&

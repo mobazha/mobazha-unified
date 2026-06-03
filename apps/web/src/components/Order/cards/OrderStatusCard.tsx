@@ -254,7 +254,11 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: ShieldAlert,
           message: t('order.statusCard.disputed'),
-          hint: t('order.statusCard.disputedHint'),
+          hint: isBuyer
+            ? t('order.statusCard.disputedHintBuyer')
+            : order.userRole === 'seller'
+              ? t('order.statusCard.disputedHintSeller')
+              : t('order.statusCard.disputedHint'),
           color: 'text-destructive',
           bgColor: 'bg-destructive/8 border-destructive/20',
           progress: -1,

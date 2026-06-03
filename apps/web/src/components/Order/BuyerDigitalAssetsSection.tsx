@@ -20,6 +20,7 @@ import type {
   BuyerAssetEntry,
   BuyerAssetStatus,
   BuyerLicenseEntry,
+  TranslateFunction,
   WebSocketMessage,
 } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
@@ -33,7 +34,33 @@ export interface BuyerDigitalAssetsSectionProps {
   buyerPortalToken?: string;
   sellerPeerID?: string;
   deliveredAt?: string;
+  /** When true, frozen assets show dispute-specific guidance instead of raw API reason text. */
+  orderInDispute?: boolean;
   className?: string;
+}
+
+function formatRestrictedReason(
+  reason: string | undefined,
+  t: TranslateFunction,
+  orderInDispute: boolean
+): string | undefined {
+  if (!reason?.trim()) {
+    return orderInDispute ? t('order.digital.disputeFrozenNote') : undefined;
+  }
+  const normalized = reason.trim().toLowerCase();
+  const knownKeys: Record<string, string> = {
+    frozen: 'order.digital.restrictedReason.frozen',
+    disputed: 'order.digital.restrictedReason.disputed',
+    dispute: 'order.digital.restrictedReason.disputed',
+    revoked: 'order.digital.restrictedReason.revoked',
+    expired: 'order.digital.restrictedReason.expired',
+  };
+  const key = knownKeys[normalized];
+  if (key) return t(key);
+  if (orderInDispute && (normalized.includes('dispute') || normalized === 'frozen')) {
+    return t('order.digital.disputeFrozenNote');
+  }
+  return reason;
 }
 
 const STATUS_META: Record<
@@ -124,6 +151,7 @@ export function BuyerDigitalAssetsSection({
   buyerPortalToken,
   sellerPeerID,
   deliveredAt,
+  orderInDispute = false,
   className,
 }: BuyerDigitalAssetsSectionProps) {
   const { t } = useI18n();
@@ -293,6 +321,7 @@ export function BuyerDigitalAssetsSection({
               asset={asset}
               buyerPortalToken={buyerPortalToken}
               sellerPeerID={sellerPeerID}
+              orderInDispute={orderInDispute}
               onCopy={handleCopy}
             />
           ))}
@@ -306,6 +335,7 @@ interface DigitalAssetCardProps {
   asset: BuyerAssetEntry;
   buyerPortalToken?: string;
   sellerPeerID?: string;
+  orderInDispute?: boolean;
   onCopy: (text: string, labelDefault: string) => void;
 }
 
@@ -313,6 +343,7 @@ function DigitalAssetCard({
   asset,
   buyerPortalToken,
   sellerPeerID,
+  orderInDispute = false,
   onCopy,
 }: DigitalAssetCardProps) {
   const { t } = useI18n();
@@ -321,6 +352,11 @@ function DigitalAssetCard({
   const meta = STATUS_META[asset.status] ?? STATUS_META.frozen;
   const StatusIcon = meta.icon;
   const accessible = asset.status === 'active' || asset.status === 'protected';
+  const restrictedNote = useMemo(
+    () =>
+      !accessible ? formatRestrictedReason(asset.restrictedReason, t, orderInDispute) : undefined,
+    [accessible, asset.restrictedReason, orderInDispute, t]
+  );
 
   const typeLabel = useMemo(() => {
     switch (asset.assetType) {
@@ -411,8 +447,8 @@ function DigitalAssetCard({
             )}
           </div>
 
-          {!accessible && asset.restrictedReason && (
-            <p className="text-xs text-muted-foreground italic">{asset.restrictedReason}</p>
+          {!accessible && restrictedNote && (
+            <p className="text-xs text-muted-foreground italic">{restrictedNote}</p>
           )}
 
           {accessible && asset.assetType === 'file' && asset.downloadURL && (
