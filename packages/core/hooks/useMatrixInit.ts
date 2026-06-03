@@ -223,7 +223,9 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
       const currentUserId = matrixClient.getUserId();
       const state = useChatStore.getState();
       const existingRoom = state.rooms.find(r => r.roomId === message.roomId);
-      const isViewingRoom = state.drawerOpen && state.currentRoomId === message.roomId;
+      const isViewingRoom =
+        (state.drawerOpen && state.currentRoomId === message.roomId) ||
+        state.embeddedVisibleRoomId === message.roomId;
       const shouldIncrementUnread = message.sender !== currentUserId && !isViewingRoom;
 
       // Message can arrive before room list gets refreshed (e.g. auto-joined DM).
@@ -244,12 +246,17 @@ export function useMatrixInit(options: UseMatrixInitOptions = {}): UseMatrixInit
         timestamp: message.timestamp,
       };
 
-      if (shouldIncrementUnread && existingRoom) {
-        roomUpdate.unreadCount = (existingRoom.unreadCount || 0) + 1;
-      }
-
       if (existingRoom) {
+        if (isViewingRoom) {
+          roomUpdate.unreadCount = 0;
+        } else if (shouldIncrementUnread) {
+          roomUpdate.unreadCount = (existingRoom.unreadCount || 0) + 1;
+        }
         updateRoom(message.roomId, roomUpdate);
+        if (isViewingRoom && message.sender !== currentUserId) {
+          useChatStore.getState().markRoomAsRead(message.roomId);
+          matrixClient.markRoomAsRead(message.roomId, message.id).catch(() => {});
+        }
       }
     };
 

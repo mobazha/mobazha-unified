@@ -43,6 +43,9 @@ export interface ChatState {
   pendingMatrixUserID: string | null;
   pendingPeerDisplayName: string | null;
 
+  /** Order detail (or other embedded) chat surface — same read semantics as drawer */
+  embeddedVisibleRoomId: string | null;
+
   // 动作
   setConnected: (connected: boolean) => void;
   setInitializing: (initializing: boolean) => void;
@@ -80,6 +83,7 @@ export interface ChatState {
   clearPendingPeer: () => void;
   closeDrawer: () => void;
   toggleDrawer: () => void;
+  setEmbeddedVisibleRoomId: (roomId: string | null) => void;
 
   updateRoomMemberPeerID: (roomId: string, userId: string, peerID: string) => void;
   markRoomAsRead: (roomId: string) => void;
@@ -116,6 +120,8 @@ const initialState = {
   pendingPeerID: null,
   pendingMatrixUserID: null,
   pendingPeerDisplayName: null,
+
+  embeddedVisibleRoomId: null,
 };
 
 // ============= Store =============
@@ -309,6 +315,8 @@ export const useChatStore = create<ChatState>()(
             pendingPeerDisplayName: null,
           }),
         toggleDrawer: () => set(state => ({ drawerOpen: !state.drawerOpen })),
+
+        setEmbeddedVisibleRoomId: roomId => set({ embeddedVisibleRoomId: roomId }),
 
         // 标记已读
         markRoomAsRead: roomId =>
