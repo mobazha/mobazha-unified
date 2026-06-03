@@ -225,6 +225,11 @@ interface RealOrderData {
     disputeClose?: {
       timestamp?: string;
       verdict?: string;
+      releaseInfo?: {
+        buyerAmount?: string;
+        vendorAmount?: string;
+        moderatorAmount?: string;
+      };
     };
     orderCancel?: {
       timestamp?: string;
@@ -292,7 +297,7 @@ export function mapOrderState(state: OrderState | string): DisplayOrderStatus {
     DECLINED: 'cancelled',
     REFUNDED: 'refunded',
     DISPUTED: 'disputed',
-    DECIDED: 'disputed',
+    DECIDED: 'decided',
     RESOLVED: 'completed',
     // PAYMENT_FINALIZED: 托管已释放（超时后），等待买家评价后变成 COMPLETE
     // 参考移动端/桌面端，此状态表示交易已完成，与 COMPLETED 同级
@@ -1351,7 +1356,11 @@ export function transformCoreOrder(
           contract.disputeOpen.openedBy === 'VENDOR' || contract.disputeOpen.openedBy === '1'
             ? 'seller'
             : 'buyer',
-        resolution: normalizeDisputeResolution(contract.disputeClose?.verdict),
+        ...parseDisputeCloseDetails(contract.disputeClose, {
+          paymentDivisibility,
+          paymentCoin: paymentCoin || pricingCoin,
+          displayCurrency,
+        }),
         openedAt: contract.disputeOpen.timestamp || contract.dispute?.timestamp,
         resolvedAt: contract.disputeClose?.timestamp,
         evidenceHashes:
@@ -1395,11 +1404,16 @@ export function transformCoreOrder(
   const awaitingPaymentVerification =
     data.state === 'AWAITING_PAYMENT_VERIFICATION' && !paymentVerificationFailed;
 
+  let displayStatus = mapOrderState(data.state as OrderState);
+  if (displayStatus === 'disputed' && contract.disputeClose) {
+    displayStatus = 'decided';
+  }
+
   const result: DisplayOrder = {
     id: fullOrderId,
     orderId: fullOrderId,
     slug: listingSlug,
-    status: mapOrderState(data.state as OrderState),
+    status: displayStatus,
     isModerated:
       isModeratedOrder ||
       (coreOrder as { paymentProductMode?: string }).paymentProductMode === 'moderated',
@@ -1506,16 +1520,104 @@ export function transformCoreOrder(
   return result;
 }
 
-/** Map API / protobuf verdict strings to UI resolution enum */
+type DisputeCloseSlice = {
+  verdict?: string;
+  releaseInfo?: {
+    buyerAmount?: string;
+    vendorAmount?: string;
+    moderatorAmount?: string;
+    transactionFee?: string;
+  };
+};
+
+export interface ParsedDisputeCloseDetails {
+  resolution?: 'buyer' | 'seller' | 'split';
+  resolutionText?: string;
+  buyerPayoutPercent?: number;
+  vendorPayoutPercent?: number;
+  buyerPayoutAmount?: string;
+  vendorPayoutAmount?: string;
+  moderatorPayoutAmount?: string;
+}
+
+function parseMinimalBigInt(value?: string): bigint {
+  if (!value) return BigInt(0);
+  const trimmed = value.trim();
+  if (!trimmed || !/^\d+$/.test(trimmed)) return BigInt(0);
+  try {
+    return BigInt(trimmed);
+  } catch {
+    return BigInt(0);
+  }
+}
+
+function deriveResolutionKind(
+  buyerAmount: bigint,
+  vendorAmount: bigint
+): 'buyer' | 'seller' | 'split' | undefined {
+  const zero = BigInt(0);
+  if (buyerAmount <= zero && vendorAmount <= zero) return undefined;
+  if (buyerAmount > zero && vendorAmount <= zero) return 'buyer';
+  if (vendorAmount > zero && buyerAmount <= zero) return 'seller';
+  return 'split';
+}
+
+/** Derive ruling outcome from disputeClose (amounts first, verdict text as explanation). */
+export function parseDisputeCloseDetails(
+  disputeClose?: DisputeCloseSlice | null,
+  options?: { paymentDivisibility?: number; paymentCoin?: string; displayCurrency?: string }
+): ParsedDisputeCloseDetails {
+  if (!disputeClose) return {};
+
+  const resolutionText = disputeClose.verdict?.trim() || undefined;
+  const buyerAmount = parseMinimalBigInt(disputeClose.releaseInfo?.buyerAmount);
+  const vendorAmount = parseMinimalBigInt(disputeClose.releaseInfo?.vendorAmount);
+  const distributableTotal = buyerAmount + vendorAmount;
+  const formatPayoutAmount = (amount?: string): string | undefined => {
+    if (!amount) return undefined;
+    const formatted = formatPaymentSentAmount(
+      amount,
+      options?.paymentDivisibility ?? 18,
+      options?.paymentCoin
+    );
+    return options?.displayCurrency ? `${formatted} ${options.displayCurrency}` : formatted;
+  };
+
+  let resolution = deriveResolutionKind(buyerAmount, vendorAmount);
+  if (!resolution && resolutionText) {
+    resolution = normalizeDisputeResolution(resolutionText);
+  }
+
+  const payoutAmounts = {
+    buyerPayoutAmount: formatPayoutAmount(disputeClose.releaseInfo?.buyerAmount),
+    vendorPayoutAmount: formatPayoutAmount(disputeClose.releaseInfo?.vendorAmount),
+    moderatorPayoutAmount: formatPayoutAmount(disputeClose.releaseInfo?.moderatorAmount),
+  };
+
+  if (distributableTotal <= BigInt(0)) {
+    return { resolution, resolutionText, ...payoutAmounts };
+  }
+
+  const buyerPayoutPercent = Number((buyerAmount * BigInt(100)) / distributableTotal);
+  const vendorPayoutPercent = 100 - buyerPayoutPercent;
+
+  return {
+    resolution,
+    resolutionText,
+    buyerPayoutPercent,
+    vendorPayoutPercent,
+    ...payoutAmounts,
+  };
+}
+
+/** Legacy keyword matcher — prefer parseDisputeCloseDetails for real disputeClose payloads. */
 export function normalizeDisputeResolution(
   verdict?: string
 ): 'buyer' | 'seller' | 'split' | undefined {
   if (!verdict) return undefined;
   const v = verdict.trim().toLowerCase();
-  if (v === 'buyer' || v.includes('buyer')) return 'buyer';
-  if (v === 'seller' || v === 'vendor' || v.includes('seller') || v.includes('vendor')) {
-    return 'seller';
-  }
-  if (v === 'split' || v.includes('split') || v.includes('half')) return 'split';
+  if (v === 'buyer') return 'buyer';
+  if (v === 'seller' || v === 'vendor') return 'seller';
+  if (v === 'split') return 'split';
   return undefined;
 }

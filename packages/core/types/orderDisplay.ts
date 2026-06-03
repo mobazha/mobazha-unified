@@ -132,6 +132,18 @@ export interface DisplayDispute {
   status: 'open' | 'in_progress' | 'resolved';
   initiator: 'buyer' | 'seller';
   resolution?: 'buyer' | 'seller' | 'split';
+  /** Moderator-written ruling explanation (contract.disputeClose.verdict) */
+  resolutionText?: string;
+  /** Buyer share of escrow payout (0–100), derived from releaseInfo amounts */
+  buyerPayoutPercent?: number;
+  /** Seller share of escrow payout (0–100), derived from releaseInfo amounts */
+  vendorPayoutPercent?: number;
+  /** Formatted buyer payout amount from disputeClose.releaseInfo */
+  buyerPayoutAmount?: string;
+  /** Formatted seller payout amount from disputeClose.releaseInfo */
+  vendorPayoutAmount?: string;
+  /** Formatted moderator fee amount from disputeClose.releaseInfo */
+  moderatorPayoutAmount?: string;
   /** When the dispute was opened (from contract.disputeOpen.timestamp) */
   openedAt?: string;
   /** When the dispute was closed (from contract.disputeClose.timestamp) */
@@ -164,6 +176,7 @@ export type DisplayOrderStatus =
   | 'delivered'
   | 'completed'
   | 'disputed'
+  | 'decided'
   | 'refunded'
   | 'cancelled'
   | 'split_resolved';

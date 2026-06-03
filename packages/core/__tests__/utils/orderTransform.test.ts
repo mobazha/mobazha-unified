@@ -836,4 +836,114 @@ describe('transformCoreOrder cancellation display', () => {
     expect(order?.dispute?.evidenceHashes).toEqual(['QmEvidenceA', 'QmEvidenceB']);
     expect(order?.dispute?.initiator).toBe('buyer');
   });
+
+  it('maps disputeClose releaseInfo into resolution outcome and explanation text', () => {
+    const rawOrder = {
+      ...buildOrder({}),
+      state: 'DECIDED',
+      contract: {
+        ...buildOrder({}).contract,
+        disputeOpen: {
+          timestamp: '2026-06-03T12:00:00Z',
+          reason: 'test dispute',
+          openedBy: 'BUYER',
+        },
+        disputeClose: {
+          timestamp: '2026-06-03T15:50:00Z',
+          verdict: 'Buyer receives 60% because delivery was incomplete.',
+          releaseInfo: {
+            buyerAmount: '6000000000000000',
+            vendorAmount: '4000000000000000',
+            moderatorAmount: '0',
+          },
+        },
+      },
+    } as any;
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.dispute?.status).toBe('resolved');
+    expect(order?.dispute?.resolution).toBe('split');
+    expect(order?.dispute?.buyerPayoutPercent).toBe(60);
+    expect(order?.dispute?.vendorPayoutPercent).toBe(40);
+    expect(order?.dispute?.buyerPayoutAmount).toBe('0.006 ETH');
+    expect(order?.dispute?.vendorPayoutAmount).toBe('0.004 ETH');
+    expect(order?.dispute?.moderatorPayoutAmount).toBe('0 ETH');
+    expect(order?.dispute?.resolutionText).toBe(
+      'Buyer receives 60% because delivery was incomplete.'
+    );
+  });
+
+  it('derives payout percentages that sum to 100', () => {
+    const rawOrder = {
+      ...buildOrder({}),
+      state: 'DECIDED',
+      contract: {
+        ...buildOrder({}).contract,
+        disputeOpen: { timestamp: '2026-06-03T12:00:00Z', reason: 'test', openedBy: 'BUYER' },
+        disputeClose: {
+          timestamp: '2026-06-03T15:50:00Z',
+          verdict: 'Split three ways approximated.',
+          releaseInfo: { buyerAmount: '1', vendorAmount: '2' },
+        },
+      },
+    } as any;
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.dispute?.buyerPayoutPercent).toBe(33);
+    expect(order?.dispute?.vendorPayoutPercent).toBe(67);
+  });
+
+  it('maps DECIDED and disputeClose to display status decided', () => {
+    const rawOrder = {
+      ...buildOrder({}),
+      state: 'DECIDED',
+      contract: {
+        ...buildOrder({}).contract,
+        disputeOpen: { timestamp: '2026-06-03T12:00:00Z', reason: 'test', openedBy: 'BUYER' },
+        disputeClose: {
+          timestamp: '2026-06-03T15:50:00Z',
+          verdict: 'Full refund to buyer.',
+          releaseInfo: { buyerAmount: '100', vendorAmount: '0' },
+        },
+      },
+    } as any;
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.status).toBe('decided');
+  });
+
+  it('promotes disputed display status to decided when disputeClose exists', () => {
+    const rawOrder = {
+      ...buildOrder({}),
+      state: 'DISPUTED',
+      contract: {
+        ...buildOrder({}).contract,
+        disputeOpen: { timestamp: '2026-06-03T12:00:00Z', reason: 'test', openedBy: 'BUYER' },
+        disputeClose: {
+          timestamp: '2026-06-03T15:50:00Z',
+          verdict: 'Seller keeps funds.',
+          releaseInfo: { buyerAmount: '0', vendorAmount: '100' },
+        },
+      },
+    } as any;
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order?.status).toBe('decided');
+  });
 });

@@ -8,7 +8,10 @@ export {
   mapOrderState,
   deriveCancellationContext,
   isRefundSettlementConfirmed,
+  parseDisputeCloseDetails,
+  normalizeDisputeResolution,
 } from './orderTransform';
+export type { ParsedDisputeCloseDetails } from './orderTransform';
 export type { CancellationSourceContract, CancellationSourceData } from './orderTransform';
 export { applyPaymentSessionToDisplayOrder, isDirectPaymentOrder } from './paymentSessionDisplay';
 export type { DirectPaymentOrderSignals } from './paymentSessionDisplay';
