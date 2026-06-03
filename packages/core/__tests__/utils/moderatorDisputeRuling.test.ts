@@ -4,6 +4,7 @@ import {
   createRulingDraftFromPreset,
   createRulingDraftFromPresetWithConstraints,
   isModeratorRulingDraftValid,
+  isDisputeClosedFromCase,
   isVendorOrderUnconfirmedFromCase,
   mapModeratorDisputeApiError,
   percentagesFromPreset,
@@ -57,6 +58,21 @@ describe('moderatorDisputeRuling', () => {
         'vendor must provide his copy of the contract before you can release funds to the vendor'
       )
     ).toBe('order.moderatorRuling.errors.vendorContractRequired');
+  });
+
+  it('mapModeratorDisputeApiError recognizes already closed disputes', () => {
+    expect(mapModeratorDisputeApiError('the dispute has already been closed')).toBe(
+      'order.moderatorRuling.errors.alreadyClosed'
+    );
+  });
+
+  it('isDisputeClosedFromCase recognizes closed case payloads', () => {
+    expect(isDisputeClosedFromCase(null)).toBe(false);
+    expect(isDisputeClosedFromCase({})).toBe(false);
+    expect(isDisputeClosedFromCase({ state: 'RESOLVED' })).toBe(true);
+    expect(isDisputeClosedFromCase({ state: 'DECIDED' })).toBe(true);
+    expect(isDisputeClosedFromCase({ disputeClose: { verdict: 'buyer receives 60%' } })).toBe(true);
+    expect(isDisputeClosedFromCase({ resolution: { buyerPercentage: 60 } })).toBe(true);
   });
 
   it('isVendorOrderUnconfirmedFromCase when vendor contract lacks confirmation', () => {

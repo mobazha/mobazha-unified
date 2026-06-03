@@ -763,6 +763,8 @@ export const en: TranslationResource = {
       packageShippedWithTracking: 'Package shipped - {{shipper}}: {{trackingNumber}}',
       orderCompleted: 'Order completed',
       disputeOpened: 'Dispute opened',
+      disputeRulingIssued: 'Moderator ruling issued',
+      disputeFundsReleased: 'Dispute funds released per ruling',
       fiatDisputeOpened: 'Payment disputed by buyer via payment provider',
       disputeClosed: 'Dispute closed: {{verdict}}',
       refunded: 'Order refunded',
@@ -859,6 +861,12 @@ export const en: TranslationResource = {
         'Funds are on hold while dispute resolution reviews your case. You can add context in Discussion.',
       disputedHintSeller:
         'Payout is paused while dispute resolution reviews this case. Respond in Discussion and keep delivery records handy.',
+      decided: 'Moderator ruling issued',
+      decidedHint: 'Accept the ruling to release escrowed funds.',
+      decidedHintBuyer:
+        'The moderator has ruled on this dispute. Review the outcome and accept the ruling to receive your share.',
+      decidedHintSeller:
+        'The moderator has ruled on this dispute. Review the outcome and accept the ruling to receive your payout.',
       cancelledBuyer: 'This order was cancelled because payment was not completed in time',
       cancelledSeller: 'This order was cancelled — the buyer did not complete payment',
       cancelledHintBuyer: 'No payment was charged. You can place a new order anytime.',
@@ -994,6 +1002,11 @@ export const en: TranslationResource = {
     },
     disputeSummary: {
       title: 'Dispute in progress',
+      titleDecided: 'Ruling issued',
+      titleResolved: 'Dispute resolved',
+      awaitingAcceptance:
+        'The moderator has issued a ruling. Accept it to release funds according to the decision.',
+      resolvedHint: 'Funds were released according to the moderator ruling below.',
       fundsHeld: 'Payment is held securely until dispute resolution completes.',
       evidence: 'Submitted evidence ({{count}})',
       noEvidenceBuyer:
@@ -1489,6 +1502,10 @@ export const en: TranslationResource = {
       buyerReceives: 'Buyer receives',
       sellerReceives: 'Seller receives',
       moderatorFee: 'Moderator fee',
+      escrowTotal: 'Escrow total',
+      releaseTx: 'On-chain release',
+      platformFeeHint:
+        'Store platform fee deducted from escrow (locked at checkout). Not part of the moderator split.',
       moderatorHint:
         'As the moderator, you can help resolve this dispute by reviewing the evidence and making a fair decision.',
       evidence: 'Evidence',
@@ -1516,6 +1533,7 @@ export const en: TranslationResource = {
       resolved: 'Resolved',
       resolvedFavor: 'Resolved in favor of {{party}}',
       resolvedSplit: 'Funds split between parties',
+      payoutSplit: 'Buyer {{buyerPercent}}% · Seller {{vendorPercent}}%',
       customSplit: 'Custom split',
     },
     moderatorRuling: {
@@ -1550,6 +1568,7 @@ export const en: TranslationResource = {
         vendorContractRequired:
           'The seller has not provided their contract copy yet. Award 100% to the buyer, or wait until the seller syncs their order.',
         generic: 'Could not submit the ruling. Please try again.',
+        alreadyClosed: 'This dispute already has a ruling. Refreshing the order status.',
         caseDetailsUnavailable: 'Could not load dispute case details. Refresh and try again.',
         orderDataUnavailable:
           'Settlement data for this order is not available on your node. If you already submitted a ruling, wait for the buyer or seller to accept it.',
@@ -1689,6 +1708,7 @@ export const en: TranslationResource = {
       paid: 'Paid',
       refunded: 'Refunded',
       disputed: 'Disputed',
+      rulingPending: 'Ruling pending acceptance',
       transactionId: 'Transaction ID',
       timelineTitle: 'Payment confirmed',
       timelineDescription: 'The buyer paid with fiat. The order can continue.',
@@ -1730,6 +1750,14 @@ export const en: TranslationResource = {
       expiresAt: 'Access expires {{date}}',
       disputeFrozenNote:
         'Downloads are paused while dispute resolution is in progress. Access may resume after the case is closed.',
+      disputeRevokedBuyerWon:
+        'Digital access ended after the dispute was resolved in your favor with a full refund.',
+      disputeRevokedSellerWon:
+        'Digital access ended after the dispute was resolved in the seller’s favor.',
+      disputeRevokedAfterSplit:
+        'Access is limited after the split dispute ruling. Contact the seller if you expected continued access.',
+      disputeResolvedRestoring:
+        'The dispute is closed. Access should update shortly — try refreshing this page.',
       restrictedReason: {
         frozen: 'Temporarily unavailable',
         disputed: 'Paused during dispute resolution',
@@ -2583,6 +2611,11 @@ export const en: TranslationResource = {
       completedSellerDesc: 'Order complete — funds have been released to your account.',
       disputed: 'Dispute In Progress',
       disputedDesc: 'Countdown paused — under review',
+      disputeRulingIssued: 'Ruling issued — awaiting acceptance',
+      disputeRulingIssuedDesc:
+        'Accept the ruling below to release funds according to the moderator decision.',
+      disputeRulingIssuedModeratorNote:
+        '{{moderator}} issued a ruling. Both parties must accept before funds are released.',
       disputedModeratorAssigned:
         '{{moderator}} is reviewing this dispute. Funds stay on hold until a ruling is accepted.',
       afterSale: 'After-Sale Window',

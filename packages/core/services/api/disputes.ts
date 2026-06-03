@@ -69,6 +69,12 @@ export interface DisputeCase {
     openedBy?: string;
     timestamp?: string;
   };
+  /** Raw dispute close message from GET /v1/cases/{orderID}; present after moderator ruling. */
+  disputeClose?: {
+    verdict?: string;
+    timestamp?: string;
+    [key: string]: unknown;
+  };
   resolution?: {
     buyerPercentage: number;
     vendorPercentage: number;
@@ -302,6 +308,7 @@ export async function getCaseDetails(orderId: string): Promise<DisputeCase | nul
         ),
         read: Boolean(raw.read),
         unreadChatMessages: typeof raw.unreadChatMessages === 'number' ? raw.unreadChatMessages : 0,
+        disputeClose: raw.disputeClose as DisputeCase['disputeClose'],
         resolution: raw.resolution as DisputeCase['resolution'],
       };
     } catch {
@@ -396,11 +403,18 @@ export async function resolveDispute(
   vendorPercentage: number,
   resolution: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_CLOSE(orderId), {
-    buyerPercentage,
-    vendorPercentage,
-    resolution,
-  });
+  const response = await authPost<{ success?: boolean; error?: string }>(
+    NODE_API.DISPUTE_CLOSE(orderId),
+    {
+      buyerPercentage,
+      vendorPercentage,
+      resolution,
+    }
+  );
+  return {
+    success: response.success !== false,
+    error: response.error,
+  };
 }
 
 /**
@@ -409,7 +423,14 @@ export async function resolveDispute(
 export async function acceptDisputeResolution(
   orderId: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_RELEASE(orderId), {});
+  const response = await authPost<{ success?: boolean; error?: string }>(
+    NODE_API.DISPUTE_RELEASE(orderId),
+    {}
+  );
+  return {
+    success: response.success !== false,
+    error: response.error,
+  };
 }
 
 /**
@@ -418,7 +439,14 @@ export async function acceptDisputeResolution(
 export async function releaseEscrowAfterTimeout(
   orderId: string
 ): Promise<{ success: boolean; error?: string }> {
-  return authPost(NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT(orderId), {});
+  const response = await authPost<{ success?: boolean; error?: string }>(
+    NODE_API.DISPUTE_RELEASE_AFTER_TIMEOUT(orderId),
+    {}
+  );
+  return {
+    success: response.success !== false,
+    error: response.error,
+  };
 }
 
 /**

@@ -28,6 +28,12 @@ export type CaseVendorConfirmationSlice = {
   vendorContract?: { orderConfirmation?: unknown } | null;
 };
 
+export type CaseDisputeCloseSlice = {
+  disputeClose?: unknown;
+  resolution?: unknown;
+  state?: string;
+};
+
 /** Seller has vendor contract on case but never sent orderConfirmation (desktop parity). */
 export function isVendorOrderUnconfirmedFromCase(
   casePayload: CaseVendorConfirmationSlice | null | undefined
@@ -36,6 +42,19 @@ export function isVendorOrderUnconfirmedFromCase(
   const vendor = casePayload.vendorContract;
   if (!vendor || typeof vendor !== 'object') return false;
   return vendor.orderConfirmation == null;
+}
+
+export function isDisputeClosedFromCase(
+  casePayload: CaseDisputeCloseSlice | null | undefined
+): boolean {
+  if (!casePayload) return false;
+  const state = typeof casePayload.state === 'string' ? casePayload.state.toLowerCase() : '';
+  return Boolean(
+    casePayload.disputeClose ||
+    casePayload.resolution ||
+    state === 'resolved' ||
+    state === 'decided'
+  );
 }
 
 export function percentagesFromPreset(preset: ModeratorRulingPreset): {
@@ -178,6 +197,12 @@ export function mapModeratorDisputeApiError(message: string): string {
   }
   if (lower.includes('unauthorized') || lower.includes('401')) {
     return 'order.moderatorRuling.errors.unauthorized';
+  }
+  if (
+    lower.includes('dispute has already been closed') ||
+    lower.includes('dispute is already closed')
+  ) {
+    return 'order.moderatorRuling.errors.alreadyClosed';
   }
   if (lower.includes('vendor must provide') || lower.includes('copy of the contract')) {
     return 'order.moderatorRuling.errors.vendorContractRequired';

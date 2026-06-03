@@ -1158,7 +1158,14 @@ export async function acceptDispute(
   orderId: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_RELEASE(orderId), {});
+    const response = await authPost<{ success?: boolean; error?: string }>(
+      NODE_API.DISPUTE_RELEASE(orderId),
+      {}
+    );
+    return {
+      success: response.success !== false,
+      error: response.error,
+    };
   };
 
   const mockFn = async () => {

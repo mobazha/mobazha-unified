@@ -117,6 +117,8 @@ export type {
   DisplayOrder,
   DisplayOrderItem,
   DisplayOrderPricingBreakdown,
+  DisplayOrderSettlementBreakdown,
+  DisplayOrderSettlementBreakdownLine,
   DisplayOrderParticipant,
   DisplayOrderProtection,
   DisplayAfterSaleDispute,
