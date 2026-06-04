@@ -5,6 +5,7 @@ export interface OrderThreadContext {
   orderId: string;
   productTitle?: string;
   orderState?: string;
+  contractType?: string;
   counterpartName?: string;
   counterpartPeerID?: string;
   viewType: 'sale' | 'purchase';
@@ -42,6 +43,18 @@ function readMetadataTitle(metadata?: RoomMetadata): string | undefined {
   }
   if (typeof metadata.title === 'string' && metadata.title.trim()) {
     return metadata.title.trim();
+  }
+  return undefined;
+}
+
+function readMetadataContractType(metadata?: RoomMetadata): string | undefined {
+  if (!metadata) return undefined;
+  if (typeof metadata.contractType === 'string' && metadata.contractType.trim()) {
+    return metadata.contractType.trim();
+  }
+  const custom = metadata.customData?.contractType;
+  if (typeof custom === 'string' && custom.trim()) {
+    return custom.trim();
   }
   return undefined;
 }
@@ -117,6 +130,7 @@ export function getOrderThreadContext(
     orderId,
     productTitle,
     orderState: room.metadata?.orderState,
+    contractType: readMetadataContractType(room.metadata),
     counterpartName: counterpart?.displayName,
     counterpartPeerID: counterpart?.peerID,
     viewType: getOrderDetailViewType(currentPeerID ?? undefined, room.metadata),

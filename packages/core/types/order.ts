@@ -129,6 +129,8 @@ export interface OrderListItem {
   moderated: boolean;
   /** settlementSpec.escrowType from payment (managed_escrow / utxo_script / solana_escrow) */
   paymentEscrowType?: string;
+  /** listing metadata contractType (PHYSICAL_GOOD / SERVICE / DIGITAL_GOOD) */
+  contractType?: string;
   unreadChatMessages?: number;
 }
 

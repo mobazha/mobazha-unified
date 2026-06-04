@@ -81,7 +81,8 @@ interface UseNotificationsReturn {
   setFilter: (filter: NotificationFilter) => void;
   markAsRead: (id: string) => Promise<{ success: boolean; error?: string }>;
   markAllAsRead: () => Promise<{ success: boolean; error?: string }>;
-  deleteNotification: (id: string) => void;
+  deleteNotification: (id: string) => Promise<{ success: boolean; error?: string }>;
+  deleteNotifications: (ids: string[]) => Promise<{ success: boolean; error?: string }>;
   clearNotifications: () => void;
 
   // 动作：声音设置
@@ -198,6 +199,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         setHasMore(result.hasMore);
         setTotal(result.total);
         setLastOffsetId(result.lastOffsetId || '');
+        store.setUnreadCount(result.unread);
 
         // 转换并存储到 store（避免依赖 apiNotifications 造成重复请求）
         if (reset) {
@@ -289,6 +291,12 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       const result = await notificationsApi.markAllNotificationsAsRead();
       if (result.success) {
         getStoreActions().markAllAsRead();
+        const updatedNotifications = apiNotificationsRef.current.map(notification => ({
+          ...notification,
+          read: true,
+        }));
+        apiNotificationsRef.current = updatedNotifications;
+        setApiNotifications(updatedNotifications);
       }
       return result;
     } catch (err) {
@@ -297,14 +305,54 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     }
   }, [getStoreActions]);
 
+  const deleteNotifications = useCallback(
+    async (ids: string[]): Promise<{ success: boolean; error?: string }> => {
+      if (ids.length === 0) {
+        return { success: true };
+      }
+
+      const removedById = new Map(
+        apiNotificationsRef.current
+          .filter(notification => ids.includes(notification.id))
+          .map(notification => [notification.id, notification] as const)
+      );
+      const hadUnreadRemoved = [...removedById.values()].some(notification => !notification.read);
+
+      ids.forEach(id => getStoreActions().removeNotification(id));
+
+      const updatedNotifications = apiNotificationsRef.current.filter(
+        notification => !ids.includes(notification.id)
+      );
+      apiNotificationsRef.current = updatedNotifications;
+      setApiNotifications(updatedNotifications);
+
+      try {
+        const result = await notificationsApi.batchNotifications('delete', ids);
+        if (!result.success) {
+          void fetchNotifications(true);
+          return { success: false, error: 'Failed to delete notifications' };
+        }
+        if (hadUnreadRemoved) {
+          void fetchUnreadCount();
+        }
+        return { success: true };
+      } catch (err) {
+        void fetchNotifications(true);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete notifications';
+        return { success: false, error: errorMessage };
+      }
+    },
+    [getStoreActions, fetchNotifications, fetchUnreadCount]
+  );
+
   /**
-   * 删除通知
+   * 删除单条通知
    */
   const deleteNotification = useCallback(
-    (id: string): void => {
-      getStoreActions().removeNotification(id);
+    async (id: string): Promise<{ success: boolean; error?: string }> => {
+      return deleteNotifications([id]);
     },
-    [getStoreActions]
+    [deleteNotifications]
   );
 
   /**
@@ -405,6 +453,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   useEffect(() => {
     if (enableRealtime) {
       notificationService.init();
+      void fetchUnreadCount();
     }
 
     if (autoLoad) {
@@ -482,6 +531,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       markAsRead,
       markAllAsRead,
       deleteNotification,
+      deleteNotifications,
       clearNotifications,
 
       // 动作：声音设置
@@ -524,6 +574,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       markAsRead,
       markAllAsRead,
       deleteNotification,
+      deleteNotifications,
       clearNotifications,
       setSoundEnabled,
       setTtsEnabled,

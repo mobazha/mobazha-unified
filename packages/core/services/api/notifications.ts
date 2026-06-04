@@ -14,7 +14,7 @@ import {
   resolveOrderOrCaseID,
   resolvePeerID,
 } from '../../utils/normalizeIds';
-
+import { sanitizeProductTitle } from '../../utils/notificationDisplay';
 // 后端返回的原始通知记录格式
 interface BackendNotificationRecord {
   timestamp: string;
@@ -77,7 +77,7 @@ interface BackendNotificationRecord {
 }
 
 // 通知过滤器类型
-export type NotificationFilter = 'all' | 'orders' | 'followers';
+export type NotificationFilter = 'all' | 'orders' | 'followers' | 'transactions' | 'system';
 
 // 过滤器到后端类型的映射（使用 dot-separated 格式）
 export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
@@ -85,6 +85,10 @@ export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
   orders:
     'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.shipped,order.completed,order.rated,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
   followers: 'social.follow,social.moderator_add,social.moderator_remove',
+  transactions:
+    'order.funded,order.payment_received,order.refunded,order.vendor_finalized,payment.locked,payment.expired,payment.cancelled',
+  system:
+    'order.stale_warning,order.expired,order.declined,order.cancelled,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,social.moderator_add,social.moderator_remove',
 };
 
 interface BackendNotificationsResponse {
@@ -295,7 +299,7 @@ function generateNotificationMessage(
   const buyerName =
     notification.buyerName ?? (notification as { buyerHandle?: string }).buyerHandle ?? '';
   const shortOrderId = orderId ? orderId.slice(0, 8) : '';
-  const productTitle = notification.title || '';
+  const productTitle = sanitizeProductTitle(notification.title);
 
   switch (type) {
     case 'order.created':
@@ -457,7 +461,7 @@ export async function getNotifications(
             slug: notif.slug,
             thumbnail: notif.thumbnail,
             avatarHashes: notif.avatarHashes,
-            productTitle: notif.title,
+            productTitle: sanitizeProductTitle(notif.title),
             price: notif.price,
             vendorName: notif.vendorName ?? (notif as { vendorHandle?: string }).vendorHandle,
             vendorAvatar: notif.vendorAvatar,
@@ -505,6 +509,26 @@ export async function getNotifications(
       );
     } else if (filter === 'followers') {
       filtered = mockNotifications.filter(n => n.type.startsWith('social.'));
+    } else if (filter === 'transactions') {
+      filtered = mockNotifications.filter(
+        n =>
+          n.type.startsWith('payment.') ||
+          [
+            'order.funded',
+            'order.payment_received',
+            'order.refunded',
+            'order.vendor_finalized',
+          ].includes(n.type)
+      );
+    } else if (filter === 'system') {
+      filtered = mockNotifications.filter(
+        n =>
+          n.type.startsWith('dispute.') ||
+          ['order.stale_warning', 'order.expired', 'order.declined', 'order.cancelled'].includes(
+            n.type
+          ) ||
+          n.type.startsWith('social.moderator')
+      );
     }
     return {
       notifications: filtered,
@@ -589,10 +613,37 @@ export async function markAllNotificationsAsRead(
 }
 
 export async function batchNotifications(
-  action: 'read' | 'delete',
+  action: 'markAsRead' | 'delete',
   notificationIds: string[]
-): Promise<{ success: boolean }> {
-  return authPost(NODE_API.NOTIFICATIONS_BATCH, { action, ids: notificationIds });
+): Promise<{ success: boolean; count?: number }> {
+  const realFn = async () => {
+    return authPost<{ success: boolean; count: number }>(NODE_API.NOTIFICATIONS_BATCH, {
+      action,
+      ids: notificationIds,
+    });
+  };
+
+  const mockFn = async () => {
+    if (action === 'delete') {
+      notificationIds.forEach(id => {
+        const index = mockNotifications.findIndex(n => n.id === id);
+        if (index >= 0) mockNotifications.splice(index, 1);
+      });
+    } else {
+      notificationIds.forEach(id => {
+        const notification = mockNotifications.find(n => n.id === id);
+        if (notification) notification.read = true;
+      });
+    }
+    return { success: true, count: notificationIds.length };
+  };
+
+  return withMockFallback(realFn, mockFn, '/notifications/batch');
+}
+
+export async function deleteNotification(notificationId: string): Promise<{ success: boolean }> {
+  const result = await batchNotifications('delete', [notificationId]);
+  return { success: result.success };
 }
 
 const GUEST_ORDER_TOKEN_PREFIX = 'gst_';
@@ -637,6 +688,7 @@ export const notificationsApi = {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   batchNotifications,
+  deleteNotification,
   getNotificationRoute,
   NOTIFICATION_FILTER_TYPES,
 };

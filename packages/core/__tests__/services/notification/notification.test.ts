@@ -211,6 +211,22 @@ describe('Notification Store', () => {
     });
   });
 
+  it('should preserve unread count when replacing notification list', () => {
+    const store = useNotificationStore.getState();
+    store.setUnreadCount(16);
+    store.setNotifications([
+      {
+        id: 'test-1',
+        type: 'order.created',
+        timestamp: new Date().toISOString(),
+        read: false,
+        orderID: 'order-123',
+      } as OrderNotificationData,
+    ]);
+
+    expect(useNotificationStore.getState().unreadCount).toBe(16);
+  });
+
   it('should add notification correctly', () => {
     const store = useNotificationStore.getState();
     const notification: OrderNotificationData = {
