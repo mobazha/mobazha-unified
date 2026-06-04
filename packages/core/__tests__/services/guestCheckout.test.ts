@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   completeGuestOrder,
   normalizeGuestOrderStatus,
+  quoteGuestOrderSupply,
   shipGuestOrder,
 } from '../../services/api/guestCheckout';
 
@@ -9,9 +10,10 @@ vi.mock('../../services/api/helpers', () => ({
   authPut: vi.fn(),
   authPost: vi.fn(),
   publicGet: vi.fn(),
+  publicPost: vi.fn(),
 }));
 
-import { authPost, authPut, publicGet } from '../../services/api/helpers';
+import { authPost, authPut, publicGet, publicPost } from '../../services/api/helpers';
 
 const statusDto = {
   orderToken: 'tok',
@@ -84,6 +86,23 @@ describe('guest order mutations', () => {
     vi.mocked(authPut).mockReset();
     vi.mocked(authPost).mockReset();
     vi.mocked(publicGet).mockReset();
+    vi.mocked(publicPost).mockReset();
+  });
+
+  it('posts guest supply quote to public quote endpoint', async () => {
+    vi.mocked(publicPost).mockResolvedValue({
+      canSell: true,
+      items: [{ listingSlug: 'item-a', quantity: 1, status: 'available', available: true }],
+    });
+
+    const result = await quoteGuestOrderSupply({
+      items: [{ listingSlug: 'item-a', listingHash: 'hash', quantity: 1 }],
+    });
+
+    expect(publicPost).toHaveBeenCalledWith('/guest/orders/quote', {
+      items: [{ listingSlug: 'item-a', listingHash: 'hash', quantity: 1 }],
+    });
+    expect(result.canSell).toBe(true);
   });
 
   it('refetches status after ship returns 204', async () => {

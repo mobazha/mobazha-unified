@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Key,
   Upload,
@@ -88,56 +88,43 @@ export function LicenseKeyPoolPanel({
 
   const [stats, setStats] = useState<LicenseKeyPoolStats | null>(null);
   const [keys, setKeys] = useState<MaskedLicenseKey[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showImport, setShowImport] = useState(false);
   const [pendingRevokeId, setPendingRevokeId] = useState<string | null>(null);
   const variantScoped = Boolean(variantSku?.trim());
+  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    if (variantScoped) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStats(null);
-      setKeys([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    // Refetch when refreshKey changes — show loading=true immediately so a
-    // stale empty state doesn't flash. Async fetch dwarfs any cascading-render
-    // cost the rule warns about.
-
+  const loadPool = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
+    try {
+      const [s, k] = await Promise.all([
+        digitalAssetsApi.getLicenseKeyPoolStats(listingSlug, variantSku),
+        digitalAssetsApi.listLicenseKeys(listingSlug, variantSku, 100, 0),
+      ]);
+      if (requestId !== requestIdRef.current) return;
+      setStats(s);
+      setKeys(Array.isArray(k) ? k : []);
+    } catch (err: unknown) {
+      if (requestId !== requestIdRef.current) return;
+      setError(
+        err instanceof Error
+          ? err.message
+          : t('common.unknownError', { defaultValue: 'Unknown error' })
+      );
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [listingSlug, variantSku, t]);
 
-    Promise.all([
-      digitalAssetsApi.getLicenseKeyPoolStats(listingSlug, variantSku),
-      digitalAssetsApi.listLicenseKeys(listingSlug, variantSku, 100, 0),
-    ])
-      .then(([s, k]) => {
-        if (cancelled) return;
-        setStats(s);
-        setKeys(Array.isArray(k) ? k : []);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(
-          err instanceof Error
-            ? err.message
-            : t('common.unknownError', { defaultValue: 'Unknown error' })
-        );
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [listingSlug, variantSku, refreshKey, variantScoped, t]);
+  useEffect(() => {
+    void loadPool();
+  }, [loadPool, refreshKey]);
 
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
@@ -168,33 +155,22 @@ export function LicenseKeyPoolPanel({
   const lowInventoryWarning = stats != null && stats.available < 5 && stats.available > 0;
   const outOfStock = stats != null && stats.available === 0 && stats.total > 0;
 
-  if (variantScoped) {
-    return (
-      <div
-        className={cn(
-          'flex items-start gap-2 rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground',
-          className
-        )}
-      >
-        <Ban className="w-4 h-4 mt-0.5 shrink-0" />
-        <span>
-          {t('listing.digital.variantUnsupported', {
-            defaultValue:
-              'Variant-specific digital delivery is not supported in Phase 1. Configure digital assets at the listing level.',
-          })}
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Key className="w-5 h-5 text-primary" />
           <h3 className="text-base font-semibold">
             {t('listing.digital.licenseKeyPoolHeader', { defaultValue: 'License key pool' })}
           </h3>
+          {variantScoped && (
+            <Badge variant="secondary" className="text-xs">
+              {t('listing.digital.variantScopeBadge', {
+                defaultValue: 'Variant: {{sku}}',
+                sku: variantSku?.trim() ?? '',
+              })}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button

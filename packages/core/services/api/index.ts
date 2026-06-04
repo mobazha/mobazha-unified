@@ -255,6 +255,10 @@ export type {
   GuestOrderStatus,
   GuestOrderSummary,
   GuestCheckoutSettings,
+  GuestOrderSupplyQuoteItem,
+  GuestOrderSupplyQuoteResponse,
+  QuoteGuestOrderSupplyRequest,
+  SupplyAvailabilityStatus,
 } from './guestCheckout';
 
 // API Tokens (MCP / programmatic access)

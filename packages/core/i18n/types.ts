@@ -1953,6 +1953,8 @@ export interface TranslationResource {
       image: string;
       selectImage: string;
       variant: string;
+      productId?: string;
+      productIdPlaceholder?: string;
       price: string;
       compareAtPrice: string;
       quantity: string;
@@ -4457,6 +4459,27 @@ export interface TranslationResource {
   auth?: TranslationSection;
 
   collections?: TranslationSection;
+
+  supplyAvailability?: {
+    checking?: string;
+    quoteError?: string;
+    allAvailable?: string;
+    unavailableTitle?: string;
+    unavailableBody?: string;
+    manualActionTitle?: string;
+    manualActionBody?: string;
+    warningTitle?: string;
+    statusAvailable?: string;
+    statusLowStock?: string;
+    statusOutOfStock?: string;
+    statusUnlimited?: string;
+    statusManualAction?: string;
+    statusSupplierUnavailable?: string;
+    statusUnknown?: string;
+    orderConflictStock?: string;
+    orderConflictManual?: string;
+    orderConflictGeneric?: string;
+  };
 
   guestCheckout?: {
     cartEmpty?: string;

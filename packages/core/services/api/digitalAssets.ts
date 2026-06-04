@@ -208,7 +208,7 @@ const UPLOAD_TIMEOUT_MS = 30 * 60 * 1000;
 
 export interface UploadDigitalFileStreamInput {
   listingSlug: string;
-  /** Phase 1 supports listing-level digital assets only. */
+  /** Empty or omitted = listing-wide asset; non-empty scopes to a variant SKU. */
   variantSku?: string;
   fileName?: string;
   mimeType?: string;
@@ -240,8 +240,6 @@ export function uploadDigitalFileStream(
   input: UploadDigitalFileStreamInput,
   options: UploadDigitalFileStreamOptions = {}
 ): Promise<DigitalAssetInfo> {
-  assertPhase1UniversalAsset(input.variantSku);
-
   const { onProgress, signal } = options;
 
   return new Promise<DigitalAssetInfo>((resolve, reject) => {
@@ -260,7 +258,7 @@ export function uploadDigitalFileStream(
 
     const body = new FormData();
     body.append('listingSlug', input.listingSlug);
-    body.append('variantSku', '');
+    body.append('variantSku', input.variantSku?.trim() ?? '');
     body.append('fileName', fileName);
     body.append('mimeType', mimeType);
     // Field name `file` must come last — backend reads the multipart stream
@@ -394,26 +392,18 @@ function toAbortError(signal?: AbortSignal): Error {
 }
 
 export function createLinkAsset(req: CreateLinkAssetRequest): Promise<DigitalAssetInfo> {
-  assertPhase1UniversalAsset(req.variantSku);
-  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LINK, {
-    ...req,
-    variantSku: undefined,
-  });
+  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LINK, withVariantSku(req));
 }
 
 export function createLicenseKeyAsset(
   req: CreateLicenseKeyAssetRequest
 ): Promise<DigitalAssetInfo> {
-  assertPhase1UniversalAsset(req.variantSku);
-  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LICENSE_KEY, {
-    ...req,
-    variantSku: undefined,
-  });
+  return authPost<DigitalAssetInfo>(NODE_API.DIGITAL_ASSET_CREATE_LICENSE_KEY, withVariantSku(req));
 }
 
 export function listAssets(listingSlug: string, variantSku?: string): Promise<DigitalAssetInfo[]> {
   const params = new URLSearchParams({ listingSlug });
-  if (variantSku) params.set('variantSku', variantSku);
+  setVariantSkuParam(params, variantSku);
   return authGet<DigitalAssetInfo[]>(`${NODE_API.DIGITAL_ASSETS}?${params.toString()}`);
 }
 
@@ -436,17 +426,25 @@ export function deleteAsset(assetID: string): Promise<void> {
 export function importLicenseKeys(
   req: ImportLicenseKeysRequest
 ): Promise<ImportLicenseKeysResponse> {
-  assertPhase1UniversalAsset(req.variantSku);
-  return authPost<ImportLicenseKeysResponse>(NODE_API.DIGITAL_ASSET_LICENSE_KEYS, {
-    ...req,
-    variantSku: undefined,
-  });
+  return authPost<ImportLicenseKeysResponse>(
+    NODE_API.DIGITAL_ASSET_LICENSE_KEYS,
+    withVariantSku(req)
+  );
 }
 
-function assertPhase1UniversalAsset(variantSku?: string): void {
-  if (variantSku?.trim()) {
-    throw new Error('Variant-specific digital delivery is not supported in Phase 1.');
+function withVariantSku<T extends { variantSku?: string }>(req: T): T {
+  const sku = req.variantSku?.trim();
+  if (!sku) {
+    const rest = { ...req };
+    delete rest.variantSku;
+    return rest as T;
   }
+  return { ...req, variantSku: sku };
+}
+
+function setVariantSkuParam(params: URLSearchParams, variantSku?: string): void {
+  const sku = variantSku?.trim();
+  if (sku) params.set('variantSku', sku);
 }
 
 export function listLicenseKeys(
@@ -460,7 +458,7 @@ export function listLicenseKeys(
     limit: String(limit),
     offset: String(offset),
   });
-  if (variantSku) params.set('variantSku', variantSku);
+  setVariantSkuParam(params, variantSku);
   return authGet<MaskedLicenseKey[]>(`${NODE_API.DIGITAL_ASSET_LICENSE_KEYS}?${params.toString()}`);
 }
 
@@ -469,7 +467,7 @@ export function getLicenseKeyPoolStats(
   variantSku?: string
 ): Promise<LicenseKeyPoolStats> {
   const params = new URLSearchParams({ listingSlug });
-  if (variantSku) params.set('variantSku', variantSku);
+  setVariantSkuParam(params, variantSku);
   return authGet<LicenseKeyPoolStats>(
     `${NODE_API.DIGITAL_ASSET_LICENSE_KEY_STATS}?${params.toString()}`
   );

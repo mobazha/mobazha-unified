@@ -104,7 +104,7 @@ export function DigitalAssetsManagerSection({
 
   // Load assets
   useEffect(() => {
-    if (!persisted || variantScoped) {
+    if (!persisted) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAssets([]);
       return;
@@ -141,7 +141,7 @@ export function DigitalAssetsManagerSection({
     return () => {
       cancelled = true;
     };
-  }, [listingSlug, variantSku, refreshKey, persisted, variantScoped, t]);
+  }, [listingSlug, variantSku, refreshKey, persisted, t]);
 
   const handleAssetCreated = useCallback(
     (asset: DigitalAssetInfo) => {
@@ -210,37 +210,23 @@ export function DigitalAssetsManagerSection({
     );
   }
 
-  if (variantScoped) {
-    return (
-      <Card className={cn('p-6', className)}>
-        <h2 className="text-lg font-semibold mb-1">
-          {t('listing.digital.title', { defaultValue: 'Digital downloads' })}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          {t('listing.digital.description', {
-            defaultValue: 'Provide files, access links, or license keys delivered after purchase.',
-          })}
-        </p>
-        <div className="flex items-start gap-2 p-3 rounded-md bg-muted/50 text-sm text-muted-foreground">
-          <Info className="w-4 h-4 mt-0.5 shrink-0" />
-          <span>
-            {t('listing.digital.variantUnsupported', {
-              defaultValue:
-                'Variant-specific digital delivery is not supported in Phase 1. Configure digital assets at the listing level.',
-            })}
-          </span>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card className={cn('p-6', className)}>
       <div className="flex items-start justify-between mb-1 gap-4">
         <div>
-          <h2 className="text-lg font-semibold">
-            {t('listing.digital.title', { defaultValue: 'Digital downloads' })}
-          </h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-semibold">
+              {t('listing.digital.title', { defaultValue: 'Digital downloads' })}
+            </h2>
+            {variantScoped && (
+              <Badge variant="secondary" className="text-xs">
+                {t('listing.digital.variantScopeBadge', {
+                  defaultValue: 'Variant: {{sku}}',
+                  sku: variantSku?.trim() ?? '',
+                })}
+              </Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             {t('listing.digital.description', {
               defaultValue:

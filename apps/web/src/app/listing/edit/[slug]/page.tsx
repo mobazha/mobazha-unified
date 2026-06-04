@@ -57,7 +57,7 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalAssetsManagerSection,
+  DigitalListingAssetsPanel,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiAssistButton,
@@ -894,8 +894,9 @@ export default function EditListingPage() {
                 </div>
               )}
 
-              {/* 变体管理 - 仅物理商品 */}
-              {formData.contractType === 'PHYSICAL_GOOD' && (
+              {/* 变体管理 - 物理商品与数字商品（数字变体用于 variant 级交付配置） */}
+              {(formData.contractType === 'PHYSICAL_GOOD' ||
+                formData.contractType === 'DIGITAL_GOOD') && (
                 <Card
                   className="p-6"
                   ref={el => {
@@ -905,7 +906,14 @@ export default function EditListingPage() {
                   <h2 className="text-lg font-semibold text-foreground mb-1">
                     {t('listing.variants.title')}
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {formData.contractType === 'DIGITAL_GOOD'
+                      ? t('listing.digital.variantsDesc', {
+                          defaultValue:
+                            'Optional variants for different download bundles or license key pools. Set a SKU code on each variant to configure delivery separately.',
+                        })
+                      : t('listing.variantsDesc')}
+                  </p>
 
                   <VariantOptionEditor options={formData.options} onChange={updateVariantOptions} />
 
@@ -922,14 +930,14 @@ export default function EditListingPage() {
                 </Card>
               )}
 
-              {/* 数字商品 — 文件 / 链接 / License Key 池统一管理（Phase 1.0 Core MVP）*/}
+              {/* 数字商品 — 文件 / 链接 / License Key 池统一管理 */}
               {formData.contractType === 'DIGITAL_GOOD' && (
                 <div
                   ref={el => {
                     sectionRefs.current.files = el;
                   }}
                 >
-                  <DigitalAssetsManagerSection listingSlug={slug} />
+                  <DigitalListingAssetsPanel listingSlug={slug} skus={formData.skus} />
                 </div>
               )}
 

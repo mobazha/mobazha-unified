@@ -3,6 +3,10 @@
  */
 
 import type { Order, OrderListItem, PaymentSession } from '../../types';
+import type {
+  CheckoutSupplyQuoteResponse,
+  QuoteCheckoutSupplyRequest,
+} from '../../types/supplyAvailability';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
 import { NODE_API, type SettlementActionKind } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
@@ -685,6 +689,38 @@ export async function getCheckoutBreakdown(data: PurchaseData): Promise<OrderEst
   return withMockFallback(realFn, mockFn, '/orders/checkout-breakdown');
 }
 
+/** Advisory supply preflight for authenticated checkout — does not hold inventory. */
+export async function quoteCheckoutSupply(
+  data: QuoteCheckoutSupplyRequest,
+  options?: { vendorPeerID?: string }
+): Promise<CheckoutSupplyQuoteResponse> {
+  const realFn = async () => {
+    const vendorPeerID = options?.vendorPeerID?.trim();
+    return authPost<CheckoutSupplyQuoteResponse>(
+      NODE_API.ORDERS_SUPPLY_QUOTE,
+      data,
+      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+    );
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    return {
+      items: data.items.map(item => ({
+        listingSlug: item.listingSlug,
+        quantity: item.quantity,
+        status: 'unknown' as const,
+        available: false,
+        reason: 'supply_availability_disabled',
+      })),
+      canSell: true,
+      reason: 'supply_availability_disabled',
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/orders/supply-quote');
+}
+
 // ========== 订单状态操作 API ==========
 
 /**
@@ -1330,6 +1366,7 @@ export const ordersApi = {
   purchaseListing,
   estimateOrderTotal,
   getCheckoutBreakdown,
+  quoteCheckoutSupply,
 
   // 状态操作
   confirmOrder,

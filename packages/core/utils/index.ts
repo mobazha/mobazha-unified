@@ -68,6 +68,9 @@ export * from './contractTypeCheckout';
 // Guest 订单实物/数字类型推断
 export * from './guestOrderKind';
 
+// Guest checkout supply availability quote helpers
+export * from './guestSupplyQuote';
+
 // Payment readiness gate UX helpers
 export * from './paymentReadinessState';
 

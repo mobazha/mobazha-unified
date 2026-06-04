@@ -4292,6 +4292,8 @@ export const en: TranslationResource = {
       image: 'Image',
       selectImage: 'Select variant image',
       variant: 'Variant',
+      productId: 'SKU code',
+      productIdPlaceholder: 'e.g. sku-blue',
       price: 'Price',
       compareAtPrice: 'Compare at',
       quantity: 'Quantity',
@@ -4704,6 +4706,14 @@ export const en: TranslationResource = {
       confirmDeleteTitle: 'Delete digital asset?',
       confirmDeleteDesc:
         'Existing buyers will no longer receive this asset on new orders. Past entitlements are preserved.',
+      variantScopeBadge: 'Variant: {{sku}}',
+      scopeLabel: 'Digital delivery scope',
+      scopeHint: 'Choose whether downloads apply to the whole listing or a specific variant.',
+      scopeListingWide: 'All variants',
+      variantSkuHint:
+        'Add a SKU code on each variant in the Variants section to configure variant-specific downloads or license keys.',
+      variantsDesc:
+        'Optional variants for different download bundles or license key pools. Set a SKU code on each variant to configure delivery separately.',
     },
   },
 
@@ -7468,6 +7478,28 @@ export const en: TranslationResource = {
     empty: 'No collections yet',
     noProducts: 'No products in this collection',
     notFound: 'Collection not found',
+  },
+
+  supplyAvailability: {
+    checking: 'Checking availability…',
+    quoteError: 'Could not verify availability. You can still try to continue.',
+    allAvailable: 'All items are available.',
+    unavailableTitle: 'Some items are unavailable',
+    unavailableBody: 'Reduce quantities or remove unavailable items to continue.',
+    manualActionTitle: 'Seller review may be required',
+    manualActionBody:
+      'One or more items may need seller confirmation. You can try to continue, but checkout might not complete.',
+    warningTitle: 'Check availability before continuing',
+    statusAvailable: 'In stock',
+    statusLowStock: 'Only {{count}} left',
+    statusOutOfStock: 'Out of stock',
+    statusUnlimited: 'Available for download',
+    statusManualAction: 'Seller review required',
+    statusSupplierUnavailable: 'Temporarily unavailable',
+    statusUnknown: 'Availability not verified',
+    orderConflictStock: 'Could not reserve inventory. Refresh availability and try again.',
+    orderConflictManual: 'This order needs seller review before payment. Please try again later.',
+    orderConflictGeneric: 'Order creation failed',
   },
 
   guestCheckout: {

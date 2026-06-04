@@ -166,21 +166,21 @@ export interface LicenseActivationResult {
 
 export interface CreateLinkAssetRequest {
   listingSlug: string;
-  /** @deprecated Phase 1 only supports listing-level digital delivery; setting this throws client-side. */
+  /** When set, scopes delivery to this variant SKU; omit for listing-wide assets. */
   variantSku?: string;
   url: string;
 }
 
 export interface CreateLicenseKeyAssetRequest {
   listingSlug: string;
-  /** @deprecated Phase 1 only supports listing-level digital delivery; setting this throws client-side. */
+  /** When set, scopes the key pool to this variant SKU; omit for listing-wide pools. */
   variantSku?: string;
   appId?: string;
 }
 
 export interface ImportLicenseKeysRequest {
   listingSlug: string;
-  /** @deprecated Phase 1 only supports listing-level digital delivery; setting this throws client-side. */
+  /** When set, imports keys into the variant SKU pool; omit for listing-wide pools. */
   variantSku?: string;
   appId?: string;
   keys: string[];

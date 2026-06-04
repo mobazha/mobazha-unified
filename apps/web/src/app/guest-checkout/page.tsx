@@ -13,6 +13,8 @@ import {
   type CreateGuestOrderRequest,
   type GuestOrderResponse,
 } from '@mobazha/core/services/api/guestCheckout';
+import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
+import { useGuestSupplyQuote } from '@mobazha/core/hooks/useGuestSupplyQuote';
 import { GUEST_CHECKOUT_DEFAULT_COINS } from '@mobazha/core/config/guestCheckoutCoins';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import { getGatewayUrl } from '@mobazha/core/services/api/config';
@@ -33,6 +35,7 @@ import {
   type ExternalWalletPaymentInfo,
 } from '@/components/Payment/ExternalWalletPayment';
 import { AnonymousModeBanner } from '@/components/GuestCheckout/AnonymousModeBanner';
+import { GuestSupplyAvailabilityPanel } from '@/components/GuestCheckout/GuestSupplyAvailabilityPanel';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 
@@ -142,6 +145,7 @@ export default function GuestCheckoutPage() {
   );
   const [coinsLoading, setCoinsLoading] = useState(false);
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
+  const supplyQuote = useGuestSupplyQuote(items, items.length > 0);
 
   // PM-3a: fetch vendor PGP public key for client-side address encryption.
   // Only needed for physical goods that require a shipping address.
@@ -180,6 +184,9 @@ export default function GuestCheckoutPage() {
     hasDigitalItems,
   } = contractTypeCheckout;
   const STEPS = isAllDigital ? STEPS_DIGITAL : STEPS_WITH_SHIPPING;
+  const supplyBlocksCheckout =
+    items.length > 0 &&
+    (supplyQuote.loading || (supplyQuote.authoritative && !supplyQuote.canProceed));
 
   const handleAddressChange = (field: keyof Address, value: string) => {
     setAddressData(prev => ({ ...prev, [field]: value }));
@@ -268,8 +275,10 @@ export default function GuestCheckoutPage() {
         clearCart();
       } catch (err) {
         if (submitOrderAbortRef.current) return;
-        const msg = err instanceof Error ? err.message : 'Order creation failed';
-        setPaymentState({ status: 'error', message: msg });
+        setPaymentState({
+          status: 'error',
+          message: resolveGuestOrderCreationError(err, t),
+        });
       }
     },
     [
@@ -388,6 +397,16 @@ export default function GuestCheckoutPage() {
                     </div>
                   )}
 
+                  {supplyQuote.showPanel && (
+                    <GuestSupplyAvailabilityPanel
+                      cartItems={items}
+                      quote={supplyQuote.quote}
+                      loading={supplyQuote.loading}
+                      error={supplyQuote.error}
+                      blocking={supplyBlocksCheckout}
+                    />
+                  )}
+
                   {/* For digital-only orders, show a compact email field before
                       proceeding to coin selection (no shipping address needed). */}
                   {isAllDigital && (
@@ -412,7 +431,7 @@ export default function GuestCheckoutPage() {
                     className="w-full"
                     size="lg"
                     onClick={() => setStep(isAllDigital ? 'coin' : 'shipping')}
-                    disabled={!canContinueCart}
+                    disabled={!canContinueCart || supplyBlocksCheckout}
                   >
                     {isAllDigital
                       ? t('guestCheckout.continueToPayment')

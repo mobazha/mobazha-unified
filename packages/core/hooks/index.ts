@@ -17,6 +17,8 @@ export * from './useOrderDetail';
 export * from './usePaymentReadinessPoll';
 export * from './useGuestDigitalDelivery';
 export * from './useGuestOrderKind';
+export * from './useGuestSupplyQuote';
+export * from './useCheckoutSupplyQuote';
 
 // 用户资料相关
 export * from './useProfile';

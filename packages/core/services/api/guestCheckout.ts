@@ -6,8 +6,19 @@
  */
 
 import { NODE_API } from '../../config/apiPaths';
+import type {
+  GuestOrderSupplyQuoteResponse,
+  QuoteGuestOrderSupplyRequest,
+} from '../../types/supplyAvailability';
 import { getImageUrl } from './config';
 import { publicGet, publicPost, authGet, authPut, authPost, authDel } from './helpers';
+
+export type {
+  GuestOrderSupplyQuoteItem,
+  GuestOrderSupplyQuoteResponse,
+  QuoteGuestOrderSupplyRequest,
+  SupplyAvailabilityStatus,
+} from '../../types/supplyAvailability';
 
 // ========== Types ==========
 
@@ -229,6 +240,13 @@ export function buyerPortalTokenStorageKey(orderToken: string): string {
 
 export function createGuestOrder(data: CreateGuestOrderRequest): Promise<GuestOrderResponse> {
   return publicPost(NODE_API.GUEST_ORDERS, data);
+}
+
+/** Advisory supply preflight — does not hold inventory. Buyer-safe (no provider IDs). */
+export function quoteGuestOrderSupply(
+  data: QuoteGuestOrderSupplyRequest
+): Promise<GuestOrderSupplyQuoteResponse> {
+  return publicPost<GuestOrderSupplyQuoteResponse>(NODE_API.GUEST_ORDERS_QUOTE, data);
 }
 
 export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {

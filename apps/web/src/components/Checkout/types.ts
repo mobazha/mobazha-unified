@@ -5,6 +5,7 @@ import type {
   Address as CoreAddress,
   OrderItemOption,
 } from '@mobazha/core';
+import type { UseCheckoutSupplyQuoteReturn } from '@mobazha/core/hooks/useCheckoutSupplyQuote';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 
@@ -29,6 +30,7 @@ export interface CheckoutShippingRate {
 /** Resolved checkout item with all data needed for order creation */
 export interface CheckoutItem {
   id: string;
+  listingSlug: string;
   title: string;
   price: number;
   currency: string;
@@ -118,4 +120,5 @@ export interface UseCheckoutReturn {
   hasAllShippingSelected: boolean;
   hasShippingPricingIssue: boolean;
   hasFreeShippingSelection: boolean;
+  supplyQuote: UseCheckoutSupplyQuoteReturn;
 }

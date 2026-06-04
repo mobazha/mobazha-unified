@@ -17,6 +17,7 @@ import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { CheckoutContractTypeAlert } from './CheckoutContractTypeAlert';
+import { SupplyAvailabilityPanel } from '@/components/SupplyAvailability/SupplyAvailabilityPanel';
 import type { UseCheckoutReturn } from './types';
 
 interface Props {
@@ -64,6 +65,7 @@ export function CheckoutDesktop({ checkout }: Props) {
     isValidatingDiscount,
     handleApplyDiscountCode,
     handleRemoveDiscount,
+    supplyQuote,
   } = checkout;
 
   const formatItemPrice = (item: (typeof checkoutItems)[0]) =>
@@ -475,6 +477,20 @@ export function CheckoutDesktop({ checkout }: Props) {
                       hasMixedContractTypes={hasMixedContractTypes}
                       hasMissingContractType={hasMissingContractType}
                     />
+
+                    {supplyQuote.showPanel && (
+                      <SupplyAvailabilityPanel
+                        displayItems={checkoutItems.map(item => ({
+                          listingSlug: item.listingSlug,
+                          title: item.title,
+                        }))}
+                        quote={supplyQuote.quote}
+                        loading={supplyQuote.loading}
+                        error={supplyQuote.error}
+                        className="mt-4"
+                        testIdPrefix="checkout-supply-quote"
+                      />
+                    )}
 
                     <Button
                       className="w-full mt-4"

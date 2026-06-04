@@ -22,6 +22,7 @@ import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
 import { calculateDiscountAmount } from '@mobazha/core/utils/discountUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { useCheckoutSupplyQuote } from '@mobazha/core/hooks/useCheckoutSupplyQuote';
 import { useI18n } from '@mobazha/core';
 import {
   profileToCheckoutZones,
@@ -204,6 +205,7 @@ export function useCheckout(): UseCheckoutReturn {
           options && options.length > 0
             ? `${product.slug}:${options.map(option => `${option.name}=${option.value}`).join('|')}`
             : product.slug,
+        listingSlug: product.slug,
         title: product.item.title,
         price,
         currency,
@@ -481,6 +483,28 @@ export function useCheckout(): UseCheckoutReturn {
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
     !isSubmitting;
+
+  const supplyQuoteLines = useMemo(
+    () =>
+      checkoutItems.map(item => {
+        const sel = selectedShipping[item.id];
+        return {
+          vendorPeerID: item.vendor.peerID,
+          listingSlug: item.listingSlug,
+          listingHash: item.listingHash ?? '',
+          quantity: item.quantity,
+          options: item.options?.map(opt => ({ [opt.name]: opt.value })),
+          shippingOption: sel?.zoneName,
+          shippingService: sel?.rateName,
+        };
+      }),
+    [checkoutItems, selectedShipping]
+  );
+
+  const supplyQuote = useCheckoutSupplyQuote(
+    supplyQuoteLines,
+    checkoutItems.length > 0 && !isLoading
+  );
 
   // ---- Auto-update shipping when address country changes ----
   useEffect(() => {
@@ -834,5 +858,6 @@ export function useCheckout(): UseCheckoutReturn {
     hasAllShippingSelected,
     hasShippingPricingIssue,
     hasFreeShippingSelection,
+    supplyQuote,
   };
 }

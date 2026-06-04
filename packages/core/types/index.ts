@@ -487,5 +487,15 @@ export type {
   LicenseDeactivateRequest,
 } from './digitalAsset';
 
+export type {
+  CheckoutSupplyQuoteItem,
+  CheckoutSupplyQuoteResponse,
+  QuoteCheckoutSupplyRequest,
+  GuestOrderSupplyQuoteItem,
+  GuestOrderSupplyQuoteResponse,
+  QuoteGuestOrderSupplyRequest,
+  SupplyAvailabilityStatus,
+} from './supplyAvailability';
+
 // OpenAPI auto-generated types (from hosting openapi.yaml)
 export type { paths as ApiPaths, components as ApiComponents } from './api-generated';

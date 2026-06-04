@@ -16,6 +16,7 @@ import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { CheckoutContractTypeAlert } from './CheckoutContractTypeAlert';
+import { SupplyAvailabilityPanel } from '@/components/SupplyAvailability/SupplyAvailabilityPanel';
 import { usePrimaryCTA, useHaptic } from '@/lib/platform';
 import type { UseCheckoutReturn } from './types';
 
@@ -63,6 +64,7 @@ export function CheckoutMobile({ checkout }: Props) {
     isValidatingDiscount,
     handleApplyDiscountCode,
     handleRemoveDiscount,
+    supplyQuote,
   } = checkout;
 
   // MVP-1: platform-abstract primary CTA + haptic (replaces direct
@@ -450,6 +452,20 @@ export function CheckoutMobile({ checkout }: Props) {
                   hasMixedContractTypes={hasMixedContractTypes}
                   hasMissingContractType={hasMissingContractType}
                 />
+
+                {supplyQuote.showPanel && (
+                  <SupplyAvailabilityPanel
+                    displayItems={checkoutItems.map(item => ({
+                      listingSlug: item.listingSlug,
+                      title: item.title,
+                    }))}
+                    quote={supplyQuote.quote}
+                    loading={supplyQuote.loading}
+                    error={supplyQuote.error}
+                    className="mt-3"
+                    testIdPrefix="checkout-supply-quote"
+                  />
+                )}
 
                 <BuyerProtectionBadge
                   variant="inline"
