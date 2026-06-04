@@ -2,7 +2,14 @@
  * 商品 API 服务
  */
 
-import type { Product, ProductListItem, RatingIndex, RatingDetail } from '../../types';
+import type {
+  ListingSupplySummaryRequest,
+  ListingSupplySummaryResponse,
+  Product,
+  ProductListItem,
+  RatingDetail,
+  RatingIndex,
+} from '../../types';
 import { getImageUrl } from './config';
 import type { Image } from '../../types';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
@@ -175,6 +182,12 @@ export async function fetchFeaturedListings(): Promise<ProductListItem[]> {
     console.error('Failed to fetch featured listings:', error);
     return [];
   }
+}
+
+export async function getListingSupplySummary(
+  req: ListingSupplySummaryRequest
+): Promise<ListingSupplySummaryResponse> {
+  return authPost<ListingSupplySummaryResponse>(NODE_API.LISTINGS_SUPPLY_SUMMARY, req);
 }
 
 /**

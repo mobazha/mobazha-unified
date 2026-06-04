@@ -185,6 +185,10 @@ describe('featureFlags', () => {
       delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
 
       const snap = featureFlags.initializeFromRuntimeConfig();
+      expect(snap.supplyAvailabilityEnabled).toEqual({
+        effective: false,
+        overridable: ['platform_global', 'tenant', 'node_runtime'],
+      });
       expect(snap.supplyChainEnabled).toEqual({
         effective: false,
         overridable: ['platform_global', 'tenant', 'node_runtime'],

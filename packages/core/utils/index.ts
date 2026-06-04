@@ -70,6 +70,8 @@ export * from './guestOrderKind';
 
 // Guest checkout supply availability quote helpers
 export * from './guestSupplyQuote';
+export * from './productSupplyDisplay';
+export * from './bulkProductSupplyActions';
 
 // Payment readiness gate UX helpers
 export * from './paymentReadinessState';

@@ -54,6 +54,7 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
+  InventoryPolicyField,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiAssistButton,
@@ -882,6 +883,12 @@ function CreateListingContent() {
                       className="mt-6"
                     />
                   )}
+
+                  <InventoryPolicyField
+                    className="mt-6 pt-6 border-t border-border"
+                    value={formData.inventoryPolicy}
+                    onChange={val => updateField('inventoryPolicy', val)}
+                  />
                 </Card>
               )}
 
@@ -935,39 +942,6 @@ function CreateListingContent() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {t('listing.processingTimeHelper')}
                       </p>
-                    </div>
-                    {/* 库存策略 */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {t('listing.inventoryPolicy.label')}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('listing.inventoryPolicy.helper')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={formData.inventoryPolicy === 'continue'}
-                        onClick={() =>
-                          updateField(
-                            'inventoryPolicy',
-                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
-                          )
-                        }
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            formData.inventoryPolicy === 'continue'
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
                     </div>
                   </Card>
                 )}
