@@ -654,6 +654,8 @@ export const en: TranslationResource = {
     pending: 'Pending',
     confirmed: 'Confirmed',
     shipped: 'Shipped',
+    serviceDelivered: 'Service delivered',
+    digitalDelivered: 'Delivered',
     delivered: 'Delivered',
     completed: 'Completed',
     cancelled: 'Cancelled',
@@ -845,15 +847,31 @@ export const en: TranslationResource = {
       pendingBuyer: 'Waiting for the seller to accept your order',
       pendingBuyerPaidHint:
         'Payment is confirmed. The seller will accept the order before shipping.',
+      pendingBuyerPaidHintService:
+        'Payment is confirmed. The seller will accept the order before fulfilling the service.',
+      pendingBuyerPaidHintDigital:
+        'Payment is confirmed. The seller will accept the order before delivering digital content.',
       pendingBuyerConfirmingHint: 'Confirming on-chain, usually takes 15–60 seconds',
       pendingSeller: 'New order received — review and accept to proceed',
       processingBuyer: 'The seller is preparing your order',
+      processingBuyerService: 'The seller is fulfilling your service',
       processingSeller: 'Order accepted — prepare and ship when ready',
+      processingSellerService: 'Order accepted — prepare to deliver when ready',
       shippedBuyer: 'Your order is on the way',
+      shippedBuyerService: 'Service delivered — please confirm completion',
       shippedSeller: 'Order shipped — waiting for buyer to confirm receipt',
+      shippedSellerService: 'Service delivered — waiting for buyer confirmation',
       shippedHint: 'Confirm receipt once your package arrives',
+      shippedHintService: 'Confirm service completion to release funds to the seller',
+      shippedBuyerDigital: 'Digital content delivered — please confirm receipt',
+      shippedSellerDigital: 'Digital content delivered — waiting for buyer confirmation',
+      shippedHintDigital: 'Confirm receipt once you have access to the digital content',
       deliveredBuyer: 'Your order has been delivered',
+      deliveredBuyerService: 'Service completed',
       deliveredSeller: 'Buyer confirmed delivery',
+      deliveredSellerService: 'Buyer confirmed service completion',
+      deliveredBuyerDigital: 'Digital content confirmed received',
+      deliveredSellerDigital: 'Buyer confirmed digital content received',
       completed: 'Transaction complete — funds released',
       disputed: 'This order is under dispute',
       disputedHint: 'A moderator is reviewing this case',
@@ -914,6 +932,7 @@ export const en: TranslationResource = {
       stepPaid: 'Payment',
       stepAccepted: 'Accepted',
       stepShipped: 'Shipped',
+      stepDelivered: 'Deliver',
       stepComplete: 'Complete',
     },
     // Order detail labels
@@ -946,6 +965,8 @@ export const en: TranslationResource = {
     },
     orderAccepted: 'Order Accepted',
     acceptedDescSeller: "You received the order and can ship whenever you're ready.",
+    acceptedDescSellerService:
+      'You received the order. Confirm delivery once the service is complete.',
     acceptedDescBuyer: 'Order accepted by seller.',
     purchases: 'Purchases',
     sales: 'Sales',
@@ -1103,10 +1124,13 @@ export const en: TranslationResource = {
       dispute: 'Open Dispute',
       reportIssue: 'Report Issue',
       complete: 'Confirm Receipt',
+      completeService: 'Confirm Service Complete',
+      completeDigital: 'Confirm Received',
       writeReview: 'Write Review',
       accept: 'Accept Order',
       decline: 'Decline',
       ship: 'Ship Order',
+      deliverService: 'Confirm Delivery',
       deliverDigital: 'Deliver digital content',
       syncDelivery: 'Sync delivery',
       retryDigitalDelivery: 'Deliver downloads',
@@ -1120,6 +1144,8 @@ export const en: TranslationResource = {
       // Success messages
       acceptSuccess: 'Order Accepted',
       acceptSuccessDesc: 'You have accepted the order. Please ship as soon as possible.',
+      acceptSuccessDescService:
+        'You have accepted the order. Confirm delivery once the service is complete.',
       declineSuccess: 'Order Declined',
       declineSuccessDesc: 'You have declined the order. The buyer has been notified.',
       cancelSuccess: 'Order Cancelled',
@@ -1135,6 +1161,9 @@ export const en: TranslationResource = {
       acceptPayoutSuccessDesc: 'You have accepted the dispute resolution payout.',
       shipSuccess: 'Order Shipped',
       shipSuccessDesc: 'The order has been marked as shipped. The buyer has been notified.',
+      shipSuccessService: 'Service Delivered',
+      shipSuccessDescService:
+        'The order has been marked as delivered. The buyer has been notified.',
       completeSuccess: 'Order Completed',
       completeSuccessDesc: 'The order has been completed. Funds have been released to the seller.',
       releasingFunds: 'Releasing escrow funds...',
@@ -1236,10 +1265,20 @@ export const en: TranslationResource = {
       },
       completeOrder: {
         title: 'Confirm Receipt',
+        titleService: 'Confirm Service Complete',
+        titleDigital: 'Confirm Received',
         description:
           'Are you sure you want to confirm receipt of this order? This will release the funds to the seller and mark the order as complete.',
+        descriptionService:
+          'Are you sure the service is complete? This will release the funds to the seller and mark the order as complete.',
+        descriptionDigital:
+          'Are you sure you have received the digital content? This will release the funds to the seller and mark the order as complete.',
         moderatedDescription:
           'Confirming receipt releases buyer protection funds to the seller. This may take up to a minute.',
+        moderatedDescriptionService:
+          'Confirming service completion releases buyer protection funds to the seller. This may take up to a minute.',
+        moderatedDescriptionDigital:
+          'Confirming receipt of digital content releases buyer protection funds to the seller. This may take up to a minute.',
       },
     },
     // Fiat refund dialog
@@ -1305,6 +1344,8 @@ export const en: TranslationResource = {
       title: 'Accept Order',
       description: 'Select the receiving account where you want to receive payment for this order.',
       fiatDescription: 'Payment has been received. Accept this order and prepare to ship.',
+      fiatDescriptionService:
+        'Payment has been received. Accept this order and confirm delivery once the service is complete.',
       receivingAccountRequired: 'Please select a receiving account',
       accept: 'Accept',
       decline: 'Decline',
@@ -3703,14 +3744,37 @@ export const en: TranslationResource = {
     tabAll: 'All',
     tabOrders: 'Orders',
     tabFollowers: 'Followers',
+    tabTransactions: 'Transactions',
+    tabSystem: 'System',
+    productFallback: 'Product',
     // Empty states
     noOrderNotifications: 'No order notifications',
     noFollowerNotifications: 'No follower notifications',
+    noTransactionNotifications: 'No payment notifications',
+    noSystemNotifications: 'No system notifications',
     noMoreNotifications: 'No more notifications',
     // Misc
     totalCount: '{{count}} notifications in total',
     allMarkedRead: 'All notifications marked as read',
     notificationDeleted: 'Notification deleted',
+    deleteFailed: 'Could not delete notification. Please try again.',
+    roles: {
+      buyer: 'Buyer',
+      seller: 'Seller',
+      user: 'User',
+    },
+    cta: {
+      viewOrder: 'View order',
+      trackOrder: 'Track shipment',
+      viewDispute: 'View dispute',
+      viewStore: 'View store',
+    },
+    orderGroup: {
+      label: '{{count}} order updates',
+      summary: '{{count}} updates · {{latest}}',
+      moreUpdates: '+ {{count}} more updates',
+      orderRef: 'Order #{{orderId}}',
+    },
     // Order notifications
     order: {
       youPlacedOrder: 'You placed an order',

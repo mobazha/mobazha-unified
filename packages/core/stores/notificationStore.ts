@@ -105,8 +105,7 @@ export const useNotificationStore = create<NotificationState>()(
         // ============ 通知管理 ============
 
         setNotifications: notifications => {
-          const unreadCount = notifications.filter(n => !n.read).length;
-          set({ notifications, unreadCount, isLoading: false, error: null });
+          set({ notifications, isLoading: false, error: null });
         },
 
         addNotification: notification => {

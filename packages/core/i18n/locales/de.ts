@@ -605,6 +605,8 @@ export const de: PartialTranslationResource = {
     pending: 'Ausstehend',
     confirmed: 'Bestätigt',
     shipped: 'Versendet',
+    serviceDelivered: 'Dienstleistung erbracht',
+    digitalDelivered: 'Geliefert',
     delivered: 'Geliefert',
     completed: 'Abgeschlossen',
     cancelled: 'Storniert',
@@ -702,15 +704,32 @@ export const de: PartialTranslationResource = {
       pendingBuyer: 'Warten auf Annahme Ihrer Bestellung durch den Verkäufer',
       pendingBuyerPaidHint:
         'Die Zahlung ist bestätigt. Der Verkäufer nimmt die Bestellung vor dem Versand an.',
+      pendingBuyerPaidHintService:
+        'Die Zahlung ist bestätigt. Der Verkäufer nimmt die Bestellung vor der Dienstleistung an.',
+      pendingBuyerPaidHintDigital:
+        'Die Zahlung ist bestätigt. Der Verkäufer nimmt die Bestellung vor der digitalen Lieferung an.',
       pendingBuyerConfirmingHint: 'On-Chain-Bestätigung, in der Regel 15–60 Sekunden',
       pendingSeller: 'Neue Bestellung eingegangen — prüfen und annehmen, um fortzufahren',
       processingBuyer: 'Der Verkäufer bereitet Ihre Bestellung vor',
+      processingBuyerService: 'Der Verkäufer erbringt Ihre Dienstleistung',
       processingSeller: 'Bestellung angenommen — bei Bereitschaft vorbereiten und versenden',
+      processingSellerService: 'Bestellung angenommen — bei Bereitschaft liefern',
       shippedBuyer: 'Ihre Bestellung ist unterwegs',
+      shippedBuyerService: 'Dienstleistung erbracht — bitte Abschluss bestätigen',
       shippedSeller: 'Bestellung versendet — warten auf Empfangsbestätigung des Käufers',
+      shippedSellerService: 'Dienstleistung erbracht — warten auf Bestätigung des Käufers',
       shippedHint: 'Bestätigen Sie den Erhalt, sobald Ihr Paket ankommt',
+      shippedHintService: 'Bestätigen Sie den Erhalt, sobald die Dienstleistung abgeschlossen ist',
+      shippedBuyerDigital: 'Digitale Inhalte geliefert — bitte Empfang bestätigen',
+      shippedSellerDigital: 'Digitale Inhalte geliefert — warten auf Käuferbestätigung',
+      shippedHintDigital:
+        'Bestätigen Sie den Erhalt, sobald Sie Zugriff auf die digitalen Inhalte haben',
       deliveredBuyer: 'Ihre Bestellung wurde zugestellt',
+      deliveredBuyerService: 'Dienstleistung abgeschlossen',
       deliveredSeller: 'Käufer hat den Erhalt bestätigt',
+      deliveredSellerService: 'Käufer hat die Dienstleistung bestätigt',
+      deliveredBuyerDigital: 'Digitaler Inhalt bestätigt erhalten',
+      deliveredSellerDigital: 'Käufer hat den digitalen Inhalt bestätigt',
       completed: 'Transaktion abgeschlossen — Mittel freigegeben',
       disputed: 'Diese Bestellung befindet sich in einem Streitfall',
       disputedHint: 'Ein Moderator prüft diesen Fall',
@@ -722,6 +741,7 @@ export const de: PartialTranslationResource = {
       stepPaid: 'Zahlung',
       stepAccepted: 'Angenommen',
       stepShipped: 'Versendet',
+      stepDelivered: 'Liefern',
       stepComplete: 'Abgeschlossen',
       paymentSubmittedBuyer: 'Zahlung eingereicht, Prufung ausstehend',
       paymentSubmittedSeller: 'Kaufer hat die Zahlung eingereicht, Prufung ausstehend',
@@ -774,6 +794,8 @@ export const de: PartialTranslationResource = {
     },
     orderAccepted: 'Bestellung angenommen',
     acceptedDescSeller: 'Sie haben die Bestellung erhalten und können sie bei Bedarf ausführen.',
+    acceptedDescSellerService:
+      'Sie haben die Bestellung erhalten. Bestätigen Sie die Lieferung nach Abschluss der Dienstleistung.',
     acceptedDescBuyer: 'Bestellung vom Verkäufer angenommen.',
     purchases: 'Käufe',
     sales: 'Verkäufe',
@@ -903,10 +925,13 @@ export const de: PartialTranslationResource = {
       dispute: 'Streitfall eröffnen',
       reportIssue: 'Problem melden',
       complete: 'Empfang bestätigen',
+      completeService: 'Dienstleistung abschließen',
+      completeDigital: 'Erhalt bestätigen',
       writeReview: 'Bewertung schreiben',
       accept: 'Bestellung annehmen',
       decline: 'Ablehnen',
       ship: 'Bestellung versenden',
+      deliverService: 'Lieferung bestätigen',
       refund: 'Rückerstatten',
       claim: 'Zahlung beanspruchen',
       acceptPayout: 'Auszahlung akzeptieren',
@@ -915,6 +940,8 @@ export const de: PartialTranslationResource = {
       acceptSuccess: 'Bestellung angenommen',
       acceptSuccessDesc:
         'Sie haben die Bestellung angenommen. Bitte erfüllen Sie sie so schnell wie möglich.',
+      acceptSuccessDescService:
+        'Sie haben die Bestellung angenommen. Bestätigen Sie die Lieferung nach Abschluss der Dienstleistung.',
       declineSuccess: 'Bestellung abgelehnt',
       declineSuccessDesc: 'Sie haben die Bestellung abgelehnt. Der Käufer wurde benachrichtigt.',
       cancelSuccess: 'Bestellung storniert',
@@ -929,6 +956,9 @@ export const de: PartialTranslationResource = {
       shipSuccess: 'Bestellung versendet',
       shipSuccessDesc:
         'Die Bestellung wurde als versendet markiert. Der Käufer wurde benachrichtigt.',
+      shipSuccessService: 'Dienstleistung erbracht',
+      shipSuccessDescService:
+        'Die Bestellung wurde als geliefert markiert. Der Käufer wurde benachrichtigt.',
       completeSuccess: 'Bestellung abgeschlossen',
       completeSuccessDesc:
         'Die Bestellung wurde abgeschlossen. Das Geld wurde an den Verkäufer freigegeben.',
@@ -1028,8 +1058,20 @@ export const de: PartialTranslationResource = {
       },
       completeOrder: {
         title: 'Empfang bestätigen',
+        titleService: 'Dienstleistung abschließen',
+        titleDigital: 'Erhalt bestätigen',
         description:
           'Möchten Sie den Empfang dieser Bestellung wirklich bestätigen? Dies gibt das Geld an den Verkäufer frei und markiert die Bestellung als abgeschlossen.',
+        descriptionService:
+          'Ist die Dienstleistung abgeschlossen? Dies gibt das Geld an den Verkäufer frei und markiert die Bestellung als abgeschlossen.',
+        descriptionDigital:
+          'Haben Sie den digitalen Inhalt erhalten? Dies gibt das Geld an den Verkäufer frei und markiert die Bestellung als abgeschlossen.',
+        moderatedDescription:
+          'Nach Bestätigung des Empfangs werden die Käuferschutz-Mittel freigegeben. Dies kann bis zu einer Minute dauern.',
+        moderatedDescriptionService:
+          'Nach Bestätigung des Dienstleistungsabschlusses werden die Käuferschutz-Mittel freigegeben. Dies kann bis zu einer Minute dauern.',
+        moderatedDescriptionDigital:
+          'Nach Bestätigung des Erhalts des digitalen Inhalts werden die Käuferschutz-Mittel freigegeben. Dies kann bis zu einer Minute dauern.',
       },
     },
     fiatRefund: {
@@ -1084,6 +1126,8 @@ export const de: PartialTranslationResource = {
         'Wählen Sie das Empfangskonto, auf das Sie die Zahlung für diese Bestellung erhalten möchten.',
       receivingAccountRequired: 'Bitte wählen Sie ein Empfangskonto',
       fiatDescription: 'Payment has been received. Accept this order and prepare for fulfillment.',
+      fiatDescriptionService:
+        'Payment has been received. Accept this order and confirm delivery once the service is complete.',
       accept: 'Akzeptieren',
       decline: 'Ablehnen',
     },
@@ -3020,12 +3064,35 @@ export const de: PartialTranslationResource = {
     tabAll: 'Alle',
     tabOrders: 'Bestellungen',
     tabFollowers: 'Follower',
+    tabTransactions: 'Zahlungen',
+    tabSystem: 'System',
+    productFallback: 'Produkt',
     noOrderNotifications: 'Keine Bestellbenachrichtigungen',
     noFollowerNotifications: 'Keine Follower-Benachrichtigungen',
+    noTransactionNotifications: 'Keine Zahlungsbenachrichtigungen',
+    noSystemNotifications: 'Keine Systembenachrichtigungen',
     noMoreNotifications: 'Keine weiteren Benachrichtigungen',
     totalCount: '{{count}} Benachrichtigungen insgesamt',
     allMarkedRead: 'Alle Benachrichtigungen als gelesen markiert',
     notificationDeleted: 'Benachrichtigung gelöscht',
+    deleteFailed: 'Benachrichtigung konnte nicht gelöscht werden. Bitte erneut versuchen.',
+    roles: {
+      buyer: 'Käufer',
+      seller: 'Verkäufer',
+      user: 'Nutzer',
+    },
+    cta: {
+      viewOrder: 'Bestellung ansehen',
+      trackOrder: 'Sendung verfolgen',
+      viewDispute: 'Streitfall ansehen',
+      viewStore: 'Shop ansehen',
+    },
+    orderGroup: {
+      label: '{{count}} Bestellungs-Updates',
+      summary: '{{count}} Updates · {{latest}}',
+      moreUpdates: '+ {{count}} weitere Updates',
+      orderRef: 'Bestellung #{{orderId}}',
+    },
     order: {
       youPlacedOrder: 'Sie haben eine Bestellung aufgegeben',
       placedOrder: 'hat eine Bestellung aufgegeben',

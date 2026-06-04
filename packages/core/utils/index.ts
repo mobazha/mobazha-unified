@@ -8,6 +8,9 @@ export * from './performance';
 // 订单操作工具
 export * from './orderActions';
 
+// 履约文案 i18n key 选择（按商品类型）
+export * from './orderFulfillmentLabels';
+
 // 争议裁决展示
 export * from './disputeRulingDisplay';
 
@@ -46,6 +49,9 @@ export * from './communityMarketplace';
 
 // JSON *ID 字段 ingress 归一化
 export * from './normalizeIds';
+
+// 通知展示（聚合、数据质量、CTA）
+export * from './notificationDisplay';
 
 // 店铺品牌化主题工具 (PG-201)
 export * from './theme';
