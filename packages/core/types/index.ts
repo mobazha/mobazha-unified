@@ -68,6 +68,8 @@ export type {
 export type {
   OrderState,
   OrderRole,
+  CompletePhase,
+  AcceptPayoutPhase,
   OrderListItem,
   Order,
   OrderContract,

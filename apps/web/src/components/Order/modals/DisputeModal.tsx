@@ -83,8 +83,6 @@ export interface DisputeModalProps {
   onAfterSaleSubmit?: (reason: string, description: string) => Promise<void>;
   isLoading?: boolean;
   isAfterSale?: boolean;
-  /** Route media upload to the seller store node on SaaS (X-Store-PeerID). */
-  vendorPeerID?: string;
 }
 
 export const DisputeModal: React.FC<DisputeModalProps> = ({
@@ -94,7 +92,6 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
   onAfterSaleSubmit,
   isLoading = false,
   isAfterSale = false,
-  vendorPeerID,
 }) => {
   const { t } = useI18n();
   const [claim, setClaim] = useState('');
@@ -123,33 +120,24 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
     onClose();
   }, [onClose, resetState]);
 
-  const uploadFile = useCallback(
-    async (file: File, preview: string): Promise<EvidenceImage> => {
-      const entry: EvidenceImage = { file, preview, uploading: true };
+  const uploadFile = useCallback(async (file: File, preview: string): Promise<EvidenceImage> => {
+    const entry: EvidenceImage = { file, preview, uploading: true };
 
-      try {
-        const base64 = await imagesApi.fileToBase64(file);
-        const uploadHeaders = vendorPeerID?.trim()
-          ? { 'X-Store-PeerID': vendorPeerID.trim() }
-          : undefined;
-        const result = await imagesApi.uploadImage(
-          {
-            filename: `evidence_${Date.now()}`,
-            image: base64,
-          },
-          uploadHeaders
-        );
-        const cid = result?.small || result?.original;
-        if (cid) {
-          return { ...entry, hash: cid, uploading: false };
-        }
-        return { ...entry, uploading: false, error: 'Upload failed' };
-      } catch {
-        return { ...entry, uploading: false, error: 'Upload failed' };
+    try {
+      const base64 = await imagesApi.fileToBase64(file);
+      const result = await imagesApi.uploadImage({
+        filename: `evidence_${Date.now()}`,
+        image: base64,
+      });
+      const cid = result?.small || result?.original;
+      if (cid) {
+        return { ...entry, hash: cid, uploading: false };
       }
-    },
-    [vendorPeerID]
-  );
+      return { ...entry, uploading: false, error: 'Upload failed' };
+    } catch {
+      return { ...entry, uploading: false, error: 'Upload failed' };
+    }
+  }, []);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {

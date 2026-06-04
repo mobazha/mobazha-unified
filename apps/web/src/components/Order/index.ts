@@ -61,6 +61,8 @@ export type { OrderConfirmDialogProps, OrderConfirmType } from './OrderConfirmDi
 export { WriteReviewDialog } from './WriteReviewDialog';
 export { ConfirmReceiptDialog } from './ConfirmReceiptDialog';
 export type { ConfirmReceiptDialogProps } from './ConfirmReceiptDialog';
+export { AcceptPayoutDialog } from './AcceptPayoutDialog';
+export type { AcceptPayoutDialogProps } from './AcceptPayoutDialog';
 export { OrderRating } from './OrderRating';
 export type { OrderRatingProps, RatingData, ReviewerInfo } from './OrderRating';
 

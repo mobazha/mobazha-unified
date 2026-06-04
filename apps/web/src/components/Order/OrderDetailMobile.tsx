@@ -44,6 +44,7 @@ import {
   OrderRating,
   WriteReviewDialog,
   ConfirmReceiptDialog,
+  AcceptPayoutDialog,
   SellerDigitalDeliveryStatus,
   OrderShipment,
   getDigitalDeliveryTimestamp,
@@ -166,8 +167,13 @@ export function OrderDetailMobile({
     isActionLoading,
     isTransitioning,
     completePhase,
+    acceptPayoutPhase,
     isModeratedOrder,
     executeConfirmAction,
+    showAcceptPayoutDialog,
+    openAcceptPayoutDialog,
+    closeAcceptPayoutDialog,
+    confirmAcceptPayout,
     showConfirmReceiptDialog,
     openConfirmReceiptDialog,
     closeConfirmReceiptDialog,
@@ -513,7 +519,7 @@ export function OrderDetailMobile({
           setConfirmDialog('claim');
           break;
         case 'AcceptPayout':
-          setConfirmDialog('acceptPayout');
+          openAcceptPayoutDialog();
           break;
         case 'Dispute':
           setIsAfterSaleDispute(false);
@@ -536,20 +542,23 @@ export function OrderDetailMobile({
       displayOrder,
       sellerDigitalDelivery,
       shouldBlockAutoRefund,
+      openAcceptPayoutDialog,
       t,
       toast,
-      haptic,
     ]
   );
 
   const handleConfirmAction = useCallback(async () => {
-    if (!confirmDialog) return;
+    if (!confirmDialog || isActionLoading) return;
     const actionType = confirmDialog;
-    setConfirmDialog(null);
     const ok = await executeConfirmAction(actionType);
-    if (ok) haptic.success();
-    else haptic.error();
-  }, [confirmDialog, executeConfirmAction, haptic]);
+    if (ok) {
+      setConfirmDialog(null);
+      haptic.success();
+    } else {
+      haptic.error();
+    }
+  }, [confirmDialog, executeConfirmAction, haptic, isActionLoading]);
 
   const handleFiatRefund = useCallback(
     async (params: { amount?: number; currency?: string; reason?: string }) => {
@@ -1311,7 +1320,8 @@ export function OrderDetailMobile({
         !tgMainButtonActive &&
         !showRatingInvite &&
         !showReviewDialog &&
-        !showConfirmReceiptDialog && (
+        !showConfirmReceiptDialog &&
+        !showAcceptPayoutDialog && (
           <OrderActionSheet
             orderState={coreOrder.state || 'PENDING'}
             userRole={displayOrder.userRole as CoreUserRole}
@@ -1328,7 +1338,7 @@ export function OrderDetailMobile({
             canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
             canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
             manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
-            isTransitioning={isTransitioning}
+            isTransitioning={isTransitioning || isActionLoading}
             onAction={handleOrderAction}
           />
         )}
@@ -1337,7 +1347,9 @@ export function OrderDetailMobile({
       {confirmDialog && (
         <OrderConfirmDialog
           open={!!confirmDialog}
-          onOpenChange={open => !open && setConfirmDialog(null)}
+          onOpenChange={open => {
+            if (!open && !isActionLoading) setConfirmDialog(null);
+          }}
           type={confirmDialog}
           onConfirm={handleConfirmAction}
           isLoading={isActionLoading}
@@ -1361,6 +1373,8 @@ export function OrderDetailMobile({
         orderId={acceptOrderProps.orderId}
         blockchain={acceptOrderProps.blockchain}
         paymentCoin={acceptOrderProps.paymentCoin}
+        paymentEscrowType={acceptOrderProps.paymentEscrowType}
+        paymentProductMode={acceptOrderProps.paymentProductMode}
         onSuccess={acceptOrderProps.onSuccess}
       />
 
@@ -1390,6 +1404,24 @@ export function OrderDetailMobile({
         isModerated={isModeratedOrder}
       />
 
+      {displayOrder?.dispute && (
+        <AcceptPayoutDialog
+          open={showAcceptPayoutDialog}
+          onOpenChange={open => !open && closeAcceptPayoutDialog()}
+          onConfirm={async () => {
+            const ok = await confirmAcceptPayout();
+            if (ok) haptic.success();
+            else haptic.error();
+          }}
+          isLoading={isActionLoading}
+          acceptPayoutPhase={acceptPayoutPhase}
+          isModerated={isModeratedOrder}
+          dispute={displayOrder.dispute}
+          settlementBreakdown={displayOrder.settlementBreakdown}
+          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+        />
+      )}
+
       <WriteReviewDialog
         open={showReviewDialog}
         productTitle={reviewProductTitle}
@@ -1412,7 +1444,6 @@ export function OrderDetailMobile({
         onAfterSaleSubmit={handleAfterSaleDisputeSubmit}
         isAfterSale={isAfterSaleDispute}
         isLoading={isDisputeLoading}
-        vendorPeerID={displayOrder.vendor?.id}
       />
 
       <PackingSlipDialog

@@ -22,9 +22,9 @@ export interface OrderListCompactProps {
   /** 查看详情回调 */
   onViewDetails: (orderId: string) => void;
   /** 接受订单回调 */
-  onAccept?: (orderId: string, paymentCoin?: string) => void;
+  onAccept?: (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => void;
   /** 拒绝订单回调 */
-  onReject?: (orderId: string, paymentCoin?: string) => void;
+  onReject?: (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => void;
   /** 联系对方回调 */
   onContact?: (vendorId: string, displayName?: string) => void;
   /** 确认收货回调（买家视角） */
@@ -370,7 +370,9 @@ export const OrderListCompact = memo(function OrderListCompact({
                       variant="outline"
                       className="min-h-[44px] px-3 text-sm flex-1 min-w-0"
                       onClick={e =>
-                        handleButtonClick(e, () => onReject(order.id, order.paymentCoin))
+                        handleButtonClick(e, () =>
+                          onReject(order.id, order.paymentCoin, order.paymentEscrowType)
+                        )
                       }
                     >
                       {t('order.actions.decline')}
@@ -381,7 +383,9 @@ export const OrderListCompact = memo(function OrderListCompact({
                       size="sm"
                       className="min-h-[44px] px-3 text-sm flex-1 min-w-0 bg-primary hover:bg-primary/90"
                       onClick={e =>
-                        handleButtonClick(e, () => onAccept(order.id, order.paymentCoin))
+                        handleButtonClick(e, () =>
+                          onAccept(order.id, order.paymentCoin, order.paymentEscrowType)
+                        )
                       }
                     >
                       {t('order.actions.accept')}

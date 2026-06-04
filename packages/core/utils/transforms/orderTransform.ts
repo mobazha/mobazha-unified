@@ -1430,6 +1430,7 @@ export function transformCoreOrder(
     paymentCoin,
     paymentAmount: formattedPaymentAmount,
     paymentSettlementMode: settlementModeFromPayMode(paymentSent?.settlementSpec?.payMode),
+    paymentEscrowType: paymentSent?.settlementSpec?.escrowType,
     paymentProductMode: productModeFromPaymentMethod(paymentMethod),
     createdAt: timestamp,
     cancelledAt: contract.orderDecline?.timestamp || contract.orderCancel?.timestamp || undefined,

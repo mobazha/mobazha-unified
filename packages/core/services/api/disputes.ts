@@ -14,6 +14,9 @@ import {
 } from '../../utils/transforms/minimalUnit';
 import { parsePriceFields } from '../../utils/transforms/priceTransform';
 import type { Price } from '../../types';
+import { acceptDisputeWithSettlement, type AcceptDisputeSettlementContext } from './orders';
+
+export type { AcceptDisputeSettlementContext };
 
 // 争议状态
 export type DisputeState =
@@ -418,19 +421,14 @@ export async function resolveDispute(
 }
 
 /**
- * 接受裁决 - 按仲裁人的裁决释放托管资金
+ * 接受裁决 - 按仲裁人的裁决释放托管资金。
+ * Accept dispute resolution (Safe / Solana moderated orders use settlement action + poll).
  */
 export async function acceptDisputeResolution(
-  orderId: string
-): Promise<{ success: boolean; error?: string }> {
-  const response = await authPost<{ success?: boolean; error?: string }>(
-    NODE_API.DISPUTE_RELEASE(orderId),
-    {}
-  );
-  return {
-    success: response.success !== false,
-    error: response.error,
-  };
+  orderId: string,
+  context?: AcceptDisputeSettlementContext
+): Promise<{ success: boolean; error?: string; txHash?: string }> {
+  return acceptDisputeWithSettlement(orderId, context);
 }
 
 /**

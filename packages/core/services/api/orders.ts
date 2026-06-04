@@ -4,11 +4,12 @@
 
 import type { Order, OrderListItem, PaymentSession } from '../../types';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
-import { NODE_API } from '../../config/apiPaths';
+import { NODE_API, type SettlementActionKind } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
 import { ApiError } from './client';
 import { caseDetailToOrder } from '../../utils/transforms/caseToOrder';
 import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
+import { orderUsesMonitoredBackendSettlement } from '../../utils/orderSettlement';
 
 async function orderWrite<T>(
   realFn: () => Promise<T>,
@@ -724,7 +725,7 @@ export interface SettlementActionResponse {
 
 export async function executeSettlementAction(payload: {
   orderID: string;
-  action: 'confirm' | 'cancel' | 'complete';
+  action: SettlementActionKind;
   payoutAddress?: string;
 }): Promise<SettlementActionResponse> {
   const realFn = async () => {
@@ -764,7 +765,7 @@ export interface SettlementActionStatusResponse {
 
 export async function getSettlementActionStatus(payload: {
   orderID: string;
-  action: 'confirm' | 'cancel' | 'complete' | 'dispute_release';
+  action: SettlementActionKind;
   actionId: string;
 }): Promise<SettlementActionStatusResponse> {
   return authGet<SettlementActionStatusResponse>(
@@ -790,7 +791,7 @@ function isRetryableSettlementStatusError(err: unknown): boolean {
 /** Poll settlement status until a tx hash is available. */
 export async function awaitSettlementActionTxHash(payload: {
   orderID: string;
-  action: 'confirm' | 'cancel' | 'complete';
+  action: SettlementActionKind;
   actionId: string;
   intervalMs?: number;
   timeoutMs?: number;
@@ -1155,12 +1156,13 @@ export async function openDispute(
  * 接受争议裁决
  */
 export async function acceptDispute(
-  orderId: string
+  orderId: string,
+  txID?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
     const response = await authPost<{ success?: boolean; error?: string }>(
       NODE_API.DISPUTE_RELEASE(orderId),
-      {}
+      { txID: txID || '' }
     );
     return {
       success: response.success !== false,
@@ -1178,6 +1180,65 @@ export async function acceptDispute(
   };
 
   return withMockFallback(realFn, mockFn, '/dispute/release');
+}
+
+/** Context for moderated backend-submitted dispute payout acceptance. */
+export interface AcceptDisputeSettlementContext {
+  paymentCoin?: string;
+  isModerated?: boolean;
+  escrowType?: string;
+}
+
+/** Run dispute-release settlement action and poll until a tx hash is available. */
+export async function executeDisputeReleaseSettlementAction(
+  orderID: string
+): Promise<SettlementActionResponse> {
+  const settlement = await executeSettlementAction({
+    orderID,
+    action: 'dispute-release',
+  });
+  if (settlement.mode === 'submitted' && settlement.actionId && !settlement.txHash) {
+    return awaitSettlementActionTxHash({
+      orderID,
+      action: 'dispute-release',
+      actionId: settlement.actionId,
+    });
+  }
+  return settlement;
+}
+
+export interface AcceptDisputeWithSettlementOptions {
+  /** Called after backend settlement (and tx poll) completes, before acceptDispute. */
+  onSettlementComplete?: (txHash?: string) => void;
+}
+
+/**
+ * Accept a dispute ruling: settlement-action (when applicable) → poll tx hash → release.
+ * Single entry point for order detail, list hooks, and disputes API.
+ */
+export async function acceptDisputeWithSettlement(
+  orderID: string,
+  context?: AcceptDisputeSettlementContext,
+  options?: AcceptDisputeWithSettlementOptions
+): Promise<{ success: boolean; error?: string; txHash?: string }> {
+  const attemptBackendSettlement = orderUsesMonitoredBackendSettlement({
+    isModerated: context?.isModerated,
+    escrowType: context?.escrowType,
+    paymentCoin: context?.paymentCoin,
+  });
+
+  let txHash: string | undefined;
+  if (attemptBackendSettlement) {
+    const resolved = await executeDisputeReleaseSettlementAction(orderID);
+    txHash = resolved.txHash;
+    options?.onSettlementComplete?.(txHash);
+  }
+
+  const result = await acceptDispute(orderID, txHash);
+  return {
+    ...result,
+    txHash,
+  };
 }
 
 /**
@@ -1288,6 +1349,7 @@ export const ordersApi = {
   // 争议
   openDispute,
   acceptDispute,
+  acceptDisputeWithSettlement,
   claimPayment,
 
   // 其他

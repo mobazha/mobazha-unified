@@ -13,7 +13,11 @@ import {
   useOrderAction,
   digitalAssetsApi,
   CONTRACT_TYPES,
-  supportsBackendSettlementActionSurface,
+  orderUsesMonitoredBackendSettlement,
+  orderUsesCancelableBackendSettlement,
+  buildAcceptDisputeSettlementContext,
+  type AcceptPayoutPhase,
+  type CompletePhase,
   type DigitalDeliveryStatus,
   type WebSocketMessage,
   queryKeys,
@@ -49,7 +53,7 @@ export interface ReviewSubmitData {
   imageHashes?: string[];
 }
 
-export type CompletePhase = 'idle' | 'confirming' | 'releasing' | 'completing' | 'syncing-rating';
+export type { CompletePhase, AcceptPayoutPhase } from '@mobazha/core';
 
 export interface UseOrderDetailPageReturn {
   displayOrder: ReturnType<typeof useOrderDetail>['displayOrder'];
@@ -66,11 +70,17 @@ export interface UseOrderDetailPageReturn {
   isActionLoading: boolean;
   isTransitioning: boolean;
   completePhase: CompletePhase;
+  acceptPayoutPhase: AcceptPayoutPhase;
   isModeratedOrder: boolean;
   executeConfirmAction: (
     actionType: OrderConfirmType,
     refundParams?: { amount?: number; currency?: string; reason?: string }
   ) => Promise<boolean>;
+
+  showAcceptPayoutDialog: boolean;
+  openAcceptPayoutDialog: () => void;
+  closeAcceptPayoutDialog: () => void;
+  confirmAcceptPayout: () => Promise<boolean>;
 
   showConfirmReceiptDialog: boolean;
   openConfirmReceiptDialog: () => void;
@@ -90,6 +100,8 @@ export interface UseOrderDetailPageReturn {
     orderId: string;
     blockchain?: string;
     paymentCoin?: string;
+    paymentEscrowType?: string;
+    paymentProductMode?: string;
     onSuccess: () => void;
   };
   shipOrderProps: {
@@ -139,7 +151,9 @@ export function useOrderDetailPage(
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showConfirmReceiptDialog, setShowConfirmReceiptDialog] = useState(false);
+  const [showAcceptPayoutDialog, setShowAcceptPayoutDialog] = useState(false);
   const [completePhase, setCompletePhase] = useState<CompletePhase>('idle');
+  const [acceptPayoutPhase, setAcceptPayoutPhase] = useState<AcceptPayoutPhase>('idle');
 
   // Clear transitioning state when order state actually changes
   const orderStateRef = useRef(coreOrder?.state);
@@ -213,9 +227,10 @@ export function useOrderDetailPage(
 
   const paymentCoin =
     displayOrder?.paymentCoin || (coreOrder as OrderContractData)?.contract?.paymentSent?.coin;
-  const canAttemptBackendSettlementAction = useMemo(() => {
-    return !displayOrder?.fiatPayment && supportsBackendSettlementActionSurface(paymentCoin);
-  }, [displayOrder?.fiatPayment, paymentCoin]);
+  const paymentEscrowType =
+    displayOrder?.paymentEscrowType ||
+    (coreOrder as OrderContractData)?.contract?.paymentSent?.settlementSpec?.escrowType;
+  const paymentProductMode = displayOrder?.paymentProductMode;
 
   const isModeratedOrder = useMemo(
     () =>
@@ -224,6 +239,26 @@ export function useOrderDetailPage(
         !!displayOrder.moderator ||
         displayOrder.protection?.protectionLevel === 'full'),
     [displayOrder]
+  );
+
+  const usesMonitoredBackendSettlement = useMemo(
+    () =>
+      orderUsesMonitoredBackendSettlement({
+        isModerated: isModeratedOrder,
+        escrowType: paymentEscrowType,
+        paymentCoin,
+      }),
+    [isModeratedOrder, paymentEscrowType, paymentCoin]
+  );
+
+  const usesCancelableBackendSettlement = useMemo(
+    () =>
+      orderUsesCancelableBackendSettlement({
+        paymentProductMode,
+        escrowType: paymentEscrowType,
+        paymentCoin,
+      }),
+    [paymentProductMode, paymentEscrowType, paymentCoin]
   );
 
   const counterparty = useMemo((): {
@@ -289,6 +324,11 @@ export function useOrderDetailPage(
     []
   );
 
+  const startAcceptPayoutPhaseProgress = useCallback((usesBackendSettlement: boolean) => {
+    setAcceptPayoutPhase(usesBackendSettlement ? 'releasing' : 'accepting');
+    return [] as number[];
+  }, []);
+
   const reviewProductTitle = useMemo(() => {
     const orderData = coreOrder as OrderContractData | null;
     const listings = orderData?.contract?.orderOpen?.listings || [];
@@ -325,7 +365,7 @@ export function useOrderDetailPage(
       });
     };
 
-    const usesBackendSettlementComplete = canAttemptBackendSettlementAction && isModeratedOrder;
+    const usesBackendSettlementComplete = usesMonitoredBackendSettlement;
 
     const phaseTimers = startCompletePhaseProgress({
       moderated: isModeratedOrder,
@@ -376,8 +416,7 @@ export function useOrderDetailPage(
   }, [
     clearCompletePhaseTimers,
     executeOrderAction,
-    canAttemptBackendSettlementAction,
-    isModeratedOrder,
+    usesMonitoredBackendSettlement,
     orderId,
     refetch,
     startCompletePhaseProgress,
@@ -458,6 +497,84 @@ export function useOrderDetailPage(
     setShowConfirmReceiptDialog(false);
   }, [isActionLoading]);
 
+  const openAcceptPayoutDialog = useCallback(() => {
+    if (isActionLoading) return;
+    setShowAcceptPayoutDialog(true);
+  }, [isActionLoading]);
+
+  const closeAcceptPayoutDialog = useCallback(() => {
+    if (isActionLoading) return;
+    setShowAcceptPayoutDialog(false);
+  }, [isActionLoading]);
+
+  const confirmAcceptPayout = useCallback(async (): Promise<boolean> => {
+    if (isActionLoading) return false;
+
+    setIsActionLoading(true);
+
+    const payoutTimers = startAcceptPayoutPhaseProgress(usesMonitoredBackendSettlement);
+    let succeeded = false;
+
+    try {
+      const settlementContext = buildAcceptDisputeSettlementContext({
+        paymentCoin,
+        isModerated: isModeratedOrder,
+        escrowType: paymentEscrowType,
+      });
+
+      const result = await ordersApi.acceptDisputeWithSettlement(orderId, settlementContext, {
+        onSettlementComplete: () => {
+          if (usesMonitoredBackendSettlement) {
+            setAcceptPayoutPhase('accepting');
+          }
+        },
+      });
+
+      if (result.success) {
+        succeeded = true;
+        setIsTransitioning(true);
+        toast({
+          title: t('order.actions.acceptPayoutSuccess'),
+          description: t('order.actions.acceptPayoutSuccessDesc'),
+        });
+        setTimeout(() => refetch(), 500);
+      } else {
+        toast({
+          title: t('order.actions.error'),
+          description: result.error || t('order.actions.operationFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      toast({
+        title: t('order.actions.error'),
+        description: err instanceof Error ? err.message : t('order.actions.operationFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      clearCompletePhaseTimers(payoutTimers);
+      setAcceptPayoutPhase('idle');
+      setIsActionLoading(false);
+      if (succeeded) {
+        setShowAcceptPayoutDialog(false);
+      }
+    }
+
+    return succeeded;
+  }, [
+    clearCompletePhaseTimers,
+    isActionLoading,
+    isModeratedOrder,
+    orderId,
+    paymentCoin,
+    paymentEscrowType,
+    refetch,
+    startAcceptPayoutPhaseProgress,
+    t,
+    toast,
+    usesMonitoredBackendSettlement,
+  ]);
+
   const openReviewDialog = useCallback(() => {
     setShowReviewDialog(true);
   }, []);
@@ -498,7 +615,7 @@ export function useOrderDetailPage(
                   orderID: orderId,
                   action: 'cancel',
                 }),
-              attemptBackendSettlementAction: canAttemptBackendSettlementAction,
+              attemptBackendSettlementAction: usesCancelableBackendSettlement,
               executeAction: txID =>
                 ordersApi.confirmOrder({ orderID: orderId, decline: true, transactionID: txID }),
               onSuccess: () =>
@@ -513,7 +630,7 @@ export function useOrderDetailPage(
                   orderID: orderId,
                   action: 'cancel',
                 }),
-              attemptBackendSettlementAction: canAttemptBackendSettlementAction,
+              attemptBackendSettlementAction: usesCancelableBackendSettlement,
               executeAction: txID =>
                 ordersApi.cancelOrder({ orderID: orderId, transactionID: txID }),
               onSuccess: () =>
@@ -537,7 +654,7 @@ export function useOrderDetailPage(
                     orderID: orderId,
                     action: 'cancel',
                   }),
-                attemptBackendSettlementAction: canAttemptBackendSettlementAction,
+                attemptBackendSettlementAction: usesCancelableBackendSettlement,
                 executeAction: txID =>
                   ordersApi.refundOrder({ orderID: orderId, transactionID: txID }),
                 onSuccess: () =>
@@ -551,17 +668,6 @@ export function useOrderDetailPage(
               executeAction: () => ordersApi.claimPayment(orderId),
               onSuccess: () =>
                 onSuccess(t('order.actions.claimSuccess'), t('order.actions.claimSuccessDesc')),
-              onError,
-            });
-            break;
-          case 'acceptPayout':
-            await executeOrderAction({
-              executeAction: () => ordersApi.acceptDispute(orderId),
-              onSuccess: () =>
-                onSuccess(
-                  t('order.actions.acceptPayoutSuccess'),
-                  t('order.actions.acceptPayoutSuccessDesc')
-                ),
               onError,
             });
             break;
@@ -580,7 +686,8 @@ export function useOrderDetailPage(
       refetch,
       t,
       toast,
-      canAttemptBackendSettlementAction,
+      usesMonitoredBackendSettlement,
+      usesCancelableBackendSettlement,
     ]
   );
 
@@ -630,9 +737,11 @@ export function useOrderDetailPage(
       orderId,
       blockchain: undefined,
       paymentCoin,
+      paymentEscrowType,
+      paymentProductMode,
       onSuccess: handleAcceptOrderSuccess,
     }),
-    [handleAcceptOrderSuccess, orderId, paymentCoin]
+    [handleAcceptOrderSuccess, orderId, paymentCoin, paymentEscrowType, paymentProductMode]
   );
 
   const shipOrderProps = useMemo(
@@ -907,8 +1016,13 @@ export function useOrderDetailPage(
     isActionLoading,
     isTransitioning,
     completePhase,
+    acceptPayoutPhase,
     isModeratedOrder,
     executeConfirmAction,
+    showAcceptPayoutDialog,
+    openAcceptPayoutDialog,
+    closeAcceptPayoutDialog,
+    confirmAcceptPayout,
     showConfirmReceiptDialog,
     openConfirmReceiptDialog,
     closeConfirmReceiptDialog,
