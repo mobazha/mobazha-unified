@@ -1,7 +1,20 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { useI18n, type DisplayOrder, type CancellationContext } from '@mobazha/core';
+import {
+  useI18n,
+  type DisplayOrder,
+  type CancellationContext,
+  getFulfillmentStepLabelKey,
+  getPendingBuyerPaidHintKey,
+  getProcessingBuyerStatusKey,
+  getProcessingSellerStatusKey,
+  getShippedBuyerStatusKey,
+  getShippedHintKey,
+  getShippedSellerStatusKey,
+  getDeliveredBuyerStatusKey,
+  getDeliveredSellerStatusKey,
+} from '@mobazha/core';
 import { formatOrderDate } from '@/components/Order/utils';
 import { cn } from '@/lib/utils';
 import {
@@ -207,7 +220,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           message: isBuyer
             ? t('order.statusCard.pendingBuyer')
             : t('order.statusCard.pendingSeller'),
-          hint: isBuyer ? t('order.statusCard.pendingBuyerPaidHint') : undefined,
+          hint: isBuyer ? t(getPendingBuyerPaidHintKey(order.contractType)) : undefined,
           color: 'text-warning',
           bgColor: 'bg-warning/8 border-warning/20',
           progress: 1,
@@ -216,8 +229,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: PackageCheck,
           message: isBuyer
-            ? t('order.statusCard.processingBuyer')
-            : t('order.statusCard.processingSeller'),
+            ? t(getProcessingBuyerStatusKey(order.contractType))
+            : t(getProcessingSellerStatusKey(order.contractType)),
           color: 'text-info',
           bgColor: 'bg-info/8 border-info/20',
           progress: 2,
@@ -226,9 +239,9 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: Truck,
           message: isBuyer
-            ? t('order.statusCard.shippedBuyer')
-            : t('order.statusCard.shippedSeller'),
-          hint: isBuyer ? t('order.statusCard.shippedHint') : undefined,
+            ? t(getShippedBuyerStatusKey(order.contractType))
+            : t(getShippedSellerStatusKey(order.contractType)),
+          hint: isBuyer ? t(getShippedHintKey(order.contractType)) : undefined,
           color: 'text-primary',
           bgColor: 'bg-primary/8 border-primary/20',
           progress: 3,
@@ -237,8 +250,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: CheckCircle2,
           message: isBuyer
-            ? t('order.statusCard.deliveredBuyer')
-            : t('order.statusCard.deliveredSeller'),
+            ? t(getDeliveredBuyerStatusKey(order.contractType))
+            : t(getDeliveredSellerStatusKey(order.contractType)),
           color: 'text-primary',
           bgColor: 'bg-primary/8 border-primary/20',
           progress: 3,
@@ -308,6 +321,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
   }, [
     order.status,
     order.userRole,
+    order.contractType,
     order.awaitingPaymentVerification,
     order.paymentVerificationFailed,
     order.paymentVerificationFailureReason,
@@ -319,10 +333,10 @@ export const OrderStatusCard = memo(function OrderStatusCard({
     () => [
       config.paymentStepLabel || t('order.statusCard.stepPaid'),
       t('order.statusCard.stepAccepted'),
-      t('order.statusCard.stepShipped'),
+      t(getFulfillmentStepLabelKey(order.contractType)),
       t('order.statusCard.stepComplete'),
     ],
-    [config.paymentStepLabel, t]
+    [config.paymentStepLabel, order.contractType, t]
   );
 
   const Icon = config.icon;

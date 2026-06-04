@@ -12,7 +12,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n } from '@mobazha/core';
+import {
+  useI18n,
+  getCompleteActionLabelKey,
+  getCompleteDialogDescriptionKey,
+  getCompleteDialogTitleKey,
+} from '@mobazha/core';
 import type { CompletePhase } from '@/hooks/useOrderDetailPage';
 
 export interface ConfirmReceiptDialogProps {
@@ -22,15 +27,23 @@ export interface ConfirmReceiptDialogProps {
   isLoading?: boolean;
   completePhase?: CompletePhase;
   isModerated?: boolean;
+  contractType?: string;
 }
 
 function getConfirmLabel(
   t: ReturnType<typeof useI18n>['t'],
-  options: { isLoading: boolean; completePhase: CompletePhase; isModerated: boolean }
+  options: {
+    isLoading: boolean;
+    completePhase: CompletePhase;
+    isModerated: boolean;
+    contractType?: string;
+  }
 ): string {
-  const { isLoading, completePhase, isModerated } = options;
+  const { isLoading, completePhase, isModerated, contractType } = options;
   if (!isLoading) {
-    return isModerated ? t('order.review.submitAndRelease') : t('order.actions.complete');
+    return isModerated
+      ? t('order.review.submitAndRelease')
+      : t(getCompleteActionLabelKey(contractType));
   }
   if (completePhase === 'releasing') {
     return t('order.complete.phase.releasing');
@@ -71,12 +84,13 @@ export function ConfirmReceiptDialog({
   isLoading = false,
   completePhase = 'idle',
   isModerated = false,
+  contractType,
 }: ConfirmReceiptDialogProps) {
   const { t } = useI18n();
 
   const confirmLabel = useMemo(
-    () => getConfirmLabel(t, { isLoading, completePhase, isModerated }),
-    [completePhase, isLoading, isModerated, t]
+    () => getConfirmLabel(t, { isLoading, completePhase, isModerated, contractType }),
+    [completePhase, contractType, isLoading, isModerated, t]
   );
 
   const phaseHint = useMemo(
@@ -105,11 +119,9 @@ export function ConfirmReceiptDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent data-testid="confirm-receipt-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('order.dialogs.completeOrder.title')}</AlertDialogTitle>
+          <AlertDialogTitle>{t(getCompleteDialogTitleKey(contractType))}</AlertDialogTitle>
           <AlertDialogDescription>
-            {isModerated
-              ? t('order.dialogs.completeOrder.moderatedDescription')
-              : t('order.dialogs.completeOrder.description')}
+            {t(getCompleteDialogDescriptionKey(contractType, isModerated))}
           </AlertDialogDescription>
         </AlertDialogHeader>
         {phaseHint && (

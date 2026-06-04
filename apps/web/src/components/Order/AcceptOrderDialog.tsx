@@ -16,6 +16,8 @@ import {
   ordersApi,
   useOrderAction,
   orderUsesCancelableBackendSettlement,
+  getAcceptSuccessDescKey,
+  getAcceptDialogDescriptionKey,
 } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
@@ -33,6 +35,7 @@ export interface AcceptOrderDialogProps {
   paymentEscrowType?: string;
   /** direct / cancelable / moderated */
   paymentProductMode?: string;
+  contractType?: string;
   onSuccess?: () => void;
 }
 
@@ -50,6 +53,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
   paymentCoin,
   paymentEscrowType,
   paymentProductMode,
+  contractType,
   onSuccess,
 }) => {
   const { t } = useI18n();
@@ -102,7 +106,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
         onSuccess: () => {
           toast({
             title: t('order.actions.acceptSuccess'),
-            description: t('order.actions.acceptSuccessDesc'),
+            description: t(getAcceptSuccessDescKey(contractType)),
           });
           selectedAccountRef.current = null;
           onOpenChange(false);
@@ -124,6 +128,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
     paymentCoin,
     paymentEscrowType,
     paymentProductMode,
+    contractType,
     isFiatPayment,
     onOpenChange,
     onSuccess,
@@ -148,7 +153,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>{t('order.accept.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            {isFiatPayment ? t('order.accept.fiatDescription') : t('order.accept.description')}
+            {t(getAcceptDialogDescriptionKey(isFiatPayment, contractType))}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

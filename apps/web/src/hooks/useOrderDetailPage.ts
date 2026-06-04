@@ -102,6 +102,7 @@ export interface UseOrderDetailPageReturn {
     paymentCoin?: string;
     paymentEscrowType?: string;
     paymentProductMode?: string;
+    contractType?: string;
     onSuccess: () => void;
   };
   shipOrderProps: {
@@ -739,9 +740,18 @@ export function useOrderDetailPage(
       paymentCoin,
       paymentEscrowType,
       paymentProductMode,
+      contractType: (coreOrder as OrderContractData)?.contract?.orderOpen?.listings?.[0]?.listing
+        ?.metadata?.contractType,
       onSuccess: handleAcceptOrderSuccess,
     }),
-    [handleAcceptOrderSuccess, orderId, paymentCoin, paymentEscrowType, paymentProductMode]
+    [
+      handleAcceptOrderSuccess,
+      orderId,
+      paymentCoin,
+      paymentEscrowType,
+      paymentProductMode,
+      coreOrder,
+    ]
   );
 
   const shipOrderProps = useMemo(

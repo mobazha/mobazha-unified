@@ -90,6 +90,7 @@ export function transformOrderListItem(
     settlementActionId: item.settlementActionId,
     settlementState: item.settlementState,
     settlementTxHash: item.settlementTxHash,
+    contractType: item.contractType,
     items: [
       {
         id: orderId,

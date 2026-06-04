@@ -2,11 +2,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-vi.mock('@mobazha/core', () => ({
-  useI18n: () => ({
-    t: (key: string) => key,
-  }),
-}));
+vi.mock('@mobazha/core', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core')>();
+  return {
+    ...actual,
+    useI18n: () => ({
+      t: (key: string) => key,
+      locale: 'en',
+    }),
+  };
+});
 
 import type { DisplayOrder } from '@mobazha/core';
 import { OrderStatusCard } from '@/components/Order/cards/OrderStatusCard';
@@ -62,5 +67,20 @@ describe('OrderStatusCard', () => {
 
     expect(screen.getByText('order.statusCard.pendingBuyer')).toBeInTheDocument();
     expect(screen.getByText('order.statusCard.pendingBuyerConfirmingHint')).toBeInTheDocument();
+  });
+
+  it('uses service fulfillment copy when contractType is SERVICE', () => {
+    render(
+      <OrderStatusCard
+        displayOrder={makeOrder({
+          status: 'processing',
+          userRole: 'seller',
+          contractType: 'SERVICE',
+        })}
+      />
+    );
+
+    expect(screen.getByText('order.statusCard.processingSellerService')).toBeInTheDocument();
+    expect(screen.getByText('order.statusCard.stepDelivered')).toBeInTheDocument();
   });
 });

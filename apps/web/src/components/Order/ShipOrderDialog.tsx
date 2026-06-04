@@ -18,6 +18,8 @@ import {
   CARRIERS,
   filterCarriersGrouped,
   detectCarrier,
+  getShipSuccessDescKey,
+  getShipSuccessTitleKey,
   type CarrierConfig,
 } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
@@ -233,6 +235,14 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
         }));
       }
 
+      if (deliveryMode === 'service') {
+        const count = Math.max(itemCount, 1);
+        payload.shipments = Array.from({ length: count }, (_, itemIndex) => ({
+          itemIndex,
+          note: trackingInfo.note || '',
+        }));
+      }
+
       if (deliveryMode === 'rwa' && selectedAccountRef.current) {
         payload.receivingAccountID = selectedAccountRef.current.id;
         payload.shipments = [
@@ -254,8 +264,8 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
           }
         }
         toast({
-          title: t('order.actions.shipSuccess'),
-          description: t('order.actions.shipSuccessDesc'),
+          title: t(getShipSuccessTitleKey(contractType)),
+          description: t(getShipSuccessDescKey(contractType)),
         });
         setTrackingInfo({
           shipper: '',
@@ -282,7 +292,17 @@ export const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [orderId, trackingInfo, deliveryMode, itemCount, onOpenChange, onSuccess, t, toast]);
+  }, [
+    orderId,
+    trackingInfo,
+    deliveryMode,
+    itemCount,
+    contractType,
+    onOpenChange,
+    onSuccess,
+    t,
+    toast,
+  ]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {

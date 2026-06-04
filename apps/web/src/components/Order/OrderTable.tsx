@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, resolveOrderStatusLabelKey } from '@mobazha/core';
 import { Copy } from 'lucide-react';
 import type { Order } from './OrderCard';
 import { OrderSettlementBadge } from './OrderSettlementBadge';
@@ -166,6 +166,11 @@ export const OrderTable = memo(function OrderTable({
               labelKey: 'order.statusLabels.unknown',
               className: 'bg-muted text-muted-foreground border-transparent',
             };
+            const statusLabelKey = resolveOrderStatusLabelKey(
+              order.status,
+              order.contractType,
+              status.labelKey
+            );
             const showActions = shouldShowActions(order.rawState);
 
             return (
@@ -286,7 +291,7 @@ export const OrderTable = memo(function OrderTable({
                     ) : (
                       <>
                         <Badge variant="outline" className={cn('text-xs', status.className)}>
-                          {t(status.labelKey)}
+                          {t(statusLabelKey)}
                         </Badge>
                         <OrderSettlementBadge
                           settlementState={order.settlementState}

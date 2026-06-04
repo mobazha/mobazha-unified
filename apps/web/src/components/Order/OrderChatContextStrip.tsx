@@ -22,7 +22,7 @@ export function OrderChatContextStrip({
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const primaryItem = displayOrder.items?.[0];
-  const statusLabel = getStatusLabel(displayOrder.status, t);
+  const statusLabel = getStatusLabel(displayOrder.status, t, displayOrder.contractType);
   const formattedTotal =
     displayOrder.pricingAmount && displayOrder.pricingCurrency
       ? formatPrice(displayOrder.pricingAmount, displayOrder.pricingCurrency)

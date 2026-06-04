@@ -11,6 +11,7 @@ import {
   getImageUrl,
   orderUsesCancelableBackendSettlement,
   useCurrency,
+  getOrderListShippedLabelKey,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
 import type { TranslateFunction } from '@mobazha/core/i18n/types';
@@ -197,7 +198,7 @@ function copyToClipboard(text: string): void {
   void navigator.clipboard.writeText(text);
 }
 
-function standardStateLabelKey(rawState: string, status: string): string {
+function standardStateLabelKey(rawState: string, status: string, contractType?: string): string {
   switch (rawState) {
     case 'AWAITING_PAYMENT':
       return 'order.statusLabels.awaitingPayment';
@@ -210,7 +211,7 @@ function standardStateLabelKey(rawState: string, status: string): string {
     case 'PROCESSING_ERROR':
       return 'order.processing';
     case 'SHIPPED':
-      return 'order.shipped';
+      return getOrderListShippedLabelKey(contractType);
     case 'COMPLETED':
     case 'PAYMENT_FINALIZED':
     case 'RESOLVED':
@@ -487,7 +488,13 @@ function AdminOrdersTable({
             const statusLabel = guestOrder
               ? formatGuestStateLabel(guestOrder.state, t)
               : standardOrder
-                ? t(standardStateLabelKey(standardOrder.rawState || '', standardOrder.status))
+                ? t(
+                    standardStateLabelKey(
+                      standardOrder.rawState || '',
+                      standardOrder.status,
+                      standardOrder.contractType
+                    )
+                  )
                 : '';
             const statusClass = guestOrder
               ? guestStateBadgeClass(guestOrder.state, t)
