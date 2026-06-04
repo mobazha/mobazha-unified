@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { ProductImage } from '@/components/ui/product-image';
-import { useCurrency, useI18n } from '@mobazha/core';
+import { useCurrency, useI18n, resolveOrderStatusLabelKey } from '@mobazha/core';
 import { CreditCard } from 'lucide-react';
 import { getStandardStatusConfig, resolveStatusDisplay } from './orderStatusConfig';
 
@@ -59,6 +59,7 @@ export interface Order {
   };
   trackingNumber?: string;
   shippingAddress?: string;
+  contractType?: string;
 }
 
 export interface OrderCardProps {
@@ -73,6 +74,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
   const { t } = useI18n();
   const statusCfg = useMemo(() => getStandardStatusConfig(t), [t]);
   const status = resolveStatusDisplay(order.status, statusCfg);
+  const statusLabel =
+    order.status === 'shipped'
+      ? t(resolveOrderStatusLabelKey(order.status, order.contractType))
+      : status.label;
   const isAwaitingPayment = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
 
   const formatDate = (dateString: string) => {
@@ -106,7 +111,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, type, onViewDetails
               className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-medium ${status.color}`}
             >
               {status.icon && React.createElement(status.icon, { className: 'w-3.5 h-3.5' })}
-              {status.label}
+              {statusLabel}
             </span>
           </HStack>
         </HStack>

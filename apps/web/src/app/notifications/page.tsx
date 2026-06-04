@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
@@ -8,13 +8,21 @@ import { Container, VStack, HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { useChatStore, useNotifications, useI18n, getNotificationRoute } from '@mobazha/core';
+import {
+  useChatStore,
+  useNotifications,
+  useI18n,
+  getNotificationRoute,
+  groupNotificationsForDisplay,
+  getDisplayItemsNotificationIds,
+} from '@mobazha/core';
 import type { NotificationFilter, Notification } from '@mobazha/core';
 import {
   NotificationCard,
   OrderNotificationCard,
   FollowNotificationCard,
   DisputeNotificationCard,
+  AggregatedOrderNotificationCard,
 } from '@/components/Notification';
 import { Bell, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,6 +37,8 @@ interface TabConfig {
 const ALL_TABS: TabConfig[] = [
   { key: 'all', labelKey: 'notifications.tabAll' },
   { key: 'orders', labelKey: 'notifications.tabOrders' },
+  { key: 'transactions', labelKey: 'notifications.tabTransactions' },
+  { key: 'system', labelKey: 'notifications.tabSystem' },
   { key: 'followers', labelKey: 'notifications.tabFollowers' },
 ];
 
@@ -53,7 +63,7 @@ export default function NotificationsPage() {
     total,
     markAsRead,
     markAllAsRead,
-    deleteNotification,
+    deleteNotifications,
     loadMore,
     setFilter,
   } = useNotifications({ autoLoad: true, pageSize: 20 });
@@ -93,13 +103,40 @@ export default function NotificationsPage() {
     toast({ title: t('notifications.allMarkedRead') });
   }, [markAllAsRead, t]);
 
-  // 处理删除通知
-  const handleDeleteNotification = useCallback(
-    (notificationId: string) => {
-      deleteNotification(notificationId);
-      toast({ title: t('notifications.notificationDeleted') });
+  const handleMarkGroupAsRead = useCallback(
+    (items: Notification[]) => {
+      items
+        .filter(n => !n.read)
+        .forEach(n => {
+          void handleMarkAsRead(n.id);
+        });
     },
-    [deleteNotification, t]
+    [handleMarkAsRead]
+  );
+
+  // 处理删除通知
+  const handleDeleteDisplayItem = useCallback(
+    async (ids: string[]) => {
+      if (ids.length === 0) return;
+
+      const result = await deleteNotifications(ids);
+      if (result.success) {
+        toast({ title: t('notifications.notificationDeleted') });
+        return;
+      }
+
+      toast({
+        title: t('common.error'),
+        description: result.error ?? t('notifications.deleteFailed'),
+        variant: 'destructive',
+      });
+    },
+    [deleteNotifications, t]
+  );
+
+  const displayItems = useMemo(
+    () => groupNotificationsForDisplay(apiNotifications),
+    [apiNotifications]
   );
 
   // 处理通知点击
@@ -135,7 +172,6 @@ export default function NotificationsPage() {
             notification={notification}
             route={route}
             onClick={() => handleNotificationClick(notification)}
-            onMarkAsRead={handleMarkAsRead}
           />
         );
       }
@@ -147,7 +183,6 @@ export default function NotificationsPage() {
             notification={notification}
             route={route}
             onClick={() => handleNotificationClick(notification)}
-            onMarkAsRead={handleMarkAsRead}
           />
         );
       }
@@ -159,7 +194,6 @@ export default function NotificationsPage() {
             notification={notification}
             route={route}
             onClick={() => handleNotificationClick(notification)}
-            onMarkAsRead={handleMarkAsRead}
           />
         );
       }
@@ -169,11 +203,36 @@ export default function NotificationsPage() {
           key={notification.id}
           notification={notification}
           onClick={() => handleNotificationClick(notification)}
-          onMarkAsRead={handleMarkAsRead}
         />
       );
     },
-    [handleNotificationClick, handleMarkAsRead]
+    [handleNotificationClick]
+  );
+
+  const renderDisplayItem = useCallback(
+    (item: ReturnType<typeof groupNotificationsForDisplay>[number]) => {
+      if (item.kind === 'order-group') {
+        const route = getNotificationRoute(item.latest);
+        return (
+          <AggregatedOrderNotificationCard
+            orderID={item.orderID}
+            items={item.items}
+            latest={item.latest}
+            hasUnread={item.hasUnread}
+            route={route}
+            onClick={() => {
+              handleMarkGroupAsRead(item.items);
+              if (item.latest.type === 'chat.message') {
+                openChatDrawer();
+              }
+            }}
+          />
+        );
+      }
+
+      return renderNotificationCard(item.notification);
+    },
+    [handleMarkGroupAsRead, openChatDrawer, renderNotificationCard]
   );
 
   return (
@@ -240,7 +299,11 @@ export default function NotificationsPage() {
                   ? t('notifications.noOrderNotifications')
                   : currentFilter === 'followers'
                     ? t('notifications.noFollowerNotifications')
-                    : t('notifications.noNotifications')}
+                    : currentFilter === 'transactions'
+                      ? t('notifications.noTransactionNotifications')
+                      : currentFilter === 'system'
+                        ? t('notifications.noSystemNotifications')
+                        : t('notifications.noNotifications')}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {t('notifications.newNotificationsDesc')}
@@ -248,41 +311,47 @@ export default function NotificationsPage() {
             </Card>
           ) : (
             <VStack gap="xs">
-              {apiNotifications.map(notification => (
-                <Card
-                  key={notification.id}
-                  className={cn(
-                    'transition-all overflow-hidden',
-                    !notification.read && 'ring-1 ring-primary/20'
-                  )}
-                >
-                  <div className="relative group">
-                    {renderNotificationCard(notification)}
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDeleteNotification(notification.id);
-                      }}
-                      aria-label={t('common.delete')}
-                      className="absolute bottom-2 right-3 sm:top-3 sm:bottom-auto p-1.5 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] sm:p-2 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors opacity-0 active:opacity-100 sm:active:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+              {displayItems.map(item => {
+                const isUnread =
+                  item.kind === 'order-group' ? item.hasUnread : !item.notification.read;
+                const itemIds = getDisplayItemsNotificationIds(item);
+
+                return (
+                  <Card
+                    key={item.kind === 'order-group' ? item.id : item.notification.id}
+                    className={cn(
+                      'transition-all overflow-hidden',
+                      isUnread && 'ring-1 ring-primary/20'
+                    )}
+                  >
+                    <div className="relative group">
+                      {renderDisplayItem(item)}
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          void handleDeleteDisplayItem(itemIds);
+                        }}
+                        aria-label={t('common.delete')}
+                        className="absolute bottom-2 right-3 sm:top-3 sm:bottom-auto p-1.5 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] sm:p-2 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors opacity-0 active:opacity-100 sm:active:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </Card>
-              ))}
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </Card>
+                );
+              })}
 
               {/* Load More Trigger */}
               <div ref={loadMoreRef} className="py-4">

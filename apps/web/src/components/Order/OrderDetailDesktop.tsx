@@ -256,7 +256,7 @@ export function OrderDetailDesktop({
   // --- Computed ---
   const statusLabel = useMemo(() => {
     if (!displayOrder) return '';
-    return getStatusLabel(displayOrder.status, t);
+    return getStatusLabel(displayOrder.status, t, displayOrder.contractType);
   }, [displayOrder, t]);
 
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
@@ -1122,6 +1122,7 @@ export function OrderDetailDesktop({
         paymentCoin={acceptOrderProps.paymentCoin}
         paymentEscrowType={acceptOrderProps.paymentEscrowType}
         paymentProductMode={acceptOrderProps.paymentProductMode}
+        contractType={acceptOrderProps.contractType}
         onSuccess={acceptOrderProps.onSuccess}
       />
 
@@ -1142,6 +1143,7 @@ export function OrderDetailDesktop({
         isLoading={isActionLoading}
         completePhase={completePhase}
         isModerated={isModeratedOrder}
+        contractType={displayOrder?.contractType}
       />
 
       {displayOrder?.dispute && (

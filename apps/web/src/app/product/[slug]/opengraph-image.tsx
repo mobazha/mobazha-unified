@@ -2,7 +2,6 @@ import { ImageResponse } from 'next/og';
 import { fetchSsrProduct, getSsrProductMediaUrl } from '@/lib/ssrProduct';
 import { getRequestSearchParam } from '@/lib/requestUrl';
 
-export const runtime = 'edge';
 export const alt = 'Product on Mobazha';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

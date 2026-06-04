@@ -332,7 +332,7 @@ export function OrderDetailMobile({
   // --- Computed ---
   const statusLabel = useMemo(() => {
     if (!displayOrder) return '';
-    return getStatusLabel(displayOrder.status, t);
+    return getStatusLabel(displayOrder.status, t, displayOrder.contractType);
   }, [displayOrder, t]);
 
   const hasTracking = useMemo(() => {
@@ -1375,6 +1375,7 @@ export function OrderDetailMobile({
         paymentCoin={acceptOrderProps.paymentCoin}
         paymentEscrowType={acceptOrderProps.paymentEscrowType}
         paymentProductMode={acceptOrderProps.paymentProductMode}
+        contractType={acceptOrderProps.contractType}
         onSuccess={acceptOrderProps.onSuccess}
       />
 
@@ -1402,6 +1403,7 @@ export function OrderDetailMobile({
         isLoading={isActionLoading}
         completePhase={completePhase}
         isModerated={isModeratedOrder}
+        contractType={displayOrder?.contractType}
       />
 
       {displayOrder?.dispute && (

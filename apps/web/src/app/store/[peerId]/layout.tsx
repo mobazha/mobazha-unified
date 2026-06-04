@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import { getCanonicalSiteUrl, getSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 
@@ -108,13 +108,11 @@ export async function generateMetadata({
   // Named storefront subdomains share the underlying profile, so we
   // consolidate SEO signals onto the canonical store URL.
   const canonicalUrl = `${canonicalSiteUrl}/store/${peerId}`;
-  const themeColor = storefront?.theme?.primaryColor;
   const ogImageUrl = `${canonicalSiteUrl}/store/${peerId}/opengraph-image`;
 
   return {
     title,
     description,
-    ...(themeColor && { themeColor }),
     alternates: { canonical: canonicalUrl },
     // Named storefronts: noindex to avoid duplicate-content with the main
     // store, follow links so internal navigation signals still propagate.
@@ -133,6 +131,18 @@ export async function generateMetadata({
       images: [ogImageUrl],
     },
   };
+}
+
+export async function generateViewport({
+  params,
+}: {
+  params: Promise<{ peerId: string }>;
+}): Promise<Viewport> {
+  const { peerId } = await params;
+  const storefront = await fetchStorefrontConfig(peerId);
+  const themeColor = storefront?.theme?.primaryColor;
+
+  return themeColor ? { themeColor } : {};
 }
 
 function buildOrganizationLd(profile: ProfileData | null, peerId: string, siteUrl: string) {

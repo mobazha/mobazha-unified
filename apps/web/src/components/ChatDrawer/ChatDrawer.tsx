@@ -106,7 +106,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = props => {
       orderId: currentOrderThread.orderId,
       productTitle: currentOrderThread.productTitle || currentRoomPresentation?.title,
       statusLabel: currentOrderThread.orderState
-        ? getStatusLabel(currentOrderThread.orderState, t)
+        ? getStatusLabel(currentOrderThread.orderState, t, currentOrderThread.contractType)
         : undefined,
       counterpartLabel: currentOrderThread.counterpartName,
       onViewOrder: isOnSameOrderDiscussion

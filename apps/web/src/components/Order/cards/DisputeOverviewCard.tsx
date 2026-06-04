@@ -137,7 +137,7 @@ export const DisputeOverviewCard = memo(function DisputeOverviewCard({
       ?.timestamp ||
     displayOrder.createdAt;
 
-  const orderStatusLabel = getStatusLabel(displayOrder.status, t);
+  const orderStatusLabel = getStatusLabel(displayOrder.status, t, displayOrder.contractType);
   const buyerHref = displayOrder.buyer?.peerID ? `/store/${displayOrder.buyer.peerID}` : null;
   const sellerHref = displayOrder.vendor?.peerID ? `/store/${displayOrder.vendor.peerID}` : null;
 

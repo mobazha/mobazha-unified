@@ -53,6 +53,7 @@ export function toDisplayRoom(
     roomType: room.roomType,
     orderId: orderThread?.orderId ?? room.orderId ?? room.metadata?.orderId,
     orderState: orderThread?.orderState,
+    orderContractType: orderThread?.contractType,
     orderSubtitle: orderThread?.counterpartName,
     isExternal: presentation.isExternal,
     isVerified: false,

@@ -22,6 +22,7 @@ export interface ChatRoom {
   roomType?: 'direct' | 'group' | 'order' | 'store' | 'community' | 'moderator';
   orderId?: string;
   orderState?: string;
+  orderContractType?: string;
   orderSubtitle?: string;
   isInvite?: boolean;
   inviterName?: string;
@@ -142,7 +143,9 @@ export const ChatList: React.FC<ChatListProps> = ({
 
   const renderRoomItem = (room: ChatRoom, isInvite = false) => {
     const isOrderRoom = room.roomType === 'order' || room.roomType === 'moderator';
-    const statusLabel = room.orderState ? getStatusLabel(room.orderState, t) : null;
+    const statusLabel = room.orderState
+      ? getStatusLabel(room.orderState, t, room.orderContractType)
+      : null;
     const orderContext = isOrderRoom
       ? [
           statusLabel,

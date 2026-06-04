@@ -25,6 +25,8 @@ import {
   useI18n,
   useCurrency,
   getNotificationRoute,
+  groupNotificationsForDisplay,
+  formatNotificationCounterparty,
 } from '@mobazha/core';
 import type { Notification } from '@mobazha/core';
 import { cn } from '@/lib/utils';
@@ -93,15 +95,6 @@ function formatTimeAgo(
 }
 
 /**
- * 截断 Peer ID
- */
-function truncatePeerId(peerId?: string): string {
-  if (!peerId) return '';
-  if (peerId.length <= 12) return peerId;
-  return `${peerId.slice(0, 12)}...`;
-}
-
-/**
  * 通知项组件（增强版）
  */
 function NotificationItem({
@@ -119,6 +112,7 @@ function NotificationItem({
   const icon = getNotificationIcon(notification.type);
   const route = getNotificationRoute(notification);
   const { data, read, timestamp, type, message } = notification;
+  const counterpartyLabel = formatNotificationCounterparty(data, t);
 
   const isOrderType = type.startsWith('order.') || type.startsWith('payment.');
 
@@ -153,10 +147,8 @@ function NotificationItem({
             read ? 'text-text-secondary' : 'text-text-primary font-medium'
           )}
         >
-          {isFollowType && (data?.buyerName || data?.peerID) && (
-            <span className="text-primary font-medium">
-              {data.buyerName || truncatePeerId(data.peerID)}{' '}
-            </span>
+          {isFollowType && counterpartyLabel && (
+            <span className="text-primary font-medium">{counterpartyLabel} </span>
           )}
           {message}
         </p>
@@ -254,8 +246,8 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     await markAllAsRead();
   }, [markAllAsRead]);
 
-  // 只显示最近 10 条通知
-  const recentNotifications = apiNotifications.slice(0, 10);
+  // 聚合后显示最近条目（下拉只做摘要）
+  const displayItems = groupNotificationsForDisplay(apiNotifications).slice(0, 10);
   const hasUnread = unreadCount > 0;
 
   return (
@@ -303,11 +295,11 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
         {/* Notification List */}
         <ScrollArea className="h-[400px]">
-          {isLoading && recentNotifications.length === 0 ? (
+          {isLoading && displayItems.length === 0 ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : recentNotifications.length === 0 ? (
+          ) : displayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <Bell className="h-10 w-10 text-text-tertiary mb-3" />
               <p className="text-text-secondary font-medium">
@@ -317,15 +309,43 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
             </div>
           ) : (
             <div className="p-2">
-              {recentNotifications.map(notification => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onClick={() => setOpen(false)}
-                  t={t}
-                />
-              ))}
+              {displayItems.map(item => {
+                if (item.kind === 'order-group') {
+                  const groupRead = !item.hasUnread;
+                  return (
+                    <NotificationItem
+                      key={item.id}
+                      notification={{
+                        ...item.latest,
+                        read: groupRead,
+                        message: t('notifications.orderGroup.summary', {
+                          count: item.items.length,
+                          latest: item.latest.message,
+                        }),
+                      }}
+                      onMarkAsRead={() => {
+                        item.items
+                          .filter(n => !n.read)
+                          .forEach(n => {
+                            void handleMarkAsRead(n.id);
+                          });
+                      }}
+                      onClick={() => setOpen(false)}
+                      t={t}
+                    />
+                  );
+                }
+
+                return (
+                  <NotificationItem
+                    key={item.notification.id}
+                    notification={item.notification}
+                    onMarkAsRead={handleMarkAsRead}
+                    onClick={() => setOpen(false)}
+                    t={t}
+                  />
+                );
+              })}
             </div>
           )}
         </ScrollArea>

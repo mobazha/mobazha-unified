@@ -9,6 +9,7 @@ import {
   getDisputeResolutionHeadline,
   getDisputeSettlementPayoutLines,
   shouldShowDisputeArchiveCard,
+  getAcceptedDescSellerKey,
   type DisplayOrder,
   type SettlementActionSnapshot,
 } from '@mobazha/core';
@@ -183,7 +184,7 @@ function buildCompletedTimelineCards(
           timestamp={acceptedEvent?.timestamp}
           description={
             order.userRole === 'seller'
-              ? t('order.acceptedDescSeller')
+              ? t(getAcceptedDescSellerKey(order.contractType))
               : t('order.acceptedDescBuyer')
           }
           showDivider={false}

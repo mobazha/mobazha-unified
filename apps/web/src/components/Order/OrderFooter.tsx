@@ -11,6 +11,9 @@ import {
   getSecondaryActions,
   getActionButtonConfig,
   isOrderExpired,
+  getShipActionLabelKey,
+  getCompleteActionLabelKey,
+  getShippedStatusLabelKey,
   type OrderAction,
   type UserRole,
   type OrderState,
@@ -131,20 +134,17 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       Cancel: t('order.actions.cancel'),
       Dispute: t('order.actions.dispute'),
       AfterSaleDispute: t('order.actions.reportIssue'),
-      Complete: t('order.actions.complete'),
+      Complete: t(getCompleteActionLabelKey(contractType)),
       WriteReview: t('order.actions.writeReview'),
       Accept: t('order.actions.accept'),
       Decline: t('order.actions.decline'),
-      Ship:
-        contractType === 'DIGITAL_GOOD'
-          ? canSyncDigitalDelivery
-            ? t('order.actions.syncDelivery')
-            : canRetryDigitalDelivery
-              ? t('order.actions.retryDigitalDelivery')
-              : manualDigitalFallbackAllowed
-                ? t('order.actions.deliverDigital')
-                : t('order.actions.deliveryPending')
-          : t('order.actions.ship'),
+      Ship: t(
+        getShipActionLabelKey(contractType, {
+          canSyncDigitalDelivery,
+          canRetryDigitalDelivery,
+          manualDigitalFallbackAllowed,
+        })
+      ),
       Refund: t('order.actions.refund'),
       Claim: t('order.actions.claim'),
       AcceptPayout: t('order.actions.acceptPayout'),
@@ -256,6 +256,9 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       PROCESSING_ERROR: 'order.statusLabels.error',
     };
 
+    if (state === 'SHIPPED') {
+      return t(getShippedStatusLabelKey(contractType));
+    }
     const key = statusKeys[state];
     if (key) return t(key);
     return formatStatus(state);

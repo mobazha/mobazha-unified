@@ -4,7 +4,13 @@ import React, { memo, useCallback, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useI18n, useCurrency, getChainFromCoin, getTokenByPaymentCoin } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getChainFromCoin,
+  getTokenByPaymentCoin,
+  resolveOrderStatusLabelKey,
+} from '@mobazha/core';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { MessageCircle, CheckCircle2, CreditCard } from 'lucide-react';
@@ -274,6 +280,11 @@ export const OrderListCompact = memo(function OrderListCompact({
           labelKey: 'order.status.unknown',
           className: 'bg-muted text-muted-foreground border-transparent',
         };
+        const statusLabelKey = resolveOrderStatusLabelKey(
+          order.status,
+          order.contractType,
+          status.labelKey
+        );
         const item = order.items[0];
         const showActions = shouldShowActions(order.rawState);
         const showPayAction = type === 'purchase' && order.rawState === 'AWAITING_PAYMENT';
@@ -350,7 +361,7 @@ export const OrderListCompact = memo(function OrderListCompact({
                       variant="outline"
                       className={cn('text-xs px-2 py-0.5 h-5', status.className)}
                     >
-                      {t(status.labelKey)}
+                      {t(statusLabelKey)}
                     </Badge>
                     <OrderSettlementBadge
                       settlementState={order.settlementState}
