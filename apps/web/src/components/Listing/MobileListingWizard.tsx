@@ -14,7 +14,13 @@ import {
   Eye,
   Tags,
 } from 'lucide-react';
-import { useI18n, useCurrency, getImageUrl, DEFAULT_LOCAL_CURRENCY } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getImageUrl,
+  DEFAULT_LOCAL_CURRENCY,
+  resolveProductSupplyMode,
+} from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile } from '@mobazha/core';
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
@@ -28,10 +34,13 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
+  InventoryPolicyField,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiSetupPrompt,
+  SupplySummaryBar,
 } from '@/components/Listing';
+import type { ProductSupplyContext, SupplySummaryAction, SupplySummaryView } from '@mobazha/core';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +53,11 @@ interface MobileListingWizardProps {
   errors: FormErrors;
   isSubmitting: boolean;
   isEditMode?: boolean;
+  listingSlug?: string;
+  supplyContext?: ProductSupplyContext;
+  supplySummary?: SupplySummaryView;
+  supplySummaryLoading?: boolean;
+  onSupplySummaryAction?: (action: SupplySummaryAction) => void;
 
   updateField: <K extends keyof ListingFormData>(key: K, value: ListingFormData[K]) => void;
   changeContractType: (type: ContractType) => void;
@@ -108,6 +122,11 @@ export function MobileListingWizard({
   errors,
   isSubmitting,
   isEditMode = false,
+  listingSlug,
+  supplyContext,
+  supplySummary,
+  supplySummaryLoading,
+  onSupplySummaryAction,
   updateField,
   changeContractType,
   addTag,
@@ -408,6 +427,19 @@ export function MobileListingWizard({
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {isEditMode &&
+          listingSlug &&
+          supplyContext &&
+          supplySummary &&
+          resolveProductSupplyMode(supplyContext) !== 'none' && (
+            <SupplySummaryBar
+              context={supplyContext}
+              summary={supplySummary}
+              loading={supplySummaryLoading}
+              onAction={onSupplySummaryAction}
+            />
+          )}
+
         {/* Step 1: Essentials */}
         {currentStep === 'essentials' && (
           <>
@@ -628,6 +660,11 @@ export function MobileListingWizard({
                     />
                   </div>
                 )}
+                <InventoryPolicyField
+                  className="mt-4 pt-4 border-t border-border"
+                  value={formData.inventoryPolicy}
+                  onChange={val => updateField('inventoryPolicy', val)}
+                />
               </AccordionItem>
             )}
 
@@ -658,40 +695,6 @@ export function MobileListingWizard({
                         value={formData.processingTime}
                         onChange={val => updateField('processingTime', val)}
                       />
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {t('listing.inventoryPolicy.label')}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('listing.inventoryPolicy.helper')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={formData.inventoryPolicy === 'continue'}
-                        onClick={() =>
-                          updateField(
-                            'inventoryPolicy',
-                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
-                          )
-                        }
-                        className={cn(
-                          'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                            formData.inventoryPolicy === 'continue'
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
-                          )}
-                        />
-                      </button>
                     </div>
                   </AccordionItem>
                 </>

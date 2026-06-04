@@ -490,6 +490,10 @@ export type {
 export type {
   CheckoutSupplyQuoteItem,
   CheckoutSupplyQuoteResponse,
+  ListingSupplyMode,
+  ListingSupplySummaryItem,
+  ListingSupplySummaryRequest,
+  ListingSupplySummaryResponse,
   QuoteCheckoutSupplyRequest,
   GuestOrderSupplyQuoteItem,
   GuestOrderSupplyQuoteResponse,

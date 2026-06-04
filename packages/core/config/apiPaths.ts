@@ -49,6 +49,7 @@ export const NODE_API = {
   LISTING_PEER: (peerID: string, slug: string) => `/listings/${peerID}/${slug}`,
   LISTINGS_INDEX: '/listings/index',
   LISTINGS_INDEX_PEER: (peerID: string) => `/listings/index/${peerID}`,
+  LISTINGS_SUPPLY_SUMMARY: '/listings/supply-summary',
 
   // --- Ratings ---
   RATINGS_INDEX: '/ratings/index',

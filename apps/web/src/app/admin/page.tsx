@@ -18,7 +18,6 @@ import {
   TrendingUp,
   Star,
   Zap,
-  Plus,
   Eye,
   Palette,
   AlertCircle,
@@ -42,6 +41,7 @@ import {
   MoneroPoolStatusBanner,
   XmrWalletSetupBanner,
   ActionItems,
+  SupplyNeedsAttentionCard,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
 import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
@@ -423,6 +423,8 @@ export default function AdminDashboardPage() {
 
       {/* Action Items — seller to-dos */}
       <ActionItems orders={salesOrders} loading={salesLoading} />
+
+      <SupplyNeedsAttentionCard products={products} loading={productsLoading} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">

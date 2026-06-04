@@ -45,8 +45,16 @@ import {
   queryKeys,
   useUserStore,
   digitalAssetsApi,
+  resolveProductSupplyMode,
+  useFeature,
 } from '@mobazha/core';
-import type { ContractType, Image, ShippingProfile, Product } from '@mobazha/core';
+import type {
+  ContractType,
+  Image,
+  ShippingProfile,
+  Product,
+  SupplySummaryAction,
+} from '@mobazha/core';
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -57,6 +65,7 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
+  InventoryPolicyField,
   DigitalListingAssetsPanel,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
@@ -64,7 +73,9 @@ import {
   AiSetupPrompt,
   useListingAiIntegration,
   MobileListingWizard,
+  SupplySummaryBar,
 } from '@/components/Listing';
+import { useListingSupplySummary } from '@/hooks/useListingSupplySummary';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -131,6 +142,7 @@ export default function EditListingPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { t } = useI18n();
+  const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -217,6 +229,25 @@ export default function EditListingPage() {
       ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
+
+  const {
+    context: supplyContext,
+    summary: supplySummary,
+    loading: supplySummaryLoading,
+  } = useListingSupplySummary({
+    listingSlug: slug,
+    contractType: formData.contractType,
+    skus: formData.skus,
+    enabled: supplyAvailabilityEnabled,
+  });
+
+  const handleSupplySummaryAction = useCallback(
+    (action: SupplySummaryAction) => {
+      if (action === 'variants') scrollToSection('variants');
+      else if (action === 'digital') scrollToSection('files');
+    },
+    [scrollToSection]
+  );
 
   // 标签规范化函数
   const normalizeTag = useCallback((input: string) => {
@@ -474,6 +505,11 @@ export default function EditListingPage() {
           errors={errors}
           isSubmitting={isSubmitting}
           isEditMode
+          listingSlug={slug}
+          supplyContext={supplyAvailabilityEnabled ? supplyContext : undefined}
+          supplySummary={supplyAvailabilityEnabled ? supplySummary : undefined}
+          supplySummaryLoading={supplyAvailabilityEnabled ? supplySummaryLoading : false}
+          onSupplySummaryAction={supplyAvailabilityEnabled ? handleSupplySummaryAction : undefined}
           updateField={updateField}
           changeContractType={changeContractType}
           addTag={addTag}
@@ -673,6 +709,15 @@ export default function EditListingPage() {
 
             {/* 主内容区域 */}
             <div className="lg:col-span-10 space-y-6">
+              {supplyAvailabilityEnabled && resolveProductSupplyMode(supplyContext) !== 'none' && (
+                <SupplySummaryBar
+                  context={supplyContext}
+                  summary={supplySummary}
+                  loading={supplySummaryLoading}
+                  onAction={handleSupplySummaryAction}
+                />
+              )}
+
               {/* 商品类型选择 */}
               <Card
                 className="p-6"
@@ -927,6 +972,14 @@ export default function EditListingPage() {
                       className="mt-6"
                     />
                   )}
+
+                  {formData.contractType === 'PHYSICAL_GOOD' && (
+                    <InventoryPolicyField
+                      className="mt-6 pt-6 border-t border-border"
+                      value={formData.inventoryPolicy}
+                      onChange={val => updateField('inventoryPolicy', val)}
+                    />
+                  )}
                 </Card>
               )}
 
@@ -964,39 +1017,6 @@ export default function EditListingPage() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {t('listing.processingTimeHelper')}
                       </p>
-                    </div>
-                    {/* 库存策略 */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {t('listing.inventoryPolicy.label')}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('listing.inventoryPolicy.helper')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={formData.inventoryPolicy === 'continue'}
-                        onClick={() =>
-                          updateField(
-                            'inventoryPolicy',
-                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
-                          )
-                        }
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            formData.inventoryPolicy === 'continue'
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
                     </div>
                   </Card>
                 )}

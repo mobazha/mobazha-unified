@@ -19,6 +19,10 @@ export type { VariantOptionEditorProps } from './VariantOptionEditor';
 export { VariantInventoryTable } from './VariantInventoryTable';
 export type { VariantInventoryTableProps } from './VariantInventoryTable';
 
+export { InventoryPolicyField } from './InventoryPolicyField';
+
+export { SupplySummaryBar } from './SupplySummaryBar';
+
 export { DigitalFileSection } from './DigitalFileSection';
 
 export { DigitalAssetsManagerSection } from './DigitalAssetsManagerSection';

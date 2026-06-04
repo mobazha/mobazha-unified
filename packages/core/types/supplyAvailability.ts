@@ -41,6 +41,37 @@ export interface QuoteCheckoutSupplyRequest {
   }>;
 }
 
+export type ListingSupplyMode =
+  | 'unknown'
+  | 'tracked_stock'
+  | 'license_codes'
+  | 'instant_download'
+  | 'supplier_fulfilled';
+
+export interface ListingSupplySummaryItem {
+  listingSlug: string;
+  supplyMode: ListingSupplyMode;
+  status: SupplyAvailabilityStatus;
+  availableQuantity?: number;
+  onHandQuantity?: number;
+  heldQuantity?: number;
+  manualActionRequired?: boolean;
+  reason?: string;
+}
+
+export interface ListingSupplySummaryRequest {
+  slugs?: string[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface ListingSupplySummaryResponse {
+  items: ListingSupplySummaryItem[];
+  limit: number;
+  offset: number;
+  total: number;
+}
+
 /** @deprecated Use CheckoutSupplyQuoteItem */
 export type GuestOrderSupplyQuoteItem = CheckoutSupplyQuoteItem;
 

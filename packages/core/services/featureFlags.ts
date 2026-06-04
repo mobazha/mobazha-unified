@@ -85,6 +85,10 @@ interface RuntimeConfigWindow {
 }
 
 const FRONTEND_FEATURE_DEFAULTS: FeatureSnapshot = {
+  supplyAvailabilityEnabled: {
+    effective: false,
+    overridable: ['platform_global', 'tenant', 'node_runtime'],
+  },
   supplyChainEnabled: {
     effective: false,
     overridable: ['platform_global', 'tenant', 'node_runtime'],
