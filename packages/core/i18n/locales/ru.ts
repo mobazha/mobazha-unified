@@ -997,6 +997,8 @@ export const ru: PartialTranslationResource = {
         title: 'Принять выплату',
         description:
           'Вы уверены, что хотите принять решение по спору? Средства будут распределены по решению модератора.',
+        releaseHint:
+          'После принятия средства на escrow будут освобождены согласно разбивке ниже. Это может занять до минуты.',
       },
       shipOrder: {
         title: 'Отправить заказ',
@@ -1028,6 +1030,15 @@ export const ru: PartialTranslationResource = {
         requestedByCustomer: 'По запросу клиента',
         duplicate: 'Дублирующий платёж',
         fraudulent: 'Мошенничество',
+      },
+    },
+    acceptPayout: {
+      phase: {
+        releasing: 'Высвобождение средств…',
+        accepting: 'Принятие решения…',
+        releasingHint:
+          'Средства на escrow освобождаются согласно решению. Это может занять до минуты.',
+        acceptingHint: 'Фиксируем ваше принятие решения по спору.',
       },
     },
     review: {

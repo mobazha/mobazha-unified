@@ -23,6 +23,12 @@ export type OrderState =
   | 'PROCESSING_ERROR'
   | 'DISPUTE_EXPIRED';
 
+/** 确认收货/完成订单时的分阶段 loading 状态 */
+export type CompletePhase = 'idle' | 'confirming' | 'releasing' | 'completing' | 'syncing-rating';
+
+/** 接受争议裁决时的分阶段 loading 状态 */
+export type AcceptPayoutPhase = 'idle' | 'releasing' | 'accepting';
+
 /**
  * 订单角色
  */
@@ -121,6 +127,8 @@ export interface OrderListItem {
   shippingName?: string;
   shippingAddress?: string;
   moderated: boolean;
+  /** settlementSpec.escrowType from payment (managed_escrow / utxo_script / solana_escrow) */
+  paymentEscrowType?: string;
   unreadChatMessages?: number;
 }
 

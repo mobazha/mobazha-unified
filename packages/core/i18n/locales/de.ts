@@ -1012,6 +1012,8 @@ export const de: PartialTranslationResource = {
         title: 'Auszahlung akzeptieren',
         description:
           'Möchten Sie die Streitfallentscheidung wirklich akzeptieren? Das Geld wird gemäß der Moderator-Entscheidung verteilt.',
+        releaseHint:
+          'Nach der Annahme werden Treuhandgelder gemäß der untenstehenden Aufteilung freigegeben. Dies kann bis zu einer Minute dauern.',
       },
       shipOrder: {
         title: 'Bestellung versenden',
@@ -1045,8 +1047,16 @@ export const de: PartialTranslationResource = {
         fraudulent: 'Betrugsverdacht',
       },
     },
+    acceptPayout: {
+      phase: {
+        releasing: 'Mittel werden freigegeben…',
+        accepting: 'Schiedsspruch wird akzeptiert…',
+        releasingHint:
+          'Treuhandgelder werden gemäß dem Schiedsspruch freigegeben. Dies kann bis zu einer Minute dauern.',
+        acceptingHint: 'Ihre Annahme des Schiedsspruchs wird erfasst.',
+      },
+    },
     review: {
-      title: 'Bewertung abgeben',
       rateExperience: 'Wie war Ihre Erfahrung?',
       reviewLabel: 'Bewertung schreiben (optional)',
       reviewPlaceholder: 'Teilen Sie Ihre Erfahrung mit diesem Produkt...',

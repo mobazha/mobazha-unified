@@ -1107,6 +1107,7 @@ export const zh: PartialTranslationResource = {
       acceptPayout: {
         title: '接受裁决',
         description: '确定要接受争议裁决结果吗？资金将按仲裁员的决定进行分配。',
+        releaseHint: '接受后将按下方分账释放托管资金，可能需要几十秒，请稍候。',
       },
       shipOrder: {
         title: '发货',
@@ -1141,6 +1142,14 @@ export const zh: PartialTranslationResource = {
         releasing: '正在释放买家保障资金…',
         completing: '正在完成订单…',
         syncingRating: '正在同步评价…',
+      },
+    },
+    acceptPayout: {
+      phase: {
+        releasing: '正在释放资金…',
+        accepting: '正在接受裁决…',
+        releasingHint: '正在按仲裁结果释放托管资金，可能需要几十秒，请稍候。',
+        acceptingHint: '正在记录您对争议裁决的接受。',
       },
     },
     review: {

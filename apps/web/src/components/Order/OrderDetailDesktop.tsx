@@ -38,6 +38,7 @@ import {
   OrderRating,
   WriteReviewDialog,
   ConfirmReceiptDialog,
+  AcceptPayoutDialog,
   SellerDigitalDeliveryStatus,
   OrderShipment,
   getDigitalDeliveryTimestamp,
@@ -109,8 +110,13 @@ export function OrderDetailDesktop({
     isActionLoading,
     isTransitioning,
     completePhase,
+    acceptPayoutPhase,
     isModeratedOrder,
     executeConfirmAction,
+    showAcceptPayoutDialog,
+    openAcceptPayoutDialog,
+    closeAcceptPayoutDialog,
+    confirmAcceptPayout,
     showConfirmReceiptDialog,
     openConfirmReceiptDialog,
     closeConfirmReceiptDialog,
@@ -435,7 +441,7 @@ export function OrderDetailDesktop({
           setConfirmDialog('claim');
           break;
         case 'AcceptPayout':
-          setConfirmDialog('acceptPayout');
+          openAcceptPayoutDialog();
           break;
         case 'Dispute':
           setIsAfterSaleDispute(false);
@@ -458,6 +464,7 @@ export function OrderDetailDesktop({
       displayOrder,
       sellerDigitalDelivery,
       shouldBlockAutoRefund,
+      openAcceptPayoutDialog,
       t,
       toast,
     ]
@@ -472,11 +479,13 @@ export function OrderDetailDesktop({
   );
 
   const handleConfirmAction = useCallback(async () => {
-    if (!confirmDialog) return;
+    if (!confirmDialog || isActionLoading) return;
     const actionType = confirmDialog;
-    setConfirmDialog(null);
-    await executeConfirmAction(actionType);
-  }, [confirmDialog, executeConfirmAction]);
+    const succeeded = await executeConfirmAction(actionType);
+    if (succeeded) {
+      setConfirmDialog(null);
+    }
+  }, [confirmDialog, executeConfirmAction, isActionLoading]);
 
   const handleDisputeSubmit = useCallback(
     async (claim: string, evidenceHashes?: string[]) => {
@@ -1047,6 +1056,7 @@ export function OrderDetailDesktop({
       {!showRatingInvite &&
         !showReviewDialog &&
         !showConfirmReceiptDialog &&
+        !showAcceptPayoutDialog &&
         !isModeratorDisputeView &&
         activeTab !== 'discussion' && (
           <OrderFooter
@@ -1069,7 +1079,7 @@ export function OrderDetailDesktop({
             canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
             canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
             manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
-            isTransitioning={isTransitioning}
+            isTransitioning={isTransitioning || isActionLoading}
             onAction={handleOrderAction}
             disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
             onOpenDiscussion={
@@ -1084,7 +1094,9 @@ export function OrderDetailDesktop({
       {confirmDialog && (
         <OrderConfirmDialog
           open={!!confirmDialog}
-          onOpenChange={open => !open && setConfirmDialog(null)}
+          onOpenChange={open => {
+            if (!open && !isActionLoading) setConfirmDialog(null);
+          }}
           type={confirmDialog}
           onConfirm={handleConfirmAction}
           isLoading={isActionLoading}
@@ -1108,6 +1120,8 @@ export function OrderDetailDesktop({
         orderId={acceptOrderProps.orderId}
         blockchain={acceptOrderProps.blockchain}
         paymentCoin={acceptOrderProps.paymentCoin}
+        paymentEscrowType={acceptOrderProps.paymentEscrowType}
+        paymentProductMode={acceptOrderProps.paymentProductMode}
         onSuccess={acceptOrderProps.onSuccess}
       />
 
@@ -1130,6 +1144,20 @@ export function OrderDetailDesktop({
         isModerated={isModeratedOrder}
       />
 
+      {displayOrder?.dispute && (
+        <AcceptPayoutDialog
+          open={showAcceptPayoutDialog}
+          onOpenChange={open => !open && closeAcceptPayoutDialog()}
+          onConfirm={() => void confirmAcceptPayout()}
+          isLoading={isActionLoading}
+          acceptPayoutPhase={acceptPayoutPhase}
+          isModerated={isModeratedOrder}
+          dispute={displayOrder.dispute}
+          settlementBreakdown={displayOrder.settlementBreakdown}
+          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+        />
+      )}
+
       <WriteReviewDialog
         open={showReviewDialog}
         productTitle={reviewProductTitle}
@@ -1148,7 +1176,6 @@ export function OrderDetailDesktop({
         onAfterSaleSubmit={handleAfterSaleDisputeSubmit}
         isAfterSale={isAfterSaleDispute}
         isLoading={isDisputeLoading}
-        vendorPeerID={displayOrder.vendor?.id}
       />
 
       <PackingSlipDialog

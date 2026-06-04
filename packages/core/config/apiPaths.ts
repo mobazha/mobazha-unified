@@ -16,6 +16,9 @@
  */
 import { NODE_API_PATHS, HOSTING_API_PATHS, SEARCH_API_PATHS } from './apiPaths.generated';
 
+/** Settlement action URL path segment (kebab-case). */
+export type SettlementActionKind = 'confirm' | 'cancel' | 'complete' | 'dispute-release';
+
 // ============================================================
 // 节点 API（mobazha3.0，经 hosting 反向代理）
 // 与 getGatewayUrl() 拼接（getGatewayUrl 已含 /v1 前缀）
@@ -87,12 +90,12 @@ export const NODE_API = {
   ORDER_RATE: (orderId: string) => `/orders/${orderId}/rate`,
   ORDER_SPEND: (orderId: string) => `/orders/${orderId}/spend`,
   ORDER_PAYMENT_REMAINING: (orderId: string) => `/orders/${orderId}/payment/remaining`,
-  /** Backend settlement: `action` is `confirm` or `cancel` (POST body optional addresses). */
-  ORDER_SETTLEMENT_ACTION: (orderId: string, action: 'confirm' | 'cancel' | 'complete') =>
+  /** Backend settlement actions (path segment = action kind). */
+  ORDER_SETTLEMENT_ACTION: (orderId: string, action: SettlementActionKind) =>
     `/orders/${orderId}/settlement-actions/${action}`,
   ORDER_SETTLEMENT_ACTION_STATUS: (
     orderId: string,
-    action: 'confirm' | 'cancel' | 'complete' | 'dispute_release',
+    action: SettlementActionKind,
     actionId: string
   ) =>
     `/orders/${orderId}/settlement-actions/${action}/status?actionId=${encodeURIComponent(actionId)}`,

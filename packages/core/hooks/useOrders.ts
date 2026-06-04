@@ -13,7 +13,9 @@ import {
   type PurchaseData,
   type OrderEstimate,
   type PurchaseResult,
+  type AcceptDisputeSettlementContext,
 } from '../services/api/orders';
+import { buildAcceptDisputeSettlementContext } from '../utils/orderSettlement';
 import { useNotificationStore, selectOrderRefreshTrigger } from '../stores/notificationStore';
 import { queryKeys } from './queryKeys';
 import { formatQueryError } from './queryUtils';
@@ -418,7 +420,8 @@ export function useOrderActions() {
     invalidateOrders
   );
   const acceptDisp = useMutationAction(
-    (orderId: string) => ordersApi.acceptDispute(orderId),
+    (p: { orderId: string; context?: AcceptDisputeSettlementContext }) =>
+      ordersApi.acceptDisputeWithSettlement(p.orderId, p.context),
     invalidateOrders
   );
   const resend = useMutationAction((p: { orderId: string; messageType: string }) =>
@@ -458,7 +461,20 @@ export function useOrderActions() {
     (orderId: string, claim: string) => dispute.execute({ orderId, claim }),
     [dispute]
   );
-  const acceptDispute = useCallback((orderId: string) => acceptDisp.execute(orderId), [acceptDisp]);
+  const acceptDispute = useCallback(
+    (
+      orderId: string,
+      context?: AcceptDisputeSettlementContext & {
+        escrowType?: string | null;
+        settlementSpec?: { escrowType?: string };
+      }
+    ) =>
+      acceptDisp.execute({
+        orderId,
+        context: context ? buildAcceptDisputeSettlementContext(context) : undefined,
+      }),
+    [acceptDisp]
+  );
   const resendMessage = useCallback(
     (orderId: string, messageType: string) => resend.execute({ orderId, messageType }),
     [resend]

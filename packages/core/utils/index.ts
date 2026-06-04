@@ -74,6 +74,8 @@ export * from './scanResult';
 // 仲裁人裁决表单
 export * from './moderatorDisputeRuling';
 
+export * from './orderSettlement';
+
 // TODO: 后续迁移添加
 // export * from './format';
 // export * from './validation';

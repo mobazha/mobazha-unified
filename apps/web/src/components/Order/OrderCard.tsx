@@ -34,6 +34,10 @@ export interface Order {
     | 'cancelled';
   /** 原始订单状态（用于判断是否显示特定操作按钮） */
   rawState?: string;
+  /** Moderated buyer-protection order */
+  isModerated?: boolean;
+  /** settlementSpec.escrowType (managed_escrow / utxo_script / solana_escrow) */
+  paymentEscrowType?: string;
   /** 支付币种（用于判断是否需要链上交易） */
   paymentCoin?: string;
   /** 最新结算动作类型（backend settlement / settlement projection） */

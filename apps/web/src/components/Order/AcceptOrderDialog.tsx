@@ -15,7 +15,7 @@ import {
   useI18n,
   ordersApi,
   useOrderAction,
-  supportsBackendSettlementActionSurface,
+  orderUsesCancelableBackendSettlement,
 } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
@@ -29,6 +29,10 @@ export interface AcceptOrderDialogProps {
   blockchain?: string;
   /** 支付币种，用于判断是否需要钱包签名。法币格式: "fiat:paypal:USD" */
   paymentCoin?: string;
+  /** settlementSpec.escrowType（managed_escrow / solana_escrow / utxo_script） */
+  paymentEscrowType?: string;
+  /** direct / cancelable / moderated */
+  paymentProductMode?: string;
   onSuccess?: () => void;
 }
 
@@ -44,6 +48,8 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
   orderId,
   blockchain,
   paymentCoin,
+  paymentEscrowType,
+  paymentProductMode,
   onSuccess,
 }) => {
   const { t } = useI18n();
@@ -81,8 +87,11 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
             action: 'confirm',
             payoutAddress,
           }),
-        attemptBackendSettlementAction:
-          !isFiatPayment && supportsBackendSettlementActionSurface(paymentCoin),
+        attemptBackendSettlementAction: orderUsesCancelableBackendSettlement({
+          paymentProductMode,
+          escrowType: paymentEscrowType,
+          paymentCoin,
+        }),
         executeAction: txID =>
           ordersApi.confirmOrder({
             orderID: orderId,
@@ -110,7 +119,18 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
     } catch {
       // Error is already handled in onError callback
     }
-  }, [orderId, paymentCoin, isFiatPayment, onOpenChange, onSuccess, t, toast, execute]);
+  }, [
+    orderId,
+    paymentCoin,
+    paymentEscrowType,
+    paymentProductMode,
+    isFiatPayment,
+    onOpenChange,
+    onSuccess,
+    t,
+    toast,
+    execute,
+  ]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {

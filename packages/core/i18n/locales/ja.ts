@@ -991,6 +991,8 @@ export const ja: PartialTranslationResource = {
         title: '支払いを受け取る',
         description:
           '紛争解決を受け入れてもよろしいですか？モデレーターの決定に従って資金が分配されます。',
+        releaseHint:
+          '受け入れると、下記の内訳に従ってエスクロー資金が解放されます。最大1分ほどかかる場合があります。',
       },
       shipOrder: {
         title: '発送する',
@@ -1022,8 +1024,16 @@ export const ja: PartialTranslationResource = {
         fraudulent: '不正',
       },
     },
+    acceptPayout: {
+      phase: {
+        releasing: '資金を解放中…',
+        accepting: '裁定を受け入れ中…',
+        releasingHint:
+          '裁定に従ってエスクロー資金を解放しています。最大1分ほどかかる場合があります。',
+        acceptingHint: '紛争裁定の受け入れを記録しています。',
+      },
+    },
     review: {
-      title: 'レビューを書く',
       rateExperience: '体験はいかがでしたか？',
       reviewLabel: 'レビューを書く（任意）',
       reviewPlaceholder: 'この商品の体験を共有...',

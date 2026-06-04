@@ -100,7 +100,7 @@ describe('DisputeModal', () => {
   });
 
   it('keeps submit disabled until claim is filled', () => {
-    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} vendorPeerID="QmVendor" />);
+    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     const submit = screen.getByRole('button', { name: 'order.dispute.submit' });
     expect(submit).toBeDisabled();
@@ -114,7 +114,7 @@ describe('DisputeModal', () => {
   it('allows submit when evidence upload failed', async () => {
     uploadImageMock.mockResolvedValue(null);
 
-    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} vendorPeerID="QmVendor" />);
+    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText('order.dispute.placeholder'), {
       target: { value: 'test dispute' },
@@ -136,15 +136,13 @@ describe('DisputeModal', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('order.dispute.evidenceUploadFailed');
   });
 
-  it('routes upload with store peer header', async () => {
+  it('uploads dispute evidence on the current user node without seller routing headers', async () => {
     uploadImageMock.mockResolvedValue({
       small: 'QmEvidenceCid',
       original: 'QmEvidenceCid',
     });
 
-    render(
-      <DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} vendorPeerID="QmVendorPeer" />
-    );
+    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText('order.dispute.placeholder'), {
       target: { value: 'test dispute' },
@@ -157,14 +155,14 @@ describe('DisputeModal', () => {
 
     await waitFor(() => {
       expect(uploadImageMock).toHaveBeenCalledWith(
-        expect.objectContaining({ filename: expect.stringMatching(/^evidence_/) }),
-        { 'X-Store-PeerID': 'QmVendorPeer' }
+        expect.objectContaining({ filename: expect.stringMatching(/^evidence_/) })
       );
     });
+    expect(uploadImageMock.mock.calls[0]).toHaveLength(1);
   });
 
   it('shows file rejection message for invalid selections', () => {
-    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} vendorPeerID="QmVendor" />);
+    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(input, {
@@ -181,7 +179,7 @@ describe('DisputeModal', () => {
     });
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={onSubmit} vendorPeerID="QmVendor" />);
+    render(<DisputeModal isOpen onClose={vi.fn()} onSubmit={onSubmit} />);
 
     fireEvent.change(screen.getByLabelText('order.dispute.placeholder'), {
       target: { value: 'buyer claim' },

@@ -225,6 +225,8 @@ export interface DisplayOrder {
   paymentProductMode?: PaymentSessionProductMode;
   /** True when the order uses moderated buyer protection. */
   isModerated?: boolean;
+  /** Escrow implementation from PaymentSent settlementSpec (safe, solana_escrow, utxo_script, …). */
+  paymentEscrowType?: string;
   /** 创建时间 */
   createdAt: string;
   /** 取消时间（仅 cancelled 状态） */

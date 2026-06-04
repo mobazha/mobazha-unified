@@ -9,7 +9,7 @@ import {
   useOrderAction,
   batchGetProfileDisplayInfo,
   getImageUrl,
-  supportsBackendSettlementActionSurface,
+  orderUsesCancelableBackendSettlement,
   useCurrency,
 } from '@mobazha/core';
 import type { ProfileDisplayInfo } from '@mobazha/core';
@@ -419,8 +419,8 @@ function AdminOrdersTable({
   entries: UnifiedAdminOrder[];
   onStandardOrderClick: (orderId: string) => void;
   onGuestOrderClick: (token: string) => void;
-  onAccept?: (orderId: string, paymentCoin?: string) => void;
-  onReject?: (orderId: string, paymentCoin?: string) => void;
+  onAccept?: (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => void;
+  onReject?: (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => void;
 }) {
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
@@ -608,7 +608,11 @@ function AdminOrdersTable({
                           className="h-7 px-2 text-xs"
                           onClick={event => {
                             event.stopPropagation();
-                            onReject?.(standardOrder.id, standardOrder.paymentCoin);
+                            onReject?.(
+                              standardOrder.id,
+                              standardOrder.paymentCoin,
+                              standardOrder.paymentEscrowType
+                            );
                           }}
                         >
                           {t('order.actions.decline')}
@@ -618,7 +622,11 @@ function AdminOrdersTable({
                           className="h-7 px-3 text-xs"
                           onClick={event => {
                             event.stopPropagation();
-                            onAccept?.(standardOrder.id, standardOrder.paymentCoin);
+                            onAccept?.(
+                              standardOrder.id,
+                              standardOrder.paymentCoin,
+                              standardOrder.paymentEscrowType
+                            );
                           }}
                         >
                           {t('order.actions.accept')}
@@ -1084,7 +1092,11 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
     if (isProcessing || isOrderActionLoading) return;
     const pendingIds = filteredOrders
       .filter(o => selectedIds.has(o.id) && o.rawState === 'PENDING')
-      .map(o => ({ id: o.id, paymentCoin: o.paymentCoin }));
+      .map(o => ({
+        id: o.id,
+        paymentCoin: o.paymentCoin,
+        paymentEscrowType: o.paymentEscrowType,
+      }));
 
     if (pendingIds.length === 0) {
       toast({ title: t('admin.orders.noPendingSelected'), variant: 'default' });
@@ -1093,7 +1105,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
 
     setIsProcessing(true);
     let successCount = 0;
-    for (const { id, paymentCoin } of pendingIds) {
+    for (const { id, paymentCoin, paymentEscrowType } of pendingIds) {
       try {
         await executeOrderAction({
           executeBackendSettlementAction: () =>
@@ -1101,7 +1113,11 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
               orderID: id,
               action: 'confirm',
             }),
-          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
+          attemptBackendSettlementAction: orderUsesCancelableBackendSettlement({
+            paymentProductMode: 'cancelable',
+            escrowType: paymentEscrowType,
+            paymentCoin,
+          }),
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: id, decline: false, transactionID: txID }),
           onSuccess: () => {
@@ -1166,7 +1182,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
 
   // Order actions
   const handleAccept = useCallback(
-    async (orderId: string, paymentCoin?: string) => {
+    async (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => {
       if (isProcessing || isOrderActionLoading) return;
       setIsProcessing(true);
       try {
@@ -1176,7 +1192,11 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
               orderID: orderId,
               action: 'confirm',
             }),
-          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
+          attemptBackendSettlementAction: orderUsesCancelableBackendSettlement({
+            paymentProductMode: 'cancelable',
+            escrowType: paymentEscrowType,
+            paymentCoin,
+          }),
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: orderId, decline: false, transactionID: txID }),
           onSuccess: async () => {
@@ -1205,7 +1225,7 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
   );
 
   const handleReject = useCallback(
-    async (orderId: string, paymentCoin?: string) => {
+    async (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => {
       if (isProcessing || isOrderActionLoading) return;
       setIsProcessing(true);
       try {
@@ -1215,7 +1235,11 @@ export function OrdersSalesPanel({ shell = 'admin' }: OrdersSalesPanelProps) {
               orderID: orderId,
               action: 'cancel',
             }),
-          attemptBackendSettlementAction: supportsBackendSettlementActionSurface(paymentCoin),
+          attemptBackendSettlementAction: orderUsesCancelableBackendSettlement({
+            paymentProductMode: 'cancelable',
+            escrowType: paymentEscrowType,
+            paymentCoin,
+          }),
           executeAction: txID =>
             ordersApi.confirmOrder({ orderID: orderId, decline: true, transactionID: txID }),
           onSuccess: async () => {

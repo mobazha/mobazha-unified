@@ -999,6 +999,8 @@ export const es: PartialTranslationResource = {
         title: 'Aceptar pago',
         description:
           '¿Seguro que quieres aceptar la resolución de disputa? Los fondos se distribuirán según la decisión del moderador.',
+        releaseHint:
+          'Al aceptar, se liberarán los fondos en depósito según el desglose inferior. Puede tardar hasta un minuto.',
       },
       shipOrder: {
         title: 'Enviar pedido',
@@ -1030,6 +1032,15 @@ export const es: PartialTranslationResource = {
         requestedByCustomer: 'Solicitado por el cliente',
         duplicate: 'Pago duplicado',
         fraudulent: 'Fraudulento',
+      },
+    },
+    acceptPayout: {
+      phase: {
+        releasing: 'Liberando fondos…',
+        accepting: 'Aceptando resolución…',
+        releasingHint:
+          'Los fondos en depósito se liberan según la resolución. Puede tardar hasta un minuto.',
+        acceptingHint: 'Registrando su aceptación de la resolución de la disputa.',
       },
     },
     review: {

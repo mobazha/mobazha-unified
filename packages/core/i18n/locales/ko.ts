@@ -985,6 +985,8 @@ export const ko: PartialTranslationResource = {
       acceptPayout: {
         title: '지급 수락',
         description: '분쟁 해결을 수락하시겠습니까? 중재자의 결정에 따라 대금이 배분됩니다.',
+        releaseHint:
+          '수락하면 아래 분배 내역에 따라 에스크로 자금이 해제됩니다. 최대 1분 정도 걸릴 수 있습니다.',
       },
       shipOrder: {
         title: '발송하기',
@@ -1015,8 +1017,16 @@ export const ko: PartialTranslationResource = {
         fraudulent: '사기',
       },
     },
+    acceptPayout: {
+      phase: {
+        releasing: '자금 해제 중…',
+        accepting: '중재 결과 수락 중…',
+        releasingHint:
+          '중재 결과에 따라 에스크로 자금을 해제하고 있습니다. 최대 1분 정도 걸릴 수 있습니다.',
+        acceptingHint: '분쟁 중재 결과 수락을 기록하고 있습니다.',
+      },
+    },
     review: {
-      title: '리뷰 남기기',
       rateExperience: '경험은 어떠셨나요?',
       reviewLabel: '리뷰 작성 (선택)',
       reviewPlaceholder: '이 상품에 대한 경험을 공유해 주세요...',

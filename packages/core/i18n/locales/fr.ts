@@ -1005,6 +1005,8 @@ export const fr: PartialTranslationResource = {
         title: 'Accepter le paiement',
         description:
           'Êtes-vous sûr de vouloir accepter la résolution du litige ? Les fonds seront distribués selon la décision du modérateur.',
+        releaseHint:
+          'L’acceptation libérera les fonds sous séquestre selon la répartition ci-dessous. Cela peut prendre jusqu’à une minute.',
       },
       shipOrder: {
         title: 'Expédier la commande',
@@ -1036,6 +1038,15 @@ export const fr: PartialTranslationResource = {
         requestedByCustomer: 'Demandé par le client',
         duplicate: 'Paiement en double',
         fraudulent: 'Frauduleux',
+      },
+    },
+    acceptPayout: {
+      phase: {
+        releasing: 'Libération des fonds…',
+        accepting: 'Acceptation de la décision…',
+        releasingHint:
+          'Les fonds sous séquestre sont libérés selon la décision. Cela peut prendre jusqu’à une minute.',
+        acceptingHint: 'Enregistrement de votre acceptation de la décision.',
       },
     },
     review: {

@@ -1220,6 +1220,8 @@ export const en: TranslationResource = {
         title: 'Accept Payout',
         description:
           "Are you sure you want to accept the dispute resolution? The funds will be distributed according to the moderator's decision.",
+        releaseHint:
+          'Accepting will release escrow funds per the breakdown below. This may take up to a minute.',
       },
       shipOrder: {
         title: 'Ship Order',
@@ -1262,6 +1264,15 @@ export const en: TranslationResource = {
         releasing: 'Releasing buyer protection funds...',
         completing: 'Completing order...',
         syncingRating: 'Syncing your review...',
+      },
+    },
+    acceptPayout: {
+      phase: {
+        releasing: 'Releasing funds...',
+        accepting: 'Accepting resolution...',
+        releasingHint:
+          'Escrow funds are being released according to the ruling. This may take up to a minute.',
+        acceptingHint: 'Recording your acceptance of the dispute resolution.',
       },
     },
     review: {
