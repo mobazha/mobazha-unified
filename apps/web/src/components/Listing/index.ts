@@ -24,6 +24,9 @@ export { DigitalFileSection } from './DigitalFileSection';
 export { DigitalAssetsManagerSection } from './DigitalAssetsManagerSection';
 export type { DigitalAssetsManagerSectionProps } from './DigitalAssetsManagerSection';
 
+export { DigitalListingAssetsPanel } from './DigitalListingAssetsPanel';
+export type { DigitalListingAssetsPanelProps } from './DigitalListingAssetsPanel';
+
 export { LicenseKeyPoolPanel } from './LicenseKeyPoolPanel';
 export type { LicenseKeyPoolPanelProps } from './LicenseKeyPoolPanel';
 
