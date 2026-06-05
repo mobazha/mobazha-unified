@@ -2882,6 +2882,9 @@ export const en: TranslationResource = {
     maxFeeOption: 'Up to {{fee}}%',
     addToStore: 'Add to store',
     addedToStore: 'Added to store',
+    inYourStore: 'In your store',
+    storeSettingsContextBanner:
+      'This page is for curating your store mediator list. When a dispute is opened, communication happens in the order Discussion tab.',
     addToStoreBanner:
       'Selections return to store settings. You can also add someone you trust with their full moderator ID.',
     recommendedDirectoryTitle: 'Moderator directory',
@@ -2914,6 +2917,8 @@ export const en: TranslationResource = {
     notFound: 'Moderator not found',
     notFoundDesc: 'This profile may no longer be available or the link is incorrect.',
     noReviewsForModerator: 'No reviews for this moderator yet.',
+    directoryExpandHint: 'Tap a moderator to view full details before adding.',
+    viewFullProfile: 'View full profile',
   },
 
   payment: {

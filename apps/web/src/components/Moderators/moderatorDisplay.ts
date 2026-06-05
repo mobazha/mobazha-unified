@@ -2,8 +2,9 @@ import type { Moderator as ApiModerator } from '@mobazha/core/services/api/moder
 import { formatUserName } from '@mobazha/core/utils/identity';
 import type { Moderator } from '@/components/Payment/types';
 
-export const ADDED_TO_STORE_BUTTON_CLASS =
-  'border border-primary/20 bg-primary/10 text-primary shadow-none disabled:opacity-100';
+/** Non-interactive status badge — use instead of a disabled button in directory lists */
+export const ADDED_TO_STORE_BADGE_CLASS =
+  'bg-muted/60 text-muted-foreground border-transparent font-normal gap-0.5';
 
 export function mapApiModeratorToModerator(
   mod: ApiModerator,

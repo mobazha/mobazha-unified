@@ -17,7 +17,7 @@ import {
   isStoreSettingsReturn,
   MODERATOR_ROUTES,
 } from '@/lib/routes/moderators';
-import { ADDED_TO_STORE_BUTTON_CLASS } from '@/components/Moderators/moderatorDisplay';
+import { ADDED_TO_STORE_BADGE_CLASS } from '@/components/Moderators/moderatorDisplay';
 import { cn } from '@/lib/utils';
 
 type DetailTab = 'about' | 'reviews' | 'terms';
@@ -320,14 +320,15 @@ export function ModeratorDetailView({
               </p>
             </div>
             {isInStore ? (
-              <Button
-                variant="outline"
-                className={cn('w-full mt-4 min-h-[44px]', ADDED_TO_STORE_BUTTON_CLASS)}
-                disabled
-              >
-                <Check className="w-4 h-4 mr-2" />
-                {fromStoreSettings ? t('moderator.inYourStore') : t('moderator.addedToStore')}
-              </Button>
+              <div className="mt-4 flex justify-center">
+                <Badge
+                  variant="outline"
+                  className={cn('min-h-[44px] px-4 text-sm', ADDED_TO_STORE_BADGE_CLASS)}
+                >
+                  <Check className="mr-2 h-4 w-4" aria-hidden />
+                  {fromStoreSettings ? t('moderator.inYourStore') : t('moderator.addedToStore')}
+                </Badge>
+              </div>
             ) : (
               !fromStoreSettings && (
                 <Button

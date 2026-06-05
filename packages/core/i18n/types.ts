@@ -908,6 +908,8 @@ export interface TranslationResource {
     maxFeeOption?: string;
     addToStore?: string;
     addedToStore?: string;
+    inYourStore?: string;
+    storeSettingsContextBanner?: string;
     addToStoreBanner?: string;
     recommendedDirectoryTitle?: string;
     customTabTitle?: string;
@@ -942,6 +944,8 @@ export interface TranslationResource {
     notFound?: string;
     notFoundDesc?: string;
     noReviewsForModerator?: string;
+    directoryExpandHint?: string;
+    viewFullProfile?: string;
   };
 
   // 支付选择

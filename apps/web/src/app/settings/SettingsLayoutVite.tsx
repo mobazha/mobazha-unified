@@ -2,7 +2,7 @@
 
 import { Outlet } from 'react-router-dom';
 import { AuthGuard } from '@/components';
-import { SettingsLayoutShell } from './layout';
+import { SettingsLayoutShell } from './settings-layout-shell';
 
 export default function SettingsLayoutVite() {
   return (

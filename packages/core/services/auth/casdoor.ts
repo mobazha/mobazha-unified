@@ -156,6 +156,25 @@ function buildOAuthCallbackParams(
   return { callbackUrl, state };
 }
 
+export function getOAuthRedirectUri(redirectUri?: string): string {
+  const env = getEnvConfig();
+  const { redirectPath } = env.casdoor;
+
+  if (redirectUri) {
+    return redirectUri;
+  }
+
+  const sfReturnOrigin = getStorefrontReturnOrigin();
+  if (sfReturnOrigin) {
+    const mainOrigin = getSaaSMainOrigin();
+    if (mainOrigin) {
+      return `${mainOrigin}${redirectPath}`;
+    }
+  }
+
+  return typeof window !== 'undefined' ? `${window.location.origin}${redirectPath}` : redirectPath;
+}
+
 /**
  * 获取 Casdoor 登录页面 URL（OAuth2 授权码流程）
  */
@@ -342,7 +361,12 @@ export async function handleOAuthCallback(code: string, state: string): Promise<
       sessionStorage.removeItem('casdoor_state');
     }
 
-    const url = `${baseUrl}${HOSTING_API.AUTH_SIGNIN}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(cleanState)}`;
+    const params = new URLSearchParams({
+      code,
+      state: cleanState,
+      redirect_uri: getOAuthRedirectUri(),
+    });
+    const url = `${baseUrl}${HOSTING_API.AUTH_SIGNIN}?${params.toString()}`;
 
     const response = await fetch(url, {
       method: 'POST',

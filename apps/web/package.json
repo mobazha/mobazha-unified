@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:remote-test": "NEXT_PUBLIC_ENV_MODE=test NEXT_PUBLIC_USE_MOCK_DATA=false NEXT_PUBLIC_AUTH_MODE=hosted NEXT_PUBLIC_API_URL=https://test-new.mobazha.org NEXT_PUBLIC_API_BASE_URL=https://test-new.mobazha.org NEXT_PUBLIC_CASDOOR_URL=https://test-new-login.mobazha.org NEXT_PUBLIC_CASDOOR_CLIENT_ID=test-mobazha-client-id NEXT_PUBLIC_SAAS_URL=https://test-new.mobazha.org NEXT_PUBLIC_STORE_SUBDOMAIN_BASE=mobaza.org NEXT_TELEMETRY_DISABLED=1 next dev --webpack -H 127.0.0.1 -p 3000",
     "dev:standalone-local": "NEXT_PUBLIC_ENV_MODE=standalone NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:4002 NEXT_PUBLIC_SAAS_URL=https://app.mobazha.org vite --port 5173 --host 127.0.0.1",
     "dev:next": "next dev --turbopack",
     "build": "vite build",

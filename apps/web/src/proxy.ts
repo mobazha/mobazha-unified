@@ -15,7 +15,7 @@ import { REQUEST_URL_HEADER } from '@/lib/requestUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
 
-const PROXY_PREFIXES = ['/v1/', '/api/', '/info/'];
+const PROXY_PREFIXES = ['/v1/', '/api/', '/info/', '/platform/'];
 
 /** Forward full request URL to RSC (layouts / opengraph-image cannot use searchParams). */
 function nextWithRequestUrl(request: NextRequest, reqHeaders?: Headers): NextResponse {
@@ -39,6 +39,7 @@ async function proxyToBackend(request: NextRequest): Promise<NextResponse> {
   const headers = new Headers(request.headers);
   headers.delete('host');
   headers.set('host', new URL(API_BASE).host);
+  headers.set('accept-encoding', 'identity');
 
   const init: RequestInit = {
     method: request.method,
@@ -56,6 +57,8 @@ async function proxyToBackend(request: NextRequest): Promise<NextResponse> {
     const response = await fetch(upstream, init);
     const responseHeaders = new Headers(response.headers);
     responseHeaders.delete('www-authenticate');
+    responseHeaders.delete('content-encoding');
+    responseHeaders.delete('content-length');
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,

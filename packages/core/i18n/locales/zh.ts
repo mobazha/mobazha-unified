@@ -2617,6 +2617,9 @@ export const zh: PartialTranslationResource = {
     maxFeeOption: '最高 {{fee}}%',
     addToStore: '添加到店铺',
     addedToStore: '已添加到店铺',
+    inYourStore: '已在店铺中',
+    storeSettingsContextBanner:
+      '此页用于管理店铺的调解员名单。争议开启后，请通过对应订单的「讨论」与各方沟通。',
     addToStoreBanner: '选好后将返回店铺设置。也可通过完整调解员 ID 直接添加已信任的人。',
     recommendedDirectoryTitle: '调解员目录',
     customTabTitle: '通过 ID 添加',
@@ -2646,6 +2649,8 @@ export const zh: PartialTranslationResource = {
     notFound: '未找到调解员',
     notFoundDesc: '该资料可能已不可用，或链接有误。',
     noReviewsForModerator: '该调解员暂无评价。',
+    directoryExpandHint: '点击调解员查看完整资料后再添加。',
+    viewFullProfile: '查看完整资料',
   },
   payment: {
     title: '支付',
