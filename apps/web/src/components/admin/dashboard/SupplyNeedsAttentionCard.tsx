@@ -24,16 +24,24 @@ export function SupplyNeedsAttentionCard({ products, loading }: SupplyNeedsAtten
   const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
   const { getProvider } = useSyncedListingProviders();
   const { getHint } = useProductLicensePoolHints(products, 0, supplyAvailabilityEnabled);
-  const { getSummary } = useSellerSupplySummaries(products, 0, supplyAvailabilityEnabled);
+  const { getSummary, loading: summaryLoading } = useSellerSupplySummaries(
+    products,
+    0,
+    supplyAvailabilityEnabled
+  );
 
   const supplyContextFor = useMemo(
-    () => (product: ProductListItem) => ({
-      product,
-      syncedProvider: getProvider(product.slug),
-      licenseHint: getHint(product.slug),
-      summary: getSummary(product.slug),
-    }),
-    [getProvider, getHint, getSummary]
+    () => (product: ProductListItem) => {
+      const summary = getSummary(product.slug);
+      return {
+        product,
+        syncedProvider: getProvider(product.slug),
+        licenseHint: getHint(product.slug),
+        summary,
+        summaryLoading: supplyAvailabilityEnabled && summaryLoading && !summary,
+      };
+    },
+    [getProvider, getHint, getSummary, supplyAvailabilityEnabled, summaryLoading]
   );
 
   const attentionProducts = useMemo(() => {

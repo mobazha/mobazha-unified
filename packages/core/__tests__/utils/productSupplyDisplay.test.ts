@@ -161,6 +161,15 @@ describe('buildProductAvailabilityView', () => {
     expect(view.messageKey).toBe('admin.products.availabilityStockDetailed');
     expect(view.messageParams).toEqual({ available: 12, onHand: 15, held: 3 });
   });
+
+  it('shows loading for tracked stock while seller summary is pending', () => {
+    const view = buildProductAvailabilityView({
+      product: product({ contractType: 'PHYSICAL_GOOD' }),
+      summaryLoading: true,
+    });
+    expect(view.messageKey).toBe('admin.products.availabilityLoading');
+    expect(view.tone).toBe('muted');
+  });
 });
 
 describe('buildSupplySummaryView', () => {

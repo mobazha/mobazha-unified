@@ -17,6 +17,7 @@ interface ProductSupplyContextInput {
   syncedProvider?: string;
   licenseHint?: LicensePoolListHint | null;
   summary?: ListingSupplySummaryItem;
+  summaryLoading?: boolean;
 }
 
 function useSupplyContext(input: ProductSupplyContextInput) {

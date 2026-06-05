@@ -148,7 +148,7 @@ export default function AdminProductsPage() {
     supplyRefreshVersion,
     supplyAvailabilityEnabled
   );
-  const { getSummary: getSupplySummary } = useSellerSupplySummaries(
+  const { getSummary: getSupplySummary, loading: supplySummaryLoading } = useSellerSupplySummaries(
     products,
     supplyRefreshVersion,
     supplyAvailabilityEnabled
@@ -190,13 +190,17 @@ export default function AdminProductsPage() {
   const getEffectiveStatus = useCallback((p: ProductListItem) => p.status ?? 'published', []);
 
   const supplyContextFor = useCallback(
-    (product: ProductListItem) => ({
-      product,
-      syncedProvider: getProvider(product.slug),
-      licenseHint: getLicenseHint(product.slug),
-      summary: getSupplySummary(product.slug),
-    }),
-    [getProvider, getLicenseHint, getSupplySummary]
+    (product: ProductListItem) => {
+      const summary = getSupplySummary(product.slug);
+      return {
+        product,
+        syncedProvider: getProvider(product.slug),
+        licenseHint: getLicenseHint(product.slug),
+        summary,
+        summaryLoading: supplyAvailabilityEnabled && supplySummaryLoading && !summary,
+      };
+    },
+    [getProvider, getLicenseHint, getSupplySummary, supplyAvailabilityEnabled, supplySummaryLoading]
   );
 
   const filtered = useMemo(() => {

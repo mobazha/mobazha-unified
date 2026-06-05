@@ -25,6 +25,7 @@ export interface ProductSupplyContext {
   syncedProvider?: string;
   licenseHint?: LicensePoolListHint | null;
   summary?: ListingSupplySummaryItem;
+  summaryLoading?: boolean;
 }
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -404,6 +405,9 @@ export function buildProductAvailabilityView(ctx: ProductSupplyContext): Product
   if (mode === 'tracked_stock') {
     const q = ctx.product.quantity;
     if (q === undefined || q === null) {
+      if (ctx.summaryLoading) {
+        return { messageKey: 'admin.products.availabilityLoading', tone: 'muted' };
+      }
       return { messageKey: 'admin.products.availabilityDash', tone: 'muted' };
     }
     if (q === 0) {
@@ -585,6 +589,9 @@ export function buildSupplySummaryView(ctx: SupplySummaryContext): SupplySummary
   if (mode === 'tracked_stock') {
     const q = ctx.product.quantity;
     if (q === undefined || q === null) {
+      if (ctx.summaryLoading) {
+        return { detailKey: 'admin.products.availabilityLoading', tone: 'muted', warning: false };
+      }
       return { detailKey: 'admin.products.availabilityDash', tone: 'muted', warning: false };
     }
     if (q === 0) {
