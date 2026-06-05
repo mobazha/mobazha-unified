@@ -169,7 +169,9 @@ export default function AdminProductsPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await productDataService.getMyListings();
+      const data = await productDataService.getMyListings({
+        includeSupplySummary: supplyAvailabilityEnabled,
+      });
       setProducts(data);
     } catch (err) {
       console.error('Failed to fetch products:', err);
@@ -181,7 +183,7 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [t, toast]);
+  }, [supplyAvailabilityEnabled, t, toast]);
 
   useEffect(() => {
     fetchProducts();
