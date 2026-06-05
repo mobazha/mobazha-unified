@@ -92,8 +92,13 @@ vi.mock('@/components/Listing', () => ({
   PhysicalGoodFields: () => React.createElement('div', null),
   VariantOptionEditor: () => React.createElement('div', null),
   VariantInventoryTable: () => React.createElement('div', null),
+  InventoryPolicyField: () =>
+    React.createElement('div', { 'data-testid': 'inventory-policy-field' }),
   DigitalFileSection: () => React.createElement('div', null),
   ProcessingTimeSelect: () => React.createElement('div', null),
+  AiImageGeneratePanel: () => React.createElement('div', { 'data-testid': 'ai-image-panel' }),
+  AiSetupPrompt: () => React.createElement('div', { 'data-testid': 'ai-setup-prompt' }),
+  SupplySummaryBar: () => React.createElement('div', { 'data-testid': 'supply-summary-bar' }),
 }));
 
 vi.mock('@/components/ui/button', () => ({
