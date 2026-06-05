@@ -1,5 +1,6 @@
 import type { Image, Price } from './common';
 import type { ShippingProfile } from './shippingConfig';
+import type { ListingSupplySummaryItem } from './supplyAvailability';
 
 /**
  * 商品分类
@@ -43,6 +44,8 @@ export interface ProductListItem {
   status?: ListingStatus;
   /** 库存数量（列表 API 可能不返回，编辑页从 item.skus 汇总） */
   quantity?: number;
+  /** 卖家管理列表可用的供给/可售摘要；公开列表和旧节点可能不返回。 */
+  supplySummary?: ListingSupplySummaryItem;
 }
 
 /**

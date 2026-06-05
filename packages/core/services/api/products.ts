@@ -83,6 +83,10 @@ export interface SearchListingsResponse {
   hasMore: boolean;
 }
 
+export interface GetListingIndexOptions {
+  includeSupplySummary?: boolean;
+}
+
 // Profile search types are defined inline in searchProfiles()
 
 // 搜索用户的响应
@@ -262,11 +266,13 @@ export async function fetchStoreListings(
  * 获取商品索引（自己的商品）
  * 超时时间增加到 60 秒，因为网关 API 有时响应较慢
  */
-export async function getListingIndex(): Promise<ProductListItem[]> {
-  const data = await publicSafeGet<ProductListItem[] | { success: false }>(
-    NODE_API.LISTINGS_INDEX,
-    []
-  );
+export async function getListingIndex(
+  options: GetListingIndexOptions = {}
+): Promise<ProductListItem[]> {
+  const path = options.includeSupplySummary
+    ? `${NODE_API.LISTINGS_INDEX}?includeSupplySummary=true`
+    : NODE_API.LISTINGS_INDEX;
+  const data = await publicSafeGet<ProductListItem[] | { success: false }>(path, []);
 
   if (!data || (data as { success: false }).success === false) {
     return [];

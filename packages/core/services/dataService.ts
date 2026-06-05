@@ -59,11 +59,13 @@ export const productDataService = {
   /**
    * 获取我的商品列表
    */
-  async getMyListings(): Promise<ProductListItem[]> {
+  async getMyListings(
+    options: productsApi.GetListingIndexOptions = {}
+  ): Promise<ProductListItem[]> {
     if (isMockMode()) {
       return mockServices.products.getMyListings();
     }
-    return await productsApi.getListingIndex();
+    return await productsApi.getListingIndex(options);
   },
 
   /**

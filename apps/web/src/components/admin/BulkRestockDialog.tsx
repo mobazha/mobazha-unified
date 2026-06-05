@@ -53,7 +53,10 @@ export function BulkRestockDialog({
       const failedCount = results.length - successCount;
       if (successCount > 0) {
         toast({
-          title: t('admin.products.bulkRestockSuccess', { count: successCount }),
+          title: t('admin.products.bulkRestockSuccess', {
+            count: successCount,
+            quantity,
+          }),
         });
       }
       if (failedCount > 0) {
@@ -120,7 +123,10 @@ export function BulkRestockDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={submitting || quantity <= 0}>
             {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {t('admin.products.bulkRestockConfirm', { count: targets.length })}
+            {t('admin.products.bulkRestockConfirm', {
+              count: targets.length,
+              quantity,
+            })}
           </Button>
         </DialogFooter>
       </DialogContent>
