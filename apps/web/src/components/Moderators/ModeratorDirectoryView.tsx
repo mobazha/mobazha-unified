@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Container, HStack, VStack } from '@/components/layouts';
+import { Container, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
@@ -16,33 +16,30 @@ import {
   SelectValue,
   useToast,
 } from '@/components/ui';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   useI18n,
   useModeratorDirectory,
   useStoreModerators,
   useModeratorPeerLookup,
+  useModeratorDetail,
   useVerifiedModerators,
-  getImageUrl,
 } from '@mobazha/core';
 import type { Moderator as ApiModerator } from '@mobazha/core/services/api/moderators';
-import { formatUserName } from '@mobazha/core/utils/identity';
 import {
-  ADDED_TO_STORE_BUTTON_CLASS,
-  getModeratorTrustMetrics,
+  ADDED_TO_STORE_BADGE_CLASS,
   mapApiModeratorToModerator,
 } from '@/components/Moderators/moderatorDisplay';
 import { ModeratorProfilePreview } from '@/components/Moderators/ModeratorProfilePreview';
+import { ModeratorExpandableRow } from '@/components/Moderators/ModeratorExpandableRow';
 import {
   Search,
   CheckCircle,
-  Star,
-  Shield,
   Filter,
   Loader2,
   RefreshCw,
   Plus,
   Check,
+  ChevronRight,
 } from 'lucide-react';
 
 import { MODERATOR_ROUTES, moderatorDetailHref } from '@/lib/routes/moderators';
@@ -50,138 +47,6 @@ import { cn } from '@/lib/utils';
 
 function mapFeePercent(mod: ApiModerator): number {
   return mod.fee?.percentage ?? 0;
-}
-
-function ModeratorDirectoryCard({
-  moderator,
-  showAddToStore,
-  isInStore,
-  isAdding,
-  onAddToStore,
-  detailHref,
-}: {
-  moderator: ApiModerator;
-  showAddToStore: boolean;
-  isInStore: boolean;
-  isAdding: boolean;
-  onAddToStore: (peerID: string) => void;
-  detailHref: string;
-}) {
-  const { t } = useI18n();
-  const displayName = formatUserName(
-    { name: moderator.name, handle: moderator.handle, peerID: moderator.peerID },
-    { fallback: 'User' }
-  );
-  const avatarUrl = moderator.avatarHashes?.small
-    ? getImageUrl(moderator.avatarHashes.small)
-    : undefined;
-  const feePercent = mapFeePercent(moderator);
-  const ratingCount = moderator.stats?.ratingCount ?? 0;
-  const description =
-    moderator.shortDescription || moderator.description || t('settingsExtended.profileUnavailable');
-  const metrics = getModeratorTrustMetrics(mapApiModeratorToModerator(moderator));
-
-  return (
-    <Card className="group relative p-4 border border-border/60 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-primary/30">
-      <HStack gap="lg" align="start">
-        <div className="relative flex-shrink-0">
-          <Avatar className="w-16 h-16 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all">
-            <AvatarImage src={avatarUrl} alt={displayName} />
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              {displayName[0] || 'M'}
-            </AvatarFallback>
-          </Avatar>
-          {moderator.verified && (
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-info rounded-full flex items-center justify-center ring-2 ring-background">
-              <CheckCircle className="w-4 h-4 text-white" />
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3">
-            <Link href={detailHref} className="min-w-0 flex-1 group/link">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-foreground group-hover/link:text-primary transition-colors truncate">
-                  {displayName}
-                </h3>
-                {moderator.verified && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary text-xs h-5 gap-0.5"
-                  >
-                    <Shield className="w-3 h-3" />
-                    {t('payment.verified')}
-                  </Badge>
-                )}
-              </div>
-            </Link>
-            <div className="text-right flex-shrink-0">
-              <div className="text-lg font-bold text-primary">{feePercent}%</div>
-              <div className="text-xs text-muted-foreground">{t('moderator.fee')}</div>
-              <div className="text-[10px] text-muted-foreground/80 max-w-[7rem] leading-tight mt-0.5">
-                {t('moderator.feeDisputeNote')}
-              </div>
-            </div>
-          </div>
-
-          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{description}</p>
-
-          <div className="flex flex-wrap items-center gap-2 mt-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-1">
-              <Star className="w-3.5 h-3.5 text-warning fill-warning/20" />
-              {metrics.rating}
-              {ratingCount > 0 ? ` (${ratingCount})` : ''}
-            </span>
-            <span className="rounded-full bg-muted/60 px-2 py-1">
-              {t('settingsExtended.disputes')}: {metrics.disputes}
-            </span>
-            <span className="rounded-full bg-muted/60 px-2 py-1">
-              {t('settingsExtended.successRate')}: {metrics.successRate}
-            </span>
-            <span className="rounded-full bg-muted/60 px-2 py-1">
-              {t('settingsExtended.avgResolution')}: {metrics.avgResolution}
-            </span>
-            {moderator.languages?.slice(0, 3).map((lang: string) => (
-              <Badge key={lang} variant="outline" className="text-xs h-5">
-                {lang.toUpperCase()}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </HStack>
-
-      {showAddToStore && (
-        <div className="mt-4 pt-4 border-t border-border flex justify-end">
-          {isInStore ? (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled
-              className={cn('min-h-[44px]', ADDED_TO_STORE_BUTTON_CLASS)}
-            >
-              <Check className="w-4 h-4 mr-1.5" />
-              {t('moderator.addedToStore')}
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className="min-h-[44px]"
-              disabled={isAdding}
-              onClick={() => onAddToStore(moderator.peerID)}
-            >
-              {isAdding ? (
-                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4 mr-1.5" />
-              )}
-              {t('moderator.addToStore')}
-            </Button>
-          )}
-        </div>
-      )}
-    </Card>
-  );
 }
 
 export interface ModeratorDirectoryViewProps {
@@ -221,10 +86,20 @@ export function ModeratorDirectoryView({
   const [sortBy, setSortBy] = useState<'rating' | 'fee'>('rating');
   const [activeMode, setActiveMode] = useState<'directory' | 'custom'>('directory');
   const [addingPeerID, setAddingPeerID] = useState<string | null>(null);
+  const [expandedPeerID, setExpandedPeerID] = useState<string | null>(null);
   const peerIdInputRef = useRef<HTMLInputElement>(null);
   const peerLookup = useModeratorPeerLookup(peerIdInput);
   const lookupResult = peerLookup.moderator;
   const lookupStatus = peerLookup.status;
+
+  const { moderator: expandedDetail, isLoading: isExpandedDetailLoading } = useModeratorDetail(
+    expandedPeerID ?? undefined
+  );
+
+  const expandedDetailCard = useMemo(
+    () => (expandedDetail ? mapApiModeratorToModerator(expandedDetail, verifiedPeerIds) : null),
+    [expandedDetail, verifiedPeerIds]
+  );
 
   const allLanguages = useMemo(
     () => Array.from(new Set(moderators.flatMap(m => m.languages || []))).sort(),
@@ -313,6 +188,17 @@ export function ModeratorDirectoryView({
     });
   };
 
+  const resolveDetailHref = useCallback(
+    (peerID: string) =>
+      detailHrefForModerator
+        ? detailHrefForModerator(peerID, returnTo)
+        : moderatorDetailHref(
+            peerID,
+            showAddToStore ? { intent: 'add-to-store', returnTo } : undefined
+          ),
+    [detailHrefForModerator, returnTo, showAddToStore]
+  );
+
   const customLookupPanel = (
     <Card className="border border-border/70 bg-surface/40 p-5">
       <div className="flex max-w-2xl flex-col gap-4">
@@ -361,30 +247,29 @@ export function ModeratorDirectoryView({
             moderator={mapApiModeratorToModerator(lookupResult, verifiedPeerIds)}
             actions={
               showAddToStore ? (
-                <Button
-                  type="button"
-                  variant={storePeerIds.has(lookupResult.peerID) ? 'outline' : 'default'}
-                  className={cn(
-                    'min-h-[44px]',
-                    storePeerIds.has(lookupResult.peerID) && ADDED_TO_STORE_BUTTON_CLASS
-                  )}
-                  disabled={
-                    storePeerIds.has(lookupResult.peerID) ||
-                    (isSaving && addingPeerID === lookupResult.peerID)
-                  }
-                  onClick={() => handleAddToStore(lookupResult.peerID)}
-                >
-                  {storePeerIds.has(lookupResult.peerID) ? (
-                    <Check className="w-4 h-4" />
-                  ) : isSaving && addingPeerID === lookupResult.peerID ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                  {storePeerIds.has(lookupResult.peerID)
-                    ? t('moderator.addedToStore')
-                    : t('moderator.addToStore')}
-                </Button>
+                storePeerIds.has(lookupResult.peerID) ? (
+                  <Badge
+                    variant="outline"
+                    className={cn('min-h-[36px] px-3', ADDED_TO_STORE_BADGE_CLASS)}
+                  >
+                    <Check className="h-4 w-4" aria-hidden />
+                    {t('moderator.addedToStore')}
+                  </Badge>
+                ) : (
+                  <Button
+                    type="button"
+                    className="min-h-[44px]"
+                    disabled={isSaving && addingPeerID === lookupResult.peerID}
+                    onClick={() => handleAddToStore(lookupResult.peerID)}
+                  >
+                    {isSaving && addingPeerID === lookupResult.peerID ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    {t('moderator.addToStore')}
+                  </Button>
+                )
               ) : undefined
             }
           />
@@ -398,20 +283,20 @@ export function ModeratorDirectoryView({
       <div className={cn('grid grid-cols-1 gap-6', showSidebar && 'lg:grid-cols-4')}>
         {showSidebar && (
           <div className="lg:col-span-1">
-            <Card className="sticky top-4 p-4 border border-border/60 shadow-sm">
-              <div className="flex items-center gap-2 pb-4 border-b border-border mb-4">
-                <Filter className="w-4 h-4 text-muted-foreground" />
+            <Card className="sticky top-4 border border-border/60 p-4 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 border-b border-border pb-4">
+                <Filter className="h-4 w-4 text-muted-foreground" />
                 <h3 className="font-semibold text-foreground">{t('filter.filters')}</h3>
               </div>
 
               <VStack gap="lg">
                 {showDirectoryFilters && (
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
+                    <label className="mb-2 block text-sm font-medium text-foreground">
                       {t('moderator.searchDirectoryLabel')}
                     </label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         value={directorySearch}
                         onChange={e => setDirectorySearch(e.target.value)}
@@ -424,7 +309,7 @@ export function ModeratorDirectoryView({
 
                 {showDirectoryFilters && (
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
+                    <label className="mb-2 block text-sm font-medium text-foreground">
                       {t('moderator.language')}
                     </label>
                     <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
@@ -445,7 +330,7 @@ export function ModeratorDirectoryView({
 
                 {showDirectoryFilters && (
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
+                    <label className="mb-2 block text-sm font-medium text-foreground">
                       {t('moderator.maxFee')}
                     </label>
                     <Select value={maxFee} onValueChange={setMaxFee}>
@@ -472,7 +357,7 @@ export function ModeratorDirectoryView({
                 )}
 
                 {showDirectoryFilters && (
-                  <label className="flex items-center gap-3 cursor-pointer group min-h-[44px]">
+                  <label className="group flex min-h-[44px] cursor-pointer items-center gap-3">
                     <input
                       type="checkbox"
                       checked={verifiedOnly}
@@ -483,9 +368,9 @@ export function ModeratorDirectoryView({
                       role="checkbox"
                       aria-checked={verifiedOnly}
                       tabIndex={0}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
                         verifiedOnly
-                          ? 'bg-primary border-primary'
+                          ? 'border-primary bg-primary'
                           : 'border-muted-foreground/40 group-hover:border-primary/60'
                       }`}
                       onClick={() => setVerifiedOnly(!verifiedOnly)}
@@ -497,14 +382,14 @@ export function ModeratorDirectoryView({
                       }}
                     >
                       {verifiedOnly && (
-                        <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
+                        <CheckCircle className="h-3.5 w-3.5 text-primary-foreground" />
                       )}
                     </div>
                     <span className="text-sm text-foreground">{t('moderator.verifiedOnly')}</span>
                   </label>
                 )}
 
-                <Button variant="outline" className="w-full min-h-[44px]" onClick={clearAllFilters}>
+                <Button variant="outline" className="min-h-[44px] w-full" onClick={clearAllFilters}>
                   {t('moderator.resetFilters')}
                 </Button>
               </VStack>
@@ -549,7 +434,7 @@ export function ModeratorDirectoryView({
             customLookupPanel
           ) : (
             <>
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-border gap-3 flex-wrap">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
                 <div>
                   <p className="text-sm font-medium text-foreground">
                     {t('moderator.recommendedDirectoryTitle')}
@@ -558,12 +443,12 @@ export function ModeratorDirectoryView({
                     {t('moderator.moderatorsFound', { count: filteredModerators.length })}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap justify-end">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <Select
                     value={sortBy}
                     onValueChange={value => setSortBy(value as 'rating' | 'fee')}
                   >
-                    <SelectTrigger className="w-[180px] min-h-[44px]">
+                    <SelectTrigger className="min-h-[44px] w-[180px]">
                       <SelectValue placeholder={t('moderator.sortBy')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -579,21 +464,27 @@ export function ModeratorDirectoryView({
                     onClick={() => refresh()}
                     disabled={isFetching}
                   >
-                    <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
               </div>
 
+              {filteredModerators.length > 0 && (
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {t('moderator.directoryExpandHint')}
+                </p>
+              )}
+
               {isLoading ? (
                 <div className="flex flex-col items-center py-16">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <p className="mt-3 text-sm text-muted-foreground">
                     {t('payment.loadingModerators')}
                   </p>
                 </div>
               ) : error ? (
                 <Card className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="mb-4 text-sm text-muted-foreground">
                     {t('moderator.directoryError')}
                   </p>
                   <Button variant="outline" onClick={() => refresh()} className="min-h-[44px]">
@@ -601,10 +492,10 @@ export function ModeratorDirectoryView({
                   </Button>
                 </Card>
               ) : filteredModerators.length === 0 ? (
-                <Card className="p-8 text-center space-y-3">
+                <Card className="space-y-3 p-8 text-center">
                   {lookupStatus === 'loading' ? (
                     <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <p className="text-muted-foreground">
                         {t('moderator.directoryLookupSearching')}
                       </p>
@@ -642,11 +533,9 @@ export function ModeratorDirectoryView({
                       {t('moderator.directoryLookupNotModerator')}
                     </p>
                   ) : catalogEmpty ? (
-                    <>
-                      <p className="text-foreground font-medium">
-                        {t('moderator.directoryUnavailable')}
-                      </p>
-                    </>
+                    <p className="font-medium text-foreground">
+                      {t('moderator.directoryUnavailable')}
+                    </p>
                   ) : (
                     <>
                       <p className="text-muted-foreground">
@@ -655,7 +544,7 @@ export function ModeratorDirectoryView({
                       <p className="text-sm text-muted-foreground">
                         {t('moderator.directoryEmptyHint')}
                       </p>
-                      <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+                      <div className="flex flex-col justify-center gap-2 pt-2 sm:flex-row">
                         <Button
                           type="button"
                           variant="outline"
@@ -669,23 +558,52 @@ export function ModeratorDirectoryView({
                   )}
                 </Card>
               ) : (
-                <VStack gap="md">
+                <VStack gap="sm">
                   {filteredModerators.map(moderator => {
-                    const detailHref = detailHrefForModerator
-                      ? detailHrefForModerator(moderator.peerID, returnTo)
-                      : moderatorDetailHref(
-                          moderator.peerID,
-                          showAddToStore ? { intent: 'add-to-store', returnTo } : undefined
-                        );
+                    const cardModerator = mapApiModeratorToModerator(moderator, verifiedPeerIds);
+                    const isInStore = storePeerIds.has(moderator.peerID);
+                    const isExpanded = expandedPeerID === moderator.peerID;
+                    const detailHref = resolveDetailHref(moderator.peerID);
+
                     return (
-                      <ModeratorDirectoryCard
+                      <ModeratorExpandableRow
                         key={moderator.peerID}
-                        moderator={moderator}
-                        showAddToStore={showAddToStore}
-                        isInStore={storePeerIds.has(moderator.peerID)}
-                        isAdding={isSaving && addingPeerID === moderator.peerID}
-                        onAddToStore={handleAddToStore}
-                        detailHref={detailHref}
+                        moderator={cardModerator}
+                        detailModerator={isExpanded ? expandedDetailCard : null}
+                        isDetailLoading={isExpanded && isExpandedDetailLoading}
+                        expanded={isExpanded}
+                        onToggle={() =>
+                          setExpandedPeerID(prev =>
+                            prev === moderator.peerID ? null : moderator.peerID
+                          )
+                        }
+                        showAddedBadge={showAddToStore && isInStore}
+                        trailing={
+                          showAddToStore && !isInStore ? (
+                            <Button
+                              size="sm"
+                              className="min-h-[44px] whitespace-nowrap"
+                              disabled={isSaving && addingPeerID === moderator.peerID}
+                              onClick={() => handleAddToStore(moderator.peerID)}
+                            >
+                              {isSaving && addingPeerID === moderator.peerID ? (
+                                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Plus className="mr-1.5 h-4 w-4" />
+                              )}
+                              {t('moderator.addToStore')}
+                            </Button>
+                          ) : undefined
+                        }
+                        expandedFooter={
+                          <Link
+                            href={detailHref}
+                            className="inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
+                          >
+                            {t('moderator.viewFullProfile')}
+                            <ChevronRight className="h-4 w-4" aria-hidden />
+                          </Link>
+                        }
                       />
                     );
                   })}

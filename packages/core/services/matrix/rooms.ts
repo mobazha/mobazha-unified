@@ -248,25 +248,6 @@ export async function getStoreRoom(storeId: string): Promise<MatrixRoom | null> 
   return rooms.find(r => r.storeId === storeId || r.metadata?.storeId === storeId) || null;
 }
 
-export async function createModeratorRoom(
-  orderId: string,
-  moderatorId: string,
-  participants: string[]
-): Promise<string | null> {
-  try {
-    const resp = await authPost<{ roomId: string }>(NODE_API.CHAT_ROOMS, {
-      name: `Dispute: Order ${orderId}`,
-      memberIDs: participants,
-      isDM: false,
-      metadata: { orderId, moderatorId, type: 'moderator' },
-    });
-    return resp.roomId;
-  } catch (error) {
-    console.error('[Chat] createModeratorRoom failed:', error);
-    return null;
-  }
-}
-
 // ============ Profile ============
 
 export async function setDisplayName(displayName: string): Promise<void> {

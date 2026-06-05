@@ -364,18 +364,6 @@ class MatrixClientService {
     return roomModule.getStoreRoom(storeId);
   }
 
-  async createModeratorRoom(
-    orderId: string,
-    moderatorId: string,
-    participants: string[]
-  ): Promise<string | null> {
-    return roomModule.createModeratorRoom(
-      orderId,
-      moderatorId,
-      this.toInviteMatrixUserIds(participants)
-    );
-  }
-
   async createGroupRoom(
     name: string,
     members: string[],

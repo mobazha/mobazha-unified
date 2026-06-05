@@ -308,6 +308,20 @@ describe('Moderators API', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/moderators/recommended?limit=3');
       expect(Array.isArray(result)).toBe(true);
     });
+
+    it('should not use raw peerID as display name', async () => {
+      mockApiClient.get.mockResolvedValueOnce([
+        {
+          ...mockModerator,
+          name: 'QmMod1',
+          handle: '',
+        },
+      ]);
+
+      const result = await moderatorsApi.getRecommendedModerators(1);
+
+      expect(result[0]?.name).toBe('');
+    });
   });
 
   describe('submitDispute', () => {

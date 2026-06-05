@@ -685,8 +685,23 @@ export async function searchModerators(
 /**
  * 获取推荐仲裁员
  */
+function normalizeModeratorDisplayFields(mod: Moderator): Moderator {
+  const peerID = mod.peerID?.trim() || '';
+  const name = mod.name?.trim() || '';
+  const handle = mod.handle?.trim() || '';
+  const safeName = name && name !== peerID ? name : handle;
+  return {
+    ...mod,
+    name: safeName,
+    handle: handle || mod.handle,
+  };
+}
+
 export async function getRecommendedModerators(limit: number = 5): Promise<Moderator[]> {
-  return apiClient.get<Moderator[]>(`${HOSTING_API.MODERATORS_RECOMMENDED}?limit=${limit}`);
+  const items = await apiClient.get<Moderator[]>(
+    `${HOSTING_API.MODERATORS_RECOMMENDED}?limit=${limit}`
+  );
+  return (items ?? []).map(normalizeModeratorDisplayFields);
 }
 
 /**

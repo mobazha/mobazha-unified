@@ -27,15 +27,15 @@ export function useVerifiedModerators(): UseVerifiedModeratorsReturn {
   } = useQuery({
     queryKey: queryKeys.moderators.verified(),
     queryFn: () => fetchVerifiedModerators(),
-    staleTime: 5 * 60 * 1000,
-    initialData: new Set<string>(),
+    staleTime: 30 * 1000,
   });
 
   const hasVerifiedMod = useCallback(
     (moderatorPeerIDs?: string[]): boolean => {
       if (!moderatorPeerIDs || moderatorPeerIDs.length === 0) return false;
       if (isVerifiedModeratorsLoaded()) return hasVerifiedModeratorSync(moderatorPeerIDs);
-      return moderatorPeerIDs.some(peerID => verifiedModerators.has(peerID));
+      const currentVerifiedModerators = verifiedModerators ?? new Set<string>();
+      return moderatorPeerIDs.some(peerID => currentVerifiedModerators.has(peerID));
     },
     [verifiedModerators]
   );
@@ -47,7 +47,7 @@ export function useVerifiedModerators(): UseVerifiedModeratorsReturn {
   return {
     verifiedModerators: verifiedModerators ?? new Set(),
     isLoading,
-    isLoaded: !isLoading && !!verifiedModerators,
+    isLoaded: isVerifiedModeratorsLoaded(),
     hasVerifiedMod,
     refresh,
   };

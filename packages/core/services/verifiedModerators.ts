@@ -41,7 +41,7 @@ export interface VerifiedModeratorsResponse {
 // 缓存的 verified moderators
 let cachedVerifiedModerators: Set<string> | null = null;
 let cacheTimestamp: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 1000; // platform certification changes should surface quickly
 
 /**
  * 获取 Verified Moderators API URL
@@ -64,6 +64,7 @@ export async function fetchVerifiedModerators(): Promise<Set<string>> {
   try {
     const response = await fetch(url, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         Accept: 'application/json',
       },
@@ -73,12 +74,13 @@ export async function fetchVerifiedModerators(): Promise<Set<string>> {
       throw new Error(`Failed to fetch verified moderators: ${response.status}`);
     }
 
-    const data: VerifiedModeratorsResponse = await response.json();
+    const json = await response.json();
+    const payload = json?.data ?? json;
 
     // 提取所有 moderator peerIDs
     const moderatorPeerIDs = new Set<string>();
-    if (data.moderators && Array.isArray(data.moderators)) {
-      for (const mod of data.moderators) {
+    if (payload?.moderators && Array.isArray(payload.moderators)) {
+      for (const mod of payload.moderators) {
         if (mod.peerID) {
           moderatorPeerIDs.add(mod.peerID);
         }
