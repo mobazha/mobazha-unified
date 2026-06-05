@@ -58,6 +58,7 @@ function useDashboardData() {
   const { profile } = useUserStore();
   const { formatPrice, fromMinimalUnit, localCurrency, convertToLocal } = useCurrency();
   const guestEnabled = useFeature('guestCheckout');
+  const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
 
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -77,7 +78,9 @@ function useDashboardData() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await productDataService.getMyListings();
+        const data = await productDataService.getMyListings({
+          includeSupplySummary: supplyAvailabilityEnabled,
+        });
         if (!cancelled) setProducts(data);
       } catch (err) {
         if (!cancelled)
@@ -91,7 +94,7 @@ function useDashboardData() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [supplyAvailabilityEnabled, t]);
 
   useEffect(() => {
     if (!profile?.peerID) return;
