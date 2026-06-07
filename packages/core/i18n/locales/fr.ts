@@ -2778,7 +2778,7 @@ export const fr: PartialTranslationResource = {
     operatorResponsibilitiesDigitalNote:
       "Une fois qu'un fichier est téléchargé ou qu'une clé de licence est livrée, ni Mobazha ni vous ne pouvez le retirer de l'appareil de l'acheteur. Les remboursements et les résultats des litiges peuvent révoquer l'accès futur, la validation de la licence et l'adhésion ; le contenu précédemment livré ne peut pas être refusé.",
     operatorResponsibilitiesAckLabel: "J'ai lu et reconnais ces responsabilités.",
-    operatorResponsibilitiesAckedAt: 'Accusé de réception le {date}',
+    operatorResponsibilitiesAckedAt: 'Accusé de réception le {{date}}',
     operatorResponsibilitiesUnacked: "Vous n'avez pas encore reconnu ce contrat.",
     operatorResponsibilitiesAckSaved: 'Accusé de réception enregistré.',
     storeVisibility: 'Visibilité du magasin',

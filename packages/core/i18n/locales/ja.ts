@@ -2707,7 +2707,7 @@ export const ja: PartialTranslationResource = {
     operatorResponsibilitiesDigitalNote:
       'ファイルがダウンロードされるか、ライセンス キーが配信されると、Mobazha もユーザーも購入者のデバイスからそれを取り戻すことはできません。返金や紛争の結果により、今後のアクセス、ライセンスの検証、メンバーシップへの参加が取り消される場合があります。以前に配信されたコンテンツは送信を取り消すことはできません。',
     operatorResponsibilitiesAckLabel: '私はこれらの責任を読み、了承しました。',
-    operatorResponsibilitiesAckedAt: '{date} に承認されました',
+    operatorResponsibilitiesAckedAt: '{{date}} に承認されました',
     operatorResponsibilitiesUnacked: 'あなたはまだこの契約を承認していません。',
     operatorResponsibilitiesAckSaved: '確認が保存されました。',
     storeVisibility: '店舗の可視性',

@@ -2754,7 +2754,7 @@ export const es: PartialTranslationResource = {
     operatorResponsibilitiesDigitalNote:
       'Una vez que se descarga un archivo o se entrega una clave de licencia, ni Mobazha ni usted podrán recuperarlo del dispositivo del comprador. Los reembolsos y los resultados de las disputas pueden revocar el acceso futuro, la validación de la licencia y la membresía; El contenido entregado previamente no se puede anular el envío.',
     operatorResponsibilitiesAckLabel: 'He leído y reconozco estas responsabilidades.',
-    operatorResponsibilitiesAckedAt: 'Confirmado el {date}',
+    operatorResponsibilitiesAckedAt: 'Confirmado el {{date}}',
     operatorResponsibilitiesUnacked: 'Aún no has reconocido este contrato.',
     operatorResponsibilitiesAckSaved: 'Confirmación guardada.',
     storeVisibility: 'Visibilidad de la tienda',

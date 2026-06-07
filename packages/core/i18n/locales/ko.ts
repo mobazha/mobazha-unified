@@ -2683,7 +2683,7 @@ export const ko: PartialTranslationResource = {
     operatorResponsibilitiesDigitalNote:
       '파일이 다운로드되거나 라이센스 키가 전달되면 Mobazha나 귀하 모두 구매자 장치에서 해당 파일을 다시 가져올 수 없습니다. 환불 및 분쟁 결과로 인해 향후 액세스, 라이센스 확인 및 멤버십 가입이 취소될 수 있습니다. 이전에 전송된 콘텐츠는 전송을 취소할 수 없습니다.',
     operatorResponsibilitiesAckLabel: '나는 이러한 책임을 읽었으며 이를 인정합니다.',
-    operatorResponsibilitiesAckedAt: '{date}에 확인됨',
+    operatorResponsibilitiesAckedAt: '{{date}}에 확인됨',
     operatorResponsibilitiesUnacked: '아직 이 계약을 승인하지 않았습니다.',
     operatorResponsibilitiesAckSaved: '승인이 저장되었습니다.',
     storeVisibility: '매장 가시성',

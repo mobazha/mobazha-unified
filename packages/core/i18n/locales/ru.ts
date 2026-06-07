@@ -2729,7 +2729,7 @@ export const ru: PartialTranslationResource = {
     operatorResponsibilitiesDigitalNote:
       'После загрузки файла или доставки лицензионного ключа ни Mobazha, ни вы не сможете вернуть его с устройства покупателя. Возврат средств и результаты споров могут привести к аннулированию будущего доступа, проверки лицензии и вступления в членство; ранее доставленный контент нельзя отменить.',
     operatorResponsibilitiesAckLabel: 'Я прочитал и подтверждаю эти обязанности.',
-    operatorResponsibilitiesAckedAt: 'Подтверждено {date}',
+    operatorResponsibilitiesAckedAt: 'Подтверждено {{date}}',
     operatorResponsibilitiesUnacked: 'Вы еще не подтвердили этот контракт.',
     operatorResponsibilitiesAckSaved: 'Подтверждение сохранено.',
     storeVisibility: 'Видимость магазина',

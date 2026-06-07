@@ -2778,7 +2778,7 @@ export const de: PartialTranslationResource = {
       'Sobald eine Datei heruntergeladen oder ein Lizenzschlüssel geliefert wurde, können weder Mobazha noch Sie diese vom Gerät des Käufers zurückziehen. Rückerstattungen und Streitergebnisse können den zukünftigen Zugriff, die Lizenzvalidierung und den Mitgliedsbeitrag widerrufen; Zuvor bereitgestellte Inhalte können nicht zurückgesendet werden.',
     operatorResponsibilitiesAckLabel:
       'Ich habe diese Verantwortlichkeiten gelesen und erkenne sie an.',
-    operatorResponsibilitiesAckedAt: 'Bestätigt am {date}',
+    operatorResponsibilitiesAckedAt: 'Bestätigt am {{date}}',
     operatorResponsibilitiesUnacked: 'Sie haben diesen Vertrag noch nicht anerkannt.',
     operatorResponsibilitiesAckSaved: 'Bestätigung gespeichert.',
     storeVisibility: 'Sichtbarkeit im Geschäft',
