@@ -47,6 +47,7 @@ import {
   digitalAssetsApi,
   resolveProductSupplyMode,
   useFeature,
+  buildProductHref,
 } from '@mobazha/core';
 import type {
   ContractType,
@@ -147,6 +148,10 @@ export default function EditListingPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { profile: currentUserProfile } = useUserStore();
+  const previewHref = useMemo(
+    () => buildProductHref(slug, currentUserProfile?.peerID),
+    [slug, currentUserProfile?.peerID]
+  );
 
   // 加载现有商品数据
   const { listing, isLoading: isLoadingListing, error: loadError } = useListing(slug);
@@ -521,7 +526,7 @@ export default function EditListingPage() {
           onSaveDraft={handleSaveDraft}
           onCancel={() => router.back()}
           onDelete={() => setShowDeleteDialog(true)}
-          onPreview={() => window.open(`/product/${slug}`, '_blank')}
+          onPreview={() => window.open(previewHref, '_blank')}
           aiLoadingAction={aiLoadingAction}
           onAiImproveTitle={handleAiImproveTitle}
           onAiPolishDescription={handleAiPolishDescription}
@@ -600,7 +605,7 @@ export default function EditListingPage() {
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => window.open(`/product/${slug}`, '_blank')}
+                onClick={() => window.open(previewHref, '_blank')}
                 disabled={isSubmitting}
                 data-testid="listing-form-preview"
               >

@@ -923,15 +923,15 @@ export const de: PartialTranslationResource = {
       thankYou: 'Vielen Dank für Ihre Bestellung!',
     },
     refundAddress: {
-      bannerTitle: 'Rückerstattungs-Wallet hinzufügen',
+      bannerTitle: 'Rückerstattungs-Empfangsadresse hinzufügen',
       bannerDesc:
-        'Diese Bestellung wurde mit Krypto bezahlt. Geben Sie an, wohin Rückerstattungen bei Storno, Streit oder Überzahlung gehen sollen.',
-      save: 'Rückerstattungs-Wallet speichern',
-      savedTitle: 'Rückerstattungs-Wallet gespeichert',
+        'Diese Bestellung nutzt Krypto. Geben Sie an, wohin Rückerstattungen bei Storno, Streit oder Überzahlung gehen sollen.',
+      save: 'Rückerstattungsadresse speichern',
+      savedTitle: 'Rückerstattungsadresse gespeichert',
       savedDesc: 'Für Rückerstattungen zu dieser Bestellung verwenden wir diese Adresse.',
-      requiredTitle: 'Rückerstattungs-Wallet erforderlich',
+      requiredTitle: 'Rückerstattungsadresse erforderlich',
       requiredDesc:
-        'Speichern Sie zuerst eine Rückerstattungs-Wallet, bevor Sie stornieren oder einen Streit eröffnen.',
+        'Speichern Sie zuerst eine Rückerstattungs-Empfangsadresse, bevor Sie stornieren oder einen Streit eröffnen.',
       paymentCoinRequired:
         'Die Zahlungsmethode ist noch nicht bereit. Aktualisieren Sie die Bestellung und versuchen Sie es erneut.',
     },
@@ -2434,15 +2434,18 @@ export const de: PartialTranslationResource = {
     failed: 'Zahlung fehlgeschlagen: ',
     securityNote: 'Sichere Zahlung mit Multi-Sig Treuhandschutz',
     refundDestination: {
-      title: 'Rückerstattungsziel',
-      desc: 'Bei Storno, Streit oder Überzahlung senden wir die Mittel an diese Adresse.',
+      title: 'Rückerstattungs-Empfangsadresse',
+      desc: 'Bei Storno, Streit oder Überzahlung gehen Rückerstattungen an diese Adresse.',
     },
     custodialPayment: {
       label: 'Ich zahle über eine Börse',
-      desc: 'Börsenadressen können meist keine Rückerstattungen empfangen. Aktivieren Sie die Option und tragen Sie unten Ihre persönliche Wallet-Adresse ein.',
-      requiredTitle: 'Rückerstattungs-Wallet erforderlich',
+      desc: 'Börsen-Einzahlungsadressen können meist keine Rückerstattungen empfangen.',
+      refundAddressLabel: 'Rückerstattungs-Empfangsadresse',
+      refundAddressPlaceholder: 'Persönliche Empfangsadresse einfügen',
+      refundAddressWarning: 'Keine Börsen-Einzahlungsadresse verwenden.',
+      requiredTitle: 'Rückerstattungsadresse erforderlich',
       requiredDesc:
-        'Hinterlegen Sie vor der Zahlung über eine Börse eine Rückerstattungs-Wallet, die Sie kontrollieren.',
+        'Tragen Sie vor der Zahlung über eine Börse Ihre Rückerstattungs-Empfangsadresse ein.',
     },
     connectWalletFirst: 'Bitte verbinden Sie zuerst Ihr Wallet',
     noPaymentAddress: 'Keine Zahlungsadresse verfügbar',

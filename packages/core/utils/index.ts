@@ -47,6 +47,9 @@ export * from './identity';
 // 社区市场展示工具
 export * from './communityMarketplace';
 
+// 商品链接
+export * from './productUrl';
+
 // JSON *ID 字段 ingress 归一化
 export * from './normalizeIds';
 

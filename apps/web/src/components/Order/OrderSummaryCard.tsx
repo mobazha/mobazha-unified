@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, buildProductHref } from '@mobazha/core';
 import { Card, CardContent } from '@/components/ui/card';
 import { HStack, VStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
@@ -42,13 +42,13 @@ export interface OrderSummaryCardProps {
   className?: string;
 }
 
-function buildProductHref(item: OrderSummaryItem, vendorPeerID?: string): string | undefined {
+function resolveOrderItemProductHref(
+  item: OrderSummaryItem,
+  vendorPeerID?: string
+): string | undefined {
   const slug = item.id.trim();
   if (!slug || slug.startsWith('item-')) return undefined;
-
-  const encodedSlug = encodeURIComponent(slug);
-  const query = vendorPeerID ? `?peerID=${encodeURIComponent(vendorPeerID)}` : '';
-  return `/product/${encodedSlug}${query}`;
+  return buildProductHref(slug, vendorPeerID);
 }
 
 /**
@@ -82,7 +82,7 @@ export function OrderSummaryCard({
         {/* Items */}
         <VStack gap="sm" className="mb-4 pb-4 border-b border-border">
           {items.map(item => {
-            const productHref = buildProductHref(item, vendor.peerID);
+            const productHref = resolveOrderItemProductHref(item, vendor.peerID);
             const content = (
               <>
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden flex-shrink-0">

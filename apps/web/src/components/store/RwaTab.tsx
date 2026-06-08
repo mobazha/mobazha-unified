@@ -18,7 +18,13 @@ import {
   type ProductContractType,
   type RwaTradeMode,
 } from '@/components/ProductCard';
-import { useI18n, productDataService, getImageUrl, useVerifiedModerators } from '@mobazha/core';
+import {
+  useI18n,
+  productDataService,
+  getImageUrl,
+  useVerifiedModerators,
+  buildProductHref,
+} from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { Package, Coins, Search, X } from 'lucide-react';
 import { useProductModal } from '@/hooks';
@@ -297,7 +303,7 @@ export const RwaTab: React.FC<RwaTabProps> = ({
             {filteredProducts.map((product, index) => (
               <Link
                 key={`${product.slug}-${index}`}
-                href={`/product/${product.slug}?peerID=${peerId}`}
+                href={buildProductHref(product.slug, peerId)}
                 onClick={e => {
                   // 桌面端使用弹框
                   if (!isMobile) {

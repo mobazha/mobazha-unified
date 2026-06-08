@@ -3,7 +3,7 @@
  */
 
 import type { Notification } from '../services/api/notifications';
-import { formatUserName, type IdentityData } from './identity';
+import { formatUserName, hasPeerIDPrefix, type IdentityData } from './identity';
 import { resolveOrderOrCaseID } from './normalizeIds';
 
 const LOW_QUALITY_TITLES = new Set(['test', 'product', 'item', 'listing', '']);
@@ -12,16 +12,11 @@ const ORDER_AGGREGATABLE_PREFIXES = ['order.', 'payment.'];
 
 const DEFAULT_AGGREGATE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-function looksLikePeerId(value: string): boolean {
-  const trimmed = value.trim();
-  return trimmed.startsWith('Qm') || trimmed.startsWith('12D3Koo');
-}
-
 export function isLowQualityProductTitle(title?: string | null): boolean {
   if (!title?.trim()) return true;
   const normalized = title.trim().toLowerCase();
   if (LOW_QUALITY_TITLES.has(normalized)) return true;
-  if (looksLikePeerId(title)) return true;
+  if (hasPeerIDPrefix(title)) return true;
   return false;
 }
 

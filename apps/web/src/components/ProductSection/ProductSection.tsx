@@ -11,7 +11,12 @@ import {
   type RwaTradeMode,
 } from '@/components/ProductCard';
 import { useProductModal } from '@/hooks';
-import { useUserStore, useVerifiedModerators, usePrefetchProduct } from '@mobazha/core';
+import {
+  useUserStore,
+  useVerifiedModerators,
+  usePrefetchProduct,
+  buildProductHref,
+} from '@mobazha/core';
 
 interface Product {
   id: string;
@@ -127,9 +132,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
             : products.map((product, index) => {
                 // 构建商品链接，如果有 vendorPeerID 则添加 peerID 参数
-                const productHref = product.vendorPeerID
-                  ? `/product/${product.slug}?peerID=${product.vendorPeerID}`
-                  : `/product/${product.slug}`;
+                const productHref = buildProductHref(product.slug, product.vendorPeerID);
                 // 检查是否为自己的商品
                 const isOwnListing = profile?.peerID === product.vendorPeerID;
                 return (

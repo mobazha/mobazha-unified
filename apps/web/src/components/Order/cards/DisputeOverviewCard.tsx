@@ -11,6 +11,7 @@ import {
   getGatewayUrl,
   NODE_API,
   isDisputeRulingAvailable,
+  buildProductHref,
   type DisplayOrder,
 } from '@mobazha/core';
 import { formatUserName } from '@mobazha/core/utils/identity';
@@ -113,13 +114,9 @@ export const DisputeOverviewCard = memo(function DisputeOverviewCard({
 
   if (!dispute) return null;
 
-  const hasSlug = !!displayOrder.slug;
-  const productHref =
-    hasSlug && displayOrder.vendor?.peerID
-      ? `/product/${displayOrder.slug}?peerID=${displayOrder.vendor.peerID}`
-      : hasSlug
-        ? `/product/${displayOrder.slug}`
-        : null;
+  const productHref = displayOrder.slug
+    ? buildProductHref(displayOrder.slug, displayOrder.vendor?.peerID)
+    : null;
 
   const statusStyle =
     STATUS_STYLE[dispute.status] ?? 'bg-muted text-muted-foreground border-border';

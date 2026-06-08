@@ -11,7 +11,7 @@ import { usePrimaryCTA } from '@/lib/platform';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import type { VendorGroup } from '@/hooks/useCart';
 import type { CartItem, OrderItemOption } from '@mobazha/core';
-import { useI18n, useUserStore, type TranslateFunction } from '@mobazha/core';
+import { useI18n, useUserStore, buildProductHref, type TranslateFunction } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
@@ -80,7 +80,7 @@ function SwipeableCartItem({
       >
         <div className="flex gap-3">
           <Link
-            href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
+            href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}
             className="flex-shrink-0"
           >
             <div className="w-20 h-20 rounded-lg overflow-hidden">
@@ -89,7 +89,7 @@ function SwipeableCartItem({
           </Link>
 
           <div className="flex-1 min-w-0 flex flex-col">
-            <Link href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}>
+            <Link href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}>
               <h3 className="font-medium text-foreground text-sm line-clamp-2">
                 {item.listing.title}
               </h3>

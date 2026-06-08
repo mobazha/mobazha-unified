@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveProductPagePeerID } from '@mobazha/core';
 import { getCanonicalSiteUrl, getSiteUrl } from '@/lib/siteUrl';
 import { getRequestSearchParam } from '@/lib/requestUrl';
 import {
@@ -9,7 +10,7 @@ import {
   type SsrProductData,
 } from '@/lib/ssrProduct';
 
-function buildJsonLd(product: SsrProductData | null, siteUrl: string) {
+function buildJsonLd(product: SsrProductData | null, siteUrl: string, peerID?: string) {
   if (!product?.item) return null;
   const title = product.item.title || product.slug;
   const description = stripProductHtml(product.item.description || '').slice(0, 500);
@@ -39,7 +40,7 @@ function buildJsonLd(product: SsrProductData | null, siteUrl: string) {
         price: String(price),
         priceCurrency: currency,
         availability: 'https://schema.org/InStock',
-        url: `${siteUrl}/product/${product.slug}`,
+        url: buildProductPageUrl(siteUrl, product.slug, peerID),
       },
     }),
   };
@@ -86,10 +87,10 @@ export default async function ProductLayout({
     getCanonicalSiteUrl(),
     getSiteUrl(),
   ]);
-  const jsonLd = buildJsonLd(product, canonicalSiteUrl);
+  const scopedPeerID = resolveProductPagePeerID(peerID, product?.vendorID?.peerID);
+  const jsonLd = buildJsonLd(product, canonicalSiteUrl, scopedPeerID);
   const breadcrumbLd = buildBreadcrumbLd(product, canonicalSiteUrl);
-  const canonicalUrl = `${canonicalSiteUrl}/product/${slug}`;
-  const oembedDiscoverUrl = buildProductPageUrl(currentSiteUrl, slug, peerID);
+  const oembedDiscoverUrl = buildProductPageUrl(currentSiteUrl, slug, scopedPeerID);
   const oembedUrl = `${currentSiteUrl}/api/oembed?url=${encodeURIComponent(oembedDiscoverUrl)}&format=json`;
 
   return (

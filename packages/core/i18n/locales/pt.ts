@@ -914,14 +914,15 @@ export const pt: PartialTranslationResource = {
       thankYou: 'Obrigado pelo seu pedido!',
     },
     refundAddress: {
-      bannerTitle: 'Adicionar carteira de reembolso',
+      bannerTitle: 'Adicionar endereço de recebimento do reembolso',
       bannerDesc:
-        'Este pedido foi pago com cripto. Informe para onde enviar reembolsos em caso de cancelamento, disputa ou pagamento a mais.',
-      save: 'Salvar carteira de reembolso',
-      savedTitle: 'Carteira de reembolso salva',
+        'Este pedido usa cripto. Informe para onde enviar reembolsos em caso de cancelamento, disputa ou pagamento a mais.',
+      save: 'Salvar endereço de reembolso',
+      savedTitle: 'Endereço de reembolso salvo',
       savedDesc: 'Usaremos este endereço para reembolsos deste pedido.',
-      requiredTitle: 'Carteira de reembolso obrigatória',
-      requiredDesc: 'Adicione uma carteira de reembolso antes de cancelar ou abrir uma disputa.',
+      requiredTitle: 'Endereço de reembolso obrigatório',
+      requiredDesc:
+        'Adicione um endereço de recebimento do reembolso antes de cancelar ou abrir uma disputa.',
       paymentCoinRequired:
         'O método de pagamento ainda não está pronto. Atualize o pedido e tente novamente.',
     },
@@ -2413,15 +2414,18 @@ export const pt: PartialTranslationResource = {
     failed: 'Pagamento falhou: ',
     securityNote: 'Pagamento seguro com proteção de custódia multi-assinatura',
     refundDestination: {
-      title: 'Destino do reembolso',
-      desc: 'Se o pedido for cancelado, disputado ou pago em excesso, os fundos serão enviados para cá.',
+      title: 'Endereço de recebimento do reembolso',
+      desc: 'Se o pedido for cancelado, disputado ou pago em excesso, o reembolso será enviado para cá.',
     },
     custodialPayment: {
       label: 'Estou pagando de uma exchange',
-      desc: 'Endereços de exchange geralmente não recebem reembolsos. Marque esta opção e adicione sua carteira pessoal abaixo.',
-      requiredTitle: 'Carteira de reembolso obrigatória',
+      desc: 'Endereços de depósito de exchange geralmente não recebem reembolsos.',
+      refundAddressLabel: 'Endereço de recebimento do reembolso',
+      refundAddressPlaceholder: 'Cole seu endereço pessoal de recebimento',
+      refundAddressWarning: 'Não use um endereço de depósito de exchange.',
+      requiredTitle: 'Endereço de reembolso obrigatório',
       requiredDesc:
-        'Adicione uma carteira de reembolso que você controla antes de pagar via exchange.',
+        'Adicione seu endereço de recebimento do reembolso antes de pagar via exchange.',
     },
     connectWalletFirst: 'Por favor, conecte sua carteira primeiro',
     noPaymentAddress: 'Nenhum endereço de pagamento disponível',

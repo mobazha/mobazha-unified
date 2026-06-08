@@ -914,14 +914,15 @@ export const es: PartialTranslationResource = {
       thankYou: '¡Gracias por tu pedido!',
     },
     refundAddress: {
-      bannerTitle: 'Añadir wallet de reembolso',
+      bannerTitle: 'Añadir dirección de recepción del reembolso',
       bannerDesc:
-        'Este pedido se pagó con cripto. Indique dónde enviar reembolsos si se cancela, hay disputa o pago de más.',
-      save: 'Guardar wallet de reembolso',
-      savedTitle: 'Wallet de reembolso guardada',
+        'Este pedido usa cripto. Indique dónde enviar reembolsos si se cancela, hay disputa o pago de más.',
+      save: 'Guardar dirección de reembolso',
+      savedTitle: 'Dirección de reembolso guardada',
       savedDesc: 'Usaremos esta dirección para reembolsos de este pedido.',
-      requiredTitle: 'Se requiere wallet de reembolso',
-      requiredDesc: 'Añada una wallet de reembolso antes de cancelar o abrir una disputa.',
+      requiredTitle: 'Se requiere dirección de reembolso',
+      requiredDesc:
+        'Añada una dirección de recepción del reembolso antes de cancelar o abrir una disputa.',
       paymentCoinRequired:
         'El método de pago aún no está listo. Actualice el pedido e inténtelo de nuevo.',
     },
@@ -2408,14 +2409,18 @@ export const es: PartialTranslationResource = {
     failed: 'Pago fallido: ',
     securityNote: 'Pago seguro con protección de custodia multi-firma',
     refundDestination: {
-      title: 'Destino del reembolso',
-      desc: 'Si se cancela, hay disputa o pago en exceso, los fondos se enviarán aquí.',
+      title: 'Dirección de recepción del reembolso',
+      desc: 'Si se cancela, hay disputa o pago en exceso, el reembolso irá aquí.',
     },
     custodialPayment: {
       label: 'Pago desde un exchange',
-      desc: 'Las direcciones de exchange normalmente no pueden recibir reembolsos. Marca esta opción y añade tu wallet personal abajo.',
-      requiredTitle: 'Wallet de reembolso obligatoria',
-      requiredDesc: 'Añade una wallet de reembolso que controles antes de pagar desde un exchange.',
+      desc: 'Las direcciones de depósito de exchange normalmente no pueden recibir reembolsos.',
+      refundAddressLabel: 'Dirección de recepción del reembolso',
+      refundAddressPlaceholder: 'Pegue su dirección personal de recepción',
+      refundAddressWarning: 'No use una dirección de depósito de exchange.',
+      requiredTitle: 'Se requiere dirección de reembolso',
+      requiredDesc:
+        'Añada su dirección de recepción del reembolso antes de pagar desde un exchange.',
     },
     connectWalletFirst: 'Por favor conecta tu billetera primero',
     noPaymentAddress: 'No hay dirección de pago disponible',

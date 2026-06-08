@@ -20,6 +20,7 @@ import {
   useCurrency,
   useMyListings,
   getImageUrl,
+  buildProductHref,
 } from '@mobazha/core';
 import type {
   ProductListItem,
@@ -184,7 +185,7 @@ function ProductRow({
           )}
           {product.listingSlug && (
             <Link
-              href={`/product/${product.listingSlug}`}
+              href={buildProductHref(product.listingSlug, listing?.vendorPeerID)}
               className="p-1.5 rounded-md hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
               title={t('admin.sourcing.viewListing')}
             >

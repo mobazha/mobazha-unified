@@ -94,7 +94,7 @@ test.describe('Standalone Mobile UX Audit — Buyer Browsing (375x667)', () => {
         .then(h => h?.split('/product/')[1]?.split('?')[0])
         .catch(() => null);
       if (slug) {
-        await page.goto(`/product/${slug}?peer=${PEER_ID}`);
+        await page.goto(`/product/${slug}?peerID=${PEER_ID}`);
         await waitForPageStable(page);
       }
     }
@@ -108,7 +108,7 @@ test.describe('Standalone Mobile UX Audit — Buyer Browsing (375x667)', () => {
     const href = await firstLink.getAttribute('href').catch(() => null);
     const slug = href?.split('/product/')[1]?.split('?')[0]?.split('#')[0];
     if (slug) {
-      await page.goto(`/product/${slug}?peer=${PEER_ID}`);
+      await page.goto(`/product/${slug}?peerID=${PEER_ID}`);
       await waitForPageStable(page);
       await page.evaluate(() => window.scrollTo(0, 600));
       await page.waitForTimeout(500);

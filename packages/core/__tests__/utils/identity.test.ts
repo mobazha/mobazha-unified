@@ -5,6 +5,7 @@ import {
   truncateAddress,
   formatNotificationName,
   isFullPeerID,
+  hasPeerIDPrefix,
 } from '../../utils/identity';
 
 describe('isFullPeerID', () => {
@@ -20,6 +21,19 @@ describe('isFullPeerID', () => {
     expect(isFullPeerID('')).toBe(false);
     expect(isFullPeerID('   ')).toBe(false);
     expect(isFullPeerID(undefined)).toBe(false);
+  });
+});
+
+describe('hasPeerIDPrefix', () => {
+  it('accepts known peer ID prefixes', () => {
+    expect(hasPeerIDPrefix('QmSellerPeer')).toBe(true);
+    expect(hasPeerIDPrefix('12D3KooWLYPUhoYt48FsocbqbD7CntQd1UgdEceZdKV9DVqXG2k8')).toBe(true);
+  });
+
+  it('rejects non-peer values', () => {
+    expect(hasPeerIDPrefix('wireless-headphones')).toBe(false);
+    expect(hasPeerIDPrefix('')).toBe(false);
+    expect(hasPeerIDPrefix(undefined)).toBe(false);
   });
 });
 

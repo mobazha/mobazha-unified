@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { resolveProductPagePeerID } from '@mobazha/core';
 import { getCanonicalSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 import {
+  buildProductPageUrl,
   buildProductOgImageUrl,
   fetchSsrProduct,
   stripProductHtml,
@@ -21,8 +23,9 @@ export async function buildProductPageMetadata(slug: string, peerID?: string): P
   const title = product.item.title || slug;
   const rawDescription = product.item.description || '';
   const description = stripProductHtml(rawDescription).slice(0, 160) || `Buy ${title} on Mobazha`;
-  const canonicalUrl = `${canonicalSiteUrl}/product/${slug}`;
-  const ogImageUrl = buildProductOgImageUrl(canonicalSiteUrl, slug, peerID);
+  const scopedPeerID = resolveProductPagePeerID(peerID, product.vendorID?.peerID);
+  const canonicalUrl = buildProductPageUrl(canonicalSiteUrl, slug, scopedPeerID);
+  const ogImageUrl = buildProductOgImageUrl(canonicalSiteUrl, slug, scopedPeerID);
 
   const currency =
     product.metadata?.pricingCurrency?.code || product.item.priceCurrency?.code || '';

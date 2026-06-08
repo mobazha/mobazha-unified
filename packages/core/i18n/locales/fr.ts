@@ -917,15 +917,15 @@ export const fr: PartialTranslationResource = {
       thankYou: 'Merci pour votre commande !',
     },
     refundAddress: {
-      bannerTitle: 'Ajouter un portefeuille de remboursement',
+      bannerTitle: 'Ajouter une adresse de réception du remboursement',
       bannerDesc:
-        'Cette commande a été payée en crypto. Indiquez où envoyer les remboursements en cas d’annulation, de litige ou de trop-perçu.',
-      save: 'Enregistrer le portefeuille de remboursement',
-      savedTitle: 'Portefeuille de remboursement enregistré',
+        'Cette commande utilise la crypto. Indiquez où envoyer les remboursements en cas d’annulation, de litige ou de trop-perçu.',
+      save: 'Enregistrer l’adresse de remboursement',
+      savedTitle: 'Adresse de remboursement enregistrée',
       savedDesc: 'Nous utiliserons cette adresse pour les remboursements de cette commande.',
-      requiredTitle: 'Portefeuille de remboursement requis',
+      requiredTitle: 'Adresse de remboursement requise',
       requiredDesc:
-        'Ajoutez un portefeuille de remboursement avant d’annuler ou d’ouvrir un litige.',
+        'Ajoutez une adresse de réception du remboursement avant d’annuler ou d’ouvrir un litige.',
       paymentCoinRequired:
         'Le mode de paiement n’est pas encore prêt. Actualisez la commande et réessayez.',
     },
@@ -2427,15 +2427,18 @@ export const fr: PartialTranslationResource = {
     failed: 'Paiement échoué : ',
     securityNote: 'Paiement sécurisé avec protection séquestre multi-signature',
     refundDestination: {
-      title: 'Destination du remboursement',
-      desc: 'En cas d’annulation, de litige ou de surpaiement, les fonds seront envoyés ici.',
+      title: 'Adresse de réception du remboursement',
+      desc: 'En cas d’annulation, de litige ou de surpaiement, le remboursement sera envoyé ici.',
     },
     custodialPayment: {
       label: 'Je paie via un exchange',
-      desc: 'Les adresses d’exchange ne peuvent généralement pas recevoir de remboursements. Cochez cette option et ajoutez votre portefeuille personnel ci-dessous.',
-      requiredTitle: 'Portefeuille de remboursement requis',
+      desc: 'Les adresses de dépôt d’exchange ne peuvent généralement pas recevoir de remboursements.',
+      refundAddressLabel: 'Adresse de réception du remboursement',
+      refundAddressPlaceholder: 'Collez votre adresse personnelle de réception',
+      refundAddressWarning: 'N’utilisez pas une adresse de dépôt d’exchange.',
+      requiredTitle: 'Adresse de remboursement requise',
       requiredDesc:
-        'Ajoutez un portefeuille de remboursement que vous contrôlez avant de payer via un exchange.',
+        'Ajoutez votre adresse de réception du remboursement avant de payer via un exchange.',
     },
     connectWalletFirst: "Veuillez d'abord connecter votre portefeuille",
     noPaymentAddress: 'Aucune adresse de paiement disponible',

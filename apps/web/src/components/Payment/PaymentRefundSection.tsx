@@ -1,7 +1,7 @@
 'use client';
 
 import { useI18n, truncateAddress } from '@mobazha/core';
-import { RefundWalletCard } from '@/components/Checkout/RefundWalletCard';
+import { RefundAddressField } from '@/components/Checkout/RefundAddressField';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface PaymentRefundSectionProps {
@@ -63,12 +63,20 @@ export function PaymentRefundSection({
               </span>
             </span>
           </label>
+
+          {payFromCustodial && (
+            <div className="mt-4 border-t border-border pt-4">
+              <RefundAddressField
+                value={refundAddress}
+                onChange={onRefundAddressChange}
+                label={t('payment.custodialPayment.refundAddressLabel')}
+                placeholder={t('payment.custodialPayment.refundAddressPlaceholder')}
+                warning={t('payment.custodialPayment.refundAddressWarning')}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {payFromCustodial && (
-        <RefundWalletCard compact value={refundAddress} onChange={onRefundAddressChange} />
-      )}
     </div>
   );
 }

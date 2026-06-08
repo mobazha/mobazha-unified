@@ -6,6 +6,7 @@ import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProductImageNative } from '@/components/ui/product-image';
+import { buildProductHref } from '@mobazha/core';
 import { useCart } from '@/hooks/useCart';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
@@ -147,7 +148,7 @@ export function CartDesktop() {
                       <div key={itemKey} className="p-3 sm:p-4">
                         <div className="flex gap-2.5 sm:gap-3">
                           <Link
-                            href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
+                            href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}
                             className="flex-shrink-0 touch-feedback"
                           >
                             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden">
@@ -161,7 +162,7 @@ export function CartDesktop() {
 
                           <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                             <Link
-                              href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
+                              href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}
                               className="min-w-0"
                             >
                               <h3 className="font-medium text-foreground text-sm line-clamp-2 hover:text-primary">

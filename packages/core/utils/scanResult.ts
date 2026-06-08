@@ -15,6 +15,7 @@
  */
 
 import { parseStartParam } from '../services/startParam';
+import { hasPeerIDPrefix, PEER_ID_PREFIX_LIBP2P } from './identity';
 
 // ── Result types ──
 
@@ -66,7 +67,6 @@ const BIP21_SCHEMES: Record<string, string> = {
 
 // ── Helpers ──
 
-const PEER_ID_PREFIX = '12D3KooW';
 const PEER_ID_PATTERN = /^[A-Za-z0-9]{1,80}$/;
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -175,11 +175,7 @@ function parseTelegramDeepLink(text: string): ScanResultStore | undefined {
 }
 
 function isPeerID(value: string | undefined): value is string {
-  return (
-    !!value &&
-    PEER_ID_PATTERN.test(value) &&
-    (value.startsWith(PEER_ID_PREFIX) || value.startsWith('Qm'))
-  );
+  return !!value && PEER_ID_PATTERN.test(value) && hasPeerIDPrefix(value);
 }
 
 function safeDecode(value: string): string {
@@ -275,7 +271,7 @@ export function parseScanResult(text: string, options?: ParseScanResultOptions):
   if (mobazhaUrl) return mobazhaUrl;
 
   // 7. Bare peerID
-  if (trimmed.startsWith(PEER_ID_PREFIX) && /^[A-Za-z0-9]+$/.test(trimmed)) {
+  if (trimmed.startsWith(PEER_ID_PREFIX_LIBP2P) && /^[A-Za-z0-9]+$/.test(trimmed)) {
     return { type: 'store', peerID: trimmed };
   }
 

@@ -2,6 +2,8 @@
  * Community marketplace display helpers (public group-marketplace projection).
  */
 
+import { buildProductHref } from './productUrl';
+
 /** Turn listing slug into a readable title when API title is unavailable. */
 export function formatListingSlugTitle(slug: string): string {
   const trimmed = slug.trim();
@@ -50,5 +52,5 @@ export function marketplaceHref(slug: string | undefined, publicID: string): str
 }
 
 export function communityProductHref(slug: string, peerID: string): string {
-  return `/product/${encodeURIComponent(slug)}?peerID=${encodeURIComponent(peerID)}`;
+  return buildProductHref(slug, peerID);
 }

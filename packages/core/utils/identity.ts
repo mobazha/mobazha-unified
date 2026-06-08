@@ -67,6 +67,20 @@ export function isFullPeerID(input: string | undefined | null): boolean {
   return trimmed.length > 0 && FULL_PEER_ID_PATTERN.test(trimmed);
 }
 
+/** Known Mobazha peer ID prefixes — libp2p CIDv1 (`12D3KooW…`) or IPFS CIDv0 (`Qm…`). */
+export const PEER_ID_PREFIX_LIBP2P = '12D3KooW' as const;
+export const PEER_ID_PREFIX_IPFS = 'Qm' as const;
+
+/**
+ * Loose prefix check for path segments / composite slugs (not full validation).
+ * Use `isFullPeerID` when validating IDs for API lookup or routing.
+ */
+export function hasPeerIDPrefix(value: string | undefined | null): boolean {
+  if (!value) return false;
+  const trimmed = value.trim();
+  return trimmed.startsWith(PEER_ID_PREFIX_IPFS) || trimmed.startsWith(PEER_ID_PREFIX_LIBP2P);
+}
+
 /**
  * Truncate a Peer ID for display: "QmY8…tRnC"
  * Uses ellipsis character (…) to distinguish from address truncation.

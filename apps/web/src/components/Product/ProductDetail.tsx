@@ -32,6 +32,7 @@ import {
   useFiatProviders,
   usePaymentMethods,
   getTokenIdFromPaymentCoin,
+  buildProductHref,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
@@ -463,7 +464,9 @@ export function ProductDetail({
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
-    const url = `${window.location.origin}/product/${product.slug}`;
+    const url = buildProductHref(product.slug, peerID || product.vendorID?.peerID, {
+      baseUrl: window.location.origin,
+    });
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -478,7 +481,7 @@ export function ProductDetail({
     }
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
-  }, [product]);
+  }, [product, peerID]);
 
   const _handleMessage = useCallback(() => {
     if (onMessage) {

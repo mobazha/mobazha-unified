@@ -5,7 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { HStack, VStack } from '@/components/layouts';
-import { useCartStore, useUserStore, useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import {
+  useCartStore,
+  useUserStore,
+  useI18n,
+  useCurrency,
+  getImageUrl,
+  buildProductHref,
+} from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { ShoppingBag } from 'lucide-react';
 import { CartItemRow } from '@/components/Cart/CartItemRow';
@@ -118,14 +125,19 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     key={itemKey}
                     thumbnailUrl={thumbUrl}
                     title={item.listing.title}
-                    href={`/product/${item.listing.slug}?peerID=${item.listing.vendorPeerID}`}
+                    href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}
                     options={item.options}
                     vendorName={item.listing.vendorName}
                     unitPrice={item.listing.price.amount}
                     currency={currency}
                     quantity={item.quantity}
-                    onUpdateQuantity={(qty) =>
-                      updateQuantity(item.listing.slug, item.listing.vendorPeerID, qty, item.options)
+                    onUpdateQuantity={qty =>
+                      updateQuantity(
+                        item.listing.slug,
+                        item.listing.vendorPeerID,
+                        qty,
+                        item.options
+                      )
                     }
                     onRemove={() =>
                       removeItem(item.listing.slug, item.listing.vendorPeerID, item.options)

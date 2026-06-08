@@ -552,15 +552,13 @@ export const en: TranslationResource = {
     creating: 'Creating...',
     createOrderFailed: 'Failed to create order: ',
     paymentNextStep: 'You will select payment method in the next step',
-    refundWallet: 'Refund Wallet',
-    refundWalletAddress: 'Refund wallet address',
-    refundWalletHint:
-      'If this order is cancelled, overpaid, or paid after timeout, funds will be returned to this wallet.',
-    refundWalletPlaceholder: 'Enter a wallet address you control',
-    refundWalletCexWarning:
-      'Do not enter an exchange deposit address. Use a wallet you control so refunds can be recovered safely.',
-    refundWalletRequired: 'Refund wallet required',
-    refundWalletRequiredDesc: 'Add a refund wallet before continuing to payment.',
+    refundWallet: 'Refund receiving address',
+    refundWalletAddress: 'Receiving address',
+    refundWalletHint: 'If this order is cancelled or refunded, funds will be sent here.',
+    refundWalletPlaceholder: 'Paste your personal receiving address',
+    refundWalletCexWarning: 'Do not use an exchange deposit address.',
+    refundWalletRequired: 'Refund address required',
+    refundWalletRequiredDesc: 'Add your refund receiving address before continuing.',
     useConnectedWallet: 'Use connected wallet',
     // RWA 相关
     rwaTransaction: 'RWA Token Transaction',
@@ -1120,14 +1118,15 @@ export const en: TranslationResource = {
       thankYou: 'Thank you for your order!',
     },
     refundAddress: {
-      bannerTitle: 'Add a refund wallet',
+      bannerTitle: 'Add refund receiving address',
       bannerDesc:
-        'This order is paid with crypto. Tell us where to send refunds if the order is cancelled, disputed, or overpaid.',
-      save: 'Save refund wallet',
-      savedTitle: 'Refund wallet saved',
+        'This order uses crypto. Tell us where to send refunds if the order is cancelled, disputed, or overpaid.',
+      save: 'Save refund address',
+      savedTitle: 'Refund address saved',
       savedDesc: 'We will use this address for refunds on this order.',
-      requiredTitle: 'Refund wallet required',
-      requiredDesc: 'Add a refund wallet on this order before cancelling or opening a dispute.',
+      requiredTitle: 'Refund address required',
+      requiredDesc:
+        'Add a refund receiving address on this order before cancelling or opening a dispute.',
       paymentCoinRequired: 'Payment method is not ready yet. Refresh the order and try again.',
     },
     // Order actions
@@ -2997,14 +2996,17 @@ export const en: TranslationResource = {
     failed: 'Payment failed',
     securityNote: 'Secure payment protection',
     refundDestination: {
-      title: 'Refund destination',
-      desc: 'If this order is cancelled, disputed, or overpaid, funds will be sent here.',
+      title: 'Refund receiving address',
+      desc: 'If this order is cancelled, disputed, or overpaid, refunds go here.',
     },
     custodialPayment: {
       label: "I'm paying from an exchange",
-      desc: "Exchange addresses usually can't receive refunds. Check this and add a personal wallet address below.",
-      requiredTitle: 'Refund wallet required',
-      requiredDesc: 'Add a refund wallet you control before paying from an exchange.',
+      desc: "Exchange deposit addresses usually can't receive refunds.",
+      refundAddressLabel: 'Refund receiving address',
+      refundAddressPlaceholder: 'Paste your personal receiving address',
+      refundAddressWarning: 'Do not use an exchange deposit address.',
+      requiredTitle: 'Refund address required',
+      requiredDesc: 'Add your refund receiving address before paying from an exchange.',
     },
     // Transaction related
     connectWalletFirst: 'Please connect your wallet first',

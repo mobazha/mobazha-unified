@@ -39,6 +39,7 @@ import {
   usePrefetchProduct,
   useStoreActivity,
   queryKeys,
+  buildProductHref,
 } from '@mobazha/core';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
@@ -1361,7 +1362,7 @@ export default function StorePage() {
                         {filteredProducts.map((product, index) => (
                           <Link
                             key={`${product.slug}-${index}`}
-                            href={`/product/${product.slug}?peerID=${peerId}`}
+                            href={buildProductHref(product.slug, peerId)}
                             onClick={e => {
                               // 桌面端使用弹框
                               if (!isMobile) {

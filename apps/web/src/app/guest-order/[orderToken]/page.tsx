@@ -4,7 +4,14 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
-import { formatUserName, isFullPeerID, profileApi, useI18n, type UserProfile } from '@mobazha/core';
+import {
+  formatUserName,
+  isFullPeerID,
+  profileApi,
+  useI18n,
+  buildProductHref,
+  type UserProfile,
+} from '@mobazha/core';
 import { Header } from '@/components';
 import {
   buyerPortalTokenStorageKey,
@@ -365,9 +372,7 @@ export default function GuestOrderPage() {
                   ? item.sellerPeerID
                   : sellerPeerID;
                 const productHref = item.listingSlug
-                  ? effectivePeerID
-                    ? `/product/${encodeURIComponent(item.listingSlug)}?peerID=${encodeURIComponent(effectivePeerID)}`
-                    : `/product/${encodeURIComponent(item.listingSlug)}`
+                  ? buildProductHref(item.listingSlug, effectivePeerID)
                   : undefined;
                 const Inner = (
                   <>

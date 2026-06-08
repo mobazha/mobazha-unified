@@ -1,3 +1,4 @@
+import { buildProductHref, buildProductOgImageHref } from '@mobazha/core';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
 
 const API_BASE = SSR_API_BASE;
@@ -62,20 +63,16 @@ export function getSsrProductMediaUrl(hash?: string): string | undefined {
   return `${API_BASE}/v1/media/images/${hash}`;
 }
 
-/** Product page URL; include peerID when the listing is store-scoped. */
+/** Product page URL; defers to core helper for SaaS vs standalone peerID rules. */
 export function buildProductPageUrl(siteUrl: string, slug: string, peerID?: string): string {
-  const base = `${siteUrl}/product/${encodeURIComponent(slug)}`;
-  if (!peerID) return base;
-  return `${base}?peerID=${encodeURIComponent(peerID)}`;
+  return buildProductHref(slug, peerID, { baseUrl: siteUrl });
 }
 
-/** OG image route; pass peerID when the listing is store-scoped. */
+/** OG image route; follows the same peerID rules as buildProductPageUrl. */
 export function buildProductOgImageUrl(
   canonicalSiteUrl: string,
   slug: string,
   peerID?: string
 ): string {
-  const base = `${canonicalSiteUrl}/product/${encodeURIComponent(slug)}/opengraph-image`;
-  if (!peerID) return base;
-  return `${base}?peerID=${encodeURIComponent(peerID)}`;
+  return buildProductOgImageHref(slug, peerID, { baseUrl: canonicalSiteUrl });
 }

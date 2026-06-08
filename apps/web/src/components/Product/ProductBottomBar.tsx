@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Heart } from 'lucide-react';
 import { HStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n, useCartStore, useChatStore, selectUnreadCountByPeerID } from '@mobazha/core';
+import {
+  useI18n,
+  useCartStore,
+  useChatStore,
+  selectUnreadCountByPeerID,
+  buildProductHref,
+} from '@mobazha/core';
 import type { OrderItemOption, Product, ProductSku } from '@mobazha/core';
 import { useHaptic } from '@/lib/platform';
 
@@ -136,7 +142,9 @@ export function ProductBottomBar({
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
-    const url = `${window.location.origin}/product/${product.slug}`;
+    const url = buildProductHref(product.slug, product.vendorID?.peerID, {
+      baseUrl: window.location.origin,
+    });
     try {
       await navigator.clipboard.writeText(url);
     } catch {

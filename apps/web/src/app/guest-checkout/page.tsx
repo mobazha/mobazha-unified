@@ -2,7 +2,13 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { analyzeContractTypes, useI18n, getImageUrl, mustAssetIdFromTokenId } from '@mobazha/core';
+import {
+  analyzeContractTypes,
+  useI18n,
+  getImageUrl,
+  mustAssetIdFromTokenId,
+  buildProductHref,
+} from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
@@ -354,7 +360,7 @@ export default function GuestCheckoutPage() {
                           key={`${item.slug}-${(item.options ?? []).map(o => o.value).join(',')}`}
                           thumbnailUrl={thumbUrl}
                           title={item.title}
-                          href={`/product/${item.slug}?peerID=${item.vendorPeerID}`}
+                          href={buildProductHref(item.slug, item.vendorPeerID)}
                           options={item.options}
                           contractType={item.contractType}
                           unitPrice={item.price.amount}

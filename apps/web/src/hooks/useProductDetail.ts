@@ -16,6 +16,7 @@ import {
   discountsApi,
   useChatStore,
   usePaymentMethods,
+  buildProductHref,
 } from '@mobazha/core';
 import { useGuestCartStore } from '@mobazha/core/stores';
 import { isOutpostMode } from '@mobazha/core/config/env';
@@ -647,7 +648,9 @@ export function useProductDetail({
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
-    const url = `${window.location.origin}/product/${product.slug}`;
+    const url = buildProductHref(product.slug, peerID || product.vendorID?.peerID, {
+      baseUrl: window.location.origin,
+    });
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -662,7 +665,7 @@ export function useProductDetail({
     }
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
-  }, [product]);
+  }, [product, peerID]);
 
   return {
     product,
