@@ -13,6 +13,7 @@ import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { useSearch } from '@/hooks/useSearch';
 import type { DisplayProduct, SearchUser } from '@/hooks/useSearch';
 import { useProductModal } from '@/hooks';
+import { buildProductHref } from '@mobazha/core';
 
 export function SearchDesktop() {
   const search = useSearch();
@@ -21,7 +22,7 @@ export function SearchDesktop() {
   const renderProductCard = (product: DisplayProduct) => (
     <Link
       key={product.id}
-      href={`/product/${product.slug}${product.vendor.peerID ? `?peerID=${product.vendor.peerID}` : ''}`}
+      href={buildProductHref(product.slug, product.vendor.peerID)}
       onClick={e => {
         if (!isMobile) {
           e.preventDefault();

@@ -13,6 +13,7 @@ import {
   useUserStore,
   useWishlist,
   usePaymentMethods,
+  getProductPeerIDParam,
   isHosted,
   startCasdoorLogin,
 } from '@mobazha/core';
@@ -49,7 +50,7 @@ export default function ProductPageClient() {
   const { isTGMiniApp, isEmbeddedApp } = usePlatform();
 
   const slug = params.slug as string;
-  const peerID = searchParams.get('peerID') || undefined;
+  const peerID = getProductPeerIDParam(searchParams);
 
   const { isAuthenticated, profile: currentUserProfile } = useUserStore();
 

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { ProductCard, type ProductContractType } from '@/components/ProductCard/ProductCard';
-import { useI18n, productDataService, getImageUrl } from '@mobazha/core';
+import { useI18n, productDataService, getImageUrl, buildProductHref } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -200,7 +200,7 @@ export const MoreFromStore = memo(function MoreFromStore({
               return <React.Fragment key={product.slug}>{card}</React.Fragment>;
             }
 
-            const href = `/product/${product.slug}${vendorPeerID ? `?peerID=${vendorPeerID}` : ''}`;
+            const href = buildProductHref(product.slug, vendorPeerID);
             return (
               <Link key={product.slug} href={href} className="block">
                 {card}

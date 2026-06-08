@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { buildEmbedProductHref } from '@mobazha/core';
 import { EmbedResizer } from '../../_components/EmbedResizer';
 import { getSiteUrl } from '@/lib/siteUrl';
 
@@ -129,9 +130,7 @@ export default async function EmbedProductPage({
   const vendorName = vendorID?.handle || '';
   const vendorPeerID = peerID || vendorID?.peerID || '';
 
-  const productUrl = vendorPeerID
-    ? `${siteUrl}/product/${slug}?peerID=${vendorPeerID}&utm_source=embed&utm_medium=iframe&utm_campaign=product_card`
-    : `${siteUrl}/product/${slug}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`;
+  const productUrl = buildEmbedProductHref(slug, vendorPeerID || undefined, siteUrl);
 
   const storeUrl = vendorPeerID
     ? `${siteUrl}/store/${vendorPeerID}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`

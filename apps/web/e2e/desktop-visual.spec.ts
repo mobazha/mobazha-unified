@@ -311,7 +311,7 @@ test.describe('Desktop Visual - Authenticated Main', () => {
     await ensureAuthenticated(page);
     await mockProductDetailAPI(page);
     await page.goto(
-      '/product/wireless-headphones?peer=QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P'
+      '/product/wireless-headphones?peerID=QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P'
     );
     await waitForDOMStable(page);
     await expect(page).toHaveScreenshot('desktop-authed-product-detail.png', { fullPage: true });

@@ -9,7 +9,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { FeaturedProductsProps, ProductListItem } from '@mobazha/core';
-import { productDataService, getImageUrl, useI18n, useCurrencyFormat } from '@mobazha/core';
+import {
+  productDataService,
+  getImageUrl,
+  useI18n,
+  useCurrencyFormat,
+  buildProductHref,
+} from '@mobazha/core';
 
 interface Props extends FeaturedProductsProps {
   peerId: string;
@@ -103,7 +109,7 @@ export function FeaturedProductsSection({
           {products.map(product => (
             <a
               key={product.slug}
-              href={`/product/${product.slug}?peerID=${peerId}`}
+              href={buildProductHref(product.slug, peerId)}
               className="group overflow-hidden transition-shadow hover:shadow-lg"
               style={{ borderRadius: 'var(--store-radius)' }}
             >

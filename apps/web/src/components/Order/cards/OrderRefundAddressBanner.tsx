@@ -48,6 +48,7 @@ export function OrderRefundAddressBanner({
 
         <RefundWalletCard
           compact
+          embedded
           value={refundAddress}
           onChange={setRefundAddress}
           showCexWarning={false}

@@ -3,6 +3,7 @@
 import React, { useState, useCallback, createContext, useContext, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { ProductDetailModal } from '@/components/Product';
+import { buildProductHref, getProductPeerIDParam } from '@mobazha/core';
 
 interface ProductModalState {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
 
   // 从 URL 参数计算弹框状态（直接使用派生状态，避免额外的 state 同步）
   const productSlug = searchParams.get('product');
-  const productPeerID = searchParams.get('peerID');
+  const productPeerID = getProductPeerIDParam(searchParams);
 
   // 计算弹框状态（基于 URL 参数和设备类型）
   // 直接使用 useMemo 的结果作为 modalState，避免使用 useEffect 同步导致的额外渲染
@@ -64,7 +65,7 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
       return {
         isOpen: true,
         slug: productSlug,
-        peerID: productPeerID,
+        peerID: productPeerID ?? null,
       };
     }
 
@@ -84,8 +85,7 @@ export function ProductModalProvider({ children }: { children: React.ReactNode }
 
       if (isCurrentlyMobile) {
         // 移动端：导航到商品详情页面
-        const url = peerID ? `/product/${slug}?peerID=${peerID}` : `/product/${slug}`;
-        router.push(url);
+        router.push(buildProductHref(slug, peerID));
       } else {
         // 桌面端：打开弹框，同时更新 URL
         const params = new URLSearchParams(searchParams.toString());

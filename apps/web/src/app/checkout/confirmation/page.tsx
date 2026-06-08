@@ -7,7 +7,7 @@ import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n, useCurrency, ordersApi, toMinimalUnit } from '@mobazha/core';
+import { useI18n, useCurrency, ordersApi, toMinimalUnit, buildProductHref } from '@mobazha/core';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { ShareButton } from '@/components/Share';
 import { ShieldCheck, Bell, FileSearch } from 'lucide-react';
@@ -37,10 +37,11 @@ function ConfirmationContent() {
   const fiatProviderRaw = searchParams.get('fiatProvider') || '';
   const fiatAmountRaw = searchParams.get('fiatAmount') || '';
   const vendorName = searchParams.get('vendorName') || '';
+  const vendorPeerID = searchParams.get('vendorPeerID') || '';
   const slug = searchParams.get('slug') || '';
   const totalAmount = totalRaw ? parseFloat(totalRaw) : 0;
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const productShareUrl = slug ? `${siteUrl}/product/${slug}` : '';
+  const productShareUrl = slug ? buildProductHref(slug, vendorPeerID, { baseUrl: siteUrl }) : '';
   const submitAttemptedRef = useRef(false);
 
   useEffect(() => {

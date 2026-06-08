@@ -112,6 +112,7 @@ function buildConfirmationUrl(details: OrderDetails, fiat?: FiatConfirmationCont
   if (details.items[0]?.title) url.searchParams.set('title', details.items[0].title);
   if (details.items[0]?.id) url.searchParams.set('slug', details.items[0].id);
   if (details.vendor?.name) url.searchParams.set('vendorName', details.vendor.name);
+  if (details.vendor?.peerID) url.searchParams.set('vendorPeerID', details.vendor.peerID);
   if (fiat?.providerID) {
     url.searchParams.set('fiatProvider', fiat.providerID);
     if (typeof fiat.amount === 'number' && Number.isFinite(fiat.amount) && fiat.amount > 0) {

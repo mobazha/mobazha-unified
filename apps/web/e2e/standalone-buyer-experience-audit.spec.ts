@@ -71,7 +71,7 @@ test.describe('Buyer Experience Audit (375x667)', () => {
         .getAttribute('href')
         .then(h => h?.split('/product/')[1]?.split('?')[0])
         .catch(() => null);
-      if (slug) await page.goto(`/product/${slug}?peer=${peerId}`);
+      if (slug) await page.goto(`/product/${slug}?peerID=${peerId}`);
       else await page.goto('/store/12D3KooWDa4RrKQvk3RHMWfwYHarmAo7nR63KZDp3raGFh5uAiHH');
       await waitForPageStable(page);
       const link = page.locator('a[href*="/product/"]').first();

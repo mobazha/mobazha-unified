@@ -9,6 +9,7 @@ import {
   productNeedsSupplyAttention,
   isBulkRestockEligible,
   isBulkImportKeysEligible,
+  buildProductHref,
 } from '@mobazha/core';
 import { productDataService } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
@@ -64,6 +65,7 @@ type SupplyFilter = 'all' | 'needs_attention';
 
 interface ProductActionsProps {
   slug: string;
+  peerID?: string;
   canRestock?: boolean;
   canImportKeys?: boolean;
   onRestock?: () => void;
@@ -74,6 +76,7 @@ interface ProductActionsProps {
 
 function ProductActions({
   slug,
+  peerID,
   canRestock,
   canImportKeys,
   onRestock,
@@ -92,7 +95,7 @@ function ProductActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={() => window.open(`/product/${slug}`, '_blank')}>
+        <DropdownMenuItem onClick={() => window.open(buildProductHref(slug, peerID), '_blank')}>
           <Eye className="mr-2 h-4 w-4" /> {t('admin.products.preview')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push(`/listing/edit/${slug}?from=admin`)}>
@@ -275,6 +278,7 @@ export default function AdminProductsPage() {
       const ctx = supplyContextFor(product);
       return {
         slug: product.slug,
+        peerID: product.vendorPeerID,
         canRestock: supplyAvailabilityEnabled && isBulkRestockEligible(ctx),
         canImportKeys: supplyAvailabilityEnabled && isBulkImportKeysEligible(ctx),
         onRestock: () => setRestockTargets([{ slug: product.slug, title: product.title }]),

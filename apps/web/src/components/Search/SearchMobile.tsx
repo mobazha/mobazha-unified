@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { useSearch } from '@/hooks/useSearch';
 import type { DisplayProduct, SearchUser } from '@/hooks/useSearch';
+import { buildProductHref } from '@mobazha/core';
 
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -240,10 +241,7 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
     <>
       <div className="grid grid-cols-2 gap-2">
         {search.products.map((product: DisplayProduct) => (
-          <Link
-            key={product.id}
-            href={`/product/${product.slug}${product.vendor.peerID ? `?peerID=${product.vendor.peerID}` : ''}`}
-          >
+          <Link key={product.id} href={buildProductHref(product.slug, product.vendor.peerID)}>
             <ProductCard
               title={product.title}
               imageUrl={product.image}

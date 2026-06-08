@@ -43,6 +43,8 @@ import {
   productDataService,
   convertProductToFormData,
   DEFAULT_LOCAL_CURRENCY,
+  useUserStore,
+  buildProductHref,
 } from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile, ListingFormData } from '@mobazha/core';
 
@@ -126,6 +128,7 @@ function CreateListingContent() {
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { profile: currentUserProfile } = useUserStore();
   const { toast } = useToast();
 
   // URL 参数
@@ -454,7 +457,9 @@ function CreateListingContent() {
             <div className="flex flex-col gap-3 mt-4">
               <Button
                 onClick={() => {
-                  router.push(`/product/${publishSuccessSlug}`);
+                  if (publishSuccessSlug) {
+                    router.push(buildProductHref(publishSuccessSlug, currentUserProfile?.peerID));
+                  }
                   setPublishSuccessSlug(null);
                 }}
                 className="w-full"
@@ -965,7 +970,9 @@ function CreateListingContent() {
           <div className="flex flex-col gap-3 mt-4">
             <Button
               onClick={() => {
-                router.push(`/product/${publishSuccessSlug}`);
+                if (publishSuccessSlug) {
+                  router.push(buildProductHref(publishSuccessSlug, currentUserProfile?.peerID));
+                }
                 setPublishSuccessSlug(null);
               }}
               className="w-full"

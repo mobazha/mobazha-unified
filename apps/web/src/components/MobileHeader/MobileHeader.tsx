@@ -13,6 +13,7 @@ import {
   useStorefrontProfile,
   useUserContext,
   parseScanResult,
+  buildProductHref,
   type AddressValidator,
 } from '@mobazha/core';
 import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
@@ -83,7 +84,7 @@ export const MobileHeader: React.FC = () => {
         router.push(`/store/${parsed.peerID}`);
         break;
       case 'listing':
-        router.push(`/product/${parsed.slug}?peerID=${encodeURIComponent(parsed.peerID)}`);
+        router.push(buildProductHref(parsed.slug, parsed.peerID, { includePeerID: true }));
         break;
       case 'payment':
         try {

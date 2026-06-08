@@ -15,6 +15,7 @@ import {
   getImageUrl,
   useI18n,
   useCurrencyFormat,
+  buildProductHref,
 } from '@mobazha/core';
 
 interface Props extends ProductGridProps {
@@ -88,7 +89,7 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
           {filtered.map(product => (
             <a
               key={product.slug}
-              href={`/product/${product.slug}?peerID=${peerId}`}
+              href={buildProductHref(product.slug, peerId)}
               className="group overflow-hidden border border-border transition-shadow hover:shadow-lg"
               style={{ borderRadius: 'var(--store-radius)' }}
               onMouseEnter={() => prefetch(product.slug, peerId)}
