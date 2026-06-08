@@ -521,6 +521,9 @@ export const ja: PartialTranslationResource = {
       'これは即時RWAスワップです。確認後、支払いはすぐにトークンシェアと交換されます。',
     rwaConfirmRequiredHint:
       'この取引には販売者の確認が必要です。販売者が確認するまで支払いはロックされます。',
+    rwaNotSupported: 'RWAトークンのチェックアウトは現在ご利用いただけません。',
+    tronNotSupported:
+      'TRONでのお支払いは現在ご利用いただけません。別の支払い方法をお選びください。',
     loadFailed: 'レジを読み込めません',
     loadFailedDesc: '注文の準備中に問題が発生しました。後でもう一度お試しください。',
     nextStepsTitle: '次のステップ',
@@ -901,6 +904,18 @@ export const ja: PartialTranslationResource = {
       item: '商品',
       price: '価格',
       thankYou: 'ご注文ありがとうございます',
+    },
+    refundAddress: {
+      bannerTitle: '返金ウォレットを追加',
+      bannerDesc:
+        'この注文は暗号資産で支払われています。キャンセル、紛争、過払い時の返金先を入力してください。',
+      save: '返金ウォレットを保存',
+      savedTitle: '返金ウォレットを保存しました',
+      savedDesc: 'この注文の返金はこのアドレスに送られます。',
+      requiredTitle: '返金ウォレットが必要です',
+      requiredDesc: 'キャンセルや紛争を開始する前に、返金ウォレットを保存してください。',
+      paymentCoinRequired:
+        '支払い方法の準備ができていません。注文を更新してから再度お試しください。',
     },
     actions: {
       pay: '今すぐ支払う',
@@ -2343,6 +2358,10 @@ export const ja: PartialTranslationResource = {
     verified: '確認済み',
     noOrderID: '注文IDが提供されていません',
     loadOrderFailed: '注文詳細の読み込みに失敗しました',
+    rwaNotSupported:
+      'RWAトークンのお支払いは現在ご利用いただけません。出品者にお問い合わせください。',
+    tronNotSupported:
+      'TRONでのお支払いは現在ご利用いただけません。別の支払い方法をお選びください。',
     errorTitle: '注文を読み込めません',
     noOrderData: '注文データがありません',
     paymentSummary: '支払い概要',
@@ -2359,6 +2378,16 @@ export const ja: PartialTranslationResource = {
     success: '支払い成功！',
     failed: '支払い失敗: ',
     securityNote: 'マルチシグエスクロー保護による安全な支払い',
+    refundDestination: {
+      title: '返金先',
+      desc: '注文がキャンセル、紛争、または過払いになった場合、ここに返金されます。',
+    },
+    custodialPayment: {
+      label: '取引所から支払う',
+      desc: '取引所のアドレスは通常返金を受け取れません。チェックを入れ、下に個人ウォレットのアドレスを入力してください。',
+      requiredTitle: '返金ウォレットが必要です',
+      requiredDesc: '取引所から支払う前に、ご自身が管理する返金ウォレットを追加してください。',
+    },
     connectWalletFirst: 'まずウォレットを接続してください',
     noPaymentAddress: '支払いアドレスがありません',
     noPaymentInstructions: '支払い指示の取得に失敗しました',
@@ -2409,7 +2438,8 @@ export const ja: PartialTranslationResource = {
     amountToSend: '送金額',
     paymentAddressLabel: '支払いアドレス',
     copyPaymentURI: '支払いURIをコピー',
-    waitingForPayment: '支払い確認を待っています...',
+    waitingForPayment: 'ウォレットで送金を完了してください',
+    paymentDetectedHint: '送金を検出しました — 確認中、通常数分かかります',
     expiresAt: '{{time}} に失効',
     paymentExpired: '支払い期限切れ',
     paymentExpiredDesc:

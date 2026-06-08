@@ -8,6 +8,7 @@ interface RefundWalletCardProps {
   onChange: (value: string) => void;
   connectedAddress?: string | null;
   compact?: boolean;
+  showCexWarning?: boolean;
 }
 
 export function RefundWalletCard({
@@ -15,6 +16,7 @@ export function RefundWalletCard({
   onChange,
   connectedAddress,
   compact = false,
+  showCexWarning = true,
 }: RefundWalletCardProps) {
   const { t } = useI18n();
   const padding = compact ? 'p-4' : 'p-6';
@@ -60,9 +62,11 @@ export function RefundWalletCard({
             </button>
           )}
 
-          <p className="rounded-lg border border-warning/20 bg-warning/8 px-3 py-2 text-xs text-warning">
-            {t('checkout.refundWalletCexWarning')}
-          </p>
+          {showCexWarning && (
+            <p className="rounded-lg border border-warning/20 bg-warning/8 px-3 py-2 text-xs text-warning">
+              {t('checkout.refundWalletCexWarning')}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

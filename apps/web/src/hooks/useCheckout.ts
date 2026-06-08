@@ -479,6 +479,7 @@ export function useCheckout(): UseCheckoutReturn {
   }, [checkoutItems, selectedShipping]);
 
   const canSubmit =
+    !isRwaToken &&
     (!needsShippingAddress || !!selectedAddress) &&
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
@@ -666,6 +667,13 @@ export function useCheckout(): UseCheckoutReturn {
       });
       return;
     }
+    if (isRwaToken) {
+      toast({
+        title: t('checkout.rwaNotSupported'),
+        variant: 'destructive',
+      });
+      return;
+    }
     if (needsShippingAddress && !selectedAddress) {
       toast({ title: t('checkout.selectAddressFirst'), variant: 'destructive' });
       return;
@@ -755,20 +763,6 @@ export function useCheckout(): UseCheckoutReturn {
         if (first.image) paymentUrl.searchParams.set('image', first.image);
       }
 
-      if (isRwaToken) {
-        paymentUrl.searchParams.set('isRwaToken', 'true');
-        if (rwaTradeMode !== undefined) {
-          paymentUrl.searchParams.set('rwaTradeMode', String(rwaTradeMode));
-        }
-        const rwaItem = checkoutItems.find(i => i.contractType === 'RWA_TOKEN');
-        if (rwaItem?.rwaEscrowTimeoutSeconds) {
-          paymentUrl.searchParams.set('escrowTimeout', String(rwaItem.rwaEscrowTimeoutSeconds));
-        }
-        if (rwaItem?.cryptoListingCurrencyCode) {
-          paymentUrl.searchParams.set('tokenCode', rwaItem.cryptoListingCurrencyCode);
-        }
-      }
-
       router.push(paymentUrl.toString());
     } catch (error) {
       console.error('Create order failed:', error);
@@ -788,7 +782,6 @@ export function useCheckout(): UseCheckoutReturn {
     t,
     toast,
     isRwaToken,
-    rwaTradeMode,
     needsShippingAddress,
     selectedShipping,
     hasAllShippingSelected,

@@ -16,6 +16,7 @@ import {
   orderUsesMonitoredBackendSettlement,
   orderUsesCancelableBackendSettlement,
   buildAcceptDisputeSettlementContext,
+  isRefundAddressRequiredError,
   type AcceptPayoutPhase,
   type CompletePhase,
   type DigitalDeliveryStatus,
@@ -96,6 +97,14 @@ export interface UseOrderDetailPageReturn {
   copyOrderId: () => Promise<void>;
   copyContract: () => Promise<void>;
 
+  buyerRefundAddress: string;
+  buyerNeedsRefundAddress: boolean;
+  showRefundDestination: boolean;
+  isSavingRefundAddress: boolean;
+  saveBuyerRefundAddress: (address: string) => Promise<boolean>;
+  ensureBuyerRefundAddress: () => boolean;
+  notifyOrderActionError: (err: Error) => void;
+
   acceptOrderProps: {
     orderId: string;
     blockchain?: string;
@@ -143,12 +152,22 @@ export function useOrderDetailPage(
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { displayOrder, coreOrder, latestSettlementAction, isLoading, error, refetch } =
-    useOrderDetail(orderId, viewingContext);
+  const {
+    displayOrder,
+    coreOrder,
+    latestSettlementAction,
+    isLoading,
+    error,
+    refetch,
+    buyerRefundAddress,
+    buyerNeedsRefundAddress,
+    showRefundDestination,
+  } = useOrderDetail(orderId, viewingContext);
 
   const currentUser = useUserStore(state => state.profile);
   const currentUserPeerID = currentUser?.peerID || null;
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isSavingRefundAddress, setIsSavingRefundAddress] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showConfirmReceiptDialog, setShowConfirmReceiptDialog] = useState(false);
@@ -260,6 +279,84 @@ export function useOrderDetailPage(
         paymentCoin,
       }),
     [paymentProductMode, paymentEscrowType, paymentCoin]
+  );
+
+  const ensureBuyerRefundAddress = useCallback((): boolean => {
+    if (!buyerNeedsRefundAddress) return true;
+    toast({
+      title: t('order.refundAddress.requiredTitle'),
+      description: t('order.refundAddress.requiredDesc'),
+      variant: 'destructive',
+    });
+    return false;
+  }, [buyerNeedsRefundAddress, t, toast]);
+
+  const notifyOrderActionError = useCallback(
+    (err: Error) => {
+      if (isRefundAddressRequiredError(err)) {
+        void refetch();
+        toast({
+          title: t('order.refundAddress.requiredTitle'),
+          description: t('order.refundAddress.requiredDesc'),
+          variant: 'destructive',
+        });
+        return;
+      }
+      toast({
+        title: t('order.actions.error'),
+        description: err.message,
+        variant: 'destructive',
+      });
+    },
+    [refetch, t, toast]
+  );
+
+  const saveBuyerRefundAddress = useCallback(
+    async (address: string): Promise<boolean> => {
+      const trimmed = address.trim();
+      if (!trimmed) {
+        toast({
+          title: t('checkout.refundWalletRequired'),
+          description: t('checkout.refundWalletRequiredDesc'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      if (!paymentCoin) {
+        toast({
+          title: t('order.actions.error'),
+          description: t('order.refundAddress.paymentCoinRequired'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      setIsSavingRefundAddress(true);
+      try {
+        await ordersApi.setOrderRefundAddress({
+          orderId,
+          refundAddress: trimmed,
+          paymentCoin,
+          vendorPeerID: displayOrder?.vendor?.peerID,
+        });
+        toast({
+          title: t('order.refundAddress.savedTitle'),
+          description: t('order.refundAddress.savedDesc'),
+        });
+        refetch();
+        return true;
+      } catch (err) {
+        toast({
+          title: t('order.actions.error'),
+          description: err instanceof Error ? err.message : t('order.actions.operationFailed'),
+          variant: 'destructive',
+        });
+        return false;
+      } finally {
+        setIsSavingRefundAddress(false);
+      }
+    },
+    [orderId, paymentCoin, displayOrder?.vendor?.peerID, refetch, t, toast]
   );
 
   const counterparty = useMemo((): {
@@ -590,6 +687,14 @@ export function useOrderDetailPage(
       actionType: OrderConfirmType,
       refundParams?: { amount?: number; currency?: string; reason?: string }
     ): Promise<boolean> => {
+      if (
+        buyerNeedsRefundAddress &&
+        displayOrder?.userRole === 'buyer' &&
+        (actionType === 'cancel' || actionType === 'refund')
+      ) {
+        if (!ensureBuyerRefundAddress()) return false;
+      }
+
       setIsActionLoading(true);
       let succeeded = false;
 
@@ -600,11 +705,7 @@ export function useOrderDetailPage(
         setTimeout(() => refetch(), 500);
       };
       const onError = (err: Error) => {
-        toast({
-          title: t('order.actions.error'),
-          description: err.message,
-          variant: 'destructive',
-        });
+        notifyOrderActionError(err);
       };
 
       try {
@@ -689,6 +790,9 @@ export function useOrderDetailPage(
       toast,
       usesMonitoredBackendSettlement,
       usesCancelableBackendSettlement,
+      buyerNeedsRefundAddress,
+      ensureBuyerRefundAddress,
+      notifyOrderActionError,
     ]
   );
 
@@ -1044,6 +1148,13 @@ export function useOrderDetailPage(
     closeReviewDialog,
     copyOrderId,
     copyContract,
+    buyerRefundAddress,
+    buyerNeedsRefundAddress,
+    showRefundDestination,
+    isSavingRefundAddress,
+    saveBuyerRefundAddress,
+    ensureBuyerRefundAddress,
+    notifyOrderActionError,
     acceptOrderProps,
     shipOrderProps,
     sellerDigitalDelivery,

@@ -522,6 +522,9 @@ export const pt: PartialTranslationResource = {
       'Esta é uma troca RWA instantânea. Seu pagamento será trocado por participações de token imediatamente após a confirmação.',
     rwaConfirmRequiredHint:
       'Esta transação requer confirmação do vendedor. Seu pagamento ficará bloqueado até o vendedor confirmar.',
+    rwaNotSupported: 'O checkout de tokens RWA ainda não está disponível.',
+    tronNotSupported:
+      'Pagamentos com TRON ainda não estão disponíveis. Escolha outro método de pagamento.',
     loadFailed: 'Não foi possível carregar o checkout',
     loadFailedDesc: 'Algo deu errado ao preparar seu pedido. Tente novamente mais tarde.',
     nextStepsTitle: 'O que acontece a seguir',
@@ -909,6 +912,18 @@ export const pt: PartialTranslationResource = {
       item: 'Item',
       price: 'Preço',
       thankYou: 'Obrigado pelo seu pedido!',
+    },
+    refundAddress: {
+      bannerTitle: 'Adicionar carteira de reembolso',
+      bannerDesc:
+        'Este pedido foi pago com cripto. Informe para onde enviar reembolsos em caso de cancelamento, disputa ou pagamento a mais.',
+      save: 'Salvar carteira de reembolso',
+      savedTitle: 'Carteira de reembolso salva',
+      savedDesc: 'Usaremos este endereço para reembolsos deste pedido.',
+      requiredTitle: 'Carteira de reembolso obrigatória',
+      requiredDesc: 'Adicione uma carteira de reembolso antes de cancelar ou abrir uma disputa.',
+      paymentCoinRequired:
+        'O método de pagamento ainda não está pronto. Atualize o pedido e tente novamente.',
     },
     actions: {
       pay: 'Pagar agora',
@@ -2377,6 +2392,10 @@ export const pt: PartialTranslationResource = {
     verified: 'Verificado',
     noOrderID: 'Nenhum ID de pedido fornecido',
     loadOrderFailed: 'Falha ao carregar detalhes do pedido',
+    rwaNotSupported:
+      'Pagamentos com tokens RWA ainda não estão disponíveis. Entre em contato com o vendedor.',
+    tronNotSupported:
+      'Pagamentos com TRON ainda não estão disponíveis. Escolha outro método de pagamento.',
     errorTitle: 'Não foi possível carregar o pedido',
     noOrderData: 'Sem dados do pedido',
     paymentSummary: 'Resumo do pagamento',
@@ -2393,6 +2412,17 @@ export const pt: PartialTranslationResource = {
     success: 'Pagamento bem-sucedido!',
     failed: 'Pagamento falhou: ',
     securityNote: 'Pagamento seguro com proteção de custódia multi-assinatura',
+    refundDestination: {
+      title: 'Destino do reembolso',
+      desc: 'Se o pedido for cancelado, disputado ou pago em excesso, os fundos serão enviados para cá.',
+    },
+    custodialPayment: {
+      label: 'Estou pagando de uma exchange',
+      desc: 'Endereços de exchange geralmente não recebem reembolsos. Marque esta opção e adicione sua carteira pessoal abaixo.',
+      requiredTitle: 'Carteira de reembolso obrigatória',
+      requiredDesc:
+        'Adicione uma carteira de reembolso que você controla antes de pagar via exchange.',
+    },
     connectWalletFirst: 'Por favor, conecte sua carteira primeiro',
     noPaymentAddress: 'Nenhum endereço de pagamento disponível',
     noPaymentInstructions: 'Falha ao obter instruções de pagamento',
@@ -2446,7 +2476,8 @@ export const pt: PartialTranslationResource = {
     amountToSend: 'Amount to send',
     paymentAddressLabel: 'Payment address',
     copyPaymentURI: 'Copy Payment URI',
-    waitingForPayment: 'Waiting for payment confirmation...',
+    waitingForPayment: 'Conclua a transferência na sua carteira',
+    paymentDetectedHint: 'Transferência detectada — confirmando, geralmente leva alguns minutos',
     expiresAt: 'Expires at {{time}}',
     paymentExpired: 'Payment Expired',
     paymentExpiredDesc: 'This payment address has expired. Please request a new one to continue.',

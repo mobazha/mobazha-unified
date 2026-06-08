@@ -87,6 +87,7 @@ export const NODE_API = {
   ORDER_CANCEL: (orderId: string) => `/orders/${orderId}/cancel`,
   ORDER_EXTEND_PROTECTION: (orderId: string) => `/orders/${orderId}/extend-protection`,
   ORDER_REFUND: (orderId: string) => `/orders/${orderId}/refund`,
+  ORDER_REFUND_ADDRESS: (orderId: string) => `/orders/${orderId}/refund-address`,
   ORDER_PAYMENT: (orderId: string) => `/orders/${orderId}/payment`,
   ORDER_PAYMENT_SESSION: (orderId: string) => `/orders/${orderId}/payment-session`,
   ORDER_RATE: (orderId: string) => `/orders/${orderId}/rate`,

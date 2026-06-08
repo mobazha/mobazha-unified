@@ -523,6 +523,8 @@ export const ru: PartialTranslationResource = {
       'Мгновенный обмен RWA. Оплата будет обменена на доли токена сразу после подтверждения.',
     rwaConfirmRequiredHint:
       'Эта сделка требует подтверждения продавца. Оплата будет заблокирована до подтверждения.',
+    rwaNotSupported: 'Оформление заказа с RWA-токенами пока недоступно.',
+    tronNotSupported: 'Оплата через TRON пока недоступна. Выберите другой способ оплаты.',
     loadFailed: 'Не удалось загрузить оформление',
     loadFailedDesc: 'Произошла ошибка при подготовке заказа. Попробуйте позже.',
     nextStepsTitle: 'Что дальше',
@@ -906,6 +908,17 @@ export const ru: PartialTranslationResource = {
       item: 'Товар',
       price: 'Цена',
       thankYou: 'Спасибо за заказ!',
+    },
+    refundAddress: {
+      bannerTitle: 'Добавьте кошелёк для возврата',
+      bannerDesc:
+        'Заказ оплачен криптовалютой. Укажите адрес для возврата при отмене, споре или переплате.',
+      save: 'Сохранить кошелёк для возврата',
+      savedTitle: 'Кошелёк для возврата сохранён',
+      savedDesc: 'Возвраты по этому заказу будут отправлены на этот адрес.',
+      requiredTitle: 'Нужен кошелёк для возврата',
+      requiredDesc: 'Сохраните кошелёк для возврата перед отменой или открытием спора.',
+      paymentCoinRequired: 'Способ оплаты ещё не готов. Обновите заказ и попробуйте снова.',
     },
     actions: {
       pay: 'Оплатить сейчас',
@@ -2358,6 +2371,8 @@ export const ru: PartialTranslationResource = {
     verified: 'Проверено',
     noOrderID: 'ID заказа не указан',
     loadOrderFailed: 'Не удалось загрузить детали заказа',
+    rwaNotSupported: 'Оплата RWA-токенами пока недоступна. Свяжитесь с продавцом.',
+    tronNotSupported: 'Оплата через TRON пока недоступна. Выберите другой способ оплаты.',
     errorTitle: 'Невозможно загрузить заказ',
     noOrderData: 'Нет данных о заказе',
     paymentSummary: 'Сводка платежа',
@@ -2374,6 +2389,16 @@ export const ru: PartialTranslationResource = {
     success: 'Оплата успешна!',
     failed: 'Оплата не удалась: ',
     securityNote: 'Безопасная оплата с мультиподписной эскроу-защитой',
+    refundDestination: {
+      title: 'Адрес возврата',
+      desc: 'При отмене, споре или переплате средства будут отправлены сюда.',
+    },
+    custodialPayment: {
+      label: 'Я плачу с биржи',
+      desc: 'Адреса бирж обычно не могут получать возвраты. Отметьте опцию и укажите ниже личный кошелёк.',
+      requiredTitle: 'Нужен адрес возврата',
+      requiredDesc: 'Добавьте кошелёк для возврата, которым вы управляете, перед оплатой с биржи.',
+    },
     connectWalletFirst: 'Сначала подключите кошелёк',
     noPaymentAddress: 'Платёжный адрес недоступен',
     noPaymentInstructions: 'Не удалось получить инструкции по оплате',
@@ -2424,7 +2449,8 @@ export const ru: PartialTranslationResource = {
     amountToSend: 'Сумма к отправке',
     paymentAddressLabel: 'Платежный адрес',
     copyPaymentURI: 'Скопировать платежный URI',
-    waitingForPayment: 'Ожидание подтверждения оплаты...',
+    waitingForPayment: 'Завершите перевод в своём кошельке',
+    paymentDetectedHint: 'Перевод обнаружен — подтверждение, обычно занимает несколько минут',
     expiresAt: 'Истекает в {{time}}',
     paymentExpired: 'Срок оплаты истек',
     paymentExpiredDesc:

@@ -568,6 +568,8 @@ export const en: TranslationResource = {
       'This is an instant RWA swap. Your payment will be exchanged for token shares immediately after confirmation.',
     rwaConfirmRequiredHint:
       'This transaction requires seller confirmation. Your payment will be locked until the seller confirms.',
+    rwaNotSupported: 'RWA token checkout is not available yet.',
+    tronNotSupported: 'TRON payments are not available yet. Please choose another method.',
     loadFailed: 'Unable to load checkout',
     loadFailedDesc: 'Something went wrong while preparing your order. Please try again later.',
     nextStepsTitle: 'What happens next',
@@ -1116,6 +1118,17 @@ export const en: TranslationResource = {
       item: 'Item',
       price: 'Price',
       thankYou: 'Thank you for your order!',
+    },
+    refundAddress: {
+      bannerTitle: 'Add a refund wallet',
+      bannerDesc:
+        'This order is paid with crypto. Tell us where to send refunds if the order is cancelled, disputed, or overpaid.',
+      save: 'Save refund wallet',
+      savedTitle: 'Refund wallet saved',
+      savedDesc: 'We will use this address for refunds on this order.',
+      requiredTitle: 'Refund wallet required',
+      requiredDesc: 'Add a refund wallet on this order before cancelling or opening a dispute.',
+      paymentCoinRequired: 'Payment method is not ready yet. Refresh the order and try again.',
     },
     // Order actions
     actions: {
@@ -2965,6 +2978,8 @@ export const en: TranslationResource = {
     // Payment page
     noOrderID: 'No order ID provided',
     loadOrderFailed: 'Failed to load order details',
+    rwaNotSupported: 'RWA token payments are not available yet. Please contact the seller.',
+    tronNotSupported: 'TRON payments are not available yet. Please choose another payment method.',
     errorTitle: 'Unable to Load Order',
     noOrderData: 'No order data',
     paymentSummary: 'Payment Summary',
@@ -2981,6 +2996,16 @@ export const en: TranslationResource = {
     success: 'Payment successful!',
     failed: 'Payment failed',
     securityNote: 'Secure payment protection',
+    refundDestination: {
+      title: 'Refund destination',
+      desc: 'If this order is cancelled, disputed, or overpaid, funds will be sent here.',
+    },
+    custodialPayment: {
+      label: "I'm paying from an exchange",
+      desc: "Exchange addresses usually can't receive refunds. Check this and add a personal wallet address below.",
+      requiredTitle: 'Refund wallet required',
+      requiredDesc: 'Add a refund wallet you control before paying from an exchange.',
+    },
     // Transaction related
     connectWalletFirst: 'Please connect your wallet first',
     noPaymentAddress: 'No payment address available',
@@ -2993,7 +3018,8 @@ export const en: TranslationResource = {
     amountToSend: 'Amount to send',
     paymentAddressLabel: 'Payment address',
     copyPaymentURI: 'Copy Payment URI',
-    waitingForPayment: 'Waiting for payment confirmation...',
+    waitingForPayment: 'Complete the transfer in your wallet',
+    paymentDetectedHint: 'Transfer detected — confirming, usually takes a few minutes',
     observedPayments: 'Observed payments',
     observationStatus: {
       pending: 'Confirming',

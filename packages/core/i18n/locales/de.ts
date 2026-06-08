@@ -523,6 +523,9 @@ export const de: PartialTranslationResource = {
       'Dies ist ein Sofort-RWA-Tausch. Ihre Zahlung wird unmittelbar nach Bestätigung gegen Token-Anteile getauscht.',
     rwaConfirmRequiredHint:
       'Diese Transaktion erfordert Verkäuferbestätigung. Ihre Zahlung wird gesperrt, bis der Verkäufer bestätigt.',
+    rwaNotSupported: 'RWA-Token-Checkout ist derzeit nicht verfügbar.',
+    tronNotSupported:
+      'TRON-Zahlungen sind derzeit nicht verfügbar. Bitte wählen Sie eine andere Zahlungsmethode.',
     loadFailed: 'Checkout konnte nicht geladen werden',
     loadFailedDesc:
       'Beim Vorbereiten Ihrer Bestellung ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.',
@@ -918,6 +921,19 @@ export const de: PartialTranslationResource = {
       item: 'Artikel',
       price: 'Preis',
       thankYou: 'Vielen Dank für Ihre Bestellung!',
+    },
+    refundAddress: {
+      bannerTitle: 'Rückerstattungs-Wallet hinzufügen',
+      bannerDesc:
+        'Diese Bestellung wurde mit Krypto bezahlt. Geben Sie an, wohin Rückerstattungen bei Storno, Streit oder Überzahlung gehen sollen.',
+      save: 'Rückerstattungs-Wallet speichern',
+      savedTitle: 'Rückerstattungs-Wallet gespeichert',
+      savedDesc: 'Für Rückerstattungen zu dieser Bestellung verwenden wir diese Adresse.',
+      requiredTitle: 'Rückerstattungs-Wallet erforderlich',
+      requiredDesc:
+        'Speichern Sie zuerst eine Rückerstattungs-Wallet, bevor Sie stornieren oder einen Streit eröffnen.',
+      paymentCoinRequired:
+        'Die Zahlungsmethode ist noch nicht bereit. Aktualisieren Sie die Bestellung und versuchen Sie es erneut.',
     },
     actions: {
       pay: 'Jetzt bezahlen',
@@ -2397,6 +2413,10 @@ export const de: PartialTranslationResource = {
     verified: 'Verifiziert',
     noOrderID: 'Keine Bestell-ID angegeben',
     loadOrderFailed: 'Bestelldetails konnten nicht geladen werden',
+    rwaNotSupported:
+      'RWA-Token-Zahlungen sind derzeit nicht verfügbar. Bitte kontaktieren Sie den Verkäufer.',
+    tronNotSupported:
+      'TRON-Zahlungen sind derzeit nicht verfügbar. Bitte wählen Sie eine andere Zahlungsmethode.',
     errorTitle: 'Bestellung konnte nicht geladen werden',
     noOrderData: 'Keine Bestelldaten',
     paymentSummary: 'Zahlungsübersicht',
@@ -2413,6 +2433,17 @@ export const de: PartialTranslationResource = {
     success: 'Zahlung erfolgreich!',
     failed: 'Zahlung fehlgeschlagen: ',
     securityNote: 'Sichere Zahlung mit Multi-Sig Treuhandschutz',
+    refundDestination: {
+      title: 'Rückerstattungsziel',
+      desc: 'Bei Storno, Streit oder Überzahlung senden wir die Mittel an diese Adresse.',
+    },
+    custodialPayment: {
+      label: 'Ich zahle über eine Börse',
+      desc: 'Börsenadressen können meist keine Rückerstattungen empfangen. Aktivieren Sie die Option und tragen Sie unten Ihre persönliche Wallet-Adresse ein.',
+      requiredTitle: 'Rückerstattungs-Wallet erforderlich',
+      requiredDesc:
+        'Hinterlegen Sie vor der Zahlung über eine Börse eine Rückerstattungs-Wallet, die Sie kontrollieren.',
+    },
     connectWalletFirst: 'Bitte verbinden Sie zuerst Ihr Wallet',
     noPaymentAddress: 'Keine Zahlungsadresse verfügbar',
     noPaymentInstructions: 'Zahlungsanweisungen konnten nicht abgerufen werden',
@@ -2469,7 +2500,8 @@ export const de: PartialTranslationResource = {
     amountToSend: 'Amount to send',
     paymentAddressLabel: 'Payment address',
     copyPaymentURI: 'Copy Payment URI',
-    waitingForPayment: 'Waiting for payment confirmation...',
+    waitingForPayment: 'Schließen Sie die Überweisung in Ihrer Wallet ab',
+    paymentDetectedHint: 'Überweisung erkannt — Bestätigung läuft, dauert meist einige Minuten',
     expiresAt: 'Expires at {{time}}',
     paymentExpired: 'Payment Expired',
     paymentExpiredDesc: 'This payment address has expired. Please request a new one to continue.',

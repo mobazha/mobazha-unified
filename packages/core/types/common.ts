@@ -50,7 +50,8 @@ export type ApiErrorCode =
   | 'INTERNAL_ERROR'
   | 'SERVICE_UNAVAILABLE'
   | 'RATE_LIMITED'
-  | 'PROVIDER_ERROR';
+  | 'PROVIDER_ERROR'
+  | 'REFUND_ADDRESS_REQUIRED';
 
 /**
  * @deprecated Use DataEnvelope<T> instead. Kept for backward compatibility during migration.

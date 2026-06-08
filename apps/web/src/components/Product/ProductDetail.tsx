@@ -369,6 +369,7 @@ export function ProductDetail({
 
   const handleAddToCart = useCallback(() => {
     if (!product) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN') return;
 
     const vendorPeerID = product.vendorID?.peerID || peerID || currentUserProfile?.peerID;
     if (!vendorPeerID) return;
@@ -403,6 +404,7 @@ export function ProductDetail({
   // 立即购买
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN') return;
 
     // 构建购买参数并导航到 checkout 页面
     const checkoutParams = new URLSearchParams({
@@ -448,7 +450,12 @@ export function ProductDetail({
           : `${t('product.addToCart')} - ${tgPriceDisplay}`;
     cta.setText(text);
     cta.setOnClick(shouldShow ? handleNativeAddToCart : undefined);
-    cta.setDisabled(tgStock === 0 || isStorePaused);
+    cta.setDisabled(
+      !shouldShow ||
+        tgStock === 0 ||
+        isStorePaused ||
+        product?.metadata?.contractType === 'RWA_TOKEN'
+    );
     return () => {
       cta.setText(undefined);
     };
@@ -571,7 +578,9 @@ export function ProductDetail({
   const tags = product.item.tags || [];
   const category = product.item.productType || '';
 
-  const purchaseDisabled = isOffline || stock === 0 || !paymentAvailable || isStorePaused;
+  const isRwaToken = product?.metadata?.contractType === 'RWA_TOKEN';
+  const purchaseDisabled =
+    isOffline || stock === 0 || !paymentAvailable || isStorePaused || isRwaToken;
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">

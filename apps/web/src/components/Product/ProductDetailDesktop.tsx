@@ -82,6 +82,7 @@ export function ProductDetailDesktop({
     acceptedCurrencies,
     tags,
     category,
+    isRwaToken,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
@@ -183,7 +184,8 @@ export function ProductDetailDesktop({
     );
   }
 
-  const purchaseDisabled = isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable);
+  const purchaseDisabled =
+    isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable) || isRwaToken;
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
@@ -714,7 +716,7 @@ export function ProductDetailDesktop({
                   (stock === 0 || !paymentAvailable) && 'border-destructive/30 bg-destructive/5'
                 )}
               >
-                {!paymentAvailable && stock > 0 && (
+                {!paymentAvailable && stock > 0 && !isRwaToken && (
                   <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
                     <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
                     <div>
@@ -725,6 +727,12 @@ export function ProductDetailDesktop({
                         {t('payment.paymentUnavailableDesc')}
                       </p>
                     </div>
+                  </div>
+                )}
+                {isRwaToken && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+                    <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted-foreground">{t('payment.rwaNotSupported')}</p>
                   </div>
                 )}
                 {stock === 0 && (
@@ -851,6 +859,8 @@ export function ProductDetailDesktop({
                       t('product.sellerOffline', { defaultValue: 'Seller Offline' })
                     ) : !paymentAvailable ? (
                       t('payment.paymentUnavailable')
+                    ) : isRwaToken ? (
+                      t('payment.rwaNotSupported')
                     ) : stock === 0 ? (
                       t('product.outOfStock')
                     ) : (

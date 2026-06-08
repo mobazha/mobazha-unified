@@ -95,6 +95,7 @@ export interface UseProductDetailReturn {
   acceptedCurrencies: string[];
   tags: string[];
   category: string;
+  isRwaToken: boolean;
   rwaTradeMode: string | undefined;
   rwaEscrowTimeoutSeconds: number;
   paymentAvailable: boolean;
@@ -387,6 +388,7 @@ export function useProductDetail({
     vendorCrypto.length > 0 ||
     vendorActiveFiat.length > 0;
 
+  const isRwaToken = product?.metadata?.contractType === 'RWA_TOKEN';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rwaTradeMode = (product?.metadata as any)?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
@@ -519,6 +521,7 @@ export function useProductDetail({
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (isRwaToken) return;
 
     const thumbnail = selectedSku?.images?.[0] ??
       product.item?.images?.[0] ?? {
@@ -563,10 +566,12 @@ export function useProductDetail({
     selectedOptions,
     openCartDrawer,
     haptic,
+    isRwaToken,
   ]);
 
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (isRwaToken) return;
 
     // Outpost mode: add to guest cart and navigate to guest checkout
     if (isOutpostMode()) {
@@ -637,6 +642,7 @@ export function useProductDetail({
     onClose,
     router,
     addGuestCartItem,
+    isRwaToken,
   ]);
 
   const handleCopyLink = useCallback(async () => {
@@ -686,6 +692,7 @@ export function useProductDetail({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isRwaToken,
     hasVariants,
     selectedOptions,
     selectedSku,

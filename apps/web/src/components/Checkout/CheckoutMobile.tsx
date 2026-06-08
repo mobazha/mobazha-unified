@@ -53,7 +53,6 @@ export function CheckoutMobile({ checkout }: Props) {
     hasMixedContractTypes,
     hasMissingContractType,
     isRwaToken,
-    rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,
     hasShippingPricingIssue,
@@ -159,35 +158,9 @@ export function CheckoutMobile({ checkout }: Props) {
           <div className="space-y-4">
             {/* RWA hint */}
             {isRwaToken && (
-              <Card className="border-primary/20 bg-primary/8">
+              <Card className="border-warning/30 bg-warning/8">
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-4 h-4 text-primary"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-primary">
-                        {t('checkout.rwaTransaction')}
-                      </h3>
-                      <p className="text-xs text-primary mt-0.5">
-                        {rwaTradeMode === 1
-                          ? t('checkout.rwaConfirmRequiredHint')
-                          : t('checkout.rwaInstantHint')}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-warning">{t('checkout.rwaNotSupported')}</p>
                 </CardContent>
               </Card>
             )}

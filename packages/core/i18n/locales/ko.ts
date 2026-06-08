@@ -517,6 +517,8 @@ export const ko: PartialTranslationResource = {
     rwaInstantHint: '즉시 RWA 스왑입니다. 확인 후 결제가 토큰 지분으로 즉시 교환됩니다.',
     rwaConfirmRequiredHint:
       '이 거래는 판매자 확인이 필요합니다. 결제는 판매자가 확인할 때까지 보관됩니다.',
+    rwaNotSupported: 'RWA 토큰 결제는 아직 지원되지 않습니다.',
+    tronNotSupported: 'TRON 결제는 아직 지원되지 않습니다. 다른 결제 수단을 선택해 주세요.',
     loadFailed: '결제 정보를 불러올 수 없습니다',
     loadFailedDesc: '주문 준비 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.',
     nextStepsTitle: '다음 단계',
@@ -898,6 +900,18 @@ export const ko: PartialTranslationResource = {
       item: '품목',
       price: '가격',
       thankYou: '주문해 주셔서 감사합니다!',
+    },
+    refundAddress: {
+      bannerTitle: '환불 지갑 추가',
+      bannerDesc:
+        '이 주문은 암호화폐로 결제되었습니다. 취소, 분쟁, 초과 결제 시 환불받을 지갑 주소를 입력하세요.',
+      save: '환불 지갑 저장',
+      savedTitle: '환불 지갑이 저장되었습니다',
+      savedDesc: '이 주문의 환불은 이 주소로 전송됩니다.',
+      requiredTitle: '환불 지갑이 필요합니다',
+      requiredDesc: '주문 취소 또는 분쟁을 시작하기 전에 환불 지갑을 저장하세요.',
+      paymentCoinRequired:
+        '결제 수단이 아직 준비되지 않았습니다. 주문을 새로고침한 후 다시 시도하세요.',
     },
     actions: {
       pay: '지금 결제',
@@ -2326,6 +2340,8 @@ export const ko: PartialTranslationResource = {
     verified: '인증됨',
     noOrderID: '주문 ID가 제공되지 않았습니다',
     loadOrderFailed: '주문 세부 정보를 불러오지 못했습니다',
+    rwaNotSupported: 'RWA 토큰 결제는 아직 지원되지 않습니다. 판매자에게 문의해 주세요.',
+    tronNotSupported: 'TRON 결제는 아직 지원되지 않습니다. 다른 결제 수단을 선택해 주세요.',
     errorTitle: '주문을 불러올 수 없습니다',
     noOrderData: '주문 데이터가 없습니다',
     paymentSummary: '결제 요약',
@@ -2342,6 +2358,16 @@ export const ko: PartialTranslationResource = {
     success: '결제 성공!',
     failed: '결제 실패: ',
     securityNote: '멀티시그 에스크로 보호로 안전한 결제',
+    refundDestination: {
+      title: '환불 주소',
+      desc: '주문 취소, 분쟁 또는 초과 결제 시 이 주소로 환불됩니다.',
+    },
+    custodialPayment: {
+      label: '거래소로 결제합니다',
+      desc: '거래소 주소는 보통 환불을 받을 수 없습니다. 선택 후 아래에 개인 지갑 주소를 입력하세요.',
+      requiredTitle: '환불 지갑 필요',
+      requiredDesc: '거래소로 결제하기 전에 본인이 통제하는 환불 지갑을 추가하세요.',
+    },
     connectWalletFirst: '먼저 지갑을 연결해 주세요',
     noPaymentAddress: '사용 가능한 결제 주소가 없습니다',
     noPaymentInstructions: '결제 안내를 가져오지 못했습니다',
@@ -2392,7 +2418,8 @@ export const ko: PartialTranslationResource = {
     amountToSend: '보낼 금액',
     paymentAddressLabel: '결제 주소',
     copyPaymentURI: '결제 URI 복사',
-    waitingForPayment: '결제 확인을 기다리는 중...',
+    waitingForPayment: '지갑에서 송금을 완료해 주세요',
+    paymentDetectedHint: '송금이 감지되었습니다 — 확인 중이며 보통 몇 분 걸립니다',
     expiresAt: '{{time}}에 만료',
     paymentExpired: '결제 만료',
     paymentExpiredDesc: '이 결제 주소는 만료되었습니다. 계속하려면 새 주소를 요청하세요.',

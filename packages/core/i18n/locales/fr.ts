@@ -523,6 +523,9 @@ export const fr: PartialTranslationResource = {
       'Échange RWA instantané. Votre paiement sera échangé contre des parts de token immédiatement après confirmation.',
     rwaConfirmRequiredHint:
       "Cette transaction nécessite la confirmation du vendeur. Votre paiement sera verrouillé jusqu'à confirmation.",
+    rwaNotSupported: "Le paiement de jetons RWA n'est pas encore disponible.",
+    tronNotSupported:
+      'Les paiements TRON ne sont pas encore disponibles. Veuillez choisir un autre mode de paiement.',
     loadFailed: 'Impossible de charger le paiement',
     loadFailedDesc:
       "Une erreur s'est produite lors de la préparation de votre commande. Veuillez réessayer plus tard.",
@@ -912,6 +915,19 @@ export const fr: PartialTranslationResource = {
       item: 'Article',
       price: 'Prix',
       thankYou: 'Merci pour votre commande !',
+    },
+    refundAddress: {
+      bannerTitle: 'Ajouter un portefeuille de remboursement',
+      bannerDesc:
+        'Cette commande a été payée en crypto. Indiquez où envoyer les remboursements en cas d’annulation, de litige ou de trop-perçu.',
+      save: 'Enregistrer le portefeuille de remboursement',
+      savedTitle: 'Portefeuille de remboursement enregistré',
+      savedDesc: 'Nous utiliserons cette adresse pour les remboursements de cette commande.',
+      requiredTitle: 'Portefeuille de remboursement requis',
+      requiredDesc:
+        'Ajoutez un portefeuille de remboursement avant d’annuler ou d’ouvrir un litige.',
+      paymentCoinRequired:
+        'Le mode de paiement n’est pas encore prêt. Actualisez la commande et réessayez.',
     },
     actions: {
       pay: 'Payer maintenant',
@@ -2390,6 +2406,10 @@ export const fr: PartialTranslationResource = {
     verified: 'Vérifié',
     noOrderID: 'Aucun ID de commande fourni',
     loadOrderFailed: 'Échec du chargement des détails de la commande',
+    rwaNotSupported:
+      'Les paiements en jetons RWA ne sont pas encore disponibles. Veuillez contacter le vendeur.',
+    tronNotSupported:
+      'Les paiements TRON ne sont pas encore disponibles. Veuillez choisir un autre mode de paiement.',
     errorTitle: 'Impossible de charger la commande',
     noOrderData: 'Aucune donnée de commande',
     paymentSummary: 'Résumé du paiement',
@@ -2406,6 +2426,17 @@ export const fr: PartialTranslationResource = {
     success: 'Paiement réussi !',
     failed: 'Paiement échoué : ',
     securityNote: 'Paiement sécurisé avec protection séquestre multi-signature',
+    refundDestination: {
+      title: 'Destination du remboursement',
+      desc: 'En cas d’annulation, de litige ou de surpaiement, les fonds seront envoyés ici.',
+    },
+    custodialPayment: {
+      label: 'Je paie via un exchange',
+      desc: 'Les adresses d’exchange ne peuvent généralement pas recevoir de remboursements. Cochez cette option et ajoutez votre portefeuille personnel ci-dessous.',
+      requiredTitle: 'Portefeuille de remboursement requis',
+      requiredDesc:
+        'Ajoutez un portefeuille de remboursement que vous contrôlez avant de payer via un exchange.',
+    },
     connectWalletFirst: "Veuillez d'abord connecter votre portefeuille",
     noPaymentAddress: 'Aucune adresse de paiement disponible',
     noPaymentInstructions: "Échec de l'obtention des instructions de paiement",
@@ -2461,7 +2492,9 @@ export const fr: PartialTranslationResource = {
     amountToSend: 'Amount to send',
     paymentAddressLabel: 'Payment address',
     copyPaymentURI: 'Copy Payment URI',
-    waitingForPayment: 'Waiting for payment confirmation...',
+    waitingForPayment: 'Effectuez le virement dans votre portefeuille',
+    paymentDetectedHint:
+      'Virement détecté — confirmation en cours, prend généralement quelques minutes',
     expiresAt: 'Expires at {{time}}',
     paymentExpired: 'Payment Expired',
     paymentExpiredDesc: 'This payment address has expired. Please request a new one to continue.',

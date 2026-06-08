@@ -97,7 +97,12 @@ export function resolveDigitalEntitlementDisputePhase(
   return 'none';
 }
 
-const TERMINAL_ORDER_STATUSES: DisplayOrderStatus[] = ['completed', 'cancelled', 'refunded'];
+const TERMINAL_ORDER_STATUSES: DisplayOrderStatus[] = [
+  'completed',
+  'cancelled',
+  'refunded',
+  'split_resolved',
+];
 
 export function isTerminalOrderStatus(status: DisplayOrderStatus): boolean {
   return TERMINAL_ORDER_STATUSES.includes(status);

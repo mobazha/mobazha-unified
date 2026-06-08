@@ -77,6 +77,7 @@ export function ProductDetailMobile({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    isRwaToken,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
@@ -163,7 +164,8 @@ export function ProductDetailMobile({
     );
   }
 
-  const purchaseDisabled = isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable);
+  const purchaseDisabled =
+    isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable) || isRwaToken;
 
   return (
     <div data-testid="product-detail-mobile">
@@ -740,6 +742,8 @@ export function ProductDetailMobile({
                   t('product.sellerOffline', { defaultValue: 'Seller Offline' })
                 ) : !paymentAvailable ? (
                   t('payment.paymentUnavailable')
+                ) : isRwaToken ? (
+                  t('payment.rwaNotSupported')
                 ) : stock === 0 ? (
                   t('product.outOfStock')
                 ) : (
