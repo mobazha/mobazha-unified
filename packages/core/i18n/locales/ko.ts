@@ -3500,6 +3500,32 @@ export const ko: PartialTranslationResource = {
         maxCombinations: '변형 조합이 너무 많습니다 (최대 100)',
       },
     },
+    priceHierarchy: {
+      title: '이 상품은 변형별 가격을 사용합니다',
+      description:
+        '결제 시 변형 가격이 적용됩니다. 기본 가격은 변형 가격이 비어 있을 때만 사용됩니다.',
+      storefront: '스토어 표시 가격: {{price}}',
+      base: '기본 가격: {{price}}',
+    },
+    priceSync: {
+      title: '변형 가격을 업데이트할까요?',
+      description:
+        '이 상품에는 {{count}}개의 변형 가격이 있습니다. {{price}}를 모든 변형에 적용할까요, 아니면 기존 가격을 유지할까요?',
+      applyAll: '모든 변형에 적용',
+      keepVariants: '변형 가격 유지',
+      reviewVariants: '변형 검토',
+    },
+    priceLowWarning:
+      '이 가격은 풀필먼트 비용보다 낮을 수 있습니다. 주문에서 손실이 발생할 수 있습니다.',
+    fulfillment: {
+      title: '공급업체 가격',
+      supplierCost: '공급업체 비용',
+      supplierCostInCurrency: '공급업체 비용 ({{currency}})',
+      yourPrice: '판매 가격',
+      margin: '마진',
+      marginUnavailable: '비교 불가',
+      variantPrices: '변형 가격',
+    },
     policies: '반품 정책 및 이용약관',
     returnPolicy: '반품 정책',
     returnPolicyPlaceholder: '반품 정책 입력...',
@@ -4464,6 +4490,8 @@ export const ko: PartialTranslationResource = {
       createNew: '새로 만들기',
       sourceFromProvider: '공급자의 소스',
       importFromGumroad: 'Gumroad에서 수입',
+      priceStorefront: '표시 가격: {{price}}',
+      priceBase: '기본: {{price}}',
     },
     orders: {
       title: '주문',

@@ -40,6 +40,7 @@ export * from './variantUtils';
 
 // 价格工具
 export * from './priceUtils';
+export * from './listingDisplayPrice';
 
 // 身份展示工具
 export * from './identity';

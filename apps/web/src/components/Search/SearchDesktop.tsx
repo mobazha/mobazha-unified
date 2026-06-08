@@ -36,6 +36,7 @@ export function SearchDesktop() {
         price={product.price}
         currency={product.currency}
         divisibility={product.divisibility}
+        priceFrom={product.priceFrom}
         vendorName={product.vendor.name}
         vendorAvatar={product.vendor.avatar}
         vendorPeerID={product.vendor.peerID}

@@ -1,5 +1,9 @@
 import React from 'react';
-import { resolveProductPagePeerID } from '@mobazha/core';
+import {
+  resolveProductPagePeerID,
+  resolveListingDisplayPrice,
+  formatListingPriceForSchema,
+} from '@mobazha/core';
 import { getCanonicalSiteUrl, getSiteUrl } from '@/lib/siteUrl';
 import { getRequestSearchParam } from '@/lib/requestUrl';
 import {
@@ -16,8 +20,16 @@ function buildJsonLd(product: SsrProductData | null, siteUrl: string, peerID?: s
   const description = stripProductHtml(product.item.description || '').slice(0, 500);
   const firstImage = product.item.images?.[0];
   const imageUrl = getSsrProductMediaUrl(firstImage?.medium || firstImage?.original);
-  const currency = product.item.priceCurrency?.code || 'USD';
-  const price = product.item.price;
+  const currency = product.item.priceCurrency?.code?.trim();
+  const divisibility = product.item.priceCurrency?.divisibility ?? 2;
+  const displayPrice = resolveListingDisplayPrice({
+    basePrice: product.item.price ?? 0,
+    skus: product.item.skus,
+  });
+  const hasOffer = displayPrice.minAmountString !== '0' && !!currency;
+  const price = hasOffer
+    ? formatListingPriceForSchema(displayPrice.minAmountString, divisibility)
+    : undefined;
 
   return {
     '@context': 'https://schema.org',
@@ -34,15 +46,16 @@ function buildJsonLd(product: SsrProductData | null, siteUrl: string, peerID?: s
           ? 'https://schema.org/NewCondition'
           : 'https://schema.org/UsedCondition',
     }),
-    ...(price !== undefined && {
-      offers: {
-        '@type': 'Offer',
-        price: String(price),
-        priceCurrency: currency,
-        availability: 'https://schema.org/InStock',
-        url: buildProductPageUrl(siteUrl, product.slug, peerID),
-      },
-    }),
+    ...(hasOffer &&
+      price && {
+        offers: {
+          '@type': 'Offer',
+          price,
+          priceCurrency: currency,
+          availability: 'https://schema.org/InStock',
+          url: buildProductPageUrl(siteUrl, product.slug, peerID),
+        },
+      }),
   };
 }
 

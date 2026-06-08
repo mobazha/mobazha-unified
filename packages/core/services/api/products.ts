@@ -13,7 +13,7 @@ import type {
 import { getImageUrl } from './config';
 import type { Image } from '../../types';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
-import { parsePriceFields } from '../../utils/transforms/priceTransform';
+import { minimalAmountAsNumber, parsePriceFields } from '../../utils/transforms/priceTransform';
 import { isStoreUnavailableError } from './client';
 import {
   authPost,
@@ -226,6 +226,47 @@ function imageFromCid(cid: string | undefined): Image | undefined {
   return { tiny: trimmed, small: trimmed, medium: trimmed, large: trimmed, original: trimmed };
 }
 
+function toListItemPrice(priceSource: unknown): ProductListItem['price'] | undefined {
+  if (typeof priceSource !== 'object' || priceSource === null) return undefined;
+  const { amountString, currencyCode, divisibility } = parsePriceFields(
+    priceSource as ProductListItem['price']
+  );
+  if (!currencyCode) {
+    return { amount: amountString, currency: { code: '', divisibility: divisibility ?? 2 } };
+  }
+  return {
+    amount: amountString,
+    currency: { code: currencyCode, divisibility: divisibility ?? 2 },
+  };
+}
+
+function mapSearchListingItem(item: ProfileListingItem, storePeerID: string): ProductListItem {
+  const price = toListItemPrice(item.price) ?? {
+    amount: 0,
+    currency: { code: '', divisibility: 2 },
+  };
+  const mapped: ProductListItem = {
+    slug: item.slug,
+    title: item.title,
+    thumbnail:
+      transformImageUrls(
+        hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
+        storePeerID
+      ) ?? ({} as Image),
+    price,
+    vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
+    cid: item.cid ?? item.hash,
+    contractType: item.contractType as ProductListItem['contractType'],
+    nsfw: item.nsfw?.status,
+  };
+  const basePrice = toListItemPrice(item.basePrice);
+  const priceMax = toListItemPrice(item.priceMax);
+  if (basePrice) mapped.basePrice = basePrice;
+  if (priceMax) mapped.priceMax = priceMax;
+  if (typeof item.priceHasRange === 'boolean') mapped.priceHasRange = item.priceHasRange;
+  return mapped;
+}
+
 /**
  * 获取店铺商品列表
  */
@@ -238,27 +279,8 @@ export async function fetchStoreListings(
     []
   );
   return raw.map(item => {
-    const priceSource =
-      typeof item.price === 'object' && item.price !== null
-        ? (item.price as unknown as ProductListItem['price'])
-        : undefined;
-    const { amount, currencyCode, divisibility } = parsePriceFields(priceSource);
-    return {
-      slug: item.slug,
-      title: item.title,
-      thumbnail:
-        transformImageUrls(
-          hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
-          storePeerID
-        ) ?? ({} as Image),
-      price: currencyCode
-        ? { amount, currency: { code: currencyCode, divisibility: divisibility ?? 2 } }
-        : { amount, currency: { code: '', divisibility: divisibility ?? 2 } },
-      vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
-      cid: item.cid ?? item.hash,
-      contractType: item.contractType as ProductListItem['contractType'],
-      nsfw: item.nsfw?.status,
-    };
+    const mapped = mapSearchListingItem(item, storePeerID);
+    return mapped;
   });
 }
 
@@ -389,7 +411,7 @@ async function getListingFromSearchFallback(peerID: string, slug: string): Promi
         title: match.title,
         description: '',
         processingTime: '',
-        price: match.price?.amount ?? 0,
+        price: minimalAmountAsNumber(match.price?.amount),
         nsfw: match.nsfw ?? false,
         tags: [],
         images: [thumbnail],

@@ -14,9 +14,9 @@ import {
   usePrefetchProduct,
   getImageUrl,
   useI18n,
-  useCurrencyFormat,
   buildProductHref,
 } from '@mobazha/core';
+import { ListingPriceLabel } from '@/components/Product/ListingPriceLabel';
 
 interface Props extends ProductGridProps {
   peerId: string;
@@ -36,7 +36,6 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
   const prefetch = usePrefetchProduct();
   const [search, setSearch] = useState('');
   const { t } = useI18n();
-  const { formatLocalPrice } = useCurrencyFormat();
 
   const colClass = COL_CLASS[columns] || COL_CLASS[4];
   const filtered = useMemo(
@@ -112,11 +111,11 @@ export function ProductGridSection({ title, showSearch, columns, peerId }: Props
                 </h3>
                 {product.price && (
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {formatLocalPrice(
-                      Number(product.price.amount || 0),
-                      product.price.currency?.code || 'USD',
-                      { divisibility: product.price.currency?.divisibility }
-                    )}
+                    <ListingPriceLabel
+                      listItem={product}
+                      currencyCode={product.price.currency?.code}
+                      divisibility={product.price.currency?.divisibility}
+                    />
                   </p>
                 )}
               </div>

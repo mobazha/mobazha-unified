@@ -371,6 +371,7 @@ export const en: TranslationResource = {
     reviews: 'reviews',
     reviewsTitle: 'Customer Reviews',
     rating: 'Rating',
+    priceFrom: 'From {{price}}',
     addToCart: 'Add to Cart',
     addedToCart: 'Added to Cart',
     buyNow: 'Buy Now',
@@ -4370,6 +4371,31 @@ export const en: TranslationResource = {
         maxCombinations: 'Too many variant combinations (max 100)',
       },
     },
+    priceHierarchy: {
+      title: 'This product uses variant-specific prices',
+      description:
+        'Buyers pay the variant price at checkout. The base price is only used when a variant price is left empty.',
+      storefront: 'Storefront price: {{price}}',
+      base: 'Base price: {{price}}',
+    },
+    priceSync: {
+      title: 'Update variant prices?',
+      description:
+        'This product has {{count}} variant prices. Apply {{price}} to all variants, or keep the existing variant prices?',
+      applyAll: 'Apply to all variants',
+      keepVariants: 'Keep variant prices',
+      reviewVariants: 'Review variants',
+    },
+    priceLowWarning: 'This price appears below fulfillment cost. Orders may lose money.',
+    fulfillment: {
+      title: 'Supplier pricing',
+      supplierCost: 'Supplier cost',
+      supplierCostInCurrency: 'Supplier cost ({{currency}})',
+      yourPrice: 'Your price',
+      margin: 'Margin',
+      marginUnavailable: 'Not comparable',
+      variantPrices: 'Variant prices',
+    },
 
     // Policies
     policies: 'Return Policy & Terms',
@@ -5442,6 +5468,8 @@ export const en: TranslationResource = {
       colAvailability: 'Availability',
       colType: 'Type',
       colPrice: 'Price',
+      priceStorefront: 'Storefront: {{price}}',
+      priceBase: 'Base: {{price}}',
       outOfStock: 'Out of stock',
       availabilityManualAction: 'Needs your action',
       availabilitySupplierUnavailable: 'Supplier unavailable',

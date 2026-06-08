@@ -7,7 +7,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { ProductCard, type ProductContractType } from '@/components/ProductCard/ProductCard';
-import { useI18n, productDataService, getImageUrl, buildProductHref } from '@mobazha/core';
+import {
+  useI18n,
+  productDataService,
+  getImageUrl,
+  buildProductHref,
+  productCardPriceFieldsFromListItem,
+} from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -172,6 +178,7 @@ export const MoreFromStore = memo(function MoreFromStore({
           )}
         >
           {products.map(product => {
+            const priceFields = productCardPriceFieldsFromListItem(product);
             const card = (
               <ProductCard
                 key={product.slug}
@@ -180,8 +187,10 @@ export const MoreFromStore = memo(function MoreFromStore({
                   getImageUrl(product.thumbnail?.medium, vendorPeerID) ||
                   getImageUrl(product.thumbnail?.small, vendorPeerID)
                 }
-                price={product.price?.amount || 0}
-                currency={product.price?.currency?.code}
+                price={priceFields.price}
+                currency={priceFields.currencyCode}
+                divisibility={priceFields.divisibility}
+                priceFrom={priceFields.priceFrom}
                 rating={product.averageRating}
                 reviewCount={product.ratingCount}
                 freeShipping={product.freeShipping && product.freeShipping.length > 0}

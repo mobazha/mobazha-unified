@@ -280,6 +280,8 @@ export const FULFILLMENT_PROVIDERS: {
   docsUrl: string;
   productsUrl: string;
   workflow: FulfillmentWorkflow;
+  /** Supplier billing currency for cost quotes (minimal-unit amounts). */
+  billingCurrency: string;
 }[] = [
   {
     id: 'printful',
@@ -289,6 +291,7 @@ export const FULFILLMENT_PROVIDERS: {
     docsUrl: 'https://www.printful.com/dashboard/settings/api',
     productsUrl: 'https://www.printful.com/dashboard/product-templates',
     workflow: 'pod',
+    billingCurrency: 'USD',
   },
   {
     id: 'printify',
@@ -298,6 +301,7 @@ export const FULFILLMENT_PROVIDERS: {
     docsUrl: 'https://printify.com/app/account/api',
     productsUrl: 'https://printify.com/app/products',
     workflow: 'pod',
+    billingCurrency: 'USD',
   },
   {
     id: 'cj',
@@ -307,5 +311,6 @@ export const FULFILLMENT_PROVIDERS: {
     docsUrl: 'https://www.cjdropshipping.com/my.html#/apikey',
     productsUrl: 'https://www.cjdropshipping.com/my.html#/list',
     workflow: 'catalog',
+    billingCurrency: 'USD',
   },
 ];

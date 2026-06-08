@@ -3580,6 +3580,32 @@ export const es: PartialTranslationResource = {
         maxCombinations: 'Demasiadas combinaciones de variantes (máx. 100)',
       },
     },
+    priceHierarchy: {
+      title: 'Este producto usa precios por variante',
+      description:
+        'Los compradores pagan el precio de la variante al pagar. El precio base solo se usa si una variante no tiene precio.',
+      storefront: 'Precio en tienda: {{price}}',
+      base: 'Precio base: {{price}}',
+    },
+    priceSync: {
+      title: '¿Actualizar precios de variantes?',
+      description:
+        'Este producto tiene {{count}} precios de variantes. ¿Aplicar {{price}} a todas las variantes o mantener los precios actuales?',
+      applyAll: 'Aplicar a todas las variantes',
+      keepVariants: 'Mantener precios de variantes',
+      reviewVariants: 'Revisar variantes',
+    },
+    priceLowWarning:
+      'Este precio parece estar por debajo del coste de fulfillment. Los pedidos pueden generar pérdidas.',
+    fulfillment: {
+      title: 'Precios del proveedor',
+      supplierCost: 'Coste del proveedor',
+      supplierCostInCurrency: 'Coste del proveedor ({{currency}})',
+      yourPrice: 'Tu precio',
+      margin: 'Margen',
+      marginUnavailable: 'No comparable',
+      variantPrices: 'Precios de variantes',
+    },
     policies: 'Política de devoluciones y términos',
     returnPolicy: 'Política de devoluciones',
     returnPolicyPlaceholder: 'Ingresa tu política de devoluciones...',
@@ -4573,6 +4599,8 @@ export const es: PartialTranslationResource = {
       createNew: 'Crear nuevo',
       sourceFromProvider: 'Fuente del proveedor',
       importFromGumroad: 'Importar desde Gumroad',
+      priceStorefront: 'Tienda: {{price}}',
+      priceBase: 'Base: {{price}}',
     },
     orders: {
       title: 'Pedidos',

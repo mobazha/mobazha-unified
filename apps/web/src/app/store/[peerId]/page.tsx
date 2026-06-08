@@ -40,6 +40,8 @@ import {
   useStoreActivity,
   queryKeys,
   buildProductHref,
+  compareMinimalAmountStrings,
+  productCardPriceFieldsFromListItem,
 } from '@mobazha/core';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
@@ -454,10 +456,20 @@ export default function StorePage() {
     // 排序
     switch (filter.sortBy) {
       case 'price-asc':
-        result.sort((a, b) => (a.price?.amount || 0) - (b.price?.amount || 0));
+        result.sort((a, b) =>
+          compareMinimalAmountStrings(
+            productCardPriceFieldsFromListItem(a).price,
+            productCardPriceFieldsFromListItem(b).price
+          )
+        );
         break;
       case 'price-desc':
-        result.sort((a, b) => (b.price?.amount || 0) - (a.price?.amount || 0));
+        result.sort((a, b) =>
+          compareMinimalAmountStrings(
+            productCardPriceFieldsFromListItem(b).price,
+            productCardPriceFieldsFromListItem(a).price
+          )
+        );
         break;
       case 'rating':
         result.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
@@ -1359,56 +1371,62 @@ export default function StorePage() {
                       </Grid>
                     ) : filteredProducts.length > 0 ? (
                       <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-                        {filteredProducts.map((product, index) => (
-                          <Link
-                            key={`${product.slug}-${index}`}
-                            href={buildProductHref(product.slug, peerId)}
-                            onClick={e => {
-                              // 桌面端使用弹框
-                              if (!isMobile) {
-                                e.preventDefault();
-                                openProduct(product.slug, peerId);
-                              }
-                            }}
-                          >
-                            <ProductCard
-                              title={product.title}
-                              imageUrl={getImageUrl(product.thumbnail?.medium, storeImageHint)}
-                              price={Number(product.price?.amount || 0)}
-                              currency={product.price?.currency?.code}
-                              divisibility={product.price?.currency?.divisibility}
-                              // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
-                              vendorPeerID={peerId}
-                              rating={product.averageRating}
-                              reviewCount={product.ratingCount}
-                              freeShipping={product.freeShipping && product.freeShipping.length > 0}
-                              contractType={product.contractType as ProductContractType}
-                              tokenStandard={product.tokenStandard}
-                              rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                              hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                              isOwnListing={isOwnStore}
-                              status={isOwnStore ? product.status : undefined}
-                              onReport={() => {
-                                /* TODO: 打开举报对话框 */
+                        {filteredProducts.map((product, index) => {
+                          const priceFields = productCardPriceFieldsFromListItem(product);
+                          return (
+                            <Link
+                              key={`${product.slug}-${index}`}
+                              href={buildProductHref(product.slug, peerId)}
+                              onClick={e => {
+                                // 桌面端使用弹框
+                                if (!isMobile) {
+                                  e.preventDefault();
+                                  openProduct(product.slug, peerId);
+                                }
                               }}
-                              onBlock={() => {
-                                /* TODO: 实现屏蔽卖家功能 */
-                              }}
-                              // 自己商品的快捷操作
-                              onEdit={
-                                isOwnStore ? () => handleEditListing(product.slug) : undefined
-                              }
-                              onClone={
-                                isOwnStore ? () => handleCloneListing(product.slug) : undefined
-                              }
-                              onDelete={
-                                isOwnStore
-                                  ? () => handleOpenDeleteDialog(product.slug, product.title)
-                                  : undefined
-                              }
-                            />
-                          </Link>
-                        ))}
+                            >
+                              <ProductCard
+                                title={product.title}
+                                imageUrl={getImageUrl(product.thumbnail?.medium, storeImageHint)}
+                                price={priceFields.price}
+                                currency={priceFields.currencyCode}
+                                divisibility={priceFields.divisibility}
+                                priceFrom={priceFields.priceFrom}
+                                // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                                vendorPeerID={peerId}
+                                rating={product.averageRating}
+                                reviewCount={product.ratingCount}
+                                freeShipping={
+                                  product.freeShipping && product.freeShipping.length > 0
+                                }
+                                contractType={product.contractType as ProductContractType}
+                                tokenStandard={product.tokenStandard}
+                                rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                                hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                                isOwnListing={isOwnStore}
+                                status={isOwnStore ? product.status : undefined}
+                                onReport={() => {
+                                  /* TODO: 打开举报对话框 */
+                                }}
+                                onBlock={() => {
+                                  /* TODO: 实现屏蔽卖家功能 */
+                                }}
+                                // 自己商品的快捷操作
+                                onEdit={
+                                  isOwnStore ? () => handleEditListing(product.slug) : undefined
+                                }
+                                onClone={
+                                  isOwnStore ? () => handleCloneListing(product.slug) : undefined
+                                }
+                                onDelete={
+                                  isOwnStore
+                                    ? () => handleOpenDeleteDialog(product.slug, product.title)
+                                    : undefined
+                                }
+                              />
+                            </Link>
+                          );
+                        })}
                       </Grid>
                     ) : storeListingCount > 0 ? (
                       // 有商品但筛选后为空

@@ -3526,6 +3526,32 @@ export const ja: PartialTranslationResource = {
         maxCombinations: 'バリエーションの組み合わせが多すぎます（最大100）',
       },
     },
+    priceHierarchy: {
+      title: 'この商品はバリエーション別価格を使用しています',
+      description:
+        '購入時はバリエーション価格が適用されます。基本価格はバリエーション価格が空の場合のみ使用されます。',
+      storefront: 'ストア表示価格: {{price}}',
+      base: '基本価格: {{price}}',
+    },
+    priceSync: {
+      title: 'バリエーション価格を更新しますか？',
+      description:
+        'この商品には {{count}} 件のバリエーション価格があります。{{price}} をすべてのバリエーションに適用しますか、それとも既存の価格を維持しますか？',
+      applyAll: 'すべてのバリエーションに適用',
+      keepVariants: 'バリエーション価格を維持',
+      reviewVariants: 'バリエーションを確認',
+    },
+    priceLowWarning:
+      'この価格はフルフィルメントコストを下回っている可能性があります。注文で損失が出る場合があります。',
+    fulfillment: {
+      title: 'サプライヤー価格',
+      supplierCost: 'サプライヤーコスト',
+      supplierCostInCurrency: 'サプライヤーコスト（{{currency}}）',
+      yourPrice: 'あなたの価格',
+      margin: '利益',
+      marginUnavailable: '比較不可',
+      variantPrices: 'バリエーション価格',
+    },
     policies: '返品ポリシーと利用規約',
     returnPolicy: '返品ポリシー',
     returnPolicyPlaceholder: '返品ポリシーを入力...',
@@ -4500,6 +4526,8 @@ export const ja: PartialTranslationResource = {
       createNew: '新規作成',
       sourceFromProvider: 'プロバイダーからのソース',
       importFromGumroad: 'Gumroadからインポート',
+      priceStorefront: '表示価格: {{price}}',
+      priceBase: '基本価格: {{price}}',
     },
     orders: {
       title: '注文',

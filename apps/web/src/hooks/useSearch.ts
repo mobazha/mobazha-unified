@@ -9,6 +9,7 @@ import {
   useVerifiedModerators,
   useWishlist,
   parsePriceFields,
+  listingDisplayPriceFromListItem,
 } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
 import type { ProductListItem, AddWishlistParams } from '@mobazha/core';
@@ -18,9 +19,10 @@ export interface DisplayProduct {
   id: string;
   slug: string;
   title: string;
-  price: number;
+  price: number | string;
   currency?: string;
   divisibility?: number;
+  priceFrom?: boolean;
   image: string;
   vendor: {
     peerID: string;
@@ -91,15 +93,17 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
       : '');
   const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
 
-  const { amount, currencyCode, divisibility } = parsePriceFields(item.price);
+  const { currencyCode, divisibility } = parsePriceFields(item.price);
+  const displayPrice = listingDisplayPriceFromListItem(item);
 
   return {
     id: item.slug,
     slug: item.slug,
     title: item.title,
-    price: amount,
+    price: displayPrice.minAmountString,
     currency: currencyCode,
     divisibility,
+    priceFrom: displayPrice.hasPriceRange,
     image: thumbnailUrl,
     vendor: {
       peerID: item.vendorPeerID || '',

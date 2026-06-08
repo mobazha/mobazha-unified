@@ -3548,6 +3548,32 @@ export const ru: PartialTranslationResource = {
         maxCombinations: 'Слишком много комбинаций вариантов (макс. 100)',
       },
     },
+    priceHierarchy: {
+      title: 'У этого товара цены по вариантам',
+      description:
+        'При оплате покупатель платит цену варианта. Базовая цена используется только если цена варианта не указана.',
+      storefront: 'Цена витрины: {{price}}',
+      base: 'Базовая цена: {{price}}',
+    },
+    priceSync: {
+      title: 'Обновить цены вариантов?',
+      description:
+        'У этого товара {{count}} цен вариантов. Применить {{price}} ко всем вариантам или оставить текущие цены?',
+      applyAll: 'Применить ко всем вариантам',
+      keepVariants: 'Оставить цены вариантов',
+      reviewVariants: 'Проверить варианты',
+    },
+    priceLowWarning:
+      'Эта цена может быть ниже стоимости fulfillment. Заказы могут принести убыток.',
+    fulfillment: {
+      title: 'Цены поставщика',
+      supplierCost: 'Себестоимость поставщика',
+      supplierCostInCurrency: 'Себестоимость поставщика ({{currency}})',
+      yourPrice: 'Ваша цена',
+      margin: 'Маржа',
+      marginUnavailable: 'Несопоставимо',
+      variantPrices: 'Цены вариантов',
+    },
     policies: 'Политика возврата и условия',
     returnPolicy: 'Политика возврата',
     returnPolicyPlaceholder: 'Введите политику возврата...',
@@ -4518,6 +4544,8 @@ export const ru: PartialTranslationResource = {
       createNew: 'Создать новый',
       sourceFromProvider: 'Источник от провайдера',
       importFromGumroad: 'Импорт из Gumroad',
+      priceStorefront: 'Витрина: {{price}}',
+      priceBase: 'База: {{price}}',
     },
     orders: {
       title: 'Заказы',

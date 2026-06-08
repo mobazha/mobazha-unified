@@ -47,6 +47,8 @@ export interface ProductCardProps {
   divisibility?: number;
   /** 价格是否为最小单位 (如 cents, satoshi, wei)，默认为 true，因为 API 返回的都是最小单位 */
   priceInMinimalUnit?: boolean;
+  /** 变体价格有区间时显示 "From $X" */
+  priceFrom?: boolean;
   /** 原价（用于显示折扣） */
   originalPrice?: number | string;
   /** 卖家名称 */
@@ -118,6 +120,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   currency,
   divisibility,
   priceInMinimalUnit = true,
+  priceFrom = false,
   originalPrice,
   vendorName,
   vendorAvatar,
@@ -188,7 +191,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       : null;
 
   const formatOptions = { isMinimalUnit: priceInMinimalUnit, divisibility };
-  const formattedPrice = currency ? formatLocalPrice(price, currency, formatOptions) : '—';
+  const formattedAmount = currency ? formatLocalPrice(price, currency, formatOptions) : '—';
+  const formattedPrice =
+    priceFrom && currency ? t('product.priceFrom', { price: formattedAmount }) : formattedAmount;
   const formattedOriginalPrice =
     originalPrice && currency ? formatLocalPrice(originalPrice, currency, formatOptions) : '';
 

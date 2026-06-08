@@ -24,7 +24,7 @@ import {
   useStorefrontMode,
   useStorefrontPeerID,
   useStorefrontProfile,
-  parsePriceFields,
+  productCardPriceFieldsFromListItem,
   isStandalone,
 } from '@mobazha/core';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
@@ -40,7 +40,7 @@ interface DisplayProduct {
   slug: string;
   title: string;
   imageUrl: string;
-  price: number;
+  price: number | string;
   currency?: string;
   divisibility?: number;
   originalPrice?: number;
@@ -51,6 +51,7 @@ interface DisplayProduct {
   reviewCount: number;
   freeShipping?: boolean;
   isDigital?: boolean;
+  priceFrom?: boolean;
   moderators?: string[];
 }
 
@@ -62,7 +63,7 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
       : '');
   const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
 
-  const { amount, currencyCode, divisibility } = parsePriceFields(item.price);
+  const priceFields = productCardPriceFieldsFromListItem(item);
 
   return {
     id: item.slug,
@@ -72,9 +73,10 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
       getImageUrl(item.thumbnail?.medium) ||
       getImageUrl(item.thumbnail?.small) ||
       'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
-    price: amount,
-    currency: currencyCode,
-    divisibility,
+    price: priceFields.price,
+    currency: priceFields.currencyCode,
+    divisibility: priceFields.divisibility,
+    priceFrom: priceFields.priceFrom,
     vendorName,
     vendorAvatar,
     vendorPeerID: item.vendorPeerID,

@@ -62,13 +62,13 @@ export function useCart() {
         };
       }
       map[key].items.push(item);
-      map[key].subtotal += item.listing.price.amount * item.quantity;
+      map[key].subtotal += Number(item.listing.price.amount) * item.quantity;
     });
     return Object.values(map);
   }, [items]);
 
   const totalAmount = useMemo(
-    () => items.reduce((sum, item) => sum + item.listing.price.amount * item.quantity, 0),
+    () => items.reduce((sum, item) => sum + Number(item.listing.price.amount) * item.quantity, 0),
     [items]
   );
 

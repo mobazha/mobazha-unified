@@ -110,7 +110,7 @@ function SwipeableCartItem({
 
             <div className="flex items-center justify-between mt-auto pt-1.5">
               <span className="text-sm font-bold text-primary">
-                {renderPrice(item.listing.price.amount, item.listing.price.currency.code)}
+                {renderPrice(Number(item.listing.price.amount), item.listing.price.currency.code)}
               </span>
 
               <div className="flex items-center border border-border rounded-lg bg-muted/30">

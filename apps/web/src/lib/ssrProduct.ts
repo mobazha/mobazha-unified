@@ -10,13 +10,14 @@ export interface SsrProductData {
     description?: string;
     images?: Array<{ medium?: string; small?: string; original?: string }>;
     price?: number;
-    priceCurrency?: { code?: string };
+    priceCurrency?: { code?: string; divisibility?: number };
+    skus?: Array<{ price?: string }>;
     condition?: string;
     categories?: string[];
   };
   metadata?: {
     contractType?: string;
-    pricingCurrency?: { code?: string };
+    pricingCurrency?: { code?: string; divisibility?: number };
   };
   vendorID?: { peerID?: string; handle?: string };
   hash?: string;

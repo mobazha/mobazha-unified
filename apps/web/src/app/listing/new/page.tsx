@@ -63,7 +63,10 @@ import {
   AiSetupPrompt,
   useListingAiIntegration,
   MobileListingWizard,
+  BasePriceSyncDialog,
+  ListingPriceHierarchyBanner,
 } from '@/components/Listing';
+import { useListingPriceChange } from '@/hooks/useListingPriceChange';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -248,6 +251,23 @@ function CreateListingContent() {
       ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
+
+  const {
+    pendingSync,
+    setPendingSync,
+    handlePriceInput,
+    handlePriceFocus,
+    handlePriceBlur,
+    applyBaseOnly,
+    applyToAllVariants,
+    reviewVariants,
+  } = useListingPriceChange({
+    price: formData.price,
+    skus: formData.skus,
+    onPriceChange: value => updateField('price', value),
+    onSkusChange: updateSkus,
+    onReviewVariants: () => scrollToSection('variants'),
+  });
 
   // 标签规范化函数（小写、空格转连字符、去除 #）
   const normalizeTag = useCallback((input: string) => {
@@ -439,6 +459,9 @@ function CreateListingContent() {
           onSubmit={handleSubmit}
           onSaveDraft={handleSaveDraft}
           onCancel={() => (returnToDashboard ? router.push('/admin') : router.back())}
+          onPriceChange={handlePriceInput}
+          onPriceFocus={handlePriceFocus}
+          onPriceBlur={handlePriceBlur}
           aiLoadingAction={aiLoadingAction}
           onAiImproveTitle={handleAiImproveTitle}
           onAiPolishDescription={handleAiPolishDescription}
@@ -495,6 +518,17 @@ function CreateListingContent() {
             </div>
           </DialogContent>
         </Dialog>
+        <BasePriceSyncDialog
+          open={!!pendingSync}
+          variantCount={pendingSync?.variantCount ?? 0}
+          newPrice={pendingSync?.newPrice ?? ''}
+          onApplyAll={applyToAllVariants}
+          onKeepVariants={applyBaseOnly}
+          onReviewVariants={reviewVariants}
+          onOpenChange={open => {
+            if (!open) setPendingSync(null);
+          }}
+        />
       </>
     );
   }
@@ -653,6 +687,13 @@ function CreateListingContent() {
                 />
               </Card>
 
+              {formData.contractType !== 'RWA_TOKEN' && (
+                <ListingPriceHierarchyBanner
+                  basePrice={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  skus={formData.skus}
+                />
+              )}
               {/* 基础信息 - 非 RWA Token */}
               {formData.contractType !== 'RWA_TOKEN' && (
                 <BasicInfoSection
@@ -670,7 +711,9 @@ function CreateListingContent() {
                   onTitleChange={v => updateField('title', v)}
                   onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={handlePriceInput}
+                  onPriceFocus={handlePriceFocus}
+                  onPriceBlur={handlePriceBlur}
                   onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
@@ -754,7 +797,7 @@ function CreateListingContent() {
                     onCryptoListingCurrencyCodeChange={v =>
                       updateField('cryptoListingCurrencyCode', v)
                     }
-                    onPriceChange={v => updateField('price', v)}
+                    onPriceChange={handlePriceInput}
                     onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
                     onMinQuantityChange={v => updateField('minQuantity', v)}
                     onMaxQuantityChange={v => updateField('maxQuantity', v)}
@@ -957,6 +1000,17 @@ function CreateListingContent() {
           </div>
         </Container>
       </main>
+      <BasePriceSyncDialog
+        open={!!pendingSync}
+        variantCount={pendingSync?.variantCount ?? 0}
+        newPrice={pendingSync?.newPrice ?? ''}
+        onApplyAll={applyToAllVariants}
+        onKeepVariants={applyBaseOnly}
+        onReviewVariants={reviewVariants}
+        onOpenChange={open => {
+          if (!open) setPendingSync(null);
+        }}
+      />
       <Footer />
 
       {/* Publish Success Dialog */}

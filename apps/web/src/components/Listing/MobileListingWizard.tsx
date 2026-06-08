@@ -72,6 +72,9 @@ interface MobileListingWizardProps {
   onCancel: () => void;
   onDelete?: () => void;
   onPreview?: () => void;
+  onPriceChange?: (value: string) => void;
+  onPriceFocus?: () => void;
+  onPriceBlur?: (value: string) => void;
 
   aiLoadingAction?: string | null;
   onAiImproveTitle?: () => void;
@@ -139,6 +142,9 @@ export function MobileListingWizard({
   onCancel,
   onDelete,
   onPreview,
+  onPriceChange,
+  onPriceFocus,
+  onPriceBlur,
   aiLoadingAction,
   onAiImproveTitle,
   onAiPolishDescription,
@@ -472,7 +478,9 @@ export function MobileListingWizard({
                   onTitleChange={v => updateField('title', v)}
                   onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
+                  onPriceFocus={onPriceFocus}
+                  onPriceBlur={onPriceBlur}
                   onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
@@ -558,7 +566,7 @@ export function MobileListingWizard({
                   onCryptoListingCurrencyCodeChange={v =>
                     updateField('cryptoListingCurrencyCode', v)
                   }
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
                   onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
                   onMinQuantityChange={v => updateField('minQuantity', v)}
                   onMaxQuantityChange={v => updateField('maxQuantity', v)}

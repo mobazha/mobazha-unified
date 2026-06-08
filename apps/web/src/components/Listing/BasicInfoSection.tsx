@@ -36,6 +36,8 @@ interface BasicInfoSectionProps {
   onShortDescriptionChange?: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onPriceChange: (value: string) => void;
+  onPriceFocus?: () => void;
+  onPriceBlur?: (value: string) => void;
   onCompareAtPriceChange?: (value: string) => void;
   onCurrencyChange: (value: string) => void;
   onConditionChange?: (value: ProductCondition) => void;
@@ -115,6 +117,8 @@ export function BasicInfoSection({
   onShortDescriptionChange,
   onDescriptionChange,
   onPriceChange,
+  onPriceFocus,
+  onPriceBlur,
   onCompareAtPriceChange,
   onCurrencyChange,
   onConditionChange,
@@ -302,6 +306,8 @@ export function BasicInfoSection({
                   min="0"
                   value={price}
                   onChange={e => onPriceChange(e.target.value)}
+                  onFocus={onPriceFocus}
+                  onBlur={e => onPriceBlur?.(e.target.value)}
                   className={inputInnerClass}
                   placeholder="0.00"
                 />

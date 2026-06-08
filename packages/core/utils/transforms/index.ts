@@ -18,5 +18,5 @@ export type { DirectPaymentOrderSignals } from './paymentSessionDisplay';
 export { formatMinimalUnitAmountString, formatMinimalUnitExactAmountString } from './minimalUnit';
 export { caseDetailToOrder } from './caseToOrder';
 export { convertProductToFormData } from './productTransform';
-export { parsePriceFields } from './priceTransform';
+export { minimalAmountAsNumber, parsePriceFields } from './priceTransform';
 export type { ParsedPrice } from './priceTransform';

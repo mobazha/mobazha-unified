@@ -1994,6 +1994,29 @@ export interface TranslationResource {
         maxCombinations: string;
       };
     };
+    priceHierarchy?: {
+      title?: string;
+      description?: string;
+      storefront?: string;
+      base?: string;
+    };
+    priceSync?: {
+      title?: string;
+      description?: string;
+      applyAll?: string;
+      keepVariants?: string;
+      reviewVariants?: string;
+    };
+    priceLowWarning?: string;
+    fulfillment?: {
+      title?: string;
+      supplierCost?: string;
+      supplierCostInCurrency?: string;
+      yourPrice?: string;
+      margin?: string;
+      marginUnavailable?: string;
+      variantPrices?: string;
+    };
     policies: string;
     returnPolicy: string;
     returnPolicyPlaceholder: string;
@@ -2963,6 +2986,8 @@ export interface TranslationResource {
       createNew?: string;
       sourceFromProvider?: string;
       importFromGumroad?: string;
+      priceStorefront?: string;
+      priceBase?: string;
     };
     gumroadImport?: {
       backToProducts?: string;

@@ -77,6 +77,10 @@ import {
   SupplySummaryBar,
 } from '@/components/Listing';
 import { useListingSupplySummary } from '@/hooks/useListingSupplySummary';
+import { useListingPriceChange } from '@/hooks/useListingPriceChange';
+import { BasePriceSyncDialog } from '@/components/Listing/BasePriceSyncDialog';
+import { ListingPriceHierarchyBanner } from '@/components/Listing/ListingPriceHierarchyBanner';
+import { ListingFulfillmentPricingPanel } from '@/components/Listing/ListingFulfillmentPricingPanel';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -178,6 +182,26 @@ export default function EditListingPage() {
     submitDraft,
     reset,
   } = useListingForm(initialFormData);
+
+  const {
+    pendingSync,
+    setPendingSync,
+    handlePriceInput,
+    handlePriceFocus,
+    handlePriceBlur,
+    applyBaseOnly,
+    applyToAllVariants,
+    reviewVariants,
+  } = useListingPriceChange({
+    price: formData.price,
+    skus: formData.skus,
+    onPriceChange: value => updateField('price', value),
+    onSkusChange: updateSkus,
+    onReviewVariants: () => {
+      setActiveTab('variants');
+      sectionRefs.current.variants?.scrollIntoView({ behavior: 'smooth' });
+    },
+  });
 
   // 当 listing 数据加载完成后重置表单
   useEffect(() => {
@@ -527,6 +551,9 @@ export default function EditListingPage() {
           onCancel={() => router.back()}
           onDelete={() => setShowDeleteDialog(true)}
           onPreview={() => window.open(previewHref, '_blank')}
+          onPriceChange={handlePriceInput}
+          onPriceFocus={handlePriceFocus}
+          onPriceBlur={handlePriceBlur}
           aiLoadingAction={aiLoadingAction}
           onAiImproveTitle={handleAiImproveTitle}
           onAiPolishDescription={handleAiPolishDescription}
@@ -561,6 +588,17 @@ export default function EditListingPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <BasePriceSyncDialog
+          open={!!pendingSync}
+          variantCount={pendingSync?.variantCount ?? 0}
+          newPrice={pendingSync?.newPrice ?? ''}
+          onApplyAll={applyToAllVariants}
+          onKeepVariants={applyBaseOnly}
+          onReviewVariants={reviewVariants}
+          onOpenChange={open => {
+            if (!open) setPendingSync(null);
+          }}
+        />
       </>
     );
   }
@@ -742,6 +780,21 @@ export default function EditListingPage() {
 
               {/* 基础信息 - 非 RWA Token */}
               {formData.contractType !== 'RWA_TOKEN' && (
+                <div className="space-y-3">
+                  <ListingPriceHierarchyBanner
+                    basePrice={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    skus={formData.skus}
+                  />
+                  <ListingFulfillmentPricingPanel
+                    listingSlug={slug}
+                    basePrice={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    skus={formData.skus}
+                  />
+                </div>
+              )}
+              {formData.contractType !== 'RWA_TOKEN' && (
                 <BasicInfoSection
                   title={formData.title}
                   shortDescription={formData.shortDescription}
@@ -757,7 +810,9 @@ export default function EditListingPage() {
                   onTitleChange={v => updateField('title', v)}
                   onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={handlePriceInput}
+                  onPriceFocus={handlePriceFocus}
+                  onPriceBlur={handlePriceBlur}
                   onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
@@ -841,7 +896,7 @@ export default function EditListingPage() {
                     onCryptoListingCurrencyCodeChange={v =>
                       updateField('cryptoListingCurrencyCode', v)
                     }
-                    onPriceChange={v => updateField('price', v)}
+                    onPriceChange={handlePriceInput}
                     onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
                     onMinQuantityChange={v => updateField('minQuantity', v)}
                     onMaxQuantityChange={v => updateField('maxQuantity', v)}
@@ -1064,6 +1119,18 @@ export default function EditListingPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BasePriceSyncDialog
+        open={!!pendingSync}
+        variantCount={pendingSync?.variantCount ?? 0}
+        newPrice={pendingSync?.newPrice ?? ''}
+        onApplyAll={applyToAllVariants}
+        onKeepVariants={applyBaseOnly}
+        onReviewVariants={reviewVariants}
+        onOpenChange={open => {
+          if (!open) setPendingSync(null);
+        }}
+      />
 
       <Footer />
     </div>
