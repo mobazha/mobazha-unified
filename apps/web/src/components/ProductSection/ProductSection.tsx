@@ -23,9 +23,10 @@ interface Product {
   slug: string;
   title: string;
   imageUrl?: string;
-  price: number;
+  price: number | string;
   currency?: string;
   divisibility?: number;
+  priceFrom?: boolean;
   vendorName?: string;
   vendorAvatar?: string;
   vendorPeerID?: string;
@@ -148,6 +149,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       price={product.price}
                       currency={product.currency}
                       divisibility={product.divisibility}
+                      priceFrom={product.priceFrom}
                       vendorName={product.vendorName}
                       vendorAvatar={product.vendorAvatar}
                       vendorPeerID={product.vendorPeerID}

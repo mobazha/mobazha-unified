@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
-import { resolveProductPagePeerID } from '@mobazha/core';
+import {
+  resolveProductPagePeerID,
+  resolveListingDisplayPrice,
+  formatListingPriceForSchema,
+} from '@mobazha/core';
 import { getCanonicalSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 import {
   buildProductPageUrl,
@@ -29,10 +33,20 @@ export async function buildProductPageMetadata(slug: string, peerID?: string): P
 
   const currency =
     product.metadata?.pricingCurrency?.code || product.item.priceCurrency?.code || '';
-  const price = product.item.price;
+  const divisibility =
+    product.item.priceCurrency?.divisibility ??
+    product.metadata?.pricingCurrency?.divisibility ??
+    2;
+  const displayPrice = resolveListingDisplayPrice({
+    basePrice: product.item.price ?? 0,
+    skus: product.item.skus,
+  });
   const productOtherMeta: Record<string, string> = {};
-  if (price !== undefined) {
-    productOtherMeta['product:price:amount'] = String(price);
+  if (displayPrice.minAmountString !== '0') {
+    productOtherMeta['product:price:amount'] = formatListingPriceForSchema(
+      displayPrice.minAmountString,
+      divisibility
+    );
   }
   if (currency) {
     productOtherMeta['product:price:currency'] = currency;

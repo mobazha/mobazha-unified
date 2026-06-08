@@ -14,6 +14,7 @@ import { ApiError } from './client';
 import { caseDetailToOrder } from '../../utils/transforms/caseToOrder';
 import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
 import { orderUsesMonitoredBackendSettlement } from '../../utils/orderSettlement';
+import { minimalAmountAsNumber } from '../../utils/transforms/priceTransform';
 
 async function orderWrite<T>(
   realFn: () => Promise<T>,
@@ -294,7 +295,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
           },
           timestamp: orderItem.timestamp,
           pricingCoin: orderItem.paymentCoin,
-          amount: orderItem.total.amount,
+          amount: minimalAmountAsNumber(orderItem.total.amount),
           items: [
             {
               listingHash: 'Qm' + Math.random().toString(36).slice(2, 48),
@@ -325,7 +326,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
                 item: {
                   title: orderItem.title,
                   description: 'Mock product description',
-                  price: orderItem.total.amount,
+                  price: minimalAmountAsNumber(orderItem.total.amount),
                   images: [
                     typeof orderItem.thumbnail === 'string'
                       ? createMockImage(orderItem.thumbnail)
@@ -345,7 +346,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
         },
         paymentSent: {
           method: orderItem.moderated ? 'MODERATED' : 'DIRECT',
-          amount: orderItem.total.amount,
+          amount: minimalAmountAsNumber(orderItem.total.amount),
           coin: orderItem.paymentCoin,
         },
       },

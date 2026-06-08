@@ -38,7 +38,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   const removeItem = useCartStore(state => state.removeItem);
   const clearCart = useCartStore(state => state.clearCart);
 
-  const subtotal = items.reduce((sum, item) => sum + item.listing.price.amount * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + Number(item.listing.price.amount) * item.quantity,
+    0
+  );
   const currency = items[0]?.listing.price.currency.code ?? 'USD';
 
   const handleCheckout = useCallback(async () => {
@@ -128,7 +131,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     href={buildProductHref(item.listing.slug, item.listing.vendorPeerID)}
                     options={item.options}
                     vendorName={item.listing.vendorName}
-                    unitPrice={item.listing.price.amount}
+                    unitPrice={Number(item.listing.price.amount)}
                     currency={currency}
                     quantity={item.quantity}
                     onUpdateQuantity={qty =>

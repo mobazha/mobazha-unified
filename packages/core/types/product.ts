@@ -22,6 +22,12 @@ export interface ProductListItem {
   title: string;
   thumbnail: Image;
   price: Price;
+  /** Fallback base price when variant prices override storefront display */
+  basePrice?: Price;
+  /** Highest explicit variant price when variants differ */
+  priceMax?: Price;
+  /** True when variant prices span a range */
+  priceHasRange?: boolean;
   averageRating?: number;
   ratingCount?: number;
   vendorPeerID: string;

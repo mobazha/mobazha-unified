@@ -8,7 +8,13 @@ import { Container, Grid, VStack } from '@/components/layouts';
 import { ProductCard, type ProductContractType, type RwaTradeMode } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Layers, Loader2 } from 'lucide-react';
-import { collectionsApi, productDataService, useI18n, getImageUrl } from '@mobazha/core';
+import {
+  collectionsApi,
+  productDataService,
+  useI18n,
+  getImageUrl,
+  productCardPriceFieldsFromListItem,
+} from '@mobazha/core';
 import type { Collection, ProductListItem } from '@mobazha/core';
 import { useProductModal } from '@/hooks';
 
@@ -124,22 +130,26 @@ export default function StoreCollectionPage() {
             </div>
           ) : (
             <Grid cols={4} colsMobile={2} colsTablet={3} gap="md">
-              {products.map(product => (
-                <ProductCard
-                  key={product.slug}
-                  title={product.title}
-                  imageUrl={getImageUrl(product.thumbnail?.medium)}
-                  price={Number(product.price?.amount ?? 0)}
-                  currency={product.price?.currency?.code}
-                  divisibility={product.price?.currency?.divisibility}
-                  contractType={product.contractType as ProductContractType}
-                  rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                  vendorPeerID={peerId}
-                  rating={product.averageRating}
-                  reviewCount={product.ratingCount}
-                  onClick={() => openProduct(product.slug, peerId)}
-                />
-              ))}
+              {products.map(product => {
+                const priceFields = productCardPriceFieldsFromListItem(product);
+                return (
+                  <ProductCard
+                    key={product.slug}
+                    title={product.title}
+                    imageUrl={getImageUrl(product.thumbnail?.medium)}
+                    price={priceFields.price}
+                    currency={priceFields.currencyCode}
+                    divisibility={priceFields.divisibility}
+                    priceFrom={priceFields.priceFrom}
+                    contractType={product.contractType as ProductContractType}
+                    rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                    vendorPeerID={peerId}
+                    rating={product.averageRating}
+                    reviewCount={product.ratingCount}
+                    onClick={() => openProduct(product.slug, peerId)}
+                  />
+                );
+              })}
             </Grid>
           )}
         </VStack>

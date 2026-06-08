@@ -10,6 +10,8 @@ import {
   isBulkRestockEligible,
   isBulkImportKeysEligible,
   buildProductHref,
+  listingDisplayPriceFromListItem,
+  formatListingDisplayPriceLabel,
 } from '@mobazha/core';
 import { productDataService } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
@@ -381,15 +383,39 @@ export default function AdminProductsPage() {
     }
   };
 
-  function renderPrice(price: {
-    amount?: number;
-    currency?: { code?: string; divisibility?: number };
-    currencyCode?: string;
-  }): string {
-    if (!price.amount) return '—';
-    const code = price.currency?.code || price.currencyCode || 'USD';
-    const standardAmount = fromMinimalUnit(price.amount, code);
-    return formatPrice(standardAmount, code);
+  function renderAdminProductPrice(product: ProductListItem) {
+    const code = product.price.currency?.code;
+    const divisibility = product.price.currency?.divisibility ?? 2;
+    const display = listingDisplayPriceFromListItem(product);
+    const storefront = formatListingDisplayPriceLabel(
+      display,
+      (amount, currency) => formatPrice(fromMinimalUnit(amount, currency), currency),
+      code,
+      divisibility,
+      t
+    );
+
+    if (!product.basePrice || display.baseAmount === display.minAmount) {
+      return <span>{storefront}</span>;
+    }
+
+    const baseCode = product.basePrice.currency?.code || code;
+    if (!baseCode?.trim()) {
+      return <span>{storefront}</span>;
+    }
+    const base = formatPrice(
+      fromMinimalUnit(product.basePrice.amount ?? display.baseAmount, baseCode),
+      baseCode
+    );
+
+    return (
+      <span className="inline-flex flex-col">
+        <span>{t('admin.products.priceStorefront', { price: storefront })}</span>
+        <span className="text-xs text-muted-foreground font-normal">
+          {t('admin.products.priceBase', { price: base })}
+        </span>
+      </span>
+    );
   }
 
   function contractTypeLabel(type?: string): string {
@@ -699,7 +725,7 @@ export default function AdminProductsPage() {
                   <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-sm font-semibold text-primary">
-                      {renderPrice(product.price)}
+                      {renderAdminProductPrice(product)}
                     </span>
                     {statusBadge(product.status)}
                     <ProductSupplyModeBadge {...supplyContextFor(product)} />
@@ -821,7 +847,7 @@ export default function AdminProductsPage() {
                       <ProductAvailabilityCell {...supplyContextFor(product)} />
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-foreground">
-                      {renderPrice(product.price)}
+                      {renderAdminProductPrice(product)}
                     </td>
                     <td className="px-4 py-3">
                       <ProductActions {...productActionProps(product)} />
@@ -860,7 +886,7 @@ export default function AdminProductsPage() {
                 <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
                 <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                   <span className="text-sm font-semibold text-primary">
-                    {renderPrice(product.price)}
+                    {renderAdminProductPrice(product)}
                   </span>
                   {statusBadge(product.status)}
                   <ProductSupplyModeBadge {...supplyContextFor(product)} />

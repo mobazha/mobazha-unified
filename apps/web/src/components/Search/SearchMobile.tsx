@@ -246,6 +246,7 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
               title={product.title}
               imageUrl={product.image}
               price={product.price}
+              priceFrom={product.priceFrom}
               currency={product.currency}
               divisibility={product.divisibility}
               vendorName={product.vendor.name}

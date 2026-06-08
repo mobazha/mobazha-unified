@@ -66,15 +66,15 @@ describe('getProductCurrencyCode', () => {
     expect(getProductCurrencyCode(product)).toBe('EUR');
   });
 
-  it('falls back to USD when no currency info', () => {
+  it('returns undefined when no currency info', () => {
     const product = {
       price: { amount: 1000 },
     } as any;
-    expect(getProductCurrencyCode(product)).toBe('USD');
+    expect(getProductCurrencyCode(product)).toBeUndefined();
   });
 
   it('handles undefined price gracefully', () => {
     const product = {} as any;
-    expect(getProductCurrencyCode(product)).toBe('USD');
+    expect(getProductCurrencyCode(product)).toBeUndefined();
   });
 });

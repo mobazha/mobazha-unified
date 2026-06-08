@@ -79,7 +79,7 @@ function priceToDisplayAmount(
   if (!listing?.price) return null;
   const divisibility = listing.price.currency?.divisibility ?? 2;
   return {
-    amount: listing.price.amount / 10 ** divisibility,
+    amount: Number(listing.price.amount) / 10 ** divisibility,
     currency: listing.price.currency?.code || 'USD',
   };
 }
