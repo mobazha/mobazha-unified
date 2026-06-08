@@ -81,6 +81,8 @@ import {
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { OrderRefundAddressBanner } from '@/components/Order/cards/OrderRefundAddressBanner';
+import { OrderRefundDestinationCard } from '@/components/Order/cards/OrderRefundDestinationCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -185,6 +187,13 @@ export function OrderDetailMobile({
     closeReviewDialog,
     copyOrderId,
     copyContract,
+    buyerRefundAddress,
+    buyerNeedsRefundAddress,
+    showRefundDestination,
+    isSavingRefundAddress,
+    saveBuyerRefundAddress,
+    ensureBuyerRefundAddress,
+    notifyOrderActionError,
     acceptOrderProps,
     shipOrderProps,
     sellerDigitalDelivery,
@@ -446,6 +455,7 @@ export function OrderDetailMobile({
           router.push(`/payment?orderID=${orderId}`);
           break;
         case 'Cancel':
+          if (!ensureBuyerRefundAddress()) break;
           setConfirmDialog('cancel');
           break;
         case 'Complete':
@@ -512,6 +522,7 @@ export function OrderDetailMobile({
           if (displayOrder?.fiatPayment) {
             setShowFiatRefundDialog(true);
           } else {
+            if (!ensureBuyerRefundAddress()) break;
             setConfirmDialog('refund');
           }
           break;
@@ -522,6 +533,7 @@ export function OrderDetailMobile({
           openAcceptPayoutDialog();
           break;
         case 'Dispute':
+          if (!ensureBuyerRefundAddress()) break;
           setIsAfterSaleDispute(false);
           setShowDisputeModal(true);
           break;
@@ -543,6 +555,7 @@ export function OrderDetailMobile({
       sellerDigitalDelivery,
       shouldBlockAutoRefund,
       openAcceptPayoutDialog,
+      ensureBuyerRefundAddress,
       t,
       toast,
     ]
@@ -572,6 +585,8 @@ export function OrderDetailMobile({
 
   const handleDisputeSubmit = useCallback(
     async (claim: string, evidenceHashes?: string[]) => {
+      if (!isAfterSaleDispute && !ensureBuyerRefundAddress()) return;
+
       setIsDisputeLoading(true);
       try {
         await ordersApi.openDispute(orderId, claim, evidenceHashes);
@@ -584,16 +599,21 @@ export function OrderDetailMobile({
         setTimeout(() => refetch(), 500);
       } catch (error) {
         haptic.error();
-        toast({
-          title: t('order.actions.error'),
-          description: (error as Error).message,
-          variant: 'destructive',
-        });
+        notifyOrderActionError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setIsDisputeLoading(false);
       }
     },
-    [orderId, refetch, t, toast, haptic]
+    [
+      orderId,
+      refetch,
+      t,
+      toast,
+      haptic,
+      isAfterSaleDispute,
+      ensureBuyerRefundAddress,
+      notifyOrderActionError,
+    ]
   );
 
   const handleAfterSaleDisputeSubmit = useCallback(
@@ -984,6 +1004,21 @@ export function OrderDetailMobile({
                 ) : (
                   <OrderStatusCard displayOrder={displayOrder} />
                 ))}
+
+              {buyerNeedsRefundAddress && (
+                <OrderRefundAddressBanner
+                  initialAddress={buyerRefundAddress}
+                  isSaving={isSavingRefundAddress}
+                  onSave={async address => {
+                    await saveBuyerRefundAddress(address);
+                  }}
+                  className="mb-4"
+                />
+              )}
+
+              {showRefundDestination && (
+                <OrderRefundDestinationCard address={buyerRefundAddress} className="mb-4" />
+              )}
 
               {!(
                 displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'

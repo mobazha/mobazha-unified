@@ -74,6 +74,8 @@ import {
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { OrderRefundAddressBanner } from '@/components/Order/cards/OrderRefundAddressBanner';
+import { OrderRefundDestinationCard } from '@/components/Order/cards/OrderRefundDestinationCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 import { orderDetailPath } from '@/lib/ordersNavigation';
 
@@ -128,6 +130,13 @@ export function OrderDetailDesktop({
     closeReviewDialog,
     copyOrderId,
     copyContract,
+    buyerRefundAddress,
+    buyerNeedsRefundAddress,
+    showRefundDestination,
+    isSavingRefundAddress,
+    saveBuyerRefundAddress,
+    ensureBuyerRefundAddress,
+    notifyOrderActionError,
     acceptOrderProps,
     shipOrderProps,
     sellerDigitalDelivery,
@@ -370,6 +379,7 @@ export function OrderDetailDesktop({
           router.push(`/payment?orderID=${orderId}`);
           break;
         case 'Cancel':
+          if (!ensureBuyerRefundAddress()) break;
           setConfirmDialog('cancel');
           break;
         case 'Complete':
@@ -434,6 +444,7 @@ export function OrderDetailDesktop({
           if (displayOrder?.fiatPayment) {
             setShowFiatRefundDialog(true);
           } else {
+            if (!ensureBuyerRefundAddress()) break;
             setConfirmDialog('refund');
           }
           break;
@@ -444,6 +455,7 @@ export function OrderDetailDesktop({
           openAcceptPayoutDialog();
           break;
         case 'Dispute':
+          if (!ensureBuyerRefundAddress()) break;
           setIsAfterSaleDispute(false);
           setShowDisputeModal(true);
           break;
@@ -465,6 +477,7 @@ export function OrderDetailDesktop({
       sellerDigitalDelivery,
       shouldBlockAutoRefund,
       openAcceptPayoutDialog,
+      ensureBuyerRefundAddress,
       t,
       toast,
     ]
@@ -489,6 +502,8 @@ export function OrderDetailDesktop({
 
   const handleDisputeSubmit = useCallback(
     async (claim: string, evidenceHashes?: string[]) => {
+      if (!isAfterSaleDispute && !ensureBuyerRefundAddress()) return;
+
       setIsDisputeLoading(true);
       try {
         await ordersApi.openDispute(orderId, claim, evidenceHashes);
@@ -499,16 +514,20 @@ export function OrderDetailDesktop({
         });
         setTimeout(() => refetch(), 500);
       } catch (error) {
-        toast({
-          title: t('order.actions.error'),
-          description: (error as Error).message,
-          variant: 'destructive',
-        });
+        notifyOrderActionError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setIsDisputeLoading(false);
       }
     },
-    [orderId, refetch, t, toast]
+    [
+      orderId,
+      refetch,
+      t,
+      toast,
+      isAfterSaleDispute,
+      ensureBuyerRefundAddress,
+      notifyOrderActionError,
+    ]
   );
 
   const handleAfterSaleDisputeSubmit = useCallback(
@@ -812,6 +831,21 @@ export function OrderDetailDesktop({
                   />
                 ) : (
                   <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                )}
+
+                {buyerNeedsRefundAddress && (
+                  <OrderRefundAddressBanner
+                    initialAddress={buyerRefundAddress}
+                    isSaving={isSavingRefundAddress}
+                    onSave={async address => {
+                      await saveBuyerRefundAddress(address);
+                    }}
+                    className="mb-4"
+                  />
+                )}
+
+                {showRefundDestination && (
+                  <OrderRefundDestinationCard address={buyerRefundAddress} className="mb-4" />
                 )}
 
                 {!(

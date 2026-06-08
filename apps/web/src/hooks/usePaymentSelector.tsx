@@ -4,7 +4,12 @@ import React, { useState, useCallback, useMemo, createContext, useContext } from
 import { useRouter } from 'next/navigation';
 import { useMediaQuery } from './useMediaQuery';
 import { useModerators } from './useModerators';
-import { getTokenById, isPaymentCoinEnabled, usePaymentMethods } from '@mobazha/core';
+import {
+  getTokenById,
+  isPaymentCoinEnabled,
+  isRetiredPaymentChain,
+  usePaymentMethods,
+} from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
 type PaymentCategory = 'crypto' | 'fiat';
@@ -43,9 +48,10 @@ const PaymentSelectorContext = createContext<PaymentSelectorContextValue | null>
 function enabledTokenID(tokenID: string | null): string | undefined {
   if (!tokenID) return undefined;
   const token = getTokenById(tokenID);
-  return token && !token.disabled && isPaymentCoinEnabled(token.assetId || token.id)
-    ? token.id
-    : undefined;
+  if (!token || token.disabled) return undefined;
+  const assetId = token.assetId || token.id;
+  if (!isPaymentCoinEnabled(assetId) || isRetiredPaymentChain(assetId)) return undefined;
+  return token.id;
 }
 
 /**

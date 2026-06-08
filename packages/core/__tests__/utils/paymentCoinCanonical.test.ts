@@ -7,6 +7,7 @@ import {
   getChainFromCoin,
   isCanonicalPaymentCoin,
   isPaymentCoinEnabled,
+  isRetiredPaymentChain,
   mustCanonicalCoin,
   getTokenByPaymentCoin,
   getTokenDecimals,
@@ -114,5 +115,9 @@ describe('mustCanonicalCoin', () => {
     expect(isPaymentCoinEnabled('crypto:solana:mainnet:native')).toBe(true);
     expect(isPaymentCoinEnabled('ZEC')).toBe(false);
     expect(isPaymentCoinEnabled('crypto:zcash:mainnet:native')).toBe(false);
+    expect(isPaymentCoinEnabled('TRX')).toBe(false);
+    expect(isPaymentCoinEnabled('crypto:tron:mainnet:native')).toBe(false);
+    expect(isRetiredPaymentChain('crypto:tron:mainnet:native')).toBe(true);
+    expect(isRetiredPaymentChain('crypto:eip155:1:native')).toBe(false);
   });
 });

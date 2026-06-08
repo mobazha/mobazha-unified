@@ -9,8 +9,8 @@ import {
   CheckoutBottomBar,
   TransactionOverlay,
   FiatPaymentSection,
-  TronGasHint,
   ExternalWalletPayment,
+  PaymentRefundSection,
 } from '@/components/Payment';
 import type {
   PaymentStep,
@@ -19,7 +19,6 @@ import type {
 } from '@/components/Payment';
 import { getTokenById } from '@/components/Payment/config';
 import { OrderSummaryCard } from '@/components/Order';
-import { RwaPurchaseFlow } from '@/components/RwaToken';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,8 +36,6 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { usePaymentSelector } from '@/hooks';
 import {
-  useWallet,
-  useTronWallet,
   useCurrency,
   useRateFreshness,
   useI18n,
@@ -54,6 +51,8 @@ import {
   getBaseRateSymbol,
   getPaymentReadinessBlockedCopyKeys,
   shouldShowPaymentReadinessPlaceholder,
+  resolveBuyerRefundAddress,
+  isRetiredPaymentChain,
   type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
@@ -96,13 +95,7 @@ interface OrderDetails {
     amount: string;
     currency: string;
   };
-  // RWA 相关
-  isRwaToken?: boolean;
-  rwaTradeMode?: number;
-  rwaEscrowTimeoutSeconds?: number;
-  cryptoListingCurrencyCode?: string;
   contractType?: string;
-  // 原始订单金额（最小单位，用于传统订单支付）
   rawOrderAmount?: number;
 }
 
@@ -244,17 +237,9 @@ export default function PaymentPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const haptic = useHaptic();
-  const evmWallet = useWallet();
-  const tronWallet = useTronWallet();
 
   // 从 URL 获取参数
   const orderID = searchParams.get('orderID');
-  const urlIsRwaToken = searchParams.get('isRwaToken') === 'true';
-  const urlRwaTradeMode = searchParams.get('rwaTradeMode');
-  const urlEscrowTimeout = searchParams.get('escrowTimeout');
-  const urlTokenCode = searchParams.get('tokenCode');
-
-  // 从 URL 获取订单信息（由 checkout 页面传递）
   const urlAmount = searchParams.get('amount');
   const urlCurrency = searchParams.get('currency');
   const urlTitle = searchParams.get('title');
@@ -289,12 +274,12 @@ export default function PaymentPage() {
   const [isCheckingSellerReceipt, setIsCheckingSellerReceipt] = useState(false);
   const [isCancelingOrder, setIsCancelingOrder] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [refundWalletAddress, setRefundWalletAddress] = useState('');
+  const [payFromCustodial, setPayFromCustodial] = useState(false);
+  const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
 
   const paymentReadinessPollEnabled =
-    Boolean(orderID) &&
-    Boolean(orderDetails) &&
-    !orderDetails?.isRwaToken &&
-    isPaymentOpenState(orderDetails?.status);
+    Boolean(orderID) && Boolean(orderDetails) && isPaymentOpenState(orderDetails?.status);
 
   const {
     isCheckingReadiness,
@@ -378,9 +363,13 @@ export default function PaymentPage() {
 
   // 链类别检测与统一钱包状态
   const chainCategory = selectedPaymentCoin ? resolveChainCategory(selectedPaymentCoin) : null;
-  const isTronPayment = chainCategory === 'tron';
-  const usesPaymentSessionFlow = Boolean(chainCategory) && !orderDetails?.isRwaToken;
-  const isConnecting = isTronPayment ? tronWallet.isConnecting : evmWallet.isConnecting;
+  const isRetiredPayment = isRetiredPaymentChain(selectedPaymentCoin);
+  const usesPaymentSessionFlow = Boolean(chainCategory);
+  const isCryptoPaymentFlow =
+    Boolean(selectedTokenId) && !selectedFiatProvider && usesPaymentSessionFlow;
+  const resolvedRefundAddress = resolveBuyerRefundAddress(rawOrder, paymentSession);
+  const requiresCustodialRefundInput = isCryptoPaymentFlow && payFromCustodial;
+  const canProceedToPay = !requiresCustodialRefundInput || refundWalletAddress.trim().length > 0;
 
   // 地址监听支付信息（UTXO / managed settlement）
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
@@ -392,12 +381,45 @@ export default function PaymentPage() {
     externalWalletActiveRef.current = externalWalletInfo !== null;
   }, [externalWalletInfo]);
 
+  const cryptoRefundSection = isCryptoPaymentFlow ? (
+    <PaymentRefundSection
+      resolvedAddress={resolvedRefundAddress}
+      refundAddress={refundWalletAddress}
+      onRefundAddressChange={setRefundWalletAddress}
+      payFromCustodial={payFromCustodial}
+      onPayFromCustodialChange={setPayFromCustodial}
+      compact
+    />
+  ) : null;
+
+  // Persist refund address while the QR / copy UI is visible (exchange path).
+  useEffect(() => {
+    if (!externalWalletInfo || !orderID || !selectedPaymentCoin || !orderDetails) return;
+    const trimmed = refundWalletAddress.trim();
+    if (!trimmed) return;
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          await ordersApi.setOrderRefundAddress({
+            orderId: orderID,
+            refundAddress: trimmed,
+            paymentCoin: selectedPaymentCoin,
+            vendorPeerID: orderDetails.vendor.peerID,
+          });
+          const session = await ordersApi.getOrderPaymentSession(orderID);
+          setPaymentSession(session);
+        } catch {
+          // Silent while typing; explicit save remains on order detail.
+        }
+      })();
+    }, 600);
+
+    return () => window.clearTimeout(timer);
+  }, [externalWalletInfo, orderID, selectedPaymentCoin, orderDetails, refundWalletAddress]);
+
   const showMobileBottomBar =
-    Boolean(orderDetails) &&
-    !orderDetails?.isRwaToken &&
-    !selectedFiatProvider &&
-    !externalWalletInfo &&
-    !isPaymentBlocked;
+    Boolean(orderDetails) && !selectedFiatProvider && !externalWalletInfo && !isPaymentBlocked;
 
   // 切换支付方式时清除外部钱包信息
   useEffect(() => {
@@ -433,6 +455,7 @@ export default function PaymentPage() {
 
       const order = await ordersApi.getOrderDetails(orderID);
       const session = await ordersApi.getOrderPaymentSession(orderID).catch(() => null);
+      setPaymentSession(session);
       const nextState = typeof order?.state === 'string' ? order.state : null;
       const sessionVerified = isPaymentSessionVerified(session);
 
@@ -553,11 +576,20 @@ export default function PaymentPage() {
       try {
         // 调用真实的订单详情 API
         const order = await ordersApi.getOrderDetails(orderID);
+        if (!order) {
+          throw new Error(t('payment.loadOrderFailed'));
+        }
+        const session = await ordersApi.getOrderPaymentSession(orderID).catch(() => null);
+        setPaymentSession(session);
         setRawOrder(order);
 
-        // 从订单中提取商品信息
+        const savedRefundAddress = resolveBuyerRefundAddress(order, session);
+        if (savedRefundAddress) {
+          setRefundWalletAddress(savedRefundAddress);
+        }
+
+        const contract = order.contract as any;
         // 使用 orderOpen 结构（与桌面端一致）
-        const contract = order?.contract as any;
         const orderOpen = contract?.orderOpen;
 
         if (!orderOpen) {
@@ -584,16 +616,12 @@ export default function PaymentPage() {
         // 处理 listings（每个元素是 {cid, listing, signature}）
         const normalizedListings = rawListings.map((item: any) => item.listing || item);
 
-        // 判断是否为 RWA Token（优先使用 URL 参数）
         const metadata = normalizedListings[0]?.metadata as any;
         const contractType = urlContractType || metadata?.contractType;
-        const isRwa = urlIsRwaToken || contractType === 'RWA_TOKEN';
-        const rwaMode = urlRwaTradeMode ? parseInt(urlRwaTradeMode, 10) : metadata?.rwaTradeMode;
-        const escrowTimeout = urlEscrowTimeout
-          ? parseInt(urlEscrowTimeout, 10)
-          : metadata?.rwaEscrowTimeoutSeconds || metadata?.escrowTimeoutSeconds || 86400;
-        const tokenCode =
-          urlTokenCode || (normalizedListings[0]?.item as any)?.cryptoListingCurrencyCode;
+        if (contractType === 'RWA_TOKEN') {
+          setError(t('payment.rwaNotSupported'));
+          return;
+        }
 
         // 转换为 OrderDetails 格式
         let items = normalizedListings.map((listing: any, index: number) => {
@@ -694,13 +722,7 @@ export default function PaymentPage() {
           shipping: shippingAmount,
           total: finalTotal,
           currency: items[0]?.currency || urlCurrency || pricingCurrency,
-          // RWA 相关
-          isRwaToken: isRwa,
-          rwaTradeMode: rwaMode,
-          rwaEscrowTimeoutSeconds: escrowTimeout,
-          cryptoListingCurrencyCode: tokenCode,
           contractType,
-          // 保存原始订单金额（用于传统订单支付）
           rawOrderAmount: orderAmount,
         };
 
@@ -710,6 +732,11 @@ export default function PaymentPage() {
 
         // API 调用失败时，尝试使用 URL 参数构建订单详情
         if (urlTitle && urlAmount) {
+          if (urlContractType === 'RWA_TOKEN') {
+            setError(t('payment.rwaNotSupported'));
+            return;
+          }
+
           const priceNum = parseFloat(urlAmount);
           const quantityNum = parseInt(urlQuantity || '1', 10);
 
@@ -742,10 +769,6 @@ export default function PaymentPage() {
             shipping: 0,
             total: priceNum,
             currency: urlCurrency || 'USD',
-            isRwaToken: urlIsRwaToken,
-            rwaTradeMode: urlRwaTradeMode ? parseInt(urlRwaTradeMode, 10) : undefined,
-            rwaEscrowTimeoutSeconds: urlEscrowTimeout ? parseInt(urlEscrowTimeout, 10) : undefined,
-            cryptoListingCurrencyCode: urlTokenCode || undefined,
             contractType: urlContractType || undefined,
           };
 
@@ -762,10 +785,6 @@ export default function PaymentPage() {
   }, [
     orderID,
     t,
-    urlIsRwaToken,
-    urlRwaTradeMode,
-    urlEscrowTimeout,
-    urlTokenCode,
     urlAmount,
     urlCurrency,
     urlTitle,
@@ -899,6 +918,23 @@ export default function PaymentPage() {
       return;
     }
 
+    if (isRetiredPayment) {
+      toast({
+        title: t('payment.tronNotSupported'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (requiresCustodialRefundInput && !refundWalletAddress.trim()) {
+      toast({
+        title: t('payment.custodialPayment.requiredTitle'),
+        description: t('payment.custodialPayment.requiredDesc'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (paymentProtectionEnabled && !paymentModerator) {
       toast({
         title: t('payment.selectModerator'),
@@ -922,7 +958,10 @@ export default function PaymentPage() {
           paymentCoin: selectedPaymentCoin,
           vendorPeerID: orderDetails.vendor.peerID,
           moderator: moderatorPeerID,
+          refundAddress: refundWalletAddress.trim() || undefined,
+          payFromCustodial: payFromCustodial || undefined,
         });
+        setPaymentSession(session);
 
         if (session.paymentReadiness?.status === 'awaiting_seller_receipt') {
           const copy = getPaymentReadinessBlockedCopyKeys({ tier: readinessUxTier });
@@ -962,14 +1001,15 @@ export default function PaymentPage() {
     selectedFiatProvider,
     paymentProtectionEnabled,
     paymentModerator,
-    isTronPayment,
     isReadyToPay,
     readinessFetchError,
     readinessUxTier,
     readinessBlockedCopy,
     refreshPaymentReadiness,
+    requiresCustodialRefundInput,
+    payFromCustodial,
+    refundWalletAddress,
     usesPaymentSessionFlow,
-    tronWallet,
     router,
     t,
     toast,
@@ -1191,356 +1231,325 @@ export default function PaymentPage() {
                   memo={orderDetails.memo}
                 />
 
-                {/* RWA Token 支付流程 */}
-                {orderDetails.isRwaToken ? (
-                  <RwaPurchaseFlow
-                    order={rawOrder!}
-                    rwaTradeMode={orderDetails.rwaTradeMode}
-                    escrowTimeoutSeconds={orderDetails.rwaEscrowTimeoutSeconds}
-                    cryptoListingCurrencyCode={orderDetails.cryptoListingCurrencyCode}
-                    onSuccess={() => {
-                      toast({ title: t('payment.success') });
-                      router.push(buildConfirmationUrl(orderDetails));
-                    }}
-                    onCancel={() => router.back()}
-                  />
-                ) : (
+                {externalWalletInfo ? (
                   <>
-                    {externalWalletInfo ? (
-                      <ExternalWalletPayment
-                        paymentInfo={externalWalletInfo}
-                        tokenId={selectedTokenId || undefined}
-                        onRefresh={() => {
-                          setExternalWalletInfo(null);
-                          handlePayment();
-                        }}
-                        onClose={() => {
-                          setExternalWalletInfo(null);
-                          router.push(orderDetailPath(orderDetails.orderID, 'purchase'));
-                        }}
-                      />
-                    ) : isPaymentBlocked &&
-                      shouldShowPaymentReadinessPlaceholder(readinessUxTier) ? (
+                    <ExternalWalletPayment
+                      paymentInfo={externalWalletInfo}
+                      tokenId={selectedTokenId || undefined}
+                      onRefresh={() => {
+                        setExternalWalletInfo(null);
+                        handlePayment();
+                      }}
+                      onClose={() => {
+                        setExternalWalletInfo(null);
+                        router.push(orderDetailPath(orderDetails.orderID, 'purchase'));
+                      }}
+                    />
+                    {cryptoRefundSection}
+                  </>
+                ) : isPaymentBlocked && shouldShowPaymentReadinessPlaceholder(readinessUxTier) ? (
+                  <Card>
+                    <CardContent className="p-4 sm:p-6" role="status" aria-live="polite">
+                      <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                        {t(readinessBlockedCopy.titleKey)}
+                      </h2>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t(readinessBlockedCopy.hintKey)}
+                      </p>
+                      <Skeleton variant="text" height={24} width="45%" className="mb-4" />
+                      <Skeleton variant="rounded" height={72} className="mb-4" />
+                      <Skeleton variant="rounded" height={48} />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  !isPaymentBlocked && (
+                    <>
+                      {/* Payment Method Selection */}
                       <Card>
-                        <CardContent className="p-4 sm:p-6" role="status" aria-live="polite">
-                          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                            {t(readinessBlockedCopy.titleKey)}
+                        <CardContent className="p-4 sm:p-6">
+                          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                            {t('payment.paymentMethod')}
                           </h2>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            {t(readinessBlockedCopy.hintKey)}
-                          </p>
-                          <Skeleton variant="text" height={24} width="45%" className="mb-4" />
-                          <Skeleton variant="rounded" height={72} className="mb-4" />
-                          <Skeleton variant="rounded" height={48} />
+                          <PaymentMethodSummary
+                            selectedTokenId={selectedTokenId}
+                            selectedFiatProvider={selectedFiatProvider}
+                            onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
+                          />
                         </CardContent>
                       </Card>
-                    ) : (
-                      !isPaymentBlocked && (
-                        <>
-                          {/* Payment Method Selection */}
-                          <Card>
-                            <CardContent className="p-4 sm:p-6">
-                              <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                                {t('payment.paymentMethod')}
-                              </h2>
-                              <PaymentMethodSummary
-                                selectedTokenId={selectedTokenId}
-                                selectedFiatProvider={selectedFiatProvider}
-                                onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
-                              />
-                            </CardContent>
-                          </Card>
 
-                          {/* Fiat Payment Form (Stripe / PayPal) */}
-                          {selectedFiatProvider && isReadyToPay && (
-                            <Card>
-                              <CardContent className="p-4 sm:p-6">
-                                <FiatPaymentSection
-                                  providerID={selectedFiatProvider}
-                                  vendorPeerID={orderDetails.vendor.peerID}
-                                  orderID={orderDetails.orderID}
-                                  amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
-                                  currency={orderDetails.currency}
-                                  description={orderDetails.items[0]?.title}
-                                  returnUrl={buildConfirmationUrl(orderDetails, {
-                                    providerID: selectedFiatProvider,
-                                    amount: toMinimalUnit(
-                                      orderDetails.total,
-                                      orderDetails.currency
-                                    ),
-                                  })}
-                                  canCreateSession={isReadyToPay}
-                                  onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
-                                    try {
-                                      const submitResult = await ordersApi.submitPayment({
-                                        orderID: orderDetails.orderID,
-                                        transactionID: result.transactionID,
-                                        coin: buildFiatPaymentCoin(
-                                          result.providerID,
-                                          result.currency
-                                        ),
-                                        amount: String(result.amount),
-                                        timestamp: new Date().toISOString(),
-                                        method: 5, // FIAT
-                                      });
-                                      if (submitResult?.success === false) {
-                                        throw new Error(
-                                          submitResult.error || 'submit payment failed'
-                                        );
-                                      }
-                                      router.push(
-                                        buildConfirmationUrl(orderDetails, {
-                                          providerID: result.providerID,
-                                          amount: result.amount,
-                                        })
-                                      );
-                                    } catch (err) {
-                                      const message =
-                                        err instanceof Error ? err.message : t('fiat.genericError');
-                                      toast({
-                                        title: t('fiat.paymentBeingConfirmed'),
-                                        description: message,
-                                        variant: 'destructive',
-                                      });
-                                      router.push(
-                                        buildConfirmationUrl(orderDetails, {
-                                          providerID: result.providerID,
-                                          amount: result.amount,
-                                        })
-                                      );
-                                    }
-                                  }}
-                                  onPaymentError={msg => {
-                                    toast({
-                                      title: t('fiat.genericError'),
-                                      description: msg,
-                                      variant: 'destructive',
-                                    });
-                                  }}
-                                />
-                              </CardContent>
-                            </Card>
-                          )}
-
-                          {/* Payment Protection (crypto only) */}
-                          {!selectedFiatProvider && (
-                            <PaymentProtectionCard
-                              enabled={paymentProtectionEnabled}
-                              onEnabledChange={setPaymentProtectionEnabled}
-                              selectedModerator={paymentModerator}
-                              onChangeModerator={() =>
-                                openModeratorSelector('/payment?orderID=' + orderID)
-                              }
-                              protectionDays={45}
+                      {/* Fiat Payment Form (Stripe / PayPal) */}
+                      {selectedFiatProvider && isReadyToPay && (
+                        <Card>
+                          <CardContent className="p-4 sm:p-6">
+                            <FiatPaymentSection
+                              providerID={selectedFiatProvider}
+                              vendorPeerID={orderDetails.vendor.peerID}
+                              orderID={orderDetails.orderID}
+                              amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
+                              currency={orderDetails.currency}
+                              description={orderDetails.items[0]?.title}
+                              returnUrl={buildConfirmationUrl(orderDetails, {
+                                providerID: selectedFiatProvider,
+                                amount: toMinimalUnit(orderDetails.total, orderDetails.currency),
+                              })}
+                              canCreateSession={isReadyToPay}
+                              onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
+                                try {
+                                  const submitResult = await ordersApi.submitPayment({
+                                    orderID: orderDetails.orderID,
+                                    transactionID: result.transactionID,
+                                    coin: buildFiatPaymentCoin(result.providerID, result.currency),
+                                    amount: String(result.amount),
+                                    timestamp: new Date().toISOString(),
+                                    method: 5, // FIAT
+                                  });
+                                  if (submitResult?.success === false) {
+                                    throw new Error(submitResult.error || 'submit payment failed');
+                                  }
+                                  router.push(
+                                    buildConfirmationUrl(orderDetails, {
+                                      providerID: result.providerID,
+                                      amount: result.amount,
+                                    })
+                                  );
+                                } catch (err) {
+                                  const message =
+                                    err instanceof Error ? err.message : t('fiat.genericError');
+                                  toast({
+                                    title: t('fiat.paymentBeingConfirmed'),
+                                    description: message,
+                                    variant: 'destructive',
+                                  });
+                                  router.push(
+                                    buildConfirmationUrl(orderDetails, {
+                                      providerID: result.providerID,
+                                      amount: result.amount,
+                                    })
+                                  );
+                                }
+                              }}
+                              onPaymentError={msg => {
+                                toast({
+                                  title: t('fiat.genericError'),
+                                  description: msg,
+                                  variant: 'destructive',
+                                });
+                              }}
                             />
-                          )}
-                        </>
-                      )
-                    )}
-                  </>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {cryptoRefundSection}
+
+                      {/* Payment Protection (crypto only) */}
+                      {!selectedFiatProvider && (
+                        <PaymentProtectionCard
+                          enabled={paymentProtectionEnabled}
+                          onEnabledChange={setPaymentProtectionEnabled}
+                          selectedModerator={paymentModerator}
+                          onChangeModerator={() =>
+                            openModeratorSelector('/payment?orderID=' + orderID)
+                          }
+                          protectionDays={45}
+                        />
+                      )}
+                    </>
+                  )
                 )}
               </div>
 
-              {/* Payment Summary - 仅非 RWA 商品显示 */}
-              {!orderDetails.isRwaToken && (
-                <div className="space-y-4 sm:space-y-6">
-                  <Card className="sticky top-4">
-                    <CardContent className="p-4 sm:p-6">
-                      <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
-                        {t('payment.paymentSummary')}
-                      </h2>
+              {/* Payment Summary */}
+              <div className="space-y-4 sm:space-y-6">
+                <Card className="sticky top-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+                      {t('payment.paymentSummary')}
+                    </h2>
 
-                      <VStack gap="sm" className="border-b border-border pb-3 mb-3">
-                        <HStack justify="between">
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('payment.subtotal')}
-                          </span>
-                          <span className="font-medium text-foreground text-xs sm:text-sm">
-                            {renderPairedPrice(orderDetails.subtotal, orderDetails.currency, {
-                              isMinimalUnit: false,
-                            })}
-                          </span>
-                        </HStack>
-
-                        {orderDetails.shipping > 0 && (
-                          <HStack justify="between">
-                            <span className="text-xs sm:text-sm text-muted-foreground">
-                              {t('payment.shipping')}
-                            </span>
-                            <span className="font-medium text-foreground text-xs sm:text-sm">
-                              {renderPairedPrice(orderDetails.shipping, orderDetails.currency, {
-                                isMinimalUnit: false,
-                              })}
-                            </span>
-                          </HStack>
-                        )}
-
-                        <HStack justify="between">
-                          <span className="text-xs sm:text-sm text-muted-foreground">
-                            {t('payment.orderTotal')}
-                          </span>
-                          <span className="font-medium text-foreground text-xs sm:text-sm">
-                            {renderPairedPrice(orderDetails.total, orderDetails.currency, {
-                              isMinimalUnit: false,
-                            })}
-                          </span>
-                        </HStack>
-                      </VStack>
-
-                      <HStack justify="between" className="mb-4">
-                        <span className="text-base sm:text-lg font-semibold text-foreground">
-                          {t('payment.totalToPay')}
+                    <VStack gap="sm" className="border-b border-border pb-3 mb-3">
+                      <HStack justify="between">
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {t('payment.subtotal')}
                         </span>
-                        <div className="text-right">
-                          <p className="text-lg sm:text-xl font-bold text-primary">
-                            {renderPairedPrice(totalWithFee, orderDetails.currency, {
-                              isMinimalUnit: false,
-                            })}
-                          </p>
-                          {externalWalletInfo ? (
-                            <p className="text-xs text-muted-foreground">
-                              = {formatExternalPaymentAmountForSummary(externalWalletInfo)}{' '}
-                              {nativeSymbol.toUpperCase()}
-                            </p>
-                          ) : selectedTokenId && cryptoAmountDisplay ? (
-                            <p className="text-xs text-muted-foreground">
-                              ≈ {cryptoAmountDisplay} {nativeSymbol}
-                              {secondsAgo !== null && (
-                                <span className="ml-1.5 opacity-60">
-                                  ({t('payment.rateUpdated', { seconds: secondsAgo })})
-                                </span>
-                              )}
-                            </p>
-                          ) : null}
-                        </div>
+                        <span className="font-medium text-foreground text-xs sm:text-sm">
+                          {renderPairedPrice(orderDetails.subtotal, orderDetails.currency, {
+                            isMinimalUnit: false,
+                          })}
+                        </span>
                       </HStack>
 
-                      {/* TRON Gas Hint — only when payment is unblocked */}
-                      {isTronPayment && !isPaymentBlocked && (
-                        <div className="mb-3">
-                          <TronGasHint trxBalance={tronWallet.trxBalance} />
-                        </div>
+                      {orderDetails.shipping > 0 && (
+                        <HStack justify="between">
+                          <span className="text-xs sm:text-sm text-muted-foreground">
+                            {t('payment.shipping')}
+                          </span>
+                          <span className="font-medium text-foreground text-xs sm:text-sm">
+                            {renderPairedPrice(orderDetails.shipping, orderDetails.currency, {
+                              isMinimalUnit: false,
+                            })}
+                          </span>
+                        </HStack>
                       )}
 
-                      {/* Pay Button - Desktop (crypto only) */}
-                      {selectedFiatProvider ? (
-                        <div className="p-3 bg-muted/50 rounded-lg text-center">
-                          <p className="text-sm text-muted-foreground">{t('fiat.sectionTitle')}</p>
-                        </div>
-                      ) : externalWalletInfo ? (
-                        <div className="p-3 bg-muted/50 rounded-lg text-center">
-                          <p className="text-sm text-muted-foreground">
-                            {t('payment.waitingForPayment')}
-                          </p>
-                        </div>
-                      ) : isPaymentBlocked ? (
-                        <div className="p-3 bg-muted/50 rounded-lg text-center hidden sm:block">
-                          <p className="text-sm text-muted-foreground">
-                            {t(readinessBlockedCopy.hintKey)}
-                          </p>
-                        </div>
-                      ) : (
-                        <Button
-                          className="w-full touch-feedback hidden sm:flex"
-                          size="default"
-                          onClick={handlePayment}
-                          disabled={
-                            isProcessing ||
-                            isConnecting ||
-                            paymentExpired ||
-                            isPaymentBlocked ||
-                            !selectedTokenId ||
-                            (paymentProtectionEnabled && !paymentModerator)
-                          }
-                        >
-                          {isProcessing ? (
-                            <HStack gap="sm" align="center" justify="center">
-                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                />
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                />
-                              </svg>
-                              <span>{t('payment.processing')}</span>
-                            </HStack>
-                          ) : isConnecting ? (
-                            <HStack gap="sm" align="center" justify="center">
-                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                />
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                />
-                              </svg>
-                              <span>{t('payment.connecting')}</span>
-                            </HStack>
-                          ) : usesPaymentSessionFlow ? (
-                            t('payment.getPaymentInfo')
-                          ) : cryptoAmountDisplay ? (
-                            `${t('payment.pay')} ${cryptoAmountDisplay} ${nativeSymbol}`
-                          ) : (
-                            t('payment.pay')
-                          )}
-                        </Button>
-                      )}
+                      <HStack justify="between">
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {t('payment.orderTotal')}
+                        </span>
+                        <span className="font-medium text-foreground text-xs sm:text-sm">
+                          {renderPairedPrice(orderDetails.total, orderDetails.currency, {
+                            isMinimalUnit: false,
+                          })}
+                        </span>
+                      </HStack>
+                    </VStack>
 
-                      {/* Warnings */}
-                      {!isPaymentBlocked && !selectedTokenId && !selectedFiatProvider && (
+                    <HStack justify="between" className="mb-4">
+                      <span className="text-base sm:text-lg font-semibold text-foreground">
+                        {t('payment.totalToPay')}
+                      </span>
+                      <div className="text-right">
+                        <p className="text-lg sm:text-xl font-bold text-primary">
+                          {renderPairedPrice(totalWithFee, orderDetails.currency, {
+                            isMinimalUnit: false,
+                          })}
+                        </p>
+                        {externalWalletInfo ? (
+                          <p className="text-xs text-muted-foreground">
+                            = {formatExternalPaymentAmountForSummary(externalWalletInfo)}{' '}
+                            {nativeSymbol.toUpperCase()}
+                          </p>
+                        ) : selectedTokenId && cryptoAmountDisplay ? (
+                          <p className="text-xs text-muted-foreground">
+                            ≈ {cryptoAmountDisplay} {nativeSymbol}
+                            {secondsAgo !== null && (
+                              <span className="ml-1.5 opacity-60">
+                                ({t('payment.rateUpdated', { seconds: secondsAgo })})
+                              </span>
+                            )}
+                          </p>
+                        ) : null}
+                      </div>
+                    </HStack>
+
+                    {/* Pay Button - Desktop (crypto only) */}
+                    {selectedFiatProvider ? (
+                      <div className="p-3 bg-muted/50 rounded-lg text-center">
+                        <p className="text-sm text-muted-foreground">{t('fiat.sectionTitle')}</p>
+                      </div>
+                    ) : externalWalletInfo ? (
+                      <div className="p-3 bg-muted/50 rounded-lg text-center">
+                        <p className="text-sm text-muted-foreground">
+                          {t('payment.waitingForPayment')}
+                        </p>
+                      </div>
+                    ) : isPaymentBlocked ? (
+                      <div className="p-3 bg-muted/50 rounded-lg text-center hidden sm:block">
+                        <p className="text-sm text-muted-foreground">
+                          {t(readinessBlockedCopy.hintKey)}
+                        </p>
+                      </div>
+                    ) : (
+                      <Button
+                        className="w-full touch-feedback hidden sm:flex"
+                        size="default"
+                        onClick={handlePayment}
+                        disabled={
+                          isProcessing ||
+                          paymentExpired ||
+                          isPaymentBlocked ||
+                          isRetiredPayment ||
+                          !selectedTokenId ||
+                          !canProceedToPay ||
+                          (paymentProtectionEnabled && !paymentModerator)
+                        }
+                      >
+                        {isProcessing ? (
+                          <HStack gap="sm" align="center" justify="center">
+                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            <span>{t('payment.processing')}</span>
+                          </HStack>
+                        ) : usesPaymentSessionFlow ? (
+                          t('payment.getPaymentInfo')
+                        ) : cryptoAmountDisplay ? (
+                          `${t('payment.pay')} ${cryptoAmountDisplay} ${nativeSymbol}`
+                        ) : (
+                          t('payment.pay')
+                        )}
+                      </Button>
+                    )}
+
+                    {/* Warnings */}
+                    {!isPaymentBlocked && isRetiredPayment && !selectedFiatProvider && (
+                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
+                        <p className="text-xs sm:text-sm text-warning">
+                          {t('payment.tronNotSupported')}
+                        </p>
+                      </div>
+                    )}
+                    {!isPaymentBlocked && !selectedTokenId && !selectedFiatProvider && (
+                      <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
+                        <p className="text-xs sm:text-sm text-warning">
+                          {t('payment.selectPaymentMethodWarning')}
+                        </p>
+                      </div>
+                    )}
+                    {!isPaymentBlocked &&
+                      !selectedFiatProvider &&
+                      requiresCustodialRefundInput &&
+                      !refundWalletAddress.trim() && (
                         <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
                           <p className="text-xs sm:text-sm text-warning">
-                            {t('payment.selectPaymentMethodWarning')}
+                            {t('payment.custodialPayment.requiredDesc')}
                           </p>
                         </div>
                       )}
-                      {!isPaymentBlocked &&
-                        !selectedFiatProvider &&
-                        paymentProtectionEnabled &&
-                        !paymentModerator && (
-                          <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
-                            <p className="text-xs sm:text-sm text-warning">
-                              {t('payment.selectModeratorWarning')}
-                            </p>
-                          </div>
-                        )}
+                    {!isPaymentBlocked &&
+                      !selectedFiatProvider &&
+                      paymentProtectionEnabled &&
+                      !paymentModerator && (
+                        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
+                          <p className="text-xs sm:text-sm text-warning">
+                            {t('payment.selectModeratorWarning')}
+                          </p>
+                        </div>
+                      )}
 
-                      {/* Security Note */}
-                      <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <svg
-                          className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          />
-                        </svg>
-                        <span>{t('payment.securityNote')}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+                    {/* Security Note */}
+                    <div className="mt-3 sm:mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <svg
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                      <span>{t('payment.securityNote')}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           ) : null}
         </Container>
@@ -1555,16 +1564,15 @@ export default function PaymentPage() {
           currency={orderDetails.currency}
           cryptoAmount={cryptoAmountDisplay}
           cryptoCurrency={nativeSymbol}
-          paymentMethod={selectedTokenId || undefined}
           onPay={handlePayment}
-          onConnect={handlePayment}
           isLoading={isProcessing}
-          isConnected={true}
-          isConnecting={isConnecting}
+          payLabel={usesPaymentSessionFlow ? t('payment.getPaymentInfo') : t('payment.pay')}
           disabled={
             paymentExpired ||
             isPaymentBlocked ||
+            isRetiredPayment ||
             !selectedTokenId ||
+            !canProceedToPay ||
             (paymentProtectionEnabled && !paymentModerator)
           }
         />

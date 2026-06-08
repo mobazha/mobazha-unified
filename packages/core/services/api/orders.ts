@@ -415,6 +415,7 @@ export interface CreateOrderPaymentSessionData {
   paymentCoin: string;
   vendorPeerID?: string;
   refundAddress?: string;
+  payFromCustodial?: boolean;
   buyerPeerID?: string;
   payerAddress?: string;
   moderator?: string;
@@ -435,6 +436,7 @@ export async function createOrderPaymentSession(
       {
         paymentCoin,
         ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
+        ...(payload.payFromCustodial ? { payFromCustodial: true } : {}),
         ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
         ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
         ...(payload.moderator ? { moderator: payload.moderator } : {}),
@@ -478,6 +480,27 @@ export async function createOrderPaymentSession(
   return orderWrite(realFn, mockFn, `/orders/${payload.orderId}/payment-session`);
 }
 
+export interface SetOrderRefundAddressData {
+  orderId: string;
+  refundAddress: string;
+  paymentCoin?: string;
+  vendorPeerID?: string;
+}
+
+export async function setOrderRefundAddress(
+  payload: SetOrderRefundAddressData
+): Promise<{ orderID: string; refundAddress: string; paymentCoin: string }> {
+  const vendorPeerID = payload.vendorPeerID?.trim();
+  return authPost<{ orderID: string; refundAddress: string; paymentCoin: string }>(
+    NODE_API.ORDER_REFUND_ADDRESS(payload.orderId),
+    {
+      refundAddress: payload.refundAddress.trim(),
+      ...(payload.paymentCoin ? { paymentCoin: payload.paymentCoin } : {}),
+    },
+    vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+  );
+}
+
 // ========== 订单创建 API ==========
 
 /**
@@ -512,7 +535,7 @@ export interface CreateOrderData {
     addressNotes?: string;
   };
   pricingCoin?: string; // 定价币种
-  refundAddress?: string; // 退款钱包地址（可选；后端会在安全可判定时从付款方补齐）
+  refundAddress?: string; // 买家显式声明的退款钱包地址（托管/交易所付款或无法自动解析时填写）
   moderator?: string; // 仲裁人 ID
 }
 
@@ -588,7 +611,7 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
     apiData.pricingCoin = restData.pricingCoin;
   }
 
-  // 添加退款钱包地址（加密货币订单必填；法币订单后端会忽略）
+  // 添加显式退款钱包地址（法币订单后端会忽略）
   if (restData.refundAddress) {
     apiData.refundAddress = restData.refundAddress;
   }

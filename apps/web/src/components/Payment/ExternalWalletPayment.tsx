@@ -159,6 +159,7 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
 
   const coinSymbol = tokenId?.toUpperCase() || getReadableCoinName(paymentInfo.coin) || '';
   const observedPayments = paymentInfo.observedPayments || [];
+  const hasObservedTransfer = observedPayments.length > 0;
 
   if (isExpired) {
     return (
@@ -289,7 +290,11 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
           {/* Status hint */}
           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg w-full">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
-            <p className="text-xs text-muted-foreground">{t('payment.waitingForPayment')}</p>
+            <p className="text-xs text-muted-foreground">
+              {hasObservedTransfer
+                ? t('payment.paymentDetectedHint')
+                : t('payment.waitingForPayment')}
+            </p>
           </div>
 
           {observedPayments.length > 0 && (

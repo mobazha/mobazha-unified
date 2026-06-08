@@ -244,6 +244,8 @@ export interface OrderContract {
     openedAt?: string;
     reportedAt?: string;
   };
+  /** Buyer-declared crypto refund destination (SQL-backed, not in protobuf). */
+  refundAddress?: string;
 }
 
 /**

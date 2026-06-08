@@ -60,10 +60,12 @@ export function ProductBottomBar({
       ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
       : undefined;
   const effectiveStock = selectedSku?.quantity != null ? Number(selectedSku.quantity) || 0 : stock;
-  const purchaseDisabled = effectiveStock === 0 || !paymentAvailable;
+  const isRwaProduct = product?.metadata?.contractType === 'RWA_TOKEN';
+  const purchaseDisabled = effectiveStock === 0 || !paymentAvailable || isRwaProduct;
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN') return;
 
     const thumbnail = selectedSku?.images?.[0] ??
       product.item?.images?.[0] ?? {
@@ -98,6 +100,7 @@ export function ProductBottomBar({
   // 立即购买
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN') return;
 
     const checkoutParams = new URLSearchParams({
       slug: product.slug,

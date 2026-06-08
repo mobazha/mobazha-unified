@@ -390,6 +390,10 @@ export function isPaymentCoinEnabled(coin: string): boolean {
   const trimmed = (coin || '').trim();
   if (!trimmed) return true;
 
+  if (isRetiredPaymentChain(trimmed)) {
+    return false;
+  }
+
   const token = TOKENS_BY_ID.get(trimmed.toUpperCase());
   const canonical = token?.assetId ?? trimmed;
   return !canonical.toLowerCase().startsWith('crypto:zcash:');
@@ -1014,6 +1018,13 @@ export function isTRONChain(coinOrChain?: string): boolean {
 }
 
 /**
+ * Chains that no longer accept new payment setup (aligned with backend IsRetiredPaymentChain).
+ */
+export function isRetiredPaymentChain(coinOrChain?: string): boolean {
+  return isTRONChain(coinOrChain);
+}
+
+/**
  * 判断订单操作是否需要前端钱包签名
  * - UTXO 链：不需要（后端处理）
  * - EVM/Solana 链：需要
@@ -1029,8 +1040,8 @@ export function requiresWalletSignature(coinOrChain?: string): boolean {
     return false;
   }
 
-  // EVM, Solana, TRON 链需要签名
-  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain) || isTRONChain(coinOrChain);
+  // EVM and Solana chains need frontend signing; retired chains are excluded.
+  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain);
 }
 
 /**

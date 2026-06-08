@@ -14,12 +14,18 @@ import { useOrder } from './useOrders';
 import { useUserStore } from '../stores/userStore';
 import { transformCoreOrder } from '../utils/transforms/orderTransform';
 import { applyPaymentSessionToDisplayOrder } from '../utils/transforms/paymentSessionDisplay';
+import {
+  buyerNeedsRefundAddress,
+  resolveBuyerRefundAddress,
+  shouldShowRefundDestination,
+} from '../utils/buyerRefundAddress';
 import { fetchProfileWithCache } from '../services/profileCache';
 import { getImageUrl } from '../services/api/config';
 import { ordersApi } from '../services/api/orders';
 import type { Order as CoreOrder } from '../types/order';
 import type { SettlementActionSnapshot } from '../types/order';
 import type { DisplayOrder } from '../types/orderDisplay';
+import type { PaymentSession } from '../types/paymentSession';
 
 /**
  * useOrderDetail Hook 返回值
@@ -31,6 +37,16 @@ export interface UseOrderDetailReturn {
   coreOrder: CoreOrder | null;
   /** 最新的结算动作快照（如果存在） */
   latestSettlementAction: SettlementActionSnapshot | null;
+  /** Unified payment session when available */
+  paymentSession: PaymentSession | null | undefined;
+  /** Buyer-declared crypto refund address, if any */
+  buyerRefundAddress: string;
+  /** Buyer must set refund address before cancel / refund / dispute */
+  buyerNeedsRefundAddress: boolean;
+  /** Show read-only refund destination card on order detail */
+  showRefundDestination: boolean;
+  /** False while the payment session query is still loading */
+  paymentSessionKnown: boolean;
   /** 是否正在加载 */
   isLoading: boolean;
   /** 错误信息 */
@@ -279,10 +295,44 @@ export function useOrderDetail(
     void refetchPaymentSession();
   }, [refetch, refetchPaymentSession]);
 
+  const buyerRefundAddress = useMemo(
+    () => resolveBuyerRefundAddress(coreOrder, paymentSession),
+    [coreOrder, paymentSession]
+  );
+
+  const paymentSessionKnown = !isPaymentSessionLoading;
+
+  const needsBuyerRefundAddress = useMemo(
+    () =>
+      buyerNeedsRefundAddress({
+        displayOrder,
+        coreOrder,
+        paymentSession,
+        paymentSessionKnown,
+      }),
+    [displayOrder, coreOrder, paymentSession, paymentSessionKnown]
+  );
+
+  const showRefundDestination = useMemo(
+    () =>
+      shouldShowRefundDestination({
+        displayOrder,
+        coreOrder,
+        paymentSession,
+        paymentSessionKnown,
+      }),
+    [displayOrder, coreOrder, paymentSession, paymentSessionKnown]
+  );
+
   return {
     displayOrder,
     coreOrder,
     latestSettlementAction,
+    paymentSession,
+    buyerRefundAddress,
+    buyerNeedsRefundAddress: needsBuyerRefundAddress,
+    showRefundDestination,
+    paymentSessionKnown,
     isLoading: isLoading || isPaymentSessionLoading,
     error,
     refetch: refetchAll,

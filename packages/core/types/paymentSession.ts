@@ -71,6 +71,9 @@ export interface PaymentSession {
   confirmationPolicy?: string;
   expectedAmount: string;
   refundAddress?: string;
+  refundAddressSource?: string;
+  refundRequiresInput?: boolean;
+  refundResolveReason?: string;
   expiresAt: string;
   fundingTarget: PaymentSessionFundingTarget;
   paymentProgress: PaymentSessionProgress;
