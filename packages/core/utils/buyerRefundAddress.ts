@@ -4,6 +4,7 @@ import type { Order } from '../types/order';
 import type { DisplayOrder } from '../types/orderDisplay';
 import type { PaymentSession } from '../types/paymentSession';
 import { isTerminalOrderStatus } from './disputeRulingDisplay';
+import { lookupPaymentCoinAddress } from './paymentCoinIngress';
 
 export const REFUND_ADDRESS_REQUIRED_CODE = 'REFUND_ADDRESS_REQUIRED' as const;
 
@@ -22,6 +23,26 @@ export function resolveBuyerRefundAddress(
   if (fromPaymentSent) return fromPaymentSent;
 
   return '';
+}
+
+/** Resolve a buyer account default refund address for the given payment coin. */
+export function resolveAccountDefaultRefundAddress(
+  prefs: Record<string, string> | undefined,
+  paymentCoin: string | undefined
+): string {
+  return lookupPaymentCoinAddress(prefs, paymentCoin);
+}
+
+/** Merge one coin→address entry into buyer refund preferences. */
+export function mergeRefundReceivingAddress(
+  existing: Record<string, string> | undefined,
+  paymentCoin: string,
+  address: string
+): Record<string, string> {
+  const coin = paymentCoin.trim();
+  const addr = address.trim();
+  if (!coin || !addr) return { ...(existing ?? {}) };
+  return { ...(existing ?? {}), [coin]: addr };
 }
 
 /** True when an API/action error indicates a missing buyer refund address. */

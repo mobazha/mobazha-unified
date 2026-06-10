@@ -4,6 +4,8 @@ import {
   buyerNeedsRefundAddress,
   isRefundAddressRequiredError,
   resolveBuyerRefundAddress,
+  mergeRefundReceivingAddress,
+  resolveAccountDefaultRefundAddress,
   shouldShowRefundDestination,
 } from '../../utils/buyerRefundAddress';
 import type { Order } from '../../types/order';
@@ -96,6 +98,47 @@ describe('resolveBuyerRefundAddress', () => {
         paymentAddressTransactions: [],
       })
     ).toBe('0xcontract-refund');
+  });
+});
+
+describe('resolveAccountDefaultRefundAddress', () => {
+  it('returns address for exact coin key', () => {
+    expect(
+      resolveAccountDefaultRefundAddress(
+        { 'crypto:eip155:1:native': '0xdefault' },
+        'crypto:eip155:1:native'
+      )
+    ).toBe('0xdefault');
+  });
+
+  it('returns empty when coin is missing', () => {
+    expect(
+      resolveAccountDefaultRefundAddress(
+        { 'crypto:eip155:1:native': '0xdefault' },
+        'crypto:bitcoin:mainnet:native'
+      )
+    ).toBe('');
+  });
+
+  it('resolves legacy ticker keys against canonical payment coin', () => {
+    expect(resolveAccountDefaultRefundAddress({ ETH: '0xlegacy' }, 'crypto:eip155:1:native')).toBe(
+      '0xlegacy'
+    );
+  });
+});
+
+describe('mergeRefundReceivingAddress', () => {
+  it('merges coin entry without dropping existing keys', () => {
+    expect(
+      mergeRefundReceivingAddress(
+        { 'crypto:eip155:1:native': '0xexisting' },
+        'crypto:bitcoin:mainnet:native',
+        'bc1qexample'
+      )
+    ).toEqual({
+      'crypto:eip155:1:native': '0xexisting',
+      'crypto:bitcoin:mainnet:native': 'bc1qexample',
+    });
   });
 });
 

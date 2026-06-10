@@ -7,7 +7,7 @@
  * Routes under test:
  *   /guest-checkout       — multi-step guest checkout wizard
  *   /guest-order/:token   — token-based order status page
- *   /admin/settings/guest-checkout — seller toggle + coin config
+ *   /admin/payments — seller toggle + coin config
  *
  * Run:
  *   npx playwright test guest-checkout.spec.ts --project=chromium --reporter=list
@@ -109,7 +109,7 @@ const MOCK_GUEST_ORDERS_LIST = [
 
 /**
  * Match only API requests (pathname starts with /v1/).
- * This avoids intercepting page navigations like /admin/settings/guest-checkout.
+ * This avoids intercepting page navigations like /admin/payments.
  */
 function isV1Api(url: URL, suffix: string): boolean {
   return url.pathname.startsWith('/v1/') && url.pathname.includes(suffix);
@@ -163,7 +163,7 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
     }
   );
 
-  // Guest checkout settings — only match /v1/settings/guest-checkout, NOT /admin/settings/guest-checkout
+  // Guest checkout settings — only match /v1/settings/guest-checkout, NOT /admin/payments
   await page.route(
     url => isV1Api(url, '/settings/guest-checkout'),
     async (route, request) => {
@@ -434,13 +434,14 @@ test.describe('Guest Checkout — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     // Wait for settings API to resolve
     await page.waitForTimeout(3000);
 
     const settingsPage = page.locator('[data-testid="admin-guest-checkout"]').first();
+    await settingsPage.scrollIntoViewIfNeeded();
     await expect(settingsPage).toBeVisible({ timeout: 15000 });
 
     await page.screenshot({
@@ -453,10 +454,11 @@ test.describe('Guest Checkout — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     const settingsPage = page.locator('[data-testid="admin-guest-checkout"]').first();
+    await settingsPage.scrollIntoViewIfNeeded();
     await expect(settingsPage).toBeVisible({ timeout: 15000 });
 
     const toggle = page.getByRole('switch').first();
@@ -487,10 +489,11 @@ test.describe('Guest Checkout — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     const settingsPage = page.locator('[data-testid="admin-guest-checkout"]').first();
+    await settingsPage.scrollIntoViewIfNeeded();
     await expect(settingsPage).toBeVisible({ timeout: 15000 });
 
     const saveBtn = page.getByRole('button', { name: /save|保存/i }).first();

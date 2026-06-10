@@ -101,6 +101,8 @@ export * from './useShippingAddresses';
 export type { DisplayAddress, DisplayAddressUI } from './useShippingAddresses';
 export { toDisplayAddressUI } from './useShippingAddresses';
 
+export * from './useRefundReceivingAddresses';
+
 // 配送档案管理相关（Shopify 模式）
 export * from './useShippingProfiles';
 export { createEmptyProfile } from './useShippingProfiles';

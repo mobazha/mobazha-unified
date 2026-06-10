@@ -992,7 +992,7 @@ export const useUserStore = create<UserState>()(
             if (result.success) {
               const { settings } = get();
               set({
-                settings: settings ? { ...settings, ...updates } : null,
+                settings: { ...(settings ?? {}), ...updates },
               });
               return true;
             }

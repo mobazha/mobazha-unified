@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useI18n } from '@mobazha/core';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { RefundWalletCard } from '@/components/Checkout/RefundWalletCard';
 interface OrderRefundAddressBannerProps {
   initialAddress?: string;
   isSaving?: boolean;
-  onSave: (address: string) => Promise<void>;
+  onSave: (address: string, options?: { saveAsDefault?: boolean }) => Promise<void>;
   className?: string;
 }
 
@@ -22,6 +23,7 @@ export function OrderRefundAddressBanner({
 }: OrderRefundAddressBannerProps) {
   const { t } = useI18n();
   const [refundAddress, setRefundAddress] = useState(initialAddress);
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
 
   useEffect(() => {
     setRefundAddress(initialAddress);
@@ -43,6 +45,12 @@ export function OrderRefundAddressBanner({
               {t('order.refundAddress.bannerTitle')}
             </h3>
             <p className="text-xs text-muted-foreground">{t('order.refundAddress.bannerDesc')}</p>
+            <Link
+              href="/settings/refunds"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {t('order.refundAddress.manageDefaults')}
+            </Link>
           </div>
         </div>
 
@@ -54,11 +62,24 @@ export function OrderRefundAddressBanner({
           showCexWarning={false}
         />
 
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            checked={saveAsDefault}
+            onChange={event => setSaveAsDefault(event.target.checked)}
+            data-testid="order-refund-save-as-default"
+          />
+          <span className="text-xs text-muted-foreground">
+            {t('order.refundAddress.saveAsDefault')}
+          </span>
+        </label>
+
         <Button
           type="button"
           className="w-full sm:w-auto"
           disabled={!canSave}
-          onClick={() => void onSave(trimmed)}
+          onClick={() => void onSave(trimmed, { saveAsDefault })}
           data-testid="order-refund-address-save"
         >
           {isSaving ? t('common.saving') : t('order.refundAddress.save')}

@@ -52,6 +52,9 @@ import {
   getPaymentReadinessBlockedCopyKeys,
   shouldShowPaymentReadinessPlaceholder,
   resolveBuyerRefundAddress,
+  resolveAccountDefaultRefundAddress,
+  loadRefundReceivingPreferencesSafe,
+  persistRefundReceivingAddressBestEffort,
   isRetiredPaymentChain,
   type WebSocketMessage,
 } from '@mobazha/core';
@@ -276,6 +279,8 @@ export default function PaymentPage() {
   const [isCancelingOrder, setIsCancelingOrder] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [refundWalletAddress, setRefundWalletAddress] = useState('');
+  const [refundAddressPrefilled, setRefundAddressPrefilled] = useState(false);
+  const [saveRefundAsDefault, setSaveRefundAsDefault] = useState(false);
   const [payFromCustodial, setPayFromCustodial] = useState(false);
   const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
 
@@ -372,6 +377,29 @@ export default function PaymentPage() {
   const requiresCustodialRefundInput = isCryptoPaymentFlow && payFromCustodial;
   const canProceedToPay = !requiresCustodialRefundInput || refundWalletAddress.trim().length > 0;
 
+  const handleRefundWalletAddressChange = useCallback((value: string) => {
+    setRefundWalletAddress(value);
+    setRefundAddressPrefilled(false);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedPaymentCoin || refundWalletAddress.trim() || resolvedRefundAddress) return;
+
+    let cancelled = false;
+    void loadRefundReceivingPreferencesSafe().then(prefs => {
+      if (cancelled) return;
+      const defaultAddr = resolveAccountDefaultRefundAddress(prefs, selectedPaymentCoin);
+      if (defaultAddr) {
+        setRefundWalletAddress(defaultAddr);
+        setRefundAddressPrefilled(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPaymentCoin, refundWalletAddress, resolvedRefundAddress]);
+
   // 地址监听支付信息（UTXO / managed settlement）
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
     null
@@ -386,9 +414,12 @@ export default function PaymentPage() {
     <PaymentRefundSection
       resolvedAddress={resolvedRefundAddress}
       refundAddress={refundWalletAddress}
-      onRefundAddressChange={setRefundWalletAddress}
+      onRefundAddressChange={handleRefundWalletAddressChange}
       payFromCustodial={payFromCustodial}
       onPayFromCustodialChange={setPayFromCustodial}
+      refundAddressPrefilled={refundAddressPrefilled}
+      saveAsDefault={saveRefundAsDefault}
+      onSaveAsDefaultChange={setSaveRefundAsDefault}
       compact
     />
   ) : null;
@@ -587,6 +618,21 @@ export default function PaymentPage() {
         const savedRefundAddress = resolveBuyerRefundAddress(order, session);
         if (savedRefundAddress) {
           setRefundWalletAddress(savedRefundAddress);
+          setRefundAddressPrefilled(true);
+        } else {
+          const settings = await profileApi.getSettings().catch(() => null);
+          const paymentCoin =
+            session?.paymentCoin || order.contract?.paymentSent?.coin || undefined;
+          const defaultAddr = resolveAccountDefaultRefundAddress(
+            settings?.refundReceivingAddresses,
+            paymentCoin
+          );
+          if (defaultAddr) {
+            setRefundWalletAddress(defaultAddr);
+            setRefundAddressPrefilled(true);
+          } else {
+            setRefundAddressPrefilled(false);
+          }
         }
 
         const contract = order.contract as any;
@@ -964,6 +1010,21 @@ export default function PaymentPage() {
         });
         setPaymentSession(session);
 
+        let defaultSaveFailed = false;
+        if (saveRefundAsDefault && refundWalletAddress.trim() && selectedPaymentCoin) {
+          const savedDefault = await persistRefundReceivingAddressBestEffort(
+            selectedPaymentCoin,
+            refundWalletAddress
+          );
+          defaultSaveFailed = !savedDefault;
+        }
+        if (defaultSaveFailed) {
+          toast({
+            title: t('settings.refunds.saveFailed'),
+            description: t('order.refundAddress.defaultSaveFailedDesc'),
+          });
+        }
+
         if (session.paymentReadiness?.status === 'awaiting_seller_receipt') {
           const copy = getPaymentReadinessBlockedCopyKeys({ tier: readinessUxTier });
           toast({
@@ -1010,6 +1071,7 @@ export default function PaymentPage() {
     requiresCustodialRefundInput,
     payFromCustodial,
     refundWalletAddress,
+    saveRefundAsDefault,
     usesPaymentSessionFlow,
     router,
     t,

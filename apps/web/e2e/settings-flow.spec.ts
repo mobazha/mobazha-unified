@@ -137,7 +137,7 @@ test.describe('Settings - Other Pages', () => {
 
   const settingsPages = [
     { path: '/settings/keys', name: 'Keys' },
-    { path: '/settings/receiving', name: 'Receiving' },
+    { path: '/settings/refunds', name: 'Refunds' },
     { path: '/settings/advanced', name: 'Advanced' },
     { path: '/settings/blocked-users', name: 'Blocked Users' },
   ];

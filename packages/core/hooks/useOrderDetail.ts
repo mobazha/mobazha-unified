@@ -16,9 +16,11 @@ import { transformCoreOrder } from '../utils/transforms/orderTransform';
 import { applyPaymentSessionToDisplayOrder } from '../utils/transforms/paymentSessionDisplay';
 import {
   buyerNeedsRefundAddress,
+  resolveAccountDefaultRefundAddress,
   resolveBuyerRefundAddress,
   shouldShowRefundDestination,
 } from '../utils/buyerRefundAddress';
+import { loadRefundReceivingPreferencesSafe } from '../utils/refundReceivingPreferences';
 import { fetchProfileWithCache } from '../services/profileCache';
 import { getImageUrl } from '../services/api/config';
 import { ordersApi } from '../services/api/orders';
@@ -41,6 +43,8 @@ export interface UseOrderDetailReturn {
   paymentSession: PaymentSession | null | undefined;
   /** Buyer-declared crypto refund address, if any */
   buyerRefundAddress: string;
+  /** Prefill for refund input: order address, else account default */
+  buyerRefundAddressDraft: string;
   /** Buyer must set refund address before cancel / refund / dispute */
   buyerNeedsRefundAddress: boolean;
   /** Show read-only refund destination card on order detail */
@@ -300,6 +304,14 @@ export function useOrderDetail(
     [coreOrder, paymentSession]
   );
 
+  const paymentCoin =
+    displayOrder?.paymentCoin?.trim() ||
+    coreOrder?.contract?.paymentSent?.coin?.trim() ||
+    paymentSession?.paymentCoin?.trim() ||
+    '';
+
+  const [loadedAccountDefaultRefundAddress, setLoadedAccountDefaultRefundAddress] = useState('');
+
   const paymentSessionKnown = !isPaymentSessionLoading;
 
   const needsBuyerRefundAddress = useMemo(
@@ -312,6 +324,29 @@ export function useOrderDetail(
       }),
     [displayOrder, coreOrder, paymentSession, paymentSessionKnown]
   );
+
+  const shouldLoadAccountDefaultRefund =
+    needsBuyerRefundAddress && !buyerRefundAddress && Boolean(paymentCoin);
+
+  useEffect(() => {
+    if (!shouldLoadAccountDefaultRefund) return;
+
+    let cancelled = false;
+    void loadRefundReceivingPreferencesSafe().then(prefs => {
+      if (cancelled) return;
+      setLoadedAccountDefaultRefundAddress(resolveAccountDefaultRefundAddress(prefs, paymentCoin));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldLoadAccountDefaultRefund, paymentCoin]);
+
+  const accountDefaultRefundAddress = shouldLoadAccountDefaultRefund
+    ? loadedAccountDefaultRefundAddress
+    : '';
+
+  const buyerRefundAddressDraft = buyerRefundAddress || accountDefaultRefundAddress;
 
   const showRefundDestination = useMemo(
     () =>
@@ -330,6 +365,7 @@ export function useOrderDetail(
     latestSettlementAction,
     paymentSession,
     buyerRefundAddress,
+    buyerRefundAddressDraft,
     buyerNeedsRefundAddress: needsBuyerRefundAddress,
     showRefundDestination,
     paymentSessionKnown,

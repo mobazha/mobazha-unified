@@ -17,6 +17,7 @@ import {
   orderUsesCancelableBackendSettlement,
   buildAcceptDisputeSettlementContext,
   isRefundAddressRequiredError,
+  persistRefundReceivingAddressBestEffort,
   type AcceptPayoutPhase,
   type CompletePhase,
   type DigitalDeliveryStatus,
@@ -98,10 +99,14 @@ export interface UseOrderDetailPageReturn {
   copyContract: () => Promise<void>;
 
   buyerRefundAddress: string;
+  buyerRefundAddressDraft: string;
   buyerNeedsRefundAddress: boolean;
   showRefundDestination: boolean;
   isSavingRefundAddress: boolean;
-  saveBuyerRefundAddress: (address: string) => Promise<boolean>;
+  saveBuyerRefundAddress: (
+    address: string,
+    options?: { saveAsDefault?: boolean }
+  ) => Promise<boolean>;
   ensureBuyerRefundAddress: () => boolean;
   notifyOrderActionError: (err: Error) => void;
 
@@ -160,6 +165,7 @@ export function useOrderDetailPage(
     error,
     refetch,
     buyerRefundAddress,
+    buyerRefundAddressDraft,
     buyerNeedsRefundAddress,
     showRefundDestination,
   } = useOrderDetail(orderId, viewingContext);
@@ -312,7 +318,7 @@ export function useOrderDetailPage(
   );
 
   const saveBuyerRefundAddress = useCallback(
-    async (address: string): Promise<boolean> => {
+    async (address: string, options?: { saveAsDefault?: boolean }): Promise<boolean> => {
       const trimmed = address.trim();
       if (!trimmed) {
         toast({
@@ -339,10 +345,25 @@ export function useOrderDetailPage(
           paymentCoin,
           vendorPeerID: displayOrder?.vendor?.peerID,
         });
+
+        let savedAsDefault = false;
+        if (options?.saveAsDefault) {
+          savedAsDefault = await persistRefundReceivingAddressBestEffort(paymentCoin, trimmed);
+        }
+
         toast({
           title: t('order.refundAddress.savedTitle'),
-          description: t('order.refundAddress.savedDesc'),
+          description:
+            options?.saveAsDefault && savedAsDefault
+              ? t('order.refundAddress.savedWithDefaultDesc')
+              : t('order.refundAddress.savedDesc'),
         });
+        if (options?.saveAsDefault && !savedAsDefault) {
+          toast({
+            title: t('settings.refunds.saveFailed'),
+            description: t('order.refundAddress.defaultSaveFailedDesc'),
+          });
+        }
         refetch();
         return true;
       } catch (err) {
@@ -1149,6 +1170,7 @@ export function useOrderDetailPage(
     copyOrderId,
     copyContract,
     buyerRefundAddress,
+    buyerRefundAddressDraft,
     buyerNeedsRefundAddress,
     showRefundDestination,
     isSavingRefundAddress,

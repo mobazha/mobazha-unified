@@ -37,6 +37,7 @@ export {
   isCanonicalPaymentCoin,
   isPaymentCoinEnabled,
   mustCanonicalCoin,
+  tryNormalizePaymentCoinToAssetId,
   assetIdFromTokenId,
   mustAssetIdFromTokenId,
   parseCanonicalPaymentCoin,

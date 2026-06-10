@@ -188,6 +188,7 @@ export function OrderDetailMobile({
     copyOrderId,
     copyContract,
     buyerRefundAddress,
+    buyerRefundAddressDraft,
     buyerNeedsRefundAddress,
     showRefundDestination,
     isSavingRefundAddress,
@@ -1007,10 +1008,10 @@ export function OrderDetailMobile({
 
               {buyerNeedsRefundAddress && (
                 <OrderRefundAddressBanner
-                  initialAddress={buyerRefundAddress}
+                  initialAddress={buyerRefundAddressDraft}
                   isSaving={isSavingRefundAddress}
-                  onSave={async address => {
-                    await saveBuyerRefundAddress(address);
+                  onSave={async (address, options) => {
+                    await saveBuyerRefundAddress(address, options);
                   }}
                   className="mb-4"
                 />
