@@ -6,7 +6,7 @@
  * - 公开路由：无需登录即可访问
  * - 私有路由：需要登录才能访问，使用 ProtectedRoute 包装
  */
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { lazy, Suspense, type ComponentType } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -224,6 +224,7 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/settings/page-profile/page')),
         },
         { path: 'addresses', element: lazyPage(() => import('./app/settings/addresses/page')) },
+        { path: 'refunds', element: lazyPage(() => import('./app/settings/refunds/page')) },
         { path: 'blocked', element: lazyPage(() => import('./app/settings/blocked/page')) },
         {
           path: 'blocked-users',
@@ -235,7 +236,6 @@ if (!__OUTPOST__) {
         },
         { path: 'keys', element: lazyPage(() => import('./app/settings/keys/page')) },
         { path: 'privacy', element: lazyPage(() => import('./app/settings/privacy/page')) },
-        { path: 'receiving', element: lazyPage(() => import('./app/settings/receiving/page')) },
         { path: 'advanced', element: lazyPage(() => import('./app/settings/advanced/page')) },
         { path: 'moderation', element: lazyPage(() => import('./app/settings/moderation/page')) },
         {
@@ -277,6 +277,7 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/products/import-gumroad/page')),
         },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
+        { path: 'payments', element: lazyPage(() => import('./app/admin/settings/payments/page')) },
         { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
         {
           path: 'finance/xmr-wallet',
@@ -339,29 +340,9 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
         },
         {
-          path: 'settings/payments',
-          element: lazyPage(() => import('./app/admin/settings/payments/page')),
-        },
-        {
           // Outpost-only: Monero NodePool admin (linked from payments page)
           path: 'settings/monero-nodes',
           element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
-        },
-        {
-          path: 'settings/payments/xmr-wallet',
-          element: <Navigate to="/admin/finance/xmr-wallet" replace />,
-        },
-        {
-          path: 'settings/payments/xmr-withdraw',
-          element: <Navigate to="/admin/finance/xmr-withdraw" replace />,
-        },
-        {
-          path: 'settings/payments/xmr-secrets',
-          element: <Navigate to="/admin/finance/xmr-secrets" replace />,
-        },
-        {
-          path: 'settings/payments/xmr-transfers',
-          element: <Navigate to="/admin/finance/xmr-transfers" replace />,
         },
         {
           path: 'settings/policies',
@@ -394,10 +375,6 @@ if (!__OUTPOST__) {
         {
           path: 'settings/integrations',
           element: lazyPage(() => import('./app/admin/settings/integrations/page')),
-        },
-        {
-          path: 'settings/guest-checkout',
-          element: lazyPage(() => import('./app/admin/settings/guest-checkout/page')),
         },
         {
           path: 'settings/sales-channels',
@@ -592,27 +569,6 @@ if (__OUTPOST__) {
         {
           path: 'settings/shipping',
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
-        },
-        {
-          path: 'settings/payments',
-          element: <Navigate to="/admin/finance" replace />,
-        },
-        {
-          // Legacy URLs → canonical under /admin/finance/*
-          path: 'settings/payments/xmr-wallet',
-          element: <Navigate to="/admin/finance/xmr-wallet" replace />,
-        },
-        {
-          path: 'settings/payments/xmr-withdraw',
-          element: <Navigate to="/admin/finance/xmr-withdraw" replace />,
-        },
-        {
-          path: 'settings/payments/xmr-secrets',
-          element: <Navigate to="/admin/finance/xmr-secrets" replace />,
-        },
-        {
-          path: 'settings/payments/xmr-transfers',
-          element: <Navigate to="/admin/finance/xmr-transfers" replace />,
         },
         {
           // Outpost-only: Monero NodePool admin (linked from /admin/finance)

@@ -131,6 +131,7 @@ export function OrderDetailDesktop({
     copyOrderId,
     copyContract,
     buyerRefundAddress,
+    buyerRefundAddressDraft,
     buyerNeedsRefundAddress,
     showRefundDestination,
     isSavingRefundAddress,
@@ -835,10 +836,10 @@ export function OrderDetailDesktop({
 
                 {buyerNeedsRefundAddress && (
                   <OrderRefundAddressBanner
-                    initialAddress={buyerRefundAddress}
+                    initialAddress={buyerRefundAddressDraft}
                     isSaving={isSavingRefundAddress}
-                    onSave={async address => {
-                      await saveBuyerRefundAddress(address);
+                    onSave={async (address, options) => {
+                      await saveBuyerRefundAddress(address, options);
                     }}
                     className="mb-4"
                   />

@@ -45,6 +45,7 @@ import {
   User,
   Link2,
   MapPin,
+  Wallet,
   Lock,
   Ban,
   Wrench,
@@ -226,6 +227,12 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
               title={t('settings.sidebar.addresses')}
               description={t('me.addressesDesc')}
               href="/settings/addresses"
+            />
+            <FeatureItem
+              icon={<Wallet className="w-5 h-5" />}
+              title={t('settings.sidebar.refunds')}
+              description={t('me.refundsDesc')}
+              href="/settings/refunds"
             />
           </div>
         </>

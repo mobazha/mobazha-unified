@@ -9,6 +9,7 @@ import {
   isStandalone,
   getImageUrl,
   useReceivingAccounts,
+  getAdminStorePaymentsPath,
 } from '@mobazha/core';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
@@ -689,7 +690,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
           )}
 
           <Link
-            href={__OUTPOST__ ? '/admin/finance' : '/admin/settings/payments'}
+            href={getAdminStorePaymentsPath()}
             className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent/50 transition-colors group"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">

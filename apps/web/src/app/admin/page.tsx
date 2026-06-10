@@ -10,6 +10,7 @@ import {
   isStandalone,
   useReceivingAccounts,
   useUserContext,
+  getAdminStorePaymentsPath,
 } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import {
@@ -411,11 +412,7 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.noPaymentMethodsWarning')}
             </p>
             <Link
-              href={
-                typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
-                  ? '/admin/finance'
-                  : '/admin/settings/payments'
-              }
+              href={getAdminStorePaymentsPath()}
               className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
             >
               {t('admin.dashboard.setUpPayments')} →

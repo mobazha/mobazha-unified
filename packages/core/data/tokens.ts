@@ -424,6 +424,36 @@ export function mustAssetIdFromTokenId(tokenId: string): string {
 }
 
 /**
+ * Best-effort normalization to canonical payment asset id (crypto:* /
+ * fiat:provider:CURRENCY). Mirrors mobazha3.0 TryNormalizePaymentCoin for ingress
+ * lookups. Returns undefined when ambiguous — unlike mustCanonicalCoin which throws.
+ */
+export function tryNormalizePaymentCoinToAssetId(raw: string): string | undefined {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return undefined;
+
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('fiat:')) {
+    const parts = trimmed.split(':');
+    if (parts.length !== 3) return undefined;
+    const provider = parts[1]?.trim();
+    const currency = parts[2]?.trim();
+    if (!provider || !currency) return undefined;
+    return `fiat:${provider.toLowerCase()}:${currency.toUpperCase()}`;
+  }
+
+  if (lower.startsWith('crypto:')) {
+    const match = TOKENS.find(token => token.assetId.toLowerCase() === lower);
+    if (match) return match.assetId;
+    return parseCanonicalPaymentCoin(trimmed) ? trimmed : undefined;
+  }
+
+  const tokenId = getTokenIdFromPaymentCoin(trimmed);
+  if (!tokenId) return undefined;
+  return assetIdFromTokenId(tokenId);
+}
+
+/**
  * Parses canonical crypto payment coin (crypto:...) into structured parts.
  * Returns null when input is not a valid canonical crypto payment coin.
  */

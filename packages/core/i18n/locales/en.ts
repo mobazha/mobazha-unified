@@ -292,6 +292,7 @@ export const en: TranslationResource = {
     linkedAccountsDesc: 'Manage linked social accounts',
     languageDesc: 'Change display language',
     addressesDesc: 'Manage shipping addresses',
+    refundsDesc: 'Default refund receiving addresses for crypto orders',
     chatEncryptionDesc: 'Manage encryption keys',
     blockedDesc: 'Manage blocked users',
     advancedDesc: 'Backup, developer tools, and more',
@@ -1123,8 +1124,13 @@ export const en: TranslationResource = {
       bannerDesc:
         'This order uses crypto. Tell us where to send refunds if the order is cancelled, disputed, or overpaid.',
       save: 'Save refund address',
+      saveAsDefault: 'Also save as my default refund address',
+      manageDefaults: 'Manage default refund addresses',
       savedTitle: 'Refund address saved',
       savedDesc: 'We will use this address for refunds on this order.',
+      savedWithDefaultDesc: 'Saved for this order and your account defaults.',
+      defaultSaveFailedDesc:
+        'This order was updated, but saving your account default failed. You can retry in Settings → Refund Addresses.',
       requiredTitle: 'Refund address required',
       requiredDesc:
         'Add a refund receiving address on this order before cancelling or opening a dispute.',
@@ -2171,11 +2177,39 @@ export const en: TranslationResource = {
       productGroups: 'Product Groups',
       accessRequests: 'Access Requests',
       addresses: 'Addresses',
+      refunds: 'Refund Addresses',
       blocked: 'Blocked',
       moderation: 'Dispute Resolution',
       receiving: 'Receiving Addresses',
       chatEncryption: 'Chat Encryption',
       advanced: 'Advanced',
+    },
+    refunds: {
+      title: 'Default Refund Receiving Addresses',
+      description:
+        'Save refund destinations per payment method. They pre-fill at checkout when you pay from an exchange or custodial wallet.',
+      contextNote:
+        'Use a personal wallet address you control — not an exchange deposit address. Refunds are sent on the same network as the original payment.',
+      emptyTitle: 'No default refund addresses yet',
+      emptyDesc: 'Add an address below to skip re-entering it on future crypto orders.',
+      addTitle: 'Add default address',
+      coinLabel: 'Payment method',
+      addressLabel: 'Refund receiving address',
+      addressPlaceholder: 'Enter your wallet address',
+      exchangeWarning:
+        'Do not use an exchange deposit address. Use your personal wallet receiving address.',
+      validationEmpty: 'Enter a refund receiving address.',
+      validationFormat: 'This address does not match the selected payment method format.',
+      validationZeroAddress: 'Refund address cannot be the zero address.',
+      warningDuplicateCoin:
+        'Same address is already saved for {{coin}}. Confirm it also works on this network.',
+      warningBchFormat:
+        'This looks like a Bitcoin (BTC) address. BCH usually uses bitcoincash: or legacy formats — double-check before saving.',
+      saved: 'Refund address saved',
+      removed: 'Refund address removed',
+      cleared: 'All default refund addresses cleared',
+      saveFailed: 'Failed to save refund address',
+      clearAll: 'Clear all',
     },
     // Account binding
     accountBinding: {
@@ -3006,6 +3040,9 @@ export const en: TranslationResource = {
       refundAddressLabel: 'Refund receiving address',
       refundAddressPlaceholder: 'Paste your personal receiving address',
       refundAddressWarning: 'Do not use an exchange deposit address.',
+      confirmNotice: 'Refunds for this order will be sent to {{address}}.',
+      changeForOrder: 'Use a different address for this order',
+      saveAsDefault: 'Remember as my default refund address',
       requiredTitle: 'Refund address required',
       requiredDesc: 'Add your refund receiving address before paying from an exchange.',
     },
@@ -3238,7 +3275,7 @@ export const en: TranslationResource = {
     privateStore: 'Private Store',
     privateStoreDesc: 'Only approved users can view your listings',
     storePolicies: 'Store Policies',
-    storePoliciesDesc: 'Return policy, terms & conditions',
+    storePoliciesDesc: 'Return policy, terms, and fulfillment rules',
     moderators: 'Moderators',
     moderatorsDesc: 'Manage dispute moderators',
     acceptedCrypto: 'Accepted Cryptocurrencies',
@@ -5340,6 +5377,7 @@ export const en: TranslationResource = {
       products: 'Products',
       orders: 'Orders',
       storeSales: 'Store sales',
+      payments: 'Store payments',
       funds: 'Funds',
       analytics: 'Analytics',
       discounts: 'Discounts',
@@ -5359,6 +5397,10 @@ export const en: TranslationResource = {
       expandSidebar: 'Expand sidebar',
       collapseSidebar: 'Collapse sidebar',
       backToMarketplace: 'Marketplace',
+    },
+    payments: {
+      pageDesc:
+        'Configure how your store receives payments — accounts, guest checkout, confirmation rules, and card providers.',
     },
     dashboard: {
       welcome: 'Welcome back, {{name}}',
@@ -6019,7 +6061,7 @@ export const en: TranslationResource = {
       profile: 'Store Profile',
       profileDesc: 'Name, avatar, description, and contact info',
       policies: 'Store Policies',
-      policiesDesc: 'Terms, returns, and shipping policies',
+      policiesDesc: 'Returns, terms, and digital goods review period',
       shipping: 'Shipping',
       shippingDesc: 'Shipping methods, rates, and regions',
       moderators: 'Moderators',
@@ -6028,8 +6070,8 @@ export const en: TranslationResource = {
       accessControlDesc: 'Whitelist, user groups, and product groups',
       funds: 'Funds',
       fundsDesc: 'Balance, withdrawals, and transaction history',
-      payments: 'Payments',
-      paymentsDesc: 'Crypto receiving addresses and card payments',
+      payments: 'Store payments',
+      paymentsDesc: 'Receiving accounts, guest checkout, confirmation rules, and card providers',
       integrations: 'Integrations',
       integrationsDesc: 'Notification channels, AI assistant, and webhooks',
       guestCheckout: 'Guest Checkout',
@@ -6093,6 +6135,12 @@ export const en: TranslationResource = {
       saveSettings: 'Save Settings',
       paymentPolicyNote: 'UTXO payment confirmation is configured in',
       paymentPolicyLink: 'Payments settings',
+      receivingAccountsNote: 'Cryptocurrency receiving accounts are configured in',
+      receivingAccountsLink: 'Store payments',
+      receivingAccountsInlineNote:
+        'Each accepted coin needs an active receiving account in the section above.',
+      missingAccountWarning:
+        '{{coin}} is selected but has no active receiving account configured above.',
     },
     paymentPolicy: {
       title: 'Payment confirmation',

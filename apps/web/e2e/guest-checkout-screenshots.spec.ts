@@ -405,8 +405,10 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+    await page.goto('/admin/payments');
+    const guestSection = page.locator('[data-testid="admin-guest-checkout"]');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible({
       timeout: 15000,
     });
     await page.waitForTimeout(800);
@@ -418,8 +420,10 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+    await page.goto('/admin/payments');
+    const guestSection = page.locator('[data-testid="admin-guest-checkout"]');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible({
       timeout: 15000,
     });
     await page.waitForTimeout(500);
@@ -434,8 +438,10 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+    await page.goto('/admin/payments');
+    const guestSection = page.locator('[data-testid="admin-guest-checkout"]');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible({
       timeout: 15000,
     });
     await page.waitForTimeout(500);

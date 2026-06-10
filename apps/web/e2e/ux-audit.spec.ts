@@ -154,7 +154,7 @@ const settingsPages: Array<{ name: string; path: string; description: string }> 
   { name: '62-settings-account', path: '/settings/account', description: '账户设置' },
   { name: '63-settings-page-profile', path: '/settings/page-profile', description: '页面资料' },
   { name: '64-settings-addresses', path: '/settings/addresses', description: '地址管理' },
-  { name: '65-settings-receiving', path: '/settings/receiving', description: '收款设置' },
+  { name: '65-settings-refunds', path: '/settings/refunds', description: '默认退款收款地址' },
   { name: '66-settings-privacy', path: '/settings/privacy', description: '隐私设置' },
   { name: '67-settings-keys', path: '/settings/keys', description: '密钥管理' },
   {

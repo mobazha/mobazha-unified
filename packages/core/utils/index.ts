@@ -85,6 +85,10 @@ export * from './orderPaymentDisplay';
 
 // Buyer-declared crypto refund routing helpers
 export * from './buyerRefundAddress';
+export * from './cryptoAddressFormat';
+export * from './paymentCoinIngress';
+export * from './refundReceivingPreferences';
+export * from './refundReceivingAddressValidation';
 
 // 扫码结果解析
 export * from './scanResult';

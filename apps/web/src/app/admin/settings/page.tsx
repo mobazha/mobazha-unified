@@ -12,10 +12,8 @@ import {
   PauseCircle,
   PlayCircle,
   Megaphone,
-  ShoppingBag,
   ShieldCheck,
   Download,
-  Coins,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -222,14 +220,6 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.policiesDesc')}
             href="/admin/settings/policies"
           />
-          {!isOutpost && (
-            <SettingsCard
-              icon={Coins}
-              title={t('admin.settings.payments')}
-              description={t('admin.settings.paymentsDesc')}
-              href="/admin/settings/payments"
-            />
-          )}
           <SettingsCard
             icon={Truck}
             title={t('admin.settings.shipping')}
@@ -237,20 +227,12 @@ export default function AdminSettingsPage() {
             href="/admin/settings/shipping"
           />
           {!isOutpost && (
-            <>
-              <SettingsCard
-                icon={ShoppingBag}
-                title={t('admin.settings.guestCheckout')}
-                description={t('admin.settings.guestCheckoutDesc')}
-                href="/admin/settings/guest-checkout"
-              />
-              <SettingsCard
-                icon={Scale}
-                title={t('admin.settings.moderators')}
-                description={t('admin.settings.moderatorsDesc')}
-                href="/admin/settings/moderators"
-              />
-            </>
+            <SettingsCard
+              icon={Scale}
+              title={t('admin.settings.moderators')}
+              description={t('admin.settings.moderatorsDesc')}
+              href="/admin/settings/moderators"
+            />
           )}
         </SettingsSection>
 

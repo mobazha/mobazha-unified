@@ -271,6 +271,7 @@ export const de: PartialTranslationResource = {
     linkedAccountsDesc: 'Verknüpfte Social-Accounts verwalten',
     languageDesc: 'Anzeigesprache ändern',
     addressesDesc: 'Lieferadressen verwalten',
+    refundsDesc: 'Standard-Rückerstattungsadressen für Krypto-Bestellungen',
     chatEncryptionDesc: 'Verschlüsselungsschlüssel verwalten',
     blockedDesc: 'Blockierte Benutzer verwalten',
     advancedDesc: 'Backup, Entwickler-Tools und mehr',
@@ -929,6 +930,8 @@ export const de: PartialTranslationResource = {
       save: 'Rückerstattungsadresse speichern',
       savedTitle: 'Rückerstattungsadresse gespeichert',
       savedDesc: 'Für Rückerstattungen zu dieser Bestellung verwenden wir diese Adresse.',
+      defaultSaveFailedDesc:
+        'Die Bestellung wurde aktualisiert, aber Ihre Standard-Rückerstattungsadresse konnte nicht gespeichert werden. Sie können es unter Einstellungen → Rückerstattungsadressen erneut versuchen.',
       requiredTitle: 'Rückerstattungsadresse erforderlich',
       requiredDesc:
         'Speichern Sie zuerst eine Rückerstattungs-Empfangsadresse, bevor Sie stornieren oder einen Streit eröffnen.',
@@ -1750,11 +1753,29 @@ export const de: PartialTranslationResource = {
       productGroups: 'Produktgruppen',
       accessRequests: 'Zugriffsanfragen',
       addresses: 'Adressen',
+      refunds: 'Rückerstattungsadressen',
       blocked: 'Blockiert',
       moderation: 'Streitbeilegung',
       receiving: 'Empfangsadressen',
       chatEncryption: 'Chat-Verschlüsselung',
       advanced: 'Erweitert',
+    },
+    refunds: {
+      title: 'Standard-Rückerstattungsadressen',
+      description:
+        'Rückerstattungsziele pro Zahlungsmethode speichern. Sie werden beim Bezahlen von einer Börse automatisch vorausgefüllt.',
+      emptyTitle: 'Noch keine Standard-Rückerstattungsadressen',
+      emptyDesc:
+        'Fügen Sie unten eine Adresse hinzu, um sie bei zukünftigen Krypto-Bestellungen nicht erneut einzugeben.',
+      addTitle: 'Standardadresse hinzufügen',
+      coinLabel: 'Zahlungsmethode',
+      addressLabel: 'Rückerstattungsadresse',
+      addressPlaceholder: 'Wallet-Adresse eingeben',
+      saved: 'Rückerstattungsadresse gespeichert',
+      removed: 'Rückerstattungsadresse entfernt',
+      cleared: 'Alle Standard-Rückerstattungsadressen gelöscht',
+      saveFailed: 'Speichern der Rückerstattungsadresse fehlgeschlagen',
+      clearAll: 'Alle löschen',
     },
     accountBinding: {
       title: 'Verknüpfte Konten',
@@ -2443,6 +2464,8 @@ export const de: PartialTranslationResource = {
       refundAddressLabel: 'Rückerstattungs-Empfangsadresse',
       refundAddressPlaceholder: 'Persönliche Empfangsadresse einfügen',
       refundAddressWarning: 'Keine Börsen-Einzahlungsadresse verwenden.',
+      confirmNotice: 'Rückerstattungen für diese Bestellung gehen an {{address}}.',
+      changeForOrder: 'Andere Adresse für diese Bestellung verwenden',
       requiredTitle: 'Rückerstattungsadresse erforderlich',
       requiredDesc:
         'Tragen Sie vor der Zahlung über eine Börse Ihre Rückerstattungs-Empfangsadresse ein.',
@@ -4494,6 +4517,7 @@ export const de: PartialTranslationResource = {
       products: 'Produkte',
       orders: 'Bestellungen',
       storeSales: 'Shop-Verkäufe',
+      payments: 'Shop-Zahlungen',
       analytics: 'Analytik',
       discounts: 'Rabatte',
       collections: 'Kollektionen',
@@ -4512,6 +4536,9 @@ export const de: PartialTranslationResource = {
       mainNavigation: 'Main navigation',
       sourcing: 'Beschaffung',
       storefronts: 'Schaufenster',
+    },
+    payments: {
+      pageDesc: 'Konfigurieren Sie, wie Ihr Shop Krypto- und Kartenzahlungen empfängt.',
     },
     dashboard: {
       welcome: 'Willkommen zurück, {{name}}',

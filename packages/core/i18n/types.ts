@@ -199,6 +199,7 @@ export interface TranslationResource {
     userGroups?: string;
     receivingAccounts?: string;
     receivingAccountsDesc?: string;
+    refundsDesc?: string;
     wishlist?: string;
     wishlistDesc?: string;
     wishlistEmpty?: string;
@@ -692,6 +693,7 @@ export interface TranslationResource {
       productGroups: string;
       accessRequests: string;
       addresses: string;
+      refunds?: string;
       blocked: string;
       moderation: string;
       receiving?: string;
@@ -2807,6 +2809,10 @@ export interface TranslationResource {
       backToShopping?: string;
       mainNavigation?: string;
       aiAgents?: string;
+      payments?: string;
+    };
+    payments?: {
+      pageDesc?: string;
     };
     dashboard?: {
       welcome?: string;
@@ -3437,6 +3443,10 @@ export interface TranslationResource {
       paymentTimeoutHelpBody?: string;
       paymentPolicyNote?: string;
       paymentPolicyLink?: string;
+      receivingAccountsInlineNote?: string;
+      missingAccountWarning?: string;
+      receivingAccountsNote?: string;
+      receivingAccountsLink?: string;
     };
     paymentPolicy?: {
       title?: string;

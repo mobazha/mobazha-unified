@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getAdminStorePaymentsPath } from '@mobazha/core';
 import { getBrandNetworkConfig } from '@mobazha/core/config/env';
 import {
   AlertCircle,
@@ -277,7 +277,7 @@ export default function MoneroNodesPage() {
 
   const candidates = useMemo(() => snapshot?.candidates ?? [], [snapshot]);
   const activeAddress = snapshot?.active?.address;
-  const paymentsBackHref = __OUTPOST__ ? '/admin/finance' : '/admin/settings/payments';
+  const paymentsBackHref = getAdminStorePaymentsPath();
 
   // Non-outpost build OR brand has hidden the NodePool surface: render an
   // explanatory placeholder. We don't 404 because the page may still be

@@ -116,6 +116,8 @@ export interface UserSettings {
    * silently clamped so buyers always have at least the default window.
    */
   digitalGoodReviewWindowDays?: number;
+  /** Buyer default refund receiving addresses keyed by canonical payment coin. */
+  refundReceivingAddresses?: Record<string, string>;
 }
 
 /**

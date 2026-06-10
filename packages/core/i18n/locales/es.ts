@@ -271,6 +271,7 @@ export const es: PartialTranslationResource = {
     linkedAccountsDesc: 'Gestionar cuentas sociales vinculadas',
     languageDesc: 'Cambiar idioma de visualización',
     addressesDesc: 'Gestionar direcciones de envío',
+    refundsDesc: 'Direcciones de reembolso predeterminadas para pedidos cripto',
     chatEncryptionDesc: 'Gestionar claves de cifrado',
     blockedDesc: 'Gestionar usuarios bloqueados',
     advancedDesc: 'Copia de seguridad, herramientas de desarrollador y más',
@@ -920,6 +921,8 @@ export const es: PartialTranslationResource = {
       save: 'Guardar dirección de reembolso',
       savedTitle: 'Dirección de reembolso guardada',
       savedDesc: 'Usaremos esta dirección para reembolsos de este pedido.',
+      defaultSaveFailedDesc:
+        'El pedido se actualizó, pero no se pudo guardar la dirección predeterminada. Puede reintentar en Ajustes → Direcciones de reembolso.',
       requiredTitle: 'Se requiere dirección de reembolso',
       requiredDesc:
         'Añada una dirección de recepción del reembolso antes de cancelar o abrir una disputa.',
@@ -1729,11 +1732,29 @@ export const es: PartialTranslationResource = {
       productGroups: 'Grupos de productos',
       accessRequests: 'Solicitudes de acceso',
       addresses: 'Direcciones',
+      refunds: 'Direcciones de reembolso',
       blocked: 'Bloqueados',
       moderation: 'Resolución de disputas',
       receiving: 'Direcciones de recepción',
       chatEncryption: 'Cifrado de chat',
       advanced: 'Avanzado',
+    },
+    refunds: {
+      title: 'Direcciones de reembolso predeterminadas',
+      description:
+        'Guarde destinos de reembolso por método de pago. Se rellenan automáticamente al pagar desde un exchange.',
+      emptyTitle: 'Aún no hay direcciones de reembolso predeterminadas',
+      emptyDesc:
+        'Agregue una dirección abajo para no volver a escribirla en futuros pedidos cripto.',
+      addTitle: 'Agregar dirección predeterminada',
+      coinLabel: 'Método de pago',
+      addressLabel: 'Dirección de reembolso',
+      addressPlaceholder: 'Ingrese su dirección de wallet',
+      saved: 'Dirección de reembolso guardada',
+      removed: 'Dirección de reembolso eliminada',
+      cleared: 'Se borraron todas las direcciones de reembolso predeterminadas',
+      saveFailed: 'Error al guardar la dirección de reembolso',
+      clearAll: 'Borrar todo',
     },
     accountBinding: {
       title: 'Cuentas vinculadas',
@@ -2418,6 +2439,8 @@ export const es: PartialTranslationResource = {
       refundAddressLabel: 'Dirección de recepción del reembolso',
       refundAddressPlaceholder: 'Pegue su dirección personal de recepción',
       refundAddressWarning: 'No use una dirección de depósito de exchange.',
+      confirmNotice: 'Los reembolsos de este pedido se enviarán a {{address}}.',
+      changeForOrder: 'Usar otra dirección para este pedido',
       requiredTitle: 'Se requiere dirección de reembolso',
       requiredDesc:
         'Añada su dirección de recepción del reembolso antes de pagar desde un exchange.',
@@ -4454,6 +4477,7 @@ export const es: PartialTranslationResource = {
       products: 'Productos',
       orders: 'Pedidos',
       storeSales: 'Ventas de la tienda',
+      payments: 'Pagos de la tienda',
       analytics: 'Analíticas',
       discounts: 'Descuentos',
       collections: 'Colecciones',
@@ -4472,6 +4496,9 @@ export const es: PartialTranslationResource = {
       mainNavigation: 'Main navigation',
       sourcing: 'Abastecimiento',
       storefronts: 'Escaparates',
+    },
+    payments: {
+      pageDesc: 'Configure cómo su tienda recibe pagos con cripto y tarjeta.',
     },
     dashboard: {
       welcome: 'Bienvenido de nuevo, {{name}}',

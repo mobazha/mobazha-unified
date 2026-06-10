@@ -271,6 +271,7 @@ export const fr: PartialTranslationResource = {
     linkedAccountsDesc: 'Gérer les comptes sociaux liés',
     languageDesc: "Changer la langue d'affichage",
     addressesDesc: 'Gérer les adresses de livraison',
+    refundsDesc: 'Adresses de remboursement par défaut pour les commandes crypto',
     chatEncryptionDesc: 'Gérer les clés de chiffrement',
     blockedDesc: 'Gérer les utilisateurs bloqués',
     advancedDesc: 'Sauvegarde, outils développeur et plus',
@@ -923,6 +924,8 @@ export const fr: PartialTranslationResource = {
       save: 'Enregistrer l’adresse de remboursement',
       savedTitle: 'Adresse de remboursement enregistrée',
       savedDesc: 'Nous utiliserons cette adresse pour les remboursements de cette commande.',
+      defaultSaveFailedDesc:
+        'La commande a été mise à jour, mais l’enregistrement de votre adresse par défaut a échoué. Réessayez dans Paramètres → Adresses de remboursement.',
       requiredTitle: 'Adresse de remboursement requise',
       requiredDesc:
         'Ajoutez une adresse de réception du remboursement avant d’annuler ou d’ouvrir un litige.',
@@ -1739,11 +1742,29 @@ export const fr: PartialTranslationResource = {
       productGroups: 'Groupes de produits',
       accessRequests: "Demandes d'accès",
       addresses: 'Adresses',
+      refunds: 'Adresses de remboursement',
       blocked: 'Bloqués',
       moderation: 'Résolution des litiges',
       receiving: 'Adresses de réception',
       chatEncryption: 'Chiffrement du chat',
       advanced: 'Avancé',
+    },
+    refunds: {
+      title: 'Adresses de remboursement par défaut',
+      description:
+        'Enregistrez les destinations de remboursement par mode de paiement. Elles sont préremplies lors d’un paiement depuis un exchange.',
+      emptyTitle: 'Aucune adresse de remboursement par défaut',
+      emptyDesc:
+        'Ajoutez une adresse ci-dessous pour éviter de la ressaisir sur vos prochaines commandes crypto.',
+      addTitle: 'Ajouter une adresse par défaut',
+      coinLabel: 'Mode de paiement',
+      addressLabel: 'Adresse de remboursement',
+      addressPlaceholder: 'Saisissez votre adresse de portefeuille',
+      saved: 'Adresse de remboursement enregistrée',
+      removed: 'Adresse de remboursement supprimée',
+      cleared: 'Toutes les adresses de remboursement par défaut ont été effacées',
+      saveFailed: 'Échec de l’enregistrement de l’adresse de remboursement',
+      clearAll: 'Tout effacer',
     },
     accountBinding: {
       title: 'Comptes liés',
@@ -2436,6 +2457,8 @@ export const fr: PartialTranslationResource = {
       refundAddressLabel: 'Adresse de réception du remboursement',
       refundAddressPlaceholder: 'Collez votre adresse personnelle de réception',
       refundAddressWarning: 'N’utilisez pas une adresse de dépôt d’exchange.',
+      confirmNotice: 'Les remboursements de cette commande seront envoyés à {{address}}.',
+      changeForOrder: 'Utiliser une autre adresse pour cette commande',
       requiredTitle: 'Adresse de remboursement requise',
       requiredDesc:
         'Ajoutez votre adresse de réception du remboursement avant de payer via un exchange.',
@@ -4482,6 +4505,7 @@ export const fr: PartialTranslationResource = {
       products: 'Produits',
       orders: 'Commandes',
       storeSales: 'Ventes boutique',
+      payments: 'Paiements boutique',
       analytics: 'Analytiques',
       discounts: 'Réductions',
       collections: 'Collections',
@@ -4500,6 +4524,9 @@ export const fr: PartialTranslationResource = {
       mainNavigation: 'Main navigation',
       sourcing: 'Approvisionnement',
       storefronts: 'Vitrines de magasins',
+    },
+    payments: {
+      pageDesc: 'Configurez comment votre boutique reçoit les paiements crypto et par carte.',
     },
     dashboard: {
       welcome: 'Bienvenue, {{name}}',

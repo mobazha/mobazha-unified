@@ -388,7 +388,7 @@ test.describe('Seller Settings — TRON Receiving Address', () => {
       });
     });
 
-    await page.goto('/admin/settings/payments');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
@@ -414,7 +414,7 @@ test.describe('Seller Settings — TRON Receiving Address', () => {
       });
     });
 
-    await page.goto('/admin/settings/payments');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 

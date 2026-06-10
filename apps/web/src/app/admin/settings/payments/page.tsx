@@ -4,11 +4,7 @@ import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
-import { SettingsPageHeader } from '@/components/SettingsLayout';
-
-const PaymentConfirmationSection = lazy(() =>
-  import('./PaymentConfirmationSection').then(m => ({ default: m.PaymentConfirmationSection }))
-);
+import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
 const CryptoReceivingSection = __OUTPOST__
   ? () => null
@@ -21,6 +17,18 @@ const PaymentProvidersSection = __OUTPOST__
   : lazy(() =>
       import('./PaymentProvidersSection').then(m => ({ default: m.PaymentProvidersSection }))
     );
+
+const GuestCheckoutPolicySection = lazy(() =>
+  import('@/components/admin/policy/GuestCheckoutPolicySection').then(m => ({
+    default: m.GuestCheckoutPolicySection,
+  }))
+);
+
+const PaymentConfirmationSection = lazy(() =>
+  import('@/components/admin/policy/PaymentConfirmationSection').then(m => ({
+    default: m.PaymentConfirmationSection,
+  }))
+);
 
 function PayoutInfoSection() {
   const { t } = useI18n();
@@ -99,24 +107,45 @@ export default function AdminPaymentsPage() {
     return <div data-testid="admin-payments" className="min-h-[120px]" aria-busy="true" />;
   }
 
-  const description = t('admin.settings.paymentsDesc');
+  const description = t('admin.payments.pageDesc');
 
   return (
     <div data-testid="admin-payments">
       <SettingsPageHeader
-        title={t('admin.settings.payments')}
+        title={t('admin.nav.payments')}
         description={description}
-        backHref="/admin/settings"
+        backHref="/admin"
       />
 
-      <div className="space-y-6 md:space-y-10">
+      <div className="divide-y divide-border">
         <Suspense fallback={<div className="h-40 animate-pulse bg-muted/30 rounded-xl" />}>
-          <PaymentConfirmationSection />
-          <div className="border-t border-border" />
-          <CryptoReceivingSection />
-          <div className="border-t border-border" />
-          <PaymentProvidersSection />
-          <PayoutInfoSection />
+          <SettingsSection className="pb-6 md:pb-10">
+            <CryptoReceivingSection />
+          </SettingsSection>
+
+          <SettingsSection
+            className="py-6 md:py-10"
+            title={t('admin.guestCheckout.title')}
+            description={t('admin.guestCheckout.description')}
+          >
+            <GuestCheckoutPolicySection embedded />
+          </SettingsSection>
+
+          <SettingsSection
+            className="py-6 md:py-10"
+            title={t('admin.paymentPolicy.title')}
+            description={t('admin.paymentPolicy.description')}
+          >
+            <PaymentConfirmationSection />
+          </SettingsSection>
+
+          <SettingsSection className="py-6 md:py-10">
+            <PaymentProvidersSection />
+          </SettingsSection>
+
+          <SettingsSection className="pt-6 md:pt-10">
+            <PayoutInfoSection />
+          </SettingsSection>
         </Suspense>
       </div>
     </div>

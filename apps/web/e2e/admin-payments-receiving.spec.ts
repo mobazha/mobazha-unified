@@ -35,6 +35,60 @@ function createMockAccounts() {
   ];
 }
 
+async function mockPaymentPolicyAPI(page: Page): Promise<void> {
+  await page.route('**/v1/settings/payment-policy**', async route => {
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON() as { utxoConfirmationPolicy?: string };
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: { utxoConfirmationPolicy: body.utxoConfirmationPolicy ?? 'chain_confirmed' },
+        }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { utxoConfirmationPolicy: 'chain_confirmed' } }),
+    });
+  });
+}
+
+async function mockGuestCheckoutSettingsAPI(page: Page): Promise<void> {
+  await page.route('**/v1/settings/guest-checkout**', async route => {
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON() as {
+        enabled?: boolean;
+        acceptedCoins?: string[];
+        paymentTimeoutMinutes?: number;
+      };
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            enabled: body.enabled ?? true,
+            acceptedCoins: body.acceptedCoins ?? ['BTC'],
+            paymentTimeoutMinutes: body.paymentTimeoutMinutes ?? 30,
+          },
+        }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          enabled: true,
+          acceptedCoins: ['BTC'],
+          paymentTimeoutMinutes: 30,
+        },
+      }),
+    });
+  });
+}
+
 async function mockReceivingAccountsAPI(page: Page): Promise<void> {
   const accounts = createMockAccounts();
 
@@ -104,13 +158,40 @@ test.describe('Admin Payments - Receiving Accounts', () => {
   test.beforeEach(async ({ page }) => {
     await setupMockAuth(page);
     await mockReceivingAccountsAPI(page);
+    await mockPaymentPolicyAPI(page);
+    await mockGuestCheckoutSettingsAPI(page);
 
-    await page.goto('/admin/settings/payments');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page.getByTestId('admin-payments')).toBeVisible();
     await expect(page.getByTestId('receiving-accounts-section')).toBeVisible();
     await expect(page.locator(ROW_SELECTOR)).toHaveCount(2);
+  });
+
+  test('shows guest checkout and payment confirmation on store payments', async ({ page }) => {
+    const guestSection = page.getByTestId('admin-guest-checkout');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible();
+
+    const policySection = page.getByTestId('payment-confirmation-policy');
+    await policySection.scrollIntoViewIfNeeded();
+    await expect(policySection).toBeVisible();
+
+    await expect(page.getByTestId('guest-checkout-missing-accounts')).toBeVisible();
+    await expect(page.getByTestId('guest-coin-BTC')).toHaveAttribute(
+      'data-missing-account',
+      'true'
+    );
+  });
+
+  test('shows cancel before chain is selected when adding account', async ({ page }) => {
+    await page.getByTestId('receiving-add-button').click();
+    await expect(page.getByTestId('receiving-form-cancel')).toBeVisible();
+    await expect(page.getByTestId('receiving-form-save')).toHaveCount(0);
+
+    await page.getByTestId('receiving-form-cancel').click();
+    await expect(page.getByTestId('receiving-add-button')).toBeVisible();
   });
 
   test('shows network lock banner and status filters', async ({ page }) => {

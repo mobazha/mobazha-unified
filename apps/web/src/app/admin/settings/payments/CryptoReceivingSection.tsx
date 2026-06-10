@@ -563,34 +563,39 @@ const AccountForm: React.FC<AccountFormProps> = ({
               </div>
             </div>
           )}
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              data-testid="receiving-form-save"
-              onClick={onSave}
-              disabled={saving || !canSave}
-              className={cn(
-                'flex-1 flex items-center justify-center gap-2 h-10 rounded-lg',
-                'bg-primary text-primary-foreground text-sm font-medium',
-                'active:scale-[0.98] transition-all',
-                (saving || !canSave) && 'opacity-50 cursor-not-allowed'
-              )}
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isEdit ? t('common.save') : t('common.add')}
-            </button>
-            <button
-              type="button"
-              data-testid="receiving-form-cancel"
-              onClick={onCancel}
-              className="px-4 h-10 rounded-lg border border-border text-sm text-muted-foreground hover:bg-muted/50"
-            >
-              {t('common.cancel')}
-            </button>
-          </div>
         </>
       )}
+
+      <div className="flex gap-2 pt-1">
+        {form.chainType && (
+          <button
+            type="button"
+            data-testid="receiving-form-save"
+            onClick={onSave}
+            disabled={saving || !canSave}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-2 h-10 rounded-lg',
+              'bg-primary text-primary-foreground text-sm font-medium',
+              'active:scale-[0.98] transition-all',
+              (saving || !canSave) && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isEdit ? t('common.save') : t('common.add')}
+          </button>
+        )}
+        <button
+          type="button"
+          data-testid="receiving-form-cancel"
+          onClick={onCancel}
+          className={cn(
+            'h-10 rounded-lg border border-border text-sm text-muted-foreground hover:bg-muted/50',
+            form.chainType ? 'px-4' : 'flex-1'
+          )}
+        >
+          {t('common.cancel')}
+        </button>
+      </div>
     </div>
   );
 };

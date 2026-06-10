@@ -355,7 +355,7 @@ test.describe('Outpost Screenshots — Settings', () => {
     await setupOutpostMockAuth(page);
     await mockOutpostGuestAPIs(page, 'LTC');
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/settings/policies');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1500);
 

@@ -9,6 +9,7 @@ import {
   isPaymentCoinEnabled,
   isRetiredPaymentChain,
   mustCanonicalCoin,
+  tryNormalizePaymentCoinToAssetId,
   getTokenByPaymentCoin,
   getTokenDecimals,
   getTokenIdFromPaymentCoin,
@@ -16,6 +17,22 @@ import {
   parseCanonicalPaymentCoin,
   resolveTokenIdForDisplay,
 } from '../../data/tokens';
+
+describe('tryNormalizePaymentCoinToAssetId', () => {
+  it('normalizes legacy tickers and chain ids to canonical asset ids', () => {
+    expect(tryNormalizePaymentCoinToAssetId('ETH')).toBe('crypto:eip155:1:native');
+    expect(tryNormalizePaymentCoinToAssetId('BSC')).toBe('crypto:eip155:56:native');
+    expect(tryNormalizePaymentCoinToAssetId('BASE')).toBe('crypto:eip155:8453:native');
+  });
+
+  it('normalizes fiat provider casing', () => {
+    expect(tryNormalizePaymentCoinToAssetId('fiat:Stripe:usd')).toBe('fiat:stripe:USD');
+  });
+
+  it('returns undefined for ambiguous legacy token ids', () => {
+    expect(tryNormalizePaymentCoinToAssetId('USDC')).toBeUndefined();
+  });
+});
 
 describe('mustCanonicalCoin', () => {
   it('rejects non-canonical token IDs in hardcut mode', () => {

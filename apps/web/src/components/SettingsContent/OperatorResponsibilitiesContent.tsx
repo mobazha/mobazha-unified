@@ -17,7 +17,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui';
-import { useI18n, isStandaloneMode, type TranslationKey } from '@mobazha/core';
+import {
+  useI18n,
+  isStandaloneMode,
+  type TranslationKey,
+  getAdminStorePaymentsPath,
+} from '@mobazha/core';
 import { SettingsSection } from '@/components/SettingsLayout';
 
 // DG-1.14: Operator-responsibility acknowledgement (client-side MVP).
@@ -189,7 +194,7 @@ export function OperatorResponsibilitiesContent() {
     },
     {
       textKey: 'operatorResponsibilitiesSellerProcessor',
-      href: '/admin/settings/payments',
+      href: getAdminStorePaymentsPath(),
     },
     {
       textKey: 'operatorResponsibilitiesSellerCustomer',

@@ -81,13 +81,6 @@ export function PaymentConfirmationSection() {
       className="rounded-xl border border-border bg-card p-4 md:p-6 space-y-4"
       data-testid="payment-confirmation-policy"
     >
-      <div>
-        <h2 className="text-base font-semibold text-foreground">
-          {t('admin.paymentPolicy.title')}
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">{t('admin.paymentPolicy.description')}</p>
-      </div>
-
       <div className="grid gap-3 sm:grid-cols-2">
         {POLICY_OPTIONS.map(option => {
           const selected = policy === option.value;

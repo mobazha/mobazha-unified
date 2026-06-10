@@ -8,6 +8,7 @@ import {
   useFiatProviders,
   useShippingProfiles,
   useStorefrontConfig,
+  getAdminStorePaymentsPath,
 } from '@mobazha/core';
 import {
   ShoppingBag,
@@ -84,7 +85,7 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
         icon: CreditCard,
         labelKey: 'admin.checklist.setupPayment',
         descKey: 'admin.checklist.setupPaymentDesc',
-        href: __OUTPOST__ ? '/admin/finance' : '/admin/settings/payments',
+        href: getAdminStorePaymentsPath(),
         completed: hasPayment,
       },
       {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, getAdminStorePaymentsPath } from '@mobazha/core';
 import { completeInitialSetup } from '@mobazha/core/services/api/system';
 import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
@@ -760,7 +760,7 @@ export default function StandaloneSetupWizard({
 
           <div className="space-y-3 text-left">
             <button
-              onClick={() => handleFinish('/admin/settings/payments')}
+              onClick={() => handleFinish(getAdminStorePaymentsPath())}
               className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent transition-colors group"
             >
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">

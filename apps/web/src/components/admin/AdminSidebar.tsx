@@ -40,10 +40,18 @@ interface NavItem {
   badge?: number;
 }
 
+const storePaymentsNavItem: NavItem = {
+  id: 'payments',
+  labelKey: 'admin.nav.payments',
+  href: '/admin/payments',
+  icon: Wallet,
+};
+
 const baseNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
+  storePaymentsNavItem,
   { id: 'discounts', labelKey: 'admin.nav.discounts', href: '/admin/discounts', icon: Tag },
   {
     id: 'collections',
@@ -85,7 +93,7 @@ const outpostNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
-  { id: 'funds', labelKey: 'admin.nav.funds', href: '/admin/finance', icon: Wallet },
+  { id: 'payments', labelKey: 'admin.nav.payments', href: '/admin/finance', icon: Wallet },
   {
     id: 'collections',
     labelKey: 'admin.nav.collections',
