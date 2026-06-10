@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ChevronRight, ShieldAlert } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getAdminXmrWalletPath } from '@mobazha/core';
 import {
   getXMRWalletSetupStatus,
   type MoneroWalletSetupStatus,
@@ -83,7 +83,7 @@ export function XmrWalletSetupBanner() {
             })}
           </p>
           <Link
-            to="/admin/finance/xmr-wallet"
+            to={getAdminXmrWalletPath()}
             className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-destructive hover:underline"
           >
             {t('admin.dashboard.xmrWalletSetupCta', { defaultValue: 'Set up wallet' })} →
@@ -99,7 +99,7 @@ export function XmrWalletSetupBanner() {
 
   return (
     <Link
-      to="/admin/finance/xmr-wallet"
+      to={getAdminXmrWalletPath()}
       className="flex items-start gap-3 p-3 mb-4 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
     >
       <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />

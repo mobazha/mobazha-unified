@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getAdminFinancePath } from '@mobazha/core';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -75,7 +75,7 @@ function NotOutpostPlaceholder() {
   const { t } = useI18n();
   return (
     <div>
-      <SettingsPageHeader title={t('outpost.xmrWithdraw.title')} backHref="/admin/finance" />
+      <SettingsPageHeader title={t('outpost.xmrWithdraw.title')} backHref={getAdminFinancePath()} />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
           {t('outpost.xmrWithdraw.notApplicable')}
@@ -234,7 +234,7 @@ function SuccessCard({ result, onReset }: { result: PostResult; onReset: () => v
 
         <div className="flex items-center justify-between pt-2">
           <Link
-            to="/admin/finance"
+            to={getAdminFinancePath()}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -401,7 +401,10 @@ export default function XMRWithdrawPage() {
   if (result) {
     return (
       <div data-testid="admin-xmr-withdraw-success">
-        <SettingsPageHeader title={t('outpost.xmrWithdraw.title')} backHref="/admin/finance" />
+        <SettingsPageHeader
+          title={t('outpost.xmrWithdraw.title')}
+          backHref={getAdminFinancePath()}
+        />
         <SuccessCard result={result} onReset={handleReset} />
       </div>
     );
@@ -420,7 +423,7 @@ export default function XMRWithdrawPage() {
       <SettingsPageHeader
         title={t('outpost.xmrWithdraw.title')}
         description={t('outpost.xmrWithdraw.description')}
-        backHref="/admin/finance"
+        backHref={getAdminFinancePath()}
       />
 
       <div className="space-y-6">

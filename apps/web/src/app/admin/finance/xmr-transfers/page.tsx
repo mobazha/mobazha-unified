@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getAdminFinancePath } from '@mobazha/core';
 import {
   AlertTriangle,
   ArrowDownLeft,
@@ -76,7 +76,7 @@ function NotOutpostPlaceholder() {
     <div>
       <SettingsPageHeader
         title={t('outpost.xmrTransfers.title', { defaultValue: 'Monero Transactions' })}
-        backHref="/admin/finance"
+        backHref={getAdminFinancePath()}
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ export default function XMRTransfersPage() {
           defaultValue:
             'All payments seen by your Monero wallet. Live data — fetched from monero-wallet-rpc on every refresh.',
         })}
-        backHref="/admin/finance"
+        backHref={getAdminFinancePath()}
       />
 
       <BucketFilters
@@ -224,7 +224,7 @@ export default function XMRTransfersPage() {
       ) : null}
 
       <Link
-        to="/admin/finance"
+        to={getAdminFinancePath()}
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />

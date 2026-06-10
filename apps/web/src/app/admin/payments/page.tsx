@@ -2,7 +2,7 @@
 
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getAdminFinancePath } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
@@ -100,7 +100,7 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => {
     if (!__OUTPOST__) return;
-    router.replace('/admin/finance');
+    router.replace(getAdminFinancePath());
   }, [router]);
 
   if (__OUTPOST__) {

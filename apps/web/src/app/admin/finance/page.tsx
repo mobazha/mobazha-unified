@@ -2,7 +2,13 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useI18n } from '@mobazha/core';
+import {
+  useI18n,
+  getAdminXmrWalletPath,
+  getAdminXmrWithdrawPath,
+  getAdminXmrSecretsPath,
+  getAdminXmrTransfersPath,
+} from '@mobazha/core';
 import { getBrandNetworkConfig } from '@mobazha/core/config/env';
 import { getPaymentRPCStatus, type PaymentRPCStatusEntry } from '@mobazha/core/services/api/system';
 import {
@@ -245,13 +251,13 @@ export default function AdminFinancePage() {
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
           <ActionCard
-            to="/admin/finance/xmr-withdraw"
+            to={getAdminXmrWithdrawPath()}
             icon={ArrowUpRight}
             title={t('admin.finance.withdrawTitle')}
             description={t('admin.finance.withdrawDesc')}
           />
           <ActionCard
-            to="/admin/finance/xmr-transfers"
+            to={getAdminXmrTransfersPath()}
             icon={History}
             title={t('admin.finance.transactionsTitle')}
             description={t('admin.finance.transactionsDesc')}
@@ -266,13 +272,13 @@ export default function AdminFinancePage() {
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
           <ActionCard
-            to="/admin/finance/xmr-wallet"
+            to={getAdminXmrWalletPath()}
             icon={Wallet}
             title={t('admin.finance.setupWalletTitle')}
             description={t('admin.finance.setupWalletDesc')}
           />
           <ActionCard
-            to="/admin/finance/xmr-secrets"
+            to={getAdminXmrSecretsPath()}
             icon={KeyRound}
             title={t('admin.finance.exportSecretsTitle')}
             description={t('admin.finance.exportSecretsDesc')}

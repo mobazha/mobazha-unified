@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useI18n } from '@mobazha/core';
+import { useI18n, getAdminFinancePath } from '@mobazha/core';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -58,7 +58,7 @@ function NotOutpostPlaceholder() {
     <div>
       <SettingsPageHeader
         title={t('outpost.xmrSecrets.title', { defaultValue: 'Monero Wallet Secrets' })}
-        backHref="/admin/finance"
+        backHref={getAdminFinancePath()}
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -86,14 +86,14 @@ export default function XMRSecretsPage() {
           defaultValue:
             'Export your seed for offline backup, or share view-only keys with a trusted bookkeeper. Both panels reveal data on demand and never persist anything in your browser.',
         })}
-        backHref="/admin/finance"
+        backHref={getAdminFinancePath()}
       />
 
       <MnemonicPanel />
       <ViewOnlyPanel />
 
       <Link
-        to="/admin/finance"
+        to={getAdminFinancePath()}
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />

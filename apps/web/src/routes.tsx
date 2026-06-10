@@ -277,23 +277,23 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/products/import-gumroad/page')),
         },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
-        { path: 'payments', element: lazyPage(() => import('./app/admin/settings/payments/page')) },
+        { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
         { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
         {
           path: 'finance/xmr-wallet',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-wallet/page')),
         },
         {
           path: 'finance/xmr-withdraw',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-withdraw/page')),
         },
         {
           path: 'finance/xmr-secrets',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-secrets/page')),
         },
         {
           path: 'finance/xmr-transfers',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-transfers/page')),
         },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
         {
@@ -535,19 +535,19 @@ if (__OUTPOST__) {
         {
           // Canonical Monero wallet ops under Funds (sidebar); keep registered here for Outpost builds.
           path: 'finance/xmr-wallet',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-wallet/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-wallet/page')),
         },
         {
           path: 'finance/xmr-withdraw',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-withdraw/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-withdraw/page')),
         },
         {
           path: 'finance/xmr-secrets',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-secrets/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-secrets/page')),
         },
         {
           path: 'finance/xmr-transfers',
-          element: lazyPage(() => import('./app/admin/settings/payments/xmr-transfers/page')),
+          element: lazyPage(() => import('./app/admin/finance/xmr-transfers/page')),
         },
         {
           path: 'collections',

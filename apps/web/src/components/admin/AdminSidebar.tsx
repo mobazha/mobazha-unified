@@ -9,6 +9,7 @@ import {
   isStandalone,
   useStorefrontMode,
   useFeatureFlags,
+  getAdminStorePaymentsPath,
 } from '@mobazha/core';
 import {
   LayoutDashboard,
@@ -43,7 +44,7 @@ interface NavItem {
 const storePaymentsNavItem: NavItem = {
   id: 'payments',
   labelKey: 'admin.nav.payments',
-  href: '/admin/payments',
+  href: getAdminStorePaymentsPath(),
   icon: Wallet,
 };
 
@@ -93,7 +94,7 @@ const outpostNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
-  { id: 'payments', labelKey: 'admin.nav.payments', href: '/admin/finance', icon: Wallet },
+  storePaymentsNavItem,
   {
     id: 'collections',
     labelKey: 'admin.nav.collections',
