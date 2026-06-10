@@ -43,9 +43,13 @@ vi.mock('@mobazha/core', async importOriginal => {
   };
 });
 
-vi.mock('@mobazha/core/data/tokens', () => ({
-  resolveTokenIdForDisplay: (coin: string) => coin,
-}));
+vi.mock('@mobazha/core/data/tokens', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core/data/tokens')>();
+  return {
+    ...actual,
+    resolveTokenIdForDisplay: (coin: string) => coin,
+  };
+});
 
 vi.mock('@/components/GuestCheckout/AdminShippingDecrypt', () => ({
   AdminShippingDecrypt: () => <div data-testid="shipping-decrypt" />,

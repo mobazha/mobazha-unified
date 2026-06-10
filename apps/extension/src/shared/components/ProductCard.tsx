@@ -113,9 +113,11 @@ const FIAT_SYMBOLS: Record<string, string> = {
 };
 
 function formatDisplayPrice(price?: ProductListItem['price']): string {
-  if (!price?.amount) return '';
+  if (price?.amount == null || price.amount === '') return '';
   const divisibility = price.currency?.divisibility ?? 2;
-  const displayAmount = price.amount / Math.pow(10, divisibility);
+  const rawAmount = typeof price.amount === 'string' ? Number(price.amount) : price.amount;
+  if (!Number.isFinite(rawAmount)) return '';
+  const displayAmount = rawAmount / Math.pow(10, divisibility);
   const code = price.currency?.code ?? '';
 
   const symbol = FIAT_SYMBOLS[code];
