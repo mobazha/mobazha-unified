@@ -52,9 +52,17 @@ vi.mock('@mobazha/core', () => ({
   isStandalone: () => false,
 }));
 
-vi.mock('@mobazha/core/data/tokens', () => ({
-  resolveTokenIdForDisplay: (coin: string) => coin,
-  getPaymentCoinDisplayLabel: (coin: string) => coin,
+vi.mock('@mobazha/core/data/tokens', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core/data/tokens')>();
+  return {
+    ...actual,
+    resolveTokenIdForDisplay: (coin: string) => coin,
+    getPaymentCoinDisplayLabel: (coin: string) => coin,
+  };
+});
+
+vi.mock('@/components/Product/ListingPriceLabel', () => ({
+  ListingPriceLabel: () => React.createElement('span', null, 'USD 15.00'),
 }));
 
 vi.mock('@mobazha/core/services/api/guestCheckout', () => ({
