@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { useI18n, useUserStore, getImageUrl, getAdminStorePaymentsPath } from '@mobazha/core';
+import {
+  useI18n,
+  useUserStore,
+  getImageUrl,
+  getAdminStorePaymentsPath,
+  isFiatPaymentVisible,
+} from '@mobazha/core';
 import { completeInitialSetup } from '@mobazha/core/services/api/system';
 import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
@@ -775,8 +781,11 @@ export default function StandaloneSetupWizard({
                     ? t('outpost.setupPaymentsDesc', {
                         defaultValue: 'Configure XMR wallet-rpc endpoint',
                       })
-                    : t('admin.onboarding.setupPaymentsDesc') ||
-                      'Add crypto wallets, connect Stripe or PayPal'}
+                    : isFiatPaymentVisible()
+                      ? t('admin.onboarding.setupPaymentsDesc') ||
+                        'Add crypto wallets, connect Stripe or PayPal'
+                      : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
+                        'Add crypto receiving addresses for your store'}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />

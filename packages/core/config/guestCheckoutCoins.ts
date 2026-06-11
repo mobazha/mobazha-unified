@@ -15,6 +15,7 @@ import {
   type PaymentChainConfig,
   type TokenConfig,
 } from '../data/tokens';
+import { isTronPaymentVisible } from './paymentMethodVisibility';
 
 /**
  * Chain IDs (as used in CHAINS / PaymentChainConfig) supported by Guest Checkout KeyDeriver.
@@ -29,7 +30,7 @@ const GUEST_SUPPORTED_CHAIN_IDS = [
   'BSC',
   'MATIC',
   'BASE',
-  'TRON',
+  ...(isTronPaymentVisible() ? (['TRON'] as const) : []),
 ] as const;
 
 /**

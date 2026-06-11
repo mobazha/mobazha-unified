@@ -4887,6 +4887,8 @@ export const zh: PartialTranslationResource = {
     },
     payments: {
       pageDesc: '配置店铺收款方式：收款账户、访客结账、确认规则与银行卡提供商。',
+      pageDescCryptoOnly: '配置店铺收款方式：加密货币收款账户、访客结账与确认规则。',
+      payoutInfoTitle: '我如何收款？',
     },
     dashboard: {
       welcome: '欢迎回来，{{name}}',
@@ -5634,6 +5636,7 @@ export const zh: PartialTranslationResource = {
       step3Desc: '选择你的收款渠道',
       setupPayments: '设置收款方式',
       setupPaymentsDesc: '添加加密钱包，或连接 Stripe / PayPal',
+      setupPaymentsDescCryptoOnly: '为店铺添加加密货币收款地址',
       paymentConfigured: '收款方式已配置',
       storeName: '店铺名称',
       storeNamePlaceholder: '我的店铺',
@@ -5693,6 +5696,7 @@ export const zh: PartialTranslationResource = {
       fundsDesc: '余额、提现和交易流水',
       payments: '店铺收款',
       paymentsDesc: '收款账户、访客结账、确认规则与银行卡提供商',
+      paymentsDescCryptoOnly: '收款账户、访客结账与确认规则',
       integrations: '集成管理',
       integrationsDesc: '通知渠道、AI 助手和 Webhook',
       guestCheckout: '访客结账',

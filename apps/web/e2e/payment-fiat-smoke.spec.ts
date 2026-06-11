@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
 import { mockPaymentMethodsAPI } from './fixtures/mock-api-routes';
+import { isFiatPaymentVisible } from '@mobazha/core';
 
 const MOCK_VENDOR_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const ETH_USDT_ASSET_ID = 'crypto:eip155:1:erc20:0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA';
@@ -19,6 +20,8 @@ test.describe('Payment Fiat Smoke', () => {
   });
 
   test('should render and select fiat method', async ({ page }) => {
+    test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
     await page.goto(paymentMethodURL());
     await page.waitForLoadState('domcontentloaded');
 

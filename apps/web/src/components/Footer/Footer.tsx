@@ -14,6 +14,8 @@ import {
   stripHtmlTags,
   getBrandConfig,
   isOutpostMode,
+  isTronPaymentVisible,
+  isFiatPaymentVisible,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
@@ -24,7 +26,7 @@ const FOOTER_CRYPTO_TOKENS_FULL = [
   { id: 'BASE', name: 'Base' },
   { id: 'SOL', name: 'Solana' },
   { id: 'LTC', name: 'Litecoin' },
-  { id: 'TRX', name: 'TRON' },
+  ...(isTronPaymentVisible() ? [{ id: 'TRX', name: 'TRON' }] : []),
   { id: 'USDT', name: 'Tether (USDT)' },
   { id: 'USDC', name: 'USD Coin (USDC)' },
 ];
@@ -341,7 +343,7 @@ export const Footer: React.FC = () => {
                   <TokenIcon token={id} size={20} />
                 </span>
               ))}
-              {!isOutpostMode() && (
+              {isFiatPaymentVisible() && (
                 <>
                   <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
                   {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (

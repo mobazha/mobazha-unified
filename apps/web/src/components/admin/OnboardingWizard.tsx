@@ -10,6 +10,7 @@ import {
   getImageUrl,
   useReceivingAccounts,
   getAdminStorePaymentsPath,
+  isFiatPaymentVisible,
 } from '@mobazha/core';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
@@ -701,8 +702,9 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {t('admin.onboarding.setupPaymentsDesc') ||
-                  'Add crypto wallets, connect Stripe or PayPal'}
+                {isFiatPaymentVisible()
+                  ? t('admin.onboarding.setupPaymentsDesc')
+                  : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

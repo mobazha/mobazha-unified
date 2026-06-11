@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
 import { useI18n, getAdminStorePaymentsPath, useReceivingAccounts } from '@mobazha/core';
@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { GUEST_CHECKOUT_COINS, type GuestCoinInfo } from '@mobazha/core/config/guestCheckoutCoins';
+import { sanitizeAcceptedPaymentCoins, isVisibleAcceptedCurrency } from '@mobazha/core';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,11 +46,26 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
   const [pgpError, setPgpError] = useState<string | null>(null);
   const [pgpSuccess, setPgpSuccess] = useState(false);
   const showPGPSection = isOutpostMode();
+  /** Hidden GA-gated coins kept on server until explicit save + visibility launch. */
+  const preservedHiddenCoinsRef = useRef<string[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+
     getGuestCheckoutSettings()
-      .then(res => setSettings(res))
-      .catch(() => setError(t('admin.guestCheckout.loadError')));
+      .then(res => {
+        const serverCoins = res.acceptedCoins ?? [];
+        preservedHiddenCoinsRef.current = serverCoins.filter(
+          coin => !isVisibleAcceptedCurrency(coin)
+        );
+        const visibleCoins = sanitizeAcceptedPaymentCoins(serverCoins);
+        if (!cancelled) {
+          setSettings({ ...res, acceptedCoins: visibleCoins });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError(t('admin.guestCheckout.loadError'));
+      });
 
     if (isOutpostMode()) {
       getPGPPublicKey()
@@ -61,6 +77,10 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
           // 404 = not configured yet
         });
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [t]);
 
   const handleSavePGPKey = useCallback(async () => {
@@ -116,8 +136,21 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
     setError(null);
     setSuccess(false);
     try {
-      const res = await updateGuestCheckoutSettings(settings);
-      setSettings(res);
+      const visibleCoins = sanitizeAcceptedPaymentCoins(settings.acceptedCoins);
+      const mergedCoins = [...new Set([...visibleCoins, ...preservedHiddenCoinsRef.current])];
+      const payload = {
+        ...settings,
+        acceptedCoins: mergedCoins,
+      };
+      const res = await updateGuestCheckoutSettings(payload);
+      const serverCoins = res.acceptedCoins ?? [];
+      preservedHiddenCoinsRef.current = serverCoins.filter(
+        coin => !isVisibleAcceptedCurrency(coin)
+      );
+      setSettings({
+        ...res,
+        acceptedCoins: sanitizeAcceptedPaymentCoins(serverCoins),
+      });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {

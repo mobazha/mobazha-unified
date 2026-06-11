@@ -13,6 +13,7 @@ import {
   decodeHtmlEntities,
   sanitizeHtml,
   getTokenIdFromPaymentCoin,
+  filterVisibleAcceptedCurrencies,
   useI18n,
   useCartStore,
   useChatStore,
@@ -107,7 +108,10 @@ export function ProductDetailMobile({
   const cartItemCount = useCartStore(state => state.getItemCount());
   const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(vendorPeerID));
   const displayAcceptedCurrencies = React.useMemo(
-    () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),
+    () =>
+      filterVisibleAcceptedCurrencies(acceptedCurrencies).map(
+        coin => getTokenIdFromPaymentCoin(coin) || coin
+      ),
     [acceptedCurrencies]
   );
 

@@ -3,7 +3,12 @@
 import React from 'react';
 import { Container } from '@/components/layouts';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
-import { useI18n, getSupportedChains } from '@mobazha/core';
+import {
+  useI18n,
+  getVisibleSupportedChainCount,
+  isTronPaymentVisible,
+  isFiatPaymentVisible,
+} from '@mobazha/core';
 
 interface PlatformStatsSectionProps {
   storeCount: number;
@@ -11,7 +16,7 @@ interface PlatformStatsSectionProps {
   isLoading: boolean;
 }
 
-const CHAINS_SUPPORTED = getSupportedChains().length;
+const CHAINS_SUPPORTED = getVisibleSupportedChainCount();
 
 const CHAIN_ECOSYSTEM = [
   { id: 'BTC', name: 'Bitcoin' },
@@ -20,7 +25,7 @@ const CHAIN_ECOSYSTEM = [
   { id: 'SOL', name: 'Solana' },
   { id: 'BASE', name: 'Base' },
   { id: 'LTC', name: 'Litecoin' },
-  { id: 'TRX', name: 'TRON' },
+  ...(isTronPaymentVisible() ? [{ id: 'TRX', name: 'TRON' }] : []),
 ];
 
 const FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
@@ -127,12 +132,20 @@ export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.m
                   <TokenIcon token={chain.id} size={20} />
                 </span>
               ))}
-              <span className="w-px h-4 bg-white/15 mx-0.5" aria-hidden="true" />
-              {FIAT_METHODS.map(method => (
-                <span key={method.id} title={method.name} className="flex items-center opacity-70">
-                  {method.icon}
-                </span>
-              ))}
+              {isFiatPaymentVisible() && (
+                <>
+                  <span className="w-px h-4 bg-white/15 mx-0.5" aria-hidden="true" />
+                  {FIAT_METHODS.map(method => (
+                    <span
+                      key={method.id}
+                      title={method.name}
+                      className="flex items-center opacity-70"
+                    >
+                      {method.icon}
+                    </span>
+                  ))}
+                </>
+              )}
             </div>
 
             <p className="text-white/20 text-[10px] mt-3">

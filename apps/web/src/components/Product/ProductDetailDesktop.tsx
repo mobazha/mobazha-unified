@@ -15,6 +15,7 @@ import {
   decodeHtmlEntities,
   sanitizeHtml,
   getTokenIdFromPaymentCoin,
+  filterVisibleAcceptedCurrencies,
 } from '@mobazha/core';
 import type { Product, ProductSku } from '@mobazha/core';
 import { Heart, AlertTriangle } from 'lucide-react';
@@ -119,7 +120,10 @@ export function ProductDetailDesktop({
   }, [onPurchaseStateChange, quantity, hasVariants, selectedOptions, selectedSku]);
 
   const displayAcceptedCurrencies = React.useMemo(
-    () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),
+    () =>
+      filterVisibleAcceptedCurrencies(acceptedCurrencies).map(
+        coin => getTokenIdFromPaymentCoin(coin) || coin
+      ),
     [acceptedCurrencies]
   );
 

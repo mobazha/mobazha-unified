@@ -3,7 +3,12 @@
 import React, { useMemo, useCallback } from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getTokenIdFromPaymentCoin, useI18n } from '@mobazha/core';
+import {
+  getTokenIdFromPaymentCoin,
+  useI18n,
+  isFiatPaymentVisible,
+  filterVisiblePaymentTokens,
+} from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
 import { TOKENS, CHAINS, FIAT_METHODS, groupTokensByCurrency, getChainById } from './config';
@@ -28,9 +33,11 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   const { t } = useI18n();
   const { isEmbedded } = useMiniAppPayment();
 
+  const effectiveShowFiat = showFiatMethods && isFiatPaymentVisible();
+
   const hasFiat = useMemo(
-    () => showFiatMethods && availableFiatProviders && availableFiatProviders.length > 0,
-    [showFiatMethods, availableFiatProviders]
+    () => effectiveShowFiat && availableFiatProviders && availableFiatProviders.length > 0,
+    [effectiveShowFiat, availableFiatProviders]
   );
 
   const activeFiatMethods = useMemo<FiatMethodConfig[]>(() => {
@@ -63,7 +70,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
         return accepted.has(tokenID) || (canonical ? accepted.has(canonical) : false);
       });
     }
-    return tokens;
+    return filterVisiblePaymentTokens(tokens);
   }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
 
   const currencyGroups = useMemo(() => groupTokensByCurrency(availableTokens), [availableTokens]);

@@ -5404,6 +5404,9 @@ export const en: TranslationResource = {
     payments: {
       pageDesc:
         'Configure how your store receives payments — accounts, guest checkout, confirmation rules, and card providers.',
+      pageDescCryptoOnly:
+        'Configure how your store receives payments — crypto receiving accounts, guest checkout, and confirmation rules.',
+      payoutInfoTitle: 'How do I get paid?',
     },
     dashboard: {
       welcome: 'Welcome back, {{name}}',
@@ -6015,6 +6018,7 @@ export const en: TranslationResource = {
       step3Desc: 'Choose how you want to get paid',
       setupPayments: 'Set up payment methods',
       setupPaymentsDesc: 'Add crypto wallets, connect Stripe or PayPal',
+      setupPaymentsDescCryptoOnly: 'Add crypto receiving addresses for your store',
       paymentConfigured: 'Payment method configured',
       storeName: 'Store Name',
       storeNamePlaceholder: 'My Awesome Store',
@@ -6075,6 +6079,7 @@ export const en: TranslationResource = {
       fundsDesc: 'Balance, withdrawals, and transaction history',
       payments: 'Store payments',
       paymentsDesc: 'Receiving accounts, guest checkout, confirmation rules, and card providers',
+      paymentsDescCryptoOnly: 'Receiving accounts, guest checkout, and confirmation rules',
       integrations: 'Integrations',
       integrationsDesc: 'Notification channels, AI assistant, and webhooks',
       guestCheckout: 'Guest Checkout',

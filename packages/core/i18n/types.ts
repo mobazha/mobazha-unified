@@ -2815,6 +2815,8 @@ export interface TranslationResource {
     };
     payments?: {
       pageDesc?: string;
+      pageDescCryptoOnly?: string;
+      payoutInfoTitle?: string;
     };
     dashboard?: {
       welcome?: string;
@@ -3328,6 +3330,7 @@ export interface TranslationResource {
       step3Desc?: string;
       setupPayments?: string;
       setupPaymentsDesc?: string;
+      setupPaymentsDescCryptoOnly?: string;
       paymentConfigured?: string;
       storeName?: string;
       storeNamePlaceholder?: string;
@@ -3389,6 +3392,7 @@ export interface TranslationResource {
       fundsDesc?: string;
       payments?: string;
       paymentsDesc?: string;
+      paymentsDescCryptoOnly?: string;
       integrations?: string;
       integrationsDesc?: string;
       guestCheckout?: string;

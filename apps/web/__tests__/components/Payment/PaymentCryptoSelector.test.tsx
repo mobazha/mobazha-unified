@@ -10,8 +10,10 @@ vi.mock('@/hooks/useMiniAppPayment', () => ({
 
 vi.mock('@mobazha/core', async () => {
   const tokens = await import('../../../../../packages/core/data/tokens');
+  const visibility = await import('../../../../../packages/core/config/paymentMethodVisibility');
   return {
     ...tokens,
+    ...visibility,
     useI18n: () => ({
       t: (key: string, vars?: Record<string, unknown>) =>
         vars?.count !== undefined ? `${key}:${vars.count}` : key,
@@ -47,5 +49,14 @@ describe('PaymentCryptoSelector', () => {
     expect(screen.getByText('ETH')).toBeInTheDocument();
     expect(screen.getByText('Base')).toBeInTheDocument();
     expect(screen.queryByText('BNB')).not.toBeInTheDocument();
+  });
+
+  it('hides TRON tokens when TRON checkout is disabled', () => {
+    render(
+      <PaymentCryptoSelector selectedTokenId="" onSelect={() => {}} showFiatMethods={false} />
+    );
+
+    expect(screen.queryByText('TRX')).not.toBeInTheDocument();
+    expect(screen.queryByText('TRON')).not.toBeInTheDocument();
   });
 });

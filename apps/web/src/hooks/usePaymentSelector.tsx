@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useMediaQuery } from './useMediaQuery';
 import { useModerators } from './useModerators';
 import {
-  getTokenById,
-  isPaymentCoinEnabled,
-  isRetiredPaymentChain,
   usePaymentMethods,
+  syncCheckoutPaymentSessionStorage,
+  sanitizeCheckoutTokenId,
+  sanitizeCheckoutFiatProvider,
+  persistCheckoutTokenSelection,
+  persistCheckoutFiatSelection,
+  isFiatPaymentVisible,
 } from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
@@ -45,13 +48,16 @@ interface PaymentSelectorContextValue extends PaymentSelectorState {
 
 const PaymentSelectorContext = createContext<PaymentSelectorContextValue | null>(null);
 
-function enabledTokenID(tokenID: string | null): string | undefined {
-  if (!tokenID) return undefined;
-  const token = getTokenById(tokenID);
-  if (!token || token.disabled) return undefined;
-  const assetId = token.assetId || token.id;
-  if (!isPaymentCoinEnabled(assetId) || isRetiredPaymentChain(assetId)) return undefined;
-  return token.id;
+function readInitialPaymentSelection(): Pick<
+  PaymentSelectorState,
+  'paymentCategory' | 'selectedTokenId' | 'selectedFiatProvider'
+> {
+  const session = syncCheckoutPaymentSessionStorage();
+  return {
+    paymentCategory: session.category,
+    selectedTokenId: session.tokenId,
+    selectedFiatProvider: session.fiatProvider,
+  };
 }
 
 /**
@@ -83,17 +89,12 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
       };
     }
 
-    const savedTokenId = enabledTokenID(sessionStorage.getItem('checkout_selected_token'));
-    const savedFiatProvider = sessionStorage.getItem('checkout_selected_fiat_provider');
     const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
-    const category: PaymentCategory = savedFiatProvider ? 'fiat' : 'crypto';
 
     return {
       isPaymentDrawerOpen: false,
       isModeratorDrawerOpen: false,
-      paymentCategory: category,
-      selectedTokenId: savedTokenId || undefined,
-      selectedFiatProvider: savedFiatProvider || undefined,
+      ...readInitialPaymentSelection(),
       selectedModerator: savedModeratorJson ? JSON.parse(savedModeratorJson) : undefined,
     };
   });
@@ -101,15 +102,14 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const restoreFromSession = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    const savedTokenId = enabledTokenID(sessionStorage.getItem('checkout_selected_token'));
-    const savedFiatProvider = sessionStorage.getItem('checkout_selected_fiat_provider');
     const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
+    const session = syncCheckoutPaymentSessionStorage();
 
     setState(prev => ({
       ...prev,
-      paymentCategory: savedFiatProvider ? 'fiat' : 'crypto',
-      selectedTokenId: savedTokenId || prev.selectedTokenId,
-      selectedFiatProvider: savedFiatProvider || prev.selectedFiatProvider,
+      paymentCategory: session.category,
+      selectedTokenId: session.tokenId,
+      selectedFiatProvider: session.fiatProvider,
       selectedModerator: savedModeratorJson
         ? JSON.parse(savedModeratorJson)
         : prev.selectedModerator,
@@ -173,30 +173,25 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   }, []);
 
   const setSelectedTokenId = useCallback((tokenId: string) => {
-    if (!enabledTokenID(tokenId)) return;
+    if (!sanitizeCheckoutTokenId(tokenId)) return;
     setState(prev => ({
       ...prev,
       paymentCategory: 'crypto',
       selectedTokenId: tokenId,
       selectedFiatProvider: undefined,
     }));
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('checkout_selected_token', tokenId);
-      sessionStorage.removeItem('checkout_selected_fiat_provider');
-    }
+    persistCheckoutTokenSelection(tokenId);
   }, []);
 
   const setSelectedFiatProvider = useCallback((providerID: string) => {
+    if (!isFiatPaymentVisible() || !sanitizeCheckoutFiatProvider(providerID)) return;
     setState(prev => ({
       ...prev,
       paymentCategory: 'fiat',
       selectedFiatProvider: providerID,
       selectedTokenId: undefined,
     }));
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('checkout_selected_fiat_provider', providerID);
-      sessionStorage.removeItem('checkout_selected_token');
-    }
+    persistCheckoutFiatSelection(providerID);
   }, []);
 
   // 设置选中的仲裁员

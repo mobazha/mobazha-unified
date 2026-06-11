@@ -56,6 +56,8 @@ import {
   loadRefundReceivingPreferencesSafe,
   persistRefundReceivingAddressBestEffort,
   isRetiredPaymentChain,
+  isFiatPaymentVisible,
+  sanitizeCheckoutTokenId,
   type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
@@ -361,18 +363,21 @@ export default function PaymentPage() {
     setVendorPeerID,
   } = usePaymentSelector();
 
+  const visibleTokenId = useMemo(() => sanitizeCheckoutTokenId(selectedTokenId), [selectedTokenId]);
+  const visibleFiatProvider = isFiatPaymentVisible() ? selectedFiatProvider : undefined;
+
   const selectedPaymentCoin = useMemo(() => {
-    const tokenId = (selectedTokenId || '').trim();
+    const tokenId = (visibleTokenId || '').trim();
     if (!tokenId) return '';
     return getTokenById(tokenId)?.assetId?.trim() || tokenId;
-  }, [selectedTokenId]);
+  }, [visibleTokenId]);
 
   // 链类别检测与统一钱包状态
   const chainCategory = selectedPaymentCoin ? resolveChainCategory(selectedPaymentCoin) : null;
   const isRetiredPayment = isRetiredPaymentChain(selectedPaymentCoin);
   const usesPaymentSessionFlow = Boolean(chainCategory);
   const isCryptoPaymentFlow =
-    Boolean(selectedTokenId) && !selectedFiatProvider && usesPaymentSessionFlow;
+    Boolean(visibleTokenId) && !visibleFiatProvider && usesPaymentSessionFlow;
   const resolvedRefundAddress = resolveBuyerRefundAddress(rawOrder, paymentSession);
   const requiresCustodialRefundInput = isCryptoPaymentFlow && payFromCustodial;
   const canProceedToPay = !requiresCustodialRefundInput || refundWalletAddress.trim().length > 0;
@@ -451,12 +456,12 @@ export default function PaymentPage() {
   }, [externalWalletInfo, orderID, selectedPaymentCoin, orderDetails, refundWalletAddress]);
 
   const showMobileBottomBar =
-    Boolean(orderDetails) && !selectedFiatProvider && !externalWalletInfo && !isPaymentBlocked;
+    Boolean(orderDetails) && !visibleFiatProvider && !externalWalletInfo && !isPaymentBlocked;
 
   // 切换支付方式时清除外部钱包信息
   useEffect(() => {
     setExternalWalletInfo(null);
-  }, [selectedTokenId]);
+  }, [visibleTokenId]);
 
   // beforeunload: warn user when payment is in progress
   useEffect(() => {
@@ -494,7 +499,7 @@ export default function PaymentPage() {
       setRawOrder(order);
       if (session && externalWalletActiveRef.current && !sessionVerified) {
         setExternalWalletInfo(
-          externalWalletInfoFromSession(session, selectedTokenId ?? null, selectedPaymentCoin)
+          externalWalletInfoFromSession(session, visibleTokenId ?? null, selectedPaymentCoin)
         );
       }
       if (nextState) {
@@ -529,7 +534,7 @@ export default function PaymentPage() {
       refreshPaymentReadiness,
       router,
       selectedPaymentCoin,
-      selectedTokenId,
+      visibleTokenId,
     ]
   );
 
@@ -917,21 +922,21 @@ export default function PaymentPage() {
   // 调解员费用仅在发生纠纷时从卖家收益中扣除，支付时无需计入
   const totalWithFee = orderDetails?.total || 0;
 
-  const nativeSymbol = selectedTokenId || '';
+  const nativeSymbol = visibleTokenId || '';
   const canPreviewCryptoAmount = hasExchangeRateForConversion(
     rates,
     orderDetails?.currency,
-    selectedTokenId || undefined
+    visibleTokenId || undefined
   );
   const cryptoAmount = canPreviewCryptoAmount
-    ? convertCurrency(totalWithFee, orderDetails?.currency || 'USD', selectedTokenId!)
+    ? convertCurrency(totalWithFee, orderDetails?.currency || 'USD', visibleTokenId!)
     : null;
   const cryptoAmountDisplay =
     cryptoAmount !== null && cryptoAmount > 0 ? cryptoAmount.toFixed(6) : undefined;
 
   // 执行支付（仅加密货币，法币由 FiatPaymentSection 独立处理）
   const handlePayment = useCallback(async () => {
-    if (selectedFiatProvider) return;
+    if (visibleFiatProvider) return;
 
     if (!orderDetails) {
       toast({
@@ -957,7 +962,7 @@ export default function PaymentPage() {
       return;
     }
 
-    if (!selectedTokenId) {
+    if (!visibleTokenId) {
       toast({
         title: t('payment.selectPaymentMethod'),
         variant: 'destructive',
@@ -1037,7 +1042,7 @@ export default function PaymentPage() {
         }
 
         setExternalWalletInfo(
-          externalWalletInfoFromSession(session, selectedTokenId, selectedPaymentCoin)
+          externalWalletInfoFromSession(session, visibleTokenId, selectedPaymentCoin)
         );
         setPaymentStep('idle');
         return;
@@ -1058,9 +1063,9 @@ export default function PaymentPage() {
   }, [
     orderDetails,
     orderID,
-    selectedTokenId,
+    visibleTokenId,
     selectedPaymentCoin,
-    selectedFiatProvider,
+    visibleFiatProvider,
     paymentProtectionEnabled,
     paymentModerator,
     isReadyToPay,
@@ -1298,7 +1303,7 @@ export default function PaymentPage() {
                   <>
                     <ExternalWalletPayment
                       paymentInfo={externalWalletInfo}
-                      tokenId={selectedTokenId || undefined}
+                      tokenId={visibleTokenId || undefined}
                       onRefresh={() => {
                         setExternalWalletInfo(null);
                         handlePayment();
@@ -1334,26 +1339,26 @@ export default function PaymentPage() {
                             {t('payment.paymentMethod')}
                           </h2>
                           <PaymentMethodSummary
-                            selectedTokenId={selectedTokenId}
-                            selectedFiatProvider={selectedFiatProvider}
+                            selectedTokenId={visibleTokenId}
+                            selectedFiatProvider={visibleFiatProvider}
                             onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
                           />
                         </CardContent>
                       </Card>
 
                       {/* Fiat Payment Form (Stripe / PayPal) */}
-                      {selectedFiatProvider && isReadyToPay && (
+                      {visibleFiatProvider && isReadyToPay && (
                         <Card>
                           <CardContent className="p-4 sm:p-6">
                             <FiatPaymentSection
-                              providerID={selectedFiatProvider}
+                              providerID={visibleFiatProvider}
                               vendorPeerID={orderDetails.vendor.peerID}
                               orderID={orderDetails.orderID}
                               amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
                               currency={orderDetails.currency}
                               description={orderDetails.items[0]?.title}
                               returnUrl={buildConfirmationUrl(orderDetails, {
-                                providerID: selectedFiatProvider,
+                                providerID: visibleFiatProvider,
                                 amount: toMinimalUnit(orderDetails.total, orderDetails.currency),
                               })}
                               canCreateSession={isReadyToPay}
@@ -1407,7 +1412,7 @@ export default function PaymentPage() {
                       {cryptoRefundSection}
 
                       {/* Payment Protection (crypto only) */}
-                      {!selectedFiatProvider && (
+                      {!visibleFiatProvider && (
                         <PaymentProtectionCard
                           enabled={paymentProtectionEnabled}
                           onEnabledChange={setPaymentProtectionEnabled}
@@ -1483,7 +1488,7 @@ export default function PaymentPage() {
                             = {formatExternalPaymentAmountForSummary(externalWalletInfo)}{' '}
                             {nativeSymbol.toUpperCase()}
                           </p>
-                        ) : selectedTokenId && cryptoAmountDisplay ? (
+                        ) : visibleTokenId && cryptoAmountDisplay ? (
                           <p className="text-xs text-muted-foreground">
                             ≈ {cryptoAmountDisplay} {nativeSymbol}
                             {secondsAgo !== null && (
@@ -1497,7 +1502,7 @@ export default function PaymentPage() {
                     </HStack>
 
                     {/* Pay Button - Desktop (crypto only) */}
-                    {selectedFiatProvider ? (
+                    {visibleFiatProvider ? (
                       <div className="p-3 bg-muted/50 rounded-lg text-center">
                         <p className="text-sm text-muted-foreground">{t('fiat.sectionTitle')}</p>
                       </div>
@@ -1523,7 +1528,7 @@ export default function PaymentPage() {
                           paymentExpired ||
                           isPaymentBlocked ||
                           isRetiredPayment ||
-                          !selectedTokenId ||
+                          !visibleTokenId ||
                           !canProceedToPay ||
                           (paymentProtectionEnabled && !paymentModerator)
                         }
@@ -1558,14 +1563,14 @@ export default function PaymentPage() {
                     )}
 
                     {/* Warnings */}
-                    {!isPaymentBlocked && isRetiredPayment && !selectedFiatProvider && (
+                    {!isPaymentBlocked && isRetiredPayment && !visibleFiatProvider && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-warning">
                           {t('payment.tronNotSupported')}
                         </p>
                       </div>
                     )}
-                    {!isPaymentBlocked && !selectedTokenId && !selectedFiatProvider && (
+                    {!isPaymentBlocked && !visibleTokenId && !visibleFiatProvider && (
                       <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
                         <p className="text-xs sm:text-sm text-warning">
                           {t('payment.selectPaymentMethodWarning')}
@@ -1573,7 +1578,7 @@ export default function PaymentPage() {
                       </div>
                     )}
                     {!isPaymentBlocked &&
-                      !selectedFiatProvider &&
+                      !visibleFiatProvider &&
                       requiresCustodialRefundInput &&
                       !refundWalletAddress.trim() && (
                         <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
@@ -1583,7 +1588,7 @@ export default function PaymentPage() {
                         </div>
                       )}
                     {!isPaymentBlocked &&
-                      !selectedFiatProvider &&
+                      !visibleFiatProvider &&
                       paymentProtectionEnabled &&
                       !paymentModerator && (
                         <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-warning/8 border border-warning/20 rounded-md sm:rounded-lg">
@@ -1634,7 +1639,7 @@ export default function PaymentPage() {
             paymentExpired ||
             isPaymentBlocked ||
             isRetiredPayment ||
-            !selectedTokenId ||
+            !visibleTokenId ||
             !canProceedToPay ||
             (paymentProtectionEnabled && !paymentModerator)
           }
@@ -1667,7 +1672,7 @@ export default function PaymentPage() {
       <TransactionOverlay
         step={paymentStep}
         txHash={submittedTxHash}
-        tokenId={selectedTokenId || undefined}
+        tokenId={visibleTokenId || undefined}
         errorMessage={paymentError}
         onRetry={() => {
           setPaymentStep('idle');

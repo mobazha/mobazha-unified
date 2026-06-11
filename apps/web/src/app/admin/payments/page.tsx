@@ -2,7 +2,7 @@
 
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getAdminFinancePath } from '@mobazha/core';
+import { useI18n, getAdminFinancePath, isFiatPaymentVisible } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
@@ -35,18 +35,22 @@ function PayoutInfoSection() {
   const [open, setOpen] = useState(false);
 
   const items = [
-    {
-      icon: <CreditCard className="w-4 h-4 text-[#6772e5]" />,
-      label: 'Stripe',
-      text: t('fiat.payoutInfoStripe'),
-      link: 'https://dashboard.stripe.com/settings/payouts',
-    },
-    {
-      icon: <Wallet className="w-4 h-4 text-[#0070ba]" />,
-      label: 'PayPal',
-      text: t('fiat.payoutInfoPaypal'),
-      link: 'https://www.paypal.com/myaccount/money/',
-    },
+    ...(isFiatPaymentVisible()
+      ? [
+          {
+            icon: <CreditCard className="w-4 h-4 text-[#6772e5]" />,
+            label: 'Stripe',
+            text: t('fiat.payoutInfoStripe'),
+            link: 'https://dashboard.stripe.com/settings/payouts',
+          },
+          {
+            icon: <Wallet className="w-4 h-4 text-[#0070ba]" />,
+            label: 'PayPal',
+            text: t('fiat.payoutInfoPaypal'),
+            link: 'https://www.paypal.com/myaccount/money/',
+          },
+        ]
+      : []),
     {
       icon: <Coins className="w-4 h-4 text-amber-500" />,
       label: 'Crypto',
@@ -61,7 +65,7 @@ function PayoutInfoSection() {
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/50 rounded-xl transition-colors"
       >
-        <span>{t('fiat.payoutInfoTitle')}</span>
+        <span>{t('admin.payments.payoutInfoTitle')}</span>
         <ChevronDown
           className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`}
         />
@@ -107,7 +111,9 @@ export default function AdminPaymentsPage() {
     return <div data-testid="admin-payments" className="min-h-[120px]" aria-busy="true" />;
   }
 
-  const description = t('admin.payments.pageDesc');
+  const description = isFiatPaymentVisible()
+    ? t('admin.payments.pageDesc')
+    : t('admin.payments.pageDescCryptoOnly');
 
   return (
     <div data-testid="admin-payments">
@@ -139,9 +145,11 @@ export default function AdminPaymentsPage() {
             <PaymentConfirmationSection />
           </SettingsSection>
 
-          <SettingsSection className="py-6 md:py-10">
-            <PaymentProvidersSection />
-          </SettingsSection>
+          {isFiatPaymentVisible() && (
+            <SettingsSection className="py-6 md:py-10">
+              <PaymentProvidersSection />
+            </SettingsSection>
+          )}
 
           <SettingsSection className="pt-6 md:pt-10">
             <PayoutInfoSection />

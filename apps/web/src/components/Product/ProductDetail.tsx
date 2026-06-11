@@ -32,6 +32,7 @@ import {
   useFiatProviders,
   usePaymentMethods,
   getTokenIdFromPaymentCoin,
+  filterVisibleAcceptedCurrencies,
   buildProductHref,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
@@ -143,6 +144,14 @@ export function ProductDetail({
   // Outpost: guest checkout via XMR is always available; skip fiat/crypto method check.
   const paymentAvailable =
     __OUTPOST__ || paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+
+  const displayAcceptedCurrencies = useMemo(
+    () =>
+      filterVisibleAcceptedCurrencies(product?.metadata?.acceptedCurrencies ?? []).map(
+        coin => getTokenIdFromPaymentCoin(coin) || coin
+      ),
+    [product?.metadata?.acceptedCurrencies]
+  );
 
   const isStorePaused = !isOwnProduct && vendor?.storePaused === true;
 
@@ -572,9 +581,6 @@ export function ProductDetail({
   const estimatedDelivery = getEstimatedDelivery(product);
   const vendorPeerID = product.vendorID?.peerID;
   const acceptedCurrencies = product.metadata?.acceptedCurrencies || [];
-  const displayAcceptedCurrencies = acceptedCurrencies.map(
-    coin => getTokenIdFromPaymentCoin(coin) || coin
-  );
   const rwaTradeMode = product.metadata?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
     product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
@@ -1288,12 +1294,12 @@ export function ProductDetail({
                   )}
                 </VStack>
 
-                {(acceptedCurrencies.length > 0 || fiatActiveProviders.length > 0) && (
+                {(displayAcceptedCurrencies.length > 0 || fiatActiveProviders.length > 0) && (
                   <div className="pt-3 border-t border-border space-y-2">
                     {fiatActiveProviders.length > 0 && (
                       <PaymentMethodBadges
                         fiatProviders={fiatActiveProviders.map(p => p.providerID)}
-                        showCrypto={acceptedCurrencies.length > 0}
+                        showCrypto={displayAcceptedCurrencies.length > 0}
                         size="sm"
                       />
                     )}
