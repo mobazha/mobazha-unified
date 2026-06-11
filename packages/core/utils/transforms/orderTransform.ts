@@ -229,7 +229,13 @@ interface RealOrderData {
         buyerAmount?: string;
         vendorAmount?: string;
         moderatorAmount?: string;
+        txid?: string;
       };
+    };
+    disputeAccept?: {
+      timestamp?: string | { seconds?: number };
+      closedBy?: string;
+      txid?: string;
     };
     orderCancel?: {
       timestamp?: string;
@@ -559,12 +565,19 @@ function getThumbnailUrl(
  * 格式化收货地址
  */
 function shipmentMessageTimestamp(msg: { timestamp?: string | { seconds?: number } }): string {
-  const t = msg.timestamp;
-  if (typeof t === 'string') return t;
-  if (t && typeof t === 'object' && typeof t.seconds === 'number') {
-    return new Date(t.seconds * 1000).toISOString();
+  return normalizeMessageTimestamp(msg.timestamp) || '';
+}
+
+function normalizeMessageTimestamp(ts?: string | { seconds?: number }): string | undefined {
+  if (!ts) return undefined;
+  if (typeof ts === 'string') {
+    const trimmed = ts.trim();
+    return trimmed || undefined;
   }
-  return '';
+  if (typeof ts === 'object' && typeof ts.seconds === 'number') {
+    return new Date(ts.seconds * 1000).toISOString();
+  }
+  return undefined;
 }
 
 function firstDefinedTimestamp(...timestamps: Array<string | undefined>): string {
@@ -667,6 +680,7 @@ function formatShippingAddress(shipping?: {
 function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent[] {
   const timeline: DisplayTimelineEvent[] = [];
   const contract = data.contract;
+  const disputeAcceptTimestamp = normalizeMessageTimestamp(contract.disputeAccept?.timestamp);
   const paymentTxid =
     contract.paymentSent?.transactionID || data.paymentAddressTransactions?.[0]?.txid;
   const releaseTxid = extractReleaseTx(contract, paymentTxid);
@@ -740,14 +754,26 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   if (releaseTxid) {
     const confirmationTxid = normalizeTransactionID(orderConfirmation?.transactionID);
     const releaseAtConfirmation = !!confirmationTxid && confirmationTxid === releaseTxid;
+    const disputeClose = contract.disputeClose;
     const releaseTimestamp = releaseAtConfirmation
       ? firstDefinedTimestamp(orderConfirmation?.timestamp, data.lastStateChangeAt)
-      : firstDefinedTimestamp(contract.orderComplete?.timestamp, data.completedAt);
+      : firstDefinedTimestamp(
+          disputeAcceptTimestamp,
+          contract.orderComplete?.timestamp,
+          data.completedAt,
+          disputeClose?.timestamp,
+          data.lastStateChangeAt
+        );
+    const buyerAmount = parseMinimalBigInt(disputeClose?.releaseInfo?.buyerAmount);
+    const vendorAmount = parseMinimalBigInt(disputeClose?.releaseInfo?.vendorAmount);
+    const releaseToBuyer = buyerAmount > BigInt(0) && vendorAmount <= BigInt(0);
     timeline.push({
       status: 'released',
       timestamp: releaseTimestamp,
-      description: 'Funds released to seller',
-      descriptionKey: 'order.timeline.fundsReleased',
+      description: releaseToBuyer ? 'Funds released to buyer' : 'Funds released to seller',
+      descriptionKey: releaseToBuyer
+        ? 'order.timeline.fundsReleasedToBuyer'
+        : 'order.timeline.fundsReleased',
       actor: 'system',
     });
   }
@@ -797,7 +823,12 @@ function generateTimelineFromRealData(data: RealOrderData): DisplayTimelineEvent
   if (orderComplete || data.completedAt) {
     timeline.push({
       status: 'completed',
-      timestamp: firstDefinedTimestamp(orderComplete?.timestamp, data.completedAt),
+      timestamp: firstDefinedTimestamp(
+        orderComplete?.timestamp,
+        disputeAcceptTimestamp,
+        data.completedAt,
+        data.lastStateChangeAt
+      ),
       description: 'Order completed',
       descriptionKey: 'order.timeline.orderCompleted',
       actor: 'buyer',
@@ -1001,7 +1032,8 @@ function normalizeTransactionID(txid?: string): string | undefined {
  * 优先级：
  *  1. orderConfirmation.transactionID（CANCELABLE 订单，Confirm 时释放）
  *  2. orderComplete.releaseInfo.txid（MODERATED 订单，Complete 时释放）
- *  3. contract.transactions 中与付款 tx 不同的 tx（fallback）
+ *  3. disputeClose.releaseInfo.txid（MODERATED 争议裁决释放）
+ *  4. contract.transactions 中与付款 tx 不同的 tx（fallback）
  */
 function extractReleaseTx(
   contract: RealOrderData['contract'],
@@ -1016,6 +1048,9 @@ function extractReleaseTx(
   // MODERATED orders: release tx is stored in OrderComplete.releaseInfo
   const fromReleaseInfo = normalizeTransactionID(contract.orderComplete?.releaseInfo?.txid);
   if (fromReleaseInfo) return fromReleaseInfo;
+
+  const fromDisputeClose = normalizeTransactionID(contract.disputeClose?.releaseInfo?.txid);
+  if (fromDisputeClose) return fromDisputeClose;
 
   const txs = contract.transactions;
   if (!txs || txs.length < 2 || !paymentTxid) return undefined;
@@ -1363,6 +1398,7 @@ export function transformCoreOrder(
         }),
         openedAt: contract.disputeOpen.timestamp || contract.dispute?.timestamp,
         resolvedAt: contract.disputeClose?.timestamp,
+        acceptedAt: normalizeMessageTimestamp(contract.disputeAccept?.timestamp),
         evidenceHashes:
           contract.disputeOpen.evidenceHashes?.filter(
             (h): h is string => typeof h === 'string' && h.length > 0
@@ -1528,6 +1564,7 @@ type DisputeCloseSlice = {
     vendorAmount?: string;
     moderatorAmount?: string;
     transactionFee?: string;
+    txid?: string;
   };
 };
 

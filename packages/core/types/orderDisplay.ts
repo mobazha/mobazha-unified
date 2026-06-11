@@ -148,6 +148,8 @@ export interface DisplayDispute {
   openedAt?: string;
   /** When the dispute was closed (from contract.disputeClose.timestamp) */
   resolvedAt?: string;
+  /** When a party accepted the ruling (from contract.disputeAccept.timestamp) */
+  acceptedAt?: string;
   evidenceHashes?: string[];
 }
 

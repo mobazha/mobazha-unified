@@ -425,6 +425,7 @@ export interface DisputeClose {
     moderatorAddress?: string;
     moderatorAmount?: string;
     transactionFee?: string;
+    txid?: string;
   };
   timestamp?: string;
 }

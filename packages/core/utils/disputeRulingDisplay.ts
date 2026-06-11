@@ -222,10 +222,16 @@ function settlementLineLabel(type: string, t: TranslateFn): string {
   }
 }
 
-function isMeaningfulAmount(amount?: string): amount is string {
+export function isMeaningfulAmount(amount?: string): amount is string {
   if (!amount) return false;
   const trimmed = amount.trim();
-  return trimmed !== '' && trimmed !== '0' && trimmed !== '0.0' && trimmed !== '0.00';
+  if (!trimmed) return false;
+
+  const numericPart = trimmed.replace(/[^\d.]/g, '');
+  if (!numericPart) return false;
+
+  const value = Number(numericPart);
+  return Number.isFinite(value) && value > 0;
 }
 
 /** User-facing crypto/fiat label for dispute payout rows (never CAIP-19 IDs). */
