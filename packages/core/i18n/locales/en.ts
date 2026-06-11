@@ -763,6 +763,7 @@ export const en: TranslationResource = {
       fundsSecured: 'Buyer payment confirmed, funds secured in escrow',
       vendorConfirmed: 'Vendor confirmed order',
       fundsReleased: 'Funds released from escrow to seller',
+      fundsReleasedToBuyer: 'Funds released from escrow to buyer',
       packageShipped: 'Package shipped',
       packageShippedWithTracking: 'Package shipped - {{shipper}}: {{trackingNumber}}',
       orderCompleted: 'Order completed',
@@ -1016,6 +1017,7 @@ export const en: TranslationResource = {
     packageShipped: 'Package shipped',
     orderCompleted: 'Order completed',
     fundsReleased: 'Funds released to seller',
+    fundsReleasedToBuyer: 'Funds released from escrow to buyer',
     disputeOpened: 'Dispute opened',
     disputeResolved: 'Dispute resolved',
     // Order items
@@ -1045,6 +1047,7 @@ export const en: TranslationResource = {
     platformFee: 'Platform service fee',
     networkFee: 'Network fee',
     sellerPayout: 'Seller payout',
+    buyerPayout: 'Buyer payout',
     // Parties
     seller: 'Seller',
     buyer: 'Buyer',
@@ -3040,7 +3043,7 @@ export const en: TranslationResource = {
       refundAddressLabel: 'Refund receiving address',
       refundAddressPlaceholder: 'Paste your personal receiving address',
       refundAddressWarning: 'Do not use an exchange deposit address.',
-      confirmNotice: 'Refunds for this order will be sent to {{address}}.',
+      confirmNotice: 'Refunds for this order will be sent to the address below.',
       changeForOrder: 'Use a different address for this order',
       saveAsDefault: 'Remember as my default refund address',
       requiredTitle: 'Refund address required',

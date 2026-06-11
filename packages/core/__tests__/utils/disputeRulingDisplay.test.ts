@@ -8,6 +8,7 @@ import {
   getDisputeSettlementPayoutLines,
   isActiveCryptoDisputeStatus,
   isDisputeRulingAvailable,
+  isMeaningfulAmount,
   resolveDigitalEntitlementDisputePhase,
   shouldHideSellerDigitalInProgress,
   shouldShowDisputeArchiveCard,
@@ -40,6 +41,15 @@ const t = (key: string, params?: Record<string, string | number>) => {
 };
 
 describe('disputeRulingDisplay', () => {
+  it('isMeaningfulAmount treats zero payout strings as empty', () => {
+    expect(isMeaningfulAmount(undefined)).toBe(false);
+    expect(isMeaningfulAmount('0')).toBe(false);
+    expect(isMeaningfulAmount('0.00')).toBe(false);
+    expect(isMeaningfulAmount('0 BCH')).toBe(false);
+    expect(isMeaningfulAmount('0.0002482 BCH')).toBe(true);
+    expect(isMeaningfulAmount('0.006157442656000344')).toBe(true);
+  });
+
   it('isDisputeRulingAvailable detects resolved disputes', () => {
     expect(isDisputeRulingAvailable(null)).toBe(false);
     expect(isDisputeRulingAvailable({ status: 'open' })).toBe(false);

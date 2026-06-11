@@ -80,15 +80,7 @@ export function formatTime(dateString: string, locale?: string): string {
  * @param text - 要复制的文本
  * @returns 是否成功
  */
-export async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (err) {
-    console.error('Failed to copy to clipboard:', err);
-    return false;
-  }
-}
+export { copyToClipboard } from '@/lib/clipboard';
 
 export { getBlockExplorerUrl, getOrderTransactionExplorerUrl };
 

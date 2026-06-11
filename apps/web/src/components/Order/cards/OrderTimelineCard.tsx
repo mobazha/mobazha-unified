@@ -9,6 +9,7 @@ import {
   getDisputeResolutionHeadline,
   getDisputeSettlementPayoutLines,
   shouldShowDisputeArchiveCard,
+  isMeaningfulAmount,
   getAcceptedDescSellerKey,
   type DisplayOrder,
   type SettlementActionSnapshot,
@@ -34,11 +35,133 @@ type TimelineCardEntry = {
 
 function sortTimelineCards(cards: TimelineCardEntry[]): TimelineCardEntry[] {
   return [...cards].sort((a, b) => {
-    const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-    const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    const aTime = a.timestamp ? new Date(a.timestamp).getTime() : Number.NEGATIVE_INFINITY;
+    const bTime = b.timestamp ? new Date(b.timestamp).getTime() : Number.NEGATIVE_INFINITY;
     if (aTime !== bTime) return bTime - aTime;
     return b.priority - a.priority;
   });
+}
+
+function firstValidTimestamp(...candidates: (string | undefined)[]): string | undefined {
+  for (const ts of candidates) {
+    if (!ts?.trim()) continue;
+    const ms = new Date(ts).getTime();
+    if (!Number.isNaN(ms)) return ts;
+  }
+  return undefined;
+}
+
+function latestTimelineTimestamp(order: DisplayOrder): string | undefined {
+  let maxMs = Number.NEGATIVE_INFINITY;
+  let best: string | undefined;
+  for (const event of order.timeline) {
+    const ms = new Date(event.timestamp).getTime();
+    if (!Number.isNaN(ms) && ms > maxMs) {
+      maxMs = ms;
+      best = event.timestamp;
+    }
+  }
+  return best;
+}
+
+function resolveSettlementTimestamp(
+  order: DisplayOrder,
+  ...candidates: (string | undefined)[]
+): string | undefined {
+  return firstValidTimestamp(
+    ...candidates,
+    order.dispute?.acceptedAt,
+    order.timeline.find(event => event.status === 'completed')?.timestamp,
+    latestTimelineTimestamp(order)
+  );
+}
+
+/** Resolved disputes are covered by the ruling card — skip duplicate seller-oriented release row. */
+function shouldOmitReleasedTimelineCard(order: DisplayOrder): boolean {
+  const dispute = order.dispute;
+  if (!dispute || !isDisputeRulingAvailable(dispute)) return false;
+  return order.status === 'completed' || order.status === 'split_resolved';
+}
+
+function resolveReleaseDisplay(
+  order: DisplayOrder,
+  t: (key: string) => string
+): {
+  amount?: string;
+  amountLabel: string;
+  description: string;
+  breakdownLines: Array<{ label: string; amount: string }>;
+} {
+  const settlementLineLabel = (type: string): string => {
+    switch (type) {
+      case 'buyer':
+        return t('order.buyer');
+      case 'moderator':
+        return t('order.moderatorFee');
+      case 'platform':
+        return t('order.platformFee');
+      case 'network_fee':
+        return t('order.networkFee');
+      case 'seller':
+      default:
+        return t('order.seller');
+    }
+  };
+
+  const breakdown = order.settlementBreakdown;
+  const dispute = order.dispute;
+  const buyerAmount = breakdown?.buyerAmount || dispute?.buyerPayoutAmount;
+  const sellerAmount = breakdown?.sellerAmount || dispute?.vendorPayoutAmount;
+  const buyerReceives =
+    dispute?.resolution === 'buyer' ||
+    (isMeaningfulAmount(buyerAmount) && !isMeaningfulAmount(sellerAmount));
+  const splitRelease =
+    dispute?.resolution === 'split' ||
+    (isMeaningfulAmount(buyerAmount) && isMeaningfulAmount(sellerAmount));
+
+  const releaseBreakdownLines =
+    breakdown?.lines
+      ?.filter(line => line.type !== 'seller' && line.type !== 'buyer')
+      .map(line => ({
+        label: settlementLineLabel(line.type),
+        amount: `${line.amount} ${order.currency}`,
+      })) || [];
+
+  if (buyerReceives) {
+    return {
+      amount: buyerAmount || order.total,
+      amountLabel: t('order.buyerPayout'),
+      description: t('order.timeline.fundsReleasedToBuyer'),
+      breakdownLines: releaseBreakdownLines,
+    };
+  }
+
+  if (splitRelease) {
+    const splitLines = dispute
+      ? getDisputeSettlementPayoutLines(dispute, breakdown, t, {
+          paymentCoin: order.paymentCoin,
+        }).map(line => ({
+          label: line.label,
+          amount: line.amount,
+        }))
+      : breakdown?.lines?.map(line => ({
+          label: settlementLineLabel(line.type),
+          amount: `${line.amount} ${order.currency}`,
+        })) || [];
+    return {
+      amount: undefined,
+      amountLabel: '',
+      description: t('order.timeline.disputeFundsReleased'),
+      breakdownLines: splitLines.length > 0 ? splitLines : releaseBreakdownLines,
+    };
+  }
+
+  return {
+    amount: breakdown?.sellerAmount || order.total,
+    amountLabel: t('order.sellerPayout'),
+    description: t('order.timeline.fundsReleased'),
+    breakdownLines: releaseBreakdownLines,
+  };
 }
 
 function isFiatOrderPayment(order: DisplayOrder): boolean {
@@ -105,29 +228,8 @@ function buildCompletedTimelineCards(
   const shippedEvent = order.timeline.find(e => e.status === 'shipped');
   const releasedEvent = order.timeline.find(e => e.status === 'released');
   const completedEvent = order.timeline.find(e => e.status === 'completed');
-  const releaseAmount = order.settlementBreakdown?.sellerAmount || order.total;
-  const settlementLineLabel = (type: string): string => {
-    switch (type) {
-      case 'buyer':
-        return t('order.buyer');
-      case 'moderator':
-        return t('order.moderatorFee');
-      case 'platform':
-        return t('order.platformFee');
-      case 'network_fee':
-        return t('order.networkFee');
-      case 'seller':
-      default:
-        return t('order.seller');
-    }
-  };
-  const releaseBreakdownLines =
-    order.settlementBreakdown?.lines
-      ?.filter(line => line.type !== 'seller')
-      .map(line => ({
-        label: settlementLineLabel(line.type),
-        amount: `${line.amount} ${order.currency}`,
-      })) || [];
+  const releaseDisplay = resolveReleaseDisplay(order, t);
+  const releaseBreakdownLines = releaseDisplay.breakdownLines;
 
   const releaseTxHash =
     order.releaseTx && order.releaseTx !== order.paymentTx ? order.releaseTx : undefined;
@@ -193,24 +295,25 @@ function buildCompletedTimelineCards(
     });
   }
 
-  if (releaseTxHash && releasedEvent) {
+  if (releaseTxHash && releasedEvent && !shouldOmitReleasedTimelineCard(order)) {
+    const releasedTimestamp = resolveSettlementTimestamp(order, releasedEvent.timestamp);
     timelineCards.push({
       key: 'released',
-      timestamp: releasedEvent.timestamp,
+      timestamp: releasedTimestamp,
       priority: 30,
       node: (
         <OrderCompleteCard
           stageVariant="released"
           title={t('order.stages.released')}
-          timestamp={releasedEvent.timestamp}
-          amount={releaseAmount}
+          timestamp={releasedTimestamp}
+          amount={releaseDisplay.amount}
           currency={order.currency}
           paymentCoin={order.paymentCoin}
-          amountLabel={t('order.sellerPayout')}
+          amountLabel={releaseDisplay.amountLabel}
           breakdownLines={releaseBreakdownLines}
           txHash={releaseTxHash}
           txUrl={releaseTxUrl}
-          description={t('order.timeline.fundsReleased')}
+          description={releaseDisplay.description}
           showDivider={false}
         />
       ),
@@ -235,14 +338,18 @@ function buildCompletedTimelineCards(
   }
 
   if (order.status === 'completed') {
+    const completedTimestamp = firstValidTimestamp(
+      completedEvent?.timestamp,
+      order.dispute?.acceptedAt
+    );
     timelineCards.push({
       key: 'completed',
-      timestamp: completedEvent?.timestamp,
-      priority: 50,
+      timestamp: completedTimestamp,
+      priority: order.dispute?.resolvedAt ? 53 : 50,
       node: (
         <OrderCompleteCard
           stageVariant="complete"
-          timestamp={completedEvent?.timestamp}
+          timestamp={completedTimestamp}
           txHash={completedTxHash}
           txUrl={completedTxUrl}
           description={t('order.timeline.orderCompleted')}
@@ -289,7 +396,7 @@ function buildDisputeTimelineCards(
     cards.push({
       key: 'dispute-ruling',
       timestamp: dispute.resolvedAt,
-      priority: 36,
+      priority: 52,
       node: (
         <OrderCompleteCard
           stageVariant="released"

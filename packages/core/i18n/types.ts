@@ -431,6 +431,7 @@ export interface TranslationResource {
     packageShipped: string;
     orderCompleted: string;
     fundsReleased: string;
+    fundsReleasedToBuyer: string;
     disputeOpened: string;
     disputeResolved: string;
     // Order items
@@ -443,6 +444,7 @@ export interface TranslationResource {
     platformFee: string;
     networkFee: string;
     sellerPayout: string;
+    buyerPayout: string;
     // Parties
     seller: string;
     buyer: string;

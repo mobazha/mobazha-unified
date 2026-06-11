@@ -328,4 +328,75 @@ describe('OrderTimelineCard', () => {
     expect(rulingCard).toHaveAttribute('data-breakdown-count', '0');
     expect(rulingCard).toHaveTextContent('0x44ec455388ba');
   });
+
+  it('omits duplicate seller release card when dispute ruling resolved in buyer favor', () => {
+    render(
+      <OrderTimelineCard
+        displayOrder={makeOrder({
+          status: 'completed',
+          timeline: [
+            {
+              status: 'paid',
+              timestamp: '2026-06-10T13:36:41Z',
+              description: 'paid',
+              descriptionKey: 'order.timeline.fundsSecured',
+            },
+            {
+              status: 'processing',
+              timestamp: '2026-06-10T13:37:01Z',
+              description: 'accepted',
+              descriptionKey: 'order.timeline.vendorConfirmed',
+            },
+            {
+              status: 'shipped',
+              timestamp: '2026-06-10T13:37:01Z',
+              description: 'shipped',
+              descriptionKey: 'order.timeline.packageShipped',
+            },
+            {
+              status: 'released',
+              timestamp: '',
+              description: 'released',
+              descriptionKey: 'order.timeline.fundsReleased',
+            },
+            {
+              status: 'completed',
+              timestamp: '2026-06-10T13:41:05Z',
+              description: 'completed',
+              descriptionKey: 'order.timeline.orderCompleted',
+            },
+          ],
+          dispute: {
+            id: 'd1',
+            claim: 'test dispute',
+            status: 'resolved',
+            initiator: 'buyer',
+            resolution: 'buyer',
+            buyerPayoutAmount: '0.0002482 BCH',
+            vendorPayoutAmount: '0 BCH',
+            openedAt: '2026-06-10T13:37:17Z',
+            resolvedAt: '2026-06-10T13:40:25Z',
+            acceptedAt: '2026-06-10T13:41:05Z',
+          },
+          settlementBreakdown: {
+            source: 'settlement_action',
+            currency: 'BCH',
+            buyerAmount: '0.0002482',
+            sellerAmount: '0',
+            txHash: '6d02d9a0release',
+          },
+          fundsReleasedAtConfirmation: false,
+        })}
+      />
+    );
+
+    const completeCards = screen.getAllByTestId('complete-card');
+    expect(completeCards.some(card => card.textContent?.includes('order.stages.released'))).toBe(
+      false
+    );
+    expect(completeCards[0]).toHaveTextContent('order.stages.complete');
+    expect(completeCards[0]).toHaveTextContent('2026-06-10T13:41:05Z');
+    expect(completeCards[1]).toHaveTextContent('order.timeline.disputeRulingIssued');
+    expect(completeCards[1]).toHaveTextContent('2026-06-10T13:40:25Z');
+  });
 });

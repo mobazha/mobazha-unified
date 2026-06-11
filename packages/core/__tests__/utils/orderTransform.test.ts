@@ -588,6 +588,49 @@ describe('transformCoreOrder payment progress formatting', () => {
     expect(order?.timeline.some(event => event.status === 'released')).toBe(true);
   });
 
+  it('uses buyer-oriented released timeline copy when dispute refunds buyer', () => {
+    const order = transformCoreOrder(
+      {
+        ...buildOrder({}),
+        state: 'COMPLETED',
+        completedAt: '2026-06-10T13:41:05Z',
+        contract: {
+          ...buildOrder({}).contract,
+          paymentSent: {
+            ...buildOrder({}).contract.paymentSent,
+            transactionID: 'paymenttx1234567890abcdef',
+          },
+          disputeOpen: { timestamp: '2026-06-10T13:37:17Z', reason: 'test dispute' },
+          disputeClose: {
+            timestamp: '2026-06-10T13:40:25Z',
+            verdict: 'Buyer wins',
+            releaseInfo: {
+              buyerAmount: '100000',
+              vendorAmount: '0',
+              txid: 'releasetx4567890abcdef',
+            },
+          },
+          disputeAccept: {
+            timestamp: '2026-06-10T13:41:05Z',
+            closedBy: 'BUYER',
+            txid: 'releasetx4567890abcdef',
+          },
+          orderComplete: {},
+        },
+      } as any,
+      { currentUserPeerID: 'buyer-peer', viewingContext: 'purchase' }
+    );
+
+    const released = order?.timeline.find(event => event.status === 'released');
+    expect(released?.descriptionKey).toBe('order.timeline.fundsReleasedToBuyer');
+    expect(released?.timestamp).toBe('2026-06-10T13:41:05Z');
+
+    const completed = order?.timeline.find(event => event.status === 'completed');
+    expect(completed?.timestamp).toBe('2026-06-10T13:41:05Z');
+    expect(order?.dispute?.resolvedAt).toBe('2026-06-10T13:40:25Z');
+    expect(order?.dispute?.acceptedAt).toBe('2026-06-10T13:41:05Z');
+  });
+
   it('maps nested after-sale dispute payloads from order details', () => {
     const order = transformCoreOrder(
       {
