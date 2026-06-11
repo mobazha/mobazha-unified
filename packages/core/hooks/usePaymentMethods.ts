@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  filterVisibleAcceptedCurrencies,
+  isFiatPaymentVisible,
+} from '../config/paymentMethodVisibility';
 import * as fiatApi from '../services/api/fiat';
 import type { FiatProviderInfo } from '../types/fiat';
 
@@ -48,10 +52,12 @@ export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResul
     fetchMethods();
   }, [fetchMethods]);
 
-  const activeFiat = useMemo(
-    () => fiat.filter(p => p.status === 'active' || p.status === 'restricted'),
-    [fiat]
-  );
+  const activeFiat = useMemo(() => {
+    if (!isFiatPaymentVisible()) return [];
+    return fiat.filter(p => p.status === 'active' || p.status === 'restricted');
+  }, [fiat]);
+
+  const visibleCrypto = useMemo(() => filterVisibleAcceptedCurrencies(crypto), [crypto]);
 
   const hasActiveProvider = useCallback(
     (providerID: string) => activeFiat.some(p => p.providerID === providerID),
@@ -59,8 +65,8 @@ export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResul
   );
 
   return {
-    crypto,
-    fiat,
+    crypto: visibleCrypto,
+    fiat: isFiatPaymentVisible() ? fiat : [],
     activeFiat,
     isLoading,
     error,

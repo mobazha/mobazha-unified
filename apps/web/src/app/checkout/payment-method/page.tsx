@@ -3,7 +3,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { useI18n, usePaymentMethods } from '@mobazha/core';
+import {
+  useI18n,
+  usePaymentMethods,
+  syncCheckoutPaymentSessionStorage,
+  persistCheckoutTokenSelection,
+  persistCheckoutFiatSelection,
+  sanitizeCheckoutFiatProvider,
+} from '@mobazha/core';
 import { PaymentCryptoSelector } from '@/components/Payment';
 
 /**
@@ -18,8 +25,7 @@ export default function PaymentMethodPage() {
   const initialTokenId = searchParams.get('selected') || undefined;
   const [initialFiatProvider] = useState<string | undefined>(() => {
     if (typeof window === 'undefined') return undefined;
-    const saved = window.sessionStorage.getItem('checkout_selected_fiat_provider');
-    return saved || undefined;
+    return syncCheckoutPaymentSessionStorage().fiatProvider;
   });
   const vendorPeerID = searchParams.get('vendor') || undefined;
   const returnUrl = searchParams.get('returnUrl') || '/checkout';
@@ -29,8 +35,7 @@ export default function PaymentMethodPage() {
 
   const handleSelect = useCallback(
     (tokenId: string) => {
-      sessionStorage.setItem('checkout_selected_token', tokenId);
-      sessionStorage.removeItem('checkout_selected_fiat_provider');
+      persistCheckoutTokenSelection(tokenId);
       router.push(returnUrl);
     },
     [returnUrl, router]
@@ -38,8 +43,8 @@ export default function PaymentMethodPage() {
 
   const handleFiatSelect = useCallback(
     (providerID: string) => {
-      sessionStorage.setItem('checkout_selected_fiat_provider', providerID);
-      sessionStorage.removeItem('checkout_selected_token');
+      if (!sanitizeCheckoutFiatProvider(providerID)) return;
+      persistCheckoutFiatSelection(providerID);
       router.push(returnUrl);
     },
     [returnUrl, router]

@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@mobazha/core';
+import { useI18n, filterVisibleFiatProviderIDs } from '@mobazha/core';
 import { FIAT_METHODS } from './config';
 
 export interface PaymentMethodBadgesProps {
@@ -21,7 +21,8 @@ export const PaymentMethodBadges: React.FC<PaymentMethodBadgesProps> = ({
 }) => {
   const { t } = useI18n();
   const activeMethods = useMemo(
-    () => FIAT_METHODS.filter(m => fiatProviders.includes(m.providerID)),
+    () =>
+      FIAT_METHODS.filter(m => filterVisibleFiatProviderIDs(fiatProviders).includes(m.providerID)),
     [fiatProviders]
   );
 

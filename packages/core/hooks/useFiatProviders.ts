@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { isFiatPaymentVisible } from '../config/paymentMethodVisibility';
 import * as fiatApi from '../services/api/fiat';
 import type { FiatProviderInfo } from '../types/fiat';
 
@@ -40,7 +41,12 @@ export function useFiatProviders(vendorPeerID?: string): UseFiatProvidersResult 
     fetchProviders();
   }, [fetchProviders]);
 
-  const activeProviders = providers.filter(p => p.status === 'active' || p.status === 'restricted');
+  const visibleProviders = useMemo(() => (isFiatPaymentVisible() ? providers : []), [providers]);
+
+  const activeProviders = useMemo(
+    () => visibleProviders.filter(p => p.status === 'active' || p.status === 'restricted'),
+    [visibleProviders]
+  );
 
   const hasActiveProvider = useCallback(
     (providerID: string) => activeProviders.some(p => p.providerID === providerID),
@@ -48,7 +54,7 @@ export function useFiatProviders(vendorPeerID?: string): UseFiatProvidersResult 
   );
 
   return {
-    providers,
+    providers: visibleProviders,
     activeProviders,
     isLoading,
     error,

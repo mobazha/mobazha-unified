@@ -26,6 +26,7 @@ import {
   useDeleteReceivingAccount,
   useWallet,
   getEnvConfig,
+  isTronPaymentVisible,
 } from '@mobazha/core';
 import WAValidator from 'multicoin-address-validator';
 import type { ReceivingAccount, ReceivingAccountInput } from '@mobazha/core/services/api/wallet';
@@ -127,7 +128,9 @@ const CHAINS: ChainMeta[] = [
   },
 ];
 
-const SELECTABLE_CHAINS = CHAINS.filter(chain => chain.id !== 'ZEC');
+const SELECTABLE_CHAINS = CHAINS.filter(
+  chain => chain.id !== 'ZEC' && (isTronPaymentVisible() || chain.id !== 'TRON')
+);
 
 type ValidatorNetwork = 'prod' | 'testnet';
 

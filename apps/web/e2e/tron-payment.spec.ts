@@ -21,6 +21,7 @@ import { test, expect } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
 import { mockImageRoutes, mockPreferencesAPI } from './fixtures/mock-api-routes';
 import { mustAssetIdFromTokenId } from '@mobazha/core/data';
+import { isTronPaymentVisible } from '@mobazha/core';
 
 const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const TRON_ORDER_ID = 'QmTronOrder001';
@@ -227,6 +228,8 @@ function buildPaymentUrl(): string {
 
 test.describe('Payment Page — TRON Token', () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(!isTronPaymentVisible(), 'TRON payments hidden in UI');
+
     await setupMockAuth(page);
     await mockTronOrderAPI(page);
     await mockProfilesAPI(page);
@@ -295,6 +298,8 @@ test.describe('Payment Page — TRON Token', () => {
 
 test.describe('TronGasHint — Insufficient TRX Warning', () => {
   test('should render TronGasHint warning via DOM injection on payment page', async ({ page }) => {
+    test.skip(!isTronPaymentVisible(), 'TRON payments hidden in UI');
+
     await setupMockAuth(page);
     await mockTronOrderAPI(page);
     await mockProfilesAPI(page);
@@ -402,7 +407,7 @@ test.describe('Seller Settings — TRON Receiving Address', () => {
     });
   });
 
-  test('should display TRON in chain selection grid when adding account', async ({ page }) => {
+  test('should hide TRON in chain selection grid when adding account', async ({ page }) => {
     await setupMockAuth(page);
     await mockImageRoutes(page);
 
@@ -418,15 +423,17 @@ test.describe('Seller Settings — TRON Receiving Address', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
-    // Click "+ Add Receiving Address" to open the form with chain selector
     const addButton = page.getByRole('button', { name: /add receiving address|add/i });
     await expect(addButton).toBeVisible();
     await addButton.click();
     await page.waitForTimeout(500);
 
-    // Verify TRON appears in the chain selector grid
     const tronOption = page.getByText('TRON', { exact: true });
-    await expect(tronOption).toBeVisible();
+    if (isTronPaymentVisible()) {
+      await expect(tronOption).toBeVisible();
+    } else {
+      await expect(tronOption).toHaveCount(0);
+    }
 
     await page.screenshot({
       path: 'e2e-screenshots/tron-chain-option.png',
@@ -462,6 +469,8 @@ test.describe('TransactionOverlay — TRON Explorer', () => {
 
 test.describe('ConfirmationProgress Component', () => {
   test('should render progress bar with TRON styling', async ({ page }) => {
+    test.skip(!isTronPaymentVisible(), 'TRON payments hidden in UI');
+
     await setupMockAuth(page);
     await mockTronOrderAPI(page);
     await mockProfilesAPI(page);
@@ -533,6 +542,8 @@ test.describe('ConfirmationProgress Component', () => {
 
 test.describe('Payment Page — TRON Token Selected', () => {
   test('payment page with TRXUSDT selected should show TRON-related content', async ({ page }) => {
+    test.skip(!isTronPaymentVisible(), 'TRON payments hidden in UI');
+
     await setupMockAuth(page);
     await mockTronOrderAPI(page);
     await mockProfilesAPI(page);
