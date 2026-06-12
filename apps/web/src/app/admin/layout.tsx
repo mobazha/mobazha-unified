@@ -8,6 +8,7 @@ import { AIChatPanel } from '@/components/AIChatPanel';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { isStandalone, useUserStore, useUserContext } from '@mobazha/core';
+import { isOutpostMode } from '@mobazha/core/config/env';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 
@@ -54,11 +55,15 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const outpostMode = useMemo(() => isOutpostMode(), []);
   const { isAuthenticated, isLoading: authLoading } = useUserStore();
 
   // Standalone first-run: bypass AuthGuard + AdminLayoutShell when setup is incomplete.
   // The StandaloneSetupWizard renders its own full-page layout.
-  const [setupBypass, setSetupBypass] = useState<boolean | null>(standaloneMode ? null : false);
+  // Outpost/Tor: optimistic setup path — skip spinner; API confirms in background.
+  const [setupBypass, setSetupBypass] = useState<boolean | null>(
+    standaloneMode ? (outpostMode ? true : null) : false
+  );
   const [casdoorAvailable, setCasdoorAvailable] = useState(false);
 
   useEffect(() => {
@@ -72,13 +77,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           setCasdoorAvailable(!!status.casdoorAvailable);
         }
       } catch {
-        if (!cancelled) setSetupBypass(false);
+        if (!cancelled) setSetupBypass(outpostMode ? true : false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [standaloneMode]);
+  }, [standaloneMode, outpostMode]);
 
   if (setupBypass === null) {
     return (

@@ -12,6 +12,7 @@ import {
   useUserContext,
   getAdminStorePaymentsPath,
 } from '@mobazha/core';
+import { isOutpostMode } from '@mobazha/core/config/env';
 import type { ProductListItem } from '@mobazha/core';
 import {
   Package,
@@ -257,10 +258,12 @@ export default function AdminDashboardPage() {
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const outpostMode = useMemo(() => isOutpostMode(), []);
 
   // Standalone first-run setup detection
+  // Outpost/Tor: show setup wizard immediately; confirm via API in background.
   const [standaloneSetupNeeded, setStandaloneSetupNeeded] = useState<boolean | null>(
-    standaloneMode ? null : false
+    standaloneMode ? (outpostMode ? true : null) : false
   );
   const [standaloneCompletedSteps, setStandaloneCompletedSteps] = useState<
     SetupCompletedSteps | undefined
@@ -277,13 +280,13 @@ export default function AdminDashboardPage() {
           setStandaloneCompletedSteps(status.completedSteps);
         }
       } catch {
-        if (!cancelled) setStandaloneSetupNeeded(false);
+        if (!cancelled) setStandaloneSetupNeeded(outpostMode ? true : false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [standaloneMode]);
+  }, [standaloneMode, outpostMode]);
 
   const isDataLoading = productsLoading || salesLoading;
   const hasProducts = products.length > 0;

@@ -41,9 +41,17 @@ function readBody(req: IncomingMessage): Promise<string> {
  * Strips external resources from index.html for Outpost privacy builds:
  * - Google Fonts preconnect + stylesheet links
  * - Telegram SDK conditional loader script
- * - Any <script src> pointing to external domains
+ * - Blocking /runtime-config.js → inline bootstrap + defer dynamic merge (saves one Tor RTT)
  */
 function outpostHtmlStripPlugin(): Plugin {
+  const inlineRuntimeConfig = JSON.stringify({
+    authMode: 'standalone',
+    outpostMode: true,
+    disableExternalResources: true,
+    guestCheckoutEnabled: true,
+    features: {},
+  });
+
   return {
     name: 'outpost-html-strip',
     transformIndexHtml(html) {
@@ -52,7 +60,12 @@ function outpostHtmlStripPlugin(): Plugin {
         .replace(/\s*<link[^>]*fonts\.googleapis\.com[^>]*\/?\s*>/g, '')
         .replace(/\s*<link[^>]*fonts\.gstatic\.com[^>]*\/?\s*>/g, '')
         // Remove Telegram SDK loader script block
-        .replace(/\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g, '');
+        .replace(/\s*<script>\s*var _tg[\s\S]*?telegram-web-app\.js[\s\S]*?<\/script>/g, '')
+        // Inline static bootstrap; defer server-driven merge (brand/features)
+        .replace(
+          /\s*<script src="\/runtime-config\.js"[^>]*><\/script>/,
+          `    <script>window.__RUNTIME_CONFIG__=${inlineRuntimeConfig};</script>\n    <script defer src="/runtime-config.js"></script>`
+        );
 
       // Inject self-hosted Inter font CSS (replaces Google Fonts CDN)
       result = result.replace(
@@ -518,5 +531,17 @@ export default defineConfig(({ mode }) => {
     css: {
       postcss: './postcss.config.js',
     },
+    ...(isOutpost
+      ? {
+          build: {
+            rollupOptions: {
+              input: {
+                main: path.resolve(__dirname, 'index.html'),
+                setup: path.resolve(__dirname, 'setup.html'),
+              },
+            },
+          },
+        }
+      : {}),
   };
 });
