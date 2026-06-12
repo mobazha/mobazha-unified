@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   useI18n,
   useUserStore,
@@ -159,6 +159,14 @@ export default function StandaloneSetupWizard({
   const [showPassword, setShowPassword] = useState(false);
   const [passwordDone, setPasswordDone] = useState(passwordAlreadySet && !needsLogin);
   const [loginMode, setLoginMode] = useState(needsLogin);
+
+  useEffect(() => {
+    setStep(initialStep);
+    if (passwordAlreadySet) {
+      setPasswordDone(!needsLogin);
+      setLoginMode(needsLogin);
+    }
+  }, [initialStep, passwordAlreadySet, needsLogin]);
 
   // Step 2: Profile
   const [storeName, setStoreName] = useState(profile?.name || '');
