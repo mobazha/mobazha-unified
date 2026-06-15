@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useUserStore, getEnvConfig, useI18n } from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher';
@@ -24,7 +23,6 @@ interface AdminLoginFormProps {
 }
 
 export function AdminLoginForm({ casdoorAvailable: _ignored }: AdminLoginFormProps) {
-  const router = useRouter();
   const { login, isLoading, error } = useUserStore();
   const { t } = useI18n();
 
@@ -44,9 +42,10 @@ export function AdminLoginForm({ casdoorAvailable: _ignored }: AdminLoginFormPro
     }
 
     const success = await login({ username: presetUsername, password });
-    if (success) {
-      router.refresh();
-    }
+    if (!success) return;
+    // Auth state in userStore triggers AdminLayout re-render — no full reload.
+    // router.refresh() maps to window.location.reload() in the Vite compat layer,
+    // which races with lazy admin chunks on slow Tor links.
   };
 
   const displayError = error || localError;

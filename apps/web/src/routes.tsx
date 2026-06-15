@@ -7,8 +7,9 @@
  * - 私有路由：需要登录才能访问，使用 ProtectedRoute 包装
  */
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
-import { lazy, Suspense, type ComponentType } from 'react';
+import { Suspense, type ComponentType } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { lazyWithRetry } from './lib/lazyWithRetry';
 
 // 加载中的占位组件
 function PageLoading() {
@@ -21,7 +22,7 @@ function PageLoading() {
 
 // 懒加载包装器（公开路由）
 function lazyPage(importFn: () => Promise<{ default: ComponentType<unknown> }>) {
-  const LazyComponent = lazy(importFn);
+  const LazyComponent = lazyWithRetry(importFn);
   return (
     <Suspense fallback={<PageLoading />}>
       <LazyComponent />
@@ -31,7 +32,7 @@ function lazyPage(importFn: () => Promise<{ default: ComponentType<unknown> }>) 
 
 // 懒加载包装器（私有路由，需要登录）
 function protectedPage(importFn: () => Promise<{ default: ComponentType<unknown> }>) {
-  const LazyComponent = lazy(importFn);
+  const LazyComponent = lazyWithRetry(importFn);
   return (
     <ProtectedRoute>
       <Suspense fallback={<PageLoading />}>

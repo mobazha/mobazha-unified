@@ -18,6 +18,7 @@ import { StorefrontProvider } from '@/components/StorefrontProvider';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
+import { RouteChunkErrorFallback } from '@/components/RouteChunkErrorFallback';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +78,7 @@ function AppLayout() {
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    errorElement: <RouteChunkErrorFallback />,
     children: routes,
   },
 ]);
