@@ -1,0 +1,1 @@
+export { XmrWalletSetupEmptyState } from './XmrWalletSetupEmptyState';
