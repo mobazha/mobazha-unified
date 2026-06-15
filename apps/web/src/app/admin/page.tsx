@@ -345,6 +345,7 @@ export default function AdminDashboardPage() {
     return (
       <div data-testid="admin-dashboard">
         <DashboardHeader name={displayName} />
+        <XmrWalletSetupBanner />
         <SetupChecklist hasProducts={false} productsLoading={false} />
         {profile?.visibility === 'private' && (
           <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">

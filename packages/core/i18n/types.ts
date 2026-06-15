@@ -3331,6 +3331,8 @@ export interface TranslationResource {
       setupPayments?: string;
       setupPaymentsDesc?: string;
       setupPaymentsDescCryptoOnly?: string;
+      setupXmrWallet?: string;
+      setupXmrWalletDesc?: string;
       paymentConfigured?: string;
       storeName?: string;
       storeNamePlaceholder?: string;
@@ -3425,6 +3427,16 @@ export interface TranslationResource {
       rpcNotAvailable?: string;
       walletTotalBalance?: string;
       walletTotalBalanceHint?: string;
+      walletNotSetUpHint?: string;
+      walletNotSetUpTitle?: string;
+      walletNotSetUpDesc?: string;
+      walletNotSetUpCta?: string;
+      walletNotSetUpBadge?: string;
+      walletNotProvisioned?: string;
+      walletNotOpen?: string;
+      walletDisconnected?: string;
+      actionRequiresWallet?: string;
+      walletStatusUnknown?: string;
     };
     guestCheckout?: {
       title?: string;

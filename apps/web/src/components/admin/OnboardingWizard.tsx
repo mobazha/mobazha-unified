@@ -10,12 +10,17 @@ import {
   getImageUrl,
   useReceivingAccounts,
   getAdminStorePaymentsPath,
+  getAdminXmrWalletPath,
   isFiatPaymentVisible,
 } from '@mobazha/core';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
 import { createProfile as apiCreateProfile } from '@mobazha/core/services/api/profile';
+import {
+  getXMRWalletSetupStatus,
+  type MoneroWalletSetupStatus,
+} from '@mobazha/core/services/api/monero';
 import {
   Store,
   ShoppingBag,
@@ -157,12 +162,34 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const { profile, updateProfile, updateSettings } = useUserStore();
 
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const isOutpost = useMemo(() => isOutpostMode(), []);
 
   const { data: receivingAccounts } = useReceivingAccounts();
-  const hasPayment = useMemo(
-    () => Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false),
-    [receivingAccounts]
-  );
+  const [xmrWalletStatus, setXmrWalletStatus] = useState<MoneroWalletSetupStatus | null>(null);
+
+  useEffect(() => {
+    if (!isOutpost) return;
+    let cancelled = false;
+    getXMRWalletSetupStatus()
+      .then(status => {
+        if (!cancelled) setXmrWalletStatus(status);
+      })
+      .catch(() => {
+        if (!cancelled) setXmrWalletStatus(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOutpost]);
+
+  const hasPayment = useMemo(() => {
+    if (isOutpost) {
+      return Boolean(xmrWalletStatus?.exists);
+    }
+    return Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false);
+  }, [isOutpost, receivingAccounts, xmrWalletStatus]);
+
+  const paymentsSetupPath = isOutpost ? getAdminXmrWalletPath() : getAdminStorePaymentsPath();
 
   const TOTAL_STEPS = 4;
   const profileAlreadyComplete = useMemo(() => isProfileComplete(profile), [profile]);
@@ -191,7 +218,6 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const isOutpost = useMemo(() => isOutpostMode(), []);
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>(
     isOutpost ? 'unlisted' : 'public'
   );
@@ -690,8 +716,30 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
           )}
 
+          {!hasPayment && isOutpost && (
+            <div
+              role="alert"
+              className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4"
+            >
+              <Wallet className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {t('admin.dashboard.xmrWalletMissingTitle', {
+                    defaultValue: 'Monero wallet not set up',
+                  })}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {t('admin.dashboard.xmrWalletMissingDesc', {
+                    defaultValue:
+                      'XMR payments will fail until you create or restore a wallet. The setup takes about a minute.',
+                  })}
+                </p>
+              </div>
+            </div>
+          )}
+
           <Link
-            href={getAdminStorePaymentsPath()}
+            href={paymentsSetupPath}
             className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent/50 transition-colors group"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -699,12 +747,21 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">
-                {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
+                {isOutpost
+                  ? t('admin.onboarding.setupXmrWallet', {
+                      defaultValue: 'Set up Monero wallet',
+                    })
+                  : t('admin.onboarding.setupPayments') || 'Set up payment methods'}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {isFiatPaymentVisible()
-                  ? t('admin.onboarding.setupPaymentsDesc')
-                  : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
+                {isOutpost
+                  ? t('admin.onboarding.setupXmrWalletDesc', {
+                      defaultValue:
+                        'Create or restore the wallet that receives buyer payments on this store.',
+                    })
+                  : isFiatPaymentVisible()
+                    ? t('admin.onboarding.setupPaymentsDesc')
+                    : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

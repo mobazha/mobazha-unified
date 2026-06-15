@@ -6019,6 +6019,9 @@ export const en: TranslationResource = {
       setupPayments: 'Set up payment methods',
       setupPaymentsDesc: 'Add crypto wallets, connect Stripe or PayPal',
       setupPaymentsDescCryptoOnly: 'Add crypto receiving addresses for your store',
+      setupXmrWallet: 'Set up Monero wallet',
+      setupXmrWalletDesc:
+        'Create or restore the wallet that receives buyer payments on this store.',
       paymentConfigured: 'Payment method configured',
       storeName: 'Store Name',
       storeNamePlaceholder: 'My Awesome Store',
@@ -6086,8 +6089,8 @@ export const en: TranslationResource = {
       guestCheckoutDesc: 'Allow anonymous buyers to pay with cryptocurrency.',
     },
     finance: {
-      title: 'Funds',
-      subtitle: 'Monero (XMR) wallet balance and management.',
+      title: 'Store payments',
+      subtitle: 'Monero (XMR) wallet balance and payouts for this store.',
       notApplicable: 'This page is only available on Outpost builds.',
       fetchError: 'Failed to load wallet data',
       availableBalance: 'Available',
@@ -6115,6 +6118,19 @@ export const en: TranslationResource = {
       walletTotalBalance: 'Wallet total',
       walletTotalBalanceHint:
         'Includes funds that are still confirming or temporarily locked. Only "Available now" can be spent or withdrawn.',
+      walletNotSetUpHint: 'After setup, balance, withdrawals, and history appear here.',
+      walletNotSetUpTitle: 'Monero wallet not set up',
+      walletNotSetUpDesc:
+        'Buyers cannot pay with XMR until you create or restore a wallet. The setup takes about a minute.',
+      walletNotSetUpCta: 'Set up Monero wallet',
+      walletNotSetUpBadge: 'Wallet not set up',
+      walletNotProvisioned:
+        'Monero wallet is not set up yet. Create or restore a wallet to accept XMR payments.',
+      walletNotOpen: 'Monero wallet is not open. Restart the store or complete wallet setup.',
+      walletDisconnected: 'Not connected',
+      actionRequiresWallet: 'Set up your Monero wallet first.',
+      walletStatusUnknown:
+        'Could not verify wallet status right now. Check your connection and try again.',
     },
     guestCheckout: {
       title: 'Guest Checkout',
