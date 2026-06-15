@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useUserStore, getEnvConfig, useI18n, acquireSaaSToken } from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher';
@@ -26,7 +25,6 @@ interface AdminLoginFormProps {
  * admin ownership (claims.Id == ownerUserID).
  */
 export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps) {
-  const router = useRouter();
   const { login, loginWithToken, isLoading, error } = useUserStore();
   const { t } = useI18n();
 
@@ -47,9 +45,8 @@ export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps
     }
 
     const success = await login({ username: presetUsername, password });
-    if (success) {
-      router.refresh();
-    }
+    if (!success) return;
+    // userStore auth update re-renders AdminLayout; avoid router.refresh() (full reload on Vite).
   };
 
   const handleSocialLogin = async () => {
@@ -62,9 +59,7 @@ export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps
         return;
       }
       const success = await loginWithToken(result.token);
-      if (success) {
-        router.refresh();
-      } else {
+      if (!success) {
         setLocalError(
           t('login.socialLoginNotAdmin', {
             defaultValue: 'This account does not have admin access to this store.',
