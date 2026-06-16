@@ -1,5 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import { isChunkLoadError } from './chunkLoadError';
+import { isChunkLoadError, reloadOnceForChunkError } from './chunkLoadError';
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -30,13 +30,8 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(
       }
     }
 
-    if (isChunkLoadError(lastError)) {
-      const reloadKey = 'mobazha:chunk-reload';
-      if (!sessionStorage.getItem(reloadKey)) {
-        sessionStorage.setItem(reloadKey, '1');
-        window.location.reload();
-        await sleep(Number.POSITIVE_INFINITY);
-      }
+    if (isChunkLoadError(lastError) && reloadOnceForChunkError()) {
+      await sleep(Number.POSITIVE_INFINITY);
     }
 
     throw lastError;

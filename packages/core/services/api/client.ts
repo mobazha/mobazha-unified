@@ -8,6 +8,7 @@
 import type { ErrorEnvelope, ApiErrorCode } from '../../types';
 import { isStandaloneBuyerAuth, getBuyerGatewayUrl } from './config';
 import { getStoredToken } from '../auth/token';
+import { isTransientRequestError } from './transientErrors';
 
 /**
  * Return true if the token was refreshed and the request should be retried.
@@ -29,6 +30,8 @@ export interface RequestOptions {
   raw?: boolean;
   /** @internal Prevent infinite 401 retry loops. */
   _retried?: boolean;
+  /** @internal Prevent infinite transient network retry loops. */
+  _networkRetried?: boolean;
 }
 
 export class ApiError extends Error {
@@ -74,8 +77,15 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
   }
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
  * Core request function with envelope unwrapping.
+ *
+ * Transient GET failures (Tor / upstream blips) retry once after 400ms.
+ * Timeouts, 401 refresh, and store-offline 503s are not retried here.
  *
  * For 204 No Content, returns `undefined` (callers should type as `T | void`).
  * For success responses, unwraps `{data: T}` and returns `T`.
@@ -89,6 +99,7 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     timeout = 30000,
     raw = false,
     _retried = false,
+    _networkRetried = false,
   } = options;
 
   const controller = new AbortController();
@@ -144,6 +155,13 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
 
     return json as T;
   } catch (error) {
+    const canRetryNetwork = !_networkRetried && method === 'GET' && isTransientRequestError(error);
+    if (canRetryNetwork) {
+      clearTimeout(timeoutId);
+      await sleep(400);
+      return request<T>(url, { ...options, _networkRetried: true });
+    }
+
     if (error instanceof ApiError) {
       throw error;
     }

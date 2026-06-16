@@ -1,5 +1,5 @@
 import { NODE_API } from '../../config/apiPaths';
-import { authGet, authPost } from './helpers';
+import { nodeAuthGet, nodeAuthPost } from './helpers';
 
 export interface MCPClientStatus {
   name: string;
@@ -47,11 +47,11 @@ export interface MCPCapability {
 }
 
 export async function mcpGetCapability(): Promise<MCPCapability> {
-  return authGet<MCPCapability>(NODE_API.SYSTEM_MCP_CAPABILITY);
+  return nodeAuthGet<MCPCapability>(NODE_API.SYSTEM_MCP_CAPABILITY);
 }
 
 export async function mcpConnectAll(token?: string, force?: boolean): Promise<MCPConnectResponse> {
-  return authPost<MCPConnectResponse>(NODE_API.SYSTEM_MCP_CONNECT, { token, force });
+  return nodeAuthPost<MCPConnectResponse>(NODE_API.SYSTEM_MCP_CONNECT, { token, force });
 }
 
 export async function mcpConnectClient(
@@ -59,17 +59,20 @@ export async function mcpConnectClient(
   token?: string,
   force?: boolean
 ): Promise<MCPConnectResponse> {
-  return authPost<MCPConnectResponse>(NODE_API.SYSTEM_MCP_CONNECT_CLIENT(client), { token, force });
+  return nodeAuthPost<MCPConnectResponse>(NODE_API.SYSTEM_MCP_CONNECT_CLIENT(client), {
+    token,
+    force,
+  });
 }
 
 export async function mcpListClients(): Promise<MCPClientStatus[]> {
-  return authGet<MCPClientStatus[]>(NODE_API.SYSTEM_MCP_CLIENTS);
+  return nodeAuthGet<MCPClientStatus[]>(NODE_API.SYSTEM_MCP_CLIENTS);
 }
 
 export async function mcpDisconnectAll(): Promise<MCPConnectResult[]> {
-  return authPost<MCPConnectResult[]>(NODE_API.SYSTEM_MCP_DISCONNECT);
+  return nodeAuthPost<MCPConnectResult[]>(NODE_API.SYSTEM_MCP_DISCONNECT);
 }
 
 export async function mcpDisconnectClient(client: string): Promise<MCPConnectResult> {
-  return authPost<MCPConnectResult>(NODE_API.SYSTEM_MCP_DISCONNECT_CLIENT(client));
+  return nodeAuthPost<MCPConnectResult>(NODE_API.SYSTEM_MCP_DISCONNECT_CLIENT(client));
 }
