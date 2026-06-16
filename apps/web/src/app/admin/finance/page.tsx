@@ -14,6 +14,7 @@ import { getPaymentRPCStatus, type PaymentRPCStatusEntry } from '@mobazha/core/s
 import {
   getXMRBalance,
   getXMRWalletSetupStatus,
+  isWalletOperational,
   piconeroToXMR,
   type MoneroBalance,
   type MoneroWalletSetupStatus,
@@ -240,11 +241,14 @@ export default function AdminFinancePage() {
       (setupResult.status === 'fulfilled' && needsWalletSetup(nextSetup, nextStatus)) ||
       (setupResult.status === 'rejected' && isWalletNotProvisionedMessage(nextStatus?.error));
 
+    const nextBalance = balanceResult.status === 'fulfilled' ? balanceResult.value : null;
+    const walletOperational = isWalletOperational(nextStatus, nextSetup);
+
     if (balanceResult.status === 'fulfilled') {
-      setBalance(balanceResult.value);
+      setBalance(nextBalance);
     } else {
       setBalance(null);
-      if (!walletMissing) {
+      if (!walletMissing && !walletOperational) {
         const raw =
           balanceResult.reason instanceof Error
             ? balanceResult.reason.message
@@ -255,7 +259,7 @@ export default function AdminFinancePage() {
 
     if (walletMissing) {
       setError(null);
-    } else if (nextStatus?.error && !balance) {
+    } else if (nextStatus?.error && !nextBalance && !walletOperational) {
       setError(sanitizeUserFacingError(nextStatus.error, sanitizeOptions));
     }
 

@@ -4,8 +4,8 @@
  */
 
 import { NODE_API } from '../../config/apiPaths';
-import { getMyGatewayUrl, getAuthHeaders } from '../api/config';
-import { authGet, authDel } from '../api/helpers';
+import { getGatewayUrl, getAuthHeaders } from '../api/config';
+import { nodeAuthGet, nodeAuthDel } from '../api/helpers';
 
 // --- Types ---
 
@@ -71,7 +71,7 @@ export async function sendChatMessage(
   signal?: AbortSignal,
   context?: ChatContext
 ): Promise<void> {
-  const url = `${getMyGatewayUrl()}${NODE_API.AI_CHAT}`;
+  const url = `${getGatewayUrl()}${NODE_API.AI_CHAT}`;
   const headers = {
     ...getAuthHeaders(),
     'Content-Type': 'application/json',
@@ -169,17 +169,16 @@ function handleSSEEvent(event: ChatSSEEvent, _eventType: string, callbacks: Chat
 // --- Session Management ---
 
 export async function listChatSessions(limit = 20, offset = 0): Promise<ChatSession[]> {
-  const resp = await authGet<{ data: ChatSession[] }>(
+  const sessions = await nodeAuthGet<ChatSession[]>(
     `${NODE_API.AI_CHAT_SESSIONS}?limit=${limit}&offset=${offset}`
   );
-  return resp.data || [];
+  return sessions || [];
 }
 
 export async function getChatSession(sessionId: string): Promise<ChatSession> {
-  const resp = await authGet<{ data: ChatSession }>(NODE_API.AI_CHAT_SESSION(sessionId));
-  return resp.data;
+  return nodeAuthGet<ChatSession>(NODE_API.AI_CHAT_SESSION(sessionId));
 }
 
 export async function deleteChatSession(sessionId: string): Promise<void> {
-  await authDel(NODE_API.AI_CHAT_SESSION(sessionId));
+  await nodeAuthDel(NODE_API.AI_CHAT_SESSION(sessionId));
 }

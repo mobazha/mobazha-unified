@@ -5,12 +5,14 @@
  * getGatewayUrl / getMyGatewayUrl / getSearchUrl，从而将"URL 选择"
  * 从上百个分散决策点收敛到三个集中入口。
  *
- * Layer 1 — auth*:    所有需要认证的端点（按当前角色路由）
- *                      独立站买家 → SaaS，其他 → 本地节点/hosting
- * Layer 2 — public*:  公开店铺数据（始终走本地节点，含群组上下文）
- *                      listings、profiles、ratings、exchange rates
- * Layer 3 — search*:  搜索/发现服务（含群组上下文）
- *                      trending、featured、search results
+ * Layer 1 — auth*:      需要认证且按当前角色路由的端点
+ *                        独立站买家 → SaaS，其他 → 本地节点/hosting
+ * Layer 1b — nodeAuth*:  需要认证但必须走本地节点的管理端点
+ *                        system、wallet-rpc、AI/MCP local admin
+ * Layer 2 — public*:    公开店铺数据（始终走本地节点，含群组上下文）
+ *                        listings、profiles、ratings、exchange rates
+ * Layer 3 — search*:    搜索/发现服务（含群组上下文）
+ *                        trending、featured、search results
  */
 
 import { get, post, put, del, request, safeRequest } from './client';
@@ -32,11 +34,57 @@ export function authGet<T>(path: string): Promise<T> {
   return get<T>(`${getMyGatewayUrl()}${path}`, getAuthHeaders());
 }
 
-// Authenticated local node request. This intentionally bypasses
-// getMyGatewayUrl()'s standalone-buyer SaaS routing for node-local resources
-// that do not exist behind the buyer gateway.
+// Layer 1b: Authenticated local node — bypass standalone-buyer SaaS routing
+// for node-local resources that do not exist behind the buyer gateway.
 export function nodeAuthGet<T>(path: string): Promise<T> {
   return get<T>(`${getGatewayUrl()}${path}`, getAuthHeaders());
+}
+
+export function nodeAuthPost<T>(
+  path: string,
+  body?: unknown,
+  headers?: Record<string, string>
+): Promise<T> {
+  return post<T>(`${getGatewayUrl()}${path}`, body, {
+    ...getAuthHeaders(),
+    ...headers,
+  });
+}
+
+export function nodeAuthPut<T>(path: string, body?: unknown): Promise<T> {
+  return put<T>(`${getGatewayUrl()}${path}`, body, getAuthHeaders());
+}
+
+export function nodeAuthPatch<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(`${getGatewayUrl()}${path}`, {
+    method: 'PATCH',
+    body,
+    headers: getAuthHeaders(),
+  });
+}
+
+export function nodeAuthDel<T>(path: string): Promise<T> {
+  return del<T>(`${getGatewayUrl()}${path}`, getAuthHeaders());
+}
+
+export function nodeAuthSafeGet<T>(
+  path: string,
+  fallback: T,
+  opts?: { timeout?: number }
+): Promise<T> {
+  const reqOpts: RequestOptions = { headers: getAuthHeaders() };
+  if (opts?.timeout) reqOpts.timeout = opts.timeout;
+  return safeRequest<T>(`${getGatewayUrl()}${path}`, reqOpts, fallback);
+}
+
+export function nodeAuthRequest<T>(
+  path: string,
+  reqOpts: Omit<RequestOptions, 'headers'>
+): Promise<T> {
+  return request<T>(`${getGatewayUrl()}${path}`, {
+    ...reqOpts,
+    headers: getAuthHeaders(),
+  });
 }
 
 export function authPost<T>(

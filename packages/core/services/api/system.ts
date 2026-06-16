@@ -5,7 +5,7 @@
  *          mobazha3.0/internal/api/system_admin_handlers.go
  */
 
-import { publicGet, publicPost, authGet, authPost, authPut } from './helpers';
+import { publicGet, publicPost, nodeAuthGet, nodeAuthPost, nodeAuthPut } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
 // --- Setup types ---
@@ -112,21 +112,21 @@ export interface ConnectPlatformResponse {
 }
 
 export async function connectPlatform(token: string): Promise<ConnectPlatformResponse> {
-  return authPost<ConnectPlatformResponse>(NODE_API.SYSTEM_CONNECT_PLATFORM, { token });
+  return nodeAuthPost<ConnectPlatformResponse>(NODE_API.SYSTEM_CONNECT_PLATFORM, { token });
 }
 
 // --- System admin API (standalone only, requires auth) ---
 
 export async function getSystemHealth(): Promise<SystemHealthResponse> {
-  return authGet<SystemHealthResponse>(NODE_API.SYSTEM_HEALTH);
+  return nodeAuthGet<SystemHealthResponse>(NODE_API.SYSTEM_HEALTH);
 }
 
 export async function getPaymentRPCStatus(): Promise<PaymentRPCStatusResponse> {
-  return authGet<PaymentRPCStatusResponse>(NODE_API.SYSTEM_RPC_STATUS);
+  return nodeAuthGet<PaymentRPCStatusResponse>(NODE_API.SYSTEM_RPC_STATUS);
 }
 
 export async function getSystemLogs(): Promise<string> {
-  return authGet<string>(NODE_API.SYSTEM_LOGS);
+  return nodeAuthGet<string>(NODE_API.SYSTEM_LOGS);
 }
 
 // --- Network config API (standalone overlay management) ---
@@ -146,13 +146,13 @@ export interface NetworkConfigUpdateResponse {
 }
 
 export async function getNetworkConfig(): Promise<NetworkConfigResponse> {
-  return authGet<NetworkConfigResponse>(NODE_API.SYSTEM_NETWORK);
+  return nodeAuthGet<NetworkConfigResponse>(NODE_API.SYSTEM_NETWORK);
 }
 
 export async function updateNetworkConfig(
   overlayType: string
 ): Promise<NetworkConfigUpdateResponse> {
-  return authPost<NetworkConfigUpdateResponse>(NODE_API.SYSTEM_NETWORK, { overlayType });
+  return nodeAuthPost<NetworkConfigUpdateResponse>(NODE_API.SYSTEM_NETWORK, { overlayType });
 }
 
 // --- Doctor API (standalone health checks) ---
@@ -173,7 +173,7 @@ export interface DoctorSummary {
 }
 
 export async function runDoctor(): Promise<DoctorSummary> {
-  return authGet<DoctorSummary>(NODE_API.SYSTEM_DOCTOR);
+  return nodeAuthGet<DoctorSummary>(NODE_API.SYSTEM_DOCTOR);
 }
 
 export async function downloadDiagnostics(): Promise<Blob> {
@@ -202,11 +202,11 @@ export interface DomainUpdateResponse {
 }
 
 export async function getDomainConfig(): Promise<DomainConfigResponse> {
-  return authGet<DomainConfigResponse>(NODE_API.SYSTEM_DOMAIN);
+  return nodeAuthGet<DomainConfigResponse>(NODE_API.SYSTEM_DOMAIN);
 }
 
 export async function updateDomain(domain: string): Promise<DomainUpdateResponse> {
-  return authPost<DomainUpdateResponse>(NODE_API.SYSTEM_DOMAIN, { domain });
+  return nodeAuthPost<DomainUpdateResponse>(NODE_API.SYSTEM_DOMAIN, { domain });
 }
 
 // --- Update management API (native deployment only) ---
@@ -218,15 +218,15 @@ export interface UpdateConfigResponse {
 }
 
 export async function triggerUpdate(action: 'check' | 'apply'): Promise<void> {
-  await authPost(NODE_API.SYSTEM_UPDATE_TRIGGER, { action });
+  await nodeAuthPost(NODE_API.SYSTEM_UPDATE_TRIGGER, { action });
 }
 
 export async function getUpdateConfig(): Promise<UpdateConfigResponse> {
-  return authGet<UpdateConfigResponse>(NODE_API.SYSTEM_UPDATE_CONFIG);
+  return nodeAuthGet<UpdateConfigResponse>(NODE_API.SYSTEM_UPDATE_CONFIG);
 }
 
 export async function updateUpdateConfig(
   config: UpdateConfigResponse
 ): Promise<UpdateConfigResponse> {
-  return authPut<UpdateConfigResponse>(NODE_API.SYSTEM_UPDATE_CONFIG, config);
+  return nodeAuthPut<UpdateConfigResponse>(NODE_API.SYSTEM_UPDATE_CONFIG, config);
 }

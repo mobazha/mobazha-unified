@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
 import { useI18n } from '@mobazha/core';
-import { CHUNK_LOAD_ERROR_RE } from '@/lib/chunkLoadError';
+import { CHUNK_LOAD_ERROR_RE, reloadOnceForChunkError } from '@/lib/chunkLoadError';
 
 function isChunkLoadError(error: unknown): boolean {
   if (error instanceof Error) return CHUNK_LOAD_ERROR_RE.test(error.message);
@@ -21,11 +21,7 @@ export function RouteChunkErrorFallback() {
 
   useEffect(() => {
     if (!chunkError) return;
-    const reloadKey = 'mobazha:route-chunk-reload';
-    if (!sessionStorage.getItem(reloadKey)) {
-      sessionStorage.setItem(reloadKey, '1');
-      window.location.reload();
-    }
+    reloadOnceForChunkError();
   }, [chunkError]);
 
   const message =

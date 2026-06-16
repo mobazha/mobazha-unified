@@ -26,8 +26,9 @@
  * format and rejects empty/zero/non-numeric/overflow.
  */
 
-import { authGet, authPost, authDel } from './helpers';
+import { nodeAuthGet, nodeAuthPost, nodeAuthDel } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
+import type { PaymentRPCStatusEntry } from './system';
 
 // =====================================================================
 // NodePool types — mirror pkg/contracts/contracts.go
@@ -118,20 +119,20 @@ export interface MoneroSweepAllResult {
 // =====================================================================
 
 export async function getMoneroNodes(): Promise<MoneroNodePoolSnapshot> {
-  return authGet<MoneroNodePoolSnapshot>(NODE_API.SYSTEM_MONERO_NODES);
+  return nodeAuthGet<MoneroNodePoolSnapshot>(NODE_API.SYSTEM_MONERO_NODES);
 }
 
 export async function addMoneroNode(req: MoneroNodeAddRequest): Promise<MoneroNodeInfo> {
-  return authPost<MoneroNodeInfo>(NODE_API.SYSTEM_MONERO_NODES, req);
+  return nodeAuthPost<MoneroNodeInfo>(NODE_API.SYSTEM_MONERO_NODES, req);
 }
 
 export async function removeMoneroNode(address: string): Promise<void> {
-  await authDel<void>(NODE_API.SYSTEM_MONERO_NODE(address));
+  await nodeAuthDel<void>(NODE_API.SYSTEM_MONERO_NODE(address));
 }
 
 /** Returns the refreshed pool snapshot so callers don't need a follow-up GET. */
 export async function switchMoneroNode(address: string): Promise<MoneroNodePoolSnapshot> {
-  return authPost<MoneroNodePoolSnapshot>(NODE_API.SYSTEM_MONERO_NODE_SWITCH(address));
+  return nodeAuthPost<MoneroNodePoolSnapshot>(NODE_API.SYSTEM_MONERO_NODE_SWITCH(address));
 }
 
 /**
@@ -159,15 +160,15 @@ export async function getXMRBalance(accountIndex?: number | null): Promise<Moner
     accountIndex == null
       ? NODE_API.WALLET_XMR_BALANCE
       : `${NODE_API.WALLET_XMR_BALANCE}?accountIndex=${encodeURIComponent(String(accountIndex))}`;
-  return authGet<MoneroBalance>(path);
+  return nodeAuthGet<MoneroBalance>(path);
 }
 
 export async function withdrawXMR(req: MoneroWithdrawRequest): Promise<MoneroWithdrawResult> {
-  return authPost<MoneroWithdrawResult>(NODE_API.WALLET_XMR_WITHDRAW, req);
+  return nodeAuthPost<MoneroWithdrawResult>(NODE_API.WALLET_XMR_WITHDRAW, req);
 }
 
 export async function sweepAllXMR(req: MoneroSweepAllRequest): Promise<MoneroSweepAllResult> {
-  return authPost<MoneroSweepAllResult>(NODE_API.WALLET_XMR_SWEEP_ALL, req);
+  return nodeAuthPost<MoneroSweepAllResult>(NODE_API.WALLET_XMR_SWEEP_ALL, req);
 }
 
 // =====================================================================
@@ -191,6 +192,17 @@ export interface MoneroWalletSetupStatus {
   createdAt: number;
 }
 
+/**
+ * Live wallet-rpc readiness (not merely configured on disk).
+ * Used to grade error severity on the Store payments page.
+ */
+export function isWalletOperational(
+  status: PaymentRPCStatusEntry | null | undefined,
+  setup: MoneroWalletSetupStatus | null | undefined
+): boolean {
+  return Boolean(status?.connected || setup?.walletOpen);
+}
+
 export interface MoneroCreateWalletResult {
   /** 25-word English seed — display once, never persist client-side */
   mnemonic: string;
@@ -211,11 +223,11 @@ export interface MoneroRestoreWalletResult {
 }
 
 export async function getXMRWalletSetupStatus(): Promise<MoneroWalletSetupStatus> {
-  return authGet<MoneroWalletSetupStatus>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET);
+  return nodeAuthGet<MoneroWalletSetupStatus>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET);
 }
 
 export async function createXMRWallet(language?: string): Promise<MoneroCreateWalletResult> {
-  return authPost<MoneroCreateWalletResult>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
+  return nodeAuthPost<MoneroCreateWalletResult>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
     action: 'create',
     language,
   });
@@ -224,7 +236,7 @@ export async function createXMRWallet(language?: string): Promise<MoneroCreateWa
 export async function restoreXMRWallet(
   req: MoneroRestoreWalletRequest
 ): Promise<MoneroRestoreWalletResult> {
-  return authPost<MoneroRestoreWalletResult>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
+  return nodeAuthPost<MoneroRestoreWalletResult>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
     action: 'restore',
     seed: req.seed,
     language: req.language,
@@ -233,7 +245,7 @@ export async function restoreXMRWallet(
 }
 
 export async function confirmXMRWalletBackup(): Promise<void> {
-  await authPost<void>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
+  await nodeAuthPost<void>(NODE_API.SYSTEM_SETUP_WIZARD_XMR_WALLET, {
     action: 'confirm-backup',
   });
 }
@@ -343,11 +355,11 @@ export interface MoneroListTransfersOptions {
 }
 
 export async function getXMRMnemonic(): Promise<MoneroMnemonicResult> {
-  return authGet<MoneroMnemonicResult>(NODE_API.WALLET_XMR_SECRETS_MNEMONIC);
+  return nodeAuthGet<MoneroMnemonicResult>(NODE_API.WALLET_XMR_SECRETS_MNEMONIC);
 }
 
 export async function getXMRViewOnlyKeys(): Promise<MoneroViewOnlyKeysResult> {
-  return authGet<MoneroViewOnlyKeysResult>(NODE_API.WALLET_XMR_SECRETS_VIEW_ONLY);
+  return nodeAuthGet<MoneroViewOnlyKeysResult>(NODE_API.WALLET_XMR_SECRETS_VIEW_ONLY);
 }
 
 export async function listXMRTransfers(
@@ -368,7 +380,7 @@ export async function listXMRTransfers(
 
   const query = params.toString();
   const path = query ? `${NODE_API.WALLET_XMR_TRANSFERS}?${query}` : NODE_API.WALLET_XMR_TRANSFERS;
-  return authGet<MoneroTransfersResult>(path);
+  return nodeAuthGet<MoneroTransfersResult>(path);
 }
 
 // =====================================================================

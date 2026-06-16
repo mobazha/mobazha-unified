@@ -5,7 +5,7 @@
  * Backend: mobazha3.0/internal/api/ai_handlers.go
  */
 
-import { authGet, authPut, authPost } from './helpers';
+import { nodeAuthGet, nodeAuthPut, nodeAuthPost } from './helpers';
 import { NODE_API } from '../../config/apiPaths';
 
 export interface AIProviderState {
@@ -53,19 +53,19 @@ export interface AIStatus {
 }
 
 export async function getAIStatus(): Promise<AIStatus> {
-  return authGet<AIStatus>(NODE_API.AI_STATUS);
+  return nodeAuthGet<AIStatus>(NODE_API.AI_STATUS);
 }
 
 export async function getAIConfig(): Promise<AIConfig> {
-  return authGet<AIConfig>(NODE_API.AI_CONFIG);
+  return nodeAuthGet<AIConfig>(NODE_API.AI_CONFIG);
 }
 
 export async function saveAIConfig(config: AIConfigInput): Promise<AIConfig> {
-  return authPut<AIConfig>(NODE_API.AI_CONFIG, config);
+  return nodeAuthPut<AIConfig>(NODE_API.AI_CONFIG, config);
 }
 
 export async function getAIProviders(): Promise<AIProviderInfo[]> {
-  return authGet<AIProviderInfo[]>(NODE_API.AI_PROVIDERS);
+  return nodeAuthGet<AIProviderInfo[]>(NODE_API.AI_PROVIDERS);
 }
 
 export async function testAIConnection(params: {
@@ -74,5 +74,5 @@ export async function testAIConnection(params: {
   model: string;
   base_url: string;
 }): Promise<AITestConnectionResult> {
-  return authPost<AITestConnectionResult>(NODE_API.AI_TEST_CONNECTION, params);
+  return nodeAuthPost<AITestConnectionResult>(NODE_API.AI_TEST_CONNECTION, params);
 }
