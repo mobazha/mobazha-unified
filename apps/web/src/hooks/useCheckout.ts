@@ -699,6 +699,7 @@ export function useCheckout(): UseCheckoutReturn {
       const discountCodes = appliedDiscounts.filter(d => d.code).map(d => d.code!);
 
       const result = await ordersApi.createOrder({
+        vendorId: checkoutItems[0]?.vendor.peerID,
         discountCodes: discountCodes.length > 0 ? discountCodes : undefined,
         items: checkoutItems.map(item => {
           const payload: {

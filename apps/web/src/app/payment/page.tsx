@@ -444,7 +444,9 @@ export default function PaymentPage() {
             paymentCoin: selectedPaymentCoin,
             vendorPeerID: orderDetails.vendor.peerID,
           });
-          const session = await ordersApi.getOrderPaymentSession(orderID);
+          const session = await ordersApi.getOrderPaymentSession(orderID, {
+            vendorPeerID: orderDetails.vendor.peerID,
+          });
           setPaymentSession(session);
         } catch {
           // Silent while typing; explicit save remains on order detail.
@@ -490,8 +492,13 @@ export default function PaymentPage() {
     async ({ markSuccess = false }: { markSuccess?: boolean } = {}) => {
       if (!orderID) return null;
 
-      const order = await ordersApi.getOrderDetails(orderID);
-      const session = await ordersApi.getOrderPaymentSession(orderID).catch(() => null);
+      const vendorPeerID = orderDetails?.vendor?.peerID || urlVendorPeerID || undefined;
+      const storeOptions = vendorPeerID ? { vendorPeerID } : undefined;
+
+      const order = await ordersApi.getOrderDetails(orderID, storeOptions);
+      const session = await ordersApi
+        .getOrderPaymentSession(orderID, storeOptions)
+        .catch(() => null);
       setPaymentSession(session);
       const nextState = typeof order?.state === 'string' ? order.state : null;
       const sessionVerified = isPaymentSessionVerified(session);
@@ -534,6 +541,7 @@ export default function PaymentPage() {
       refreshPaymentReadiness,
       router,
       selectedPaymentCoin,
+      urlVendorPeerID,
       visibleTokenId,
     ]
   );
@@ -611,12 +619,15 @@ export default function PaymentPage() {
       setError(null);
 
       try {
+        const storeOptions = urlVendorPeerID ? { vendorPeerID: urlVendorPeerID } : undefined;
         // 调用真实的订单详情 API
-        const order = await ordersApi.getOrderDetails(orderID);
+        const order = await ordersApi.getOrderDetails(orderID, storeOptions);
         if (!order) {
           throw new Error(t('payment.loadOrderFailed'));
         }
-        const session = await ordersApi.getOrderPaymentSession(orderID).catch(() => null);
+        const session = await ordersApi
+          .getOrderPaymentSession(orderID, storeOptions)
+          .catch(() => null);
         setPaymentSession(session);
         setRawOrder(order);
 

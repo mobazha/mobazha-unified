@@ -250,10 +250,16 @@ export async function getSales(limit = '', offsetId = ''): Promise<OrderListItem
 /**
  * 获取订单详情
  */
-export async function getOrderDetails(orderId: string): Promise<Order | null> {
+export async function getOrderDetails(
+  orderId: string,
+  options?: { vendorPeerID?: string }
+): Promise<Order | null> {
+  const vendorPeerID = options?.vendorPeerID?.trim();
+  const storeHeaders = vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined;
+
   const realFn = async () => {
     try {
-      return await authGet<Order>(NODE_API.ORDER(orderId));
+      return await authGet<Order>(NODE_API.ORDER(orderId), storeHeaders);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         try {
@@ -398,9 +404,15 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   return withMockFallback(realFn, mockFn, `/orders/${orderId}`);
 }
 
-export async function getOrderPaymentSession(orderId: string): Promise<PaymentSession | null> {
+export async function getOrderPaymentSession(
+  orderId: string,
+  options?: { vendorPeerID?: string }
+): Promise<PaymentSession | null> {
+  const vendorPeerID = options?.vendorPeerID?.trim();
+  const storeHeaders = vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined;
+
   try {
-    return await authGet<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(orderId));
+    return await authGet<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(orderId), storeHeaders);
   } catch (err) {
     // 404 = no session yet (order detail may treat as absent). Network/5xx must propagate
     // so payment readiness polling can show a retryable error, not seller-receipt waiting.
@@ -635,7 +647,11 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
     }
   }
 
-  return authPost<CreateOrderResult>(NODE_API.ORDERS, apiData);
+  return authPost<CreateOrderResult>(
+    NODE_API.ORDERS,
+    apiData,
+    _vendorId?.trim() ? { 'X-Store-PeerID': _vendorId.trim() } : undefined
+  );
 }
 
 /**

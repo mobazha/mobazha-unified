@@ -30,8 +30,11 @@ import {
 // Layer 1: Authenticated — routes by current role via getMyGatewayUrl()
 // =====================================================================
 
-export function authGet<T>(path: string): Promise<T> {
-  return get<T>(`${getMyGatewayUrl()}${path}`, getAuthHeaders());
+export function authGet<T>(path: string, headers?: Record<string, string>): Promise<T> {
+  return get<T>(`${getMyGatewayUrl()}${path}`, {
+    ...getAuthHeaders(),
+    ...headers,
+  });
 }
 
 // Layer 1b: Authenticated local node — bypass standalone-buyer SaaS routing
