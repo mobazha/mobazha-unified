@@ -16,6 +16,7 @@ import {
   useVerifiedModerators,
   usePrefetchProduct,
   buildProductHref,
+  useI18n,
 } from '@mobazha/core';
 
 interface Product {
@@ -42,6 +43,8 @@ interface Product {
   rwaTradeMode?: RwaTradeMode;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
+  /** 店铺归属文案（Network Activity 等场景） */
+  storeAttribution?: string;
 }
 
 export interface ProductSectionProps {
@@ -53,6 +56,8 @@ export interface ProductSectionProps {
   viewAllHref?: string;
   containerSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   titleClassName?: string;
+  /** 为每个商品卡片展示 "from {storeName}" 店铺归属 */
+  showStoreAttribution?: boolean;
 }
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
@@ -64,7 +69,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   viewAllHref = '/marketplace',
   containerSize = 'xl',
   titleClassName,
+  showStoreAttribution = false,
 }) => {
+  const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const profile = useUserStore(state => state.profile);
   const { hasVerifiedMod } = useVerifiedModerators();
@@ -136,6 +143,11 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 const productHref = buildProductHref(product.slug, product.vendorPeerID);
                 // 检查是否为自己的商品
                 const isOwnListing = profile?.peerID === product.vendorPeerID;
+                const storeAttribution =
+                  product.storeAttribution ||
+                  (showStoreAttribution && product.vendorName
+                    ? t('saasHome.networkActivity.fromStore', { storeName: product.vendorName })
+                    : undefined);
                 return (
                   <Link
                     key={`${product.id}-${index}`}
@@ -151,6 +163,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       divisibility={product.divisibility}
                       priceFrom={product.priceFrom}
                       vendorName={product.vendorName}
+                      storeAttribution={storeAttribution}
                       vendorAvatar={product.vendorAvatar}
                       vendorPeerID={product.vendorPeerID}
                       rating={product.rating}

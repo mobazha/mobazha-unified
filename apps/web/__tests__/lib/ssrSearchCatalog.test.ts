@@ -36,4 +36,14 @@ describe('parseSearchListingPage', () => {
     expect(items[0].data?.slug).toBe('wireless-headphones');
     expect(hasMore).toBe(false);
   });
+
+  it('reads list envelope meta.hasMore from /search/v1/listings', () => {
+    const { items, hasMore } = parseSearchListingPage({
+      data: [{ data: { slug: 'poster-a' } }, { data: { slug: 'poster-b' } }],
+      meta: { total: 116, hasMore: true },
+    });
+
+    expect(items).toHaveLength(2);
+    expect(hasMore).toBe(true);
+  });
 });

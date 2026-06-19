@@ -27,6 +27,14 @@ import {
   searchPost,
 } from './helpers';
 import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
+import {
+  computeFeaturedStoreScore,
+  countUniqueVendors,
+  diversifyListingsByVendor,
+  homepageFeedFetchLimit,
+  HOMEPAGE_FEED_FETCH_BATCHES,
+  HOMEPAGE_MIN_VENDORS_FOR_HOT,
+} from '../../utils/homepageFeeds';
 
 // API 返回的搜索结果格式
 interface SearchResultItem {
@@ -72,6 +80,8 @@ export interface SearchListingsParams {
   rating?: number;
   shipping?: string;
   nsfw?: boolean;
+  /** discover (default) | all — only applies to q=* browse */
+  browse?: 'discover' | 'all';
 }
 
 // 搜索商品的响应
@@ -81,6 +91,9 @@ export interface SearchListingsResponse {
   page: number;
   pageSize: number;
   hasMore: boolean;
+  vendorCount?: number;
+  catalogTotal?: number;
+  browseMode?: 'discover' | 'all';
 }
 
 export interface GetListingIndexOptions {
@@ -176,12 +189,81 @@ export async function fetchTrendingListings(): Promise<ProductListItem[]> {
 }
 
 /**
- * 获取精选商品列表
+ * Adaptive over-fetch; returns the best candidate pool (may still be single-vendor).
  */
-export async function fetchFeaturedListings(): Promise<ProductListItem[]> {
+async function fetchListingPoolWithBatches(
+  load: (fetchLimit: number) => Promise<ProductListItem[]>
+): Promise<ProductListItem[]> {
+  const batches = [...new Set([homepageFeedFetchLimit(12), ...HOMEPAGE_FEED_FETCH_BATCHES])].sort(
+    (a, b) => a - b
+  );
+
+  let items: ProductListItem[] = [];
+  for (const fetchLimit of batches) {
+    items = await load(fetchLimit);
+    if (countUniqueVendors(items) > 1 || items.length < fetchLimit) {
+      break;
+    }
+  }
+  return items;
+}
+
+/**
+ * Fetch listing feed with adaptive over-fetch when one vendor monopolizes fresh/hot windows.
+ */
+async function fetchAndDiversifyListingFeed(
+  load: (fetchLimit: number) => Promise<ProductListItem[]>,
+  limit: number,
+  maxPerVendor = 2
+): Promise<ProductListItem[]> {
+  const batches = [
+    ...new Set([homepageFeedFetchLimit(limit), ...HOMEPAGE_FEED_FETCH_BATCHES]),
+  ].sort((a, b) => a - b);
+
+  let diversified: ProductListItem[] = [];
+
+  for (const fetchLimit of batches) {
+    const items = await load(fetchLimit);
+    diversified = diversifyListingsByVendor(items, { limit, maxPerVendor });
+    if (countUniqueVendors(items) > 1 || items.length < fetchLimit) {
+      return diversified;
+    }
+  }
+
+  return diversified;
+}
+
+/**
+ * 获取精选商品列表（SaaS 首页 Popular Products）
+ *
+ * Primary: hot listings (rating_count across all stores, no time window).
+ * Fallback: when hot pool has too few vendors (bulk-import skew), use fresh with max 1/store.
+ */
+export async function fetchFeaturedListings(limit = 8): Promise<ProductListItem[]> {
   try {
-    const response = await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_HOT(24, 10), {});
-    return parseSearchResults(response);
+    const hotPool = await fetchListingPoolWithBatches(async fetchLimit => {
+      const response = await searchSafeGet<SearchApiResponse>(
+        SEARCH_API.LISTINGS_HOT(fetchLimit),
+        {}
+      );
+      return parseSearchResults(response);
+    });
+
+    if (countUniqueVendors(hotPool) >= HOMEPAGE_MIN_VENDORS_FOR_HOT) {
+      return diversifyListingsByVendor(hotPool, { limit, maxPerVendor: 1 });
+    }
+
+    return fetchAndDiversifyListingFeed(
+      async fetchLimit => {
+        const response = await searchSafeGet<SearchApiResponse>(
+          SEARCH_API.LISTINGS_FRESH(fetchLimit),
+          {}
+        );
+        return parseSearchResults(response);
+      },
+      limit,
+      1
+    );
   } catch (error) {
     console.error('Failed to fetch featured listings:', error);
     return [];
@@ -569,7 +651,7 @@ export async function fetchFeaturedStores(limit = 6): Promise<SearchedUser[]> {
   try {
     const result = await searchProfiles({ query: '*', pageSize: 20, vendor: true });
     return result.users
-      .map(user => ({ ...user, _score: computeStoreScore(user) }))
+      .map(user => ({ ...user, _score: computeFeaturedStoreScore(user) }))
       .sort((a, b) => b._score - a._score)
       .slice(0, limit)
       .map(({ _score: _, ...user }) => user);
@@ -601,16 +683,6 @@ export async function fetchPlatformStats(): Promise<{
   }
 }
 
-function computeStoreScore(user: SearchedUser): number {
-  const activityScore = user.listingCount * 0.3 + user.reviewCount * 0.2;
-  const qualityScore = user.rating * 0.2;
-  const brandScore =
-    (user.avatar ? 1 : 0) * 0.1 +
-    (user.shortDescription ? 1 : 0) * 0.1 +
-    (user.listingCount > 0 ? 1 : 0) * 0.1;
-  return activityScore + qualityScore + brandScore;
-}
-
 /**
  * 举报商品
  */
@@ -626,6 +698,53 @@ export async function reportListing(
  * 搜索商品
  * 参考移动端: mobazha-mobile/api/search.js
  */
+async function fetchSearchListingsRaw(queryString: string) {
+  return searchRawGet<{
+    data?: SearchResultItem[] | SearchApiResponse;
+    meta?: {
+      total?: number;
+      hasMore?: boolean;
+      vendorCount?: number;
+      catalogTotal?: number;
+      browseMode?: 'discover' | 'all';
+    };
+    results?: { total?: number; morePages?: boolean; results?: SearchResultItem[] };
+    total?: number;
+    morePages?: boolean;
+  }>(`${SEARCH_API.SEARCH_LISTINGS}?${queryString}`, {});
+}
+
+function parseSearchListingsResponse(
+  raw: Awaited<ReturnType<typeof fetchSearchListingsRaw>>,
+  pageSize: number,
+  page = 0
+): Pick<
+  SearchListingsResponse,
+  'products' | 'total' | 'hasMore' | 'vendorCount' | 'catalogTotal' | 'browseMode'
+> {
+  const innerData = raw?.data ?? raw;
+  const products = parseSearchResults(innerData);
+  const meta = raw?.meta;
+  const total =
+    meta?.total ??
+    (innerData as SearchApiResponse)?.results?.total ??
+    raw?.total ??
+    products.length;
+  const hasMore =
+    meta?.hasMore ??
+    (innerData as SearchApiResponse)?.results?.morePages ??
+    raw?.morePages ??
+    (page + 1) * pageSize < total;
+  return {
+    products,
+    total,
+    hasMore,
+    vendorCount: meta?.vendorCount,
+    catalogTotal: meta?.catalogTotal,
+    browseMode: meta?.browseMode,
+  };
+}
+
 export async function searchListings(
   params: SearchListingsParams
 ): Promise<SearchListingsResponse> {
@@ -639,16 +758,21 @@ export async function searchListings(
     rating,
     shipping,
     nsfw = false,
+    browse,
   } = params;
 
   // 构建查询参数
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
     q: searchQuery,
-    p: String(page),
+    p: String(page + 1),
     pageSize: String(pageSize),
     sortBy,
   });
+
+  if (browse === 'all') {
+    queryParams.append('browse', 'all');
+  }
 
   // 添加可选过滤参数
   if (productType && productType !== 'all') {
@@ -668,23 +792,9 @@ export async function searchListings(
   }
 
   try {
-    const raw = await searchRawGet<{
-      data?: SearchResultItem[] | SearchApiResponse;
-      meta?: { total?: number };
-      results?: { total?: number; morePages?: boolean; results?: SearchResultItem[] };
-      total?: number;
-      morePages?: boolean;
-    }>(`${SEARCH_API.SEARCH_LISTINGS}?${queryParams.toString()}`, {});
-
-    const innerData = raw?.data ?? raw;
-    const products = parseSearchResults(innerData);
-
-    const total =
-      raw?.meta?.total ??
-      (innerData as SearchApiResponse)?.results?.total ??
-      raw?.total ??
-      products.length;
-    const hasMore = (innerData as SearchApiResponse)?.results?.morePages ?? raw?.morePages ?? false;
+    const raw = await fetchSearchListingsRaw(queryParams.toString());
+    const { products, total, hasMore, vendorCount, catalogTotal, browseMode } =
+      parseSearchListingsResponse(raw, pageSize, page);
 
     return {
       products,
@@ -692,6 +802,9 @@ export async function searchListings(
       page,
       pageSize,
       hasMore,
+      vendorCount,
+      catalogTotal,
+      browseMode,
     };
   } catch (error) {
     console.error('Failed to search listings:', error);
@@ -720,7 +833,7 @@ export async function searchProfiles(params: {
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
     q: searchQuery,
-    p: String(page),
+    p: String(page + 1),
     pageSize: String(pageSize),
   });
   if (vendor !== undefined) {
@@ -741,7 +854,7 @@ export async function searchProfiles(params: {
         ratingCount?: number;
         listingCount?: number;
       }>;
-      meta?: { total?: number };
+      meta?: { total?: number; hasMore?: boolean };
     }
 
     const raw = await searchRawGet<RawProfileResponse>(
@@ -764,7 +877,7 @@ export async function searchProfiles(params: {
     }));
 
     const total = raw?.meta?.total ?? users.length;
-    const hasMore = (page + 1) * pageSize < total;
+    const hasMore = raw?.meta?.hasMore ?? (page + 1) * pageSize < total;
 
     return {
       users,

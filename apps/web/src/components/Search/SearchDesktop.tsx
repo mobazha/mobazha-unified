@@ -223,7 +223,7 @@ export function SearchDesktop() {
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {search.t('searchExtended.products')} ({search.productsTotal})
+                    {search.productsTabLabel}
                   </button>
                   <button
                     onClick={() => search.setActiveTab('users')}
@@ -277,6 +277,38 @@ export function SearchDesktop() {
                   </HStack>
                 )}
               </div>
+
+              {search.activeTab === 'listings' && search.isBrowseAllCatalog && (
+                <div className="mb-4 sm:mb-5 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <p>
+                    {search.browseMode === 'discover'
+                      ? search.t('searchExtended.discoverHint')
+                      : search.t('searchExtended.browseAllActive', {
+                          count: search.productsCatalogTotal,
+                        })}
+                  </p>
+                  {search.browseMode === 'discover' &&
+                  search.productsCatalogTotal > search.productsTotal ? (
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-primary shrink-0"
+                      onClick={() => search.setBrowseMode('all')}
+                    >
+                      {search.t('searchExtended.browseAllProducts', {
+                        count: search.productsCatalogTotal,
+                      })}
+                    </Button>
+                  ) : search.browseMode === 'all' ? (
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-primary shrink-0"
+                      onClick={() => search.setBrowseMode('discover')}
+                    >
+                      {search.t('searchExtended.backToDiscover')}
+                    </Button>
+                  ) : null}
+                </div>
+              )}
 
               {/* Filter Panel */}
               {search.showFilters && search.activeTab === 'listings' && (
