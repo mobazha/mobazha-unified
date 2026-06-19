@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
+import { UniquePieceBadge } from './UniquePieceBadge';
+import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -83,6 +85,8 @@ export function ProductDetailMobile({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isUniquePiece,
+    authenticityCertificateUrl,
     hasVariants,
     selectedOptions,
     unavailableVariants,
@@ -294,6 +298,15 @@ export function ProductDetailMobile({
           )}
           {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" />}
         </div>
+
+        {(isUniquePiece || authenticityCertificateUrl) && (
+          <div className="space-y-2">
+            {isUniquePiece && <UniquePieceBadge compact />}
+            {authenticityCertificateUrl && (
+              <AuthenticityCertificateCard certificateUrl={authenticityCertificateUrl} compact />
+            )}
+          </div>
+        )}
 
         {/* Title + Rating + More */}
         <div>

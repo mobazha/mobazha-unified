@@ -34,6 +34,7 @@ export * from './transforms';
 
 // HTML 处理工具
 export * from './htmlUtils';
+export * from './artListingMetadata';
 
 // 变体工具
 export * from './variantUtils';

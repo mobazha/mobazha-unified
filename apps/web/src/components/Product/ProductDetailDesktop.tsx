@@ -32,6 +32,8 @@ import { ReviewList } from '@/components/Review';
 import { StarRating } from '@/components/ui/star-rating';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
+import { UniquePieceBadge } from './UniquePieceBadge';
+import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
 
 export interface ProductDetailProps {
   slug: string;
@@ -88,6 +90,8 @@ export function ProductDetailDesktop({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isUniquePiece,
+    authenticityCertificateUrl,
     hasVariants,
     selectedOptions,
     selectedSku,
@@ -449,6 +453,18 @@ export function ProductDetailDesktop({
                 </span>
               )}
             </div>
+
+            {(isUniquePiece || authenticityCertificateUrl) && (
+              <div className={cn('flex flex-col', isModal ? 'gap-2' : 'gap-2.5')}>
+                {isUniquePiece && <UniquePieceBadge compact={isModal} />}
+                {authenticityCertificateUrl && (
+                  <AuthenticityCertificateCard
+                    certificateUrl={authenticityCertificateUrl}
+                    compact={isModal}
+                  />
+                )}
+              </div>
+            )}
 
             {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
 

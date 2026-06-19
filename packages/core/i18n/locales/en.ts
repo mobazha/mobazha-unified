@@ -397,6 +397,15 @@ export const en: TranslationResource = {
     termsAndConditions: 'Terms and Conditions',
     refundPolicy: 'Refund Policy',
     tags: 'Tags',
+    uniquePiece: {
+      badge: 'Unique · 1/1',
+      hint: 'One-of-a-kind artwork',
+    },
+    authenticity: {
+      title: 'Certificate of Authenticity',
+      description: 'Verified by an independent certification provider. View details online.',
+      viewCertificate: 'View certificate',
+    },
     discount: {
       off: '{{value}} off',
       freeShipping: 'Free shipping',

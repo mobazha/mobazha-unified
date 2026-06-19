@@ -17,6 +17,8 @@ import {
   useChatStore,
   usePaymentMethods,
   buildProductHref,
+  extractAuthenticityCertificateUrl,
+  isUniquePieceListing,
 } from '@mobazha/core';
 import { useGuestCartStore } from '@mobazha/core/stores';
 import { isOutpostMode } from '@mobazha/core/config/env';
@@ -102,6 +104,8 @@ export interface UseProductDetailReturn {
   rwaTradeMode: string | undefined;
   rwaEscrowTimeoutSeconds: number;
   paymentAvailable: boolean;
+  isUniquePiece: boolean;
+  authenticityCertificateUrl: string | null;
 
   // Variant selection
   hasVariants: boolean;
@@ -379,6 +383,14 @@ export function useProductDetail({
     : product?.metadata?.acceptedCurrencies || [];
   const tags = product?.item.tags || [];
   const category = product?.item.productType || '';
+  const isUniquePiece = useMemo(
+    () => isUniquePieceListing(product?.item.tags),
+    [product?.item.tags]
+  );
+  const authenticityCertificateUrl = useMemo(
+    () => extractAuthenticityCertificateUrl(product?.item.description),
+    [product?.item.description]
+  );
 
   const {
     crypto: vendorCrypto,
@@ -697,6 +709,8 @@ export function useProductDetail({
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isUniquePiece,
+    authenticityCertificateUrl,
     isRwaToken,
     hasVariants,
     selectedOptions,

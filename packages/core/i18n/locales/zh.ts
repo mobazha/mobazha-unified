@@ -368,6 +368,15 @@ export const zh: PartialTranslationResource = {
     termsAndConditions: '交易条款',
     refundPolicy: '退款政策',
     tags: '标签',
+    uniquePiece: {
+      badge: '唯一 · 1/1',
+      hint: '独一无二艺术品',
+    },
+    authenticity: {
+      title: '真品证书',
+      description: '由独立认证机构出具，可在线查验。',
+      viewCertificate: '查看证书',
+    },
     discount: {
       off: '减 {{value}}',
       freeShipping: '免邮',
