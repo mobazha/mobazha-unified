@@ -7,7 +7,7 @@ export interface SsrProfileData {
   about?: string;
   shortDescription?: string;
   avatarHashes?: { medium?: string; small?: string; original?: string };
-  headerHashes?: { medium?: string; original?: string };
+  headerHashes?: { large?: string; medium?: string; original?: string };
   stats?: { listingCount?: number; followerCount?: number };
 }
 
