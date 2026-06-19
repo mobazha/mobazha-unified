@@ -289,6 +289,8 @@ export default function PaymentPage() {
   const paymentReadinessPollEnabled =
     Boolean(orderID) && Boolean(orderDetails) && isPaymentOpenState(orderDetails?.status);
 
+  const paymentVendorPeerID = orderDetails?.vendor?.peerID || urlVendorPeerID || undefined;
+
   const {
     isCheckingReadiness,
     isAwaitingSellerReceipt,
@@ -300,6 +302,7 @@ export default function PaymentPage() {
     refresh: refreshPaymentReadiness,
   } = usePaymentReadinessPoll(orderID ?? undefined, {
     enabled: paymentReadinessPollEnabled,
+    vendorPeerID: paymentVendorPeerID,
   });
 
   const isPaymentBlocked =

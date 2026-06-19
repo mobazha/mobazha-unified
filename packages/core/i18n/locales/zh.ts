@@ -383,7 +383,7 @@ export const zh: PartialTranslationResource = {
       dimensions: '尺寸',
       shipping: '发货方式',
       edition: '版次',
-      uniqueEdition: '独一无二 — 无限量版次',
+      uniqueEdition: '独一无二 — 无编号版次',
     },
     discount: {
       off: '减 {{value}}',

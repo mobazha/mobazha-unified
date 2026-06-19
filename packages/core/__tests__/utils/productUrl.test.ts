@@ -6,7 +6,9 @@ import {
   buildProductHref,
   buildProductOgImageHref,
   getProductPeerIDParam,
+  inferStorePeerIDFromPath,
   parseCompositeListingSlug,
+  resolveProductModalPeerID,
   resolveProductPagePeerID,
 } from '../../utils/productUrl';
 
@@ -33,6 +35,29 @@ describe('productUrl', () => {
   it('reads the standard peerID param only', () => {
     expect(getProductPeerIDParam(new URLSearchParams('peerID=QmStandard'))).toBe('QmStandard');
     expect(getProductPeerIDParam(new URLSearchParams('peer=QmLegacy'))).toBeUndefined();
+  });
+
+  it('infers store peerID from /store/{peerID} paths', () => {
+    const peerID = '12D3KooWKDELaTd1v58rSoYW1JyeuKk7K7vxFcVQgcV4NPwkACSX';
+    expect(inferStorePeerIDFromPath(`/store/${peerID}`)).toBe(peerID);
+    expect(inferStorePeerIDFromPath(`/store/${peerID}/`)).toBe(peerID);
+    expect(inferStorePeerIDFromPath('/search')).toBeUndefined();
+    expect(inferStorePeerIDFromPath('/store/not-a-peer')).toBeUndefined();
+  });
+
+  it('resolves product modal peerID from query or store pathname', () => {
+    const peerID = '12D3KooWKDELaTd1v58rSoYW1JyeuKk7K7vxFcVQgcV4NPwkACSX';
+    const params = new URLSearchParams('product=break-out');
+    expect(resolveProductModalPeerID(`/store/${peerID}`, params)).toBe(peerID);
+    expect(
+      resolveProductModalPeerID(
+        `/store/${peerID}`,
+        new URLSearchParams(`product=break-out&peerID=${peerID}`)
+      )
+    ).toBe(peerID);
+    expect(
+      resolveProductModalPeerID('/search', new URLSearchParams('product=break-out&peerID=QmOther'))
+    ).toBe('QmOther');
   });
 
   it('keeps clean product hrefs in standalone mode', () => {

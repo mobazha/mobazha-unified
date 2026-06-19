@@ -53,6 +53,25 @@ export function getProductPeerIDParam(searchParams: URLSearchParams): string | u
   return searchParams.get('peerID') || undefined;
 }
 
+/** Extract store peerID from `/store/{peerID}` paths (SaaS storefront deep links). */
+export function inferStorePeerIDFromPath(pathname: string): string | undefined {
+  const match = pathname.match(/^\/store\/([^/?#]+)/);
+  if (!match) return undefined;
+  const candidate = decodeURIComponent(match[1]).trim();
+  return hasPeerIDPrefix(candidate) ? candidate : undefined;
+}
+
+/**
+ * Resolve peerID for `?product=` modal / deep links.
+ * Query param wins; otherwise infer from `/store/{peerID}` pathname.
+ */
+export function resolveProductModalPeerID(
+  pathname: string,
+  searchParams: URLSearchParams
+): string | undefined {
+  return getProductPeerIDParam(searchParams) ?? inferStorePeerIDFromPath(pathname);
+}
+
 /**
  * Resolve the peerID used in canonical product URLs and structured data.
  * Prefers the explicit request param; falls back to vendor peerID in multi-store modes.

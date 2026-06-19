@@ -11,12 +11,12 @@ function productWithSkus(quantities: Array<string | number>): Product {
         selections: [],
       })),
     },
-  } as Product;
+  } as unknown as Product;
 }
 
 describe('getStockQuantity', () => {
   it('returns 999 when listing has no skus', () => {
-    expect(getStockQuantity({ item: {} } as Product)).toBe(999);
+    expect(getStockQuantity({ item: {} } as unknown as Product)).toBe(999);
   });
 
   it('treats legacy -1 quantity as unlimited stock', () => {
