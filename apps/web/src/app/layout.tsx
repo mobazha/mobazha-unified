@@ -116,6 +116,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `window.__OUTPOST__=false;`,
           }}
         />
+        {/* Sync <html lang> before hydration — reduces browser auto-translate misfires */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('mobazha-locale');
+                  if (saved) {
+                    document.documentElement.lang = saved;
+                    return;
+                  }
+                  var browser = (navigator.language || '').split('-')[0];
+                  if (browser) document.documentElement.lang = browser;
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

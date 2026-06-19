@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { EmbedResizer } from '../../_components/EmbedResizer';
+import { IdentityName } from '@/components/IdentityName';
 import { getSiteUrl } from '@/lib/siteUrl';
 
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
@@ -135,14 +136,15 @@ export default async function EmbedStorePage({
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <a
+            <IdentityName
+              as="a"
               href={storeUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={`block font-semibold text-sm ${textPrimary} hover:underline truncate`}
             >
               {name}
-            </a>
+            </IdentityName>
             {about && <p className={`text-xs ${textSecondary} mt-0.5 line-clamp-1`}>{about}</p>}
             <div className={`flex items-center gap-1.5 text-xs ${textMuted} mt-0.5 flex-wrap`}>
               {profile.location && (

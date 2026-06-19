@@ -14,6 +14,12 @@ let currentLocale: Locale = DEFAULT_LOCALE;
 type LocaleChangeListener = (locale: Locale) => void;
 const listeners = new Set<LocaleChangeListener>();
 
+function applyDocumentLocale(locale: Locale): void {
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = locale;
+  }
+}
+
 /**
  * 获取当前语言
  */
@@ -31,6 +37,7 @@ export function setLocale(locale: Locale): void {
 
   if (locale !== currentLocale) {
     currentLocale = locale;
+    applyDocumentLocale(locale);
     // 通知所有监听器
     listeners.forEach(listener => listener(locale));
 
@@ -64,6 +71,7 @@ export function initLocale(): Locale {
   const saved = localStorage.getItem('mobazha-locale') as Locale | null;
   if (saved && SUPPORTED_LOCALES.includes(saved)) {
     currentLocale = saved;
+    applyDocumentLocale(saved);
     return saved;
   }
 
@@ -71,9 +79,11 @@ export function initLocale(): Locale {
   const browserLang = navigator.language.split('-')[0] as Locale;
   if (SUPPORTED_LOCALES.includes(browserLang)) {
     currentLocale = browserLang;
+    applyDocumentLocale(browserLang);
     return browserLang;
   }
 
+  applyDocumentLocale(DEFAULT_LOCALE);
   return DEFAULT_LOCALE;
 }
 

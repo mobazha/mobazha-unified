@@ -69,6 +69,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { ShareButton } from '@/components/Share';
+import { IdentityName } from '@/components/IdentityName';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
 import { getProfileWithDedup } from '@/utils/requestDedup';
@@ -943,9 +944,12 @@ export default function StorePage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0 text-white">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md">
+                    <IdentityName
+                      as="h1"
+                      className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md"
+                    >
                       {store.name || peerId.slice(0, 8)}
-                    </h1>
+                    </IdentityName>
                     {store.visibility === 'private' && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-black/40 text-white backdrop-blur-sm border border-white/20 shrink-0">
                         <Lock className="h-3 w-3" />
