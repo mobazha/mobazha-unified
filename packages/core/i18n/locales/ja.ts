@@ -2002,6 +2002,7 @@ export const ja: PartialTranslationResource = {
       emptyTitle: '最初の一歩を',
       emptySubtitle: 'Web3ストアを作成してネットワークに参加',
       growingCta: '成長するネットワークに参加',
+      newOnNetwork: 'ネットワーク新着',
     },
     popularProducts: {
       title: '人気の商品',

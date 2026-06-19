@@ -2032,6 +2032,7 @@ export const pt: PartialTranslationResource = {
       emptyTitle: 'Seja o primeiro',
       emptySubtitle: 'Crie sua loja Web3 e entre na rede',
       growingCta: 'Entre na rede em crescimento',
+      newOnNetwork: 'Novo na rede',
     },
     popularProducts: {
       title: 'Produtos populares',

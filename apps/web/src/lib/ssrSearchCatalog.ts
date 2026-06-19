@@ -17,19 +17,35 @@ interface SearchPagePayload {
   morePages?: boolean;
 }
 
+interface ListEnvelopePayload {
+  data?: SearchResultItem[];
+  meta?: { hasMore?: boolean; total?: number };
+}
+
 /** Parse a search listings page response (exported for unit tests). */
 export function parseSearchListingPage(json: unknown): {
   items: SearchResultItem[];
   hasMore: boolean;
 } {
-  const root =
-    json && typeof json === 'object' && 'data' in json ? (json as { data: unknown }).data : json;
+  if (!json || typeof json !== 'object') {
+    return { items: [], hasMore: false };
+  }
+
+  const envelope = json as ListEnvelopePayload;
+
+  // Current /search/v1/listings list envelope: { data: [...], meta: { hasMore } }
+  if (Array.isArray(envelope.data)) {
+    const hasMore = envelope.meta?.hasMore ?? false;
+    return { items: envelope.data, hasMore };
+  }
+
+  const root = 'data' in envelope ? envelope.data : json;
 
   if (Array.isArray(root)) {
     return { items: root as SearchResultItem[], hasMore: false };
   }
 
-  const payload = root as SearchPagePayload | undefined;
+  const payload = (root ?? json) as SearchPagePayload | undefined;
   const items = payload?.results?.results ?? [];
   const hasMore = payload?.results?.morePages ?? payload?.morePages ?? false;
   return { items, hasMore };
@@ -45,9 +61,10 @@ export async function fetchSearchListingCatalog(): Promise<SitemapListingItem[]>
   for (let page = 0; page < maxPages; page++) {
     const params = new URLSearchParams({
       q: '*',
-      p: String(page),
+      p: String(page + 1),
       pageSize: String(pageSize),
-      sortBy: 'recent',
+      sortBy: 'newest',
+      browse: 'all',
     });
 
     try {

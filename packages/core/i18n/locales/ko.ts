@@ -1985,6 +1985,7 @@ export const ko: PartialTranslationResource = {
       emptyTitle: '첫 주인공이 되세요',
       emptySubtitle: 'Web3 스토어를 만들고 네트워크에 참여하세요',
       growingCta: '성장하는 네트워크에 참여하세요',
+      newOnNetwork: '네트워크 신규 입점',
     },
     popularProducts: {
       title: '인기 상품',

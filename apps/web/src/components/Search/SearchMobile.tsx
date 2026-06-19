@@ -178,7 +178,7 @@ export function SearchMobile() {
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                {search.t('searchExtended.products')} ({search.productsTotal})
+                {search.productsTabLabel}
               </button>
               <button
                 onClick={() => search.setActiveTab('users')}
@@ -195,6 +195,38 @@ export function SearchMobile() {
 
           {/* Sort + Type Bar */}
           {search.activeTab === 'listings' && <SortTypeBar search={search} />}
+
+          {search.activeTab === 'listings' && search.isBrowseAllCatalog && (
+            <div className="mx-3 mt-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+              <p className="mb-1">
+                {search.browseMode === 'discover'
+                  ? search.t('searchExtended.discoverHint')
+                  : search.t('searchExtended.browseAllActive', {
+                      count: search.productsCatalogTotal,
+                    })}
+              </p>
+              {search.browseMode === 'discover' &&
+              search.productsCatalogTotal > search.productsTotal ? (
+                <button
+                  type="button"
+                  className="text-primary font-medium"
+                  onClick={() => search.setBrowseMode('all')}
+                >
+                  {search.t('searchExtended.browseAllProducts', {
+                    count: search.productsCatalogTotal,
+                  })}
+                </button>
+              ) : search.browseMode === 'all' ? (
+                <button
+                  type="button"
+                  className="text-primary font-medium"
+                  onClick={() => search.setBrowseMode('discover')}
+                >
+                  {search.t('searchExtended.backToDiscover')}
+                </button>
+              ) : null}
+            </div>
+          )}
 
           {/* Product Grid / User List */}
           <div className="px-3 py-3 pb-24">

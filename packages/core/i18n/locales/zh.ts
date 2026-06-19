@@ -2273,6 +2273,7 @@ export const zh: PartialTranslationResource = {
       emptyTitle: '成为第一个',
       emptySubtitle: '创建你的 Web3 店铺，加入网络',
       growingCta: '加入不断壮大的网络',
+      newOnNetwork: '新入驻网络',
     },
     popularProducts: {
       title: '热门商品',
@@ -2922,7 +2923,12 @@ export const zh: PartialTranslationResource = {
     clearAll: '清除全部',
     popularCategories: '热门分类',
     products: '商品',
+    productsFromStores: '{{count}} 件 · {{stores}} 店',
     stores: '店铺',
+    discoverHint: '来自全网各店的精选展示，每家店只取少量代表商品。',
+    browseAllProducts: '浏览全部 {{count}} 件商品',
+    browseAllActive: '正在显示市场中全部 {{count}} 件商品。',
+    backToDiscover: '返回精选浏览',
   },
   costCalc: {
     pageTitle: '数字商品成本计算器',

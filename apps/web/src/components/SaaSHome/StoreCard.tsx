@@ -8,9 +8,11 @@ import type { SearchedUser } from '@mobazha/core/services/api/products';
 
 interface StoreCardProps {
   store: SearchedUser;
+  /** 新入驻网络、尚无评价的店铺 */
+  isNewOnNetwork?: boolean;
 }
 
-export const StoreCard: React.FC<StoreCardProps> = React.memo(({ store }) => {
+export const StoreCard: React.FC<StoreCardProps> = React.memo(({ store, isNewOnNetwork }) => {
   const { t } = useI18n();
   const storeUrl = `/store/${store.peerID}`;
 
@@ -34,6 +36,11 @@ export const StoreCard: React.FC<StoreCardProps> = React.memo(({ store }) => {
             <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-primary/5" />
           )}
         </div>
+        {isNewOnNetwork && (
+          <span className="absolute top-2 right-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground shadow-sm">
+            {t('saasHome.featuredStores.newOnNetwork')}
+          </span>
+        )}
         {/* Avatar — positioned outside overflow-hidden so it won't be clipped */}
         {store.avatar ? (
           <div className="absolute -bottom-6 left-4">

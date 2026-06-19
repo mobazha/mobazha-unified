@@ -256,7 +256,7 @@ function SaaSHomePage() {
             products={popularProducts}
             isLoading={isLoadingPopular}
             showViewAll
-            viewAllHref="/marketplace?sort=popular"
+            viewAllHref="/search?q=*&sortBy=rating"
           />
         )}
 
@@ -269,7 +269,8 @@ function SaaSHomePage() {
               products={latestProducts}
               isLoading={isLoadingProducts}
               showViewAll
-              viewAllHref="/marketplace?sort=newest"
+              viewAllHref="/search?q=*&sortBy=newest"
+              showStoreAttribution
             />
           </div>
         )}

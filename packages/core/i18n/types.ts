@@ -1075,7 +1075,12 @@ export interface TranslationResource {
     clearAll: string;
     popularCategories: string;
     products: string;
+    productsFromStores?: string;
     stores: string;
+    discoverHint?: string;
+    browseAllProducts?: string;
+    browseAllActive?: string;
+    backToDiscover?: string;
   };
 
   // 设置扩展
@@ -4419,6 +4424,7 @@ export interface TranslationResource {
       emptyTitle: string;
       emptySubtitle: string;
       growingCta: string;
+      newOnNetwork: string;
     };
     popularProducts: {
       title: string;

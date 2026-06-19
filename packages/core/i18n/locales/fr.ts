@@ -2043,6 +2043,7 @@ export const fr: PartialTranslationResource = {
       emptyTitle: 'Soyez le premier',
       emptySubtitle: 'Créez votre boutique Web3 et rejoignez le réseau',
       growingCta: 'Rejoindre le réseau en croissance',
+      newOnNetwork: 'Nouveau sur le réseau',
     },
     popularProducts: {
       title: 'Produits populaires',

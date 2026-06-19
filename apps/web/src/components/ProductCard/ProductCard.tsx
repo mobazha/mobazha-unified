@@ -53,6 +53,8 @@ export interface ProductCardProps {
   originalPrice?: number | string;
   /** 卖家名称 */
   vendorName?: string;
+  /** 店铺归属文案（如 "from StoreName"），优先于 vendorName 展示 */
+  storeAttribution?: string;
   /** 卖家头像 */
   vendorAvatar?: string;
   /** 卖家 Peer ID (用于 block 功能) */
@@ -123,6 +125,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   priceFrom = false,
   originalPrice,
   vendorName,
+  storeAttribution,
   vendorAvatar,
   vendorPeerID,
   rating,
@@ -483,27 +486,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* 卖家信息 & 配送标签 */}
-        {(vendorName || freeShipping) && (
+        {(vendorName || storeAttribution || freeShipping) && (
           <div
             className={cn(
               'flex items-center justify-between pt-1.5 border-t border-border',
               compact && 'pt-1'
             )}
           >
-            {vendorName && (
+            {(storeAttribution || vendorName) && (
               <div className="flex items-center gap-1.5 min-w-0">
                 {!compact && (
                   <Avatar
                     src={vendorAvatar}
-                    name={vendorName}
+                    name={vendorName || storeAttribution}
                     size="xs"
                     className="flex-shrink-0"
                   />
                 )}
                 <span
-                  className={cn('text-muted-foreground truncate text-xs', compact && 'text-xs')}
+                  className={cn(
+                    'text-muted-foreground truncate text-xs',
+                    storeAttribution && 'text-foreground/80',
+                    compact && 'text-xs'
+                  )}
                 >
-                  {vendorName}
+                  {storeAttribution || vendorName}
                 </span>
               </div>
             )}

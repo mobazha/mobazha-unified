@@ -142,11 +142,11 @@ export const productDataService = {
   /**
    * 获取热门商品列表（SaaS 首页）
    */
-  async getPopularProducts(): Promise<ProductListItem[]> {
+  async getPopularProducts(limit = 8): Promise<ProductListItem[]> {
     if (isMockMode()) {
       return mockServices.products.getTrendingProducts();
     }
-    return await productsApi.fetchFeaturedListings();
+    return await productsApi.fetchFeaturedListings(limit);
   },
 
   /**
@@ -751,6 +751,7 @@ export interface SearchFilters {
   rating?: number;
   shipping?: string;
   nsfw?: boolean;
+  browse?: 'discover' | 'all';
 }
 
 // 搜索返回的用户类型（与 productsApi.SearchedUser 对齐）
@@ -898,6 +899,9 @@ export const searchDataService = {
     page: number;
     pageSize: number;
     hasMore: boolean;
+    vendorCount?: number;
+    catalogTotal?: number;
+    browseMode?: 'discover' | 'all';
   }> {
     if (isMockMode()) {
       const result = await mockServices.search.search(query, 'products');
@@ -907,6 +911,9 @@ export const searchDataService = {
         page,
         pageSize,
         hasMore: result.hasMore,
+        vendorCount: undefined,
+        catalogTotal: undefined,
+        browseMode: filters.browse,
       };
     }
 

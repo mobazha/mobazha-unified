@@ -2009,6 +2009,7 @@ export const ru: PartialTranslationResource = {
       emptyTitle: 'Будьте первым',
       emptySubtitle: 'Создайте Web3-магазин и присоединяйтесь к сети',
       growingCta: 'Присоединяйтесь к растущей сети',
+      newOnNetwork: 'Новый в сети',
     },
     popularProducts: {
       title: 'Популярные товары',

@@ -51,6 +51,7 @@ export * from './communityMarketplace';
 
 // 商品链接
 export * from './productUrl';
+export * from './homepageFeeds';
 
 // JSON *ID 字段 ingress 归一化
 export * from './normalizeIds';

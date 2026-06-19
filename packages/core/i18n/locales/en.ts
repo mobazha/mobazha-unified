@@ -2502,6 +2502,7 @@ export const en: TranslationResource = {
       emptyTitle: 'Be the First',
       emptySubtitle: 'Create your Web3 store and join the network',
       growingCta: 'Join the growing network',
+      newOnNetwork: 'New on the network',
     },
     popularProducts: {
       title: 'Popular Products',
@@ -3273,7 +3274,12 @@ export const en: TranslationResource = {
     clearAll: 'Clear All',
     popularCategories: 'Popular Categories',
     products: 'Products',
+    productsFromStores: '{{count}} from {{stores}} stores',
     stores: 'Stores',
+    discoverHint: 'Highlights from across the network — one curated slice per store.',
+    browseAllProducts: 'Browse all {{count}} products',
+    browseAllActive: 'Showing all {{count}} products in the marketplace.',
+    backToDiscover: 'Back to highlights',
   },
 
   settingsExtended: {

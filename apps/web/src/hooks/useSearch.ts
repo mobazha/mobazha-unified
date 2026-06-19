@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   useI18n,
@@ -49,6 +49,25 @@ export interface SearchUser {
 }
 
 export type TabType = 'listings' | 'users';
+export type BrowseMode = 'discover' | 'all';
+
+const SEARCH_SORT_VALUES = ['relevance', 'price_low', 'price_high', 'rating', 'newest'] as const;
+
+function isBrowseAllQuery(query: string): boolean {
+  const trimmed = query.trim();
+  return trimmed === '' || trimmed === '*';
+}
+
+function parseBrowseParam(value: string | null): BrowseMode {
+  return value === 'all' ? 'all' : 'discover';
+}
+
+function parseSortParam(value: string | null): string {
+  if (value && SEARCH_SORT_VALUES.includes(value as (typeof SEARCH_SORT_VALUES)[number])) {
+    return value;
+  }
+  return 'relevance';
+}
 
 const RECENT_SEARCHES_KEY = 'mobazha_recent_searches';
 const MAX_RECENT = 8;
@@ -79,6 +98,13 @@ function saveRecentSearches(searches: string[]) {
   }
 }
 
+function productListKey(item: ProductListItem): string {
+  const peer = item.vendorPeerID || '';
+  const slug = item.slug || '';
+  const hash = item.cid || '';
+  return hash || `${peer}/${slug}`;
+}
+
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
   const thumbnailUrl =
     getImageUrl(item.thumbnail?.medium) ||
@@ -97,7 +123,7 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
   const displayPrice = listingDisplayPriceFromListItem(item);
 
   return {
-    id: item.slug,
+    id: productListKey(item),
     slug: item.slug,
     title: item.title,
     price: displayPrice.minAmountString,
@@ -124,6 +150,8 @@ export function useSearch() {
   const searchParams = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const typeParam = searchParams.get('type') || 'all';
+  const sortParam = searchParams.get('sortBy') || 'relevance';
+  const browseParam = searchParams.get('browse');
   const tabParam = (searchParams.get('tab') as TabType) || 'listings';
   const { t } = useI18n();
   const { hasVerifiedMod } = useVerifiedModerators();
@@ -132,14 +160,19 @@ export function useSearch() {
   // Search state
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const [activeTab, setActiveTab] = useState<TabType>(tabParam);
-  const [sortBy, setSortBy] = useState('relevance');
-  const [listingType, setListingType] = useState(typeParam);
   const [showFilters, setShowFilters] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
+
+  // Derived from URL — single source of truth for fetch params
+  const sortBy = parseSortParam(sortParam);
+  const listingType = typeParam || 'all';
+  const browseMode = parseBrowseParam(browseParam);
 
   // Products state
   const [products, setProducts] = useState<DisplayProduct[]>([]);
   const [productsTotal, setProductsTotal] = useState(0);
+  const [productsCatalogTotal, setProductsCatalogTotal] = useState(0);
+  const [productsVendorCount, setProductsVendorCount] = useState(0);
   const [productsPage, setProductsPage] = useState(0);
   const [productsHasMore, setProductsHasMore] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
@@ -178,40 +211,76 @@ export function useSearch() {
     [t]
   );
 
+  const isBrowseAllCatalog = isBrowseAllQuery(queryParam);
+  const productsFetchGen = useRef(0);
+
   const searchProducts = useCallback(
-    async (query: string, page: number = 0, append: boolean = false) => {
+    async (
+      query: string,
+      page: number = 0,
+      append: boolean = false,
+      overrides?: { sortBy?: string; type?: string; browse?: BrowseMode }
+    ) => {
       if (!query.trim()) {
         setProducts([]);
         setProductsTotal(0);
+        setProductsCatalogTotal(0);
+        setProductsVendorCount(0);
         setProductsHasMore(false);
         return;
       }
+
+      const fetchSort = overrides?.sortBy ?? sortBy;
+      const fetchType = overrides?.type ?? (listingType !== 'all' ? listingType : undefined);
+      const fetchBrowse = overrides?.browse ?? (isBrowseAllQuery(query) ? browseMode : undefined);
+      const generation = ++productsFetchGen.current;
+
       setIsLoadingProducts(true);
       try {
         const result = await searchDataService.searchProducts(query, page, 20, {
-          sortBy,
-          type: listingType !== 'all' ? listingType : undefined,
+          sortBy: fetchSort,
+          type: fetchType,
+          browse: fetchBrowse,
         });
+        if (generation !== productsFetchGen.current) return;
+
         const displayProducts = result.products.map(convertToDisplayProduct);
         if (append) {
-          setProducts(prev => [...prev, ...displayProducts]);
+          setProducts(prev => {
+            const seen = new Set(prev.map(p => p.id));
+            const merged = [...prev];
+            for (const product of displayProducts) {
+              if (!seen.has(product.id)) {
+                seen.add(product.id);
+                merged.push(product);
+              }
+            }
+            return merged;
+          });
         } else {
           setProducts(displayProducts);
         }
         setProductsTotal(result.total);
+        setProductsCatalogTotal(result.catalogTotal ?? result.total);
+        setProductsVendorCount(result.vendorCount ?? 0);
         setProductsPage(page);
         setProductsHasMore(result.hasMore);
       } catch {
+        if (generation !== productsFetchGen.current) return;
         if (!append) {
           setProducts([]);
           setProductsTotal(0);
+          setProductsCatalogTotal(0);
+          setProductsVendorCount(0);
         }
         setProductsHasMore(false);
       } finally {
-        setIsLoadingProducts(false);
+        if (generation === productsFetchGen.current) {
+          setIsLoadingProducts(false);
+        }
       }
     },
-    [sortBy, listingType]
+    [sortBy, listingType, browseMode]
   );
 
   const searchUsersApi = useCallback(
@@ -248,19 +317,24 @@ export function useSearch() {
 
   useEffect(() => {
     setSearchQuery(queryParam);
-    setListingType(typeParam);
-    if (queryParam) {
-      setProductsPage(0);
-      setUsersPage(0);
-      searchProducts(queryParam, 0, false);
-      searchUsersApi(queryParam, 0, false);
-    } else {
+    if (!queryParam) {
       setProducts([]);
       setUsers([]);
       setProductsTotal(0);
+      setProductsCatalogTotal(0);
+      setProductsVendorCount(0);
       setUsersTotal(0);
+      return;
     }
-  }, [queryParam, typeParam, searchProducts, searchUsersApi]);
+    setProductsPage(0);
+    setUsersPage(0);
+    searchProducts(queryParam, 0, false, {
+      sortBy: parseSortParam(sortParam),
+      type: typeParam !== 'all' ? typeParam : undefined,
+      browse: isBrowseAllQuery(queryParam) ? parseBrowseParam(browseParam) : undefined,
+    });
+    searchUsersApi(queryParam, 0, false);
+  }, [queryParam, typeParam, sortParam, browseParam, searchProducts, searchUsersApi]);
 
   useEffect(() => {
     const trimmed = searchQuery.trim();
@@ -271,17 +345,69 @@ export function useSearch() {
       if (listingType && listingType !== 'all') {
         params.set('type', listingType);
       }
+      if (sortBy && sortBy !== 'relevance') {
+        params.set('sortBy', sortBy);
+      }
+      if (isBrowseAllQuery(trimmed) && browseMode === 'all') {
+        params.set('browse', 'all');
+      }
       router.push(`/search?${params.toString()}`, { scroll: false });
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, queryParam, listingType, router]);
+  }, [searchQuery, queryParam, listingType, sortBy, browseMode, router]);
 
-  useEffect(() => {
-    if (queryParam) {
-      searchProducts(queryParam, 0, false);
+  const pushSearchParams = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      mutate(params);
+      setProductsPage(0);
+      router.push(`/search?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams]
+  );
+
+  const setSortBy = useCallback(
+    (value: string) => {
+      pushSearchParams(params => {
+        if (value && value !== 'relevance') params.set('sortBy', value);
+        else params.delete('sortBy');
+      });
+    },
+    [pushSearchParams]
+  );
+
+  const setListingType = useCallback(
+    (value: string) => {
+      pushSearchParams(params => {
+        if (value && value !== 'all') params.set('type', value);
+        else params.delete('type');
+      });
+    },
+    [pushSearchParams]
+  );
+
+  const setBrowseMode = useCallback(
+    (mode: BrowseMode) => {
+      if (!isBrowseAllCatalog) return;
+      pushSearchParams(params => {
+        if (mode === 'all') params.set('browse', 'all');
+        else params.delete('browse');
+      });
+    },
+    [isBrowseAllCatalog, pushSearchParams]
+  );
+
+  const productsTabLabel = useMemo(() => {
+    if (isBrowseAllCatalog && browseMode === 'discover' && productsVendorCount > 0) {
+      return t('searchExtended.productsFromStores', {
+        count: productsTotal,
+        stores: productsVendorCount,
+        defaultValue: `${productsTotal} from ${productsVendorCount} stores`,
+      });
     }
-  }, [sortBy, listingType, queryParam, searchProducts]);
+    return `${t('searchExtended.products')} (${productsTotal})`;
+  }, [browseMode, isBrowseAllCatalog, productsTotal, productsVendorCount, t]);
 
   const handleSearch = useCallback(
     (e?: { preventDefault: () => void }) => {
@@ -382,7 +508,13 @@ export function useSearch() {
     // Products
     products,
     productsTotal,
+    productsCatalogTotal,
+    productsVendorCount,
     productsHasMore,
+    isBrowseAllCatalog,
+    browseMode,
+    setBrowseMode,
+    productsTabLabel,
     isLoadingProducts,
     loadMoreProducts,
 

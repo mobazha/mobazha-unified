@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
-import { useI18n } from '@mobazha/core';
+import { useI18n, isNewOnNetworkStore } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
 import { StoreCard } from './StoreCard';
 
@@ -94,14 +94,18 @@ export const FeaturedStoresSection: React.FC<FeaturedStoresSectionProps> = React
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                   {stores.map(store => (
                     <div key={store.peerID} className="sm:w-1/2 lg:w-1/3">
-                      <StoreCard store={store} />
+                      <StoreCard store={store} isNewOnNetwork={isNewOnNetworkStore(store)} />
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {stores.slice(0, 6).map(store => (
-                    <StoreCard key={store.peerID} store={store} />
+                    <StoreCard
+                      key={store.peerID}
+                      store={store}
+                      isNewOnNetwork={isNewOnNetworkStore(store)}
+                    />
                   ))}
                 </div>
               )}
