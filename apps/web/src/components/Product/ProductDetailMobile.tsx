@@ -12,6 +12,7 @@ import {
   getImageUrl,
   decodeHtmlEntities,
   sanitizeHtml,
+  stripHtmlTags,
   getTokenIdFromPaymentCoin,
   filterVisibleAcceptedCurrencies,
   useI18n,
@@ -308,6 +309,11 @@ export function ProductDetailMobile({
               {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
             </span>
           </div>
+          {product.item.shortDescription?.trim() && (
+            <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-snug">
+              {stripHtmlTags(product.item.shortDescription)}
+            </p>
+          )}
         </div>
 
         {/* Discount badges */}
@@ -754,14 +760,15 @@ export function ProductDetailMobile({
                   t('product.addToCart')
                 )}
               </Button>
-              <Button
-                size="sm"
-                className="flex-1 h-11 text-sm font-medium touch-feedback"
-                onClick={handleBuyNow}
-                disabled={purchaseDisabled}
-              >
-                {t('product.buyNow')}
-              </Button>
+              {!purchaseDisabled && (
+                <Button
+                  size="sm"
+                  className="flex-1 h-11 text-sm font-medium touch-feedback"
+                  onClick={handleBuyNow}
+                >
+                  {t('product.buyNow')}
+                </Button>
+              )}
             </div>
           </div>
         )}

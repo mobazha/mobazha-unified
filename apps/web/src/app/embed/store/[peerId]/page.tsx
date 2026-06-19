@@ -4,20 +4,14 @@ import { EmbedResizer } from '../../_components/EmbedResizer';
 import { getSiteUrl } from '@/lib/siteUrl';
 
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
+import { profilePlainTextExcerpt, type SsrProfileData } from '@/lib/ssrProfile';
 
 const API_BASE = SSR_API_BASE;
 
 export const revalidate = 300;
 
-interface ProfileData {
-  peerID?: string;
-  name?: string;
-  handle?: string;
+interface ProfileData extends SsrProfileData {
   location?: string;
-  about?: string;
-  shortDescription?: string;
-  avatarHashes?: { medium?: string; small?: string; original?: string };
-  headerHashes?: { large?: string; medium?: string; original?: string };
   stats?: { listingCount?: number; averageRating?: number; ratingCount?: number };
 }
 
@@ -82,7 +76,7 @@ export default async function EmbedStorePage({
   }
 
   const name = profile.name || profile.handle || peerId.slice(0, 12);
-  const about = profile.shortDescription || profile.about || '';
+  const about = profilePlainTextExcerpt(profile, { peerId, maxLength: 120 });
   const avatarUrl = getImageUrl(
     profile.avatarHashes?.medium || profile.avatarHashes?.small || profile.avatarHashes?.original
   );

@@ -50,11 +50,11 @@ import { RwaAssetDetail } from '@/components/RwaToken';
 import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
 
-// 获取库存数量（从 SKU 计算）
+// 获取库存数量（从 SKU 计算；-1 表示旧平台无限库存）
 function getStockQuantity(product: Product): number {
-  if (!product.item.skus || product.item.skus.length === 0) {
-    return 999; // 默认无限库存
-  }
+  if (!product.item.skus || product.item.skus.length === 0) return 999;
+  const hasUnlimited = product.item.skus.some(sku => Number(sku.quantity) < 0);
+  if (hasUnlimited) return 999;
   return product.item.skus.reduce((sum, sku) => sum + (Number(sku.quantity) || 0), 0);
 }
 

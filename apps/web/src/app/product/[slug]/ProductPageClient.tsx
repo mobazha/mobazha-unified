@@ -26,6 +26,8 @@ const SITE_TITLE_SUFFIX = 'Mobazha';
 
 function getStockQuantity(product: Product): number {
   if (!product.item.skus || product.item.skus.length === 0) return 999;
+  const hasUnlimited = product.item.skus.some(sku => Number(sku.quantity) < 0);
+  if (hasUnlimited) return 999;
   return product.item.skus.reduce((sum, sku) => sum + (Number(sku.quantity) || 0), 0);
 }
 

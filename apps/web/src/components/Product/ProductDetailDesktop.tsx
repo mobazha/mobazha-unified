@@ -14,6 +14,7 @@ import {
   getImageUrl,
   decodeHtmlEntities,
   sanitizeHtml,
+  stripHtmlTags,
   getTokenIdFromPaymentCoin,
   filterVisibleAcceptedCurrencies,
 } from '@mobazha/core';
@@ -190,6 +191,7 @@ export function ProductDetailDesktop({
 
   const purchaseDisabled =
     isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable) || isRwaToken;
+  const showBuyNow = !purchaseDisabled;
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
@@ -414,6 +416,16 @@ export function ProductDetailDesktop({
                   {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
                 </span>
               </HStack>
+              {product.item.shortDescription?.trim() && (
+                <p
+                  className={cn(
+                    'text-muted-foreground leading-snug',
+                    isModal ? 'text-xs mt-1.5 line-clamp-2' : 'text-sm mt-2 line-clamp-3'
+                  )}
+                >
+                  {stripHtmlTags(product.item.shortDescription)}
+                </p>
+              )}
             </div>
 
             {/* Price */}
@@ -871,19 +883,17 @@ export function ProductDetailDesktop({
                       t('product.addToCart')
                     )}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="default"
-                    className={cn(
-                      'w-full touch-feedback',
-                      purchaseDisabled && 'opacity-50 cursor-not-allowed'
-                    )}
-                    onClick={handleBuyNow}
-                    disabled={purchaseDisabled}
-                    data-testid="product-detail-buy-now"
-                  >
-                    {t('product.buyNow')}
-                  </Button>
+                  {showBuyNow && (
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="w-full touch-feedback"
+                      onClick={handleBuyNow}
+                      data-testid="product-detail-buy-now"
+                    >
+                      {t('product.buyNow')}
+                    </Button>
+                  )}
                   {onToggleWishlist && (
                     <Button
                       variant="ghost"
