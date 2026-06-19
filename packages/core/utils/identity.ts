@@ -4,7 +4,33 @@
  *
  * Rule: Never render raw Peer IDs or blockchain addresses directly.
  * Always use these helpers. See .cursor/rules/identity-display-rules.mdc
+ *
+ * Browser auto-translate (Chrome / Safari) can mangle stylized names
+ * (e.g. "SN6op" → "sn6op"). Use identityNameProps / IdentityName to opt out.
  */
+
+/** Google Translate + HTML5 hint to skip machine translation of proper names. */
+export const IDENTITY_NAME_CLASS = 'notranslate';
+
+export interface IdentityNameHtmlProps {
+  translate: 'no';
+  className?: string;
+}
+
+/**
+ * HTML props that prevent browser auto-translate from altering a display name.
+ * Merge `className` with any existing classes on the element.
+ */
+export function identityNameProps(className?: string): IdentityNameHtmlProps {
+  if (!className) {
+    return { translate: 'no', className: IDENTITY_NAME_CLASS };
+  }
+  const classes = className.split(/\s+/).filter(Boolean);
+  if (classes.includes(IDENTITY_NAME_CLASS)) {
+    return { translate: 'no', className };
+  }
+  return { translate: 'no', className: `${IDENTITY_NAME_CLASS} ${className}`.trim() };
+}
 
 /** Minimal shape accepted by formatUserName */
 export interface IdentityData {

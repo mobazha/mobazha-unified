@@ -6,6 +6,8 @@ import {
   formatNotificationName,
   isFullPeerID,
   hasPeerIDPrefix,
+  identityNameProps,
+  IDENTITY_NAME_CLASS,
 } from '../../utils/identity';
 
 describe('isFullPeerID', () => {
@@ -152,5 +154,28 @@ describe('formatNotificationName', () => {
     expect(formatNotificationName(undefined)).toBe('');
     expect(formatNotificationName({})).toBe('');
     expect(formatNotificationName({ handle: '', name: '', peerID: '' })).toBe('');
+  });
+});
+
+describe('identityNameProps', () => {
+  it('returns translate=no and notranslate class by default', () => {
+    expect(identityNameProps()).toEqual({
+      translate: 'no',
+      className: IDENTITY_NAME_CLASS,
+    });
+  });
+
+  it('merges notranslate with existing className', () => {
+    expect(identityNameProps('font-bold truncate')).toEqual({
+      translate: 'no',
+      className: `${IDENTITY_NAME_CLASS} font-bold truncate`,
+    });
+  });
+
+  it('does not duplicate notranslate when already present', () => {
+    expect(identityNameProps('notranslate font-bold')).toEqual({
+      translate: 'no',
+      className: 'notranslate font-bold',
+    });
   });
 });

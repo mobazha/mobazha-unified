@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { profileApi, socialApi, getImageUrl, useI18n, useUserStore } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import { MapPin, UserPlus, UserMinus, Loader2, Ban, ShieldOff, Lock } from 'lucide-react';
+import { IdentityName } from '@/components/IdentityName';
 
 interface UserCardProps {
   /** 用户 peerID */
@@ -249,9 +250,9 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
         {/* 名称和 handle */}
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <h3 className="font-semibold text-foreground truncate text-sm">
+            <IdentityName as="h3" className="font-semibold text-foreground truncate text-sm">
               {profile.name || peerID.slice(0, 12)}
-            </h3>
+            </IdentityName>
             {/* 隐私店铺徽标 */}
             {profile.visibility === 'private' && (
               <span
@@ -272,7 +273,9 @@ export function UserCard({ peerID, showFollowButton = true, onClick }: UserCardP
             )}
           </div>
           {profile.handle && (
-            <p className="text-xs text-muted-foreground truncate">@{profile.handle}</p>
+            <IdentityName as="p" className="text-xs text-muted-foreground truncate">
+              @{profile.handle}
+            </IdentityName>
           )}
         </div>
 
