@@ -2,7 +2,13 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getImageUrl, useStorefrontProfile, getBrandConfig } from '@mobazha/core';
+import {
+  useI18n,
+  getImageUrl,
+  useStorefrontProfile,
+  getBrandConfig,
+  stripHtmlTags,
+} from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { Store, MapPin, Star, Package, Search } from 'lucide-react';
 
@@ -17,7 +23,8 @@ export function StoreHero() {
   const headerUrl = profile?.headerHashes?.large ? getImageUrl(profile.headerHashes.large) : null;
 
   const storeName = profile?.name || t('standalone.storeName', { defaultValue: 'Store' });
-  const storeAbout = profile?.shortDescription || profile?.about || '';
+  const storeAboutRaw = profile?.shortDescription || profile?.about || '';
+  const storeAbout = storeAboutRaw ? stripHtmlTags(storeAboutRaw) : '';
   const location = profile?.location;
   const stats = profile?.stats;
 

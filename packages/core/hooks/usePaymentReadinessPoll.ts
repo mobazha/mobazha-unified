@@ -20,6 +20,8 @@ export type PaymentReadinessPollStatus = PaymentReadinessView['status'] | undefi
 
 export interface UsePaymentReadinessPollOptions {
   enabled?: boolean;
+  /** Seller store peerID — required for cross-store payment-session polling in SaaS mode. */
+  vendorPeerID?: string;
 }
 
 export interface UsePaymentReadinessPollReturn {
@@ -51,6 +53,7 @@ export function usePaymentReadinessPoll(
   options: UsePaymentReadinessPollOptions = {}
 ): UsePaymentReadinessPollReturn {
   const enabled = options.enabled !== false && Boolean(orderId);
+  const vendorPeerID = options.vendorPeerID?.trim();
   const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
   const [hasFetchedSession, setHasFetchedSession] = useState(false);
   const [isFetchingSession, setIsFetchingSession] = useState(false);
@@ -63,7 +66,9 @@ export function usePaymentReadinessPoll(
     if (!orderId) return null;
     setIsFetchingSession(true);
     try {
-      const session = await ordersApi.getOrderPaymentSession(orderId);
+      const session = await ordersApi.getOrderPaymentSession(orderId, {
+        vendorPeerID,
+      });
       if (session == null) {
         setReadinessFetchError('payment session not found');
         setHasFetchedSession(false);
@@ -82,7 +87,7 @@ export function usePaymentReadinessPoll(
     } finally {
       setIsFetchingSession(false);
     }
-  }, [orderId]);
+  }, [orderId, vendorPeerID]);
 
   useEffect(() => {
     refreshRef.current = refresh;
