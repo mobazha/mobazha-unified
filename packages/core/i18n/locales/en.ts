@@ -406,6 +406,14 @@ export const en: TranslationResource = {
       description: 'Verified by an independent certification provider. View details online.',
       viewCertificate: 'View certificate',
     },
+    artSpecs: {
+      title: 'Artwork Details',
+      medium: 'Medium',
+      dimensions: 'Dimensions',
+      shipping: 'Shipping',
+      edition: 'Edition',
+      uniqueEdition: 'Unique piece — no numbered editions',
+    },
     discount: {
       off: '{{value}} off',
       freeShipping: 'Free shipping',

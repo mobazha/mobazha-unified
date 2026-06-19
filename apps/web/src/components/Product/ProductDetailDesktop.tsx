@@ -34,6 +34,7 @@ import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
 import { UniquePieceBadge } from './UniquePieceBadge';
 import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
+import { ArtListingSpecsTable } from './ArtListingSpecsTable';
 
 export interface ProductDetailProps {
   slug: string;
@@ -92,6 +93,7 @@ export function ProductDetailDesktop({
     paymentAvailable,
     isUniquePiece,
     authenticityCertificateUrl,
+    artListingSpecs,
     hasVariants,
     selectedOptions,
     selectedSku,
@@ -990,6 +992,13 @@ export function ProductDetailDesktop({
         >
           {/* Description */}
           <div className={isModal ? '' : 'lg:col-span-2'}>
+            {artListingSpecs.length > 0 && (
+              <ArtListingSpecsTable
+                specs={artListingSpecs}
+                compact={isModal}
+                className={cn(isModal ? 'mb-3' : 'mb-4')}
+              />
+            )}
             <Card className={cn('p-4', !isModal && 'sm:p-6')}>
               <h2
                 className={cn(

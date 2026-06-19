@@ -19,6 +19,9 @@ import {
   buildProductHref,
   extractAuthenticityCertificateUrl,
   isUniquePieceListing,
+  parseArtListingSpecs,
+  ART_LISTING_UNIQUE_EDITION,
+  type ArtListingSpecRow,
 } from '@mobazha/core';
 import { useGuestCartStore } from '@mobazha/core/stores';
 import { isOutpostMode } from '@mobazha/core/config/env';
@@ -106,6 +109,7 @@ export interface UseProductDetailReturn {
   paymentAvailable: boolean;
   isUniquePiece: boolean;
   authenticityCertificateUrl: string | null;
+  artListingSpecs: ArtListingSpecRow[];
 
   // Variant selection
   hasVariants: boolean;
@@ -391,6 +395,13 @@ export function useProductDetail({
     () => extractAuthenticityCertificateUrl(product?.item.description),
     [product?.item.description]
   );
+  const artListingSpecs = useMemo(() => {
+    const specs = parseArtListingSpecs(product?.item.description);
+    if (isUniquePiece && !specs.some(row => row.key === 'edition') && specs.length > 0) {
+      return [...specs, { key: 'edition' as const, value: ART_LISTING_UNIQUE_EDITION }];
+    }
+    return specs;
+  }, [product?.item.description, isUniquePiece]);
 
   const {
     crypto: vendorCrypto,
@@ -711,6 +722,7 @@ export function useProductDetail({
     paymentAvailable,
     isUniquePiece,
     authenticityCertificateUrl,
+    artListingSpecs,
     isRwaToken,
     hasVariants,
     selectedOptions,

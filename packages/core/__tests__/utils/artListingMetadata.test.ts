@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   extractAuthenticityCertificateUrl,
   isUniquePieceListing,
+  parseArtListingSpecs,
+  ART_LISTING_UNIQUE_EDITION,
 } from '../../utils/artListingMetadata';
 
 describe('isUniquePieceListing', () => {
@@ -33,5 +35,18 @@ describe('extractAuthenticityCertificateUrl', () => {
 
   it('returns null when no certificate URL is present', () => {
     expect(extractAuthenticityCertificateUrl('<p>No certificate here</p>')).toBeNull();
+  });
+});
+
+describe('parseArtListingSpecs', () => {
+  const sample = `<p>Dancing Queen</p><p>Photography: Color, Giclée, Photo and Digital on Paper.</p><p>Photography Size: 20 H x 24 W x 0.2 in</p><p>Ships in a tube</p><p>Each work here will be presented as a "unique" piece.</p>`;
+
+  it('extracts medium, dimensions, shipping, and edition', () => {
+    const specs = parseArtListingSpecs(sample);
+    expect(specs.map(s => s.key)).toEqual(['medium', 'dimensions', 'shipping', 'edition']);
+    expect(specs[0].value).toContain('Giclée');
+    expect(specs[1].value).toBe('20 H x 24 W x 0.2 in');
+    expect(specs[2].value).toBe('Ships in a tube');
+    expect(specs[3].value).toBe(ART_LISTING_UNIQUE_EDITION);
   });
 });

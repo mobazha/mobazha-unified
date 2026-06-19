@@ -35,6 +35,7 @@ import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
 import { UniquePieceBadge } from './UniquePieceBadge';
 import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
+import { ArtListingSpecsTable } from './ArtListingSpecsTable';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -87,6 +88,7 @@ export function ProductDetailMobile({
     paymentAvailable,
     isUniquePiece,
     authenticityCertificateUrl,
+    artListingSpecs,
     hasVariants,
     selectedOptions,
     unavailableVariants,
@@ -524,6 +526,9 @@ export function ProductDetailMobile({
         )}
 
         {/* --- Accordion Sections --- */}
+        {artListingSpecs.length > 0 && (
+          <ArtListingSpecsTable specs={artListingSpecs} compact className="mb-1" />
+        )}
         <div className="divide-y divide-border border-t border-b border-border">
           {/* Description */}
           <details open className="group">
