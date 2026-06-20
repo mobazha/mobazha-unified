@@ -33,6 +33,7 @@ import {
   isStandalone,
   isStandaloneBuyerAuth,
   useUserContext,
+  useMarketplaceContext,
 } from '@mobazha/core';
 import {
   Search,
@@ -81,7 +82,13 @@ export const Header: React.FC = () => {
 
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
+  const {
+    isSubMarket,
+    config: marketplaceConfig,
+    loading: marketplaceLoading,
+  } = useMarketplaceContext();
   const brandProfile = standaloneMode ? storefrontProfile : profile;
+  const subMarketBrand = isSubMarket ? marketplaceConfig?.brand : null;
   const isSearchPage = pathname === '/search';
 
   const handleSearch = (e: React.FormEvent) => {
@@ -113,6 +120,26 @@ export const Header: React.FC = () => {
                   size="sm"
                 />
                 <span className="font-bold text-xl text-foreground">{brandProfile.name}</span>
+              </>
+            ) : isSubMarket && marketplaceLoading ? (
+              <div
+                className="flex items-center gap-2"
+                aria-busy="true"
+                aria-label={t('marketplaceStarter.loadingTitle', {
+                  defaultValue: 'Loading marketplace',
+                })}
+              >
+                <div className="h-9 w-9 rounded-md bg-muted animate-pulse" />
+                <div className="h-6 w-28 rounded-md bg-muted animate-pulse" />
+              </div>
+            ) : isSubMarket && subMarketBrand?.name ? (
+              <>
+                {subMarketBrand.logo ? (
+                  <Avatar src={subMarketBrand.logo} name={subMarketBrand.name} size="sm" />
+                ) : (
+                  <Store className="h-8 w-8 text-primary" aria-hidden />
+                )}
+                <span className="font-bold text-xl text-foreground">{subMarketBrand.name}</span>
               </>
             ) : (
               <>
@@ -147,8 +174,8 @@ export const Header: React.FC = () => {
 
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="flex items-center">
-            {/* 市场入口 (hidden in standalone mode) */}
-            {!standaloneMode && (
+            {/* 市场入口 (hub only — hidden in storefront + sub-market) */}
+            {!standaloneMode && !isSubMarket && (
               <Link href="/marketplace" data-testid="header-marketplace-link">
                 <Button
                   variant="ghost"

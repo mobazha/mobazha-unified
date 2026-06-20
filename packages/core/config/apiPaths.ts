@@ -505,57 +505,37 @@ export const HOSTING_API = {
   STORE_ACCESS_SETTINGS: '/platform/v1/store-access-settings',
   STORE_ACCESS_LIST: '/platform/v1/store-access-list',
 
-  // --- Group Marketplace ---
-  GROUP_MARKETPLACE_LISTINGS: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/listings`,
-  GROUP_MARKETPLACE_SELLERS: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers`,
-  GROUP_MARKETPLACE_SELLERS_APPLY: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/apply`,
-  GROUP_MARKETPLACE_SELLER_REVIEW: (platform: string, chatId: string, sellerId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/${sellerId}/review`,
-  GROUP_MARKETPLACE_CHECK_ADMIN: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/check-admin`,
-  GROUP_MARKETPLACE_GROUPS: '/platform/v1/group-marketplace/groups',
-  GROUP_MARKETPLACE_PUBLIC_DETAIL: (identifier: string) =>
-    `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}`,
-  GROUP_MARKETPLACE_PUBLIC_SELLER_APPLICATION: (identifier: string) =>
-    `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}/seller-application`,
-  GROUP_MARKETPLACE_PUBLIC_SELLER_APPLY: (identifier: string) =>
-    `/platform/v1/group-marketplaces/public/${encodeURIComponent(identifier)}/sellers/apply`,
-
   // --- Marketplaces ---
   MARKETPLACES: '/platform/v1/marketplaces',
   MARKETPLACE: (id: string) => `/platform/v1/marketplaces/${id}`,
-  MARKETPLACE_BY_SLUG: (slug: string) => `/platform/v1/marketplaces/slug/${slug}`,
-  MARKETPLACES_ME_OWNED: '/platform/v1/marketplaces/me/owned',
-  MARKETPLACES_ME_JOINED: '/platform/v1/marketplaces/me/joined',
-  MARKETPLACES_FEATURED: '/platform/v1/marketplaces/featured',
-  MARKETPLACE_MEMBERS: (id: string) => `/platform/v1/marketplaces/${id}/members`,
-  MARKETPLACE_JOIN: (id: string) => `/platform/v1/marketplaces/${id}/join`,
-  MARKETPLACE_LEAVE: (id: string) => `/platform/v1/marketplaces/${id}/leave`,
-  MARKETPLACE_MEMBER_ROLE: (marketplaceId: string, memberId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/members/${memberId}/role`,
-  MARKETPLACE_MEMBER: (marketplaceId: string, memberId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/members/${memberId}`,
-  MARKETPLACE_SELLER_APPLICATIONS: (id: string) =>
-    `/platform/v1/marketplaces/${id}/seller-applications`,
-  MARKETPLACE_SELLER_APPLICATION_REVIEW: (marketplaceId: string, applicationId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/seller-applications/${applicationId}/review`,
-  MARKETPLACE_SELLER_STATUS: (marketplaceId: string, sellerId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/sellers/${sellerId}/status`,
-  MARKETPLACE_PRODUCTS: (id: string) => `/platform/v1/marketplaces/${id}/products`,
-  MARKETPLACE_PRODUCT: (marketplaceId: string, productId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}`,
-  MARKETPLACE_PRODUCT_REVIEW: (marketplaceId: string, productId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}/review`,
-  MARKETPLACE_PRODUCT_FEATURED: (marketplaceId: string, productId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}/featured`,
-  MARKETPLACE_ANNOUNCEMENTS: (id: string) => `/platform/v1/marketplaces/${id}/announcements`,
-  MARKETPLACE_ANNOUNCEMENT: (marketplaceId: string, announcementId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
-  MARKETPLACE_ACTIVITY: (id: string) => `/platform/v1/marketplaces/${id}/activity`,
-
+  MARKETPLACES_MINE: '/platform/v1/marketplaces/mine',
+  MARKETPLACE_CONFIG: (id: string) => `/platform/v1/marketplaces/${id}/config`,
+  MARKETPLACE_CONFIG_CURRENT: '/platform/v1/marketplaces/current/config',
+  MARKETPLACE_LINK: (id: string) => `/platform/v1/marketplaces/${id}/link`,
+  MARKETPLACE_SELLERS: (id: string) => `/platform/v1/marketplaces/${id}/sellers`,
+  MARKETPLACE_SELLER_INVITE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/invite`,
+  MARKETPLACE_SELLER: (marketplaceId: string, peerID: string) =>
+    `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}`,
+  COMMUNITY_MARKETPLACE_PLATFORM_LISTINGS: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/listings`,
+  COMMUNITY_MARKETPLACE_PLATFORM_SELLERS: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/sellers`,
+  COMMUNITY_MARKETPLACE_PLATFORM_SELLERS_APPLY: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/sellers/apply`,
+  COMMUNITY_MARKETPLACE_PLATFORM_SELLER_REVIEW: (
+    platform: string,
+    instanceId: string,
+    sellerId: string
+  ) => `/platform/v1/community-marketplaces/${platform}/${instanceId}/sellers/${sellerId}/review`,
+  COMMUNITY_MARKETPLACE_PLATFORM_CHECK_ADMIN: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/check-admin`,
+  COMMUNITY_MARKETPLACE_GROUPS: '/platform/v1/community-marketplaces/groups',
+  COMMUNITY_MARKETPLACE_PUBLIC_DETAIL: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}`,
+  COMMUNITY_MARKETPLACE_PUBLIC_SELLER_APPLICATION: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}/seller-application`,
+  COMMUNITY_MARKETPLACE_PUBLIC_SELLER_APPLY: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}/sellers/apply`,
   // --- Auth Tokens (MCP / API) ---
   AUTH_TOKENS: '/platform/v1/auth/tokens',
   AUTH_TOKEN: (tokenID: string) => `/platform/v1/auth/tokens/${tokenID}`,

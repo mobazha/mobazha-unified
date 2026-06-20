@@ -834,6 +834,122 @@
         "tags": ["admin"]
       }
     },
+    "/platform/v1/admin/moderators": {
+      "get": {
+        "operationId": "admin-list-moderators",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List platform-certified moderators",
+        "tags": ["admin", "moderators"]
+      },
+      "post": {
+        "operationId": "admin-create-moderator",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_PlatformModeratorUpsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Certify a third-party moderator",
+        "tags": ["admin", "moderators"]
+      }
+    },
+    "/platform/v1/admin/moderators/{peerID}": {
+      "delete": {
+        "operationId": "admin-delete-moderator",
+        "parameters": [
+          {
+            "description": "Moderator peer ID.",
+            "in": "path",
+            "name": "peerID",
+            "required": true,
+            "schema": {
+              "description": "Moderator peer ID.",
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove platform certification for a moderator",
+        "tags": ["admin", "moderators"]
+      }
+    },
     "/platform/v1/admin/relay/config": {
       "get": {
         "operationId": "admin-get-relay-config",
@@ -900,6 +1016,82 @@
           }
         ],
         "summary": "Patch relay operational parameters (admin)",
+        "tags": ["admin"]
+      }
+    },
+    "/platform/v1/admin/managed-payment/config": {
+      "get": {
+        "operationId": "admin-get-managed-payment-config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Managed payment platform fee configuration (admin)",
+        "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "admin-patch-managed-payment-config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_AdminPatchSafePaymentConfigInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Patch Managed payment platform fee configuration (admin)",
         "tags": ["admin"]
       }
     },
@@ -1711,6 +1903,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "redirect_uri",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2072,6 +2272,1149 @@
         ],
         "summary": "Revoke an API token",
         "tags": ["auth"]
+      }
+    },
+    "/platform/v1/community-marketplaces/discord/{instanceID}/verify-member": {
+      "post": {
+        "operationId": "group-marketplace-discord-verify-member",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmDiscordVerifyBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Verify Discord guild membership",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/groups": {
+      "get": {
+        "operationId": "group-marketplace-known-groups",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "platform",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List public group marketplace projections",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/public/{identifier}": {
+      "get": {
+        "operationId": "group-marketplace-public-detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get public group marketplace detail by slug or public ID",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/public/{identifier}/seller-application": {
+      "get": {
+        "operationId": "group-marketplace-public-seller-application",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get current tenant seller application for a public marketplace",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/public/{identifier}/sellers/apply": {
+      "post": {
+        "operationId": "group-marketplace-public-seller-apply",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmPublicSellerApplyBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Apply to sell in a public group marketplace by slug or public ID",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/telegram/{instanceID}/verify-member": {
+      "post": {
+        "operationId": "group-marketplace-telegram-verify-member",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmTgVerifyBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Verify Telegram membership for a chat",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}": {
+      "post": {
+        "operationId": "group-marketplace-upsert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmMarketplaceApplyBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Create or update group marketplace metadata",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}": {
+      "get": {
+        "operationId": "group-marketplace-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get group marketplace by platform and chat",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/admin/banners": {
+      "delete": {
+        "operationId": "group-marketplace-admin-banners-remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmAdminBannersBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Remove a carousel banner",
+        "tags": ["group-marketplace"]
+      },
+      "post": {
+        "operationId": "group-marketplace-admin-banners-add",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmAdminBannersBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Add a carousel banner (group admin)",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/admin/featured": {
+      "delete": {
+        "operationId": "group-marketplace-admin-featured-remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmAdminFeaturedBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Remove featured seller entry",
+        "tags": ["group-marketplace"]
+      },
+      "post": {
+        "operationId": "group-marketplace-admin-featured-add",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmAdminFeaturedBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Add a featured seller (group admin)",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/banners": {
+      "get": {
+        "operationId": "group-marketplace-banners-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get carousel banners",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/check-admin": {
+      "post": {
+        "operationId": "group-marketplace-check-admin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmCheckAdminBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Check whether a platform user is a group admin",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/featured": {
+      "get": {
+        "operationId": "group-marketplace-featured-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get featured sellers for a marketplace",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/listings": {
+      "get": {
+        "operationId": "group-marketplace-listings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Paged listing refs for approved visible sellers",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/search": {
+      "get": {
+        "operationId": "group-marketplace-search",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Search listing refs within marketplace",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers": {
+      "get": {
+        "operationId": "group-marketplace-sellers-list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "userID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List sellers for a group marketplace",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers/apply": {
+      "post": {
+        "operationId": "group-marketplace-seller-apply",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmSellerApplyBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Apply to join a group marketplace as a seller",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers/{sellerID}/product-groups": {
+      "put": {
+        "operationId": "group-marketplace-seller-product-groups-put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sellerID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmProductGroupsBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update seller product groups in a marketplace",
+        "tags": ["group-marketplace"]
+      }
+    },
+    "/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers/{sellerID}/review": {
+      "put": {
+        "operationId": "group-marketplace-seller-review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "platform",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "instanceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sellerID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_GmReviewBodyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Review a seller application (platform group admin)",
+        "tags": ["group-marketplace"]
       }
     },
     "/platform/v1/encryption/listings/{peerID}/{slug}/key": {
@@ -2628,994 +3971,6 @@
         "tags": ["fiat"]
       }
     },
-    "/platform/v1/group-marketplace/discord/{chatID}/verify-member": {
-      "post": {
-        "operationId": "group-marketplace-discord-verify-member",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmDiscordVerifyBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Verify Discord guild membership",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/groups": {
-      "get": {
-        "operationId": "group-marketplace-known-groups",
-        "parameters": [
-          {
-            "explode": false,
-            "in": "query",
-            "name": "platform",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "List known group marketplaces from database",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/telegram/{chatID}/verify-member": {
-      "post": {
-        "operationId": "group-marketplace-telegram-verify-member",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmTgVerifyBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Verify Telegram membership for a chat",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}": {
-      "post": {
-        "operationId": "group-marketplace-upsert",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmMarketplaceApplyBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Create or update group marketplace metadata",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}": {
-      "get": {
-        "operationId": "group-marketplace-get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Get group marketplace by platform and chat",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/admin/banners": {
-      "delete": {
-        "operationId": "group-marketplace-admin-banners-remove",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmAdminBannersBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Remove a carousel banner",
-        "tags": ["group-marketplace"]
-      },
-      "post": {
-        "operationId": "group-marketplace-admin-banners-add",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmAdminBannersBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Add a carousel banner (group admin)",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/admin/featured": {
-      "delete": {
-        "operationId": "group-marketplace-admin-featured-remove",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmAdminFeaturedBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Remove featured seller entry",
-        "tags": ["group-marketplace"]
-      },
-      "post": {
-        "operationId": "group-marketplace-admin-featured-add",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmAdminFeaturedBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Add a featured seller (group admin)",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/banners": {
-      "get": {
-        "operationId": "group-marketplace-banners-get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Get carousel banners",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/check-admin": {
-      "post": {
-        "operationId": "group-marketplace-check-admin",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmCheckAdminBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Check whether a platform user is a group admin",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/featured": {
-      "get": {
-        "operationId": "group-marketplace-featured-get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Get featured sellers for a marketplace",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/listings": {
-      "get": {
-        "operationId": "group-marketplace-listings",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "format": "int64",
-              "type": "integer"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "pageSize",
-            "schema": {
-              "format": "int64",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Paged listing refs for approved visible sellers",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/search": {
-      "get": {
-        "operationId": "group-marketplace-search",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "q",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Search listing refs within marketplace",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/sellers": {
-      "get": {
-        "operationId": "group-marketplace-sellers-list",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "status",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "userID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "List sellers for a group marketplace",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/sellers/apply": {
-      "post": {
-        "operationId": "group-marketplace-seller-apply",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmSellerApplyBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Apply to join a group marketplace as a seller",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups": {
-      "put": {
-        "operationId": "group-marketplace-seller-product-groups-put",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "sellerID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmProductGroupsBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Update seller product groups in a marketplace",
-        "tags": ["group-marketplace"]
-      }
-    },
-    "/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review": {
-      "put": {
-        "operationId": "group-marketplace-seller-review",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "platform",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "sellerID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_GmReviewBodyBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Review a seller application (platform group admin)",
-        "tags": ["group-marketplace"]
-      }
-    },
     "/platform/v1/integrations/telegram/webhook": {
       "post": {
         "operationId": "integrations-telegram-webhook-group",
@@ -3765,6 +4120,539 @@
         },
         "summary": "Read raw IPNS record blob cached for PeerID",
         "tags": ["ipns"]
+      }
+    },
+    "/platform/v1/marketplaces": {
+      "post": {
+        "operationId": "marketplaces-create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceOwnerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create native marketplace",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/mine": {
+      "get": {
+        "operationId": "marketplaces-mine",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List marketplaces owned by current user",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}": {
+      "delete": {
+        "operationId": "marketplaces-delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete marketplace by ID",
+        "tags": ["marketplaces"]
+      },
+      "get": {
+        "operationId": "marketplaces-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get marketplace by ID",
+        "tags": ["marketplaces"]
+      },
+      "put": {
+        "operationId": "marketplaces-update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceOwnerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update marketplace by ID",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/config": {
+      "get": {
+        "operationId": "marketplaces-config",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "subdomain",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get public marketplace curation config",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/link": {
+      "get": {
+        "operationId": "marketplaces-link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get marketplace share link",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/sellers": {
+      "get": {
+        "operationId": "marketplaces-sellers-list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List marketplace seller whitelist",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/sellers/invite": {
+      "post": {
+        "operationId": "marketplaces-sellers-invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceSellerInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Invite seller to marketplace",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/sellers/{peerID}": {
+      "delete": {
+        "operationId": "marketplaces-sellers-delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "peerID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove marketplace seller",
+        "tags": ["marketplaces"]
+      },
+      "put": {
+        "operationId": "marketplaces-sellers-update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "peerID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceSellerUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update marketplace seller status",
+        "tags": ["marketplaces"]
       }
     },
     "/platform/v1/matrix/config": {
@@ -3965,6 +4853,48 @@
         ],
         "summary": "Create Matrix store space + starter rooms",
         "tags": ["matrix"]
+      }
+    },
+    "/platform/v1/moderators/recommended": {
+      "get": {
+        "operationId": "moderators-recommended",
+        "parameters": [
+          {
+            "description": "Maximum number of moderators to return (default 20, max 50).",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "description": "Maximum number of moderators to return (default 20, max 50).",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List platform-recommended moderators",
+        "tags": ["moderators"]
       }
     },
     "/platform/v1/product-groups": {
@@ -4477,6 +5407,89 @@
         "tags": ["relay"]
       }
     },
+    "/platform/v1/relay/gas-wallet": {
+      "get": {
+        "operationId": "relay-gas-wallet",
+        "parameters": [
+          {
+            "description": "EVM chain ID (e.g. 1, 56, 137)",
+            "explode": false,
+            "in": "query",
+            "name": "chain_id",
+            "required": true,
+            "schema": {
+              "description": "EVM chain ID (e.g. 1, 56, 137)",
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Gas wallet address and balance for a specific chain (admin)",
+        "tags": ["relay"]
+      }
+    },
+    "/platform/v1/relay/gas-wallet/status": {
+      "get": {
+        "operationId": "relay-gas-wallet-status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Gas wallet status for all configured chains (admin)",
+        "tags": ["relay"]
+      }
+    },
     "/platform/v1/relay/status": {
       "get": {
         "operationId": "relay-status",
@@ -4511,7 +5524,7 @@
         "tags": ["relay"]
       }
     },
-    "/platform/v1/sellers/{userID}/group-marketplaces": {
+    "/platform/v1/sellers/{userID}/marketplaces": {
       "get": {
         "operationId": "sellers-group-marketplaces-list",
         "parameters": [
@@ -4555,7 +5568,7 @@
         "tags": ["sellers"]
       }
     },
-    "/platform/v1/sellers/{userID}/visibility/{platform}/{chatID}": {
+    "/platform/v1/sellers/{userID}/visibility/{platform}/{instanceID}": {
       "put": {
         "operationId": "sellers-visibility-update",
         "parameters": [
@@ -4577,7 +5590,7 @@
           },
           {
             "in": "path",
-            "name": "chatID",
+            "name": "instanceID",
             "required": true,
             "schema": {
               "type": "string"
@@ -7728,6 +8741,101 @@
         "tags": ["netdb"]
       }
     },
+    "/search/v1/netdb/listings/{id}": {
+      "get": {
+        "operationId": "netdb-get-listing-by-cid",
+        "parameters": [
+          {
+            "description": "Listing CID hash.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Listing CID hash.",
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Search_ListingResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Search_InfoEnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get a listing by CID",
+        "tags": ["netdb"]
+      }
+    },
+    "/search/v1/netdb/listings/{id}/{slug}": {
+      "get": {
+        "operationId": "netdb-get-listing-by-slug",
+        "parameters": [
+          {
+            "description": "Peer ID of the store.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Peer ID of the store.",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing slug.",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "description": "Listing slug.",
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Search_ListingResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Search_InfoEnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get a listing by peerID and slug",
+        "tags": ["netdb"]
+      }
+    },
     "/search/v1/netdb/listings/{listingID}": {
       "delete": {
         "operationId": "netdb-delete-listing",
@@ -7770,48 +8878,6 @@
           }
         },
         "summary": "Delete a listing from NetDB",
-        "tags": ["netdb"]
-      }
-    },
-    "/search/v1/netdb/listings/{path+}": {
-      "get": {
-        "description": "Supports two path formats: `/search/v1/netdb/listings/{cid}` or `/search/v1/netdb/listings/{peerID}/{slug}`. Access control is enforced for private stores.",
-        "operationId": "netdb-get-listing",
-        "parameters": [
-          {
-            "description": "Listing CID or peerID/slug path.",
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "schema": {
-              "description": "Listing CID or peerID/slug path.",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Search_ListingResponse"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Search_InfoEnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Get a listing by CID or peerID/slug",
         "tags": ["netdb"]
       }
     },
@@ -8757,9 +9823,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Rotate standalone admin password",
@@ -9287,9 +10350,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "List local API tokens (standalone)",
@@ -9333,9 +10393,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Mint local API token (standalone)",
@@ -9376,9 +10433,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Revoke local API token by ID",
@@ -12497,6 +13551,552 @@
         "tags": ["crypto"]
       }
     },
+    "/v1/digital-assets": {
+      "get": {
+        "operationId": "digital-asset-list",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "listingSlug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "variantSku",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Node_DigitalAssetInfo"
+                  },
+                  "type": ["array", "null"]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "List digital assets for a listing",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/digital-assets/license-key": {
+      "post": {
+        "operationId": "digital-asset-create-license-key",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_Digital-asset-create-license-keyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_DigitalAssetInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Create a license-key-type digital asset",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/digital-assets/license-keys": {
+      "get": {
+        "operationId": "digital-asset-list-license-keys",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "listingSlug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "variantSku",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int64",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Node_MaskedLicenseKey"
+                  },
+                  "type": ["array", "null"]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "List license keys (masked) for a listing",
+        "tags": ["digital-assets"]
+      },
+      "post": {
+        "operationId": "digital-asset-import-license-keys",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_Digital-asset-import-license-keysRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_ImportKeysOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Import license keys for a listing",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/digital-assets/license-keys/stats": {
+      "get": {
+        "operationId": "digital-asset-license-key-stats",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "listingSlug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "variantSku",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_LicenseKeyPoolStats"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get license key pool statistics for a listing",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/digital-assets/license-keys/{keyID}/revoke": {
+      "post": {
+        "operationId": "digital-asset-revoke-license-key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "keyID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Revoke a license key",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/digital-assets/link": {
+      "post": {
+        "operationId": "digital-asset-create-link",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_Digital-asset-create-linkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_DigitalAssetInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Create a link-type digital asset",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/digital-assets/{assetID}": {
+      "delete": {
+        "operationId": "digital-asset-delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Delete a digital asset",
+        "tags": ["digital-assets"]
+      },
+      "get": {
+        "operationId": "digital-asset-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_DigitalAssetInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get a digital asset by ID",
+        "tags": ["digital-assets"]
+      },
+      "patch": {
+        "operationId": "digital-asset-update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_AssetUpdateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_DigitalAssetInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Update a digital asset",
+        "tags": ["digital-assets"]
+      }
+    },
     "/v1/discounts": {
       "get": {
         "operationId": "discounts-get",
@@ -13259,6 +14859,67 @@
           }
         ],
         "summary": "Close a dispute",
+        "tags": ["disputes"]
+      }
+    },
+    "/v1/disputes/{orderID}/instructions/release": {
+      "post": {
+        "description": "Compatibility endpoint for client-signed moderated dispute payouts. backend-managed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.",
+        "operationId": "disputes-post-instructions-release",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Legacy dispute release instructions",
         "tags": ["disputes"]
       }
     },
@@ -14658,6 +16319,183 @@
         "tags": ["following"]
       }
     },
+    "/v1/fulfillment/alerts": {
+      "get": {
+        "operationId": "fulfillment-get-alerts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "List fulfillment alerts",
+        "tags": ["fulfillment"]
+      }
+    },
+    "/v1/fulfillment/alerts/{alertID}": {
+      "delete": {
+        "operationId": "fulfillment-delete-alert",
+        "parameters": [
+          {
+            "description": "Alert ID to dismiss.",
+            "in": "path",
+            "name": "alertID",
+            "required": true,
+            "schema": {
+              "description": "Alert ID to dismiss.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Dismiss a fulfillment alert",
+        "tags": ["fulfillment"]
+      }
+    },
+    "/v1/fulfillment/locations": {
+      "get": {
+        "operationId": "fulfillment-get-locations",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "List fulfillment locations",
+        "tags": ["fulfillment"]
+      }
+    },
+    "/v1/fulfillment/locations/{locationID}": {
+      "get": {
+        "operationId": "fulfillment-get-location",
+        "parameters": [
+          {
+            "description": "Fulfillment location ID.",
+            "in": "path",
+            "name": "locationID",
+            "required": true,
+            "schema": {
+              "description": "Fulfillment location ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get fulfillment location detail",
+        "tags": ["fulfillment"]
+      }
+    },
     "/v1/fulfillment/orders/{orderID}/status": {
       "get": {
         "operationId": "fulfillment-get-order-status",
@@ -14799,6 +16637,137 @@
           }
         ],
         "summary": "List fulfillment providers",
+        "tags": ["fulfillment"]
+      }
+    },
+    "/v1/fulfillment/rules": {
+      "get": {
+        "operationId": "fulfillment-get-rules",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "List fulfillment auto-action rules",
+        "tags": ["fulfillment"]
+      },
+      "post": {
+        "operationId": "fulfillment-post-rule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Create a fulfillment auto-action rule",
+        "tags": ["fulfillment"]
+      }
+    },
+    "/v1/fulfillment/rules/{ruleID}": {
+      "delete": {
+        "operationId": "fulfillment-delete-rule",
+        "parameters": [
+          {
+            "description": "Rule ID to delete.",
+            "in": "path",
+            "name": "ruleID",
+            "required": true,
+            "schema": {
+              "description": "Rule ID to delete.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Delete a fulfillment auto-action rule",
         "tags": ["fulfillment"]
       }
     },
@@ -15407,6 +17376,61 @@
         "tags": ["fulfillment"]
       }
     },
+    "/v1/fulfillment/{providerID}/synced-products/{mappingID}": {
+      "delete": {
+        "operationId": "fulfillment-delete-synced-product",
+        "parameters": [
+          {
+            "description": "Fulfillment provider ID.",
+            "in": "path",
+            "name": "providerID",
+            "required": true,
+            "schema": {
+              "description": "Fulfillment provider ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Synced product mapping ID.",
+            "in": "path",
+            "name": "mappingID",
+            "required": true,
+            "schema": {
+              "description": "Synced product mapping ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Unlink a synced product from its supplier",
+        "tags": ["fulfillment"]
+      }
+    },
     "/v1/fulfillment/{providerID}/webhooks/{webhookSecret}": {
       "post": {
         "operationId": "fulfillment-public-post-provider-webhook",
@@ -15560,6 +17584,43 @@
         "tags": ["orders", "guest"]
       }
     },
+    "/v1/guest/orders/quote": {
+      "post": {
+        "operationId": "guest-orders-quote-public",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Public guest checkout supply preflight",
+        "tags": ["orders", "guest"]
+      }
+    },
     "/v1/guest/orders/{token}": {
       "get": {
         "operationId": "guest-orders-get-public",
@@ -15643,6 +17704,58 @@
           }
         ],
         "summary": "Manually finalize guest-funded order",
+        "tags": ["orders", "guest"]
+      }
+    },
+    "/v1/guest/orders/{token}/detail": {
+      "get": {
+        "operationId": "guest-orders-admin-detail",
+        "parameters": [
+          {
+            "description": "Guest checkout token.",
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "description": "Guest checkout token.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Admin: full guest order detail including encrypted shipping address",
         "tags": ["orders", "guest"]
       }
     },
@@ -15855,6 +17968,55 @@
         "tags": ["listings"]
       }
     },
+    "/v1/listings/import/gumroad": {
+      "post": {
+        "description": "Reads products from the Gumroad v2 API using a personal access token and imports them as DRAFT digital-good listings. The seller must upload the actual digital file to each draft before publishing — Gumroad's protected file URLs are not server-fetchable. Pass {\"dryRun\": true} to preview without writing.",
+        "operationId": "listings-import-gumroad",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Import listings from a Gumroad creator account",
+        "tags": ["listings"]
+      }
+    },
     "/v1/listings/import/json": {
       "post": {
         "operationId": "listings-import-json",
@@ -16032,6 +18194,54 @@
           }
         ],
         "summary": "Get authenticated seller listing by slug or CID",
+        "tags": ["listings"]
+      }
+    },
+    "/v1/listings/supply-summary": {
+      "post": {
+        "operationId": "listings-post-supply-summary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get seller supply summaries",
         "tags": ["listings"]
       }
     },
@@ -17494,6 +19704,54 @@
         "tags": ["orders"]
       }
     },
+    "/v1/orders/supply-quote": {
+      "post": {
+        "operationId": "orders-post-supply-quote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Authenticated checkout supply preflight",
+        "tags": ["orders"]
+      }
+    },
     "/v1/orders/{orderID}": {
       "get": {
         "operationId": "orders-get-detail",
@@ -17726,6 +19984,308 @@
         "tags": ["orders"]
       }
     },
+    "/v1/orders/{orderID}/digital-assets": {
+      "get": {
+        "description": "Returns all digital entitlements (files, license keys, links) granted to the buyer after order confirmation. Guest checkout access requires the independent buyerPortalToken issued at order creation.",
+        "operationId": "digital-assets-buyer-get",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "example": "QmOrder123",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "examples": ["QmOrder123"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Independent buyer portal bearer token issued at guest order creation.",
+            "in": "header",
+            "name": "X-Buyer-Portal-Token",
+            "schema": {
+              "description": "Independent buyer portal bearer token issued at guest order creation.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Signed download URL expiry in seconds.",
+            "explode": false,
+            "in": "query",
+            "name": "urlExpirySec",
+            "schema": {
+              "default": 3600,
+              "description": "Signed download URL expiry in seconds.",
+              "format": "int64",
+              "maximum": 86400,
+              "minimum": 60,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "List of digital entitlements for this order.",
+                  "items": {
+                    "$ref": "#/components/schemas/Node_BuyerAssetEntry"
+                  },
+                  "type": ["array", "null"]
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Get buyer digital assets for an order",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/orders/{orderID}/digital-delivery": {
+      "get": {
+        "description": "Returns the order-level digital delivery contract used by seller and buyer order pages. It exposes delivery state and counts only; digital secrets are returned by the buyer assets endpoint.",
+        "operationId": "digital-delivery-status-get",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "example": "QmOrder123",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "examples": ["QmOrder123"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Independent buyer portal bearer token issued at guest order creation.",
+            "in": "header",
+            "name": "X-Buyer-Portal-Token",
+            "schema": {
+              "description": "Independent buyer portal bearer token issued at guest order creation.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_DigitalDeliveryStatus",
+                  "description": "Order-level digital delivery status."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Get digital delivery status for an order",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/orders/{orderID}/digital-delivery/retry": {
+      "post": {
+        "description": "Replays automatic digital entitlement creation for a seller order. This is intended for recoverable cases where digital assets were added after payment confirmation.",
+        "operationId": "digital-delivery-retry",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "example": "QmOrder123",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "examples": ["QmOrder123"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_DigitalDeliveryStatus",
+                  "description": "Order-level digital delivery status."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Retry digital delivery for an order",
+        "tags": ["digital-assets"]
+      }
+    },
+    "/v1/orders/{orderID}/digital-download": {
+      "get": {
+        "description": "Serves the binary content of a purchased digital asset. Authentication is provided by the HMAC signature embedded in the query parameters (generated by the buyer portal API). No session or admin token required.",
+        "operationId": "digital-download",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Grant nonce.",
+            "explode": false,
+            "in": "query",
+            "name": "grant",
+            "required": true,
+            "schema": {
+              "description": "Grant nonce.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Asset ID.",
+            "explode": false,
+            "in": "query",
+            "name": "asset",
+            "required": true,
+            "schema": {
+              "description": "Asset ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Expiry unix timestamp.",
+            "explode": false,
+            "in": "query",
+            "name": "expires",
+            "required": true,
+            "schema": {
+              "description": "Expiry unix timestamp.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Grant version.",
+            "explode": false,
+            "in": "query",
+            "name": "v",
+            "required": true,
+            "schema": {
+              "description": "Grant version.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "HMAC-SHA256 hex signature.",
+            "explode": false,
+            "in": "query",
+            "name": "sig",
+            "required": true,
+            "schema": {
+              "description": "HMAC-SHA256 hex signature.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "contentEncoding": "base64",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "description": "Cache directive.",
+                  "type": "string"
+                }
+              },
+              "Content-Disposition": {
+                "schema": {
+                  "description": "Attachment hint for downloads.",
+                  "type": "string"
+                }
+              },
+              "Content-Type": {
+                "schema": {
+                  "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Download a purchased digital file",
+        "tags": ["digital-assets"]
+      }
+    },
     "/v1/orders/{orderID}/extend-protection": {
       "post": {
         "operationId": "orders-post-extend-protection",
@@ -17775,6 +20335,307 @@
           }
         ],
         "summary": "Buyer protection extension preview",
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/instructions/cancel": {
+      "post": {
+        "operationId": "orders-post-instructions-cancel",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Cancellation / refund-before-ship instructions",
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/instructions/complete": {
+      "post": {
+        "description": "Compatibility endpoint for client-signed moderated completion flows. backend-managed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.",
+        "operationId": "orders-post-instructions-complete",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Legacy completion payout instructions",
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/instructions/confirm": {
+      "post": {
+        "operationId": "orders-post-instructions-confirm",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Confirmation / acceptance instructions",
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/instructions/decline": {
+      "post": {
+        "operationId": "orders-post-instructions-decline",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Decline / refund-flow instructions via confirmation handler",
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/instructions/refund": {
+      "post": {
+        "operationId": "orders-post-instructions-refund",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Refund instructions",
         "tags": ["orders"]
       }
     },
@@ -17836,6 +20697,118 @@
         ],
         "summary": "Buyer submit payment payloads",
         "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/payment-session": {
+      "get": {
+        "description": "Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, backend-managed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).",
+        "operationId": "orders-get-payment-session",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Unified payment session view for an order",
+        "tags": ["orders", "payments"]
+      },
+      "post": {
+        "description": "Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; address-monitored flows may auto-fill refunds after confirmation.",
+        "operationId": "orders-post-payment-session",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Provision unified payment session",
+        "tags": ["orders", "payments"]
       }
     },
     "/v1/orders/{orderID}/payment/cancel-partial": {
@@ -18112,6 +21085,212 @@
         ],
         "summary": "Finalize refund transaction",
         "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/rwa-token/payment-info": {
+      "post": {
+        "description": "Returns buyer and vendor chain identity addresses for RWA token purchases.",
+        "operationId": "orders-post-rwa-token-payment-info",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get RWA token identity payment info",
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/settlement-actions/{action}": {
+      "post": {
+        "description": "Runs the default backend-submitted settlement action flow for crypto orders, including backend-managed EVM. Client-signed legacy chains must keep using the legacy instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.",
+        "operationId": "orders-post-settlement-action",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Settlement intent: confirm or cancel.",
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "description": "Settlement intent: confirm or cancel.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Execute backend settlement action (confirm / cancel)",
+        "tags": ["orders", "payments"]
+      }
+    },
+    "/v1/orders/{orderID}/settlement-actions/{action}/status": {
+      "get": {
+        "description": "Returns the latest status for a previously issued backend settlement action. backend-managed flows expose relay task correlation and confirmations through this endpoint.",
+        "operationId": "orders-get-settlement-action-status",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Settlement intent: confirm or cancel.",
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "description": "Settlement intent: confirm or cancel.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque settlement action poll key returned by POST settlement-actions.",
+            "explode": false,
+            "in": "query",
+            "name": "actionId",
+            "required": true,
+            "schema": {
+              "description": "Opaque settlement action poll key returned by POST settlement-actions.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Read unified settlement action status",
+        "tags": ["orders", "payments"]
       }
     },
     "/v1/orders/{orderID}/ship": {
@@ -19898,17 +23077,6 @@
             "description": "Error"
           }
         },
-        "security": [
-          {
-            "basicAuth": []
-          },
-          {
-            "bearerJWT": []
-          },
-          {
-            "apiToken": []
-          }
-        ],
         "summary": "Get guest checkout settings",
         "tags": ["settings"]
       },
@@ -19956,6 +23124,232 @@
           }
         ],
         "summary": "Update guest checkout settings",
+        "tags": ["settings"]
+      }
+    },
+    "/v1/settings/guest-checkout/readiness": {
+      "get": {
+        "operationId": "settings-guest-checkout-readiness-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get guest checkout UTXO readiness",
+        "tags": ["settings"]
+      }
+    },
+    "/v1/settings/payment-policy": {
+      "get": {
+        "operationId": "settings-payment-policy-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get store payment policy",
+        "tags": ["settings"]
+      },
+      "put": {
+        "operationId": "settings-payment-policy-put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Update store payment policy",
+        "tags": ["settings"]
+      }
+    },
+    "/v1/settings/pgp-key": {
+      "delete": {
+        "operationId": "settings-pgp-key-delete",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          }
+        ],
+        "summary": "Remove seller PGP public key",
+        "tags": ["settings"]
+      },
+      "get": {
+        "operationId": "settings-pgp-key-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get seller PGP public key (public)",
+        "tags": ["settings"]
+      },
+      "put": {
+        "operationId": "settings-pgp-key-put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          }
+        ],
+        "summary": "Set seller PGP public key",
         "tags": ["settings"]
       }
     },
@@ -20831,9 +24225,9 @@
         "tags": ["shipping"]
       }
     },
-    "/v1/system/cache": {
-      "delete": {
-        "operationId": "system-cache-delete",
+    "/v1/store-policy": {
+      "get": {
+        "operationId": "store-policy-get",
         "responses": {
           "200": {
             "content": {
@@ -20865,6 +24259,420 @@
           },
           {
             "apiToken": []
+          }
+        ],
+        "summary": "Get store policy",
+        "tags": ["store-policy"]
+      }
+    },
+    "/v1/store-policy/moderators": {
+      "get": {
+        "operationId": "store-policy-moderators-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "List store moderators",
+        "tags": ["store-policy"]
+      },
+      "post": {
+        "operationId": "store-policy-moderators-post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Add or update store moderator",
+        "tags": ["store-policy"]
+      },
+      "put": {
+        "operationId": "store-policy-moderators-put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Replace store moderators",
+        "tags": ["store-policy"]
+      }
+    },
+    "/v1/store-policy/moderators/{peerID}": {
+      "delete": {
+        "operationId": "store-policy-moderators-peer-delete",
+        "parameters": [
+          {
+            "description": "Moderator peer ID.",
+            "in": "path",
+            "name": "peerID",
+            "required": true,
+            "schema": {
+              "description": "Moderator peer ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Remove store moderator",
+        "tags": ["store-policy"]
+      }
+    },
+    "/v1/store-policy/{peerID}/published": {
+      "get": {
+        "operationId": "store-policy-peer-published-get",
+        "parameters": [
+          {
+            "description": "Store peer ID.",
+            "in": "path",
+            "name": "peerID",
+            "required": true,
+            "schema": {
+              "description": "Store peer ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get published store policy",
+        "tags": ["store-policy"]
+      }
+    },
+    "/v1/stores/{storeID}/licenses/activate": {
+      "post": {
+        "description": "Binds a license key to a device fingerprint. Returns existing activation if already activated for this fingerprint.",
+        "operationId": "license-activate",
+        "parameters": [
+          {
+            "description": "Store identifier (peerID or handle).",
+            "in": "path",
+            "name": "storeID",
+            "required": true,
+            "schema": {
+              "description": "Store identifier (peerID or handle).",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_License-activateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_LicenseActivationResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Activate a license key on a device",
+        "tags": ["licenses"]
+      }
+    },
+    "/v1/stores/{storeID}/licenses/deactivate": {
+      "post": {
+        "description": "Unbinds a license key from a device fingerprint, freeing up an activation slot.",
+        "operationId": "license-deactivate",
+        "parameters": [
+          {
+            "description": "Store identifier (peerID or handle).",
+            "in": "path",
+            "name": "storeID",
+            "required": true,
+            "schema": {
+              "description": "Store identifier (peerID or handle).",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_License-deactivateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Deactivate a license key on a device",
+        "tags": ["licenses"]
+      }
+    },
+    "/v1/stores/{storeID}/licenses/validate": {
+      "post": {
+        "description": "Checks whether a license key is valid and returns its status. Public endpoint for use by third-party software.",
+        "operationId": "license-validate",
+        "parameters": [
+          {
+            "description": "Store identifier (peerID or handle). Used for multi-tenant routing in SaaS mode.",
+            "in": "path",
+            "name": "storeID",
+            "required": true,
+            "schema": {
+              "description": "Store identifier (peerID or handle). Used for multi-tenant routing in SaaS mode.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_License-validateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_LicenseValidationResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [],
+        "summary": "Validate a license key",
+        "tags": ["licenses"]
+      }
+    },
+    "/v1/system/cache": {
+      "delete": {
+        "operationId": "system-cache-delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
           }
         ],
         "summary": "Purge publishing cache",
@@ -20947,9 +24755,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Bind standalone store owner to SaaS identity",
@@ -20987,9 +24792,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Export structured diagnostics blob",
@@ -21027,9 +24829,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Run self-check diagnostics snapshot",
@@ -21067,9 +24866,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Inspect store domain bindings",
@@ -21113,9 +24909,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Update store domain configuration",
@@ -21153,9 +24946,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Node health and telemetry",
@@ -21223,9 +25013,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Get system/network info snapshot",
@@ -21263,9 +25050,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Tail recent node log lines",
@@ -21303,9 +25087,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Detect MCP client capabilities",
@@ -21343,9 +25124,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "List configured MCP clients",
@@ -21391,9 +25169,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Auto-configure MCP client",
@@ -21449,9 +25224,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Auto-configure a specific MCP client",
@@ -21489,9 +25261,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Remove MCP integration",
@@ -21539,9 +25308,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Remove integration for one MCP client",
@@ -21579,9 +25345,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Inspect network overlays and listening multiaddrs",
@@ -21625,9 +25388,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Change network overlays (standalone)",
@@ -21665,9 +25425,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Publish store data",
@@ -21734,7 +25491,7 @@
             "description": "Error"
           }
         },
-        "summary": "Standalone one-time password setup (public)",
+        "summary": "Standalone one-time password setup",
         "tags": ["system"]
       }
     },
@@ -21769,9 +25526,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Shutdown standalone node process",
@@ -21809,9 +25563,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Read auto-update configuration sidecar",
@@ -21855,9 +25606,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Write auto-update configuration sidecar",
@@ -21903,9 +25651,6 @@
           },
           {
             "bearerJWT": []
-          },
-          {
-            "apiToken": []
           }
         ],
         "summary": "Ask launcher/native updater to action",
@@ -22807,6 +26552,26 @@
         },
         "type": "object"
       },
+      "Platform_AdminPatchSafePaymentConfigInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "platform_addrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "release_fee_usd_cents": {
+            "additionalProperties": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "Platform_AdminPatchServiceTogglesInputBody": {
         "additionalProperties": false,
         "properties": {
@@ -23098,6 +26863,21 @@
         "required": ["productGroupIDs"],
         "type": "object"
       },
+      "Platform_GmPublicSellerApplyBodyBody": {
+        "additionalProperties": false,
+        "properties": {
+          "productGroupIDs": {
+            "items": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "required": ["productGroupIDs"],
+        "type": "object"
+      },
       "Platform_GmReviewBodyBody": {
         "additionalProperties": false,
         "properties": {
@@ -23214,6 +26994,119 @@
         "required": ["ipnsRecord"],
         "type": "object"
       },
+      "Platform_MarketplaceOwnerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attribution": {
+            "type": "string"
+          },
+          "bannerURL": {
+            "type": "string"
+          },
+          "catalogMode": {
+            "type": "string"
+          },
+          "catalogQuery": {
+            "type": "string"
+          },
+          "chatTitle": {
+            "type": "string"
+          },
+          "discoverability": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "joinMode": {
+            "type": "string"
+          },
+          "logoURL": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "publicDescription": {
+            "type": "string"
+          },
+          "sellerEntryMode": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "subdomain": {
+            "type": "string"
+          },
+          "theme": {},
+          "themeJSON": {
+            "type": "string"
+          },
+          "vertical": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "vertical",
+          "name",
+          "chatTitle",
+          "slug",
+          "publicDescription",
+          "logoURL",
+          "bannerURL",
+          "joinMode",
+          "catalogMode",
+          "discoverability",
+          "domain",
+          "subdomain",
+          "catalogQuery",
+          "theme",
+          "themeJSON",
+          "attribution",
+          "sellerEntryMode",
+          "visibility"
+        ],
+        "type": "object"
+      },
+      "Platform_MarketplaceSellerInviteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "peerID": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "tenantID": {
+            "type": "string"
+          },
+          "userID": {
+            "type": "string"
+          },
+          "visible": {
+            "type": ["boolean", "null"]
+          }
+        },
+        "required": ["peerID", "userID", "tenantID", "status", "visible"],
+        "type": "object"
+      },
+      "Platform_MarketplaceSellerUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "visible": {
+            "type": ["boolean", "null"]
+          }
+        },
+        "required": ["status", "visible"],
+        "type": "object"
+      },
       "Platform_MatrixProvisionRequest": {
         "additionalProperties": false,
         "properties": {
@@ -23245,6 +27138,22 @@
           }
         },
         "required": ["enabled"],
+        "type": "object"
+      },
+      "Platform_PlatformModeratorUpsertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "peerID": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": ["peerID"],
         "type": "object"
       },
       "Platform_ProductGroupAuthorizationsCreateBodyBody": {
@@ -23324,10 +27233,16 @@
           "chainType": {
             "type": "string"
           },
+          "clientActionId": {
+            "type": "string"
+          },
           "data": {
             "type": "string"
           },
           "orderId": {
+            "type": "string"
+          },
+          "settlementAction": {
             "type": "string"
           },
           "to": {
@@ -23938,6 +27853,280 @@
         "required": ["name", "description"],
         "type": "object"
       },
+      "Node_AssetUpdateInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expiryHours": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "maxDownloads": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sortOrder": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Node_BuyerAssetEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "assetId": {
+            "type": "string"
+          },
+          "assetType": {
+            "type": "string"
+          },
+          "deliveryURL": {
+            "type": "string"
+          },
+          "downloadCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "downloadURL": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "licenseKeys": {
+            "items": {
+              "$ref": "#/components/schemas/Node_BuyerLicenseEntry"
+            },
+            "type": ["array", "null"]
+          },
+          "maxDownloads": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "restrictedReason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["assetId", "assetType", "downloadCount", "maxDownloads", "status"],
+        "type": "object"
+      },
+      "Node_BuyerLicenseEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "activations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "licenseKey": {
+            "type": "string"
+          },
+          "licenseType": {
+            "type": "string"
+          },
+          "maxActivations": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["licenseKey", "activations"],
+        "type": "object"
+      },
+      "Node_Digital-asset-create-license-keyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "appId": {
+            "type": "string"
+          },
+          "listingSlug": {
+            "type": "string"
+          },
+          "variantSku": {
+            "type": "string"
+          }
+        },
+        "required": ["listingSlug"],
+        "type": "object"
+      },
+      "Node_Digital-asset-create-linkRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "listingSlug": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "variantSku": {
+            "type": "string"
+          }
+        },
+        "required": ["listingSlug", "url"],
+        "type": "object"
+      },
+      "Node_Digital-asset-import-license-keysRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "appId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "RFC3339 expiration timestamp.",
+            "type": "string"
+          },
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": ["array", "null"]
+          },
+          "licenseType": {
+            "type": "string"
+          },
+          "listingSlug": {
+            "type": "string"
+          },
+          "maxActivations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "variantSku": {
+            "type": "string"
+          }
+        },
+        "required": ["listingSlug", "keys"],
+        "type": "object"
+      },
+      "Node_DigitalAssetInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "assetType": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiryHours": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "listingSlug": {
+            "type": "string"
+          },
+          "maxDownloads": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "variantSku": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "listingSlug",
+          "assetType",
+          "sortOrder",
+          "maxDownloads",
+          "expiryHours",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Node_DigitalDeliveryStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "accessibleGrantCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "assetCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "deliveryURL": {
+            "type": "string"
+          },
+          "grantCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "isDigitalOrder": {
+            "type": "boolean"
+          },
+          "listingSlugs": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "manualFallbackAllowed": {
+            "type": "boolean"
+          },
+          "orderID": {
+            "type": "string"
+          },
+          "preconfiguredAssetHint": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "orderID",
+          "isDigitalOrder",
+          "status",
+          "assetCount",
+          "grantCount",
+          "accessibleGrantCount",
+          "manualFallbackAllowed",
+          "preconfiguredAssetHint"
+        ],
+        "type": "object"
+      },
       "Node_EnvelopeError": {
         "additionalProperties": false,
         "type": "object"
@@ -23957,6 +28146,189 @@
           }
         },
         "required": ["message", "serverTime"],
+        "type": "object"
+      },
+      "Node_ImportKeysOutputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "imported": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["imported"],
+        "type": "object"
+      },
+      "Node_License-activateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fingerprint": {
+            "description": "Unique device/machine fingerprint.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "label": {
+            "description": "Human-readable device label (e.g. 'MacBook Pro').",
+            "type": "string"
+          },
+          "licenseKey": {
+            "description": "The license key to activate.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": ["licenseKey", "fingerprint"],
+        "type": "object"
+      },
+      "Node_License-deactivateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fingerprint": {
+            "description": "Device fingerprint to unbind.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "licenseKey": {
+            "description": "The license key to deactivate.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": ["licenseKey", "fingerprint"],
+        "type": "object"
+      },
+      "Node_License-validateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "appID": {
+            "description": "Application identifier for multi-product stores.",
+            "type": "string"
+          },
+          "fingerprint": {
+            "description": "Optional machine fingerprint for activation check.",
+            "type": "string"
+          },
+          "licenseKey": {
+            "description": "The license key to validate.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": ["licenseKey"],
+        "type": "object"
+      },
+      "Node_LicenseActivationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "fingerprint": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          },
+          "lastSeenAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "licenseId": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "licenseId", "fingerprint", "isActive", "lastSeenAt"],
+        "type": "object"
+      },
+      "Node_LicenseKeyPoolStats": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "dispensed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "revoked": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["available", "dispensed", "revoked", "total"],
+        "type": "object"
+      },
+      "Node_LicenseValidationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "activations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "licenseId": {
+            "type": "string"
+          },
+          "licenseType": {
+            "type": "string"
+          },
+          "maxActivations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        },
+        "required": ["valid"],
+        "type": "object"
+      },
+      "Node_MaskedLicenseKey": {
+        "additionalProperties": false,
+        "properties": {
+          "dispensedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "licenseType": {
+            "type": "string"
+          },
+          "maskedKey": {
+            "type": "string"
+          },
+          "maxActivations": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "status", "maskedKey", "licenseType", "maxActivations"],
         "type": "object"
       },
       "Search_AuthorizationItem": {

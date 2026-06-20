@@ -8,6 +8,7 @@ import {
   useUserStore,
   getImageUrl,
   useStorefrontMode,
+  useMarketplaceContext,
   useChatStore,
   selectTotalUnreadCount,
 } from '@mobazha/core';
@@ -47,6 +48,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const { t } = useI18n();
   const { profile, logout } = useUserStore();
   const standaloneMode = useStorefrontMode();
+  const { isSubMarket } = useMarketplaceContext();
   const toggleAIChat = useAIChatStore(s => s.toggle);
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
@@ -94,6 +96,27 @@ export function AdminHeader({ title }: AdminHeaderProps) {
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">{t('userMenu.viewStore')}</span>
           </button>
+        ) : isSubMarket ? (
+          <>
+            <Link
+              href="/"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+              data-testid="admin-back-to-submarket"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('admin.nav.backToMarketplace')}</span>
+            </Link>
+            {profile?.peerID ? (
+              <button
+                onClick={handleViewStore}
+                className="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+                data-testid="admin-view-store"
+              >
+                <Eye className="w-4 h-4" />
+                <span>{t('userMenu.viewStore')}</span>
+              </button>
+            ) : null}
+          </>
         ) : (
           <>
             <Link

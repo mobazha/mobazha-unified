@@ -10,6 +10,7 @@ import {
   useWishlist,
   parsePriceFields,
   listingDisplayPriceFromListItem,
+  useMarketplaceContext,
 } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
 import type { ProductListItem, AddWishlistParams } from '@mobazha/core';
@@ -156,6 +157,11 @@ export function useSearch() {
   const { t } = useI18n();
   const { hasVerifiedMod } = useVerifiedModerators();
   const { isInWishlist, toggleItem } = useWishlist();
+  const {
+    isSubMarket,
+    config: marketplaceConfig,
+    loading: isMarketplaceContextLoading,
+  } = useMarketplaceContext();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState(queryParam);
@@ -213,6 +219,20 @@ export function useSearch() {
 
   const isBrowseAllCatalog = isBrowseAllQuery(queryParam);
   const productsFetchGen = useRef(0);
+  const usersFetchGen = useRef(0);
+  const marketplacePeerIDs = useMemo(
+    () =>
+      isSubMarket && marketplaceConfig?.catalogMode === 'curated'
+        ? (marketplaceConfig.allowedPeers ?? []).filter(Boolean)
+        : undefined,
+    [isSubMarket, marketplaceConfig]
+  );
+  const isEmptyCuratedMarketplace = Boolean(
+    isSubMarket &&
+    marketplaceConfig?.catalogMode === 'curated' &&
+    (marketplaceConfig.allowedPeers ?? []).length === 0
+  );
+  const isMarketplaceScopePending = isSubMarket && isMarketplaceContextLoading;
 
   const searchProducts = useCallback(
     async (
@@ -221,19 +241,29 @@ export function useSearch() {
       append: boolean = false,
       overrides?: { sortBy?: string; type?: string; browse?: BrowseMode }
     ) => {
+      const generation = ++productsFetchGen.current;
       if (!query.trim()) {
         setProducts([]);
         setProductsTotal(0);
         setProductsCatalogTotal(0);
         setProductsVendorCount(0);
         setProductsHasMore(false);
+        setIsLoadingProducts(false);
+        return;
+      }
+      if (isMarketplaceScopePending || isEmptyCuratedMarketplace) {
+        setProducts([]);
+        setProductsTotal(0);
+        setProductsCatalogTotal(0);
+        setProductsVendorCount(0);
+        setProductsHasMore(false);
+        setIsLoadingProducts(false);
         return;
       }
 
       const fetchSort = overrides?.sortBy ?? sortBy;
       const fetchType = overrides?.type ?? (listingType !== 'all' ? listingType : undefined);
       const fetchBrowse = overrides?.browse ?? (isBrowseAllQuery(query) ? browseMode : undefined);
-      const generation = ++productsFetchGen.current;
 
       setIsLoadingProducts(true);
       try {
@@ -241,6 +271,7 @@ export function useSearch() {
           sortBy: fetchSort,
           type: fetchType,
           browse: fetchBrowse,
+          peerIDs: marketplacePeerIDs,
         });
         if (generation !== productsFetchGen.current) return;
 
@@ -280,20 +311,39 @@ export function useSearch() {
         }
       }
     },
-    [sortBy, listingType, browseMode]
+    [
+      sortBy,
+      listingType,
+      browseMode,
+      marketplacePeerIDs,
+      isMarketplaceScopePending,
+      isEmptyCuratedMarketplace,
+    ]
   );
 
   const searchUsersApi = useCallback(
     async (query: string, page: number = 0, append: boolean = false) => {
+      const generation = ++usersFetchGen.current;
       if (!query.trim()) {
         setUsers([]);
         setUsersTotal(0);
         setUsersHasMore(false);
+        setIsLoadingUsers(false);
+        return;
+      }
+      if (isMarketplaceScopePending || isEmptyCuratedMarketplace) {
+        setUsers([]);
+        setUsersTotal(0);
+        setUsersHasMore(false);
+        setIsLoadingUsers(false);
         return;
       }
       setIsLoadingUsers(true);
       try {
-        const result = await searchDataService.searchUsers(query, page, 20);
+        const result = await searchDataService.searchUsers(query, page, 20, {
+          peerIDs: marketplacePeerIDs,
+        });
+        if (generation !== usersFetchGen.current) return;
         if (append) {
           setUsers(prev => [...prev, ...result.users]);
         } else {
@@ -303,16 +353,19 @@ export function useSearch() {
         setUsersPage(page);
         setUsersHasMore(result.hasMore);
       } catch {
+        if (generation !== usersFetchGen.current) return;
         if (!append) {
           setUsers([]);
           setUsersTotal(0);
         }
         setUsersHasMore(false);
       } finally {
-        setIsLoadingUsers(false);
+        if (generation === usersFetchGen.current) {
+          setIsLoadingUsers(false);
+        }
       }
     },
-    []
+    [marketplacePeerIDs, isMarketplaceScopePending, isEmptyCuratedMarketplace]
   );
 
   useEffect(() => {

@@ -26,11 +26,13 @@ import {
   useStorefrontProfile,
   productCardPriceFieldsFromListItem,
   isStandalone,
+  useIsSubMarket,
 } from '@mobazha/core';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { ProductListItem } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
 import { getListingsWithDedup } from '@/utils/requestDedup';
+import { MarketplaceHomePage } from '@/components/MarketplaceDiscovery/MarketplaceHomePage';
 
 const HOMEPAGE_EXCLUDE_TYPES = new Set(['hero', 'testimonials', 'store-tabs']);
 const noopFn = () => {};
@@ -91,6 +93,11 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
 export default function HomePage() {
   const storefrontMode = useStorefrontMode();
   const storefrontPeerID = useStorefrontPeerID();
+  const isSubMarket = useIsSubMarket();
+
+  if (isSubMarket) {
+    return <MarketplaceHomePage />;
+  }
 
   if (storefrontMode) {
     return <StandaloneHomePage overridePeerID={storefrontPeerID} />;

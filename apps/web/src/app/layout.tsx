@@ -21,10 +21,13 @@ import { OuterProviders } from '@/components/OuterProviders';
 import { ChatSystemLazy } from '@/components/ChatSystem';
 import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
 import { StorefrontProvider } from '@/components/StorefrontProvider';
+import { MarketplaceProvider } from '@/components/MarketplaceProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
+import { getRequestMarketplaceContext } from '@/lib/ssrMarketplace';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 /**
  * AuthProvider 加载状态
@@ -46,7 +49,7 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://app.mobazha.org');
 
-export const metadata: Metadata = {
+const defaultMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: 'Mobazha - Decentralized Marketplace',
@@ -85,6 +88,52 @@ export const metadata: Metadata = {
   },
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  const [marketplace, requestSiteUrl] = await Promise.all([
+    getRequestMarketplaceContext(),
+    getSiteUrl(),
+  ]);
+  const marketplaceConfig = marketplace.config;
+
+  if (!marketplaceConfig) {
+    return defaultMetadata;
+  }
+
+  const brandName = marketplaceConfig.brand.name || 'Mobazha Marketplace';
+  const description =
+    marketplaceConfig.brand.tagline ||
+    'Shop and grow with cryptos - A decentralized peer-to-peer marketplace';
+  const image = marketplaceConfig.brand.banner || marketplaceConfig.brand.logo || '/og-default.png';
+
+  return {
+    ...defaultMetadata,
+    metadataBase: new URL(requestSiteUrl || siteUrl),
+    title: {
+      default: brandName,
+      template: `%s | ${brandName}`,
+    },
+    description,
+    openGraph: {
+      type: 'website',
+      siteName: brandName,
+      title: brandName,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: brandName }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: brandName,
+      description,
+      images: [image],
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: brandName,
+    },
+  };
+}
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -100,6 +149,11 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const hdrs = await headers();
   const storefrontPeerID = hdrs.get('x-storefront-peerid') || hdrs.get('x-store-peerid') || null;
+  const {
+    subdomain: marketplaceSubdomain,
+    domain: marketplaceDomain,
+    config: marketplaceConfig,
+  } = await getRequestMarketplaceContext();
 
   return (
     <html
@@ -260,28 +314,34 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <QueryProvider>
           <OuterProviders>
             <StorefrontProvider peerID={storefrontPeerID}>
-              <Suspense fallback={<AuthProviderLoading />}>
-                <TGBackButtonManager />
-                <AuthProvider>
-                  <ProductModalProvider>
-                    <PaymentSelectorProvider>
-                      <StandaloneThemeWrapper>
-                        <MainContent>{children}</MainContent>
+              <MarketplaceProvider
+                initialSubdomain={marketplaceSubdomain}
+                initialDomain={marketplaceDomain}
+                initialConfig={marketplaceConfig}
+              >
+                <Suspense fallback={<AuthProviderLoading />}>
+                  <TGBackButtonManager />
+                  <AuthProvider>
+                    <ProductModalProvider>
+                      <PaymentSelectorProvider>
+                        <StandaloneThemeWrapper>
+                          <MainContent>{children}</MainContent>
 
-                        <NonEmbedUI>
-                          <MobileNav />
-                          <ChatSystemLazy />
-                          <PWAInstall />
-                          <SessionExpiredDialog />
-                        </NonEmbedUI>
+                          <NonEmbedUI>
+                            <MobileNav />
+                            <ChatSystemLazy />
+                            <PWAInstall />
+                            <SessionExpiredDialog />
+                          </NonEmbedUI>
 
-                        {/* Toast notifications */}
-                        <Toaster />
-                      </StandaloneThemeWrapper>
-                    </PaymentSelectorProvider>
-                  </ProductModalProvider>
-                </AuthProvider>
-              </Suspense>
+                          {/* Toast notifications */}
+                          <Toaster />
+                        </StandaloneThemeWrapper>
+                      </PaymentSelectorProvider>
+                    </ProductModalProvider>
+                  </AuthProvider>
+                </Suspense>
+              </MarketplaceProvider>
             </StorefrontProvider>
           </OuterProviders>
         </QueryProvider>

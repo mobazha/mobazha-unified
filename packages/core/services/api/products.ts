@@ -82,6 +82,8 @@ export interface SearchListingsParams {
   nsfw?: boolean;
   /** discover (default) | all — only applies to q=* browse */
   browse?: 'discover' | 'all';
+  /** Restrict results to these vendor peer IDs (search `id` param). */
+  peerIDs?: string[];
 }
 
 // 搜索商品的响应
@@ -759,6 +761,7 @@ export async function searchListings(
     shipping,
     nsfw = false,
     browse,
+    peerIDs,
   } = params;
 
   // 构建查询参数
@@ -789,6 +792,9 @@ export async function searchListings(
   }
   if (nsfw) {
     queryParams.append('nsfw', 'true');
+  }
+  if (peerIDs && peerIDs.length > 0) {
+    queryParams.append('id', peerIDs.join('|'));
   }
 
   try {
@@ -827,8 +833,9 @@ export async function searchProfiles(params: {
   page?: number;
   pageSize?: number;
   vendor?: boolean;
+  peerIDs?: string[];
 }): Promise<SearchProfilesResponse> {
-  const { query, page = 0, pageSize = 20, vendor } = params;
+  const { query, page = 0, pageSize = 20, vendor, peerIDs } = params;
 
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
@@ -838,6 +845,9 @@ export async function searchProfiles(params: {
   });
   if (vendor !== undefined) {
     queryParams.append('vendor', String(vendor));
+  }
+  if (peerIDs && peerIDs.length > 0) {
+    queryParams.append('id', peerIDs.join('|'));
   }
 
   try {

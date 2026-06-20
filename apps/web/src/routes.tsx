@@ -43,7 +43,7 @@ function protectedPage(importFn: () => Promise<{ default: ComponentType<unknown>
 }
 
 // Full route table — guarded by compile-time constant so Rollup eliminates all
-// dynamic imports in Outpost builds (prevents chunk leakage of Stripe/PayPal/etc).
+// dynamic imports in Outpost builds.
 let routes: RouteObject[] = [];
 if (!__OUTPOST__) {
   routes = [
@@ -622,7 +622,7 @@ if (__OUTPOST__) {
     // Notifications (local WebSocket only)
     { path: '/notifications', element: protectedPage(() => import('./app/notifications/page')) },
   ];
-} // end if (__OUTPOST__)
+} // end if (!__OUTPOST__)
 
 const activeRoutes = __OUTPOST__ ? outpostRoutes : routes;
 
