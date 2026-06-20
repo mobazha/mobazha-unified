@@ -752,6 +752,7 @@ export interface SearchFilters {
   shipping?: string;
   nsfw?: boolean;
   browse?: 'discover' | 'all';
+  peerIDs?: string[];
 }
 
 // 搜索返回的用户类型（与 productsApi.SearchedUser 对齐）
@@ -871,7 +872,7 @@ export const searchDataService = {
           })
         : { products: [], total: 0, hasMore: false },
       type !== 'products'
-        ? productsApi.searchProfiles({ query, page: 0, pageSize: 20 })
+        ? productsApi.searchProfiles({ query, page: 0, pageSize: 20, peerIDs: filters.peerIDs })
         : { users: [], total: 0, hasMore: false },
     ]);
 
@@ -932,7 +933,8 @@ export const searchDataService = {
   async searchUsers(
     query: string,
     page = 0,
-    pageSize = 20
+    pageSize = 20,
+    filters: Pick<SearchFilters, 'peerIDs'> = {}
   ): Promise<{
     users: SearchUser[];
     total: number;
@@ -956,6 +958,7 @@ export const searchDataService = {
       query,
       page,
       pageSize,
+      peerIDs: filters.peerIDs,
     });
   },
 };

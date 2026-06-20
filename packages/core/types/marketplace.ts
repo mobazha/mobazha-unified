@@ -36,6 +36,136 @@ export enum MarketplaceRole {
   MEMBER = 'member',
 }
 
+export type MarketplacePlatform = 'native' | 'telegram' | 'discord' | 'slack' | string;
+export type MarketplaceVisibility = 'draft' | 'active' | 'hidden' | 'suspended';
+export type MarketplaceJoinMode = 'open' | 'approval' | 'invite';
+export type MarketplaceCatalogMode = 'open' | 'curated';
+export type MarketplaceDiscoverability = 'public' | 'unlisted';
+export type MarketplaceSellerEntryMode = 'operator_invited' | 'seller_self_serve';
+export type MarketplaceSellerWhitelistStatus = 'pending' | 'approved' | 'rejected';
+
+export interface NativeMarketplace {
+  id: string;
+  platform: MarketplacePlatform;
+  name: string;
+  publicID?: string;
+  slug?: string;
+  visibility: MarketplaceVisibility;
+  publicDescription?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  ownerUserID?: string;
+  joinMode: MarketplaceJoinMode;
+  catalogMode: MarketplaceCatalogMode;
+  discoverability: MarketplaceDiscoverability;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  vertical: string;
+  domain?: string;
+  subdomain?: string;
+  catalogQuery?: string;
+  themeJSON?: string;
+  attribution?: string;
+  subStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateNativeMarketplaceRequest {
+  name: string;
+  vertical?: string;
+  slug?: string;
+  publicDescription?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  joinMode?: MarketplaceJoinMode;
+  catalogMode?: MarketplaceCatalogMode;
+  discoverability?: MarketplaceDiscoverability;
+  domain?: string;
+  subdomain?: string;
+  catalogQuery?: string;
+  theme?: Record<string, unknown>;
+  themeJSON?: string;
+  attribution?: string;
+  sellerEntryMode?: MarketplaceSellerEntryMode;
+  visibility?: MarketplaceVisibility;
+}
+
+export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest>;
+
+export interface MarketplaceSellerWhitelistEntry {
+  id: number;
+  tenantID: string;
+  marketplaceID: string;
+  userID: string;
+  peerID: string;
+  status: MarketplaceSellerWhitelistStatus;
+  isVisible: boolean;
+  appliedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InviteMarketplaceSellerRequest {
+  peerID: string;
+  userID?: string;
+  tenantID?: string;
+  status?: MarketplaceSellerWhitelistStatus;
+  visible?: boolean;
+}
+
+export interface UpdateMarketplaceSellerRequest {
+  status?: MarketplaceSellerWhitelistStatus;
+  visible?: boolean;
+}
+
+export interface MarketplaceCurationFeaturedItem {
+  type: 'seller' | 'listing' | string;
+  peerID?: string;
+  slug?: string;
+  sortOrder: number;
+}
+
+export interface MarketplaceCurationBrand {
+  name: string;
+  tagline?: string;
+  logo?: string;
+  banner?: string;
+  theme?: Record<string, unknown>;
+}
+
+export interface MarketplaceCurationConfig {
+  id: string;
+  vertical: string;
+  joinMode: MarketplaceJoinMode;
+  catalogMode: MarketplaceCatalogMode;
+  discoverability: MarketplaceDiscoverability;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  catalogQuery?: string;
+  allowedPeers: string[];
+  sellers: string[];
+  featured: MarketplaceCurationFeaturedItem[];
+  brand: MarketplaceCurationBrand;
+  taxonomy: Array<Record<string, string>>;
+  policy: Record<string, string>;
+  attribution: {
+    utmSource: string;
+    marketplaceId: string;
+  };
+  subdomain?: string;
+  domain?: string;
+}
+
+export interface MarketplaceShareLink {
+  url: string;
+  qrText: string;
+  domain?: string;
+  subdomain?: string;
+}
+
 // 集市信息
 export interface Marketplace {
   id: string;
@@ -358,10 +488,9 @@ export interface MarketplaceMemberListParams {
 }
 
 // 创建集市请求
-export interface CreateMarketplaceRequest {
-  name: string;
-  slug: string;
-  description: string;
+export interface CreateMarketplaceRequest extends CreateNativeMarketplaceRequest {
+  slug?: string;
+  description?: string;
   shortDescription?: string;
   logo?: string;
   banner?: string;
@@ -371,8 +500,7 @@ export interface CreateMarketplaceRequest {
 }
 
 // 更新集市请求
-export interface UpdateMarketplaceRequest {
-  name?: string;
+export interface UpdateMarketplaceRequest extends UpdateNativeMarketplaceRequest {
   description?: string;
   shortDescription?: string;
   logo?: string;
@@ -386,7 +514,7 @@ export interface UpdateMarketplaceRequest {
 export interface SellerApplicationRequest {
   marketplaceId: string;
   message?: string;
-  sellerProfile: Partial<SellerProfile>;
+  sellerProfile?: Partial<SellerProfile>;
 }
 
 // 商品上架请求

@@ -15,56 +15,38 @@ vi.mock('../../../services/api/client', () => ({
   },
 }));
 
-import { apiClient } from '../../../services/api/client';
+vi.mock('../../../services/api/helpers', () => ({
+  hostingGet: vi.fn(),
+  hostingPost: vi.fn(),
+  hostingPut: vi.fn(),
+  hostingDel: vi.fn(),
+}));
+
+import { hostingDel, hostingGet, hostingPost, hostingPut } from '../../../services/api/helpers';
 import * as marketplaceApi from '../../../services/api/marketplace';
 
-const mockApiClient = apiClient as {
-  get: ReturnType<typeof vi.fn>;
-  post: ReturnType<typeof vi.fn>;
-  put: ReturnType<typeof vi.fn>;
-  delete: ReturnType<typeof vi.fn>;
-};
+const mockHostingGet = hostingGet as ReturnType<typeof vi.fn>;
+const mockHostingPost = hostingPost as ReturnType<typeof vi.fn>;
+const mockHostingPut = hostingPut as ReturnType<typeof vi.fn>;
+const mockHostingDel = hostingDel as ReturnType<typeof vi.fn>;
 
 // Import types after mock setup
-import type {
-  Marketplace,
-  MarketplaceMember,
-  MarketplaceProduct,
-} from '../../../types/marketplace';
+import type { Marketplace } from '../../../types/marketplace';
 
 describe('Marketplace API', () => {
-  const mockMarketplace: Marketplace = {
+  const mockNativeMarketplace = {
     id: 'mp1',
+    platform: 'native',
     name: 'Crypto Collectibles',
+    publicID: 'mp1',
     slug: 'crypto-collectibles',
-    description: 'A marketplace for digital collectibles',
-    owner: {
-      id: 'owner1',
-      peerID: 'QmOwner1',
-      name: 'Owner',
-    },
-    status: 'active' as const,
-    settings: {
-      requireSellerApproval: true,
-      requireProductApproval: true,
-      allowPublicJoin: true,
-      showSellerInfo: true,
-      showSellerRating: true,
-    },
-    stats: {
-      memberCount: 150,
-      sellerCount: 30,
-      productCount: 500,
-      orderCount: 1000,
-      totalVolume: { amount: 50000, currency: 'USD' },
-      averageRating: 4.5,
-      reviewCount: 200,
-    },
-    categories: ['digital', 'collectibles'],
-    tags: ['crypto', 'nft'],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T00:00:00Z',
-  };
+    visibility: 'active',
+    joinMode: 'approval',
+    catalogMode: 'curated',
+    discoverability: 'public',
+    sellerEntryMode: 'operator_invited',
+    vertical: 'collectibles',
+  } as const;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,236 +56,144 @@ describe('Marketplace API', () => {
     vi.restoreAllMocks();
   });
 
-  describe('getMarketplaces', () => {
-    it('should fetch list of marketplaces', async () => {
-      const mockResponse = {
-        marketplaces: [mockMarketplace],
-        total: 1,
-        page: 1,
-        limit: 20,
-        hasMore: false,
-      };
-
-      mockApiClient.get.mockResolvedValueOnce(mockResponse);
-
-      const result = await marketplaceApi.getMarketplaces();
-
-      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/marketplaces');
-      expect(result.marketplaces).toHaveLength(1);
-    });
-
-    it('should pass query parameters correctly', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        marketplaces: [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        hasMore: false,
-      });
-
-      await marketplaceApi.getMarketplaces({
-        page: 1,
-        limit: 10,
-        featured: true,
-        category: 'electronics',
-      });
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/platform/v1/marketplaces?')
-      );
-    });
-  });
-
   describe('getMarketplace', () => {
     it('should fetch marketplace details', async () => {
-      mockApiClient.get.mockResolvedValueOnce(mockMarketplace);
+      mockHostingGet.mockResolvedValueOnce(mockNativeMarketplace);
 
       const result = await marketplaceApi.getMarketplace('mp1');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1');
+      expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1');
       expect(result.id).toBe('mp1');
       expect(result.name).toBe('Crypto Collectibles');
     });
   });
 
-  describe('getMarketplaceBySlug', () => {
-    it('should fetch marketplace by slug', async () => {
-      mockApiClient.get.mockResolvedValueOnce(mockMarketplace);
-
-      const result = await marketplaceApi.getMarketplaceBySlug('crypto-collectibles');
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/platform/v1/marketplaces/slug/crypto-collectibles'
-      );
-      expect(result.slug).toBe('crypto-collectibles');
-    });
-  });
-
   describe('createMarketplace', () => {
     it('should create a marketplace', async () => {
-      mockApiClient.post.mockResolvedValueOnce(mockMarketplace);
+      mockHostingPost.mockResolvedValueOnce(mockNativeMarketplace);
 
       const result = await marketplaceApi.createMarketplace({
         name: 'Crypto Collectibles',
-        description: 'A marketplace for digital collectibles',
-        settings: {
-          requireSellerApproval: true,
-          requireProductApproval: true,
-          commissionPercentage: 2.5,
-        },
+        publicDescription: 'A marketplace for digital collectibles',
+        joinMode: 'approval',
+        catalogMode: 'curated',
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/platform/v1/marketplaces',
-        expect.any(Object)
-      );
+      expect(mockHostingPost).toHaveBeenCalledWith('/platform/v1/marketplaces', expect.any(Object));
       expect(result.name).toBe('Crypto Collectibles');
     });
   });
 
-  describe('joinMarketplace', () => {
-    it('should join a marketplace', async () => {
-      const mockMember: MarketplaceMember = {
-        id: 'mem1',
-        marketplaceId: 'mp1',
-        userId: 'user1',
-        peerID: 'QmUser1',
-        name: 'Test User',
-        role: 'member' as const,
-        joinedAt: '2024-01-15T00:00:00Z',
-      };
+  describe('updateMarketplace', () => {
+    it('should update a marketplace', async () => {
+      mockHostingPut.mockResolvedValueOnce(mockNativeMarketplace);
 
-      mockApiClient.post.mockResolvedValueOnce(mockMember);
-
-      const result = await marketplaceApi.joinMarketplace('mp1');
-
-      expect(mockApiClient.post).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/join', {});
-      expect(result.marketplaceId).toBe('mp1');
-    });
-  });
-
-  describe('leaveMarketplace', () => {
-    it('should leave a marketplace', async () => {
-      mockApiClient.post.mockResolvedValueOnce(undefined);
-
-      await marketplaceApi.leaveMarketplace('mp1');
-
-      expect(mockApiClient.post).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/leave', {});
-    });
-  });
-
-  describe('applyAsSeller', () => {
-    it('should apply as seller', async () => {
-      const mockApplication = {
-        id: 'app1',
-        marketplaceId: 'mp1',
-        applicantPeerID: 'QmUser1',
-        status: 'pending' as const,
-        message: 'I want to sell quality goods',
-        createdAt: '2024-01-15T00:00:00Z',
-      };
-
-      mockApiClient.post.mockResolvedValueOnce(mockApplication);
-
-      const result = await marketplaceApi.applyAsSeller({
-        marketplaceId: 'mp1',
-        message: 'I want to sell quality goods',
+      const result = await marketplaceApi.updateMarketplace('mp1', {
+        name: 'Crypto Collectibles',
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/platform/v1/marketplaces/mp1/seller-applications',
-        expect.any(Object)
-      );
-      expect(result.status).toBe('pending');
+      expect(mockHostingPut).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1', {
+        name: 'Crypto Collectibles',
+      });
+      expect(result.id).toBe('mp1');
     });
   });
 
-  describe('getMarketplaceProducts', () => {
-    it('should fetch marketplace products', async () => {
-      const mockProducts: MarketplaceProduct[] = [
-        {
-          id: 'prod1',
-          productId: 'ext-prod1',
-          marketplaceId: 'mp1',
-          sellerId: 'seller1',
-          approvalStatus: 'approved' as const,
-          featured: false,
-          createdAt: '2024-01-10T00:00:00Z',
-          updatedAt: '2024-01-10T00:00:00Z',
-        },
-      ];
+  describe('deleteMarketplace', () => {
+    it('should delete a marketplace', async () => {
+      mockHostingDel.mockResolvedValueOnce({ deleted: true, id: 'mp1' });
 
-      mockApiClient.get.mockResolvedValueOnce({
-        products: mockProducts,
-        total: 1,
-      });
+      const result = await marketplaceApi.deleteMarketplace('mp1');
 
-      const result = await marketplaceApi.getMarketplaceProducts({
-        marketplaceId: 'mp1',
-        page: 1,
-        limit: 20,
-      });
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/platform/v1/marketplaces/mp1/products')
-      );
-      expect(result.products).toHaveLength(1);
+      expect(mockHostingDel).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1');
+      expect(result.deleted).toBe(true);
     });
   });
 
-  describe('listProductInMarketplace', () => {
-    it('should list a product in marketplace', async () => {
-      const mockProduct: MarketplaceProduct = {
-        id: 'prod1',
-        productId: 'ext-prod1',
-        marketplaceId: 'mp1',
-        sellerId: 'seller1',
-        approvalStatus: 'pending' as const,
-        featured: false,
-        createdAt: '2024-01-15T00:00:00Z',
-        updatedAt: '2024-01-15T00:00:00Z',
-      };
+  describe('getMyMarketplaces', () => {
+    it('should fetch marketplaces owned by the current user', async () => {
+      mockHostingGet.mockResolvedValueOnce([mockNativeMarketplace]);
 
-      mockApiClient.post.mockResolvedValueOnce(mockProduct);
+      const result = await marketplaceApi.getMyMarketplaces();
 
-      const result = await marketplaceApi.listProductInMarketplace({
-        marketplaceId: 'mp1',
-        productId: 'ext-prod1',
-      });
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/platform/v1/marketplaces/mp1/products',
-        expect.any(Object)
-      );
-      expect(result.approvalStatus).toBe('pending');
+      expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mine');
+      expect(result).toHaveLength(1);
     });
   });
 
-  describe('reviewProduct', () => {
-    it('should review a product', async () => {
-      const mockProduct: MarketplaceProduct = {
-        id: 'prod1',
-        productId: 'ext-prod1',
-        marketplaceId: 'mp1',
-        sellerId: 'seller1',
-        approvalStatus: 'approved' as const,
-        featured: false,
-        createdAt: '2024-01-15T00:00:00Z',
-        updatedAt: '2024-01-15T00:00:00Z',
-      };
-
-      mockApiClient.post.mockResolvedValueOnce(mockProduct);
-
-      const result = await marketplaceApi.reviewProduct('mp1', 'prod1', {
+  describe('marketplace seller whitelist', () => {
+    it('should manage seller whitelist entries', async () => {
+      const mockSeller = {
+        id: 1,
+        tenantID: 'tenant1',
+        marketplaceID: 'mp1',
+        userID: 'user1',
+        peerID: 'QmSeller1',
         status: 'approved',
-      });
+        isVisible: true,
+        appliedAt: '2024-01-15T00:00:00Z',
+      };
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        '/platform/v1/marketplaces/mp1/products/prod1/review',
-        { status: 'approved' }
+      mockHostingGet.mockResolvedValueOnce([mockSeller]);
+      await marketplaceApi.getMarketplaceSellers('mp1', { status: 'approved' });
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/sellers?status=approved'
       );
-      expect(result.approvalStatus).toBe('approved');
+
+      mockHostingPost.mockResolvedValueOnce({ ...mockSeller, status: 'pending', isVisible: false });
+      await marketplaceApi.inviteMarketplaceSeller('mp1', {
+        peerID: 'QmSeller1',
+      });
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/sellers/invite',
+        expect.objectContaining({ peerID: 'QmSeller1' })
+      );
+
+      mockHostingPut.mockResolvedValueOnce(mockSeller);
+      await marketplaceApi.updateMarketplaceSeller('mp1', 'QmSeller1', {
+        status: 'approved',
+        visible: true,
+      });
+      expect(mockHostingPut).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/sellers/QmSeller1',
+        { status: 'approved', visible: true }
+      );
+
+      mockHostingDel.mockResolvedValueOnce({ removed: true, peerID: 'QmSeller1' });
+      await marketplaceApi.removeMarketplaceSeller('mp1', 'QmSeller1');
+      expect(mockHostingDel).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/sellers/QmSeller1'
+      );
+    });
+  });
+
+  describe('marketplace curation config', () => {
+    it('should fetch config and share link', async () => {
+      const mockConfig = {
+        id: 'mp1',
+        vertical: 'collectibles',
+        joinMode: 'approval',
+        catalogMode: 'curated',
+        discoverability: 'public',
+        sellerEntryMode: 'operator_invited',
+        allowedPeers: [],
+        sellers: [],
+        featured: [],
+        brand: { name: 'Crypto Collectibles' },
+        taxonomy: [],
+        policy: {},
+        attribution: { utmSource: 'mp1', marketplaceId: 'mp1' },
+      };
+
+      mockHostingGet.mockResolvedValueOnce(mockConfig);
+      await marketplaceApi.getMarketplaceConfig('mp1', { subdomain: 'crypto' });
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/config?subdomain=crypto'
+      );
+
+      mockHostingGet.mockResolvedValueOnce({ url: 'https://crypto.example.test', qrText: 'mp1' });
+      await marketplaceApi.getMarketplaceLink('mp1');
+      expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/link');
     });
   });
 });

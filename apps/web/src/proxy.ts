@@ -14,6 +14,8 @@ import type { NextRequest } from 'next/server';
 import { REQUEST_URL_HEADER } from '@/lib/requestUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+const INFO_API_BASE =
+  process.env.NEXT_PUBLIC_INFO_API_URL || process.env.INTERNAL_INFO_API_URL || API_BASE;
 
 const PROXY_PREFIXES = ['/v1/', '/api/', '/info/', '/platform/'];
 
@@ -34,11 +36,14 @@ function shouldProxyToBackend(pathname: string): boolean {
  */
 async function proxyToBackend(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
-  const upstream = `${API_BASE}${pathname}${search}`;
+  // Browser search uses `/info/search/v1/*`; E2E info-api listens on `/search/v1/*` (port 18082).
+  const upstream = pathname.startsWith('/info/')
+    ? `${INFO_API_BASE.replace(/\/$/, '')}${pathname.slice('/info'.length)}${search}`
+    : `${API_BASE}${pathname}${search}`;
 
   const headers = new Headers(request.headers);
   headers.delete('host');
-  headers.set('host', new URL(API_BASE).host);
+  headers.set('host', new URL(upstream).host);
   headers.set('accept-encoding', 'identity');
 
   const init: RequestInit = {

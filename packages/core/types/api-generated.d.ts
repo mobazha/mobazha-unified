@@ -315,6 +315,41 @@ export interface paths {
     patch: operations['admin-patch-fiat-provider'];
     trace?: never;
   };
+  '/platform/v1/admin/moderators': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List platform-certified moderators */
+    get: operations['admin-list-moderators'];
+    put?: never;
+    /** Certify a third-party moderator */
+    post: operations['admin-create-moderator'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/admin/moderators/{peerID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove platform certification for a moderator */
+    delete: operations['admin-delete-moderator'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/admin/relay/config': {
     parameters: {
       query?: never;
@@ -331,6 +366,24 @@ export interface paths {
     head?: never;
     /** Patch relay operational parameters (admin) */
     patch: operations['admin-patch-relay-config'];
+    trace?: never;
+  };
+  '/platform/v1/admin/managed-payment/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Managed payment platform fee configuration (admin) */
+    get: operations['admin-get-managed-payment-config'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Patch Managed payment platform fee configuration (admin) */
+    patch: operations['admin-patch-managed-payment-config'];
     trace?: never;
   };
   '/platform/v1/admin/services': {
@@ -788,6 +841,331 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/community-marketplaces/discord/{instanceID}/verify-member': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Verify Discord guild membership */
+    post: operations['group-marketplace-discord-verify-member'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/groups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List public group marketplace projections */
+    get: operations['group-marketplace-known-groups'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/public/{identifier}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get public group marketplace detail by slug or public ID */
+    get: operations['group-marketplace-public-detail'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/public/{identifier}/seller-application': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get current tenant seller application for a public marketplace */
+    get: operations['group-marketplace-public-seller-application'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/public/{identifier}/sellers/apply': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply to sell in a public group marketplace by slug or public ID */
+    post: operations['group-marketplace-public-seller-apply'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/telegram/{instanceID}/verify-member': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Verify Telegram membership for a chat */
+    post: operations['group-marketplace-telegram-verify-member'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create or update group marketplace metadata */
+    post: operations['group-marketplace-upsert'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get group marketplace by platform and chat */
+    get: operations['group-marketplace-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/admin/banners': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add a carousel banner (group admin) */
+    post: operations['group-marketplace-admin-banners-add'];
+    /** Remove a carousel banner */
+    delete: operations['group-marketplace-admin-banners-remove'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/admin/featured': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add a featured seller (group admin) */
+    post: operations['group-marketplace-admin-featured-add'];
+    /** Remove featured seller entry */
+    delete: operations['group-marketplace-admin-featured-remove'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/banners': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get carousel banners */
+    get: operations['group-marketplace-banners-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/check-admin': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Check whether a platform user is a group admin */
+    post: operations['group-marketplace-check-admin'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/featured': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get featured sellers for a marketplace */
+    get: operations['group-marketplace-featured-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/listings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Paged listing refs for approved visible sellers */
+    get: operations['group-marketplace-listings'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Search listing refs within marketplace */
+    get: operations['group-marketplace-search'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List sellers for a group marketplace */
+    get: operations['group-marketplace-sellers-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers/apply': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply to join a group marketplace as a seller */
+    post: operations['group-marketplace-seller-apply'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers/{sellerID}/product-groups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update seller product groups in a marketplace */
+    put: operations['group-marketplace-seller-product-groups-put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/community-marketplaces/{platform}/{instanceID}/sellers/{sellerID}/review': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Review a seller application (platform group admin) */
+    put: operations['group-marketplace-seller-review'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/encryption/listings/{peerID}/{slug}/key': {
     parameters: {
       query?: never;
@@ -1012,280 +1390,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/group-marketplace/discord/{chatID}/verify-member': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Verify Discord guild membership */
-    post: operations['group-marketplace-discord-verify-member'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/groups': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List known group marketplaces from database */
-    get: operations['group-marketplace-known-groups'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/telegram/{chatID}/verify-member': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Verify Telegram membership for a chat */
-    post: operations['group-marketplace-telegram-verify-member'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create or update group marketplace metadata */
-    post: operations['group-marketplace-upsert'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get group marketplace by platform and chat */
-    get: operations['group-marketplace-get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/admin/banners': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Add a carousel banner (group admin) */
-    post: operations['group-marketplace-admin-banners-add'];
-    /** Remove a carousel banner */
-    delete: operations['group-marketplace-admin-banners-remove'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/admin/featured': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Add a featured seller (group admin) */
-    post: operations['group-marketplace-admin-featured-add'];
-    /** Remove featured seller entry */
-    delete: operations['group-marketplace-admin-featured-remove'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/banners': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get carousel banners */
-    get: operations['group-marketplace-banners-get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/check-admin': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Check whether a platform user is a group admin */
-    post: operations['group-marketplace-check-admin'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/featured': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get featured sellers for a marketplace */
-    get: operations['group-marketplace-featured-get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/listings': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Paged listing refs for approved visible sellers */
-    get: operations['group-marketplace-listings'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/search': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Search listing refs within marketplace */
-    get: operations['group-marketplace-search'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List sellers for a group marketplace */
-    get: operations['group-marketplace-sellers-list'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/apply': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Apply to join a group marketplace as a seller */
-    post: operations['group-marketplace-seller-apply'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/product-groups': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Update seller product groups in a marketplace */
-    put: operations['group-marketplace-seller-product-groups-put'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/platform/v1/group-marketplace/{platform}/{chatID}/sellers/{sellerID}/review': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Review a seller application (platform group admin) */
-    put: operations['group-marketplace-seller-review'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/platform/v1/integrations/telegram/webhook': {
     parameters: {
       query?: never;
@@ -1349,6 +1453,145 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create native marketplace */
+    post: operations['marketplaces-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List marketplaces owned by current user */
+    get: operations['marketplaces-mine'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get marketplace by ID */
+    get: operations['marketplaces-get'];
+    /** Update marketplace by ID */
+    put: operations['marketplaces-update'];
+    post?: never;
+    /** Delete marketplace by ID */
+    delete: operations['marketplaces-delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get public marketplace curation config */
+    get: operations['marketplaces-config'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/link': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get marketplace share link */
+    get: operations['marketplaces-link'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/sellers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List marketplace seller whitelist */
+    get: operations['marketplaces-sellers-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/sellers/invite': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Invite seller to marketplace */
+    post: operations['marketplaces-sellers-invite'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/sellers/{peerID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update marketplace seller status */
+    put: operations['marketplaces-sellers-update'];
+    post?: never;
+    /** Remove marketplace seller */
+    delete: operations['marketplaces-sellers-delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -1433,6 +1676,23 @@ export interface paths {
     put?: never;
     /** Create Matrix store space + starter rooms */
     post: operations['matrix-store-spaces-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/moderators/recommended': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List platform-recommended moderators */
+    get: operations['moderators-recommended'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1562,6 +1822,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/relay/gas-wallet': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Gas wallet address and balance for a specific chain (admin) */
+    get: operations['relay-gas-wallet'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/relay/gas-wallet/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Gas wallet status for all configured chains (admin) */
+    get: operations['relay-gas-wallet-status'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/relay/status': {
     parameters: {
       query?: never;
@@ -1579,7 +1873,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/sellers/{userID}/group-marketplaces': {
+  '/platform/v1/sellers/{userID}/marketplaces': {
     parameters: {
       query?: never;
       header?: never;
@@ -1596,7 +1890,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/platform/v1/sellers/{userID}/visibility/{platform}/{chatID}': {
+  '/platform/v1/sellers/{userID}/visibility/{platform}/{instanceID}': {
     parameters: {
       query?: never;
       header?: never;
@@ -2779,6 +3073,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/search/v1/netdb/listings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a listing by CID */
+    get: operations['netdb-get-listing-by-cid'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/search/v1/netdb/listings/{id}/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a listing by peerID and slug */
+    get: operations['netdb-get-listing-by-slug'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/search/v1/netdb/listings/{listingID}': {
     parameters: {
       query?: never;
@@ -2791,26 +3119,6 @@ export interface paths {
     post?: never;
     /** Delete a listing from NetDB */
     delete: operations['netdb-delete-listing'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/search/v1/netdb/listings/{path+}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get a listing by CID or peerID/slug
-     * @description Supports two path formats: `/search/v1/netdb/listings/{cid}` or `/search/v1/netdb/listings/{peerID}/{slug}`. Access control is enforced for private stores.
-     */
-    get: operations['netdb-get-listing'];
-    put?: never;
-    post?: never;
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -4210,6 +4518,128 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/digital-assets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List digital assets for a listing */
+    get: operations['digital-asset-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/digital-assets/license-key': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create a license-key-type digital asset */
+    post: operations['digital-asset-create-license-key'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/digital-assets/license-keys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List license keys (masked) for a listing */
+    get: operations['digital-asset-list-license-keys'];
+    put?: never;
+    /** Import license keys for a listing */
+    post: operations['digital-asset-import-license-keys'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/digital-assets/license-keys/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get license key pool statistics for a listing */
+    get: operations['digital-asset-license-key-stats'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/digital-assets/license-keys/{keyID}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Revoke a license key */
+    post: operations['digital-asset-revoke-license-key'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/digital-assets/link': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create a link-type digital asset */
+    post: operations['digital-asset-create-link'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/digital-assets/{assetID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a digital asset by ID */
+    get: operations['digital-asset-get'];
+    put?: never;
+    post?: never;
+    /** Delete a digital asset */
+    delete: operations['digital-asset-delete'];
+    options?: never;
+    head?: never;
+    /** Update a digital asset */
+    patch: operations['digital-asset-update'];
+    trace?: never;
+  };
   '/v1/discounts': {
     parameters: {
       query?: never;
@@ -4378,6 +4808,26 @@ export interface paths {
     put?: never;
     /** Close a dispute */
     post: operations['disputes-post-close'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{orderID}/instructions/release': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Legacy dispute release instructions
+     * @description Compatibility endpoint for client-signed moderated dispute payouts. backend-managed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.
+     */
+    post: operations['disputes-post-instructions-release'];
     delete?: never;
     options?: never;
     head?: never;
@@ -4796,6 +5246,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/fulfillment/alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List fulfillment alerts */
+    get: operations['fulfillment-get-alerts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fulfillment/alerts/{alertID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Dismiss a fulfillment alert */
+    delete: operations['fulfillment-delete-alert'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fulfillment/locations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List fulfillment locations */
+    get: operations['fulfillment-get-locations'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fulfillment/locations/{locationID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get fulfillment location detail */
+    get: operations['fulfillment-get-location'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/fulfillment/orders/{orderID}/status': {
     parameters: {
       query?: never;
@@ -4842,6 +5360,41 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fulfillment/rules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List fulfillment auto-action rules */
+    get: operations['fulfillment-get-rules'];
+    put?: never;
+    /** Create a fulfillment auto-action rule */
+    post: operations['fulfillment-post-rule'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fulfillment/rules/{ruleID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a fulfillment auto-action rule */
+    delete: operations['fulfillment-delete-rule'];
     options?: never;
     head?: never;
     patch?: never;
@@ -5017,6 +5570,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/fulfillment/{providerID}/synced-products/{mappingID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Unlink a synced product from its supplier */
+    delete: operations['fulfillment-delete-synced-product'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/fulfillment/{providerID}/webhooks/{webhookSecret}': {
     parameters: {
       query?: never;
@@ -5052,6 +5622,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/guest/orders/quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Public guest checkout supply preflight */
+    post: operations['guest-orders-quote-public'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/guest/orders/{token}': {
     parameters: {
       query?: never;
@@ -5079,6 +5666,23 @@ export interface paths {
     get?: never;
     /** Manually finalize guest-funded order */
     put: operations['guest-orders-complete-token'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/guest/orders/{token}/detail': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Admin: full guest order detail including encrypted shipping address */
+    get: operations['guest-orders-admin-detail'];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -5132,6 +5736,26 @@ export interface paths {
     put?: never;
     /** Import listings from ZIP (multipart) */
     post: operations['listing-import-multipart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/listings/import/gumroad': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import listings from a Gumroad creator account
+     * @description Reads products from the Gumroad v2 API using a personal access token and imports them as DRAFT digital-good listings. The seller must upload the actual digital file to each draft before publishing — Gumroad's protected file URLs are not server-fetchable. Pass {"dryRun": true} to preview without writing.
+     */
+    post: operations['listings-import-gumroad'];
     delete?: never;
     options?: never;
     head?: never;
@@ -5200,6 +5824,23 @@ export interface paths {
     get: operations['listings-get-mine-slug-or-cid'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/listings/supply-summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Get seller supply summaries */
+    post: operations['listings-post-supply-summary'];
     delete?: never;
     options?: never;
     head?: never;
@@ -5635,6 +6276,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/orders/supply-quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Authenticated checkout supply preflight */
+    post: operations['orders-post-supply-quote'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/orders/{orderID}': {
     parameters: {
       query?: never;
@@ -5703,6 +6361,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/orders/{orderID}/digital-assets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get buyer digital assets for an order
+     * @description Returns all digital entitlements (files, license keys, links) granted to the buyer after order confirmation. Guest checkout access requires the independent buyerPortalToken issued at order creation.
+     */
+    get: operations['digital-assets-buyer-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/digital-delivery': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get digital delivery status for an order
+     * @description Returns the order-level digital delivery contract used by seller and buyer order pages. It exposes delivery state and counts only; digital secrets are returned by the buyer assets endpoint.
+     */
+    get: operations['digital-delivery-status-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/digital-delivery/retry': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Retry digital delivery for an order
+     * @description Replays automatic digital entitlement creation for a seller order. This is intended for recoverable cases where digital assets were added after payment confirmation.
+     */
+    post: operations['digital-delivery-retry'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/digital-download': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download a purchased digital file
+     * @description Serves the binary content of a purchased digital asset. Authentication is provided by the HMAC signature embedded in the query parameters (generated by the buyer portal API). No session or admin token required.
+     */
+    get: operations['digital-download'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/orders/{orderID}/extend-protection': {
     parameters: {
       query?: never;
@@ -5720,6 +6458,94 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/orders/{orderID}/instructions/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancellation / refund-before-ship instructions */
+    post: operations['orders-post-instructions-cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Legacy completion payout instructions
+     * @description Compatibility endpoint for client-signed moderated completion flows. backend-managed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.
+     */
+    post: operations['orders-post-instructions-complete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirmation / acceptance instructions */
+    post: operations['orders-post-instructions-confirm'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/decline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Decline / refund-flow instructions via confirmation handler */
+    post: operations['orders-post-instructions-decline'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/instructions/refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Refund instructions */
+    post: operations['orders-post-instructions-refund'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/orders/{orderID}/payment': {
     parameters: {
       query?: never;
@@ -5731,6 +6557,30 @@ export interface paths {
     put?: never;
     /** Buyer submit payment payloads */
     post: operations['orders-post-payment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/payment-session': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Unified payment session view for an order
+     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, backend-managed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).
+     */
+    get: operations['orders-get-payment-session'];
+    put?: never;
+    /**
+     * Provision unified payment session
+     * @description Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; address-monitored flows may auto-fill refunds after confirmation.
+     */
+    post: operations['orders-post-payment-session'];
     delete?: never;
     options?: never;
     head?: never;
@@ -5816,6 +6666,66 @@ export interface paths {
     put?: never;
     /** Finalize refund transaction */
     post: operations['orders-post-refund'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/rwa-token/payment-info': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get RWA token identity payment info
+     * @description Returns buyer and vendor chain identity addresses for RWA token purchases.
+     */
+    post: operations['orders-post-rwa-token-payment-info'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/settlement-actions/{action}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute backend settlement action (confirm / cancel)
+     * @description Runs the default backend-submitted settlement action flow for crypto orders, including backend-managed EVM. Client-signed legacy chains must keep using the legacy instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.
+     */
+    post: operations['orders-post-settlement-action'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/settlement-actions/{action}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read unified settlement action status
+     * @description Returns the latest status for a previously issued backend settlement action. backend-managed flows expose relay task correlation and confirmations through this endpoint.
+     */
+    get: operations['orders-get-settlement-action-status'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -6275,6 +7185,60 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/settings/guest-checkout/readiness': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get guest checkout UTXO readiness */
+    get: operations['settings-guest-checkout-readiness-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/settings/payment-policy': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get store payment policy */
+    get: operations['settings-payment-policy-get'];
+    /** Update store payment policy */
+    put: operations['settings-payment-policy-put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/settings/pgp-key': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get seller PGP public key (public) */
+    get: operations['settings-pgp-key-get'];
+    /** Set seller PGP public key */
+    put: operations['settings-pgp-key-put'];
+    post?: never;
+    /** Remove seller PGP public key */
+    delete: operations['settings-pgp-key-delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/settings/storefront': {
     parameters: {
       query?: never;
@@ -6447,6 +7411,136 @@ export interface paths {
     get: operations['shipping-stale-listings-get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/store-policy': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get store policy */
+    get: operations['store-policy-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/store-policy/moderators': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List store moderators */
+    get: operations['store-policy-moderators-get'];
+    /** Replace store moderators */
+    put: operations['store-policy-moderators-put'];
+    /** Add or update store moderator */
+    post: operations['store-policy-moderators-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/store-policy/moderators/{peerID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove store moderator */
+    delete: operations['store-policy-moderators-peer-delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/store-policy/{peerID}/published': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get published store policy */
+    get: operations['store-policy-peer-published-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stores/{storeID}/licenses/activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Activate a license key on a device
+     * @description Binds a license key to a device fingerprint. Returns existing activation if already activated for this fingerprint.
+     */
+    post: operations['license-activate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stores/{storeID}/licenses/deactivate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Deactivate a license key on a device
+     * @description Unbinds a license key from a device fingerprint, freeing up an activation slot.
+     */
+    post: operations['license-deactivate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/stores/{storeID}/licenses/validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Validate a license key
+     * @description Checks whether a license key is valid and returns its status. Public endpoint for use by third-party software.
+     */
+    post: operations['license-validate'];
     delete?: never;
     options?: never;
     head?: never;
@@ -6774,7 +7868,7 @@ export interface paths {
     /** Standalone onboarding status (public) */
     get: operations['system-setup-get'];
     put?: never;
-    /** Standalone one-time password setup (public) */
+    /** Standalone one-time password setup */
     post: operations['system-setup-post'];
     delete?: never;
     options?: never;
@@ -7062,6 +8156,14 @@ export interface components {
       /** Format: int64 */
       max_gas_price?: number;
     };
+    Platform_AdminPatchSafePaymentConfigInputBody: {
+      platform_addrs?: {
+        [key: string]: string;
+      };
+      release_fee_usd_cents?: {
+        [key: string]: number;
+      };
+    };
     Platform_AdminPatchServiceTogglesInputBody: {
       cross_store_enabled?: boolean;
       matrix_enabled?: boolean;
@@ -7160,6 +8262,9 @@ export interface components {
     Platform_GmProductGroupsBodyBody: {
       productGroupIDs: number[] | null;
     };
+    Platform_GmPublicSellerApplyBodyBody: {
+      productGroupIDs: number[] | null;
+    };
     Platform_GmReviewBodyBody: {
       platformUserID: string;
       status: string;
@@ -7204,6 +8309,37 @@ export interface components {
     Platform_IpnsPostInputBody: {
       ipnsRecord: string;
     };
+    Platform_MarketplaceOwnerRequest: {
+      attribution: string;
+      bannerURL: string;
+      catalogMode: string;
+      catalogQuery: string;
+      chatTitle: string;
+      discoverability: string;
+      domain: string;
+      joinMode: string;
+      logoURL: string;
+      name: string;
+      publicDescription: string;
+      sellerEntryMode: string;
+      slug: string;
+      subdomain: string;
+      theme: unknown;
+      themeJSON: string;
+      vertical: string;
+      visibility: string;
+    };
+    Platform_MarketplaceSellerInviteRequest: {
+      peerID: string;
+      status: string;
+      tenantID: string;
+      userID: string;
+      visible: boolean | null;
+    };
+    Platform_MarketplaceSellerUpdateRequest: {
+      status: string;
+      visible: boolean | null;
+    };
     Platform_MatrixProvisionRequest: {
       password_hash: string;
     };
@@ -7213,6 +8349,11 @@ export interface components {
     Platform_PlatformFeaturePatchRequest: {
       enabled: boolean | null;
       reason?: string;
+    };
+    Platform_PlatformModeratorUpsertRequest: {
+      comment?: string;
+      peerID: string;
+      type?: string;
     };
     Platform_ProductGroupAuthorizationsCreateBodyBody: {
       authType: string;
@@ -7240,8 +8381,10 @@ export interface components {
     };
     Platform_RelayExecuteRequest: {
       chainType: string;
+      clientActionId?: string;
       data: string;
       orderId: string;
+      settlementAction?: string;
       to: string;
     };
     Platform_RotateProductGroupKeyRequest: {
@@ -7456,6 +8599,99 @@ export interface components {
       description: string;
       name: string;
     };
+    Node_AssetUpdateInput: {
+      /** Format: int64 */
+      expiryHours?: number;
+      /** Format: int64 */
+      maxDownloads?: number;
+      /** Format: int64 */
+      sortOrder?: number;
+      url?: string;
+    };
+    Node_BuyerAssetEntry: {
+      assetId: string;
+      assetType: string;
+      deliveryURL?: string;
+      /** Format: int64 */
+      downloadCount: number;
+      downloadURL?: string;
+      /** Format: date-time */
+      expiresAt?: string;
+      fileName?: string;
+      /** Format: int64 */
+      fileSize?: number;
+      licenseKeys?: components['schemas']['Node_BuyerLicenseEntry'][] | null;
+      /** Format: int64 */
+      maxDownloads: number;
+      restrictedReason?: string;
+      status: string;
+    };
+    Node_BuyerLicenseEntry: {
+      /** Format: int64 */
+      activations: number;
+      licenseKey: string;
+      licenseType?: string;
+      /** Format: int64 */
+      maxActivations?: number;
+    };
+    'Node_Digital-asset-create-license-keyRequest': {
+      appId?: string;
+      listingSlug: string;
+      variantSku?: string;
+    };
+    'Node_Digital-asset-create-linkRequest': {
+      listingSlug: string;
+      url: string;
+      variantSku?: string;
+    };
+    'Node_Digital-asset-import-license-keysRequest': {
+      appId?: string;
+      /** @description RFC3339 expiration timestamp. */
+      expiresAt?: string;
+      keys: string[] | null;
+      licenseType?: string;
+      listingSlug: string;
+      /** Format: int64 */
+      maxActivations?: number;
+      variantSku?: string;
+    };
+    Node_DigitalAssetInfo: {
+      assetType: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: int64 */
+      expiryHours: number;
+      fileName?: string;
+      /** Format: int64 */
+      fileSize?: number;
+      id: string;
+      listingSlug: string;
+      /** Format: int64 */
+      maxDownloads: number;
+      mimeType?: string;
+      /** Format: int64 */
+      sortOrder: number;
+      /** Format: date-time */
+      updatedAt: string;
+      url?: string;
+      variantSku?: string;
+    };
+    Node_DigitalDeliveryStatus: {
+      /** Format: int64 */
+      accessibleGrantCount: number;
+      /** Format: int64 */
+      assetCount: number;
+      deliveryURL?: string;
+      /** Format: int64 */
+      grantCount: number;
+      isDigitalOrder: boolean;
+      listingSlugs?: string[] | null;
+      manualFallbackAllowed: boolean;
+      orderID: string;
+      preconfiguredAssetHint: boolean;
+      reason?: string;
+      status: string;
+    };
     Node_EnvelopeError: Record<string, never>;
     Node_HumaNodePingOutputBody: {
       /**
@@ -7468,6 +8704,76 @@ export interface components {
        * @description Server time at request handling.
        */
       serverTime: string;
+    };
+    Node_ImportKeysOutputBody: {
+      /** Format: int64 */
+      imported: number;
+    };
+    'Node_License-activateRequest': {
+      /** @description Unique device/machine fingerprint. */
+      fingerprint: string;
+      /** @description Human-readable device label (e.g. 'MacBook Pro'). */
+      label?: string;
+      /** @description The license key to activate. */
+      licenseKey: string;
+    };
+    'Node_License-deactivateRequest': {
+      /** @description Device fingerprint to unbind. */
+      fingerprint: string;
+      /** @description The license key to deactivate. */
+      licenseKey: string;
+    };
+    'Node_License-validateRequest': {
+      /** @description Application identifier for multi-product stores. */
+      appID?: string;
+      /** @description Optional machine fingerprint for activation check. */
+      fingerprint?: string;
+      /** @description The license key to validate. */
+      licenseKey: string;
+    };
+    Node_LicenseActivationResult: {
+      fingerprint: string;
+      id: string;
+      isActive: boolean;
+      label?: string;
+      /** Format: date-time */
+      lastSeenAt: string;
+      licenseId: string;
+    };
+    Node_LicenseKeyPoolStats: {
+      /** Format: int64 */
+      available: number;
+      /** Format: int64 */
+      dispensed: number;
+      /** Format: int64 */
+      revoked: number;
+      /** Format: int64 */
+      total: number;
+    };
+    Node_LicenseValidationResult: {
+      /** Format: int64 */
+      activations?: number;
+      /** Format: date-time */
+      expiresAt?: string;
+      licenseId?: string;
+      licenseType?: string;
+      /** Format: int64 */
+      maxActivations?: number;
+      reason?: string;
+      valid: boolean;
+    };
+    Node_MaskedLicenseKey: {
+      /** Format: date-time */
+      dispensedAt?: string;
+      /** Format: date-time */
+      expiresAt?: string;
+      id: string;
+      licenseType: string;
+      maskedKey: string;
+      /** Format: int64 */
+      maxActivations: number;
+      orderId?: string;
+      status: string;
     };
     Search_AuthorizationItem: {
       authType: string;
@@ -8244,6 +9550,98 @@ export interface operations {
       };
     };
   };
+  'admin-list-moderators': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-create-moderator': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PlatformModeratorUpsertRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-delete-moderator': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Moderator peer ID. */
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'admin-get-relay-config': {
     parameters: {
       query?: never;
@@ -8292,6 +9690,68 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-get-managed-payment-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-patch-managed-payment-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_AdminPatchSafePaymentConfigInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
       };
       /** @description Error */
       default: {
@@ -8885,6 +10345,7 @@ export interface operations {
       query?: {
         code?: string;
         state?: string;
+        redirect_uri?: string;
       };
       header?: never;
       path?: never;
@@ -9174,6 +10635,732 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-discord-verify-member': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmDiscordVerifyBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-known-groups': {
+    parameters: {
+      query?: {
+        platform?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-public-detail': {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-public-seller-application': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-public-seller-apply': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmPublicSellerApplyBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-telegram-verify-member': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmTgVerifyBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-upsert': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmMarketplaceApplyBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-admin-banners-add': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmAdminBannersBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-admin-banners-remove': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmAdminBannersBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-admin-featured-add': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmAdminFeaturedBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-admin-featured-remove': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmAdminFeaturedBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-banners-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-check-admin': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmCheckAdminBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-featured-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-listings': {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-search': {
+    parameters: {
+      query?: {
+        q?: string;
+      };
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-sellers-list': {
+    parameters: {
+      query?: {
+        status?: string;
+        userID?: string;
+      };
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-seller-apply': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmSellerApplyBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-seller-product-groups-put': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+        sellerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmProductGroupsBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'group-marketplace-seller-review': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        platform: string;
+        instanceID: string;
+        sellerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_GmReviewBodyBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
       };
       /** @description Error */
       default: {
@@ -9600,632 +11787,6 @@ export interface operations {
       };
     };
   };
-  'group-marketplace-discord-verify-member': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmDiscordVerifyBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-known-groups': {
-    parameters: {
-      query?: {
-        platform?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-telegram-verify-member': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmTgVerifyBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-upsert': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmMarketplaceApplyBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-get': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-admin-banners-add': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmAdminBannersBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-admin-banners-remove': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmAdminBannersBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-admin-featured-add': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmAdminFeaturedBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-admin-featured-remove': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmAdminFeaturedBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-banners-get': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-check-admin': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmCheckAdminBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-featured-get': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-listings': {
-    parameters: {
-      query?: {
-        page?: number;
-        pageSize?: number;
-      };
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-search': {
-    parameters: {
-      query?: {
-        q?: string;
-      };
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-sellers-list': {
-    parameters: {
-      query?: {
-        status?: string;
-        userID?: string;
-      };
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-seller-apply': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmSellerApplyBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-seller-product-groups-put': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-        sellerID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmProductGroupsBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'group-marketplace-seller-review': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        platform: string;
-        chatID: string;
-        sellerID: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_GmReviewBodyBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
   'integrations-telegram-webhook-group': {
     parameters: {
       query?: never;
@@ -10324,6 +11885,366 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceOwnerRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceOwnerRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-config': {
+    parameters: {
+      query?: {
+        domain?: string;
+        subdomain?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-link': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-sellers-list': {
+    parameters: {
+      query?: {
+        status?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-sellers-invite': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceSellerInviteRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-sellers-update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceSellerUpdateRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-sellers-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
         peerID: string;
       };
       cookie?: never;
@@ -10486,6 +12407,38 @@ export interface operations {
         'application/json': components['schemas']['Platform_StoreSpaceCreateRequest'];
       };
     };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'moderators-recommended': {
+    parameters: {
+      query?: {
+        /** @description Maximum number of moderators to return (default 20, max 50). */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description OK */
       200: {
@@ -10863,6 +12816,67 @@ export interface operations {
       };
     };
   };
+  'relay-gas-wallet': {
+    parameters: {
+      query: {
+        /** @description EVM chain ID (e.g. 1, 56, 137) */
+        chain_id: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'relay-gas-wallet-status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'relay-status': {
     parameters: {
       query?: never;
@@ -10930,7 +12944,7 @@ export interface operations {
       path: {
         userID: string;
         platform: string;
-        chatID: string;
+        instanceID: string;
       };
       cookie?: never;
     };
@@ -13413,6 +15427,72 @@ export interface operations {
       };
     };
   };
+  'netdb-get-listing-by-cid': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Listing CID hash. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Search_ListingResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Search_InfoEnvelopeError'];
+        };
+      };
+    };
+  };
+  'netdb-get-listing-by-slug': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Peer ID of the store. */
+        id: string;
+        /** @description Listing slug. */
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Search_ListingResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Search_InfoEnvelopeError'];
+        };
+      };
+    };
+  };
   'netdb-delete-listing': {
     parameters: {
       query?: never;
@@ -13435,38 +15515,6 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Search_InfoEnvelopeError'];
-        };
-      };
-    };
-  };
-  'netdb-get-listing': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Listing CID or peerID/slug path. */
-        path: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Search_ListingResponse'];
-        };
       };
       /** @description Error */
       default: {
@@ -16579,6 +18627,327 @@ export interface operations {
       };
     };
   };
+  'digital-asset-list': {
+    parameters: {
+      query: {
+        listingSlug: string;
+        variantSku?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalAssetInfo'][] | null;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-create-license-key': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_Digital-asset-create-license-keyRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalAssetInfo'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-list-license-keys': {
+    parameters: {
+      query: {
+        listingSlug: string;
+        variantSku?: string;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_MaskedLicenseKey'][] | null;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-import-license-keys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_Digital-asset-import-license-keysRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_ImportKeysOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-license-key-stats': {
+    parameters: {
+      query: {
+        listingSlug: string;
+        variantSku?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_LicenseKeyPoolStats'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-revoke-license-key': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        keyID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-create-link': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_Digital-asset-create-linkRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalAssetInfo'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assetID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalAssetInfo'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assetID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-asset-update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assetID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_AssetUpdateInput'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalAssetInfo'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'discounts-get': {
     parameters: {
       query?: {
@@ -17015,6 +19384,42 @@ export interface operations {
     };
   };
   'disputes-post-close': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'disputes-post-instructions-release': {
     parameters: {
       query?: never;
       header?: never;
@@ -17972,6 +20377,126 @@ export interface operations {
       };
     };
   };
+  'fulfillment-get-alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fulfillment-delete-alert': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Alert ID to dismiss. */
+        alertID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fulfillment-get-locations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fulfillment-get-location': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Fulfillment location ID. */
+        locationID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'fulfillment-get-order-status': {
     parameters: {
       query?: never;
@@ -18053,6 +20578,98 @@ export interface operations {
         content: {
           'application/json': unknown;
         };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fulfillment-get-rules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fulfillment-post-rule': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fulfillment-delete-rule': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Rule ID to delete. */
+        ruleID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -18407,6 +21024,38 @@ export interface operations {
       };
     };
   };
+  'fulfillment-delete-synced-product': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Fulfillment provider ID. */
+        providerID: string;
+        /** @description Synced product mapping ID. */
+        mappingID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'fulfillment-public-post-provider-webhook': {
     parameters: {
       query?: never;
@@ -18509,6 +21158,39 @@ export interface operations {
       };
     };
   };
+  'guest-orders-quote-public': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'guest-orders-get-public': {
     parameters: {
       query?: never;
@@ -18559,6 +21241,38 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'guest-orders-admin-detail': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Guest checkout token. */
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
       };
       /** @description Error */
       default: {
@@ -18706,6 +21420,39 @@ export interface operations {
       };
     };
   };
+  'listings-import-gumroad': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'listings-import-json': {
     parameters: {
       query?: never;
@@ -18814,6 +21561,39 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'listings-post-supply-summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
     responses: {
       /** @description OK */
       200: {
@@ -19781,6 +22561,39 @@ export interface operations {
       };
     };
   };
+  'orders-post-supply-quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'orders-get-detail': {
     parameters: {
       query?: never;
@@ -19921,6 +22734,166 @@ export interface operations {
       };
     };
   };
+  'digital-assets-buyer-get': {
+    parameters: {
+      query?: {
+        /** @description Signed download URL expiry in seconds. */
+        urlExpirySec?: number;
+      };
+      header?: {
+        /** @description Independent buyer portal bearer token issued at guest order creation. */
+        'X-Buyer-Portal-Token'?: string;
+      };
+      path: {
+        /**
+         * @description Order ID.
+         * @example QmOrder123
+         */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_BuyerAssetEntry'][] | null;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-delivery-status-get': {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description Independent buyer portal bearer token issued at guest order creation. */
+        'X-Buyer-Portal-Token'?: string;
+      };
+      path: {
+        /**
+         * @description Order ID.
+         * @example QmOrder123
+         */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalDeliveryStatus'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-delivery-retry': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /**
+         * @description Order ID.
+         * @example QmOrder123
+         */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_DigitalDeliveryStatus'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'digital-download': {
+    parameters: {
+      query: {
+        /** @description Grant nonce. */
+        grant: string;
+        /** @description Asset ID. */
+        asset: string;
+        /** @description Expiry unix timestamp. */
+        expires: string;
+        /** @description Grant version. */
+        v: string;
+        /** @description HMAC-SHA256 hex signature. */
+        sig: string;
+      };
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          'Cache-Control'?: string;
+          'Content-Disposition'?: string;
+          'Content-Type'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': string;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'orders-post-extend-protection': {
     parameters: {
       query?: never;
@@ -19953,7 +22926,255 @@ export interface operations {
       };
     };
   };
+  'orders-post-instructions-cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-instructions-complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-instructions-confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-instructions-decline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-instructions-refund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'orders-post-payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-get-payment-session': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-payment-session': {
     parameters: {
       query?: never;
       header?: never;
@@ -20136,6 +23357,117 @@ export interface operations {
         'application/json': unknown;
       };
     };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-rwa-token-payment-info': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-settlement-action': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+        /** @description Settlement intent: confirm or cancel. */
+        action: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-get-settlement-action-status': {
+    parameters: {
+      query: {
+        /** @description Opaque settlement action poll key returned by POST settlement-actions. */
+        actionId: string;
+      };
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+        /** @description Settlement intent: confirm or cancel. */
+        action: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description OK */
       200: {
@@ -21382,6 +24714,186 @@ export interface operations {
       };
     };
   };
+  'settings-guest-checkout-readiness-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'settings-payment-policy-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'settings-payment-policy-put': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'settings-pgp-key-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'settings-pgp-key-put': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'settings-pgp-key-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'settings-storefront-get': {
     parameters: {
       query?: never;
@@ -21942,6 +25454,300 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'store-policy-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'store-policy-moderators-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'store-policy-moderators-put': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'store-policy-moderators-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'store-policy-moderators-peer-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Moderator peer ID. */
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'store-policy-peer-published-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Store peer ID. */
+        peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'license-activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Store identifier (peerID or handle). */
+        storeID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_License-activateRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_LicenseActivationResult'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'license-deactivate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Store identifier (peerID or handle). */
+        storeID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_License-deactivateRequest'];
+      };
+    };
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'license-validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Store identifier (peerID or handle). Used for multi-tenant routing in SaaS mode. */
+        storeID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Node_License-validateRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_LicenseValidationResult'];
         };
       };
       /** @description Error */

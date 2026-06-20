@@ -148,6 +148,9 @@ export * from './useStandaloneStoreInfo';
 // Storefront Mode (SSR-safe branded-subdomain detection)
 export * from './useStorefrontMode';
 
+// Native vertical sub-market (runtime host context)
+export * from './useMarketplaceContext';
+
 // Feature Flags (Phase MS — server-driven toggles + kill switches)
 export * from './useFeatureFlags';
 

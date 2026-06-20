@@ -26,7 +26,11 @@ export const HOSTING_API_PATHS = {
   ADMIN_FIAT_PROVIDERS: '/platform/v1/admin/fiat-providers',
   ADMIN_FIAT_PROVIDERS_BY_PROVIDER: (provider: string) =>
     `/platform/v1/admin/fiat-providers/${encodeURIComponent(provider)}`,
+  ADMIN_MODERATORS: '/platform/v1/admin/moderators',
+  ADMIN_MODERATORS_BY_PEER_ID: (peerID: string) =>
+    `/platform/v1/admin/moderators/${encodeURIComponent(peerID)}`,
   ADMIN_RELAY_CONFIG: '/platform/v1/admin/relay/config',
+  ADMIN_MANAGED_PAYMENT_CONFIG: '/platform/v1/admin/managed-payment/config',
   ADMIN_SERVICES: '/platform/v1/admin/services',
   ADMIN_STATS: '/platform/v1/admin/stats',
   ADMIN_TENANTS: '/platform/v1/admin/tenants',
@@ -57,6 +61,47 @@ export const HOSTING_API_PATHS = {
   AUTH_TOKENS: '/platform/v1/auth/tokens',
   AUTH_TOKENS_BY_TOKEN_ID: (tokenID: string) =>
     `/platform/v1/auth/tokens/${encodeURIComponent(tokenID)}`,
+  COMMUNITY_MARKETPLACES_ADMIN_BANNERS: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/admin/banners`,
+  COMMUNITY_MARKETPLACES_ADMIN_FEATURED: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/admin/featured`,
+  COMMUNITY_MARKETPLACES_BANNERS: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/banners`,
+  COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
+  COMMUNITY_MARKETPLACES_BY_PLATFORM_INSTANCE_ID: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}`,
+  COMMUNITY_MARKETPLACES_CHECK_ADMIN: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/check-admin`,
+  COMMUNITY_MARKETPLACES_DISCORD_VERIFY_MEMBER: (instanceID: string) =>
+    `/platform/v1/community-marketplaces/discord/${encodeURIComponent(instanceID)}/verify-member`,
+  COMMUNITY_MARKETPLACES_FEATURED: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/featured`,
+  COMMUNITY_MARKETPLACES_GROUPS: '/platform/v1/community-marketplaces/groups',
+  COMMUNITY_MARKETPLACES_LISTINGS: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/listings`,
+  COMMUNITY_MARKETPLACES_PUBLIC: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}`,
+  COMMUNITY_MARKETPLACES_PUBLIC_SELLER_APPLICATION: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}/seller-application`,
+  COMMUNITY_MARKETPLACES_PUBLIC_SELLERS_APPLY: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}/sellers/apply`,
+  COMMUNITY_MARKETPLACES_SEARCH: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/search`,
+  COMMUNITY_MARKETPLACES_SELLERS: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers`,
+  COMMUNITY_MARKETPLACES_SELLERS_APPLY: (platform: string, instanceID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers/apply`,
+  COMMUNITY_MARKETPLACES_SELLERS_PRODUCT_GROUPS: (
+    platform: string,
+    instanceID: string,
+    sellerID: string
+  ) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers/${encodeURIComponent(sellerID)}/product-groups`,
+  COMMUNITY_MARKETPLACES_SELLERS_REVIEW: (platform: string, instanceID: string, sellerID: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers/${encodeURIComponent(sellerID)}/review`,
+  COMMUNITY_MARKETPLACES_TELEGRAM_VERIFY_MEMBER: (instanceID: string) =>
+    `/platform/v1/community-marketplaces/telegram/${encodeURIComponent(instanceID)}/verify-member`,
   ENCRYPTION_LISTINGS_KEY: (peerID: string, slug: string) =>
     `/platform/v1/encryption/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}/key`,
   ENCRYPTION_PRODUCT_GROUPS_ROTATE_KEY: (id: string) =>
@@ -77,47 +122,28 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/fiat/providers/${encodeURIComponent(providerID)}/onboarding/callback`,
   FIAT_PROVIDERS_STATUS: (providerID: string) =>
     `/platform/v1/fiat/providers/${encodeURIComponent(providerID)}/status`,
-  GROUP_MARKETPLACE_ADMIN_BANNERS: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/admin/banners`,
-  GROUP_MARKETPLACE_ADMIN_FEATURED: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/admin/featured`,
-  GROUP_MARKETPLACE_BANNERS: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/banners`,
-  GROUP_MARKETPLACE_BY_PLATFORM: (platform: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}`,
-  GROUP_MARKETPLACE_BY_PLATFORM_CHAT_ID: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}`,
-  GROUP_MARKETPLACE_CHECK_ADMIN: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/check-admin`,
-  GROUP_MARKETPLACE_DISCORD_VERIFY_MEMBER: (chatID: string) =>
-    `/platform/v1/group-marketplace/discord/${encodeURIComponent(chatID)}/verify-member`,
-  GROUP_MARKETPLACE_FEATURED: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/featured`,
-  GROUP_MARKETPLACE_GROUPS: '/platform/v1/group-marketplace/groups',
-  GROUP_MARKETPLACE_LISTINGS: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/listings`,
-  GROUP_MARKETPLACE_SEARCH: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/search`,
-  GROUP_MARKETPLACE_SELLERS: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/sellers`,
-  GROUP_MARKETPLACE_SELLERS_APPLY: (platform: string, chatID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/sellers/apply`,
-  GROUP_MARKETPLACE_SELLERS_PRODUCT_GROUPS: (platform: string, chatID: string, sellerID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/sellers/${encodeURIComponent(sellerID)}/product-groups`,
-  GROUP_MARKETPLACE_SELLERS_REVIEW: (platform: string, chatID: string, sellerID: string) =>
-    `/platform/v1/group-marketplace/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}/sellers/${encodeURIComponent(sellerID)}/review`,
-  GROUP_MARKETPLACE_TELEGRAM_VERIFY_MEMBER: (chatID: string) =>
-    `/platform/v1/group-marketplace/telegram/${encodeURIComponent(chatID)}/verify-member`,
   INTEGRATIONS_TELEGRAM_WEBHOOK: '/platform/v1/integrations/telegram/webhook',
   INTEGRATIONS_TELEGRAM_WEBHOOK_BY_BOT_ID: (botID: string) =>
     `/platform/v1/integrations/telegram/webhook/${encodeURIComponent(botID)}`,
   IPNS: '/platform/v1/ipns',
   IPNS_BY_PEER_ID: (peerID: string) => `/platform/v1/ipns/${encodeURIComponent(peerID)}`,
+  MARKETPLACES: '/platform/v1/marketplaces',
+  MARKETPLACES_BY_ID: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}`,
+  MARKETPLACES_CONFIG: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}/config`,
+  MARKETPLACES_LINK: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}/link`,
+  MARKETPLACES_MINE: '/platform/v1/marketplaces/mine',
+  MARKETPLACES_SELLERS_BY_ID: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers`,
+  MARKETPLACES_SELLERS_BY_ID_PEER_ID: (id: string, peerID: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/${encodeURIComponent(peerID)}`,
+  MARKETPLACES_SELLERS_INVITE: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/invite`,
   MATRIX_CONFIG: '/platform/v1/matrix/config',
   MATRIX_PEER_ID: '/platform/v1/matrix/peer-id',
   MATRIX_STORE_INVITE: '/platform/v1/matrix/store/invite',
   MATRIX_STORE_KICK: '/platform/v1/matrix/store/kick',
   MATRIX_STORE_SPACES: '/platform/v1/matrix/store/spaces',
+  MODERATORS_RECOMMENDED: '/platform/v1/moderators/recommended',
   PRODUCT_GROUPS: '/platform/v1/product-groups',
   PRODUCT_GROUPS_AUTHORIZATIONS_BY_PRODUCT_GROUP_ID: (productGroupID: string) =>
     `/platform/v1/product-groups/${encodeURIComponent(productGroupID)}/authorizations`,
@@ -133,11 +159,13 @@ export const HOSTING_API_PATHS = {
   PRODUCT_GROUPS_ITEMS_BY_GROUP_ID_SLUG: (groupID: string, slug: string) =>
     `/platform/v1/product-groups/${encodeURIComponent(groupID)}/items/${encodeURIComponent(slug)}`,
   RELAY_EXECUTE: '/platform/v1/relay/execute',
+  RELAY_GAS_WALLET: '/platform/v1/relay/gas-wallet',
+  RELAY_GAS_WALLET_STATUS: '/platform/v1/relay/gas-wallet/status',
   RELAY_STATUS: '/platform/v1/relay/status',
-  SELLERS_GROUP_MARKETPLACES: (userID: string) =>
-    `/platform/v1/sellers/${encodeURIComponent(userID)}/group-marketplaces`,
-  SELLERS_VISIBILITY: (userID: string, platform: string, chatID: string) =>
-    `/platform/v1/sellers/${encodeURIComponent(userID)}/visibility/${encodeURIComponent(platform)}/${encodeURIComponent(chatID)}`,
+  SELLERS_MARKETPLACES: (userID: string) =>
+    `/platform/v1/sellers/${encodeURIComponent(userID)}/marketplaces`,
+  SELLERS_VISIBILITY: (userID: string, platform: string, instanceID: string) =>
+    `/platform/v1/sellers/${encodeURIComponent(userID)}/visibility/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}`,
   SERVER_INFO: '/platform/v1/server/info',
   STORE_ACCESS_CHECK: '/platform/v1/store-access/check',
   STORE_ACCESS_LIST: '/platform/v1/store-access-list',
@@ -222,9 +250,11 @@ export const SEARCH_API_PATHS = {
   NETDB_LISTING_INDEXES_BY_PEER_ID: (peerID: string) =>
     `/search/v1/netdb/listing-indexes/${encodeURIComponent(peerID)}`,
   NETDB_LISTINGS: '/search/v1/netdb/listings',
+  NETDB_LISTINGS_BY_ID: (id: string) => `/search/v1/netdb/listings/${encodeURIComponent(id)}`,
+  NETDB_LISTINGS_BY_ID_SLUG: (id: string, slug: string) =>
+    `/search/v1/netdb/listings/${encodeURIComponent(id)}/${encodeURIComponent(slug)}`,
   NETDB_LISTINGS_BY_LISTING_ID: (listingID: string) =>
     `/search/v1/netdb/listings/${encodeURIComponent(listingID)}`,
-  NETDB_LISTINGS_BY_PATH: (path: string) => `/search/v1/netdb/listings/${path}`,
   NETDB_PROFILES: '/search/v1/netdb/profiles',
   NETDB_PROFILES_BY_PEER_ID: (peerID: string) =>
     `/search/v1/netdb/profiles/${encodeURIComponent(peerID)}`,
@@ -330,6 +360,14 @@ export const NODE_API_PATHS = {
   CRYPTO_HASH: '/crypto/hash',
   CRYPTO_SIGN: '/crypto/sign',
   CRYPTO_VERIFY: '/crypto/verify',
+  DIGITAL_ASSETS: '/digital-assets',
+  DIGITAL_ASSETS_BY_ASSET_ID: (assetID: string) => `/digital-assets/${encodeURIComponent(assetID)}`,
+  DIGITAL_ASSETS_LICENSE_KEY: '/digital-assets/license-key',
+  DIGITAL_ASSETS_LICENSE_KEYS: '/digital-assets/license-keys',
+  DIGITAL_ASSETS_LICENSE_KEYS_REVOKE: (keyID: string) =>
+    `/digital-assets/license-keys/${encodeURIComponent(keyID)}/revoke`,
+  DIGITAL_ASSETS_LICENSE_KEYS_STATS: '/digital-assets/license-keys/stats',
+  DIGITAL_ASSETS_LINK: '/digital-assets/link',
   DISCOUNTS: '/discounts',
   DISCOUNTS_APPLICABLE: (peerID: string) => `/discounts/${encodeURIComponent(peerID)}/applicable`,
   DISCOUNTS_BY_DISCOUNT_ID: (discountID: string) => `/discounts/${encodeURIComponent(discountID)}`,
@@ -343,6 +381,8 @@ export const NODE_API_PATHS = {
   DISCOUNTS_VALIDATE: (peerID: string) => `/discounts/${encodeURIComponent(peerID)}/validate`,
   DISPUTES_AFTER_SALE: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/after-sale`,
   DISPUTES_CLOSE: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/close`,
+  DISPUTES_INSTRUCTIONS_RELEASE: (orderID: string) =>
+    `/disputes/${encodeURIComponent(orderID)}/instructions/release`,
   DISPUTES_OPEN: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/open`,
   DISPUTES_RELEASE: (orderID: string) => `/disputes/${encodeURIComponent(orderID)}/release`,
   DISPUTES_RELEASE_AFTER_TIMEOUT: (orderID: string) =>
@@ -380,6 +420,9 @@ export const NODE_API_PATHS = {
   FOLLOWERS_CHECK: (peerID: string) => `/followers/${encodeURIComponent(peerID)}/check`,
   FOLLOWING: '/following',
   FOLLOWING_BY_PEER_ID: (peerID: string) => `/following/${encodeURIComponent(peerID)}`,
+  FULFILLMENT_ALERTS: '/fulfillment/alerts',
+  FULFILLMENT_ALERTS_BY_ALERT_ID: (alertID: string) =>
+    `/fulfillment/alerts/${encodeURIComponent(alertID)}`,
   FULFILLMENT_CATALOG_BY_PROVIDER_ID: (providerID: string) =>
     `/fulfillment/${encodeURIComponent(providerID)}/catalog`,
   FULFILLMENT_CATALOG_BY_PROVIDER_ID_PRODUCT_ID: (providerID: string, productID: string) =>
@@ -390,11 +433,17 @@ export const NODE_API_PATHS = {
     `/fulfillment/${encodeURIComponent(providerID)}/disconnect`,
   FULFILLMENT_IMPORT: (providerID: string) =>
     `/fulfillment/${encodeURIComponent(providerID)}/import`,
+  FULFILLMENT_LOCATIONS: '/fulfillment/locations',
+  FULFILLMENT_LOCATIONS_BY_LOCATION_ID: (locationID: string) =>
+    `/fulfillment/locations/${encodeURIComponent(locationID)}`,
   FULFILLMENT_ORDERS_STATUS: (orderID: string) =>
     `/fulfillment/orders/${encodeURIComponent(orderID)}/status`,
   FULFILLMENT_PRODUCTS_SYNC: (slug: string) =>
     `/fulfillment/products/${encodeURIComponent(slug)}/sync`,
   FULFILLMENT_PROVIDERS: '/fulfillment/providers',
+  FULFILLMENT_RULES: '/fulfillment/rules',
+  FULFILLMENT_RULES_BY_RULE_ID: (ruleID: string) =>
+    `/fulfillment/rules/${encodeURIComponent(ruleID)}`,
   FULFILLMENT_SHIPPING_ESTIMATES: (providerID: string) =>
     `/fulfillment/${encodeURIComponent(providerID)}/shipping-estimates`,
   FULFILLMENT_STATUS: (providerID: string) =>
@@ -406,13 +455,17 @@ export const NODE_API_PATHS = {
     syncProductID: string
   ) =>
     `/fulfillment/${encodeURIComponent(providerID)}/store-products/${encodeURIComponent(syncProductID)}`,
-  FULFILLMENT_SYNCED_PRODUCTS: (providerID: string) =>
+  FULFILLMENT_SYNCED_PRODUCTS_BY_PROVIDER_ID: (providerID: string) =>
     `/fulfillment/${encodeURIComponent(providerID)}/synced-products`,
+  FULFILLMENT_SYNCED_PRODUCTS_BY_PROVIDER_ID_MAPPING_ID: (providerID: string, mappingID: string) =>
+    `/fulfillment/${encodeURIComponent(providerID)}/synced-products/${encodeURIComponent(mappingID)}`,
   FULFILLMENT_WEBHOOKS: (providerID: string, webhookSecret: string) =>
     `/fulfillment/${encodeURIComponent(providerID)}/webhooks/${encodeURIComponent(webhookSecret)}`,
   GUEST_ORDERS: '/guest/orders',
   GUEST_ORDERS_BY_TOKEN: (token: string) => `/guest/orders/${encodeURIComponent(token)}`,
   GUEST_ORDERS_COMPLETE: (token: string) => `/guest/orders/${encodeURIComponent(token)}/complete`,
+  GUEST_ORDERS_DETAIL: (token: string) => `/guest/orders/${encodeURIComponent(token)}/detail`,
+  GUEST_ORDERS_QUOTE: '/guest/orders/quote',
   GUEST_ORDERS_SHIP: (token: string) => `/guest/orders/${encodeURIComponent(token)}/ship`,
   LISTINGS: '/listings',
   LISTINGS_BY_LISTING_ID: (listingID: string) => `/listings/${encodeURIComponent(listingID)}`,
@@ -420,10 +473,12 @@ export const NODE_API_PATHS = {
     `/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}`,
   LISTINGS_BY_SLUG: (slug: string) => `/listings/${encodeURIComponent(slug)}`,
   LISTINGS_IMPORT: '/listings/import',
+  LISTINGS_IMPORT_GUMROAD: '/listings/import/gumroad',
   LISTINGS_IMPORT_JSON: '/listings/import/json',
   LISTINGS_INDEX: '/listings/index',
   LISTINGS_INDEX_BY_PEER_ID: (peerID: string) => `/listings/index/${encodeURIComponent(peerID)}`,
   LISTINGS_MINE: (slugOrCID: string) => `/listings/mine/${encodeURIComponent(slugOrCID)}`,
+  LISTINGS_SUPPLY_SUMMARY: '/listings/supply-summary',
   LISTINGS_TEMPLATE: '/listings/template',
   MEDIA_AVATAR: '/media/avatar',
   MEDIA_FILES: '/media/files',
@@ -451,19 +506,46 @@ export const NODE_API_PATHS = {
   ORDERS_CHECKOUT_BREAKDOWN: '/orders/checkout-breakdown',
   ORDERS_COMPLETE: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/complete`,
   ORDERS_CONFIRM: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/confirm`,
+  ORDERS_DIGITAL_ASSETS: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-assets`,
+  ORDERS_DIGITAL_DELIVERY: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-delivery`,
+  ORDERS_DIGITAL_DELIVERY_RETRY: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-delivery/retry`,
+  ORDERS_DIGITAL_DOWNLOAD: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-download`,
   ORDERS_ESTIMATE: '/orders/estimate',
   ORDERS_EXTEND_PROTECTION: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/extend-protection`,
+  ORDERS_INSTRUCTIONS_CANCEL: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/instructions/cancel`,
+  ORDERS_INSTRUCTIONS_COMPLETE: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/instructions/complete`,
+  ORDERS_INSTRUCTIONS_CONFIRM: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/instructions/confirm`,
+  ORDERS_INSTRUCTIONS_DECLINE: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/instructions/decline`,
+  ORDERS_INSTRUCTIONS_REFUND: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/instructions/refund`,
   ORDERS_PAYMENT: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/payment`,
   ORDERS_PAYMENT_CANCEL_PARTIAL: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/payment/cancel-partial`,
   ORDERS_PAYMENT_REMAINING: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/payment/remaining`,
+  ORDERS_PAYMENT_SESSION: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/payment-session`,
   ORDERS_PAYMENT_WATCH: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/payment/watch`,
   ORDERS_RATE: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/rate`,
   ORDERS_REFUND: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/refund`,
+  ORDERS_RWA_TOKEN_PAYMENT_INFO: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/rwa-token/payment-info`,
+  ORDERS_SETTLEMENT_ACTIONS: (orderID: string, action: string) =>
+    `/orders/${encodeURIComponent(orderID)}/settlement-actions/${encodeURIComponent(action)}`,
+  ORDERS_SETTLEMENT_ACTIONS_STATUS: (orderID: string, action: string) =>
+    `/orders/${encodeURIComponent(orderID)}/settlement-actions/${encodeURIComponent(action)}/status`,
   ORDERS_SHIP: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/ship`,
   ORDERS_SPEND: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/spend`,
+  ORDERS_SUPPLY_QUOTE: '/orders/supply-quote',
   PAYMENT_METHODS: (peerID: string) => `/payment-methods/${encodeURIComponent(peerID)}`,
   PEERS: '/peers',
   POSTS: '/posts',
@@ -493,6 +575,9 @@ export const NODE_API_PATHS = {
   SETTINGS_AI_TEST: '/settings/ai/test',
   SETTINGS_FEATURES: (key: string) => `/settings/features/${encodeURIComponent(key)}`,
   SETTINGS_GUEST_CHECKOUT: '/settings/guest-checkout',
+  SETTINGS_GUEST_CHECKOUT_READINESS: '/settings/guest-checkout/readiness',
+  SETTINGS_PAYMENT_POLICY: '/settings/payment-policy',
+  SETTINGS_PGP_KEY: '/settings/pgp-key',
   SETTINGS_STOREFRONT: '/settings/storefront',
   SETTINGS_STOREFRONT_BY_PEER_ID: (peerID: string) =>
     `/settings/storefront/${encodeURIComponent(peerID)}`,
@@ -508,6 +593,18 @@ export const NODE_API_PATHS = {
     `/shipping/profiles/${encodeURIComponent(profileID)}/set-default`,
   SHIPPING_REFRESH_SNAPSHOTS: '/shipping/refresh-snapshots',
   SHIPPING_STALE_LISTINGS: '/shipping/stale-listings',
+  STORE_POLICY: '/store-policy',
+  STORE_POLICY_MODERATORS: '/store-policy/moderators',
+  STORE_POLICY_MODERATORS_BY_PEER_ID: (peerID: string) =>
+    `/store-policy/moderators/${encodeURIComponent(peerID)}`,
+  STORE_POLICY_PUBLISHED: (peerID: string) =>
+    `/store-policy/${encodeURIComponent(peerID)}/published`,
+  STORES_LICENSES_ACTIVATE: (storeID: string) =>
+    `/stores/${encodeURIComponent(storeID)}/licenses/activate`,
+  STORES_LICENSES_DEACTIVATE: (storeID: string) =>
+    `/stores/${encodeURIComponent(storeID)}/licenses/deactivate`,
+  STORES_LICENSES_VALIDATE: (storeID: string) =>
+    `/stores/${encodeURIComponent(storeID)}/licenses/validate`,
   SYSTEM_CACHE: '/system/cache',
   SYSTEM_CLAIM_STORE: '/system/claim-store',
   SYSTEM_CONNECT_PLATFORM: '/system/connect-platform',
