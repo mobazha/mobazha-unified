@@ -99,7 +99,7 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   ltc: 'LTC',
   zec: 'ZEC',
   eth: 'ETH',
-  sol: 'SOL',
+  sol: 'SOL.png',
   bnb: 'BNB',
   matic: 'Polygon',
   usdt: 'USDT',
@@ -108,7 +108,7 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   busd: 'BUSD',
   cfx: 'CFX',
   base: 'BASE',
-  arbitrum: 'Arbitrum',
+  arbitrum: 'Arbitrum.png',
   op: 'Optimism',
   avax: 'AVAX',
   xdai: 'XDAI',
@@ -159,7 +159,8 @@ const getCDNIconUrl = (symbol: string): string => {
 const getLocalIconUrl = (symbol: string): string => {
   const s = symbol.toLowerCase();
   const fileName = LOCAL_ICON_MAP[s] || symbol.toUpperCase();
-  return `/icons/crypto/${fileName}.svg`;
+  const hasExtension = /\.[a-z0-9]+$/i.test(fileName);
+  return `/icons/crypto/${hasExtension ? fileName : `${fileName}.svg`}`;
 };
 
 /**

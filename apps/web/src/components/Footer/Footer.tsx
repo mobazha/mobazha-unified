@@ -27,6 +27,7 @@ const FOOTER_CRYPTO_TOKENS_FULL = [
   { id: 'MATIC', name: 'Polygon' },
   { id: 'ARBITRUM', name: 'Arbitrum' },
   { id: 'SOL', name: 'Solana' },
+  { id: 'BCH', name: 'Bitcoin Cash' },
   { id: 'LTC', name: 'Litecoin' },
   ...(isTronPaymentVisible() ? [{ id: 'TRX', name: 'TRON' }] : []),
   { id: 'USDT', name: 'Tether (USDT)' },
