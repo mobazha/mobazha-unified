@@ -11,17 +11,17 @@ vi.mock('@/hooks/useMiniAppPayment', () => ({
 vi.mock('@mobazha/core', async () => {
   const tokens = await import('../../../../../packages/core/data/tokens');
   const visibility = await import('../../../../../packages/core/config/paymentMethodVisibility');
-  const mainland = await import('../../../../../packages/core/config/mainlandCryptoPaymentGuide');
+  const guide = await import('../../../../../packages/core/config/exchangeUsdtPaymentGuide');
   return {
     ...tokens,
     ...visibility,
-    ...mainland,
+    ...guide,
     useI18n: () => ({
       locale: 'en',
       t: (key: string, vars?: Record<string, unknown>) =>
         vars?.count !== undefined ? `${key}:${vars.count}` : key,
     }),
-    useMainlandCryptoGuideDismiss: () => ({
+    useExchangeUsdtGuideDismiss: () => ({
       dismissed: false,
       dismiss: vi.fn(),
     }),
