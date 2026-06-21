@@ -133,6 +133,8 @@ function addTokenRateMappings(rates: ExchangeRates): void {
   const mappings: Record<string, string> = {
     MATICUSDT: 'USDT',
     MATICUSDC: 'USDC',
+    ARBUSDT: 'USDT',
+    ARBUSDC: 'USDC',
     ETHUSDT: 'USDT',
     ETHUSDC: 'USDC',
   };

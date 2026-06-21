@@ -2798,6 +2798,7 @@ export const zh: PartialTranslationResource = {
         sol: '提币选 Solana 网络 USDT，欧易、币安、火币通常均支持。',
         base: '提币选 Base 网络 USDT，须与下方所选一致。',
         matic: '提币选 Polygon 网络 USDT，须与下方所选一致。',
+        arbitrum: '提币选 Arbitrum 网络 USDT，须与下方所选一致。',
         eth: '以太坊主网 USDT Gas 较高，小额订单建议优先 BSC 或 Solana。',
         generic: '提币网络须与下方所选支付方式一致。',
       },

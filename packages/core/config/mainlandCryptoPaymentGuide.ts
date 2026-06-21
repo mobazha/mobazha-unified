@@ -28,7 +28,14 @@ export const MAINLAND_PAYMENT_HELP_PATH = '/help/mainland-payment';
 /** localStorage key for "don't show again" on checkout slim guide. */
 export const MAINLAND_GUIDE_DISMISS_STORAGE_KEY = 'mobazha.mainlandCryptoGuide.dismissed';
 
-export type MainlandWithdrawalHintKey = 'bsc' | 'sol' | 'base' | 'matic' | 'eth' | 'generic';
+export type MainlandWithdrawalHintKey =
+  | 'bsc'
+  | 'sol'
+  | 'base'
+  | 'matic'
+  | 'arbitrum'
+  | 'eth'
+  | 'generic';
 
 /** Map selected checkout token to a withdrawal-network hint i18n key (P2). */
 export function getMainlandWithdrawalHintKey(
@@ -40,6 +47,7 @@ export function getMainlandWithdrawalHintKey(
   if (id === 'SOLUSDT' || (id.startsWith('SOL') && id.includes('USDT'))) return 'sol';
   if (id === 'BASEUSDT' || id.includes('BASEUSDT')) return 'base';
   if (id === 'MATICUSDT' || (id.includes('MATIC') && id.includes('USDT'))) return 'matic';
+  if (id === 'ARBUSDT' || (id.includes('ARB') && id.includes('USDT'))) return 'arbitrum';
   if (id === 'ETHUSDT' || (id.includes('ETH') && id.includes('USDT') && !id.includes('BASE'))) {
     return 'eth';
   }
@@ -53,6 +61,7 @@ export const MAINLAND_CHECKOUT_TOKEN_PRIORITY = [
   'SOLUSDT',
   'BASEUSDT',
   'MATICUSDT',
+  'ARBUSDT',
   'ETHUSDT',
 ] as const;
 

@@ -30,6 +30,7 @@ const GUEST_SUPPORTED_CHAIN_IDS = [
   'BSC',
   'MATIC',
   'BASE',
+  'ARBITRUM',
   ...(isTronPaymentVisible() ? (['TRON'] as const) : []),
 ] as const;
 
@@ -39,6 +40,7 @@ const GUEST_SUPPORTED_CHAIN_IDS = [
  */
 const CHAIN_ID_TO_PAYMENT_COIN: Record<string, string> = {
   TRON: 'TRX',
+  ARBITRUM: 'ARB',
 };
 
 export interface GuestCoinInfo {

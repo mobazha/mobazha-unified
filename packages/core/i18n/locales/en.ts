@@ -3081,6 +3081,7 @@ export const en: TranslationResource = {
         sol: 'Withdraw USDT on Solana — supported on OKX, Binance, and HTX.',
         base: 'Withdraw USDT on the Base network to match this payment method.',
         matic: 'Withdraw USDT on Polygon to match this payment method.',
+        arbitrum: 'Withdraw USDT on Arbitrum to match this payment method.',
         eth: 'Ethereum mainnet USDT — higher network fees; BSC or Solana recommended for small orders.',
         generic: 'Match the withdrawal network to the payment method selected above.',
       },

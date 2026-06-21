@@ -85,6 +85,28 @@ const CHAINS: ChainMeta[] = [
     ],
   },
   {
+    id: 'MATIC',
+    name: 'Polygon',
+    color: '#8247E5',
+    family: 'evm',
+    tokens: [
+      { symbol: 'NATIVE', label: 'MATIC' },
+      { symbol: 'USDT', label: 'USDT' },
+      { symbol: 'USDC', label: 'USDC' },
+    ],
+  },
+  {
+    id: 'ARB',
+    name: 'Arbitrum',
+    color: '#28A0F0',
+    family: 'evm',
+    tokens: [
+      { symbol: 'NATIVE', label: 'ETH' },
+      { symbol: 'USDT', label: 'USDT' },
+      { symbol: 'USDC', label: 'USDC' },
+    ],
+  },
+  {
     id: 'SOL',
     name: 'Solana',
     color: '#9945FF',

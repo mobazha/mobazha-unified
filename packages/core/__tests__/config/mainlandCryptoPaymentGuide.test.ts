@@ -48,6 +48,7 @@ describe('mainlandCryptoPaymentGuide', () => {
     expect(getMainlandWithdrawalHintKey('SOLUSDT')).toBe('sol');
     expect(getMainlandWithdrawalHintKey('BASEUSDT')).toBe('base');
     expect(getMainlandWithdrawalHintKey('MATICUSDT')).toBe('matic');
+    expect(getMainlandWithdrawalHintKey('ARBUSDT')).toBe('arbitrum');
     expect(getMainlandWithdrawalHintKey('ETHUSDT')).toBe('eth');
     expect(getMainlandWithdrawalHintKey('')).toBeNull();
   });
