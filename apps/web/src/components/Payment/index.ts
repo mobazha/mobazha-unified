@@ -7,6 +7,8 @@ export * from './types';
 export * from './config';
 
 export { PaymentCryptoSelector } from './PaymentCryptoSelector';
+export { CryptoPaymentReadinessGuide } from './CryptoPaymentReadinessGuide';
+export { MainlandPaymentTokenHint } from './MainlandPaymentTokenHint';
 export { ModeratorSelector } from './ModeratorSelector';
 export { ModeratorCard } from './ModeratorCard';
 export { CryptoTokenCard } from './CryptoTokenCard';

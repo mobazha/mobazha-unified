@@ -2785,6 +2785,23 @@ export const zh: PartialTranslationResource = {
       requiredTitle: '请填写退款收款地址',
       requiredDesc: '从交易所付款前，请先填写退款收款地址。',
     },
+    cryptoReadiness: {
+      title: '还没有 USDT？',
+      summary: '先在交易所 C2C 购买 USDT（通常需实名），提币网络须与下方所选支付方式一致。',
+      trc20Warning:
+        '大陆 OTC 常默认 TRC20，本平台不支持。请选 BSC（BEP20）或 Solana，不要选 TRC20。',
+      fullGuideLink: '查看完整指引',
+      fullGuideLinkNewTab: '查看完整指引（在新标签页打开）',
+      dismiss: '不再显示',
+      tokenHint: {
+        bsc: '提币选 BSC USDT（BEP20），建议走币安 C2C（欧易不支持 BSC 网络 USDT）。',
+        sol: '提币选 Solana 网络 USDT，欧易、币安、火币通常均支持。',
+        base: '提币选 Base 网络 USDT，须与下方所选一致。',
+        matic: '提币选 Polygon 网络 USDT，须与下方所选一致。',
+        eth: '以太坊主网 USDT Gas 较高，小额订单建议优先 BSC 或 Solana。',
+        generic: '提币网络须与下方所选支付方式一致。',
+      },
+    },
     tron: {
       insufficientGas: 'TRX 不足，无法支付网络手续费（需要：{{required}}，当前余额：{{balance}}）',
       gasExplanation: 'TRON 网络使用 TRX 支付手续费（能量费）。请先向钱包充值后再试。',
@@ -6579,9 +6596,92 @@ export const zh: PartialTranslationResource = {
     disconnectConfirmTitle: '断开 {{provider}}？',
     disconnectConfirmDesc: '断开后将无法通过 {{provider}} 接收付款。进行中的订单不受影响。',
   },
+  help: {
+    backToStore: '返回店铺',
+    mainlandPayment: {
+      title: '大陆用户 USDT 支付指引',
+      intro: 'Mobazha 不提供人民币入金。请通过交易所 C2C 购买 USDT，再按结账页所选网络完成支付。',
+      step1Title: '在交易所完成实名并购买 USDT',
+      step1Desc:
+        'C2C 买币通常需要身份证与人脸认证。请仅按各交易所官方教程操作，Mobazha 不提供人民币入金服务。',
+      step2Title: '提币或链上转账时选对网络',
+      step2Desc: '提币网络须与结账页所选支付方式一致。本平台暂不支持 TRON（TRC20）。',
+      trc20Warning:
+        '大陆 OTC 常默认 TRC20，本平台不支持。请选 BSC（BEP20）或 Solana，不要选 TRC20。',
+      step3Title: '回到结账页完成支付',
+      step3Desc:
+        '在结账页选择对应的 USDT 网络付款。若从交易所转账，请勾选「我将从交易所付款」并填写个人钱包退款地址。',
+      networkTableTitle: '网络对照表',
+      networkTableHeaders: {
+        mobazha: 'Mobazha 结账',
+        okx: '欧易提币',
+        binance: '币安提币',
+        htx: '火币提币',
+      },
+      networkRows: {
+        bsc: {
+          mobazha: 'BSC USDT（BEP20）— 推荐',
+          okx: '不支持 BSC 网络 USDT',
+          binance: '支持 BEP20',
+          htx: '支持 BEP20',
+        },
+        sol: {
+          mobazha: 'Solana USDT — 推荐',
+          okx: '支持 Solana',
+          binance: '支持 Solana',
+          htx: '支持 Solana',
+        },
+        base: {
+          mobazha: 'Base USDT',
+          okx: '支持 Base 网络',
+          binance: '支持 Base 网络',
+          htx: '以火币帮助中心为准',
+        },
+        matic: {
+          mobazha: 'Polygon USDT',
+          okx: '支持 Polygon',
+          binance: '支持 Polygon',
+          htx: '以火币帮助中心为准',
+        },
+        eth: {
+          mobazha: '以太坊主网 USDT',
+          okx: '支持 ERC20（Gas 较高）',
+          binance: '支持 ERC20（Gas 较高）',
+          htx: '支持 ERC20（Gas 较高）',
+        },
+      },
+      exchangeGuidesTitle: '交易所官方教程',
+      links: {
+        okx: '欧易 C2C 教程',
+        binance: '币安 P2P 帮助',
+        htx: '火币 C2C 教程',
+      },
+      faqTitle: '常见问题',
+      faq: {
+        trc20Q: '为什么不支持 TRC20？',
+        trc20A:
+          'Mobazha 结账支持 ETH/L2 与 Solana 网络，平台层面不支持 TRON（TRC20）。选错网络可能导致资产无法到账。',
+        okxBscQ: '我用欧易，怎么付 BSC USDT？',
+        okxBscA:
+          '欧易不支持 BSC 网络 USDT 提币。可在欧易选 Solana USDT，或通过币安 C2C 购买后 BEP20 提币。',
+        kycQ: '是否需要实名认证？',
+        kycA: '交易所 C2C 通常需要 KYC，具体以各平台与当地规则为准。请使用官方 App 与帮助中心。',
+        refundQ: '从交易所付款，退款怎么办？',
+        refundA:
+          '结账时勾选「我将从交易所付款」，并填写您个人控制的钱包退款地址。交易所热钱包通常无法接收退款。',
+      },
+      custodialTitle: '从交易所付款',
+      custodialDesc:
+        '选定加密货币支付方式后，勾选「我将从交易所付款」并填写个人退款地址，再在交易所 App 内发起转账。',
+      disclaimer:
+        '能否访问交易所、实名认证及当地规则由您自行负责。Mobazha 仅链接至交易所官方帮助页，不提供人民币入金服务。',
+    },
+  },
   support: {
     documentation: '文档',
     documentationDesc: '入门指南和教程',
+    mainlandPayment: 'USDT 支付指引',
+    mainlandPaymentDesc: '交易所买 U 与提币网络对照',
     community: '社区',
     communityDesc: '加入我们的 Telegram 社区获取帮助',
   },

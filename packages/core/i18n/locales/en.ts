@@ -3067,6 +3067,24 @@ export const en: TranslationResource = {
       requiredTitle: 'Refund address required',
       requiredDesc: 'Add your refund receiving address before paying from an exchange.',
     },
+    cryptoReadiness: {
+      title: "Don't have USDT yet?",
+      summary:
+        'Buy USDT on an exchange (C2C, KYC usually required). Withdraw on the network that matches your selection below.',
+      trc20Warning:
+        'Mainland OTC often defaults to TRC20. We do not support TRON. Choose BSC (BEP20) or Solana instead.',
+      fullGuideLink: 'View full guide',
+      fullGuideLinkNewTab: 'View full guide (opens in new tab)',
+      dismiss: "Don't show again",
+      tokenHint: {
+        bsc: 'Withdraw BSC USDT (BEP20) from Binance. OKX does not support BSC USDT.',
+        sol: 'Withdraw USDT on Solana — supported on OKX, Binance, and HTX.',
+        base: 'Withdraw USDT on the Base network to match this payment method.',
+        matic: 'Withdraw USDT on Polygon to match this payment method.',
+        eth: 'Ethereum mainnet USDT — higher network fees; BSC or Solana recommended for small orders.',
+        generic: 'Match the withdrawal network to the payment method selected above.',
+      },
+    },
     // Transaction related
     connectWalletFirst: 'Please connect your wallet first',
     noPaymentAddress: 'No payment address available',
@@ -7184,9 +7202,94 @@ export const en: TranslationResource = {
     disconnectConfirmDesc:
       'After disconnecting, you will no longer be able to accept payments through {{provider}}. Orders already in progress will not be affected.',
   },
+  help: {
+    backToStore: 'Back to store',
+    mainlandPayment: {
+      title: 'Pay with USDT from mainland China',
+      intro:
+        'Mobazha does not provide RMB on-ramps. Use an exchange C2C/P2P flow to buy USDT, then pay on the matching network below.',
+      step1Title: 'Buy USDT on an exchange (KYC usually required)',
+      step1Desc:
+        'Complete identity verification on the exchange, then use C2C/P2P if available in your region. Follow each platform official guide only.',
+      step2Title: 'Withdraw on the correct network',
+      step2Desc:
+        'The withdrawal network must match the payment method you select at checkout. This store does not accept TRON (TRC20).',
+      trc20Warning:
+        'Mainland OTC often defaults to TRC20. We do not support TRON. Choose BSC (BEP20) or Solana instead.',
+      step3Title: 'Return to checkout and pay',
+      step3Desc:
+        'Select the matching USDT network at checkout. If paying from an exchange, enable “Pay from exchange” and set a personal refund wallet address.',
+      networkTableTitle: 'Network quick reference',
+      networkTableHeaders: {
+        mobazha: 'Mobazha checkout',
+        okx: 'OKX withdrawal',
+        binance: 'Binance withdrawal',
+        htx: 'HTX withdrawal',
+      },
+      networkRows: {
+        bsc: {
+          mobazha: 'BSC USDT (BEP20) — recommended',
+          okx: 'Not supported for BSC USDT',
+          binance: 'BEP20 supported',
+          htx: 'BEP20 supported',
+        },
+        sol: {
+          mobazha: 'Solana USDT — recommended',
+          okx: 'Solana supported',
+          binance: 'Solana supported',
+          htx: 'Solana supported',
+        },
+        base: {
+          mobazha: 'Base USDT',
+          okx: 'Base network supported',
+          binance: 'Base network supported',
+          htx: 'Check HTX help center',
+        },
+        matic: {
+          mobazha: 'Polygon USDT',
+          okx: 'Polygon supported',
+          binance: 'Polygon supported',
+          htx: 'Check HTX help center',
+        },
+        eth: {
+          mobazha: 'Ethereum mainnet USDT',
+          okx: 'ERC20 supported (higher fees)',
+          binance: 'ERC20 supported (higher fees)',
+          htx: 'ERC20 supported (higher fees)',
+        },
+      },
+      exchangeGuidesTitle: 'Official exchange guides',
+      links: {
+        okx: 'OKX C2C guide',
+        binance: 'Binance P2P FAQ',
+        htx: 'HTX C2C guide',
+      },
+      faqTitle: 'FAQ',
+      faq: {
+        trc20Q: 'Why is TRC20 not supported?',
+        trc20A:
+          'Mobazha checkout uses ETH/L2 and Solana networks. TRON (TRC20) is not supported at the platform level — choosing TRC20 will lose funds.',
+        okxBscQ: 'I use OKX — how do I pay with BSC USDT?',
+        okxBscA:
+          'OKX does not support BSC USDT withdrawal. Use Solana USDT on OKX, or use Binance C2C + BEP20 withdrawal for BSC USDT.',
+        kycQ: 'Do I need KYC?',
+        kycA: 'Exchange C2C/P2P usually requires identity verification. Rules vary by platform and region — follow the exchange official process.',
+        refundQ: 'Paying from an exchange — what about refunds?',
+        refundA:
+          'At checkout, enable “Pay from exchange” and enter a personal wallet refund address you control. Exchange hot wallets cannot receive refunds.',
+      },
+      custodialTitle: 'Paying from an exchange',
+      custodialDesc:
+        'After selecting a crypto payment method, check “Pay from exchange” and add your personal refund address before sending from the exchange app.',
+      disclaimer:
+        'Exchange access, KYC, and local rules are your responsibility. Mobazha only links to official exchange help pages and does not operate fiat on-ramps.',
+    },
+  },
   support: {
     documentation: 'Documentation',
     documentationDesc: 'Guides and tutorials for getting started',
+    mainlandPayment: 'USDT payment guide (China)',
+    mainlandPaymentDesc: 'Buy USDT on an exchange and pay on the correct network',
     community: 'Community',
     communityDesc: 'Join our Telegram community for help',
   },

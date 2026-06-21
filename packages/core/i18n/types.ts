@@ -4541,9 +4541,60 @@ export interface TranslationResource {
     rateUpdated?: string;
   };
 
+  help?: {
+    backToStore: string;
+    mainlandPayment: {
+      title: string;
+      intro: string;
+      step1Title: string;
+      step1Desc: string;
+      step2Title: string;
+      step2Desc: string;
+      trc20Warning: string;
+      step3Title: string;
+      step3Desc: string;
+      networkTableTitle: string;
+      networkTableHeaders: {
+        mobazha: string;
+        okx: string;
+        binance: string;
+        htx: string;
+      };
+      networkRows: {
+        bsc: { mobazha: string; okx: string; binance: string; htx: string };
+        sol: { mobazha: string; okx: string; binance: string; htx: string };
+        base: { mobazha: string; okx: string; binance: string; htx: string };
+        matic: { mobazha: string; okx: string; binance: string; htx: string };
+        eth: { mobazha: string; okx: string; binance: string; htx: string };
+      };
+      exchangeGuidesTitle: string;
+      links: {
+        okx: string;
+        binance: string;
+        htx: string;
+      };
+      faqTitle: string;
+      faq: {
+        trc20Q: string;
+        trc20A: string;
+        okxBscQ: string;
+        okxBscA: string;
+        kycQ: string;
+        kycA: string;
+        refundQ: string;
+        refundA: string;
+      };
+      custodialTitle: string;
+      custodialDesc: string;
+      disclaimer: string;
+    };
+  };
+
   support?: {
     documentation: string;
     documentationDesc: string;
+    mainlandPayment?: string;
+    mainlandPaymentDesc?: string;
     community: string;
     communityDesc: string;
   };

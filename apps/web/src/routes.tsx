@@ -116,6 +116,18 @@ if (!__OUTPOST__) {
       ],
     },
 
+    // Help pages (public)
+    {
+      path: '/help',
+      element: lazyPage(() => import('./app/help/HelpLayoutVite')),
+      children: [
+        {
+          path: 'mainland-payment',
+          element: lazyPage(() => import('./app/help/mainland-payment/page')),
+        },
+      ],
+    },
+
     // ============================================
     // 私有路由（需要登录）
     // ============================================
@@ -521,6 +533,18 @@ if (__OUTPOST__) {
         { path: 'shipping', element: lazyPage(() => import('./app/policies/shipping/page')) },
         { path: 'returns', element: lazyPage(() => import('./app/policies/returns/page')) },
         { path: 'refund', element: lazyPage(() => import('./app/policies/refund/page')) },
+      ],
+    },
+
+    // Help pages
+    {
+      path: '/help',
+      element: lazyPage(() => import('./app/help/HelpLayoutVite')),
+      children: [
+        {
+          path: 'mainland-payment',
+          element: lazyPage(() => import('./app/help/mainland-payment/page')),
+        },
       ],
     },
 
