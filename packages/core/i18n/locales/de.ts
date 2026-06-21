@@ -6924,7 +6924,7 @@ export const de: PartialTranslationResource = {
         step3Body:
           'Melden Sie sich im Popup bei Mobazha an (Sie kehren zum Adminbereich Ihres Shops zurück). Nach einer Aktualisierung wird Ihr Shop hier angezeigt.',
         learnMore: 'Erfahren Sie mehr',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

@@ -6794,7 +6794,7 @@ export const ru: PartialTranslationResource = {
         step3Body:
           'Войдите в Mobazha во всплывающем окне (вы вернетесь к администратору вашего магазина). Ваш магазин появится здесь после обновления.',
         learnMore: 'Узнать больше',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

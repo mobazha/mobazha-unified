@@ -8026,7 +8026,7 @@ export const en: TranslationResource = {
         step3Body:
           'Sign in to Mobazha in the popup (you\u2019ll come back to your store\u2019s admin). Your store will appear here after a refresh.',
         learnMore: 'Learn more',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

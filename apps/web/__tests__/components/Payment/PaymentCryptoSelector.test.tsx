@@ -21,6 +21,10 @@ vi.mock('@mobazha/core', async () => {
       t: (key: string, vars?: Record<string, unknown>) =>
         vars?.count !== undefined ? `${key}:${vars.count}` : key,
     }),
+    useMainlandCryptoGuideDismiss: () => ({
+      dismissed: false,
+      dismiss: vi.fn(),
+    }),
   };
 });
 

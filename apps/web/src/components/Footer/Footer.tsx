@@ -364,7 +364,7 @@ export const Footer: React.FC = () => {
                   © {new Date().getFullYear()} {brandProfile.name}.{' '}
                   {!getBrandConfig()?.hidePoweredBy && (
                     <a
-                      href="https://mobazha.com"
+                      href="https://mobazha.org"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-primary transition-colors"

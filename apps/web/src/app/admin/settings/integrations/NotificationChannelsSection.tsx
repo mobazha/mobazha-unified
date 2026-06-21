@@ -60,7 +60,7 @@ const CHANNEL_FIELD_META: Record<string, Record<string, FieldMeta>> = {
       help: 'admin.integrations.emailRecipientHelp',
     },
     sender_email: {
-      placeholder: 'Mobazha <notifications@mobazha.com>',
+      placeholder: 'Mobazha <notifications@mobazha.org>',
       help: 'admin.integrations.emailSenderHelp',
     },
     api_key: {

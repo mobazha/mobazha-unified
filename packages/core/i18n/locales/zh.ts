@@ -7043,7 +7043,7 @@ export const zh: PartialTranslationResource = {
         step3Body:
           '在弹窗里登录 Mobazha 后会自动回到你自建店铺的 Admin，稍后刷新本页就能看到这家店铺。',
         learnMore: '查看完整指南',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

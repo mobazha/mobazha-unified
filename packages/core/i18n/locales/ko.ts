@@ -6703,7 +6703,7 @@ export const ko: PartialTranslationResource = {
         step3Body:
           '팝업에서 Mobazha에 로그인합니다(스토어 관리자로 돌아갑니다). 새로고침하면 매장이 여기에 표시됩니다.',
         learnMore: '자세히 알아보기',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

@@ -6859,7 +6859,7 @@ export const es: PartialTranslationResource = {
         step3Body:
           'Inicia sesión en Mobazha en la ventana emergente (volverás al administrador de tu tienda). Tu tienda aparecerá aquí después de una actualización.',
         learnMore: 'Más información',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

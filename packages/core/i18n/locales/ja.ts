@@ -6759,7 +6759,7 @@ export const ja: PartialTranslationResource = {
         step3Body:
           'ポップアップで Mobazha にサインインします (ストアの管理者に戻ります)。更新すると、ストアがここに表示されます。',
         learnMore: 'もっと詳しく知る',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },

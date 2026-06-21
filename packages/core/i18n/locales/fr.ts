@@ -6900,7 +6900,7 @@ export const fr: PartialTranslationResource = {
         step3Body:
           "Connectez-vous à Mobazha dans la fenêtre contextuelle (vous reviendrez à l'administrateur de votre boutique). Votre boutique apparaîtra ici après une actualisation.",
         learnMore: 'Apprendre encore plus',
-        learnMoreHref: 'https://docs.mobazha.com/self-host/bind-account',
+        learnMoreHref: 'https://docs.mobazha.org/self-host/bind-account',
       },
     },
   },
