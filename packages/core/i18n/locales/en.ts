@@ -7212,10 +7212,10 @@ export const en: TranslationResource = {
     exchangeUsdtPayment: {
       title: 'Pay with USDT from an exchange',
       intro:
-        'Mobazha does not provide RMB on-ramps. Use an exchange C2C/P2P flow to buy USDT, then pay on the matching network below.',
+        'Mobazha does not provide fiat-to-USDT conversion. Use an exchange C2C/P2P flow to buy USDT, then pay on the matching network below.',
       step1Title: 'Buy USDT on an exchange (KYC usually required)',
       step1Desc:
-        'Complete identity verification on the exchange, then use C2C/P2P if available in your region. Follow each platform official guide only.',
+        'Complete identity verification on the exchange, then use C2C/P2P if available in your region. Follow each platform official guide only. Mobazha does not provide fiat-to-USDT conversion.',
       step2Title: 'Withdraw on the correct network',
       step2Desc:
         'The withdrawal network must match the payment method you select at checkout. This store does not accept TRON (TRC20).',
@@ -7287,7 +7287,7 @@ export const en: TranslationResource = {
       custodialDesc:
         'After selecting a crypto payment method, check “Pay from exchange” and add your personal refund address before sending from the exchange app.',
       disclaimer:
-        'Exchange access, KYC, and local rules are your responsibility. Mobazha only links to official exchange help pages and does not operate fiat on-ramps.',
+        'Exchange access, KYC, and local rules are your responsibility. Mobazha only links to official exchange help pages and does not provide fiat-to-USDT conversion.',
     },
   },
   support: {

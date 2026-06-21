@@ -6605,10 +6605,11 @@ export const zh: PartialTranslationResource = {
     backToStore: '返回店铺',
     exchangeUsdtPayment: {
       title: 'USDT 支付指引（从交易所付款）',
-      intro: 'Mobazha 不提供人民币入金。请通过交易所 C2C 购买 USDT，再按结账页所选网络完成支付。',
+      intro:
+        'Mobazha 不提供法币兑换 USDT 服务。请通过交易所 C2C 购买 USDT，再按结账页所选网络完成支付。',
       step1Title: '在交易所完成实名并购买 USDT',
       step1Desc:
-        'C2C 买币通常需要身份证与人脸认证。请仅按各交易所官方教程操作，Mobazha 不提供人民币入金服务。',
+        'C2C 买币通常需要身份验证。请仅按各交易所官方教程操作，Mobazha 不提供法币兑换 USDT 服务。',
       step2Title: '提币或链上转账时选对网络',
       step2Desc: '提币网络须与结账页所选支付方式一致。本平台暂不支持 TRON（TRC20）。',
       trc20Warning:
@@ -6679,7 +6680,7 @@ export const zh: PartialTranslationResource = {
       custodialDesc:
         '选定加密货币支付方式后，勾选「我将从交易所付款」并填写个人退款地址，再在交易所 App 内发起转账。',
       disclaimer:
-        '能否访问交易所、实名认证及当地规则由您自行负责。Mobazha 仅链接至交易所官方帮助页，不提供人民币入金服务。',
+        '能否访问交易所、实名认证及当地规则由您自行负责。Mobazha 仅链接至交易所官方帮助页，不提供法币兑换 USDT 服务。',
     },
   },
   support: {
