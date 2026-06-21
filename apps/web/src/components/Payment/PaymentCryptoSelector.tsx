@@ -8,6 +8,8 @@ import {
   useI18n,
   isFiatPaymentVisible,
   filterVisiblePaymentTokens,
+  applyMainlandCheckoutTokenOrdering,
+  isMainlandCryptoPaymentGuideLocale,
 } from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
@@ -16,6 +18,8 @@ import type { CurrencyGroup } from './config';
 import { CryptoTokenCard } from './CryptoTokenCard';
 import { MultiChainTokenCard } from './MultiChainTokenCard';
 import { TokenIcon } from './TokenIcon';
+import { CryptoPaymentReadinessGuide } from './CryptoPaymentReadinessGuide';
+import { MainlandPaymentTokenHint } from './MainlandPaymentTokenHint';
 
 export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   selectedTokenId,
@@ -30,7 +34,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   rwaBlockchain,
   showFiatMethods = true,
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { isEmbedded } = useMiniAppPayment();
 
   const effectiveShowFiat = showFiatMethods && isFiatPaymentVisible();
@@ -73,7 +77,13 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
     return filterVisiblePaymentTokens(tokens);
   }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
 
-  const currencyGroups = useMemo(() => groupTokensByCurrency(availableTokens), [availableTokens]);
+  const currencyGroups = useMemo(() => {
+    const groups = groupTokensByCurrency(availableTokens);
+    if (!isMainlandCryptoPaymentGuideLocale(locale)) {
+      return groups;
+    }
+    return applyMainlandCheckoutTokenOrdering(groups) as CurrencyGroup[];
+  }, [availableTokens, locale]);
 
   const stablecoins = useMemo(
     () => currencyGroups.filter(g => g.category === 'stablecoin'),
@@ -244,6 +254,15 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
             </>
           )}
         </div>
+      )}
+
+      {availableTokens.length > 0 && isMainlandCryptoPaymentGuideLocale(locale) && (
+        <>
+          {selectedTokenId && !selectedFiatProvider && (
+            <MainlandPaymentTokenHint tokenId={selectedTokenId} />
+          )}
+          <CryptoPaymentReadinessGuide />
+        </>
       )}
     </div>
   );

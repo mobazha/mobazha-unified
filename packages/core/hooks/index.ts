@@ -31,6 +31,7 @@ export * from './useAuthenticatedImage';
 
 // 国际化相关
 export * from './useI18n';
+export * from './useMainlandCryptoGuideDismiss';
 
 // 监控相关
 export * from './useMonitoring';
