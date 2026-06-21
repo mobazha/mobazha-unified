@@ -72,7 +72,9 @@ import { ShareButton } from '@/components/Share';
 import { IdentityName } from '@/components/IdentityName';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
+import { cn } from '@/lib/utils';
 import { getProfileWithDedup } from '@/utils/requestDedup';
+import { usePlatform } from '@mobazha/ui/hooks';
 import {
   RwaTab,
   StoreListingsToolbar,
@@ -110,6 +112,7 @@ export default function StorePage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { openProduct, isMobile } = useProductModal();
+  const { isEmbeddedApp } = usePlatform();
   const { hasVerifiedMod } = useVerifiedModerators();
   const peerId = params.peerId as string;
   const {
@@ -821,7 +824,7 @@ export default function StorePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {isMobile && (
+      {isMobile && !isEmbeddedApp && (
         <button
           onClick={() => router.back()}
           className="fixed top-3 left-3 z-40 lg:hidden w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm shadow-md flex items-center justify-center active:scale-95 transition-transform"
@@ -1217,7 +1220,12 @@ export default function StorePage() {
         {/* Tabs — always visible (branded sections + tabs coexist) */}
         <>
           {/* Tabs */}
-          <div className="sticky top-16 z-30 bg-background border-b border-border">
+          <div
+            className={cn(
+              'sticky z-30 bg-background/95 backdrop-blur-sm border-b border-border',
+              'top-0 md:top-16'
+            )}
+          >
             <Container size="xl">
               <div className="relative">
                 <div className="flex items-center px-4 sm:px-6 overflow-x-auto scrollbar-hide">
