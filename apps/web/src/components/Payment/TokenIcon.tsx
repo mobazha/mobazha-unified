@@ -29,8 +29,11 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   BASEETH: 'eth',
   BASEUSDC: 'usdc',
   BASEUSDT: 'usdt',
+  ARB: 'arbitrum',
   ARBITRUM: 'arbitrum',
   ARBETH: 'eth',
+  ARBUSDT: 'usdt',
+  ARBUSDC: 'usdc',
   OP: 'op',
   OPETH: 'eth',
   AVAX: 'avax',
@@ -87,7 +90,7 @@ const FIAT_CURRENCIES = new Set([
 ]);
 
 // CDN 中不存在的 symbol，直接从 local 开始加载
-const CDN_MISSING = new Set(['base', 'mbz', 'xmr']);
+const CDN_MISSING = new Set(['base', 'mbz', 'xmr', 'arbitrum', 'sol']);
 
 // 本地图标文件名映射（用于 fallback）
 const LOCAL_ICON_MAP: Record<string, string> = {
