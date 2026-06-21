@@ -1355,7 +1355,13 @@ export default function PaymentPage() {
                           <PaymentMethodSummary
                             selectedTokenId={visibleTokenId}
                             selectedFiatProvider={visibleFiatProvider}
-                            onEdit={() => openPaymentSelector('/payment?orderID=' + orderID)}
+                            onEdit={() =>
+                              openPaymentSelector(
+                                typeof window !== 'undefined'
+                                  ? `${window.location.pathname}${window.location.search}`
+                                  : `/payment?orderID=${encodeURIComponent(orderID ?? '')}`
+                              )
+                            }
                           />
                         </CardContent>
                       </Card>
@@ -1432,7 +1438,11 @@ export default function PaymentPage() {
                           onEnabledChange={setPaymentProtectionEnabled}
                           selectedModerator={paymentModerator}
                           onChangeModerator={() =>
-                            openModeratorSelector('/payment?orderID=' + orderID)
+                            openModeratorSelector(
+                              typeof window !== 'undefined'
+                                ? `${window.location.pathname}${window.location.search}`
+                                : `/payment?orderID=${encodeURIComponent(orderID ?? '')}`
+                            )
                           }
                           protectionDays={45}
                         />

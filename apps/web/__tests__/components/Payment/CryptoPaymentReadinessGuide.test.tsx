@@ -2,20 +2,20 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { MAINLAND_GUIDE_DISMISS_STORAGE_KEY } from '../../../../../packages/core/config/mainlandCryptoPaymentGuide';
+import { EXCHANGE_USDT_GUIDE_DISMISS_STORAGE_KEY } from '../../../../../packages/core/config/exchangeUsdtPaymentGuide';
 
 const dismissMock = vi.fn();
 let dismissed = false;
 
 vi.mock('@mobazha/core', async () => {
-  const mainland = await import('../../../../../packages/core/config/mainlandCryptoPaymentGuide');
+  const guide = await import('../../../../../packages/core/config/exchangeUsdtPaymentGuide');
   return {
-    ...mainland,
+    ...guide,
     useI18n: () => ({
       locale: 'zh',
       t: (key: string) => key,
     }),
-    useMainlandCryptoGuideDismiss: () => ({
+    useExchangeUsdtGuideDismiss: () => ({
       dismissed,
       dismiss: dismissMock,
     }),
@@ -46,7 +46,7 @@ describe('CryptoPaymentReadinessGuide', () => {
     expect(screen.getByText('payment.cryptoReadiness.summary')).toBeInTheDocument();
     expect(screen.getByText('payment.cryptoReadiness.fullGuideLink')).toHaveAttribute(
       'href',
-      '/help/mainland-payment'
+      '/help/exchange-usdt-payment'
     );
     expect(screen.getByText('payment.cryptoReadiness.fullGuideLink')).toHaveAttribute(
       'target',
@@ -76,15 +76,14 @@ describe('CryptoPaymentReadinessGuide locale gate', () => {
   it('is hidden for unsupported locales', async () => {
     vi.resetModules();
     vi.doMock('@mobazha/core', async () => {
-      const mainland =
-        await import('../../../../../packages/core/config/mainlandCryptoPaymentGuide');
+      const guide = await import('../../../../../packages/core/config/exchangeUsdtPaymentGuide');
       return {
-        ...mainland,
+        ...guide,
         useI18n: () => ({
           locale: 'ja',
           t: (key: string) => key,
         }),
-        useMainlandCryptoGuideDismiss: () => ({
+        useExchangeUsdtGuideDismiss: () => ({
           dismissed: false,
           dismiss: vi.fn(),
         }),
@@ -98,8 +97,8 @@ describe('CryptoPaymentReadinessGuide locale gate', () => {
   });
 });
 
-describe('useMainlandCryptoGuideDismiss storage key', () => {
+describe('useExchangeUsdtGuideDismiss storage key', () => {
   it('uses stable localStorage key', () => {
-    expect(MAINLAND_GUIDE_DISMISS_STORAGE_KEY).toBe('mobazha.mainlandCryptoGuide.dismissed');
+    expect(EXCHANGE_USDT_GUIDE_DISMISS_STORAGE_KEY).toBe('mobazha.exchangeUsdtGuide.dismissed');
   });
 });

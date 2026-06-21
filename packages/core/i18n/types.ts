@@ -4543,7 +4543,7 @@ export interface TranslationResource {
 
   help?: {
     backToStore: string;
-    mainlandPayment: {
+    exchangeUsdtPayment: {
       title: string;
       intro: string;
       step1Title: string;
@@ -4593,8 +4593,8 @@ export interface TranslationResource {
   support?: {
     documentation: string;
     documentationDesc: string;
-    mainlandPayment?: string;
-    mainlandPaymentDesc?: string;
+    exchangeUsdtPayment?: string;
+    exchangeUsdtPaymentDesc?: string;
     community: string;
     communityDesc: string;
   };

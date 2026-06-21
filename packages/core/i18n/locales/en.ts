@@ -2437,6 +2437,10 @@ export const en: TranslationResource = {
     offline: "You're offline",
     offlineDesc: 'Some features may be unavailable.',
     backOnline: "You're back online!",
+    updateAvailable: 'Update Available',
+    updateAvailableDesc: 'A new version of Mobazha is ready. Refresh to update.',
+    refreshNow: 'Refresh Now',
+    refreshingNow: 'Refreshing…',
     invalidInput: 'Invalid input',
     requiredField: 'This field is required',
   },
@@ -3072,7 +3076,7 @@ export const en: TranslationResource = {
       summary:
         'Buy USDT on an exchange (C2C, KYC usually required). Withdraw on the network that matches your selection below.',
       trc20Warning:
-        'Mainland OTC often defaults to TRC20. We do not support TRON. Choose BSC (BEP20) or Solana instead.',
+        'Do not withdraw on TRC20. Some C2C flows default to TRON, which we do not support. Choose BSC (BEP20) or Solana instead.',
       fullGuideLink: 'View full guide',
       fullGuideLinkNewTab: 'View full guide (opens in new tab)',
       dismiss: "Don't show again",
@@ -7205,8 +7209,8 @@ export const en: TranslationResource = {
   },
   help: {
     backToStore: 'Back to store',
-    mainlandPayment: {
-      title: 'Pay with USDT from mainland China',
+    exchangeUsdtPayment: {
+      title: 'Pay with USDT from an exchange',
       intro:
         'Mobazha does not provide RMB on-ramps. Use an exchange C2C/P2P flow to buy USDT, then pay on the matching network below.',
       step1Title: 'Buy USDT on an exchange (KYC usually required)',
@@ -7216,7 +7220,7 @@ export const en: TranslationResource = {
       step2Desc:
         'The withdrawal network must match the payment method you select at checkout. This store does not accept TRON (TRC20).',
       trc20Warning:
-        'Mainland OTC often defaults to TRC20. We do not support TRON. Choose BSC (BEP20) or Solana instead.',
+        'Do not withdraw on TRC20. Some C2C flows default to TRON, which we do not support. Choose BSC (BEP20) or Solana instead.',
       step3Title: 'Return to checkout and pay',
       step3Desc:
         'Select the matching USDT network at checkout. If paying from an exchange, enable “Pay from exchange” and set a personal refund wallet address.',
@@ -7289,8 +7293,8 @@ export const en: TranslationResource = {
   support: {
     documentation: 'Documentation',
     documentationDesc: 'Guides and tutorials for getting started',
-    mainlandPayment: 'USDT payment guide (China)',
-    mainlandPaymentDesc: 'Buy USDT on an exchange and pay on the correct network',
+    exchangeUsdtPayment: 'USDT payment guide (exchange)',
+    exchangeUsdtPaymentDesc: 'Buy USDT on an exchange and pay on the correct network',
     community: 'Community',
     communityDesc: 'Join our Telegram community for help',
   },

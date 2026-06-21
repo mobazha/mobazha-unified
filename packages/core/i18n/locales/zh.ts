@@ -2211,6 +2211,10 @@ export const zh: PartialTranslationResource = {
     offline: '您已离线',
     offlineDesc: '部分功能可能不可用。',
     backOnline: '网络已恢复！',
+    updateAvailable: '有可用更新',
+    updateAvailableDesc: 'Mobazha 有新版本，刷新即可更新。',
+    refreshNow: '立即刷新',
+    refreshingNow: '正在刷新…',
     invalidInput: '输入无效',
     requiredField: '此字段为必填项',
   },
@@ -2789,7 +2793,7 @@ export const zh: PartialTranslationResource = {
       title: '还没有 USDT？',
       summary: '先在交易所 C2C 购买 USDT（通常需实名），提币网络须与下方所选支付方式一致。',
       trc20Warning:
-        '大陆 OTC 常默认 TRC20，本平台不支持。请选 BSC（BEP20）或 Solana，不要选 TRC20。',
+        '提币时请勿选择 TRC20。部分 C2C 渠道常默认 TRON，本平台不支持。请选 BSC（BEP20）或 Solana。',
       fullGuideLink: '查看完整指引',
       fullGuideLinkNewTab: '查看完整指引（在新标签页打开）',
       dismiss: '不再显示',
@@ -6599,8 +6603,8 @@ export const zh: PartialTranslationResource = {
   },
   help: {
     backToStore: '返回店铺',
-    mainlandPayment: {
-      title: '大陆用户 USDT 支付指引',
+    exchangeUsdtPayment: {
+      title: 'USDT 支付指引（从交易所付款）',
       intro: 'Mobazha 不提供人民币入金。请通过交易所 C2C 购买 USDT，再按结账页所选网络完成支付。',
       step1Title: '在交易所完成实名并购买 USDT',
       step1Desc:
@@ -6608,7 +6612,7 @@ export const zh: PartialTranslationResource = {
       step2Title: '提币或链上转账时选对网络',
       step2Desc: '提币网络须与结账页所选支付方式一致。本平台暂不支持 TRON（TRC20）。',
       trc20Warning:
-        '大陆 OTC 常默认 TRC20，本平台不支持。请选 BSC（BEP20）或 Solana，不要选 TRC20。',
+        '提币时请勿选择 TRC20。部分 C2C 渠道常默认 TRON，本平台不支持。请选 BSC（BEP20）或 Solana。',
       step3Title: '回到结账页完成支付',
       step3Desc:
         '在结账页选择对应的 USDT 网络付款。若从交易所转账，请勾选「我将从交易所付款」并填写个人钱包退款地址。',
@@ -6681,8 +6685,8 @@ export const zh: PartialTranslationResource = {
   support: {
     documentation: '文档',
     documentationDesc: '入门指南和教程',
-    mainlandPayment: 'USDT 支付指引',
-    mainlandPaymentDesc: '交易所买 U 与提币网络对照',
+    exchangeUsdtPayment: 'USDT 支付指引',
+    exchangeUsdtPaymentDesc: '交易所买 U 与提币网络对照',
     community: '社区',
     communityDesc: '加入我们的 Telegram 社区获取帮助',
   },

@@ -4,10 +4,10 @@ import React from 'react';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  MAINLAND_PAYMENT_HELP_PATH,
+  EXCHANGE_USDT_PAYMENT_HELP_PATH,
   useI18n,
-  isMainlandCryptoPaymentGuideLocale,
-  useMainlandCryptoGuideDismiss,
+  isExchangeUsdtPaymentGuideLocale,
+  useExchangeUsdtGuideDismiss,
 } from '@mobazha/core';
 import {
   Accordion,
@@ -21,7 +21,7 @@ export interface CryptoPaymentReadinessGuideProps {
 }
 
 /**
- * Slim mainland checkout guide (P0.5): TRC20 warning + summary + link to full Help page.
+ * Slim exchange USDT checkout guide (P0.5): TRC20 warning + summary + link to full Help page.
  * Placed below crypto token selection so payment choice stays primary.
  * Full guide opens in a new tab so the payment drawer / checkout page is not lost.
  */
@@ -29,9 +29,9 @@ export const CryptoPaymentReadinessGuide: React.FC<CryptoPaymentReadinessGuidePr
   className,
 }) => {
   const { t, locale } = useI18n();
-  const { dismissed, dismiss } = useMainlandCryptoGuideDismiss();
+  const { dismissed, dismiss } = useExchangeUsdtGuideDismiss();
 
-  if (!isMainlandCryptoPaymentGuideLocale(locale) || dismissed) {
+  if (!isExchangeUsdtPaymentGuideLocale(locale) || dismissed) {
     return null;
   }
 
@@ -62,7 +62,7 @@ export const CryptoPaymentReadinessGuide: React.FC<CryptoPaymentReadinessGuidePr
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <a
-                href={MAINLAND_PAYMENT_HELP_PATH}
+                href={EXCHANGE_USDT_PAYMENT_HELP_PATH}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline min-h-[44px] inline-flex items-center gap-1"

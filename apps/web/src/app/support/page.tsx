@@ -7,9 +7,9 @@ import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container } from '@/components/layouts';
 import {
-  MAINLAND_PAYMENT_HELP_PATH,
+  EXCHANGE_USDT_PAYMENT_HELP_PATH,
   useI18n,
-  isMainlandCryptoPaymentGuideLocale,
+  isExchangeUsdtPaymentGuideLocale,
 } from '@mobazha/core';
 import { MessageCircle, FileText, ExternalLink, ChevronRight, Wallet } from 'lucide-react';
 
@@ -53,7 +53,7 @@ function SupportItem({ icon, title, description, href, external }: SupportItemPr
 export default function SupportPage() {
   const { t, locale } = useI18n();
   const router = useRouter();
-  const showMainlandHelp = isMainlandCryptoPaymentGuideLocale(locale);
+  const showExchangeUsdtHelp = isExchangeUsdtPaymentGuideLocale(locale);
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,12 +65,12 @@ export default function SupportPage() {
           <h1 className="text-2xl font-bold hidden lg:block mb-6">{t('me.support')}</h1>
 
           <div className="bg-card rounded-lg border overflow-hidden">
-            {showMainlandHelp && (
+            {showExchangeUsdtHelp && (
               <SupportItem
                 icon={<Wallet className="w-5 h-5" />}
-                title={t('support.mainlandPayment')}
-                description={t('support.mainlandPaymentDesc')}
-                href={MAINLAND_PAYMENT_HELP_PATH}
+                title={t('support.exchangeUsdtPayment')}
+                description={t('support.exchangeUsdtPaymentDesc')}
+                href={EXCHANGE_USDT_PAYMENT_HELP_PATH}
               />
             )}
             <SupportItem

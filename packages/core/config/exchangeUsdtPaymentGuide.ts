@@ -22,13 +22,13 @@ export function getExchangeC2CGuideUrls(locale: Locale): Record<ExchangeC2CGuide
   return locale === 'zh' ? EXCHANGE_C2C_GUIDE_URLS : EXCHANGE_C2C_GUIDE_URLS_EN;
 }
 
-/** In-app help page for mainland crypto checkout (full SOP). */
-export const MAINLAND_PAYMENT_HELP_PATH = '/help/mainland-payment';
+/** In-app help page for exchange USDT checkout (full SOP). */
+export const EXCHANGE_USDT_PAYMENT_HELP_PATH = '/help/exchange-usdt-payment';
 
 /** localStorage key for "don't show again" on checkout slim guide. */
-export const MAINLAND_GUIDE_DISMISS_STORAGE_KEY = 'mobazha.mainlandCryptoGuide.dismissed';
+export const EXCHANGE_USDT_GUIDE_DISMISS_STORAGE_KEY = 'mobazha.exchangeUsdtGuide.dismissed';
 
-export type MainlandWithdrawalHintKey =
+export type ExchangeUsdtWithdrawalHintKey =
   | 'bsc'
   | 'sol'
   | 'base'
@@ -38,9 +38,9 @@ export type MainlandWithdrawalHintKey =
   | 'generic';
 
 /** Map selected checkout token to a withdrawal-network hint i18n key (P2). */
-export function getMainlandWithdrawalHintKey(
+export function getExchangeUsdtWithdrawalHintKey(
   tokenId?: string | null
-): MainlandWithdrawalHintKey | null {
+): ExchangeUsdtWithdrawalHintKey | null {
   if (!tokenId?.trim()) return null;
   const id = tokenId.trim().toUpperCase();
   if (id === 'BSCUSDT' || (id.includes('BSC') && id.includes('USDT'))) return 'bsc';
@@ -55,8 +55,8 @@ export function getMainlandWithdrawalHintKey(
   return null;
 }
 
-/** Preferred checkout token IDs for mainland buyers (TRON excluded at platform level). */
-export const MAINLAND_CHECKOUT_TOKEN_PRIORITY = [
+/** Preferred checkout token IDs when paying via exchange (TRON excluded at platform level). */
+export const EXCHANGE_USDT_CHECKOUT_TOKEN_PRIORITY = [
   'BSCUSDT',
   'SOLUSDT',
   'BASEUSDT',
@@ -65,50 +65,51 @@ export const MAINLAND_CHECKOUT_TOKEN_PRIORITY = [
   'ETHUSDT',
 ] as const;
 
-/** Show exchange on-ramp checkout guide (zh + en UI; content applies to mainland buyers). */
-export function isMainlandCryptoPaymentGuideLocale(locale: Locale): boolean {
+/** Show exchange on-ramp checkout guide for zh/en checkout UI. */
+export function isExchangeUsdtPaymentGuideLocale(locale: Locale): boolean {
   return locale === 'zh' || locale === 'en';
 }
 
-export function mainlandCheckoutTokenPriorityIndex(tokenId: string): number {
-  const idx = MAINLAND_CHECKOUT_TOKEN_PRIORITY.indexOf(
-    tokenId as (typeof MAINLAND_CHECKOUT_TOKEN_PRIORITY)[number]
+export function exchangeUsdtCheckoutTokenPriorityIndex(tokenId: string): number {
+  const idx = EXCHANGE_USDT_CHECKOUT_TOKEN_PRIORITY.indexOf(
+    tokenId as (typeof EXCHANGE_USDT_CHECKOUT_TOKEN_PRIORITY)[number]
   );
-  return idx === -1 ? MAINLAND_CHECKOUT_TOKEN_PRIORITY.length + 1 : idx;
+  return idx === -1 ? EXCHANGE_USDT_CHECKOUT_TOKEN_PRIORITY.length + 1 : idx;
 }
 
-export function sortTokenIdsForMainlandCheckout(tokenIds: string[]): string[] {
+export function sortTokenIdsForExchangeUsdtCheckout(tokenIds: string[]): string[] {
   return [...tokenIds].sort(
-    (a, b) => mainlandCheckoutTokenPriorityIndex(a) - mainlandCheckoutTokenPriorityIndex(b)
+    (a, b) => exchangeUsdtCheckoutTokenPriorityIndex(a) - exchangeUsdtCheckoutTokenPriorityIndex(b)
   );
 }
 
-export interface MainlandSortableToken {
+export interface ExchangeUsdtSortableToken {
   id: string;
 }
 
-export interface MainlandSortableCurrencyGroup<
-  T extends MainlandSortableToken = MainlandSortableToken,
+export interface ExchangeUsdtSortableCurrencyGroup<
+  T extends ExchangeUsdtSortableToken = ExchangeUsdtSortableToken,
 > {
   symbol: string;
   tokens: T[];
   category: 'stablecoin' | 'native' | 'other';
 }
 
-/** Re-order groups and intra-group tokens for zh checkout (BSC/SOL USDT first). */
-export function applyMainlandCheckoutTokenOrdering<T extends MainlandSortableToken>(
-  groups: MainlandSortableCurrencyGroup<T>[]
-): MainlandSortableCurrencyGroup<T>[] {
+/** Re-order groups and intra-group tokens for exchange checkout (BSC/SOL USDT first). */
+export function applyExchangeUsdtCheckoutTokenOrdering<T extends ExchangeUsdtSortableToken>(
+  groups: ExchangeUsdtSortableCurrencyGroup<T>[]
+): ExchangeUsdtSortableCurrencyGroup<T>[] {
   const withSortedTokens = groups.map(group => ({
     ...group,
     tokens: [...group.tokens].sort(
-      (a, b) => mainlandCheckoutTokenPriorityIndex(a.id) - mainlandCheckoutTokenPriorityIndex(b.id)
+      (a, b) =>
+        exchangeUsdtCheckoutTokenPriorityIndex(a.id) - exchangeUsdtCheckoutTokenPriorityIndex(b.id)
     ),
   }));
 
   return [...withSortedTokens].sort((a, b) => {
-    const aScore = Math.min(...a.tokens.map(t => mainlandCheckoutTokenPriorityIndex(t.id)));
-    const bScore = Math.min(...b.tokens.map(t => mainlandCheckoutTokenPriorityIndex(t.id)));
+    const aScore = Math.min(...a.tokens.map(t => exchangeUsdtCheckoutTokenPriorityIndex(t.id)));
+    const bScore = Math.min(...b.tokens.map(t => exchangeUsdtCheckoutTokenPriorityIndex(t.id)));
     if (aScore !== bScore) return aScore - bScore;
     return a.symbol.localeCompare(b.symbol);
   });

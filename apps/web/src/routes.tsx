@@ -122,8 +122,8 @@ if (!__OUTPOST__) {
       element: lazyPage(() => import('./app/help/HelpLayoutVite')),
       children: [
         {
-          path: 'mainland-payment',
-          element: lazyPage(() => import('./app/help/mainland-payment/page')),
+          path: 'exchange-usdt-payment',
+          element: lazyPage(() => import('./app/help/exchange-usdt-payment/page')),
         },
       ],
     },
@@ -542,8 +542,8 @@ if (__OUTPOST__) {
       element: lazyPage(() => import('./app/help/HelpLayoutVite')),
       children: [
         {
-          path: 'mainland-payment',
-          element: lazyPage(() => import('./app/help/mainland-payment/page')),
+          path: 'exchange-usdt-payment',
+          element: lazyPage(() => import('./app/help/exchange-usdt-payment/page')),
         },
       ],
     },

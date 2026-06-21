@@ -1978,6 +1978,11 @@ export const fr: PartialTranslationResource = {
     offline: 'Vous êtes hors ligne',
     offlineDesc: 'Certaines fonctionnalités peuvent être indisponibles.',
     backOnline: 'Vous êtes de nouveau en ligne !',
+    updateAvailable: 'Mise à jour disponible',
+    updateAvailableDesc:
+      'Une nouvelle version de Mobazha est prête. Actualisez pour mettre à jour.',
+    refreshNow: 'Actualiser maintenant',
+    refreshingNow: 'Actualisation…',
     invalidInput: 'Entrée invalide',
     requiredField: 'Ce champ est requis',
   },

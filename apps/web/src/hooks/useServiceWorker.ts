@@ -2,7 +2,13 @@
 
 /// <reference lib="dom" />
 
-import { useEffect, useState, useCallback, useSyncExternalStore } from 'react';
+import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
+import {
+  hasWaitingUpdate,
+  RELOAD_RECOVERY_MS,
+  SKIP_WAITING_FALLBACK_MS,
+  SKIP_WAITING_MESSAGE,
+} from '@/lib/serviceWorkerUpdate';
 
 interface ServiceWorkerState {
   isRegistered: boolean;
@@ -34,6 +40,24 @@ export function useServiceWorker() {
     registration: null,
     updateAvailable: false,
   });
+  const [isUpdating, setIsUpdating] = useState(false);
+  const isRefreshingRef = useRef(false);
+  const skipWaitingTimeoutRef = useRef<number | null>(null);
+  const recoveryTimeoutRef = useRef<number | null>(null);
+
+  const clearSkipWaitingTimeout = useCallback(() => {
+    if (skipWaitingTimeoutRef.current != null) {
+      clearTimeout(skipWaitingTimeoutRef.current);
+      skipWaitingTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearRecoveryTimeout = useCallback(() => {
+    if (recoveryTimeoutRef.current != null) {
+      clearTimeout(recoveryTimeoutRef.current);
+      recoveryTimeoutRef.current = null;
+    }
+  }, []);
 
   // Use useSyncExternalStore for online status
   const isOnline = useSyncExternalStore(
@@ -42,41 +66,72 @@ export function useServiceWorker() {
     getServerOnlineSnapshot
   );
 
-  // Check if service worker is supported
   // 开发环境下禁用 Service Worker，避免缓存问题
   const isDevelopment = process.env.NODE_ENV === 'development';
   const isSupported =
     typeof window !== 'undefined' && 'serviceWorker' in navigator && !isDevelopment;
 
+  const recoverFromFailedReload = useCallback(() => {
+    isRefreshingRef.current = false;
+    setIsUpdating(false);
+    setState(prev => ({ ...prev, updateAvailable: true }));
+  }, []);
+
+  const scheduleReloadRecovery = useCallback(() => {
+    clearRecoveryTimeout();
+    recoveryTimeoutRef.current = window.setTimeout(() => {
+      if (!isRefreshingRef.current) return;
+      recoverFromFailedReload();
+    }, RELOAD_RECOVERY_MS);
+  }, [clearRecoveryTimeout, recoverFromFailedReload]);
+
+  const attemptReload = useCallback(() => {
+    scheduleReloadRecovery();
+    window.location.reload();
+  }, [scheduleReloadRecovery]);
+
+  const startUpdateRefresh = useCallback(() => {
+    if (isRefreshingRef.current) return false;
+    isRefreshingRef.current = true;
+    setIsUpdating(true);
+    return true;
+  }, []);
+
   // Register service worker (仅生产环境)
   useEffect(() => {
     if (!isSupported) {
-      // 开发环境：尝试注销已存在的 Service Worker
       if (isDevelopment && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
           registrations.forEach(registration => {
             registration.unregister();
-            console.log('🔧 [DEV] Unregistered Service Worker for better DX');
+            console.warn('[DEV] Unregistered Service Worker for better DX');
           });
         });
       }
       return;
     }
 
-    // Register SW (生产环境)
+    let interval: ReturnType<typeof setInterval> | undefined;
+    let cancelled = false;
+
     const registerSW = async () => {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
         });
 
+        if (cancelled) return;
+
         setState(prev => ({
           ...prev,
           isRegistered: true,
           registration,
+          updateAvailable: hasWaitingUpdate(
+            registration,
+            Boolean(navigator.serviceWorker.controller)
+          ),
         }));
 
-        // Check for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -88,32 +143,62 @@ export function useServiceWorker() {
           }
         });
 
-        // Check for updates periodically
-        const interval = setInterval(
+        interval = setInterval(
           () => {
             registration.update();
           },
           60 * 60 * 1000
-        ); // Every hour
-
-        return () => clearInterval(interval);
+        );
       } catch {
         // Registration failed silently
       }
     };
 
     registerSW();
-  }, [isSupported]);
 
-  // Update service worker
-  const update = useCallback(async () => {
-    if (state.registration?.waiting) {
-      state.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [isSupported, isDevelopment]);
+
+  // Reload once when a waiting worker takes control (after SKIP_WAITING).
+  useEffect(() => {
+    if (!isSupported) return;
+
+    const onControllerChange = () => {
+      if (!isRefreshingRef.current) return;
+      clearSkipWaitingTimeout();
+      attemptReload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      clearSkipWaitingTimeout();
+      clearRecoveryTimeout();
+    };
+  }, [isSupported, clearSkipWaitingTimeout, clearRecoveryTimeout, attemptReload]);
+
+  const update = useCallback(() => {
+    if (!startUpdateRefresh()) return;
+
+    const waiting = state.registration?.waiting;
+
+    if (waiting) {
+      waiting.postMessage(SKIP_WAITING_MESSAGE);
+      clearSkipWaitingTimeout();
+      skipWaitingTimeoutRef.current = window.setTimeout(() => {
+        if (isRefreshingRef.current) {
+          attemptReload();
+        }
+      }, SKIP_WAITING_FALLBACK_MS);
+      return;
     }
-  }, [state.registration]);
 
-  // Unregister service worker
+    attemptReload();
+  }, [state.registration, startUpdateRefresh, clearSkipWaitingTimeout, attemptReload]);
+
   const unregister = useCallback(async () => {
     if (state.registration) {
       await state.registration.unregister();
@@ -124,6 +209,7 @@ export function useServiceWorker() {
   return {
     isSupported,
     isOnline,
+    isUpdating,
     ...state,
     update,
     unregister,

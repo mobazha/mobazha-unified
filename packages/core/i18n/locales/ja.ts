@@ -1940,6 +1940,11 @@ export const ja: PartialTranslationResource = {
     offline: 'オフラインです',
     offlineDesc: '一部の機能が利用できない場合があります。',
     backOnline: 'オンラインに戻りました！',
+    updateAvailable: '更新があります',
+    updateAvailableDesc:
+      'Mobazha の新しいバージョンが利用可能です。更新するには再読み込みしてください。',
+    refreshNow: '今すぐ更新',
+    refreshingNow: '更新中…',
     invalidInput: '無効な入力',
     requiredField: 'この項目は必須です',
   },

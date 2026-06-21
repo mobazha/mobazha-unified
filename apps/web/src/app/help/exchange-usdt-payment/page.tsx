@@ -7,7 +7,7 @@ import { VStack } from '@/components/layouts';
 
 const NETWORK_ROW_KEYS = ['bsc', 'sol', 'base', 'matic', 'eth'] as const;
 
-export default function MainlandPaymentHelpPage() {
+export default function ExchangeUsdtPaymentHelpPage() {
   const { t, locale } = useI18n();
   const exchangeUrls = getExchangeC2CGuideUrls(locale);
 
@@ -23,19 +23,19 @@ export default function MainlandPaymentHelpPage() {
     <VStack gap="lg">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-          {t('help.mainlandPayment.title')}
+          {t('help.exchangeUsdtPayment.title')}
         </h1>
-        <p className="text-muted-foreground">{t('help.mainlandPayment.intro')}</p>
+        <p className="text-muted-foreground">{t('help.exchangeUsdtPayment.intro')}</p>
       </div>
 
       <ol className="space-y-6 list-none m-0 p-0">
         {[1, 2, 3].map(step => (
           <li key={step} className="space-y-2">
             <h2 className="text-lg font-semibold text-foreground m-0">
-              {t(`help.mainlandPayment.step${step}Title`)}
+              {t(`help.exchangeUsdtPayment.step${step}Title`)}
             </h2>
             <p className="text-sm text-muted-foreground m-0">
-              {t(`help.mainlandPayment.step${step}Desc`)}
+              {t(`help.exchangeUsdtPayment.step${step}Desc`)}
             </p>
             {step === 2 && (
               <div
@@ -44,7 +44,7 @@ export default function MainlandPaymentHelpPage() {
               >
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-800 dark:text-amber-200 mt-0.5" />
                 <p className="text-sm text-amber-900 dark:text-amber-100 leading-relaxed m-0">
-                  {t('help.mainlandPayment.trc20Warning')}
+                  {t('help.exchangeUsdtPayment.trc20Warning')}
                 </p>
               </div>
             )}
@@ -54,23 +54,23 @@ export default function MainlandPaymentHelpPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground m-0">
-          {t('help.mainlandPayment.networkTableTitle')}
+          {t('help.exchangeUsdtPayment.networkTableTitle')}
         </h2>
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
                 <th className="text-left font-medium p-3">
-                  {t('help.mainlandPayment.networkTableHeaders.mobazha')}
+                  {t('help.exchangeUsdtPayment.networkTableHeaders.mobazha')}
                 </th>
                 <th className="text-left font-medium p-3">
-                  {t('help.mainlandPayment.networkTableHeaders.okx')}
+                  {t('help.exchangeUsdtPayment.networkTableHeaders.okx')}
                 </th>
                 <th className="text-left font-medium p-3">
-                  {t('help.mainlandPayment.networkTableHeaders.binance')}
+                  {t('help.exchangeUsdtPayment.networkTableHeaders.binance')}
                 </th>
                 <th className="text-left font-medium p-3">
-                  {t('help.mainlandPayment.networkTableHeaders.htx')}
+                  {t('help.exchangeUsdtPayment.networkTableHeaders.htx')}
                 </th>
               </tr>
             </thead>
@@ -78,16 +78,16 @@ export default function MainlandPaymentHelpPage() {
               {NETWORK_ROW_KEYS.map(rowKey => (
                 <tr key={rowKey} className="border-b border-border last:border-0">
                   <td className="p-3 align-top">
-                    {t(`help.mainlandPayment.networkRows.${rowKey}.mobazha`)}
+                    {t(`help.exchangeUsdtPayment.networkRows.${rowKey}.mobazha`)}
                   </td>
                   <td className="p-3 align-top text-muted-foreground">
-                    {t(`help.mainlandPayment.networkRows.${rowKey}.okx`)}
+                    {t(`help.exchangeUsdtPayment.networkRows.${rowKey}.okx`)}
                   </td>
                   <td className="p-3 align-top text-muted-foreground">
-                    {t(`help.mainlandPayment.networkRows.${rowKey}.binance`)}
+                    {t(`help.exchangeUsdtPayment.networkRows.${rowKey}.binance`)}
                   </td>
                   <td className="p-3 align-top text-muted-foreground">
-                    {t(`help.mainlandPayment.networkRows.${rowKey}.htx`)}
+                    {t(`help.exchangeUsdtPayment.networkRows.${rowKey}.htx`)}
                   </td>
                 </tr>
               ))}
@@ -98,7 +98,7 @@ export default function MainlandPaymentHelpPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground m-0">
-          {t('help.mainlandPayment.exchangeGuidesTitle')}
+          {t('help.exchangeUsdtPayment.exchangeGuidesTitle')}
         </h2>
         <div className="flex flex-col gap-2">
           {exchangeLinks.map(link => (
@@ -109,7 +109,7 @@ export default function MainlandPaymentHelpPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline min-h-[44px]"
             >
-              {t(`help.mainlandPayment.links.${link.key}`)}
+              {t(`help.exchangeUsdtPayment.links.${link.key}`)}
               <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
             </a>
           ))}
@@ -118,16 +118,16 @@ export default function MainlandPaymentHelpPage() {
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground m-0">
-          {t('help.mainlandPayment.faqTitle')}
+          {t('help.exchangeUsdtPayment.faqTitle')}
         </h2>
         <dl className="space-y-4 m-0">
           {faqKeys.map(key => (
             <div key={key}>
               <dt className="font-medium text-foreground text-sm">
-                {t(`help.mainlandPayment.faq.${key}Q`)}
+                {t(`help.exchangeUsdtPayment.faq.${key}Q`)}
               </dt>
               <dd className="text-sm text-muted-foreground mt-1 m-0">
-                {t(`help.mainlandPayment.faq.${key}A`)}
+                {t(`help.exchangeUsdtPayment.faq.${key}A`)}
               </dd>
             </div>
           ))}
@@ -136,15 +136,15 @@ export default function MainlandPaymentHelpPage() {
 
       <section className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
         <h2 className="text-base font-semibold text-foreground m-0">
-          {t('help.mainlandPayment.custodialTitle')}
+          {t('help.exchangeUsdtPayment.custodialTitle')}
         </h2>
         <p className="text-sm text-muted-foreground m-0">
-          {t('help.mainlandPayment.custodialDesc')}
+          {t('help.exchangeUsdtPayment.custodialDesc')}
         </p>
       </section>
 
       <p className="text-xs text-muted-foreground leading-relaxed m-0">
-        {t('help.mainlandPayment.disclaimer')}
+        {t('help.exchangeUsdtPayment.disclaimer')}
       </p>
     </VStack>
   );

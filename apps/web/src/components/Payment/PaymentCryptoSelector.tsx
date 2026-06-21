@@ -8,8 +8,8 @@ import {
   useI18n,
   isFiatPaymentVisible,
   filterVisiblePaymentTokens,
-  applyMainlandCheckoutTokenOrdering,
-  isMainlandCryptoPaymentGuideLocale,
+  applyExchangeUsdtCheckoutTokenOrdering,
+  isExchangeUsdtPaymentGuideLocale,
 } from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
@@ -19,7 +19,7 @@ import { CryptoTokenCard } from './CryptoTokenCard';
 import { MultiChainTokenCard } from './MultiChainTokenCard';
 import { TokenIcon } from './TokenIcon';
 import { CryptoPaymentReadinessGuide } from './CryptoPaymentReadinessGuide';
-import { MainlandPaymentTokenHint } from './MainlandPaymentTokenHint';
+import { ExchangeUsdtPaymentTokenHint } from './ExchangeUsdtPaymentTokenHint';
 
 export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   selectedTokenId,
@@ -79,10 +79,10 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
 
   const currencyGroups = useMemo(() => {
     const groups = groupTokensByCurrency(availableTokens);
-    if (!isMainlandCryptoPaymentGuideLocale(locale)) {
+    if (!isExchangeUsdtPaymentGuideLocale(locale)) {
       return groups;
     }
-    return applyMainlandCheckoutTokenOrdering(groups) as CurrencyGroup[];
+    return applyExchangeUsdtCheckoutTokenOrdering(groups) as CurrencyGroup[];
   }, [availableTokens, locale]);
 
   const stablecoins = useMemo(
@@ -256,10 +256,10 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
         </div>
       )}
 
-      {availableTokens.length > 0 && isMainlandCryptoPaymentGuideLocale(locale) && (
+      {availableTokens.length > 0 && isExchangeUsdtPaymentGuideLocale(locale) && (
         <>
           {selectedTokenId && !selectedFiatProvider && (
-            <MainlandPaymentTokenHint tokenId={selectedTokenId} />
+            <ExchangeUsdtPaymentTokenHint tokenId={selectedTokenId} />
           )}
           <CryptoPaymentReadinessGuide />
         </>

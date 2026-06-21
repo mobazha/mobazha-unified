@@ -120,6 +120,11 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const openPaymentSelector = useCallback(
     (returnUrl?: string) => {
       if (isMobile) {
+        const resolvedReturnUrl =
+          returnUrl ??
+          (typeof window !== 'undefined'
+            ? `${window.location.pathname}${window.location.search}`
+            : undefined);
         const url = new URL('/checkout/payment-method', window.location.origin);
         if (state.selectedTokenId) {
           url.searchParams.set('selected', state.selectedTokenId);
@@ -129,6 +134,8 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         }
         if (returnUrl) {
           url.searchParams.set('returnUrl', returnUrl);
+        } else if (resolvedReturnUrl) {
+          url.searchParams.set('returnUrl', resolvedReturnUrl);
         }
         router.push(url.pathname + url.search);
       } else {
@@ -142,7 +149,11 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const openModeratorSelector = useCallback(
     (returnUrl?: string) => {
       if (isMobile) {
-        // 移动端：跳转到选择页面
+        const resolvedReturnUrl =
+          returnUrl ??
+          (typeof window !== 'undefined'
+            ? `${window.location.pathname}${window.location.search}`
+            : undefined);
         const url = new URL('/checkout/moderator', window.location.origin);
         if (state.selectedModerator?.peerID) {
           url.searchParams.set('selected', state.selectedModerator.peerID);
@@ -152,6 +163,8 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         }
         if (returnUrl) {
           url.searchParams.set('returnUrl', returnUrl);
+        } else if (resolvedReturnUrl) {
+          url.searchParams.set('returnUrl', resolvedReturnUrl);
         }
         router.push(url.pathname + url.search);
       } else {
