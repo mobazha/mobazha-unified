@@ -131,7 +131,7 @@ jobs:
     needs: [release, build-artifacts]
     environment:
       name: production
-      url: https://mobazha.com
+      url: https://mobazha.org
     steps:
       - name: Checkout
         uses: actions/checkout@v4

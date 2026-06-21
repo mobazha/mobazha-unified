@@ -77,7 +77,7 @@ export default function SupportPage() {
               icon={<FileText className="w-5 h-5" />}
               title={t('support.documentation')}
               description={t('support.documentationDesc')}
-              href="https://mobazha.com"
+              href="https://mobazha.org"
               external
             />
             <SupportItem
