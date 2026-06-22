@@ -78,6 +78,9 @@ export interface SearchListingsParams {
   type?: string;
   productType?: string;
   rating?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  currency?: string;
   shipping?: string;
   nsfw?: boolean;
   /** discover (default) | all — only applies to q=* browse */
@@ -758,6 +761,9 @@ export async function searchListings(
     type,
     productType,
     rating,
+    minPrice,
+    maxPrice,
+    currency,
     shipping,
     nsfw = false,
     browse,
@@ -785,7 +791,16 @@ export async function searchListings(
     queryParams.append('type', type);
   }
   if (rating && rating > 0) {
-    queryParams.append('rating', String(rating));
+    queryParams.append('pr', String(rating));
+  }
+  if (minPrice != null && minPrice >= 0) {
+    queryParams.append('minPrice', String(minPrice));
+  }
+  if (maxPrice != null && maxPrice >= 0) {
+    queryParams.append('maxPrice', String(maxPrice));
+  }
+  if (currency) {
+    queryParams.append('currency', currency);
   }
   if (shipping && shipping !== 'any') {
     queryParams.append('shipping', shipping);

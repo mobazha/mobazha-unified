@@ -11,6 +11,7 @@ import {
   parsePriceFields,
   listingDisplayPriceFromListItem,
   useMarketplaceContext,
+  useCurrency,
 } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
 import type { ProductListItem, AddWishlistParams } from '@mobazha/core';
@@ -68,6 +69,47 @@ function parseSortParam(value: string | null): string {
     return value;
   }
   return 'relevance';
+}
+
+function parseRatingParam(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const n = parseInt(value, 10);
+  if (n >= 1 && n <= 5) return n;
+  return undefined;
+}
+
+function parsePriceDisplayParam(value: string | null): string | undefined {
+  if (!value?.trim()) return undefined;
+  const n = parseFloat(value);
+  if (Number.isNaN(n) || n < 0) return undefined;
+  return value.trim();
+}
+
+function priceFilterFromDisplay(
+  currency: string,
+  toMinimal: (amount: number | string, currency: string) => number,
+  displayMin?: string,
+  displayMax?: string
+): { minPrice?: number; maxPrice?: number; currency?: string } {
+  const hasMin = displayMin != null && displayMin !== '';
+  const hasMax = displayMax != null && displayMax !== '';
+  if (!hasMin && !hasMax) return {};
+
+  const code = currency.toUpperCase();
+  let minPrice: number | undefined;
+  let maxPrice: number | undefined;
+
+  if (hasMin) {
+    const n = parseFloat(displayMin);
+    if (!Number.isNaN(n) && n >= 0) minPrice = toMinimal(n, code);
+  }
+  if (hasMax) {
+    const n = parseFloat(displayMax);
+    if (!Number.isNaN(n) && n >= 0) maxPrice = toMinimal(n, code);
+  }
+  if (minPrice == null && maxPrice == null) return {};
+
+  return { minPrice, maxPrice, currency: code };
 }
 
 const RECENT_SEARCHES_KEY = 'mobazha_recent_searches';
@@ -153,8 +195,13 @@ export function useSearch() {
   const typeParam = searchParams.get('type') || 'all';
   const sortParam = searchParams.get('sortBy') || 'relevance';
   const browseParam = searchParams.get('browse');
+  const ratingParam = searchParams.get('pr');
+  const priceMinParam = searchParams.get('priceMin');
+  const priceMaxParam = searchParams.get('priceMax');
+  const priceCurrencyParam = searchParams.get('priceCurrency');
   const tabParam = (searchParams.get('tab') as TabType) || 'listings';
   const { t } = useI18n();
+  const { localCurrency, toMinimalUnit, getCurrencySymbol } = useCurrency();
   const { hasVerifiedMod } = useVerifiedModerators();
   const { isInWishlist, toggleItem } = useWishlist();
   const {
@@ -173,6 +220,11 @@ export function useSearch() {
   const sortBy = parseSortParam(sortParam);
   const listingType = typeParam || 'all';
   const browseMode = parseBrowseParam(browseParam);
+  const minRating = parseRatingParam(ratingParam);
+  const priceMin = parsePriceDisplayParam(priceMinParam);
+  const priceMax = parsePriceDisplayParam(priceMaxParam);
+  const priceCurrency = priceCurrencyParam?.trim() || localCurrency;
+  const hasPriceFilter = Boolean(priceMin || priceMax);
 
   // Products state
   const [products, setProducts] = useState<DisplayProduct[]>([]);
@@ -239,7 +291,15 @@ export function useSearch() {
       query: string,
       page: number = 0,
       append: boolean = false,
-      overrides?: { sortBy?: string; type?: string; browse?: BrowseMode }
+      overrides?: {
+        sortBy?: string;
+        type?: string;
+        browse?: BrowseMode;
+        rating?: number;
+        priceMin?: string;
+        priceMax?: string;
+        priceCurrency?: string;
+      }
     ) => {
       const generation = ++productsFetchGen.current;
       if (!query.trim()) {
@@ -264,6 +324,13 @@ export function useSearch() {
       const fetchSort = overrides?.sortBy ?? sortBy;
       const fetchType = overrides?.type ?? (listingType !== 'all' ? listingType : undefined);
       const fetchBrowse = overrides?.browse ?? (isBrowseAllQuery(query) ? browseMode : undefined);
+      const fetchRating = overrides?.rating ?? minRating;
+      const priceFilter = priceFilterFromDisplay(
+        overrides?.priceCurrency ?? priceCurrency,
+        toMinimalUnit,
+        overrides?.priceMin ?? priceMin,
+        overrides?.priceMax ?? priceMax
+      );
 
       setIsLoadingProducts(true);
       try {
@@ -271,6 +338,10 @@ export function useSearch() {
           sortBy: fetchSort,
           type: fetchType,
           browse: fetchBrowse,
+          rating: fetchRating,
+          minPrice: priceFilter.minPrice,
+          maxPrice: priceFilter.maxPrice,
+          currency: priceFilter.currency,
           peerIDs: marketplacePeerIDs,
         });
         if (generation !== productsFetchGen.current) return;
@@ -315,6 +386,11 @@ export function useSearch() {
       sortBy,
       listingType,
       browseMode,
+      minRating,
+      priceMin,
+      priceMax,
+      priceCurrency,
+      toMinimalUnit,
       marketplacePeerIDs,
       isMarketplaceScopePending,
       isEmptyCuratedMarketplace,
@@ -368,48 +444,6 @@ export function useSearch() {
     [marketplacePeerIDs, isMarketplaceScopePending, isEmptyCuratedMarketplace]
   );
 
-  useEffect(() => {
-    setSearchQuery(queryParam);
-    if (!queryParam) {
-      setProducts([]);
-      setUsers([]);
-      setProductsTotal(0);
-      setProductsCatalogTotal(0);
-      setProductsVendorCount(0);
-      setUsersTotal(0);
-      return;
-    }
-    setProductsPage(0);
-    setUsersPage(0);
-    searchProducts(queryParam, 0, false, {
-      sortBy: parseSortParam(sortParam),
-      type: typeParam !== 'all' ? typeParam : undefined,
-      browse: isBrowseAllQuery(queryParam) ? parseBrowseParam(browseParam) : undefined,
-    });
-    searchUsersApi(queryParam, 0, false);
-  }, [queryParam, typeParam, sortParam, browseParam, searchProducts, searchUsersApi]);
-
-  useEffect(() => {
-    const trimmed = searchQuery.trim();
-    if (!trimmed || trimmed === queryParam) return;
-
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams({ q: trimmed });
-      if (listingType && listingType !== 'all') {
-        params.set('type', listingType);
-      }
-      if (sortBy && sortBy !== 'relevance') {
-        params.set('sortBy', sortBy);
-      }
-      if (isBrowseAllQuery(trimmed) && browseMode === 'all') {
-        params.set('browse', 'all');
-      }
-      router.push(`/search?${params.toString()}`, { scroll: false });
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, queryParam, listingType, sortBy, browseMode, router]);
-
   const pushSearchParams = useCallback(
     (mutate: (params: URLSearchParams) => void) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -419,6 +453,83 @@ export function useSearch() {
     },
     [router, searchParams]
   );
+
+  const currentFilterOverrides = useCallback(
+    () => ({
+      sortBy: parseSortParam(sortParam),
+      type: typeParam !== 'all' ? typeParam : undefined,
+      browse: undefined as BrowseMode | undefined,
+      rating: parseRatingParam(ratingParam),
+      priceMin: parsePriceDisplayParam(priceMinParam),
+      priceMax: parsePriceDisplayParam(priceMaxParam),
+      priceCurrency: priceCurrencyParam?.trim() || localCurrency,
+    }),
+    [
+      sortParam,
+      typeParam,
+      ratingParam,
+      priceMinParam,
+      priceMaxParam,
+      priceCurrencyParam,
+      localCurrency,
+    ]
+  );
+
+  const runCommittedSearch = useCallback(
+    (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        setProducts([]);
+        setUsers([]);
+        setProductsTotal(0);
+        setProductsCatalogTotal(0);
+        setProductsVendorCount(0);
+        setUsersTotal(0);
+        setProductsHasMore(false);
+        setUsersHasMore(false);
+        return;
+      }
+      const overrides = currentFilterOverrides();
+      overrides.browse = isBrowseAllQuery(trimmed) ? parseBrowseParam(browseParam) : undefined;
+      setProductsPage(0);
+      setUsersPage(0);
+      searchProducts(trimmed, 0, false, overrides);
+      searchUsersApi(trimmed, 0, false);
+    },
+    [browseParam, currentFilterOverrides, searchProducts, searchUsersApi]
+  );
+
+  const prevQueryParamRef = useRef(queryParam);
+  useEffect(() => {
+    if (queryParam !== prevQueryParamRef.current) {
+      prevQueryParamRef.current = queryParam;
+      setSearchQuery(queryParam);
+    }
+  }, [queryParam]);
+
+  // One search pipeline: committed URL query, or debounced draft while typing (no URL push).
+  useEffect(() => {
+    const draft = searchQuery.trim();
+    const committed = queryParam.trim();
+    const isDrafting = draft.length > 0 && draft !== committed;
+    const query = isDrafting ? draft : committed;
+    const delay = isDrafting ? 400 : 0;
+
+    const timer = setTimeout(() => runCommittedSearch(query), delay);
+    return () => clearTimeout(timer);
+  }, [
+    queryParam,
+    searchQuery,
+    typeParam,
+    sortParam,
+    browseParam,
+    ratingParam,
+    priceMinParam,
+    priceMaxParam,
+    priceCurrencyParam,
+    localCurrency,
+    runCommittedSearch,
+  ]);
 
   const setSortBy = useCallback(
     (value: string) => {
@@ -451,6 +562,61 @@ export function useSearch() {
     [isBrowseAllCatalog, pushSearchParams]
   );
 
+  const setMinRating = useCallback(
+    (value: string) => {
+      pushSearchParams(params => {
+        if (value && value !== 'all') params.set('pr', value);
+        else params.delete('pr');
+      });
+    },
+    [pushSearchParams]
+  );
+
+  const setPriceRange = useCallback(
+    (min?: string, max?: string) => {
+      pushSearchParams(params => {
+        const trimmedMin = min?.trim();
+        const trimmedMax = max?.trim();
+        if (trimmedMin) params.set('priceMin', trimmedMin);
+        else params.delete('priceMin');
+        if (trimmedMax) params.set('priceMax', trimmedMax);
+        else params.delete('priceMax');
+        if (trimmedMin || trimmedMax) {
+          params.set('priceCurrency', priceCurrency || localCurrency);
+        } else {
+          params.delete('priceCurrency');
+        }
+      });
+    },
+    [pushSearchParams, priceCurrency, localCurrency]
+  );
+
+  const hasActiveFilters = useMemo(
+    () =>
+      listingType !== 'all' ||
+      minRating != null ||
+      hasPriceFilter ||
+      (isBrowseAllCatalog && browseMode === 'all'),
+    [listingType, minRating, hasPriceFilter, isBrowseAllCatalog, browseMode]
+  );
+
+  const clearAllFilters = useCallback(() => {
+    pushSearchParams(params => {
+      params.delete('type');
+      params.delete('pr');
+      params.delete('priceMin');
+      params.delete('priceMax');
+      params.delete('priceCurrency');
+      params.delete('browse');
+    });
+  }, [pushSearchParams]);
+
+  const activeSearchQuery = useMemo(() => {
+    const draft = searchQuery.trim();
+    const committed = queryParam.trim();
+    return draft && draft !== committed ? draft : committed;
+  }, [searchQuery, queryParam]);
+
   const productsTabLabel = useMemo(() => {
     if (isBrowseAllCatalog && browseMode === 'discover' && productsVendorCount > 0) {
       return t('searchExtended.productsFromStores', {
@@ -472,30 +638,34 @@ export function useSearch() {
           saveRecentSearches(updated);
           return updated;
         });
-        router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        pushSearchParams(params => {
+          params.set('q', searchQuery.trim());
+        });
       }
     },
-    [searchQuery, router]
+    [searchQuery, pushSearchParams]
   );
 
   const loadMoreProducts = useCallback(() => {
-    if (queryParam && productsHasMore && !isLoadingProducts) {
-      searchProducts(queryParam, productsPage + 1, true);
+    if (activeSearchQuery && productsHasMore && !isLoadingProducts) {
+      searchProducts(activeSearchQuery, productsPage + 1, true);
     }
-  }, [queryParam, productsHasMore, isLoadingProducts, productsPage, searchProducts]);
+  }, [activeSearchQuery, productsHasMore, isLoadingProducts, productsPage, searchProducts]);
 
   const loadMoreUsers = useCallback(() => {
-    if (queryParam && usersHasMore && !isLoadingUsers) {
-      searchUsersApi(queryParam, usersPage + 1, true);
+    if (activeSearchQuery && usersHasMore && !isLoadingUsers) {
+      searchUsersApi(activeSearchQuery, usersPage + 1, true);
     }
-  }, [queryParam, usersHasMore, isLoadingUsers, usersPage, searchUsersApi]);
+  }, [activeSearchQuery, usersHasMore, isLoadingUsers, usersPage, searchUsersApi]);
 
   const handleRecentSearch = useCallback(
     (keyword: string) => {
       setSearchQuery(keyword);
-      router.push(`/search?q=${encodeURIComponent(keyword)}`);
+      pushSearchParams(params => {
+        params.set('q', keyword);
+      });
     },
-    [router]
+    [pushSearchParams]
   );
 
   const clearRecentSearches = useCallback(() => {
@@ -553,6 +723,16 @@ export function useSearch() {
     setSortBy,
     listingType,
     setListingType,
+    minRating,
+    setMinRating,
+    priceMin,
+    priceMax,
+    priceCurrency,
+    hasPriceFilter,
+    priceCurrencySymbol: getCurrencySymbol(priceCurrency || localCurrency),
+    setPriceRange,
+    hasActiveFilters,
+    clearAllFilters,
     showFilters,
     setShowFilters,
     sortOptions,
