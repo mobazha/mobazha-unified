@@ -749,6 +749,9 @@ export interface SearchFilters {
   type?: string;
   productType?: string;
   rating?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  currency?: string;
   shipping?: string;
   nsfw?: boolean;
   browse?: 'discover' | 'all';

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
@@ -136,7 +136,7 @@ export function SearchDesktop() {
           </form>
 
           {/* No query - show recent searches */}
-          {!search.queryParam && (
+          {!search.queryParam && !search.searchQuery.trim() && (
             <div className="max-w-2xl mx-auto">
               <Card>
                 <CardContent className="p-4 sm:p-6">
@@ -210,7 +210,7 @@ export function SearchDesktop() {
           )}
 
           {/* Search Results */}
-          {search.queryParam && (
+          {(search.queryParam || search.searchQuery.trim()) && (
             <>
               {/* Tabs & Filters */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -314,7 +314,19 @@ export function SearchDesktop() {
               {search.showFilters && search.activeTab === 'listings' && (
                 <Card className="mb-6">
                   <CardContent className="p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {search.hasActiveFilters && (
+                      <div className="flex justify-end mb-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={search.clearAllFilters}
+                          className="text-primary h-9"
+                        >
+                          {search.t('filter.clearFilters')}
+                        </Button>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
                           {search.t('filter.productType', { defaultValue: 'Product Type' })}
@@ -338,27 +350,12 @@ export function SearchDesktop() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
-                          {search.t('filter.priceRange')}
-                        </label>
-                        <HStack gap="sm">
-                          <input
-                            type="number"
-                            placeholder={search.t('filter.min')}
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                          <span className="text-muted-foreground">-</span>
-                          <input
-                            type="number"
-                            placeholder={search.t('filter.max')}
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </HStack>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
                           {search.t('filter.rating')}
                         </label>
-                        <Select defaultValue="all">
+                        <Select
+                          value={search.minRating ? String(search.minRating) : 'all'}
+                          onValueChange={search.setMinRating}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder={search.t('filter.anyRating')} />
                           </SelectTrigger>
@@ -376,27 +373,10 @@ export function SearchDesktop() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          {search.t('filter.type')}
-                        </label>
-                        <Select defaultValue="all">
-                          <SelectTrigger>
-                            <SelectValue placeholder={search.t('filter.allTypes')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">{search.t('filter.allTypes')}</SelectItem>
-                            <SelectItem value="physical">
-                              {search.t('filter.physicalGoods')}
-                            </SelectItem>
-                            <SelectItem value="digital">
-                              {search.t('filter.digitalGoods')}
-                            </SelectItem>
-                            <SelectItem value="service">{search.t('filter.services')}</SelectItem>
-                            <SelectItem value="rwa">{search.t('filter.rwaTokens')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <PriceRangeFilter
+                        key={`${search.priceMin ?? ''}|${search.priceMax ?? ''}`}
+                        search={search}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -541,6 +521,47 @@ export function SearchDesktop() {
       </main>
 
       <Footer />
+    </div>
+  );
+}
+
+function PriceRangeFilter({ search }: { search: ReturnType<typeof useSearch> }) {
+  const [minInput, setMinInput] = useState(search.priceMin || '');
+  const [maxInput, setMaxInput] = useState(search.priceMax || '');
+
+  const apply = () => search.setPriceRange(minInput, maxInput);
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-foreground mb-2">
+        {search.t('filter.priceRange')}
+        <span className="text-muted-foreground font-normal ml-1">
+          ({search.priceCurrencySymbol} {search.priceCurrency})
+        </span>
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          min={0}
+          step="any"
+          placeholder={search.t('filter.min')}
+          value={minInput}
+          onChange={e => setMinInput(e.target.value)}
+          onBlur={apply}
+          className="w-full h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <span className="text-muted-foreground shrink-0">—</span>
+        <input
+          type="number"
+          min={0}
+          step="any"
+          placeholder={search.t('filter.max')}
+          value={maxInput}
+          onChange={e => setMaxInput(e.target.value)}
+          onBlur={apply}
+          className="w-full h-10 px-3 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
     </div>
   );
 }
