@@ -537,6 +537,8 @@ export const NODE_API_PATHS = {
   ORDERS_PAYMENT_WATCH: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/payment/watch`,
   ORDERS_RATE: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/rate`,
   ORDERS_REFUND: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/refund`,
+  ORDERS_REFUND_ADDRESS: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/refund-address`,
   ORDERS_RWA_TOKEN_PAYMENT_INFO: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/rwa-token/payment-info`,
   ORDERS_SETTLEMENT_ACTIONS: (orderID: string, action: string) =>

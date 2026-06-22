@@ -6578,7 +6578,7 @@ export interface paths {
     put?: never;
     /**
      * Provision unified payment session
-     * @description Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; address-monitored flows may auto-fill refunds after confirmation.
+     * @description Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; buyers should declare refundAddress before paying.
      */
     post: operations['orders-post-payment-session'];
     delete?: never;
@@ -6672,6 +6672,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/orders/{orderID}/refund-address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set buyer refund wallet address
+     * @description Validates and persists the buyer-controlled crypto refund destination. Requires buyer role. paymentCoin is optional when the order already has a selected coin.
+     */
+    post: operations['orders-post-refund-address'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/orders/{orderID}/rwa-token/payment-info': {
     parameters: {
       query?: never;
@@ -6702,8 +6722,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Execute backend settlement action (confirm / cancel)
-     * @description Runs the default backend-submitted settlement action flow for crypto orders, including backend-managed EVM. Client-signed legacy chains must keep using the legacy instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.
+     * Execute backend settlement action
+     * @description Runs backend-submitted settlement for crypto orders (managed EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.
      */
     post: operations['orders-post-settlement-action'];
     delete?: never;
@@ -8129,13 +8149,11 @@ export interface components {
       provider: string;
     };
     Platform_AdminPatchAIConfigInputBody: {
-      api_key?: string;
-      base_url?: string;
       /** Format: int64 */
       daily_limit?: number;
       enabled?: boolean;
-      model?: string;
-      provider?: string;
+      text?: components['schemas']['Platform_AiModelConfigPatchRequest'];
+      vision?: components['schemas']['Platform_AiModelConfigPatchRequest'];
     };
     Platform_AdminPatchExchangeRateConfigInputBody: {
       binance_enabled?: boolean;
@@ -8186,6 +8204,12 @@ export interface components {
       relay_gas_daily_quota?: number;
       /** Format: int64 */
       webhook_retention_days?: number;
+    };
+    Platform_AiModelConfigPatchRequest: {
+      api_key?: string;
+      base_url?: string;
+      model?: string;
+      provider?: string;
     };
     Platform_BatchGetKeysRequest: {
       peerID: string;
@@ -21488,7 +21512,10 @@ export interface operations {
   };
   'listings-index': {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Include seller-safe supply summaries for the authenticated store owner. */
+        includeSupplySummary?: boolean;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -23378,6 +23405,42 @@ export interface operations {
       };
     };
   };
+  'orders-post-refund-address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'orders-post-rwa-token-payment-info': {
     parameters: {
       query?: never;
@@ -23421,7 +23484,7 @@ export interface operations {
       path: {
         /** @description Order ID. */
         orderID: string;
-        /** @description Settlement intent: confirm or cancel. */
+        /** @description Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release. */
         action: string;
       };
       cookie?: never;
@@ -23462,7 +23525,7 @@ export interface operations {
       path: {
         /** @description Order ID. */
         orderID: string;
-        /** @description Settlement intent: confirm or cancel. */
+        /** @description Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release. */
         action: string;
       };
       cookie?: never;
