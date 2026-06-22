@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getImageUrl, useI18n } from '@mobazha/core';
 import type { AiGenerateResponse, Image, ListingFormData } from '@mobazha/core';
-import { getAIStatus } from '@mobazha/core/services/api/aiSettings';
+import { aiStatusSupportsVision, getAIStatus } from '@mobazha/core/services/api/aiSettings';
 import { useToast, ToastAction } from '@/components/ui';
 import { useAiAssist } from './AiAssistant';
 
@@ -35,7 +35,7 @@ export function useListingAiIntegration({
   useEffect(() => {
     getAIStatus()
       .then(status => {
-        setAiSupportsVision(status.supports_vision !== false);
+        setAiSupportsVision(aiStatusSupportsVision(status));
       })
       .catch(() => {
         // On error keep default (true) — don't hide the panel speculatively.

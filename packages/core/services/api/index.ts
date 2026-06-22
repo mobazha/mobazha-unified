@@ -291,6 +291,7 @@ export type {
   AIStatus,
   AITestConnectionResult,
 } from './aiSettings';
+export { aiStatusSupportsVision } from './aiSettings';
 export type {
   ChannelConfig,
   ChannelFieldSchema,

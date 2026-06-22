@@ -421,6 +421,24 @@ export function AIConfigSection({
                 </div>
               </div>
             )}
+            <div className="flex flex-wrap gap-1.5">
+              <Badge
+                variant={aiStatus.text_available === false ? 'outline' : 'secondary'}
+                className="text-xs font-normal"
+              >
+                <FileText className="w-3 h-3 mr-1" />
+                {t('admin.integrations.aiTextRoute', { defaultValue: 'Text AI' })}
+                {aiStatus.text_available === false && ' — off'}
+              </Badge>
+              <Badge
+                variant={aiStatus.vision_available === false ? 'outline' : 'secondary'}
+                className="text-xs font-normal"
+              >
+                <Image className="w-3 h-3 mr-1" />
+                {t('admin.integrations.aiVisionRoute', { defaultValue: 'Vision AI' })}
+                {aiStatus.vision_available === false && ' — off'}
+              </Badge>
+            </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Key className="w-3 h-3" />
               <span>{t('admin.integrations.aiPlatformUpgrade')}</span>

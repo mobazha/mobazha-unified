@@ -18068,6 +18068,18 @@
     "/v1/listings/index": {
       "get": {
         "operationId": "listings-index",
+        "parameters": [
+          {
+            "description": "Include seller-safe supply summaries for the authenticated store owner.",
+            "explode": false,
+            "in": "query",
+            "name": "includeSupplySummary",
+            "schema": {
+              "description": "Include seller-safe supply summaries for the authenticated store owner.",
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -20752,7 +20764,7 @@
         "tags": ["orders", "payments"]
       },
       "post": {
-        "description": "Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; address-monitored flows may auto-fill refunds after confirmation.",
+        "description": "Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; buyers should declare refundAddress before paying.",
         "operationId": "orders-post-payment-session",
         "parameters": [
           {
@@ -21087,6 +21099,67 @@
         "tags": ["orders"]
       }
     },
+    "/v1/orders/{orderID}/refund-address": {
+      "post": {
+        "description": "Validates and persists the buyer-controlled crypto refund destination. Requires buyer role. paymentCoin is optional when the order already has a selected coin.",
+        "operationId": "orders-post-refund-address",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Set buyer refund wallet address",
+        "tags": ["orders", "payments"]
+      }
+    },
     "/v1/orders/{orderID}/rwa-token/payment-info": {
       "post": {
         "description": "Returns buyer and vendor chain identity addresses for RWA token purchases.",
@@ -21150,7 +21223,7 @@
     },
     "/v1/orders/{orderID}/settlement-actions/{action}": {
       "post": {
-        "description": "Runs the default backend-submitted settlement action flow for crypto orders, including backend-managed EVM. Client-signed legacy chains must keep using the legacy instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.",
+        "description": "Runs backend-submitted settlement for crypto orders (managed EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.",
         "operationId": "orders-post-settlement-action",
         "parameters": [
           {
@@ -21164,12 +21237,12 @@
             }
           },
           {
-            "description": "Settlement intent: confirm or cancel.",
+            "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
             "in": "path",
             "name": "action",
             "required": true,
             "schema": {
-              "description": "Settlement intent: confirm or cancel.",
+              "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
               "type": "string"
             }
           }
@@ -21215,7 +21288,7 @@
             "apiToken": []
           }
         ],
-        "summary": "Execute backend settlement action (confirm / cancel)",
+        "summary": "Execute backend settlement action",
         "tags": ["orders", "payments"]
       }
     },
@@ -21235,12 +21308,12 @@
             }
           },
           {
-            "description": "Settlement intent: confirm or cancel.",
+            "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
             "in": "path",
             "name": "action",
             "required": true,
             "schema": {
-              "description": "Settlement intent: confirm or cancel.",
+              "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
               "type": "string"
             }
           },
@@ -26478,12 +26551,6 @@
       "Platform_AdminPatchAIConfigInputBody": {
         "additionalProperties": false,
         "properties": {
-          "api_key": {
-            "type": "string"
-          },
-          "base_url": {
-            "type": "string"
-          },
           "daily_limit": {
             "format": "int64",
             "type": "integer"
@@ -26491,11 +26558,11 @@
           "enabled": {
             "type": "boolean"
           },
-          "model": {
-            "type": "string"
+          "text": {
+            "$ref": "#/components/schemas/Platform_AiModelConfigPatchRequest"
           },
-          "provider": {
-            "type": "string"
+          "vision": {
+            "$ref": "#/components/schemas/Platform_AiModelConfigPatchRequest"
           }
         },
         "type": "object"
@@ -26628,6 +26695,24 @@
           "webhook_retention_days": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Platform_AiModelConfigPatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "api_key": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
           }
         },
         "type": "object"
