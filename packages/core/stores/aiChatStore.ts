@@ -12,6 +12,27 @@ function nextMsgId(): string {
   return `msg-${Date.now()}-${++msgCounter}`;
 }
 
+export function normalizeVisibleMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.reduce<ChatMessage[]>((visible, message) => {
+    if (message.role !== 'user' && message.role !== 'assistant') {
+      return visible;
+    }
+
+    const content = typeof message.content === 'string' ? message.content : '';
+    if (message.role === 'assistant' && !content.trim()) {
+      return visible;
+    }
+
+    visible.push({
+      id: message.id || nextMsgId(),
+      role: message.role,
+      content,
+      timestamp: message.timestamp,
+    });
+    return visible;
+  }, []);
+}
+
 interface AIChatState {
   isOpen: boolean;
   isStreaming: boolean;
@@ -122,11 +143,10 @@ export const useAIChatStore = create<AIChatState>()(
                 });
               },
 
-              onToolCall: (toolId, toolName, args) => {
+              onToolCall: (toolId, toolName, _args) => {
                 const tc: ToolCallInfo = {
                   id: toolId,
                   name: toolName,
-                  args,
                   status: 'executing',
                 };
                 toolCalls.set(toolId, tc);
@@ -138,6 +158,14 @@ export const useAIChatStore = create<AIChatState>()(
                       ...msgs[lastIdx],
                       toolCalls: Array.from(toolCalls.values()),
                     };
+                  } else {
+                    msgs.push({
+                      id: assistantMsgId,
+                      role: 'assistant',
+                      content: assistantContent,
+                      toolCalls: Array.from(toolCalls.values()),
+                      timestamp: Date.now(),
+                    });
                   }
                   return { messages: msgs };
                 });
@@ -146,8 +174,10 @@ export const useAIChatStore = create<AIChatState>()(
               onToolResult: (toolId, _toolName, result) => {
                 const tc = toolCalls.get(toolId);
                 if (tc) {
-                  tc.result = result;
-                  tc.status = 'done';
+                  tc.status =
+                    typeof result === 'object' && result !== null && 'error' in result
+                      ? 'error'
+                      : 'done';
                   toolCalls.set(toolId, tc);
                   set(s => {
                     const msgs = [...s.messages];
@@ -186,6 +216,13 @@ export const useAIChatStore = create<AIChatState>()(
             isStreaming: false,
             error: err instanceof Error ? err.message : 'Failed to send message',
           });
+        } finally {
+          if (activeAbortController === abortController) {
+            activeAbortController = null;
+          }
+          if (get().isStreaming) {
+            set({ isStreaming: false });
+          }
         }
       },
 
@@ -202,10 +239,7 @@ export const useAIChatStore = create<AIChatState>()(
         try {
           const { getChatSession } = await import('../services/ai/chatService');
           const session = await getChatSession(sessionId);
-          const msgs = (session.messages || []).map(m => ({
-            ...m,
-            id: m.id || nextMsgId(),
-          }));
+          const msgs = normalizeVisibleMessages(session.messages || []);
           set({
             sessionId: session.id,
             messages: msgs,

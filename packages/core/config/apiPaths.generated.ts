@@ -292,9 +292,9 @@ export const SEARCH_API_PATHS = {
 export const NODE_API_PATHS = {
   ADMIN_PASSWORD: '/admin/password',
   ADMIN_VERSION: '/admin/version',
-  AI_CHAT: '/ai/chat',
-  AI_CHAT_BY_SESSION_ID: (sessionId: string) => `/ai/chat/${encodeURIComponent(sessionId)}`,
-  AI_CHAT_SESSIONS: '/ai/chat/sessions',
+  AGENT_CHAT: '/agent/chat',
+  AGENT_CHAT_BY_SESSION_ID: (sessionId: string) => `/agent/chat/${encodeURIComponent(sessionId)}`,
+  AGENT_CHAT_SESSIONS: '/agent/chat/sessions',
   AI_GENERATE: '/ai/generate',
   AI_STATUS: '/ai/status',
   ANALYTICS_EVENTS: (peerID: string) => `/analytics/${encodeURIComponent(peerID)}/events`,

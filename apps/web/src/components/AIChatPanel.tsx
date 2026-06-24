@@ -12,7 +12,6 @@ import {
   Bot,
   User,
   Wrench,
-  ChevronDown,
   Trash2,
   Plus,
   Square,
@@ -22,7 +21,7 @@ import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
 const ReactMarkdown = lazy(() => import('react-markdown'));
 
 function ToolCallBadge({ tool }: { tool: ToolCallInfo }) {
-  const [expanded, setExpanded] = useState(false);
+  const { t } = useI18n();
   const statusIcon =
     tool.status === 'executing' ? (
       <Loader2 className="w-3 h-3 animate-spin" />
@@ -33,36 +32,16 @@ function ToolCallBadge({ tool }: { tool: ToolCallInfo }) {
     );
 
   return (
-    <div className="my-1 rounded-md border border-border bg-muted/50 text-xs">
-      <button
-        className="flex items-center gap-1.5 px-2 py-1 w-full text-left"
-        onClick={() => setExpanded(!expanded)}
-        aria-expanded={expanded}
-        aria-label={tool.name}
-      >
-        <Wrench className="w-3 h-3 text-muted-foreground" />
-        <span className="font-medium">{tool.name}</span>
-        {statusIcon}
-        <ChevronDown
-          className={`w-3 h-3 ml-auto transition-transform ${expanded ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {expanded && (
-        <div className="px-2 pb-1.5 space-y-1">
-          {tool.args != null && (
-            <pre className="text-[10px] text-muted-foreground overflow-x-auto max-h-24 overflow-y-auto">
-              {JSON.stringify(tool.args, null, 2)}
-            </pre>
-          )}
-          {tool.result != null && (
-            <pre className="text-[10px] text-muted-foreground overflow-x-auto max-h-24 overflow-y-auto border-t border-border pt-1">
-              {typeof tool.result === 'string'
-                ? (tool.result as string).slice(0, 500)
-                : JSON.stringify(tool.result, null, 2).slice(0, 500)}
-            </pre>
-          )}
-        </div>
-      )}
+    <div className="my-1 inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
+      <Wrench className="w-3 h-3" />
+      <span>
+        {tool.status === 'executing'
+          ? t('ai.toolAnalyzing')
+          : tool.status === 'error'
+            ? t('ai.toolFailed')
+            : t('ai.toolChecked')}
+      </span>
+      {statusIcon}
     </div>
   );
 }
@@ -70,7 +49,7 @@ function ToolCallBadge({ tool }: { tool: ToolCallInfo }) {
 function MarkdownContent({ content }: { content: string }) {
   return (
     <Suspense fallback={<p className="whitespace-pre-wrap break-words">{content}</p>}>
-      <div className="prose prose-sm dark:prose-invert max-w-none break-words [&_pre]:text-xs [&_pre]:overflow-x-auto [&_code]:text-xs [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
+      <div className="prose prose-sm dark:prose-invert max-w-none break-words [&_code]:text-xs [&_li]:my-0 [&_ol]:my-1 [&_p]:my-1 [&_pre]:overflow-x-auto [&_pre]:text-xs [&_table]:my-2 [&_table]:w-full [&_table]:text-xs [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_ul]:my-1">
         <ReactMarkdown>{content}</ReactMarkdown>
       </div>
     </Suspense>
@@ -406,10 +385,10 @@ export function AIChatPanel({
           {isStreaming ? (
             <button
               onClick={cancelStream}
-              className="p-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
+              className="p-2 rounded-lg bg-muted text-foreground border border-border hover:bg-muted/80 transition-colors"
               aria-label={t('ai.stopGenerating')}
             >
-              <Square className="w-4 h-4" />
+              <Square className="w-4 h-4 fill-current" />
             </button>
           ) : (
             <button

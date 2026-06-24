@@ -2720,6 +2720,9 @@ export interface TranslationResource {
     inputPlaceholder?: string;
     stopGenerating?: string;
     send?: string;
+    toolAnalyzing?: string;
+    toolChecked?: string;
+    toolFailed?: string;
   };
 
   standalone?: {

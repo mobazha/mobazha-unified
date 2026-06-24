@@ -2,10 +2,13 @@
 
 import { useI18n, type AIStatus } from '@mobazha/core';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Cloud, FileText, Image, Server } from 'lucide-react';
+import { Bot, Cloud, Server } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+
+/** Neutral status chip — not CTA orange (secondary) or error red (destructive). */
+const statusBadgeClass = 'text-xs font-normal gap-1 bg-muted text-muted-foreground border-border';
 
 interface AiWorkspaceStatusBadgeProps {
   className?: string;
@@ -43,7 +46,7 @@ export function AiWorkspaceStatusBadge({
 
   if (isOutpost) {
     return (
-      <Badge variant="secondary" className={cn('text-xs font-normal gap-1', className)}>
+      <Badge variant="outline" className={cn(statusBadgeClass, className)}>
         <Server className="w-3 h-3" />
         {t('admin.workspace.badgeLocalAi')}
       </Badge>
@@ -52,7 +55,7 @@ export function AiWorkspaceStatusBadge({
 
   if (status.source === 'byok') {
     return (
-      <Badge variant="secondary" className={cn('text-xs font-normal gap-1', className)}>
+      <Badge variant="outline" className={cn(statusBadgeClass, className)}>
         <Bot className="w-3 h-3" />
         {t('admin.workspace.badgeByok')}
       </Badge>
@@ -60,23 +63,13 @@ export function AiWorkspaceStatusBadge({
   }
 
   return (
-    <div className={cn('flex flex-wrap gap-1.5', className)}>
-      <Badge variant="secondary" className="text-xs font-normal gap-1">
-        <Cloud className="w-3 h-3" />
-        {t('admin.workspace.badgePlatform')}
-      </Badge>
-      {status.text_available !== false && (
-        <Badge variant="outline" className="text-xs font-normal gap-1">
-          <FileText className="w-3 h-3" />
-          {t('admin.integrations.aiTextRoute', { defaultValue: 'Text AI' })}
-        </Badge>
-      )}
-      {status.vision_available !== false && (
-        <Badge variant="outline" className="text-xs font-normal gap-1">
-          <Image className="w-3 h-3" />
-          {t('admin.integrations.aiVisionRoute', { defaultValue: 'Vision AI' })}
-        </Badge>
-      )}
-    </div>
+    <Badge
+      variant="outline"
+      className={cn(statusBadgeClass, className)}
+      data-testid="ai-workspace-status-platform"
+    >
+      <Cloud className="w-3 h-3" />
+      {t('admin.workspace.badgePlatform')}
+    </Badge>
   );
 }

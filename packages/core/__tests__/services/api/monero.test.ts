@@ -228,9 +228,9 @@ describe('Monero admin API routing', () => {
     await expect(getChatSession('session-1')).resolves.toEqual(session);
     await deleteChatSession('session-1');
 
-    expect(mockNodeAuthGet).toHaveBeenNthCalledWith(1, '/ai/chat/sessions?limit=10&offset=5');
-    expect(mockNodeAuthGet).toHaveBeenNthCalledWith(2, '/ai/chat/session-1');
-    expect(mockNodeAuthDel).toHaveBeenCalledWith('/ai/chat/session-1');
+    expect(mockNodeAuthGet).toHaveBeenNthCalledWith(1, '/agent/chat/sessions?limit=10&offset=5');
+    expect(mockNodeAuthGet).toHaveBeenNthCalledWith(2, '/agent/chat/session-1');
+    expect(mockNodeAuthDel).toHaveBeenCalledWith('/agent/chat/session-1');
     expect(mockAuthGet).not.toHaveBeenCalled();
     expect(mockAuthDel).not.toHaveBeenCalled();
   });
@@ -255,7 +255,7 @@ describe('Monero admin API routing', () => {
     await sendChatMessage('hello', undefined, callbacks);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://node.local/v1/ai/chat',
+      'http://node.local/v1/agent/chat',
       expect.objectContaining({
         method: 'POST',
         headers: {

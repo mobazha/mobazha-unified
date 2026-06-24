@@ -4874,6 +4874,9 @@ export const zh: PartialTranslationResource = {
     inputPlaceholder: '输入消息……',
     stopGenerating: '停止生成',
     send: '发送消息',
+    toolAnalyzing: '正在分析店铺数据',
+    toolChecked: '已检查店铺数据',
+    toolFailed: '未能检查店铺数据',
   },
   moderation: {
     title: '争议案件',

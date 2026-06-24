@@ -138,9 +138,7 @@ export const NODE_API = {
   AI_CONFIG: '/settings/ai',
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',
-  AI_CHAT: '/ai/chat',
-  AI_CHAT_SESSIONS: '/ai/chat/sessions',
-  AI_CHAT_SESSION: (sessionId: string) => `/ai/chat/${sessionId}`,
+  AGENT_CHAT_SESSION: NODE_API_PATHS.AGENT_CHAT_BY_SESSION_ID,
 
   // --- Social / Follow ---
   FOLLOW: (peerID: string) => `/following/${peerID}`,

@@ -5390,6 +5390,9 @@ export const en: TranslationResource = {
     inputPlaceholder: 'Type a message...',
     stopGenerating: 'Stop generating',
     send: 'Send message',
+    toolAnalyzing: 'Analyzing store data',
+    toolChecked: 'Checked store data',
+    toolFailed: 'Unable to check store data',
   },
 
   moderation: {
