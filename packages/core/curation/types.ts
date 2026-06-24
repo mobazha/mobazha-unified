@@ -15,6 +15,32 @@ export interface CurationCategoryNode {
   label: string;
 }
 
+/** Vertical preset — listing/trust defaults per marketplace vertical (P0-1a). */
+export type PaymentDefault = 'crypto' | 'fiat';
+
+export type TrustCopyKey = 'buyerProtectionNotAuthentication' | 'standard';
+
+export interface ListingFieldHint {
+  id: string;
+  label: string;
+  placeholder?: string;
+}
+
+/** P1+ hub_nft / vault / gacha mount points (F1). Empty in P0. */
+export interface VerticalModuleRef {
+  id: string;
+  fulfillment?: string;
+}
+
+export interface VerticalPreset {
+  id: VerticalId;
+  taxonomy: CurationCategoryNode[];
+  listingHints: ListingFieldHint[];
+  paymentDefaults: PaymentDefault[];
+  trustCopy: TrustCopyKey;
+  modules: VerticalModuleRef[];
+}
+
 export interface CurationConfig {
   id: string;
   vertical: VerticalId;
