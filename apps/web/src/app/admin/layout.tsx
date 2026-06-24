@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { AuthGuard } from '@/components';
 import { AdminSidebar, AdminHeader } from '@/components/admin';
 import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs';
-import { AIChatPanel } from '@/components/AIChatPanel';
+import { AdminFloatingChat } from '@/components/admin/AdminFloatingChat';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { isStandalone, useUserStore, useUserContext } from '@mobazha/core';
@@ -47,7 +47,7 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
       <AdminMobileBottomTabs />
 
       {/* AI Assistant floating panel */}
-      <AIChatPanel />
+      <AdminFloatingChat />
     </div>
   );
 }

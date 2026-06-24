@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import Link from 'next/link';
 import { useAIChatStore } from '@mobazha/core/stores';
-import { useI18n } from '@mobazha/core';
+import { useI18n, aiSettingsApi, useFeature, getAdminAiModelsPath } from '@mobazha/core';
 import {
   MessageSquare,
   X,
@@ -180,7 +181,25 @@ function SessionList({
   );
 }
 
-export function AIChatPanel() {
+export interface AIChatPanelProps {
+  variant?: 'floating' | 'inline';
+  seedPrompt?: string | null;
+  onSeedPromptConsumed?: () => void;
+  /** When set, skips internal status fetch and uses parent value. */
+  aiAvailable?: boolean;
+  aiStatusLoading?: boolean;
+  /** minimal: muted empty state only (workspace banner owns CTA). default: weak configure link. */
+  setupPromptVariant?: 'default' | 'minimal';
+}
+
+export function AIChatPanel({
+  variant = 'floating',
+  seedPrompt,
+  onSeedPromptConsumed,
+  aiAvailable: aiAvailableProp,
+  aiStatusLoading = false,
+  setupPromptVariant = 'default',
+}: AIChatPanelProps) {
   const {
     isOpen,
     toggle,
@@ -194,10 +213,35 @@ export function AIChatPanel() {
   } = useAIChatStore();
 
   const { t } = useI18n();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const aiModelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
+  const isInline = variant === 'inline';
   const [input, setInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [internalAiAvailable, setInternalAiAvailable] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const lastSeedRef = useRef<string | null>(null);
+
+  const aiAvailable =
+    aiAvailableProp !== undefined ? aiAvailableProp : internalAiAvailable === true;
+  const aiChecking = aiAvailableProp === undefined && internalAiAvailable === null;
+
+  useEffect(() => {
+    if (aiAvailableProp !== undefined) return;
+    let cancelled = false;
+    aiSettingsApi
+      .getAIStatus()
+      .then(s => {
+        if (!cancelled) setInternalAiAvailable(s.available);
+      })
+      .catch(() => {
+        if (!cancelled) setInternalAiAvailable(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [aiAvailableProp]);
 
   useEffect(() => {
     return () => {
@@ -209,12 +253,20 @@ export function AIChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    const prompt = seedPrompt?.trim();
+    if (!prompt || isStreaming || prompt === lastSeedRef.current || !aiAvailable) return;
+    lastSeedRef.current = prompt;
+    sendMessage(prompt);
+    onSeedPromptConsumed?.();
+  }, [seedPrompt, isStreaming, sendMessage, onSeedPromptConsumed, aiAvailable]);
+
   const handleSend = useCallback(() => {
     const text = input.trim();
-    if (!text || isStreaming) return;
+    if (!text || isStreaming || !aiAvailable) return;
     setInput('');
     sendMessage(text);
-  }, [input, isStreaming, sendMessage]);
+  }, [input, isStreaming, sendMessage, aiAvailable]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -226,7 +278,7 @@ export function AIChatPanel() {
     [handleSend]
   );
 
-  if (!isOpen) {
+  if (!isInline && !isOpen) {
     return (
       <button
         onClick={toggle}
@@ -238,8 +290,12 @@ export function AIChatPanel() {
     );
   }
 
+  const shellClass = isInline
+    ? 'relative flex flex-col min-h-[420px] h-[min(520px,62vh)] bg-card border border-border rounded-xl overflow-hidden'
+    : 'fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 sm:w-[400px] sm:h-[600px] bg-background border border-border sm:rounded-xl shadow-2xl flex flex-col overflow-hidden';
+
   return (
-    <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 sm:w-[400px] sm:h-[600px] bg-background border border-border sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
+    <div className={shellClass}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
@@ -254,13 +310,15 @@ export function AIChatPanel() {
           >
             <MessageSquare className="w-4 h-4" />
           </button>
-          <button
-            onClick={toggle}
-            className="p-1.5 hover:bg-muted rounded-md"
-            aria-label={t('common.close')}
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {!isInline && (
+            <button
+              onClick={toggle}
+              className="p-1.5 hover:bg-muted rounded-md"
+              aria-label={t('common.close')}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -273,7 +331,24 @@ export function AIChatPanel() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-        {messages.length === 0 && (
+        {!aiChecking && !aiStatusLoading && !aiAvailable && messages.length === 0 && (
+          <div
+            className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
+            data-testid="ai-chat-setup-prompt"
+          >
+            <Bot className="w-10 h-10 mb-3 opacity-40" />
+            <p className="text-sm">{t('admin.workspace.chatInputDisabled')}</p>
+            {setupPromptVariant === 'default' && (
+              <Link
+                href={aiModelsPath}
+                className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline mt-2"
+              >
+                {t('admin.workspace.setupBannerCta')} →
+              </Link>
+            )}
+          </div>
+        )}
+        {messages.length === 0 && aiAvailable && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Bot className="w-10 h-10 mb-3 opacity-50" />
             <p className="text-sm">{t('ai.welcomeMessage')}</p>
@@ -298,8 +373,12 @@ export function AIChatPanel() {
 
       {/* Error */}
       {error && (
-        <div className="px-3 py-2 bg-destructive/10 text-destructive text-xs flex items-center justify-between">
-          <span className="truncate">{error}</span>
+        <div className="px-3 py-2 bg-destructive/10 text-destructive text-xs flex items-center justify-between gap-2">
+          <span className="truncate">
+            {error.toLowerCase().includes('not configured')
+              ? t('admin.workspace.chatNotConfigured')
+              : error}
+          </span>
           <button onClick={clearError} className="ml-2 shrink-0" aria-label={t('common.close')}>
             <X className="w-3 h-3" />
           </button>
@@ -314,11 +393,15 @@ export function AIChatPanel() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t('ai.inputPlaceholder')}
+            placeholder={
+              !aiAvailable && !aiChecking && !aiStatusLoading
+                ? t('admin.workspace.chatInputDisabled')
+                : t('ai.inputPlaceholder')
+            }
             aria-label={t('ai.inputPlaceholder')}
             rows={1}
-            className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24"
-            disabled={isStreaming}
+            className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24 disabled:opacity-60"
+            disabled={isStreaming || aiChecking || aiStatusLoading || !aiAvailable}
           />
           {isStreaming ? (
             <button
@@ -331,7 +414,7 @@ export function AIChatPanel() {
           ) : (
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || !aiAvailable || aiChecking || aiStatusLoading}
               className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
               aria-label={t('ai.send')}
             >

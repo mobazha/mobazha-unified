@@ -147,7 +147,7 @@ test.describe('AI Agents Page Screenshots', () => {
   test('Non-outpost — full client list, no banner', async ({ page }) => {
     await setupPage(page, { outpost: false });
 
-    await page.goto('/admin/ai-agents');
+    await page.goto('/admin/ai/connect');
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
     await page.waitForSelector('h1', { timeout: 15000 });
     await page.waitForTimeout(800);
@@ -161,7 +161,7 @@ test.describe('AI Agents Page Screenshots', () => {
   test('Outpost — banner + toggle off + filtered clients', async ({ page }) => {
     await setupPage(page, { outpost: true, showHighRisk: false });
 
-    await page.goto('/admin/ai-agents');
+    await page.goto('/admin/ai/connect');
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
     await page.waitForSelector('[data-testid="outpost-privacy-banner"]', { timeout: 15000 });
     await page.waitForTimeout(800);
@@ -175,7 +175,7 @@ test.describe('AI Agents Page Screenshots', () => {
   test('Outpost — banner + toggle on + all clients with risk badges', async ({ page }) => {
     await setupPage(page, { outpost: true, showHighRisk: true });
 
-    await page.goto('/admin/ai-agents');
+    await page.goto('/admin/ai/connect');
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
     await page.waitForSelector('[data-testid="outpost-privacy-banner"]', { timeout: 15000 });
     await page.waitForTimeout(800);

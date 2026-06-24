@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useI18n, useUserContext } from '@mobazha/core';
+import { useI18n, useUserContext, useFeature } from '@mobazha/core';
 import { useUserStore } from '@mobazha/core/stores/userStore';
 import {
   Shield,
@@ -14,6 +14,7 @@ import {
   Megaphone,
   ShieldCheck,
   Download,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -152,6 +153,7 @@ function StoreStatusToggle() {
 export default function AdminSettingsPage() {
   const { t } = useI18n();
   const { isEmbeddedApp } = usePlatform();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
   const isOutpost = __OUTPOST__;
 
   return (
@@ -249,15 +251,27 @@ export default function AdminSettingsPage() {
 
         {/* Extensions — AI config / webhooks / fulfillment.
             Hidden in Outpost mode: the only sub-page that survives there is
-            the AI tab, which has been hoisted to /admin/ai-agents (a sidebar
+            the AI tab, which has been hoisted to /admin/ai/connect (a sidebar
             entry of its own). Showing the card would re-create the duplicate
             "two AI configuration entry points" UX we just consolidated. */}
         {!isOutpost && (
           <SettingsSection title={t('admin.settings.sectionExtensions')}>
+            {aiWorkspaceEnabled && (
+              <SettingsCard
+                icon={Sparkles}
+                title={t('admin.settings.aiModelsCard')}
+                description={t('admin.settings.aiModelsCardDesc')}
+                href="/admin/ai/models"
+              />
+            )}
             <SettingsCard
               icon={Plug}
               title={t('admin.settings.integrations')}
-              description={t('admin.settings.integrationsDesc')}
+              description={
+                aiWorkspaceEnabled
+                  ? t('admin.settings.integrationsDescNoAi')
+                  : t('admin.settings.integrationsDesc')
+              }
               href="/admin/settings/integrations"
             />
           </SettingsSection>

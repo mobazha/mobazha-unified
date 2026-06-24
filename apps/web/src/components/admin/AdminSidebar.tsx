@@ -9,6 +9,7 @@ import {
   isStandalone,
   useStorefrontMode,
   useFeatureFlags,
+  useFeature,
   getAdminStorePaymentsPath,
 } from '@mobazha/core';
 import {
@@ -29,6 +30,7 @@ import {
   Bot,
   Compass,
   Wallet,
+  WandSparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
@@ -47,6 +49,23 @@ const storePaymentsNavItem: NavItem = {
   href: getAdminStorePaymentsPath(),
   icon: Wallet,
 };
+
+function applyAiWorkspaceNav(items: NavItem[], aiWorkspaceEnabled: boolean): NavItem[] {
+  if (!aiWorkspaceEnabled) {
+    return items;
+  }
+
+  return items.map(item =>
+    item.id === 'ai-agents'
+      ? {
+          id: 'ai-workspace',
+          labelKey: 'admin.nav.aiWorkspace',
+          href: '/admin/ai/workspace',
+          icon: WandSparkles,
+        }
+      : item
+  );
+}
 
 const baseNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
@@ -150,9 +169,18 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
   const { isEnabled } = useFeatureFlags();
   const storefrontsEnabled = isEnabled('storefrontsEnabled', 'killStorefrontRoutingDisabled');
   const supplyChainEnabled = isEnabled('supplyChainEnabled');
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+
+  const navEntries = applyAiWorkspaceNav(
+    getNavItems(storefrontsEnabled, supplyChainEnabled),
+    aiWorkspaceEnabled
+  );
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
+    if (href === '/admin/ai/workspace') {
+      return pathname === href || pathname.startsWith('/admin/ai/');
+    }
     // /admin/storefront must not match /admin/storefronts — enforce exact
     // segment boundary rather than bare prefix.
     return pathname === href || pathname.startsWith(href + '/');
@@ -160,6 +188,34 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
   const storePeerID = profile?.peerID;
   const storeUrl = storePeerID ? (standaloneMode ? '/' : `/store/${storePeerID}`) : '/';
+
+  const renderNavLink = (item: NavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.href);
+    return (
+      <Link
+        key={item.id}
+        href={item.href}
+        data-testid={`admin-nav-${item.id}`}
+        title={collapsed ? t(item.labelKey) : undefined}
+        className={cn(
+          'flex items-center gap-3 rounded-lg text-sm transition-colors',
+          collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5',
+          active
+            ? 'bg-primary/10 text-primary font-medium'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        )}
+      >
+        <Icon className="w-[18px] h-[18px] shrink-0" />
+        {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
+        {!collapsed && item.badge != null && item.badge > 0 && (
+          <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center bg-destructive text-destructive-foreground text-xs font-bold rounded-full">
+            {item.badge > 99 ? '99+' : item.badge}
+          </span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <div
@@ -195,33 +251,7 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
-        {getNavItems(storefrontsEnabled, supplyChainEnabled).map(item => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              data-testid={`admin-nav-${item.id}`}
-              title={collapsed ? t(item.labelKey) : undefined}
-              className={cn(
-                'flex items-center gap-3 rounded-lg text-sm transition-colors',
-                collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5',
-                active
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              <Icon className="w-[18px] h-[18px] shrink-0" />
-              {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
-              {!collapsed && item.badge != null && item.badge > 0 && (
-                <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center bg-destructive text-destructive-foreground text-xs font-bold rounded-full">
-                  {item.badge > 99 ? '99+' : item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+        {navEntries.map(renderNavLink)}
       </nav>
 
       {/* Bottom section */}

@@ -2707,6 +2707,7 @@ export interface TranslationResource {
     notConfigured?: string;
     setupPrompt?: string;
     goToSettings?: string;
+    goToModels?: string;
     error?: string;
     title?: string;
     openAssistant?: string;
@@ -2816,6 +2817,11 @@ export interface TranslationResource {
       backToShopping?: string;
       mainNavigation?: string;
       aiAgents?: string;
+      home?: string;
+      aiSection?: string;
+      aiWorkspace?: string;
+      aiConnect?: string;
+      aiModels?: string;
       payments?: string;
     };
     payments?: {
@@ -2871,6 +2877,48 @@ export interface TranslationResource {
       supplyNeedsAttentionTitle?: string;
       supplyNeedsAttentionCount?: string;
       supplyNeedsAttentionViewAll?: string;
+    };
+    workspace?: {
+      title?: string;
+      subtitle?: string;
+      opportunitiesTitle?: string;
+      noOpportunities?: string;
+      noOpportunitiesHint?: string;
+      chatTitle?: string;
+      badgeAiOff?: string;
+      badgeLocalAi?: string;
+      badgeByok?: string;
+      badgePlatform?: string;
+      cardNoPayments?: string;
+      cardNoPaymentsDesc?: string;
+      cardNoProducts?: string;
+      cardNoProductsDesc?: string;
+      setupBannerTitle?: string;
+      setupBannerDesc?: string;
+      setupBannerCta?: string;
+      valueSummary?: string;
+      cardActionGo?: string;
+      cardActionAsk?: string;
+      cardAskAi?: string;
+      cardAskAiDesc?: string;
+      cardAskAiPrompt?: string;
+      chatNotConfigured?: string;
+      chatInputDisabled?: string;
+    };
+    ai?: {
+      models?: {
+        title?: string;
+        subtitle?: string;
+      };
+      tabs?: {
+        workspace?: string;
+        workspaceHint?: string;
+        models?: string;
+        modelsHint?: string;
+        modelsPending?: string;
+        connect?: string;
+        connectHint?: string;
+      };
     };
     checklist?: {
       title?: string;
@@ -3402,6 +3450,9 @@ export interface TranslationResource {
       paymentsDescCryptoOnly?: string;
       integrations?: string;
       integrationsDesc?: string;
+      integrationsDescNoAi?: string;
+      aiModelsCard?: string;
+      aiModelsCardDesc?: string;
       guestCheckout?: string;
       guestCheckoutDesc?: string;
     };
@@ -3486,6 +3537,9 @@ export interface TranslationResource {
     integrations?: {
       title?: string;
       subtitle?: string;
+      subtitleNoAi?: string;
+      aiMovedBanner?: string;
+      aiMovedLink?: string;
       tabNotifications?: string;
       tabWebhooks?: string;
       tabAI?: string;

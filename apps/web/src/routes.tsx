@@ -460,6 +460,24 @@ if (!__OUTPOST__) {
           ),
         },
         { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
+        {
+          path: 'ai',
+          element: lazyPage(() => import('./app/admin/ai/AdminAiSectionLayoutVite')),
+          children: [
+            {
+              path: 'workspace',
+              element: lazyPage(() => import('./app/admin/ai/workspace/page')),
+            },
+            {
+              path: 'models',
+              element: lazyPage(() => import('./app/admin/ai/models/page')),
+            },
+            {
+              path: 'connect',
+              element: lazyPage(() => import('./app/admin/ai/connect/page')),
+            },
+          ],
+        },
         { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
       ],
     },
@@ -620,6 +638,24 @@ if (__OUTPOST__) {
         },
         { path: 'storefront', element: lazyPage(() => import('./app/admin/storefront/page')) },
         { path: 'system', element: lazyPage(() => import('./app/admin/system/page')) },
+        {
+          path: 'ai',
+          element: lazyPage(() => import('./app/admin/ai/AdminAiSectionLayoutVite')),
+          children: [
+            {
+              path: 'workspace',
+              element: lazyPage(() => import('./app/admin/ai/workspace/page')),
+            },
+            {
+              path: 'models',
+              element: lazyPage(() => import('./app/admin/ai/models/page')),
+            },
+            {
+              path: 'connect',
+              element: lazyPage(() => import('./app/admin/ai/connect/page')),
+            },
+          ],
+        },
         { path: 'ai-agents', element: lazyPage(() => import('./app/admin/ai-agents/page')) },
       ],
     },

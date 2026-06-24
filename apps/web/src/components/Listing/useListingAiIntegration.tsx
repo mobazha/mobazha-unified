@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getAbsoluteImageUrl, useI18n } from '@mobazha/core';
+import { getAbsoluteImageUrl, useI18n, useFeature, getAdminAiModelsPath } from '@mobazha/core';
 import type { AiGenerateResponse, Image, ListingFormData } from '@mobazha/core';
 import { aiStatusSupportsVision, getAIStatus } from '@mobazha/core/services/api/aiSettings';
 import { useToast, ToastAction } from '@/components/ui';
@@ -20,6 +20,8 @@ export function useListingAiIntegration({
 }: UseListingAiIntegrationParams) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const aiModelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
   const {
     loadingAction: aiLoadingAction,
     lastError: aiError,
@@ -57,15 +59,21 @@ export function useListingAiIntegration({
         }),
         action: (
           <ToastAction
-            altText={t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
-            onClick={() => window.open('/admin/settings/integrations', '_blank')}
+            altText={
+              aiWorkspaceEnabled
+                ? t('ai.goToModels', { defaultValue: 'Configure AI Models' })
+                : t('ai.goToSettings', { defaultValue: 'Go to Settings' })
+            }
+            onClick={() => window.open(aiModelsPath, '_blank')}
           >
-            {t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
+            {aiWorkspaceEnabled
+              ? t('ai.goToModels', { defaultValue: 'Configure AI Models' })
+              : t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
           </ToastAction>
         ),
       });
     }
-  }, [aiNotConfigured, toast, t]);
+  }, [aiNotConfigured, toast, t, aiWorkspaceEnabled, aiModelsPath]);
 
   const handleAiImproveTitle = useCallback(async () => {
     const improved = await improveTitle(formData.title, formData.description);

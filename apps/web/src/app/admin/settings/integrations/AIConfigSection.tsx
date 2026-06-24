@@ -41,7 +41,7 @@ export interface AIConfigSectionProps {
   /**
    * When true, suppress the inline "Install Ollama" guide block that ships in
    * Outpost mode. The dedicated `LocalLlmEnginePanel` (rendered above this
-   * component on `/admin/ai-agents`) already covers runtime installation and
+   * component on `/admin/ai/connect`) already covers runtime installation and
    * provides three engine options instead of just Ollama, so showing both
    * would duplicate the same call to action.
    */
@@ -328,7 +328,7 @@ export function AIConfigSection({
 
       {/* Outpost: Local LLM setup guide.
           Hidden when rendered alongside `LocalLlmEnginePanel` (e.g. on
-          `/admin/ai-agents`), which already covers runtime installation with
+          `/admin/ai/connect`), which already covers runtime installation with
           a richer 3-engine picker. Kept for the legacy Settings →
           Integrations page so it still works as a standalone surface. */}
       {isOutpost && !hideOutpostInstallGuide && (

@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { useI18n } from '@mobazha/core';
+import { useI18n, useFeature, getAdminAiModelsPath } from '@mobazha/core';
 import type { StoreConfig } from '@mobazha/core';
 import { aiService, AiServiceError } from '@mobazha/core/services/ai/aiService';
 import { Sparkles, Loader2, AlertCircle, Settings2 } from 'lucide-react';
@@ -30,6 +30,8 @@ interface AIStoreBuilderDialogProps {
 
 export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderDialogProps) {
   const { t, locale } = useI18n();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const aiModelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
 
   const [brandName, setBrandName] = useState('');
   const [brandDescription, setBrandDescription] = useState('');
@@ -146,11 +148,13 @@ export function AIStoreBuilderDialog({ open, onApply, onClose }: AIStoreBuilderD
                       {t('admin.storeBranding.aiNotConfiguredDesc')}
                     </p>
                     <Link
-                      href="/admin/settings/integrations"
+                      href={aiModelsPath}
                       className="text-sm text-primary hover:underline inline-flex items-center gap-1"
                     >
                       <Settings2 className="w-3.5 h-3.5" />
-                      Settings &gt; Integrations
+                      {aiWorkspaceEnabled
+                        ? t('ai.goToModels', { defaultValue: 'Configure AI Models' })
+                        : t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
                     </Link>
                   </>
                 ) : (
