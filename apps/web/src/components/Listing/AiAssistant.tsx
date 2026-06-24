@@ -14,6 +14,7 @@ import {
 import { aiService, AiServiceError, useI18n } from '@mobazha/core';
 import type { AiGenerateResponse } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui';
 
 // ─── AI Assist Button (inline, next to field labels) ────────
 
@@ -114,6 +115,7 @@ export function AiImageGeneratePanel({
   language,
 }: AiImageGeneratePanelProps) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<AiGenerateResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -136,13 +138,16 @@ export function AiImageGeneratePanel({
         setShowSetup(true);
       } else if (err instanceof AiServiceError) {
         setError(err.message);
+        toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
       } else {
-        setError(t('ai.error', { defaultValue: 'Failed to generate. Please try again.' }));
+        const msg = t('ai.error', { defaultValue: 'Failed to generate. Please try again.' });
+        setError(msg);
+        toast({ title: t('common.error'), description: msg, variant: 'destructive' });
       }
     } finally {
       setIsGenerating(false);
     }
-  }, [imageUrls, contractType, language, t]);
+  }, [imageUrls, contractType, language, t, toast]);
 
   if (!imageUrls.length) return null;
 

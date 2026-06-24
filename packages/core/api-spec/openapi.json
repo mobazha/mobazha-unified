@@ -8160,6 +8160,198 @@
         "operationId": "search-listings",
         "parameters": [
           {
+            "description": "Search query string.",
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Search query string.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Results per page (max 100).",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Results per page (max 100).",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort field (price, added, online, rating).",
+            "explode": false,
+            "in": "query",
+            "name": "s",
+            "schema": {
+              "description": "Sort field (price, added, online, rating).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (asc, desc).",
+            "explode": false,
+            "in": "query",
+            "name": "o",
+            "schema": {
+              "description": "Sort order (asc, desc).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
+            "explode": false,
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Moderated filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "m",
+            "schema": {
+              "description": "Moderated filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Vendor filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "vendor",
+            "schema": {
+              "description": "Vendor filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Tor filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "tor",
+            "schema": {
+              "description": "Tor filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Location filter (pipe-separated country codes).",
+            "explode": false,
+            "in": "query",
+            "name": "lf",
+            "schema": {
+              "description": "Location filter (pipe-separated country codes).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Peer ID filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "description": "Peer ID filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing type filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "lt",
+            "schema": {
+              "description": "Listing type filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing type filter alias.",
+            "explode": false,
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "description": "Listing type filter alias.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Product type filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "productType",
+            "schema": {
+              "description": "Product type filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing condition filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "lc",
+            "schema": {
+              "description": "Listing condition filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Rating filter (pipe-separated integers).",
+            "explode": false,
+            "in": "query",
+            "name": "pr",
+            "schema": {
+              "description": "Rating filter (pipe-separated integers).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Status filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "ps",
+            "schema": {
+              "description": "Status filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Minimum price filter (minimal units integer).",
+            "explode": false,
+            "in": "query",
+            "name": "minPrice",
+            "schema": {
+              "description": "Minimum price filter (minimal units integer).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum price filter (minimal units integer).",
+            "explode": false,
+            "in": "query",
+            "name": "maxPrice",
+            "schema": {
+              "description": "Maximum price filter (minimal units integer).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Price currency code (e.g. USD). Recommended with min/max price.",
+            "explode": false,
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "description": "Price currency code (e.g. USD). Recommended with min/max price.",
+              "type": "string"
+            }
+          },
+          {
             "description": "Page number (1-based).",
             "explode": false,
             "in": "query",
@@ -8169,6 +8361,16 @@
               "description": "Page number (1-based).",
               "format": "int64",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Browse mode for q=* : discover (default) or all.",
+            "explode": false,
+            "in": "query",
+            "name": "browse",
+            "schema": {
+              "description": "Browse mode for q=* : discover (default) or all.",
+              "type": "string"
             }
           }
         ],
@@ -8254,18 +8456,6 @@
               "format": "int64",
               "type": "integer"
             }
-          },
-          {
-            "description": "Time window in hours.",
-            "explode": false,
-            "in": "query",
-            "name": "hours",
-            "schema": {
-              "default": 168,
-              "description": "Time window in hours.",
-              "format": "int64",
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -8288,7 +8478,7 @@
             "description": "Error"
           }
         },
-        "summary": "Get hot (trending) listings",
+        "summary": "Get hot (trending) listings ranked by rating across all time",
         "tags": ["listings"]
       }
     },
@@ -9126,6 +9316,198 @@
         "operationId": "search-profiles",
         "parameters": [
           {
+            "description": "Search query string.",
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Search query string.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Results per page (max 100).",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Results per page (max 100).",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort field (price, added, online, rating).",
+            "explode": false,
+            "in": "query",
+            "name": "s",
+            "schema": {
+              "description": "Sort field (price, added, online, rating).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (asc, desc).",
+            "explode": false,
+            "in": "query",
+            "name": "o",
+            "schema": {
+              "description": "Sort order (asc, desc).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
+            "explode": false,
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Moderated filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "m",
+            "schema": {
+              "description": "Moderated filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Vendor filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "vendor",
+            "schema": {
+              "description": "Vendor filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Tor filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "tor",
+            "schema": {
+              "description": "Tor filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Location filter (pipe-separated country codes).",
+            "explode": false,
+            "in": "query",
+            "name": "lf",
+            "schema": {
+              "description": "Location filter (pipe-separated country codes).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Peer ID filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "description": "Peer ID filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing type filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "lt",
+            "schema": {
+              "description": "Listing type filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing type filter alias.",
+            "explode": false,
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "description": "Listing type filter alias.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Product type filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "productType",
+            "schema": {
+              "description": "Product type filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing condition filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "lc",
+            "schema": {
+              "description": "Listing condition filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Rating filter (pipe-separated integers).",
+            "explode": false,
+            "in": "query",
+            "name": "pr",
+            "schema": {
+              "description": "Rating filter (pipe-separated integers).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Status filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "ps",
+            "schema": {
+              "description": "Status filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Minimum price filter (minimal units integer).",
+            "explode": false,
+            "in": "query",
+            "name": "minPrice",
+            "schema": {
+              "description": "Minimum price filter (minimal units integer).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum price filter (minimal units integer).",
+            "explode": false,
+            "in": "query",
+            "name": "maxPrice",
+            "schema": {
+              "description": "Maximum price filter (minimal units integer).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Price currency code (e.g. USD). Recommended with min/max price.",
+            "explode": false,
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "description": "Price currency code (e.g. USD). Recommended with min/max price.",
+              "type": "string"
+            }
+          },
+          {
             "description": "Page number (1-based).",
             "explode": false,
             "in": "query",
@@ -9135,6 +9517,16 @@
               "description": "Page number (1-based).",
               "format": "int64",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Browse mode for q=* : discover (default) or all.",
+            "explode": false,
+            "in": "query",
+            "name": "browse",
+            "schema": {
+              "description": "Browse mode for q=* : discover (default) or all.",
+              "type": "string"
             }
           }
         ],
@@ -9388,6 +9780,198 @@
       "get": {
         "operationId": "root-search",
         "parameters": [
+          {
+            "description": "Search query string.",
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Search query string.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Results per page (max 100).",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Results per page (max 100).",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort field (price, added, online, rating).",
+            "explode": false,
+            "in": "query",
+            "name": "s",
+            "schema": {
+              "description": "Sort field (price, added, online, rating).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (asc, desc).",
+            "explode": false,
+            "in": "query",
+            "name": "o",
+            "schema": {
+              "description": "Sort order (asc, desc).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
+            "explode": false,
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Moderated filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "m",
+            "schema": {
+              "description": "Moderated filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Vendor filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "vendor",
+            "schema": {
+              "description": "Vendor filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Tor filter (true/false).",
+            "explode": false,
+            "in": "query",
+            "name": "tor",
+            "schema": {
+              "description": "Tor filter (true/false).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Location filter (pipe-separated country codes).",
+            "explode": false,
+            "in": "query",
+            "name": "lf",
+            "schema": {
+              "description": "Location filter (pipe-separated country codes).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Peer ID filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "description": "Peer ID filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing type filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "lt",
+            "schema": {
+              "description": "Listing type filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing type filter alias.",
+            "explode": false,
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "description": "Listing type filter alias.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Product type filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "productType",
+            "schema": {
+              "description": "Product type filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Listing condition filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "lc",
+            "schema": {
+              "description": "Listing condition filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Rating filter (pipe-separated integers).",
+            "explode": false,
+            "in": "query",
+            "name": "pr",
+            "schema": {
+              "description": "Rating filter (pipe-separated integers).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Status filter (pipe-separated).",
+            "explode": false,
+            "in": "query",
+            "name": "ps",
+            "schema": {
+              "description": "Status filter (pipe-separated).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Minimum price filter (minimal units integer).",
+            "explode": false,
+            "in": "query",
+            "name": "minPrice",
+            "schema": {
+              "description": "Minimum price filter (minimal units integer).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum price filter (minimal units integer).",
+            "explode": false,
+            "in": "query",
+            "name": "maxPrice",
+            "schema": {
+              "description": "Maximum price filter (minimal units integer).",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Price currency code (e.g. USD). Recommended with min/max price.",
+            "explode": false,
+            "in": "query",
+            "name": "currency",
+            "schema": {
+              "description": "Price currency code (e.g. USD). Recommended with min/max price.",
+              "type": "string"
+            }
+          },
           {
             "description": "Page number (0-based).",
             "explode": false,
@@ -28576,7 +29160,21 @@
       "Search_ListMeta": {
         "additionalProperties": false,
         "properties": {
+          "browseMode": {
+            "type": "string"
+          },
+          "catalogTotal": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
           "total": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "vendorCount": {
             "format": "int64",
             "type": "integer"
           }

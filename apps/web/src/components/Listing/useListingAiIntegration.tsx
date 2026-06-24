@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getImageUrl, useI18n } from '@mobazha/core';
+import { getAbsoluteImageUrl, useI18n } from '@mobazha/core';
 import type { AiGenerateResponse, Image, ListingFormData } from '@mobazha/core';
 import { aiStatusSupportsVision, getAIStatus } from '@mobazha/core/services/api/aiSettings';
 import { useToast, ToastAction } from '@/components/ui';
@@ -116,7 +116,7 @@ export function useListingAiIntegration({
       .map((img: Image) => {
         const hash = img.medium || img.small || img.original;
         if (!hash) return '';
-        return getImageUrl(hash) || '';
+        return getAbsoluteImageUrl(hash) || '';
       })
       .filter(Boolean);
   }, [formData.images]);

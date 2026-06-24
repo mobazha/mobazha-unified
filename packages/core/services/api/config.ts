@@ -314,3 +314,28 @@ export function getImageUrl(
   }
   return `${getGatewayUrl()}${NODE_API.MEDIA_IMAGE(h)}`;
 }
+
+/**
+ * Absolute image URL for server-side vision APIs (must be fetchable over http/https).
+ * Browser getImageUrl() may return a same-origin relative path (/v1/media/...); this
+ * prefixes window.location.origin (or configured gateway base on SSR).
+ */
+export function getAbsoluteImageUrl(
+  hash: string | undefined | null,
+  storeHint?: string
+): string | undefined {
+  const url = getImageUrl(hash, storeHint);
+  if (!url) return undefined;
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return new URL(url, window.location.origin).href;
+  }
+  const env = getEnvConfig();
+  const base = (env.api.gateway || '').replace(/\/v1\/?$/, '');
+  if (base.startsWith('http')) {
+    return new URL(url, base).href;
+  }
+  return undefined;
+}

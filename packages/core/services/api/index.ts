@@ -14,6 +14,7 @@ export {
   setStoreContextHeaders,
   getHeadersWithContext,
   getImageUrl,
+  getAbsoluteImageUrl,
   getMediaBaseURL,
   setStandaloneBuyerAuth,
   isStandaloneBuyerAuth,
