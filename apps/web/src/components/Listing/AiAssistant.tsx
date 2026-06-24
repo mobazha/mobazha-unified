@@ -11,7 +11,14 @@ import {
   Settings,
   ExternalLink,
 } from 'lucide-react';
-import { aiService, AiServiceError, useI18n } from '@mobazha/core';
+import Link from 'next/link';
+import {
+  aiService,
+  AiServiceError,
+  useI18n,
+  useFeature,
+  getAdminAiModelsPath,
+} from '@mobazha/core';
 import type { AiGenerateResponse } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui';
@@ -66,6 +73,9 @@ interface AiSetupPromptProps {
 
 export function AiSetupPrompt({ onDismiss }: AiSetupPromptProps) {
   const { t } = useI18n();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const modelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
+
   return (
     <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-lg">
       <Settings className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
@@ -75,15 +85,15 @@ export function AiSetupPrompt({ onDismiss }: AiSetupPromptProps) {
             defaultValue: 'Set up AI to auto-optimize product titles and descriptions.',
           })}
         </p>
-        <a
-          href="/admin/settings/integrations"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href={modelsPath}
           className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline mt-1"
         >
-          {t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
+          {aiWorkspaceEnabled
+            ? t('ai.goToModels', { defaultValue: 'Configure AI Models' })
+            : t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
           <ExternalLink className="w-3 h-3" />
-        </a>
+        </Link>
       </div>
       {onDismiss && (
         <button
