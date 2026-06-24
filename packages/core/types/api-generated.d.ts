@@ -2859,7 +2859,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get hot (trending) listings */
+    /** Get hot (trending) listings ranked by rating across all time */
     get: operations['get-listings-hot'];
     put?: never;
     post?: never;
@@ -8849,8 +8849,14 @@ export interface components {
       meta?: components['schemas']['Search_ListMeta'];
     };
     Search_ListMeta: {
+      browseMode?: string;
+      /** Format: int64 */
+      catalogTotal?: number;
+      hasMore?: boolean;
       /** Format: int64 */
       total: number;
+      /** Format: int64 */
+      vendorCount?: number;
     };
     Search_ListingIndexRequest: {
       PeerID: string;
@@ -14992,8 +14998,48 @@ export interface operations {
   'search-listings': {
     parameters: {
       query?: {
+        /** @description Search query string. */
+        q?: string;
+        /** @description Results per page (max 100). */
+        pageSize?: number;
+        /** @description Sort field (price, added, online, rating). */
+        s?: string;
+        /** @description Sort order (asc, desc). */
+        o?: string;
+        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
+        sortBy?: string;
+        /** @description Moderated filter (true/false). */
+        m?: string;
+        /** @description Vendor filter (true/false). */
+        vendor?: string;
+        /** @description Tor filter (true/false). */
+        tor?: string;
+        /** @description Location filter (pipe-separated country codes). */
+        lf?: string;
+        /** @description Peer ID filter (pipe-separated). */
+        id?: string;
+        /** @description Listing type filter (pipe-separated). */
+        lt?: string;
+        /** @description Listing type filter alias. */
+        type?: string;
+        /** @description Product type filter (pipe-separated). */
+        productType?: string;
+        /** @description Listing condition filter (pipe-separated). */
+        lc?: string;
+        /** @description Rating filter (pipe-separated integers). */
+        pr?: string;
+        /** @description Status filter (pipe-separated). */
+        ps?: string;
+        /** @description Minimum price filter (minimal units integer). */
+        minPrice?: string;
+        /** @description Maximum price filter (minimal units integer). */
+        maxPrice?: string;
+        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
+        currency?: string;
         /** @description Page number (1-based). */
         p?: number;
+        /** @description Browse mode for q=* : discover (default) or all. */
+        browse?: string;
       };
       header?: never;
       path?: never;
@@ -15058,8 +15104,6 @@ export interface operations {
       query?: {
         /** @description Maximum number of results. */
         limit?: number;
-        /** @description Time window in hours. */
-        hours?: number;
       };
       header?: never;
       path?: never;
@@ -15750,8 +15794,48 @@ export interface operations {
   'search-profiles': {
     parameters: {
       query?: {
+        /** @description Search query string. */
+        q?: string;
+        /** @description Results per page (max 100). */
+        pageSize?: number;
+        /** @description Sort field (price, added, online, rating). */
+        s?: string;
+        /** @description Sort order (asc, desc). */
+        o?: string;
+        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
+        sortBy?: string;
+        /** @description Moderated filter (true/false). */
+        m?: string;
+        /** @description Vendor filter (true/false). */
+        vendor?: string;
+        /** @description Tor filter (true/false). */
+        tor?: string;
+        /** @description Location filter (pipe-separated country codes). */
+        lf?: string;
+        /** @description Peer ID filter (pipe-separated). */
+        id?: string;
+        /** @description Listing type filter (pipe-separated). */
+        lt?: string;
+        /** @description Listing type filter alias. */
+        type?: string;
+        /** @description Product type filter (pipe-separated). */
+        productType?: string;
+        /** @description Listing condition filter (pipe-separated). */
+        lc?: string;
+        /** @description Rating filter (pipe-separated integers). */
+        pr?: string;
+        /** @description Status filter (pipe-separated). */
+        ps?: string;
+        /** @description Minimum price filter (minimal units integer). */
+        minPrice?: string;
+        /** @description Maximum price filter (minimal units integer). */
+        maxPrice?: string;
+        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
+        currency?: string;
         /** @description Page number (1-based). */
         p?: number;
+        /** @description Browse mode for q=* : discover (default) or all. */
+        browse?: string;
       };
       header?: never;
       path?: never;
@@ -15980,6 +16064,44 @@ export interface operations {
   'root-search': {
     parameters: {
       query?: {
+        /** @description Search query string. */
+        q?: string;
+        /** @description Results per page (max 100). */
+        pageSize?: number;
+        /** @description Sort field (price, added, online, rating). */
+        s?: string;
+        /** @description Sort order (asc, desc). */
+        o?: string;
+        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
+        sortBy?: string;
+        /** @description Moderated filter (true/false). */
+        m?: string;
+        /** @description Vendor filter (true/false). */
+        vendor?: string;
+        /** @description Tor filter (true/false). */
+        tor?: string;
+        /** @description Location filter (pipe-separated country codes). */
+        lf?: string;
+        /** @description Peer ID filter (pipe-separated). */
+        id?: string;
+        /** @description Listing type filter (pipe-separated). */
+        lt?: string;
+        /** @description Listing type filter alias. */
+        type?: string;
+        /** @description Product type filter (pipe-separated). */
+        productType?: string;
+        /** @description Listing condition filter (pipe-separated). */
+        lc?: string;
+        /** @description Rating filter (pipe-separated integers). */
+        pr?: string;
+        /** @description Status filter (pipe-separated). */
+        ps?: string;
+        /** @description Minimum price filter (minimal units integer). */
+        minPrice?: string;
+        /** @description Maximum price filter (minimal units integer). */
+        maxPrice?: string;
+        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
+        currency?: string;
         /** @description Page number (0-based). */
         p?: number;
       };
