@@ -3583,7 +3583,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/ai/chat': {
+  '/v1/agent/chat': {
     parameters: {
       query?: never;
       header?: never;
@@ -3592,23 +3592,26 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Streaming AI chat (SSE) */
-    post: operations['ai-chat-post'];
+    /**
+     * Stream an agent chat turn
+     * @description Starts a seller AI assistant turn and streams server-sent events. Runtime is handled by a raw chi route so response chunks are not buffered by Huma.
+     */
+    post: operations['agent-chat-stream-post'];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/v1/ai/chat/sessions': {
+  '/v1/agent/chat/sessions': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** List AI chat sessions */
-    get: operations['ai-chat-sessions-get'];
+    /** List agent chat sessions */
+    get: operations['agent-chat-sessions-get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -3617,19 +3620,19 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/ai/chat/{sessionId}': {
+  '/v1/agent/chat/{sessionId}': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get AI chat session */
-    get: operations['ai-chat-session-get'];
+    /** Get agent chat session */
+    get: operations['agent-chat-session-get'];
     put?: never;
     post?: never;
-    /** Delete AI chat session */
-    delete: operations['ai-chat-session-delete'];
+    /** Delete agent chat session */
+    delete: operations['agent-chat-session-delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -16438,40 +16441,53 @@ export interface operations {
       };
     };
   };
-  'ai-chat-post': {
+  'agent-chat-stream-post': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
+    /** @description Agent chat request body. */
     requestBody: {
       content: {
         'application/json': unknown;
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Server-sent event stream. Events include content, redacted tool progress, done, and error payloads. */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'text/event-stream': unknown;
         };
       };
-      /** @description Error */
-      default: {
+      /** @description Invalid request or AI configuration. */
+      400: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': components['schemas']['Node_EnvelopeError'];
+        content?: never;
+      };
+      /** @description Rate limited or another stream is already active. */
+      429: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
+      /** @description Streaming is unavailable. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
-  'ai-chat-sessions-get': {
+  'agent-chat-sessions-get': {
     parameters: {
       query?: {
         limit?: string;
@@ -16503,7 +16519,7 @@ export interface operations {
       };
     };
   };
-  'ai-chat-session-get': {
+  'agent-chat-session-get': {
     parameters: {
       query?: never;
       header?: never;
@@ -16535,7 +16551,7 @@ export interface operations {
       };
     };
   };
-  'ai-chat-session-delete': {
+  'agent-chat-session-delete': {
     parameters: {
       query?: never;
       header?: never;

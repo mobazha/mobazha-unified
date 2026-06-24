@@ -1,6 +1,6 @@
 /**
  * AI Chat Service — SSE streaming client for the seller AI assistant.
- * Connects to POST /v1/ai/chat and parses SSE events.
+ * Connects to POST /v1/agent/chat and parses SSE events.
  */
 
 import { NODE_API } from '../../config/apiPaths';
@@ -11,7 +11,7 @@ import { nodeAuthGet, nodeAuthDel } from '../api/helpers';
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'tool';
+  role: 'user' | 'assistant' | 'tool' | 'system';
   content: string;
   toolCalls?: ToolCallInfo[];
   toolCallId?: string;
@@ -71,7 +71,7 @@ export async function sendChatMessage(
   signal?: AbortSignal,
   context?: ChatContext
 ): Promise<void> {
-  const url = `${getGatewayUrl()}${NODE_API.AI_CHAT}`;
+  const url = `${getGatewayUrl()}${NODE_API.AGENT_CHAT}`;
   const headers = {
     ...getAuthHeaders(),
     'Content-Type': 'application/json',
@@ -111,6 +111,22 @@ export async function sendChatMessage(
 
   const decoder = new TextDecoder();
   let buffer = '';
+  let streamFinished = false;
+  let streamErrored = false;
+
+  const wrappedCallbacks: ChatStreamCallbacks = {
+    onContent: callbacks.onContent,
+    onToolCall: callbacks.onToolCall,
+    onToolResult: callbacks.onToolResult,
+    onDone: sessionId => {
+      streamFinished = true;
+      callbacks.onDone(sessionId);
+    },
+    onError: error => {
+      streamErrored = true;
+      callbacks.onError(error);
+    },
+  };
 
   try {
     while (true) {
@@ -118,27 +134,50 @@ export async function sendChatMessage(
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      parseSSEBuffer(buffer, wrappedCallbacks, remaining => {
+        buffer = remaining;
+      });
+    }
 
-      let eventType = '';
-      for (const line of lines) {
-        if (line.startsWith('event: ')) {
-          eventType = line.slice(7).trim();
-        } else if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          try {
-            const event: ChatSSEEvent = JSON.parse(data);
-            handleSSEEvent(event, eventType, callbacks);
-          } catch {
-            // skip unparseable lines
-          }
-          eventType = '';
-        }
-      }
+    // Flush trailing bytes and any partial line left in buffer.
+    buffer += decoder.decode();
+    if (buffer) {
+      parseSSEBuffer(`${buffer}\n`, wrappedCallbacks, remaining => {
+        buffer = remaining;
+      });
     }
   } finally {
     reader.releaseLock();
+    // Stream closed without explicit done/error — reset UI instead of spinning forever.
+    if (!streamFinished && !streamErrored) {
+      callbacks.onDone('');
+    }
+  }
+}
+
+function parseSSEBuffer(
+  chunk: string,
+  callbacks: ChatStreamCallbacks,
+  setRemaining: (remaining: string) => void
+): void {
+  const lines = chunk.split('\n');
+  const incomplete = lines.pop() ?? '';
+  setRemaining(incomplete);
+
+  let eventType = '';
+  for (const line of lines) {
+    if (line.startsWith('event: ')) {
+      eventType = line.slice(7).trim();
+    } else if (line.startsWith('data: ')) {
+      const data = line.slice(6);
+      try {
+        const event: ChatSSEEvent = JSON.parse(data);
+        handleSSEEvent(event, eventType, callbacks);
+      } catch {
+        // skip unparseable lines
+      }
+      eventType = '';
+    }
   }
 }
 
@@ -154,7 +193,11 @@ function handleSSEEvent(event: ChatSSEEvent, _eventType: string, callbacks: Chat
       break;
     case 'tool_result':
       if (event.toolId && event.tool) {
-        callbacks.onToolResult(event.toolId, event.tool, event.result);
+        callbacks.onToolResult(
+          event.toolId,
+          event.tool,
+          event.error ? { error: event.error } : event.result
+        );
       }
       break;
     case 'done':
@@ -170,15 +213,15 @@ function handleSSEEvent(event: ChatSSEEvent, _eventType: string, callbacks: Chat
 
 export async function listChatSessions(limit = 20, offset = 0): Promise<ChatSession[]> {
   const sessions = await nodeAuthGet<ChatSession[]>(
-    `${NODE_API.AI_CHAT_SESSIONS}?limit=${limit}&offset=${offset}`
+    `${NODE_API.AGENT_CHAT_SESSIONS}?limit=${limit}&offset=${offset}`
   );
   return sessions || [];
 }
 
 export async function getChatSession(sessionId: string): Promise<ChatSession> {
-  return nodeAuthGet<ChatSession>(NODE_API.AI_CHAT_SESSION(sessionId));
+  return nodeAuthGet<ChatSession>(NODE_API.AGENT_CHAT_SESSION(sessionId));
 }
 
 export async function deleteChatSession(sessionId: string): Promise<void> {
-  await nodeAuthDel(NODE_API.AI_CHAT_SESSION(sessionId));
+  await nodeAuthDel(NODE_API.AGENT_CHAT_SESSION(sessionId));
 }
