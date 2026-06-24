@@ -11,6 +11,7 @@ import React from 'react';
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 let mockPathname = '/admin';
+let mockAiWorkspaceEnabled = false;
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
@@ -29,11 +30,13 @@ vi.mock('@mobazha/core', () => ({
         'admin.nav.products': 'Products',
         'admin.nav.orders': 'Orders',
         'admin.nav.settings': 'Settings',
+        'admin.nav.aiWorkspace': 'AI Workspace',
         'admin.nav.mainNavigation': 'Main navigation',
       };
       return translations[key] || params?.defaultValue || key;
     },
   }),
+  useFeature: (key: string) => (key === 'aiWorkspaceEnabled' ? mockAiWorkspaceEnabled : false),
 }));
 
 vi.mock('@/lib/utils', () => ({
@@ -49,6 +52,7 @@ import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs'
 describe('AdminMobileBottomTabs', () => {
   beforeEach(() => {
     mockPathname = '/admin';
+    mockAiWorkspaceEnabled = false;
   });
 
   describe('rendering', () => {
@@ -154,6 +158,32 @@ describe('AdminMobileBottomTabs', () => {
       tabs.forEach(tab => {
         expect(tab.className).toContain('min-h-[44px]');
       });
+    });
+  });
+
+  describe('ai workspace enabled', () => {
+    beforeEach(() => {
+      mockAiWorkspaceEnabled = true;
+    });
+
+    it('renders AI workspace tab before settings', () => {
+      render(<AdminMobileBottomTabs />);
+      expect(screen.getByTestId('mobile-tab-ai-workspace')).toBeInTheDocument();
+      expect(screen.getByText('AI Workspace')).toBeInTheDocument();
+    });
+
+    it('highlights AI workspace tab on /admin/ai/workspace', () => {
+      mockPathname = '/admin/ai/workspace';
+      render(<AdminMobileBottomTabs />);
+      const tab = screen.getByTestId('mobile-tab-ai-workspace');
+      expect(tab.className).toContain('text-primary');
+      expect(tab).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('highlights AI workspace tab on /admin/ai/models', () => {
+      mockPathname = '/admin/ai/models';
+      render(<AdminMobileBottomTabs />);
+      expect(screen.getByTestId('mobile-tab-ai-workspace')).toHaveAttribute('aria-current', 'page');
     });
   });
 });
