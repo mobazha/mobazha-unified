@@ -22,6 +22,7 @@ import {
   NODE_API,
   useUserContext,
   useFeatureFlags,
+  useFeature,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
@@ -53,6 +54,7 @@ import {
   ShoppingCart,
   Globe,
   ClipboardList,
+  Layers,
 } from 'lucide-react';
 
 function MeCasesEntry() {
@@ -201,6 +203,7 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
   const { t, locale, setLocale, supportedLocales, localeInfo } = useI18n();
   const { isDark, toggleDarkMode } = useTheme();
   const { isEmbeddedApp: isEmbedded } = usePlatform();
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);
 
@@ -254,6 +257,14 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
               description={t('me.notificationsDesc')}
               href="/notifications"
             />
+            {collectiblesHubEnabled && (
+              <FeatureItem
+                icon={<Layers className="w-5 h-5" />}
+                title={t('me.collectibles')}
+                description={t('me.collectiblesDesc')}
+                href="/collectibles"
+              />
+            )}
           </div>
         </>
       )}

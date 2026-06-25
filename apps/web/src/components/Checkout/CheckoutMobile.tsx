@@ -52,7 +52,8 @@ export function CheckoutMobile({ checkout }: Props) {
     canSubmit,
     hasMixedContractTypes,
     hasMissingContractType,
-    isRwaToken,
+    isRwaCheckoutBlocked,
+    isCollectibleHubNftCheckout,
     needsShippingAddress,
     hasAllShippingSelected,
     hasShippingPricingIssue,
@@ -157,10 +158,18 @@ export function CheckoutMobile({ checkout }: Props) {
         ) : (
           <div className="space-y-4">
             {/* RWA hint */}
-            {isRwaToken && (
+            {isRwaCheckoutBlocked && (
               <Card className="border-warning/30 bg-warning/8">
                 <CardContent className="p-4">
                   <p className="text-sm text-warning">{t('checkout.rwaNotSupported')}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {isCollectibleHubNftCheckout && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">{t('collectibles.trustNote')}</p>
                 </CardContent>
               </Card>
             )}

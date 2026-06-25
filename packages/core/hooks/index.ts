@@ -155,6 +155,7 @@ export * from './useMarketplaceContext';
 
 // Feature Flags (Phase MS — server-driven toggles + kill switches)
 export * from './useFeatureFlags';
+export * from './useCollectibles';
 
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';

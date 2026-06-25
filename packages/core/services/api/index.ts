@@ -102,6 +102,9 @@ export * as moderatorsApi from './moderators';
 // 集市 API
 export * as marketplaceApi from './marketplace';
 
+// Collectibles Hub+NFT API (P1)
+export * as collectiblesApi from './collectibles';
+
 // 权限控制 API
 export * as accessApi from './access';
 

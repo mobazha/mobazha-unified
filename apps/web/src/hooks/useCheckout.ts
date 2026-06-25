@@ -14,6 +14,9 @@ import {
   getImageUrl,
   useShippingAddresses,
   useCartStore,
+  isCollectibleHubNftListing,
+  parseCollectibleListingMetadata,
+  useFeature,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import type { OrderItemOption, ProductSku } from '@mobazha/core';
@@ -53,6 +56,7 @@ export function useCheckout(): UseCheckoutReturn {
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { toast } = useToast();
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   // ---- URL params ----
   const singleSlug = searchParams.get('slug');
   const singlePeerID = searchParams.get('peerID');
@@ -159,7 +163,11 @@ export function useCheckout(): UseCheckoutReturn {
   const handleUpdateQuantity = useCallback((itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setCheckoutItems(prev =>
-      prev.map(item => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
+      prev.map(item => {
+        if (item.id !== itemId) return item;
+        const quantity = item.isCollectibleHubNft ? 1 : newQuantity;
+        return { ...item, quantity };
+      })
     );
   }, []);
 
@@ -200,6 +208,10 @@ export function useCheckout(): UseCheckoutReturn {
         listingHash = String(raw.hash ?? raw.cid ?? '');
       }
 
+      const isCollectibleHubNft = isCollectibleHubNftListing(product);
+      const collectibleMeta = isCollectibleHubNft ? parseCollectibleListingMetadata(product) : null;
+      const resolvedQuantity = isCollectibleHubNft ? 1 : quantity;
+
       return {
         id:
           options && options.length > 0
@@ -209,7 +221,7 @@ export function useCheckout(): UseCheckoutReturn {
         title: product.item.title,
         price,
         currency,
-        quantity,
+        quantity: resolvedQuantity,
         image: getImageUrl(imageUrl) || '',
         vendor: { name: sellerPeerID.slice(0, 8), peerID: sellerPeerID },
         options,
@@ -221,6 +233,11 @@ export function useCheckout(): UseCheckoutReturn {
         shippingZones: product.shippingProfile
           ? profileToCheckoutZones(product.shippingProfile)
           : undefined,
+        isCollectibleHubNft,
+        fulfillment: collectibleMeta?.fulfillment,
+        hubSlotID: collectibleMeta?.hubSlotID,
+        nftMint: collectibleMeta?.nftMint,
+        certNumber: collectibleMeta?.certNumber,
       };
     },
     [findMatchingSku]
@@ -458,11 +475,35 @@ export function useCheckout(): UseCheckoutReturn {
     [checkoutItems]
   );
 
+  const isCollectibleHubNftCheckout = useMemo(
+    () =>
+      collectiblesHubEnabled &&
+      checkoutItems.length > 0 &&
+      checkoutItems.every(item => item.isCollectibleHubNft),
+    [checkoutItems, collectiblesHubEnabled]
+  );
+
+  const isRwaCheckoutBlocked = useMemo(() => {
+    return checkoutItems.some(item => {
+      if (item.contractType !== 'RWA_TOKEN') return false;
+      if (item.isCollectibleHubNft) return !collectiblesHubEnabled;
+      return true;
+    });
+  }, [checkoutItems, collectiblesHubEnabled]);
+
+  const hasCollectibleQuantityIssue = useMemo(
+    () =>
+      isCollectibleHubNftCheckout &&
+      (checkoutItems.length !== 1 || (checkoutItems[0]?.quantity ?? 0) !== 1),
+    [checkoutItems, isCollectibleHubNftCheckout]
+  );
+
   const rwaTradeMode = useMemo(() => {
     return checkoutItems.find(i => i.contractType === 'RWA_TOKEN')?.rwaTradeMode;
   }, [checkoutItems]);
 
-  const needsShippingAddress = contractTypeCheckout.needsShippingAddress;
+  const needsShippingAddress =
+    contractTypeCheckout.needsShippingAddress && !isCollectibleHubNftCheckout;
 
   const selectedCountryCode = useMemo(() => {
     if (!selectedAddress) return undefined;
@@ -479,7 +520,8 @@ export function useCheckout(): UseCheckoutReturn {
   }, [checkoutItems, selectedShipping]);
 
   const canSubmit =
-    !isRwaToken &&
+    !isRwaCheckoutBlocked &&
+    !hasCollectibleQuantityIssue &&
     (!needsShippingAddress || !!selectedAddress) &&
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
@@ -638,7 +680,7 @@ export function useCheckout(): UseCheckoutReturn {
         setIsValidatingDiscount(false);
       }
     },
-    [subtotal, currency, appliedDiscounts, toast, t]
+    [subtotal, currency, appliedDiscounts, checkoutItems, toast, t]
   );
 
   const handleRemoveDiscount = useCallback((id: string) => {
@@ -667,9 +709,17 @@ export function useCheckout(): UseCheckoutReturn {
       });
       return;
     }
-    if (isRwaToken) {
+    if (isRwaCheckoutBlocked) {
       toast({
         title: t('checkout.rwaNotSupported'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (hasCollectibleQuantityIssue) {
+      toast({
+        title: t('collectibles.checkout.onePerOrderTitle'),
+        description: t('collectibles.checkout.onePerOrderDesc'),
         variant: 'destructive',
       });
       return;
@@ -708,6 +758,10 @@ export function useCheckout(): UseCheckoutReturn {
             options?: OrderItemOption[];
             memo?: string;
             shipping?: { name: string; service: string; zoneId?: string; rateId?: string };
+            fulfillment?: string;
+            hubSlotID?: string;
+            nftMint?: string;
+            certNumber?: string;
           } = {
             listingHash: item.listingHash || item.id,
             quantity: item.quantity,
@@ -715,6 +769,13 @@ export function useCheckout(): UseCheckoutReturn {
           };
           if (item.options && item.options.length > 0) {
             payload.options = item.options;
+          }
+
+          if (item.isCollectibleHubNft) {
+            if (item.fulfillment) payload.fulfillment = item.fulfillment;
+            if (item.hubSlotID) payload.hubSlotID = item.hubSlotID;
+            if (item.nftMint) payload.nftMint = item.nftMint;
+            if (item.certNumber) payload.certNumber = item.certNumber;
           }
 
           if (item.contractType === 'PHYSICAL_GOOD') {
@@ -782,7 +843,8 @@ export function useCheckout(): UseCheckoutReturn {
     router,
     t,
     toast,
-    isRwaToken,
+    isRwaCheckoutBlocked,
+    hasCollectibleQuantityIssue,
     needsShippingAddress,
     selectedShipping,
     hasAllShippingSelected,
@@ -847,6 +909,8 @@ export function useCheckout(): UseCheckoutReturn {
     handleRemoveDiscount,
 
     isRwaToken,
+    isRwaCheckoutBlocked,
+    isCollectibleHubNftCheckout,
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,

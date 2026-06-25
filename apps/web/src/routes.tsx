@@ -224,6 +224,13 @@ if (!__OUTPOST__) {
     // RWA 仪表盘
     { path: '/rwa-dashboard', element: protectedPage(() => import('./app/rwa-dashboard/page')) },
 
+    // Collectibles Hub+NFT (P1 · SaaS · collectiblesHubEnabled)
+    { path: '/collectibles', element: protectedPage(() => import('./app/collectibles/page')) },
+    {
+      path: '/collectibles/:mint',
+      element: protectedPage(() => import('./app/collectibles/[mint]/page')),
+    },
+
     // 设置 — 嵌套路由（共享 SettingsLayout 含侧边栏）
     {
       path: '/settings',

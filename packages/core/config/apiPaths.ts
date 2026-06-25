@@ -604,6 +604,28 @@ export const HOSTING_API = {
     `/platform/v1/stores/${peerID}/storefronts/${sfID}`,
   // MS2a.2b: public slug → (peerID, storefront) resolver.
   STOREFRONTS_BY_SLUG: (slug: string) => `/platform/v1/storefronts/by-slug/${slug}`,
+
+  // --- Collectibles Hub+NFT (P1 · SaaS only · collectiblesHubEnabled) ---
+  COLLECTIBLES_HUB_INTAKE: '/platform/v1/collectibles/hub/intake',
+  COLLECTIBLES_HUB_SLOTS: '/platform/v1/collectibles/hub/slots',
+  COLLECTIBLES_HUB_SLOT: (id: string) =>
+    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}`,
+  COLLECTIBLES_HUB_SLOT_REJECT: (id: string) =>
+    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}/reject`,
+  COLLECTIBLES_HUB_SLOT_MINT: (id: string) =>
+    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}/mint`,
+  COLLECTIBLES_NFTS: '/platform/v1/collectibles/nfts',
+  COLLECTIBLES_NFT: (mint: string) => `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}`,
+  COLLECTIBLES_NFT_BURN_TX: (mint: string) =>
+    `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}/burn-tx`,
+  COLLECTIBLES_WALLETS: '/platform/v1/collectibles/wallets',
+  COLLECTIBLES_REDEMPTIONS: '/platform/v1/collectibles/redemptions',
+  COLLECTIBLES_REDEMPTION: (id: string) =>
+    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}`,
+  COLLECTIBLES_REDEMPTION_SHIP: (id: string) =>
+    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/ship`,
+  COLLECTIBLES_REDEMPTION_SETTLE: (id: string) =>
+    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/settle`,
 } as const;
 
 // ============================================================
