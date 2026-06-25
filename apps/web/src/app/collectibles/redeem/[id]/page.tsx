@@ -13,10 +13,12 @@ import {
   useCollectibleRedemption,
   useFeature,
   useI18n,
+  getSolanaExplorerTxUrl,
+  getEnvConfig,
   truncateAddress,
   type CollectibleRedemptionPhase,
 } from '@mobazha/core';
-import { ArrowLeft, CheckCircle2, Clock, Package, Truck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, ExternalLink, Package, Truck } from 'lucide-react';
 import { CollectiblesFeatureGuard } from '../../CollectiblesFeatureGuard';
 
 const PHASE_CONFIG: Record<
@@ -53,6 +55,9 @@ export default function CollectibleRedemptionPage() {
   const submittedAt = formatDateTime(redemption?.createdAt, formatDate);
   const burnAt = formatDateTime(redemption?.burnAt, formatDate);
   const slaDueAt = formatDateTime(redemption?.slaDueAt, formatDate);
+  const burnTxExplorerUrl = redemption?.burnTxSignature
+    ? getSolanaExplorerTxUrl(redemption.burnTxSignature, getEnvConfig().isTestEnv)
+    : '';
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,6 +145,33 @@ export default function CollectibleRedemptionPage() {
                           {t('collectibles.tracking.burnConfirmed')}
                         </dt>
                         <dd className="font-medium text-foreground">{burnAt}</dd>
+                      </div>
+                    ) : null}
+                    {redemption.burnTxSignature ? (
+                      <div className="sm:col-span-2">
+                        <dt className="text-muted-foreground">
+                          {t('collectibles.onChain.burnTx')}
+                        </dt>
+                        <dd className="font-medium text-foreground">
+                          {burnTxExplorerUrl ? (
+                            <a
+                              href={burnTxExplorerUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-mono text-sm text-primary hover:underline"
+                            >
+                              {truncateAddress(redemption.burnTxSignature)}
+                              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                              <span className="sr-only">
+                                {t('collectibles.onChain.viewOnExplorer')}
+                              </span>
+                            </a>
+                          ) : (
+                            <span className="font-mono text-sm">
+                              {truncateAddress(redemption.burnTxSignature)}
+                            </span>
+                          )}
+                        </dd>
                       </div>
                     ) : null}
                     {slaDueAt && phase === 'redeem_requested' ? (
