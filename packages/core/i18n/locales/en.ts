@@ -5073,6 +5073,8 @@ export const en: TranslationResource = {
       submittedAt: 'Submitted',
       burnConfirmed: 'On-chain confirmed',
       shippingAddress: 'Shipping to',
+      shippingAddressOnFile:
+        'Your shipping address is on file and will be used for Hub fulfillment.',
       trackingNumber: 'Tracking number',
       slaDue: 'Ship by',
       nftMint: 'Digital title',

@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   collectiblesApi,
   getEnvConfig,
+  prepareCollectibleShipToPayload,
   signCollectibleBurnTransaction,
   useAppKit,
   useCollectibleNFT,
@@ -23,15 +24,6 @@ import {
 import { ArrowLeft, Package } from 'lucide-react';
 import { CollectiblesFeatureGuard } from '../CollectiblesFeatureGuard';
 import { CollectibleOnChainProof } from '@/components/collectibles/CollectibleOnChainProof';
-
-function encodeShipToPayload(value: string): string {
-  if (typeof window === 'undefined') return value;
-  try {
-    return window.btoa(unescape(encodeURIComponent(value.trim())));
-  } catch {
-    return value.trim();
-  }
-}
 
 export default function CollectibleDetailPage() {
   const params = useParams();
@@ -85,7 +77,7 @@ export default function CollectibleDetailPage() {
         nftMint: nft.nftMint,
         requesterWallet: holderWallet,
         burnTxSignature: burnSignature,
-        shipToEncrypted: encodeShipToPayload(shipTo),
+        shipToEncrypted: prepareCollectibleShipToPayload(shipTo),
       });
 
       setRedemptionId(redemption.redemptionID);
