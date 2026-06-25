@@ -17,6 +17,7 @@ import {
   Square,
 } from 'lucide-react';
 import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
+import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 
 const ReactMarkdown = lazy(() => import('react-markdown'));
 
@@ -27,20 +28,29 @@ function ToolCallBadge({ tool }: { tool: ToolCallInfo }) {
       <Loader2 className="w-3 h-3 animate-spin" />
     ) : tool.status === 'error' ? (
       <span className="text-destructive">!</span>
+    ) : tool.status === 'approval_required' ? (
+      <span className="text-primary">!</span>
     ) : (
       <span className="text-primary">✓</span>
     );
 
+  const statusLabel =
+    tool.status === 'executing'
+      ? t('ai.toolAnalyzing')
+      : tool.status === 'error'
+        ? t('ai.toolFailed')
+        : tool.status === 'approval_required'
+          ? t('ai.approval.title')
+          : tool.status === 'approval_applied'
+            ? t('ai.approval.statusApplied')
+            : tool.status === 'approval_rejected'
+              ? t('ai.approval.statusRejected')
+              : t('ai.toolChecked');
+
   return (
     <div className="my-1 inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
       <Wrench className="w-3 h-3" />
-      <span>
-        {tool.status === 'executing'
-          ? t('ai.toolAnalyzing')
-          : tool.status === 'error'
-            ? t('ai.toolFailed')
-            : t('ai.toolChecked')}
-      </span>
+      <span>{statusLabel}</span>
       {statusIcon}
     </div>
   );
@@ -58,6 +68,7 @@ function MarkdownContent({ content }: { content: string }) {
 
 function ChatBubble({ msg }: { msg: ChatMessage }) {
   const isUser = msg.role === 'user';
+  const updateToolApproval = useAIChatStore(s => s.updateToolApproval);
 
   return (
     <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -80,7 +91,18 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
             <MarkdownContent content={msg.content} />
           ))}
         {msg.toolCalls?.map(tc => (
-          <ToolCallBadge key={tc.id} tool={tc} />
+          <div key={tc.id}>
+            <ToolCallBadge tool={tc} />
+            {tc.approval &&
+              (tc.approval.localStatus === 'pending' || tc.approval.localStatus === 'failed') && (
+                <AgentApprovalCard
+                  tool={tc}
+                  onStatusChange={(toolId, localStatus) =>
+                    updateToolApproval(msg.id, toolId, localStatus)
+                  }
+                />
+              )}
+          </div>
         ))}
       </div>
     </div>
