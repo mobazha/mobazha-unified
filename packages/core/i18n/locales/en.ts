@@ -5058,6 +5058,23 @@ export const en: TranslationResource = {
       failedTitle: 'Redemption failed',
       trackingLabel: 'Redemption ID',
     },
+    primarySale: {
+      title: 'Tokenized card',
+      certNumber: 'Cert #',
+      viewNft: 'View digital title',
+      loadFailed: 'Could not refresh Hub status. Try again later.',
+      supportHint: 'Payout could not be completed automatically. Contact support if this persists.',
+      phase: {
+        awaiting_payment: 'Complete payment to continue with Hub intake and digital title mint.',
+        awaiting_bridge:
+          'Payment confirmed. Linking your order to the Hub ledger — this usually takes a moment.',
+        awaiting_hub:
+          'Waiting for the card to be received at the Hub, verified, and minted as a digital title.',
+        payout_pending: 'Confirming payout to the seller from buyer protection funds.',
+        payout_complete: 'Seller payout is complete. The digital title will reflect Hub status.',
+        payout_failed: 'Payout to the seller could not be completed. Our team may need to step in.',
+      },
+    },
   },
 
   // Shipping settings

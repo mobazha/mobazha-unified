@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { collectiblesApi } from '../services/api/collectibles';
-import type { CollectibleNFT, CollectiblesPagedResult } from '../collectibles/types';
+import type {
+  CollectibleNFT,
+  CollectiblePrimarySale,
+  CollectiblesPagedResult,
+} from '../collectibles/types';
 
 export interface UseCollectibleNFTsOptions {
   page?: number;
@@ -61,4 +65,37 @@ export function useCollectibleNFT(mint: string | undefined, enabled = true) {
   }, [refresh]);
 
   return { nft, loading, error, refresh };
+}
+
+export function useCollectiblePrimarySale(orderId: string | undefined, enabled = true) {
+  const [primarySale, setPrimarySale] = useState<CollectiblePrimarySale | null>(null);
+  const [loading, setLoading] = useState(!!orderId?.trim() && enabled);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refresh = useCallback(async () => {
+    const trimmed = orderId?.trim();
+    if (!trimmed || !enabled) {
+      setPrimarySale(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await collectiblesApi.getPrimarySaleByOrder(trimmed);
+      setPrimarySale(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setPrimarySale(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [enabled, orderId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { primarySale, loading, error, refresh };
 }

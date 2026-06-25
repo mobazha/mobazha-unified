@@ -1,9 +1,11 @@
 import { HOSTING_API } from '../../config/apiPaths';
+import { ApiError } from './client';
 import { hostingGet, hostingPost } from './helpers';
 import type {
   CollectibleBurnTx,
   CollectibleHubSlot,
   CollectibleNFT,
+  CollectiblePrimarySale,
   CollectibleRedemption,
   CollectiblesPagedResult,
 } from '../../collectibles/types';
@@ -81,6 +83,31 @@ export async function getCollectibleRedemption(id: string): Promise<CollectibleR
   return hostingGet<CollectibleRedemption>(HOSTING_API.COLLECTIBLES_REDEMPTION(id));
 }
 
+export async function getCollectiblePrimarySaleByOrder(
+  orderId: string
+): Promise<CollectiblePrimarySale | null> {
+  const trimmed = orderId.trim();
+  if (!trimmed) return null;
+  try {
+    return await hostingGet<CollectiblePrimarySale>(
+      HOSTING_API.COLLECTIBLES_PRIMARY_SALE_BY_ORDER(trimmed)
+    );
+  } catch (err) {
+    if (err instanceof ApiError) {
+      // Hosting maps missing bridge rows to forbidden for participant lookup (anti-enumeration).
+      if (
+        err.status === 404 ||
+        err.status === 403 ||
+        err.code === 'not_found' ||
+        err.code === 'forbidden'
+      ) {
+        return null;
+      }
+    }
+    throw err;
+  }
+}
+
 export const collectiblesApi = {
   listHubSlots: listCollectibleHubSlots,
   getHubSlot: getCollectibleHubSlot,
@@ -90,4 +117,5 @@ export const collectiblesApi = {
   buildBurnTx: buildCollectibleBurnTx,
   createRedemption: createCollectibleRedemption,
   getRedemption: getCollectibleRedemption,
+  getPrimarySaleByOrder: getCollectiblePrimarySaleByOrder,
 };
