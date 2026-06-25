@@ -292,9 +292,21 @@ export const SEARCH_API_PATHS = {
 export const NODE_API_PATHS = {
   ADMIN_PASSWORD: '/admin/password',
   ADMIN_VERSION: '/admin/version',
+  AGENT_APPROVALS: '/agent/approvals',
+  AGENT_APPROVALS_APPLY: (approvalId: string) =>
+    `/agent/approvals/${encodeURIComponent(approvalId)}/apply`,
+  AGENT_APPROVALS_BY_APPROVAL_ID: (approvalId: string) =>
+    `/agent/approvals/${encodeURIComponent(approvalId)}`,
+  AGENT_APPROVALS_DECISION: (approvalId: string) =>
+    `/agent/approvals/${encodeURIComponent(approvalId)}/decision`,
+  AGENT_ARTIFACTS: '/agent/artifacts',
+  AGENT_ARTIFACTS_BY_ARTIFACT_ID: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}`,
   AGENT_CHAT: '/agent/chat',
   AGENT_CHAT_BY_SESSION_ID: (sessionId: string) => `/agent/chat/${encodeURIComponent(sessionId)}`,
   AGENT_CHAT_SESSIONS: '/agent/chat/sessions',
+  AGENT_SKILL_RUNS: '/agent/skill-runs',
+  AGENT_SKILL_RUNS_BY_RUN_ID: (runId: string) => `/agent/skill-runs/${encodeURIComponent(runId)}`,
   AI_GENERATE: '/ai/generate',
   AI_STATUS: '/ai/status',
   ANALYTICS_EVENTS: (peerID: string) => `/analytics/${encodeURIComponent(peerID)}/events`,

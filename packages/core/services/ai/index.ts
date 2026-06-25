@@ -7,6 +7,15 @@ export {
   getChatSession,
   deleteChatSession,
 } from './chatService';
+export {
+  listAgentApprovals,
+  getAgentApproval,
+  decideAgentApproval,
+  applyAgentApproval,
+  approveAndApplyAgentApproval,
+  parseApprovalRequiredResult,
+  normalizeAgentApprovalRecord,
+} from './approvalService';
 export type {
   ChatMessage,
   ChatSession,
@@ -14,3 +23,12 @@ export type {
   ChatStreamCallbacks,
   ToolCallInfo,
 } from './chatService';
+export type {
+  AgentApproval,
+  AgentApprovalListParams,
+  AgentApprovalRecord,
+  AgentApprovalRecordRaw,
+  AgentApprovalRequest,
+  AgentApprovalStatus,
+  ApprovalRequiredPayload,
+} from '../../types/agentApproval';

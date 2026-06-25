@@ -10,6 +10,7 @@ import { useSyncedListingProviders } from '@/hooks/useSyncedListingProviders';
 import { AiWorkspaceSetupBanner } from './AiWorkspaceSetupBanner';
 import { AiWorkspaceStatusBadge } from './AiWorkspaceStatusBadge';
 import { WorkspaceOpportunityCards } from './WorkspaceOpportunityCards';
+import { WorkspacePendingApprovals } from './WorkspacePendingApprovals';
 import { useAiWorkspaceStatus } from './useAiWorkspaceStatus';
 import { useWorkspaceOpportunities } from './useWorkspaceOpportunities';
 
@@ -83,10 +84,13 @@ export function AiWorkspacePanel({
       </div>
 
       {aiAvailable && (
-        <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 flex items-start gap-3">
-          <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-          <p className="text-sm text-muted-foreground">{t('admin.workspace.valueSummary')}</p>
-        </div>
+        <>
+          <WorkspacePendingApprovals />
+          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 flex items-start gap-3">
+            <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">{t('admin.workspace.valueSummary')}</p>
+          </div>
+        </>
       )}
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-6 lg:items-start">

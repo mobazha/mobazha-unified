@@ -2723,6 +2723,25 @@ export interface TranslationResource {
     toolAnalyzing?: string;
     toolChecked?: string;
     toolFailed?: string;
+    approval?: {
+      title?: string;
+      actionLabel?: string;
+      approve?: string;
+      reject?: string;
+      appliedTitle?: string;
+      appliedDescription?: string;
+      rejectedTitle?: string;
+      rejectedDescription?: string;
+      applyFailed?: string;
+      rejectFailed?: string;
+      statusApplied?: string;
+      statusRejected?: string;
+      statusFailed?: string;
+      pendingBanner?: string;
+      actionBanner?: string;
+      retry?: string;
+      viewInChat?: string;
+    };
   };
 
   standalone?: {

@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { ChatMessage, ToolCallInfo, ChatSession } from '../services/ai/chatService';
 import { sendChatMessage, listChatSessions, deleteChatSession } from '../services/ai/chatService';
+import { parseApprovalRequiredResult } from '../services/ai/approvalService';
 
 let msgCounter = 0;
 function nextMsgId(): string {
@@ -60,6 +61,11 @@ interface AIChatState {
   deleteSession: (sessionId: string) => Promise<void>;
   newChat: () => void;
   clearError: () => void;
+  updateToolApproval: (
+    messageId: string,
+    toolId: string,
+    localStatus: 'approved' | 'rejected' | 'applied' | 'failed'
+  ) => void;
 }
 
 let activeAbortController: AbortController | null = null;
@@ -171,26 +177,47 @@ export const useAIChatStore = create<AIChatState>()(
                 });
               },
 
-              onToolResult: (toolId, _toolName, result) => {
-                const tc = toolCalls.get(toolId);
-                if (tc) {
+              onToolResult: (toolId, toolName, result) => {
+                let tc = toolCalls.get(toolId);
+                if (!tc) {
+                  tc = { id: toolId, name: toolName, status: 'executing' };
+                  toolCalls.set(toolId, tc);
+                }
+                const approvalPayload = parseApprovalRequiredResult(result);
+                if (approvalPayload) {
+                  tc.status = 'approval_required';
+                  tc.approval = {
+                    id: approvalPayload.approval.id,
+                    action: approvalPayload.approval.action,
+                    summary: approvalPayload.approval.summary,
+                    localStatus: 'pending',
+                  };
+                } else {
                   tc.status =
                     typeof result === 'object' && result !== null && 'error' in result
                       ? 'error'
                       : 'done';
-                  toolCalls.set(toolId, tc);
-                  set(s => {
-                    const msgs = [...s.messages];
-                    const lastIdx = msgs.length - 1;
-                    if (lastIdx >= 0 && msgs[lastIdx].id === assistantMsgId) {
-                      msgs[lastIdx] = {
-                        ...msgs[lastIdx],
-                        toolCalls: Array.from(toolCalls.values()),
-                      };
-                    }
-                    return { messages: msgs };
-                  });
                 }
+                toolCalls.set(toolId, tc);
+                set(s => {
+                  const msgs = [...s.messages];
+                  const lastIdx = msgs.length - 1;
+                  if (lastIdx >= 0 && msgs[lastIdx].id === assistantMsgId) {
+                    msgs[lastIdx] = {
+                      ...msgs[lastIdx],
+                      toolCalls: Array.from(toolCalls.values()),
+                    };
+                  } else {
+                    msgs.push({
+                      id: assistantMsgId,
+                      role: 'assistant',
+                      content: assistantContent,
+                      toolCalls: Array.from(toolCalls.values()),
+                      timestamp: Date.now(),
+                    });
+                  }
+                  return { messages: msgs };
+                });
               },
 
               onDone: sessionId => {
@@ -259,6 +286,28 @@ export const useAIChatStore = create<AIChatState>()(
         } catch {
           set({ error: 'Failed to delete session' });
         }
+      },
+
+      updateToolApproval: (messageId, toolId, localStatus) => {
+        set(s => ({
+          messages: s.messages.map(msg => {
+            if (msg.id !== messageId || !msg.toolCalls?.length) return msg;
+            return {
+              ...msg,
+              toolCalls: msg.toolCalls.map(tc => {
+                if (tc.id !== toolId || !tc.approval) return tc;
+                const next: ToolCallInfo = {
+                  ...tc,
+                  approval: { ...tc.approval, localStatus },
+                };
+                if (localStatus === 'applied') next.status = 'approval_applied';
+                else if (localStatus === 'rejected') next.status = 'approval_rejected';
+                else if (localStatus === 'failed') next.status = 'approval_required';
+                return next;
+              }),
+            };
+          }),
+        }));
       },
     }),
     { name: 'ai-chat-store' }

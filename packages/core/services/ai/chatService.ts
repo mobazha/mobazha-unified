@@ -24,7 +24,20 @@ export interface ToolCallInfo {
   name: string;
   args?: unknown;
   result?: unknown;
-  status: 'pending' | 'executing' | 'done' | 'error';
+  status:
+    | 'pending'
+    | 'executing'
+    | 'done'
+    | 'error'
+    | 'approval_required'
+    | 'approval_applied'
+    | 'approval_rejected';
+  approval?: {
+    id: string;
+    action: string;
+    summary: string;
+    localStatus: 'pending' | 'approved' | 'rejected' | 'applied' | 'failed';
+  };
 }
 
 export interface ChatSession {

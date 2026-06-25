@@ -458,6 +458,11 @@ export function initEnvFromPublicConfig(publicEnv: PublicEnvConfig = {}): void {
         ...currentEnv.casdoor,
         ...(casdoorUrl && { serverUrl: casdoorUrl }),
         ...(casdoorClientId && { clientId: casdoorClientId }),
+        // Local e2e Docker: client id maps to app-mobazha / mobazha org (not TEST_ENV defaults).
+        ...(casdoorClientId === 'e2e-mobazha-client-id' && {
+          appName: 'app-mobazha',
+          organizationName: 'mobazha',
+        }),
       },
     };
   }
