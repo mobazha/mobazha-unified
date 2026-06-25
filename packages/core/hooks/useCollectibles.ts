@@ -3,6 +3,7 @@ import { collectiblesApi } from '../services/api/collectibles';
 import type {
   CollectibleNFT,
   CollectiblePrimarySale,
+  CollectibleRedemption,
   CollectiblesPagedResult,
 } from '../collectibles/types';
 
@@ -98,4 +99,37 @@ export function useCollectiblePrimarySale(orderId: string | undefined, enabled =
   }, [refresh]);
 
   return { primarySale, loading, error, refresh };
+}
+
+export function useCollectibleRedemption(redemptionId: string | undefined, enabled = true) {
+  const [redemption, setRedemption] = useState<CollectibleRedemption | null>(null);
+  const [loading, setLoading] = useState(!!redemptionId?.trim() && enabled);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refresh = useCallback(async () => {
+    const trimmed = redemptionId?.trim();
+    if (!trimmed || !enabled) {
+      setRedemption(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await collectiblesApi.getRedemption(trimmed);
+      setRedemption(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setRedemption(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [enabled, redemptionId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { redemption, loading, error, refresh };
 }
