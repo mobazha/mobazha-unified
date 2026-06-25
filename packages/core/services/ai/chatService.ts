@@ -75,6 +75,7 @@ export interface ChatContext {
   selectedListingSlug?: string;
   selectedOrderId?: string;
   locale?: string;
+  artifactIds?: string[];
 }
 
 export async function sendChatMessage(

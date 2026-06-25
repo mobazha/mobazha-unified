@@ -5561,6 +5561,17 @@ export const en: TranslationResource = {
       cardAskAiPrompt: 'What should I focus on in my store today?',
       chatNotConfigured: 'Configure AI models before chatting with the assistant.',
       chatInputDisabled: 'Configure AI models to start chatting.',
+      sourceMaterialTitle: 'Paste product material',
+      sourceMaterialHint:
+        'Paste supplier notes, CSV rows, or product descriptions. The assistant will use them on your next message.',
+      sourceMaterialPlaceholder: 'Paste product text, CSV rows, or supplier notes here...',
+      sourceMaterialAttach: 'Attach to next message',
+      sourceMaterialAttachedTitle: 'Material attached',
+      sourceMaterialAttachedDescription:
+        'Your pasted material will be included in the next assistant turn.',
+      sourceMaterialAttachFailed: 'Could not register source material.',
+      sourceMaterialRemove: 'Remove attached material',
+      sourceMaterialUntitled: 'Pasted material',
     },
     ai: {
       models: {

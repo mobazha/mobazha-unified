@@ -5038,6 +5038,15 @@ export const zh: PartialTranslationResource = {
       cardAskAiPrompt: '今天我应该重点关注店铺的哪些方面？',
       chatNotConfigured: '请先配置 AI 模型，再与助手对话。',
       chatInputDisabled: '配置 AI 模型后即可开始对话。',
+      sourceMaterialTitle: '粘贴商品素材',
+      sourceMaterialHint: '可粘贴供应商备注、CSV 行或商品描述，下一条消息会一并带给助手。',
+      sourceMaterialPlaceholder: '在此粘贴商品文本、CSV 行或供应商备注...',
+      sourceMaterialAttach: '附加到下一条消息',
+      sourceMaterialAttachedTitle: '素材已附加',
+      sourceMaterialAttachedDescription: '下一条助手回复将参考你粘贴的素材。',
+      sourceMaterialAttachFailed: '登记素材失败。',
+      sourceMaterialRemove: '移除已附加素材',
+      sourceMaterialUntitled: '粘贴素材',
     },
     ai: {
       models: {

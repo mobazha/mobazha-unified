@@ -2926,6 +2926,15 @@ export interface TranslationResource {
       cardAskAiPrompt?: string;
       chatNotConfigured?: string;
       chatInputDisabled?: string;
+      sourceMaterialTitle?: string;
+      sourceMaterialHint?: string;
+      sourceMaterialPlaceholder?: string;
+      sourceMaterialAttach?: string;
+      sourceMaterialAttachedTitle?: string;
+      sourceMaterialAttachedDescription?: string;
+      sourceMaterialAttachFailed?: string;
+      sourceMaterialRemove?: string;
+      sourceMaterialUntitled?: string;
     };
     ai?: {
       models?: {
