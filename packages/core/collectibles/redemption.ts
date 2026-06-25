@@ -19,3 +19,9 @@ export function isCollectibleRedemptionComplete(
 ): boolean {
   return resolveCollectibleRedemptionPhase(redemption) === 'settled';
 }
+
+export function shouldPollCollectibleRedemption(
+  redemption: Pick<CollectibleRedemption, 'status'> | null | undefined
+): boolean {
+  return !isCollectibleRedemptionComplete(redemption);
+}

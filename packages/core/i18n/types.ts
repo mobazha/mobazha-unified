@@ -2489,6 +2489,7 @@ export interface TranslationResource {
       submittedAt: string;
       burnConfirmed: string;
       shippingAddress: string;
+      shippingAddressOnFile: string;
       trackingNumber: string;
       slaDue: string;
       nftMint: string;

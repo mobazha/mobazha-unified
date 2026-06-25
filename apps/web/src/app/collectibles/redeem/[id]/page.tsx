@@ -9,6 +9,7 @@ import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+  isCollectibleShipToProtected,
   resolveCollectibleRedemptionPhase,
   useCollectibleRedemption,
   useFeature,
@@ -215,7 +216,9 @@ export default function CollectibleRedemptionPage() {
                           {t('collectibles.tracking.shippingAddress')}
                         </dt>
                         <dd className="whitespace-pre-wrap font-medium text-foreground">
-                          {redemption.shipToEncrypted}
+                          {isCollectibleShipToProtected(redemption.shipToEncrypted)
+                            ? t('collectibles.tracking.shippingAddressOnFile')
+                            : redemption.shipToEncrypted}
                         </dd>
                       </div>
                     ) : null}

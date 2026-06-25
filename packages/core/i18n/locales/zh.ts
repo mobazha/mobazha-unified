@@ -4583,6 +4583,7 @@ export const zh: PartialTranslationResource = {
       submittedAt: '提交时间',
       burnConfirmed: '链上已确认',
       shippingAddress: '收货地址',
+      shippingAddressOnFile: '收货地址已保存，Hub 出库时将按此地址寄送。',
       trackingNumber: '物流单号',
       slaDue: '预计出库',
       nftMint: '数字凭证',

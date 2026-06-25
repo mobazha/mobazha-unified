@@ -227,6 +227,10 @@ if (!__OUTPOST__) {
     // Collectibles Hub+NFT (P1 · SaaS · collectiblesHubEnabled)
     { path: '/collectibles', element: protectedPage(() => import('./app/collectibles/page')) },
     {
+      path: '/collectibles/redeem/:id',
+      element: protectedPage(() => import('./app/collectibles/redeem/[id]/page')),
+    },
+    {
       path: '/collectibles/:mint',
       element: protectedPage(() => import('./app/collectibles/[mint]/page')),
     },
