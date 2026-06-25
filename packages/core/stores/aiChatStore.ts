@@ -12,7 +12,11 @@ import type {
 } from '../services/ai/chatService';
 import { sendChatMessage, listChatSessions, deleteChatSession } from '../services/ai/chatService';
 import { parseApprovalRequiredResult } from '../services/ai/approvalService';
-import type { AttachedChatArtifact } from '../types/agentArtifact';
+import {
+  MAX_ATTACHED_CHAT_ARTIFACTS,
+  type AttachArtifactResult,
+  type AttachedChatArtifact,
+} from '../types/agentArtifact';
 
 let msgCounter = 0;
 function nextMsgId(): string {
@@ -60,7 +64,7 @@ interface AIChatState {
   deleteSession: (sessionId: string) => Promise<void>;
   newChat: () => void;
   clearError: () => void;
-  attachArtifact: (artifact: AttachedChatArtifact) => void;
+  attachArtifact: (artifact: AttachedChatArtifact) => AttachArtifactResult;
   detachArtifact: (artifactId: string) => void;
   clearAttachedArtifacts: () => void;
   updateToolApproval: (
@@ -91,16 +95,20 @@ export const useAIChatStore = create<AIChatState>()(
       newChat: () =>
         set({ messages: [], sessionId: undefined, error: null, attachedArtifacts: [] }),
 
-      attachArtifact: artifact =>
-        set(s => {
-          if (s.attachedArtifacts.some(item => item.id === artifact.id)) {
-            return s;
-          }
-          if (s.attachedArtifacts.length >= 10) {
-            return { error: 'Too many attached materials (max 10)' };
-          }
-          return { attachedArtifacts: [...s.attachedArtifacts, artifact], error: null };
-        }),
+      attachArtifact: artifact => {
+        const state = get();
+        if (state.attachedArtifacts.some(item => item.id === artifact.id)) {
+          return 'duplicate';
+        }
+        if (state.attachedArtifacts.length >= MAX_ATTACHED_CHAT_ARTIFACTS) {
+          return 'max_reached';
+        }
+        set({
+          attachedArtifacts: [...state.attachedArtifacts, artifact],
+          error: null,
+        });
+        return 'attached';
+      },
 
       detachArtifact: artifactId =>
         set(s => ({
@@ -245,7 +253,11 @@ export const useAIChatStore = create<AIChatState>()(
 
               onDone: sessionId => {
                 activeAbortController = null;
-                set({ isStreaming: false, sessionId: sessionId || get().sessionId });
+                set({
+                  isStreaming: false,
+                  sessionId: sessionId || get().sessionId,
+                  attachedArtifacts: [],
+                });
               },
 
               onError: error => {

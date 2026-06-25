@@ -41,6 +41,8 @@ export type {
 export type {
   AgentArtifactRecord,
   AgentArtifactRecordRaw,
+  AttachArtifactResult,
   AttachedChatArtifact,
   CreateSourceMaterialArtifactInput,
 } from '../../types/agentArtifact';
+export { MAX_ATTACHED_CHAT_ARTIFACTS } from '../../types/agentArtifact';
