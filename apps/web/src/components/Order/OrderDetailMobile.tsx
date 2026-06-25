@@ -81,6 +81,7 @@ import {
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
 import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { CollectiblePrimarySaleCard } from '@/components/Order/cards/CollectiblePrimarySaleCard';
 import { OrderRefundAddressBanner } from '@/components/Order/cards/OrderRefundAddressBanner';
 import { OrderRefundDestinationCard } from '@/components/Order/cards/OrderRefundDestinationCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
@@ -154,6 +155,7 @@ export function OrderDetailMobile({
   const router = useRouter();
   const { t } = useI18n();
   const supplyChainEnabled = useFeature('supplyChainEnabled');
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const chatDrawerOpen = useChatStore(state => state.drawerOpen);
   const closeChatDrawer = useChatStore(state => state.closeDrawer);
 
@@ -1222,6 +1224,12 @@ export function OrderDetailMobile({
                   <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
                 </div>
               )}
+
+              <CollectiblePrimarySaleCard
+                orderId={orderId}
+                coreOrder={coreOrder}
+                enabled={collectiblesHubEnabled}
+              />
 
               {/* 7. Shipping address — physical goods only */}
               {displayOrder.contractType === 'PHYSICAL_GOOD' &&

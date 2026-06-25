@@ -15,6 +15,7 @@ export { OrderProtectionStatus, type OrderProtectionStatusProps } from './OrderP
 export { RatingInviteBanner, type RatingInviteBannerProps } from './RatingInviteBanner';
 export { AfterSaleDisputeCard, type AfterSaleDisputeCardProps } from './AfterSaleDisputeCard';
 export { FulfillmentStatusCard } from './FulfillmentStatusCard';
+export { CollectiblePrimarySaleCard } from './CollectiblePrimarySaleCard';
 export { getStatusLabel } from './orderProgressUtils';
 export { DisputeSummaryCard, type DisputeSummaryCardProps } from './DisputeSummaryCard';
 export { DisputeHistoryCard, type DisputeHistoryCardProps } from './DisputeHistoryCard';
