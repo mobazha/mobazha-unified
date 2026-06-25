@@ -2464,6 +2464,7 @@ export interface TranslationResource {
       wallet: string;
       connectWallet: string;
       connecting: string;
+      solanaWalletRequired: string;
       shippingAddress: string;
       shippingPlaceholder: string;
       shippingPrivacy: string;
@@ -2473,6 +2474,27 @@ export interface TranslationResource {
       successDesc: string;
       failedTitle: string;
       trackingLabel: string;
+      viewTracking: string;
+    };
+    tracking: {
+      title: string;
+      detailsTitle: string;
+      statusLabel: string;
+      submittedAt: string;
+      burnConfirmed: string;
+      shippingAddress: string;
+      trackingNumber: string;
+      slaDue: string;
+      nftMint: string;
+      viewCard: string;
+      loadFailed: string;
+      notFound: string;
+      inProgressHint: string;
+      phase: {
+        redeem_requested: string;
+        shipped: string;
+        settled: string;
+      };
     };
     primarySale: {
       title: string;

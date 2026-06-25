@@ -3,3 +3,5 @@ export * from './types';
 export * from './listing';
 export * from './order';
 export * from './primarySale';
+export * from './burnTx';
+export * from './redemption';

@@ -48,7 +48,9 @@ export interface CollectibleRedemption {
   requesterWallet: string;
   burnTxSignature: string;
   burnSigner?: string;
+  burnAt?: string;
   status: string;
+  shipToEncrypted?: string;
   trackingNo?: string;
   slaDueAt?: string;
   createdAt?: string;
