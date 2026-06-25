@@ -11,6 +11,7 @@ import { AiWorkspaceSetupBanner } from './AiWorkspaceSetupBanner';
 import { AiWorkspaceStatusBadge } from './AiWorkspaceStatusBadge';
 import { WorkspaceOpportunityCards } from './WorkspaceOpportunityCards';
 import { WorkspacePendingApprovals } from './WorkspacePendingApprovals';
+import { WorkspaceSourceMaterial } from './WorkspaceSourceMaterial';
 import { useAiWorkspaceStatus } from './useAiWorkspaceStatus';
 import { useWorkspaceOpportunities } from './useWorkspaceOpportunities';
 
@@ -86,6 +87,7 @@ export function AiWorkspacePanel({
       {aiAvailable && (
         <>
           <WorkspacePendingApprovals />
+          <WorkspaceSourceMaterial />
           <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 flex items-start gap-3">
             <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground">{t('admin.workspace.valueSummary')}</p>

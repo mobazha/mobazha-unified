@@ -4,9 +4,15 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { ChatMessage, ToolCallInfo, ChatSession } from '../services/ai/chatService';
+import type {
+  ChatMessage,
+  ToolCallInfo,
+  ChatSession,
+  ChatContext,
+} from '../services/ai/chatService';
 import { sendChatMessage, listChatSessions, deleteChatSession } from '../services/ai/chatService';
 import { parseApprovalRequiredResult } from '../services/ai/approvalService';
+import type { AttachedChatArtifact } from '../types/agentArtifact';
 
 let msgCounter = 0;
 function nextMsgId(): string {
@@ -41,26 +47,22 @@ interface AIChatState {
   sessionId: string | undefined;
   sessions: ChatSession[];
   error: string | null;
+  attachedArtifacts: AttachedChatArtifact[];
 
   toggle: () => void;
   open: () => void;
   close: () => void;
 
-  sendMessage: (
-    text: string,
-    context?: {
-      currentPage?: string;
-      selectedListingSlug?: string;
-      selectedOrderId?: string;
-      locale?: string;
-    }
-  ) => Promise<void>;
+  sendMessage: (text: string, context?: ChatContext) => Promise<void>;
   cancelStream: () => void;
   loadSessions: () => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   newChat: () => void;
   clearError: () => void;
+  attachArtifact: (artifact: AttachedChatArtifact) => void;
+  detachArtifact: (artifactId: string) => void;
+  clearAttachedArtifacts: () => void;
   updateToolApproval: (
     messageId: string,
     toolId: string,
@@ -79,13 +81,33 @@ export const useAIChatStore = create<AIChatState>()(
       sessionId: undefined,
       sessions: [],
       error: null,
+      attachedArtifacts: [],
 
       toggle: () => set(s => ({ isOpen: !s.isOpen })),
       open: () => set({ isOpen: true }),
       close: () => set({ isOpen: false }),
       clearError: () => set({ error: null }),
 
-      newChat: () => set({ messages: [], sessionId: undefined, error: null }),
+      newChat: () =>
+        set({ messages: [], sessionId: undefined, error: null, attachedArtifacts: [] }),
+
+      attachArtifact: artifact =>
+        set(s => {
+          if (s.attachedArtifacts.some(item => item.id === artifact.id)) {
+            return s;
+          }
+          if (s.attachedArtifacts.length >= 10) {
+            return { error: 'Too many attached materials (max 10)' };
+          }
+          return { attachedArtifacts: [...s.attachedArtifacts, artifact], error: null };
+        }),
+
+      detachArtifact: artifactId =>
+        set(s => ({
+          attachedArtifacts: s.attachedArtifacts.filter(item => item.id !== artifactId),
+        })),
+
+      clearAttachedArtifacts: () => set({ attachedArtifacts: [] }),
 
       cancelStream: () => {
         if (activeAbortController) {
@@ -95,15 +117,7 @@ export const useAIChatStore = create<AIChatState>()(
         set({ isStreaming: false });
       },
 
-      sendMessage: async (
-        text: string,
-        context?: {
-          currentPage?: string;
-          selectedListingSlug?: string;
-          selectedOrderId?: string;
-          locale?: string;
-        }
-      ) => {
+      sendMessage: async (text: string, context?: ChatContext) => {
         const userMsg: ChatMessage = {
           id: nextMsgId(),
           role: 'user',
@@ -125,6 +139,15 @@ export const useAIChatStore = create<AIChatState>()(
         activeAbortController = abortController;
 
         try {
+          const attachedIds = get().attachedArtifacts.map(item => item.id);
+          const chatContext: ChatContext | undefined =
+            attachedIds.length > 0 || context
+              ? {
+                  ...context,
+                  ...(attachedIds.length > 0 ? { artifactIds: attachedIds } : {}),
+                }
+              : undefined;
+
           await sendChatMessage(
             text,
             get().sessionId,
@@ -231,7 +254,7 @@ export const useAIChatStore = create<AIChatState>()(
               },
             },
             abortController.signal,
-            context
+            chatContext
           );
         } catch (err) {
           activeAbortController = null;
