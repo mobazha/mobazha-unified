@@ -4581,6 +4581,7 @@ export const ru: PartialTranslationResource = {
       createNew: 'Создать новый',
       sourceFromProvider: 'Источник от провайдера',
       importFromGumroad: 'Импорт из Gumroad',
+      smartImport: 'Умный импорт (CSV / таблица)',
       priceStorefront: 'Витрина: {{price}}',
       priceBase: 'База: {{price}}',
     },

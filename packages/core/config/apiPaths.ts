@@ -139,6 +139,12 @@ export const NODE_API = {
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',
   AGENT_CHAT_SESSION: NODE_API_PATHS.AGENT_CHAT_BY_SESSION_ID,
+  /** Smart product import — multipart ingest (full build only; !outpost). */
+  AGENT_PRODUCT_IMPORT_INGEST: '/agent/product-import/ingest',
+  AGENT_PRODUCT_IMPORT_WORKBENCH: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/workbench`,
+  AGENT_ARTIFACTS_APPROVAL: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}/approval`,
 
   // --- Social / Follow ---
   FOLLOW: (peerID: string) => `/following/${peerID}`,

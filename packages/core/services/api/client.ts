@@ -106,17 +106,27 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    const mergedHeaders: Record<string, string> = { ...headers };
+    if (isFormData) {
+      // Let the browser set multipart boundary; strip any inherited JSON Content-Type.
+      for (const key of Object.keys(mergedHeaders)) {
+        if (key.toLowerCase() === 'content-type') {
+          delete mergedHeaders[key];
+        }
+      }
+    } else {
+      mergedHeaders['Content-Type'] = mergedHeaders['Content-Type'] ?? 'application/json';
+    }
+
     const requestInit: RequestInit = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
+      headers: mergedHeaders,
       signal: controller.signal,
     };
 
     if (body && method !== 'GET') {
-      requestInit.body = JSON.stringify(body);
+      requestInit.body = isFormData ? body : JSON.stringify(body);
     }
 
     const response = await fetch(url, requestInit);

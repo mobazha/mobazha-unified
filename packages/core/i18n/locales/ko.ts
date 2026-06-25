@@ -4526,6 +4526,7 @@ export const ko: PartialTranslationResource = {
       createNew: '새로 만들기',
       sourceFromProvider: '공급자의 소스',
       importFromGumroad: 'Gumroad에서 수입',
+      smartImport: '스마트 가져오기(CSV / 스프레드시트)',
       priceStorefront: '표시 가격: {{price}}',
       priceBase: '기본: {{price}}',
     },

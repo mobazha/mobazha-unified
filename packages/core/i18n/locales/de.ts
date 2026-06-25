@@ -4678,6 +4678,7 @@ export const de: PartialTranslationResource = {
       createNew: 'Neu erstellen',
       sourceFromProvider: 'Quelle vom Anbieter',
       importFromGumroad: 'Import von Gumroad',
+      smartImport: 'Intelligenter Import (CSV / Tabelle)',
       priceStorefront: 'Schaufenster: {{price}}',
       priceBase: 'Basis: {{price}}',
     },

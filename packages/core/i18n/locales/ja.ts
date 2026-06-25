@@ -4563,6 +4563,7 @@ export const ja: PartialTranslationResource = {
       createNew: '新規作成',
       sourceFromProvider: 'プロバイダーからのソース',
       importFromGumroad: 'Gumroadからインポート',
+      smartImport: 'スマートインポート（CSV / 表計算）',
       priceStorefront: '表示価格: {{price}}',
       priceBase: '基本価格: {{price}}',
     },

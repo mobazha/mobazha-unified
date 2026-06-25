@@ -3081,8 +3081,51 @@ export interface TranslationResource {
       createNew?: string;
       sourceFromProvider?: string;
       importFromGumroad?: string;
+      smartImport?: string;
       priceStorefront?: string;
       priceBase?: string;
+    };
+    productImport?: {
+      backToProducts?: string;
+      title?: string;
+      subtitle?: string;
+      standardTitle?: string;
+      standardDesc?: string;
+      standardCta?: string;
+      smartTitle?: string;
+      smartDesc?: string;
+      uploadTitle?: string;
+      uploadHint?: string;
+      dropzone?: string;
+      formats?: string;
+      uploading?: string;
+      uploadCta?: string;
+      errors?: {
+        fileTooLarge?: string;
+        uploadFailed?: string;
+      };
+      workbench?: {
+        backToHub?: string;
+        title?: string;
+        subtitle?: string;
+        sources?: string;
+        validationTitle?: string;
+        emptyRows?: string;
+        missingRun?: string;
+        loadFailed?: string;
+        createApproval?: string;
+        createApprovalFailed?: string;
+        goToProducts?: string;
+        colTitle?: string;
+        colPrice?: string;
+        colQty?: string;
+        colSource?: string;
+        colStatus?: string;
+        colActions?: string;
+        statusApplied?: string;
+        statusPendingApproval?: string;
+        statusNeedsReview?: string;
+      };
     };
     gumroadImport?: {
       backToProducts?: string;

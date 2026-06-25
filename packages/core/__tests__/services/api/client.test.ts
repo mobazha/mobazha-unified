@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { request, ApiError, onUnauthorized } from '../../../services/api/client';
+import { request, onUnauthorized } from '../../../services/api/client';
 
 function jsonResponse(status: number, body: unknown): Response {
   return {
@@ -119,5 +119,33 @@ describe('client.request — 401 callback', () => {
     );
     await expect(request('http://api/test')).rejects.toThrow();
     expect(callback).toHaveBeenCalled();
+  });
+});
+
+describe('client.request — multipart body', () => {
+  it('sends FormData without forcing application/json Content-Type', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(jsonResponse(200, { data: { ok: true } }));
+    const formData = new FormData();
+    formData.append('file', new Blob(['a']), 'test.csv');
+    await request<{ ok: boolean }>('http://api/upload', { method: 'POST', body: formData });
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit];
+    expect(init.body).toBe(formData);
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Content-Type']).toBeUndefined();
+  });
+
+  it('strips inherited application/json Content-Type when body is FormData', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(jsonResponse(200, { data: { ok: true } }));
+    const formData = new FormData();
+    formData.append('file', new Blob(['a']), 'test.csv');
+    await request<{ ok: boolean }>('http://api/upload', {
+      method: 'POST',
+      body: formData,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer tok' },
+    });
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Content-Type']).toBeUndefined();
+    expect(headers.Authorization).toBe('Bearer tok');
   });
 });

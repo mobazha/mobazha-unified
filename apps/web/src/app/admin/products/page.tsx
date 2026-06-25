@@ -32,6 +32,7 @@ import {
   Download,
   PackagePlus,
   KeyRound,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -558,6 +559,12 @@ export default function AdminProductsPage() {
                     <Link href="/admin/products/import-gumroad" className="flex items-center">
                       <Download className="mr-2 h-4 w-4" />
                       {t('admin.products.importFromGumroad')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/products/import" className="flex items-center">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {t('admin.products.smartImport')}
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

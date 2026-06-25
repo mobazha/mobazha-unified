@@ -289,6 +289,16 @@ if (!__OUTPOST__) {
           path: 'products/import-gumroad',
           element: lazyPage(() => import('./app/admin/products/import-gumroad/page')),
         },
+        {
+          // Agent product import — smart CSV/XLSX/ZIP ingest + workbench.
+          // Full build only; Outpost omits /v1/agent/product-import/* handlers.
+          path: 'products/import',
+          element: lazyPage(() => import('./app/admin/products/import/page')),
+        },
+        {
+          path: 'products/import/:runId',
+          element: lazyPage(() => import('./app/admin/products/import/[runId]/page')),
+        },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
         { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
