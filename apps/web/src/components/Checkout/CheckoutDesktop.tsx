@@ -53,7 +53,8 @@ export function CheckoutDesktop({ checkout }: Props) {
     canSubmit,
     hasMixedContractTypes,
     hasMissingContractType,
-    isRwaToken,
+    isRwaCheckoutBlocked,
+    isCollectibleHubNftCheckout,
     needsShippingAddress,
     hasAllShippingSelected,
     hasShippingPricingIssue,
@@ -144,10 +145,18 @@ export function CheckoutDesktop({ checkout }: Props) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column */}
               <div className="lg:col-span-2 space-y-6">
-                {isRwaToken && (
+                {isRwaCheckoutBlocked && (
                   <Card className="border-warning/30 bg-warning/8">
                     <CardContent className="p-6">
                       <p className="text-sm text-warning">{t('checkout.rwaNotSupported')}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {isCollectibleHubNftCheckout && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="p-6">
+                      <p className="text-sm text-muted-foreground">{t('collectibles.trustNote')}</p>
                     </CardContent>
                   </Card>
                 )}

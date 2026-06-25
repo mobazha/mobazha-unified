@@ -37,7 +37,7 @@ const PRESETS: Record<string, VerticalPreset> = {
     listingHints: COLLECTIBLE_LISTING_HINTS,
     paymentDefaults: ['crypto', 'fiat'],
     trustCopy: 'buyerProtectionNotAuthentication',
-    modules: [],
+    modules: [{ id: 'hub_nft', fulfillment: 'nft' }],
   },
   fashion: {
     id: 'fashion',

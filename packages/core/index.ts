@@ -31,6 +31,8 @@ export * from './utils';
 
 // Marketplace curation + native sub-market context
 export * from './curation';
+export * from './collectibles';
+export * from './verticals/modules';
 export * from './marketplace/subdomain';
 
 // i18n (国际化)

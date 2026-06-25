@@ -34,6 +34,8 @@ import {
   getTokenIdFromPaymentCoin,
   filterVisibleAcceptedCurrencies,
   buildProductHref,
+  isCollectibleHubNftListing,
+  useFeature,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
@@ -101,6 +103,7 @@ export function ProductDetail({
   onToggleWishlist,
 }: ProductDetailProps) {
   const { t } = useI18n();
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const router = useRouter();
   const { formatPrice, renderPairedPrice, fromMinimalUnit } = useCurrency();
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
@@ -587,7 +590,10 @@ export function ProductDetail({
   const tags = product.item.tags || [];
   const category = product.item.productType || '';
 
-  const isRwaToken = product?.metadata?.contractType === 'RWA_TOKEN';
+  const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
+  const isRwaToken =
+    product?.metadata?.contractType === 'RWA_TOKEN' &&
+    !(collectiblesHubEnabled && isCollectibleHubNft);
   const purchaseDisabled =
     isOffline || stock === 0 || !paymentAvailable || isStorePaused || isRwaToken;
 

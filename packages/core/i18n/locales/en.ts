@@ -276,6 +276,8 @@ export const en: TranslationResource = {
     rwaAssetsDescription: 'View and manage your RWA assets',
     notifications: 'Notifications',
     notificationsDesc: 'Your activity updates',
+    collectibles: 'Collectible Cards',
+    collectiblesDesc: 'Tokenized cards held in the Hub — redeem anytime',
     settings: 'Settings',
     settingsDesc: 'App preferences',
     appearance: 'Appearance',
@@ -5015,6 +5017,46 @@ export const en: TranslationResource = {
       '1W': '1W',
       '1M': '1M',
       ALL: 'ALL',
+    },
+  },
+
+  collectibles: {
+    title: 'Collectible Cards',
+    subtitle:
+      'Tokenized graded cards held in the Mobazha Hub. Trade on-chain and redeem the physical card when you are ready.',
+    detailTitle: 'Card details',
+    backToList: 'Back to collectibles',
+    featureDisabled: 'Collectible Hub is not available on this store yet.',
+    trustNote:
+      'Buyer protection covers the transaction — it is not a grading or authentication guarantee. Physical cards are stored in the Hub until you redeem.',
+    empty: 'No tokenized cards in circulation yet.',
+    tokenizedCard: 'Tokenized card',
+    hubSlot: 'Hub slot',
+    chain: 'Network',
+    metadata: 'Metadata',
+    viewDetails: 'View details',
+    alreadyRedeemed:
+      'This digital title has been burned and a physical shipment is in progress or complete.',
+    checkout: {
+      onePerOrderTitle: 'One card per order',
+      onePerOrderDesc: 'Tokenized card checkout supports one card per order (quantity 1).',
+    },
+    redeem: {
+      title: 'Redeem physical card',
+      description:
+        'Connect the wallet that holds this digital title, confirm the on-chain transfer, and submit your shipping details.',
+      wallet: 'Holder wallet',
+      connectWallet: 'Connect wallet',
+      connecting: 'Connecting...',
+      shippingAddress: 'Shipping address',
+      shippingPlaceholder: 'Full name, street, city, state, postal code, country',
+      shippingPrivacy: 'Your address is encrypted before it is sent to the platform.',
+      submit: 'Start redemption',
+      processing: 'Processing...',
+      successTitle: 'Redemption submitted',
+      successDesc: 'We will ship your card after the on-chain step is confirmed.',
+      failedTitle: 'Redemption failed',
+      trackingLabel: 'Redemption ID',
     },
   },
 

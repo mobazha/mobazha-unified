@@ -208,6 +208,8 @@ export interface TranslationResource {
     wishlistItemCount?: string;
     notifications?: string;
     notificationsDesc?: string;
+    collectibles?: string;
+    collectiblesDesc?: string;
     settings?: string;
     settingsDesc?: string;
     appearance?: string;
@@ -2435,6 +2437,42 @@ export interface TranslationResource {
       '1W': string;
       '1M': string;
       ALL: string;
+    };
+  };
+
+  collectibles?: {
+    title: string;
+    subtitle: string;
+    detailTitle: string;
+    backToList: string;
+    featureDisabled: string;
+    trustNote: string;
+    empty: string;
+    tokenizedCard: string;
+    hubSlot: string;
+    chain: string;
+    metadata: string;
+    viewDetails: string;
+    alreadyRedeemed: string;
+    checkout: {
+      onePerOrderTitle: string;
+      onePerOrderDesc: string;
+    };
+    redeem: {
+      title: string;
+      description: string;
+      wallet: string;
+      connectWallet: string;
+      connecting: string;
+      shippingAddress: string;
+      shippingPlaceholder: string;
+      shippingPrivacy: string;
+      submit: string;
+      processing: string;
+      successTitle: string;
+      successDesc: string;
+      failedTitle: string;
+      trackingLabel: string;
     };
   };
 

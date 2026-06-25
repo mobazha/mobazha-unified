@@ -21,6 +21,8 @@ import {
   isUniquePieceListing,
   parseArtListingSpecs,
   ART_LISTING_UNIQUE_EDITION,
+  isCollectibleHubNftListing,
+  useFeature,
   type ArtListingSpecRow,
 } from '@mobazha/core';
 import { useGuestCartStore } from '@mobazha/core/stores';
@@ -408,13 +410,17 @@ export function useProductDetail({
     activeFiat: vendorActiveFiat,
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(vendorPeerID);
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
   const paymentAvailable =
     isOutpostMode() ||
     paymentMethodsLoading ||
     vendorCrypto.length > 0 ||
     vendorActiveFiat.length > 0;
 
-  const isRwaToken = product?.metadata?.contractType === 'RWA_TOKEN';
+  const isRwaToken =
+    product?.metadata?.contractType === 'RWA_TOKEN' &&
+    !(collectiblesHubEnabled && isCollectibleHubNft);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rwaTradeMode = (product?.metadata as any)?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
