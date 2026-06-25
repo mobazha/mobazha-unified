@@ -5047,6 +5047,7 @@ export const zh: PartialTranslationResource = {
       sourceMaterialAttachFailed: '登记素材失败。',
       sourceMaterialRemove: '移除已附加素材',
       sourceMaterialUntitled: '粘贴素材',
+      sourceMaterialMaxReached: '每条消息最多附加 10 条素材。',
     },
     ai: {
       models: {

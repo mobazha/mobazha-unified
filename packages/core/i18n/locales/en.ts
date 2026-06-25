@@ -5572,6 +5572,7 @@ export const en: TranslationResource = {
       sourceMaterialAttachFailed: 'Could not register source material.',
       sourceMaterialRemove: 'Remove attached material',
       sourceMaterialUntitled: 'Pasted material',
+      sourceMaterialMaxReached: 'You can attach up to 10 materials per message.',
     },
     ai: {
       models: {

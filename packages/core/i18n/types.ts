@@ -2935,6 +2935,7 @@ export interface TranslationResource {
       sourceMaterialAttachFailed?: string;
       sourceMaterialRemove?: string;
       sourceMaterialUntitled?: string;
+      sourceMaterialMaxReached?: string;
     };
     ai?: {
       models?: {

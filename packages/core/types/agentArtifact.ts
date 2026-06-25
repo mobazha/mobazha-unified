@@ -53,3 +53,8 @@ export interface AttachedChatArtifact {
   name: string;
   summary?: string;
 }
+
+/** Max artifacts included on a single chat message (matches node agentChatMaxContextArtifacts). */
+export const MAX_ATTACHED_CHAT_ARTIFACTS = 10;
+
+export type AttachArtifactResult = 'attached' | 'duplicate' | 'max_reached';
