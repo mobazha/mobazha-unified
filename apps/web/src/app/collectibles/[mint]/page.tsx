@@ -12,14 +12,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import {
   collectiblesApi,
+  getEnvConfig,
+  signCollectibleBurnTransaction,
+  useAppKit,
   useCollectibleNFT,
   useFeature,
   useI18n,
-  useSolanaWallet,
   truncateAddress,
 } from '@mobazha/core';
 import { ArrowLeft, Package } from 'lucide-react';
-import { CollectiblesFeatureGuard } from './CollectiblesFeatureGuard';
+import { CollectiblesFeatureGuard } from '../CollectiblesFeatureGuard';
 
 function encodeShipToPayload(value: string): string {
   if (typeof window === 'undefined') return value;
@@ -38,7 +40,8 @@ export default function CollectibleDetailPage() {
   const { toast } = useToast();
   const enabled = useFeature('collectiblesHubEnabled');
   const { nft, loading, error, refresh } = useCollectibleNFT(mint, enabled);
-  const { walletInfo, isConnected, isConnecting, connect } = useSolanaWallet();
+  const { address, isConnected, isInitializing, connectSolana, getWalletProvider, chain } =
+    useAppKit();
 
   const [shipTo, setShipTo] = useState('');
   const [redeemStep, setRedeemStep] = useState<'idle' | 'binding' | 'burning' | 'submitting'>(
@@ -46,26 +49,38 @@ export default function CollectibleDetailPage() {
   );
   const [redemptionId, setRedemptionId] = useState<string | null>(null);
 
-  const holderWallet = walletInfo?.address || '';
+  const holderWallet = address || '';
+  const isSolanaWallet =
+    isConnected &&
+    !!holderWallet &&
+    !holderWallet.startsWith('0x') &&
+    (chain?.chainNamespace === 'solana' || chain?.chainNamespace === undefined);
 
   const canRedeem = useMemo(
-    () => enabled && !!nft && !nft.burnAt && isConnected && shipTo.trim().length > 8,
-    [enabled, nft, isConnected, shipTo]
+    () => enabled && !!nft && !nft.burnAt && isSolanaWallet && shipTo.trim().length > 8,
+    [enabled, nft, isSolanaWallet, shipTo]
   );
 
   const handleRedeem = useCallback(async () => {
     if (!nft?.nftMint || !holderWallet) return;
     setRedeemStep('binding');
     try {
-      await collectiblesApi.bindWallet({ wallet: holderWallet, nftMint: nft.nftMint });
+      await collectiblesApi.bindCollectibleWallet({
+        wallet: holderWallet,
+        nftMint: nft.nftMint,
+      });
 
       setRedeemStep('burning');
-      const burnTx = await collectiblesApi.buildBurnTx(nft.nftMint, holderWallet);
-      // MVP/mock: backend returns an opaque burn payload; production signs a real Solana tx.
-      const burnSignature = burnTx.transaction.trim();
+      const burnTx = await collectiblesApi.buildCollectibleBurnTx(nft.nftMint, holderWallet);
+      const burnSignature = await signCollectibleBurnTransaction({
+        burnTx,
+        walletProvider: getWalletProvider() ?? undefined,
+        walletAddress: holderWallet,
+        isDevnet: getEnvConfig().isTestEnv,
+      });
 
       setRedeemStep('submitting');
-      const redemption = await collectiblesApi.createRedemption({
+      const redemption = await collectiblesApi.createCollectibleRedemption({
         nftMint: nft.nftMint,
         requesterWallet: holderWallet,
         burnTxSignature: burnSignature,
@@ -89,7 +104,7 @@ export default function CollectibleDetailPage() {
     } finally {
       setRedeemStep('idle');
     }
-  }, [holderWallet, nft, refresh, shipTo, t, toast]);
+  }, [getWalletProvider, holderWallet, nft, refresh, shipTo, t, toast]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,18 +185,34 @@ export default function CollectibleDetailPage() {
                         <p className="mb-2 text-sm font-medium text-foreground">
                           {t('collectibles.redeem.wallet')}
                         </p>
-                        {isConnected ? (
+                        {isSolanaWallet ? (
                           <p className="font-mono text-sm text-muted-foreground">
                             {truncateAddress(holderWallet)}
                           </p>
+                        ) : isConnected ? (
+                          <div className="space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                              {t('collectibles.redeem.solanaWalletRequired')}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => void connectSolana()}
+                              disabled={isInitializing}
+                            >
+                              {isInitializing
+                                ? t('collectibles.redeem.connecting')
+                                : t('collectibles.redeem.connectWallet')}
+                            </Button>
+                          </div>
                         ) : (
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => void connect()}
-                            disabled={isConnecting}
+                            onClick={() => void connectSolana()}
+                            disabled={isInitializing}
                           >
-                            {isConnecting
+                            {isInitializing
                               ? t('collectibles.redeem.connecting')
                               : t('collectibles.redeem.connectWallet')}
                           </Button>
@@ -227,6 +258,11 @@ export default function CollectibleDetailPage() {
                       {t('collectibles.redeem.trackingLabel')}:{' '}
                       <span className="font-mono">{redemptionId}</span>
                     </p>
+                    <Button asChild variant="link" className="mt-2 h-auto p-0 text-primary">
+                      <Link href={`/collectibles/redeem/${encodeURIComponent(redemptionId)}`}>
+                        {t('collectibles.redeem.viewTracking')}
+                      </Link>
+                    </Button>
                   </Card>
                 ) : null}
               </div>
