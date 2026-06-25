@@ -48,6 +48,12 @@ export interface CheckoutItem {
   cryptoListingCurrencyCode?: string;
   shippingZones?: CheckoutShippingZone[];
   taxAmount?: number;
+  /** Hub+NFT primary sale (Solana collectible) */
+  isCollectibleHubNft?: boolean;
+  fulfillment?: string;
+  hubSlotID?: string;
+  nftMint?: string;
+  certNumber?: string;
 }
 
 /** Per-item shipping selection */
@@ -115,6 +121,8 @@ export interface UseCheckoutReturn {
   handleRemoveDiscount: (id: string) => void;
 
   isRwaToken: boolean;
+  isRwaCheckoutBlocked: boolean;
+  isCollectibleHubNftCheckout: boolean;
   rwaTradeMode: number | undefined;
   needsShippingAddress: boolean;
   hasAllShippingSelected: boolean;

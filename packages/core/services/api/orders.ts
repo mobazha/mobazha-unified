@@ -15,6 +15,10 @@ import { caseDetailToOrder } from '../../utils/transforms/caseToOrder';
 import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
 import { orderUsesMonitoredBackendSettlement } from '../../utils/orderSettlement';
 import { minimalAmountAsNumber } from '../../utils/transforms/priceTransform';
+import {
+  buildCollectiblePurchaseItemPayload,
+  type CollectiblePurchaseFields,
+} from '../../collectibles/metadata';
 
 async function orderWrite<T>(
   realFn: () => Promise<T>,
@@ -524,19 +528,23 @@ export async function setOrderRefundAddress(
 export interface CreateOrderData {
   vendorId?: string;
   discountCodes?: string[];
-  items: Array<{
-    listingHash: string;
-    quantity: number;
-    options?: Array<{
-      name: string;
-      value: string;
-    }>;
-    shipping?: {
-      name: string;
-      service: string;
-    };
-    memo?: string;
-  }>;
+  items: Array<
+    {
+      listingHash: string;
+      quantity: number;
+      options?: Array<{
+        name: string;
+        value: string;
+      }>;
+      shipping?: {
+        name: string;
+        service: string;
+        zoneId?: string;
+        rateId?: string;
+      };
+      memo?: string;
+    } & CollectiblePurchaseFields
+  >;
   // 地址信息（仅物理商品需要）
   address?: {
     name: string; // 收件人姓名 -> shipTo
@@ -611,6 +619,7 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
       ...(item.options && item.options.length > 0 ? { options: item.options } : {}),
       ...(item.shipping ? { shipping: item.shipping } : {}),
       ...(item.memo ? { memo: item.memo } : {}),
+      ...buildCollectiblePurchaseItemPayload(item),
     })),
   };
 
