@@ -5037,6 +5037,12 @@ export const en: TranslationResource = {
     viewDetails: 'View details',
     alreadyRedeemed:
       'This digital title has been burned and a physical shipment is in progress or complete.',
+    onChain: {
+      mintTx: 'Mint record',
+      mintConfirmedSlot: 'Confirmed block',
+      burnTx: 'Redemption proof',
+      viewOnExplorer: 'View on explorer',
+    },
     checkout: {
       onePerOrderTitle: 'One card per order',
       onePerOrderDesc: 'Tokenized card checkout supports one card per order (quantity 1).',
@@ -5087,12 +5093,27 @@ export const en: TranslationResource = {
       viewNft: 'View digital title',
       loadFailed: 'Could not refresh Hub status. Try again later.',
       supportHint: 'Payout could not be completed automatically. Contact support if this persists.',
+      mintLastError: 'Latest mint attempt',
+      mintErrors: {
+        pendingConfirmation:
+          'The digital title mint was submitted on-chain and is still waiting for network confirmation. You can check progress below.',
+        onChainFailed:
+          'The digital title mint did not complete on-chain. Our team will retry or follow up.',
+        interrupted:
+          'The digital title mint was interrupted before confirmation. We will retry shortly.',
+        generic:
+          'The digital title mint could not be completed yet. Our team will retry or follow up.',
+      },
       phase: {
         awaiting_payment: 'Complete payment to continue with Hub intake and digital title mint.',
         awaiting_bridge:
           'Payment confirmed. Linking your order to the Hub ledger — this usually takes a moment.',
         awaiting_hub:
           'Waiting for the card to be received at the Hub, verified, and minted as a digital title.',
+        awaiting_hub_minting:
+          'Hub verification is complete and the digital title mint is waiting for on-chain confirmation.',
+        awaiting_hub_minted:
+          'Digital title minted on-chain. Hub verification and seller payout will complete next.',
         payout_pending: 'Confirming payout to the seller from buyer protection funds.',
         payout_complete: 'Seller payout is complete. The digital title will reflect Hub status.',
         payout_failed: 'Payout to the seller could not be completed. Our team may need to step in.',

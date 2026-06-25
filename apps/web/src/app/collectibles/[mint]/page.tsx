@@ -22,6 +22,7 @@ import {
 } from '@mobazha/core';
 import { ArrowLeft, Package } from 'lucide-react';
 import { CollectiblesFeatureGuard } from '../CollectiblesFeatureGuard';
+import { CollectibleOnChainProof } from '@/components/collectibles/CollectibleOnChainProof';
 
 function encodeShipToPayload(value: string): string {
   if (typeof window === 'undefined') return value;
@@ -161,6 +162,12 @@ export default function CollectibleDetailPage() {
                           </div>
                         ) : null}
                       </dl>
+                      <CollectibleOnChainProof
+                        className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2"
+                        mintTxSignature={nft.mintTxSignature}
+                        mintConfirmedSlot={nft.mintConfirmedSlot}
+                        isDevnet={getEnvConfig().isTestEnv}
+                      />
                     </div>
                   </div>
                 </Card>

@@ -4548,6 +4548,12 @@ export const zh: PartialTranslationResource = {
     metadata: '元数据',
     viewDetails: '查看详情',
     alreadyRedeemed: '该数字凭证已销毁，实体卡正在或已经完成出库。',
+    onChain: {
+      mintTx: '铸造记录',
+      mintConfirmedSlot: '确认区块',
+      burnTx: '赎回链上凭证',
+      viewOnExplorer: '在区块浏览器查看',
+    },
     checkout: {
       onePerOrderTitle: '每单仅限一张卡',
       onePerOrderDesc: '数字化收藏卡结账每单仅支持 1 件商品（数量 1）。',
@@ -4596,10 +4602,19 @@ export const zh: PartialTranslationResource = {
       viewNft: '查看数字凭证',
       loadFailed: '无法刷新 Hub 状态，请稍后重试。',
       supportHint: '放款未能自动完成，如持续出现请联系客服。',
+      mintLastError: '最近一次铸造尝试',
+      mintErrors: {
+        pendingConfirmation: '数字凭证铸造交易已提交到链上，仍在等待网络确认。可在下方查看进度。',
+        onChainFailed: '数字凭证未能在链上完成铸造，我们会重试或人工跟进。',
+        interrupted: '数字凭证铸造在确认前被中断，我们会尽快重试。',
+        generic: '数字凭证暂时未能完成铸造，我们会重试或人工跟进。',
+      },
       phase: {
         awaiting_payment: '请先完成付款，再进行 Hub 入库与数字凭证铸造。',
         awaiting_bridge: '付款已确认，正在关联 Hub 台账，通常很快完成。',
         awaiting_hub: '等待实体卡送达 Hub、完成验货并铸造数字凭证。',
+        awaiting_hub_minting: 'Hub 验货已完成，数字凭证正在等待链上铸造确认。',
+        awaiting_hub_minted: '数字凭证已上链铸造，Hub 验货与卖家放款将随后完成。',
         payout_pending: '正在从买家保障资金中向卖家确认放款。',
         payout_complete: '卖家放款已完成，数字凭证状态将与 Hub 同步。',
         payout_failed: '向卖家的放款未能完成，可能需要人工介入。',

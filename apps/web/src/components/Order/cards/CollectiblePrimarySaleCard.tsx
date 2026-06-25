@@ -7,13 +7,19 @@ import { cn } from '@/lib/utils';
 import {
   useI18n,
   useCollectiblePrimarySale,
+  useCollectibleNFT,
   isCollectiblePrimarySaleOrder,
   parseCollectibleOrderMetadata,
   resolveCollectiblePrimarySalePhase,
+  resolveCollectiblePrimarySalePhaseMessageKey,
+  resolveCollectibleMintErrorMessageKey,
+  parseSubmittedMintTxFromError,
+  getEnvConfig,
   type CollectiblePrimarySalePhase,
   type Order,
 } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
+import { CollectibleOnChainProof } from '@/components/collectibles/CollectibleOnChainProof';
 
 interface CollectiblePrimarySaleCardProps {
   orderId: string;
@@ -63,19 +69,29 @@ export function CollectiblePrimarySaleCard({
   const paymentVerified = isOrderPaymentVerified(coreOrder);
 
   const { primarySale, loading, error } = useCollectiblePrimarySale(orderId, isCollectibleOrder);
+  const nftMint = primarySale?.nftMint?.trim() || orderMeta?.nftMint;
+  const { nft: mintedNft } = useCollectibleNFT(nftMint, isCollectibleOrder && !!nftMint?.trim());
 
   if (!isCollectibleOrder) {
     return null;
   }
 
   const phase = resolveCollectiblePrimarySalePhase(primarySale, paymentVerified);
+  const phaseMessageKey = resolveCollectiblePrimarySalePhaseMessageKey(phase, primarySale);
+  const isHubMinting = phaseMessageKey === 'awaiting_hub_minting';
   const phaseConfig = PHASE_CONFIG[phase];
-  const PhaseIcon = phaseConfig.icon;
-  const nftMint = primarySale?.nftMint?.trim() || orderMeta?.nftMint;
+  const PhaseIcon = isHubMinting ? Loader2 : phaseConfig.icon;
   const certNumber = orderMeta?.certNumber;
   const hubSlotID = primarySale?.hubSlotID || orderMeta?.hubSlotID;
+  const mintErrorKey = primarySale?.lastMintError
+    ? resolveCollectibleMintErrorMessageKey(primarySale.lastMintError)
+    : null;
+  const pendingMintTx = parseSubmittedMintTxFromError(primarySale?.lastMintError);
 
-  const phaseMessageKey = `collectibles.primarySale.phase.${phase}` as const;
+  const phaseMessageI18nKey = `collectibles.primarySale.phase.${phaseMessageKey}` as const;
+  const mintErrorI18nKey = mintErrorKey
+    ? (`collectibles.primarySale.mintErrors.${mintErrorKey}` as const)
+    : null;
 
   return (
     <Card className={cn('p-4', className)} data-testid="collectible-primary-sale-card">
@@ -90,7 +106,7 @@ export function CollectiblePrimarySaleCard({
             className={cn(
               'h-4 w-4',
               phaseConfig.color,
-              phase === 'payout_pending' && 'animate-spin'
+              (phase === 'payout_pending' || isHubMinting) && 'animate-spin'
             )}
           />
         </div>
@@ -99,7 +115,7 @@ export function CollectiblePrimarySaleCard({
             <h3 className="text-sm font-semibold text-foreground">
               {t('collectibles.primarySale.title')}
             </h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">{t(phaseMessageKey)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t(phaseMessageI18nKey)}</p>
           </div>
 
           {(certNumber || hubSlotID) && (
@@ -129,6 +145,27 @@ export function CollectiblePrimarySaleCard({
               {t('collectibles.primarySale.viewNft')}
             </Link>
           )}
+
+          {mintedNft?.mintTxSignature ? (
+            <CollectibleOnChainProof
+              className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2"
+              mintTxSignature={mintedNft.mintTxSignature}
+              mintConfirmedSlot={mintedNft.mintConfirmedSlot}
+              isDevnet={getEnvConfig().isTestEnv}
+            />
+          ) : null}
+
+          {primarySale?.lastMintError && mintErrorI18nKey ? (
+            <p className="break-words text-xs text-destructive">{t(mintErrorI18nKey)}</p>
+          ) : null}
+
+          {pendingMintTx && !mintedNft?.mintTxSignature ? (
+            <CollectibleOnChainProof
+              className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2"
+              mintTxSignature={pendingMintTx}
+              isDevnet={getEnvConfig().isTestEnv}
+            />
+          ) : null}
 
           {loading && <p className="text-xs text-muted-foreground">{t('common.loading')}</p>}
 
