@@ -3,6 +3,7 @@ export type CollectibleHubSlotStatus =
   | 'submitted'
   | 'received'
   | 'rejected'
+  | 'minting'
   | 'minted'
   | 'in_circulation'
   | 'redeem_requested'
@@ -36,6 +37,8 @@ export interface CollectibleNFT {
   tokenStandard?: string;
   metadataURI?: string;
   royaltyBps?: number;
+  mintTxSignature?: string;
+  mintConfirmedSlot?: number;
   mintAt?: string;
   burnAt?: string;
 }
@@ -105,6 +108,8 @@ export interface CollectiblePrimarySale {
   releaseError?: string;
   releasedAt?: string;
   idempotencyKey?: string;
+  hubSlotStatus?: CollectibleHubSlotStatus | string;
+  lastMintError?: string;
   createdAt?: string;
   updatedAt?: string;
 }

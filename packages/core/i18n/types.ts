@@ -2454,6 +2454,12 @@ export interface TranslationResource {
     metadata: string;
     viewDetails: string;
     alreadyRedeemed: string;
+    onChain: {
+      mintTx: string;
+      mintConfirmedSlot: string;
+      burnTx: string;
+      viewOnExplorer: string;
+    };
     checkout: {
       onePerOrderTitle: string;
       onePerOrderDesc: string;
@@ -2502,10 +2508,19 @@ export interface TranslationResource {
       viewNft: string;
       loadFailed: string;
       supportHint: string;
+      mintLastError: string;
+      mintErrors: {
+        pendingConfirmation: string;
+        onChainFailed: string;
+        interrupted: string;
+        generic: string;
+      };
       phase: {
         awaiting_payment: string;
         awaiting_bridge: string;
         awaiting_hub: string;
+        awaiting_hub_minting: string;
+        awaiting_hub_minted: string;
         payout_pending: string;
         payout_complete: string;
         payout_failed: string;
