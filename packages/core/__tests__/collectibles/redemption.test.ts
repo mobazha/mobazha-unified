@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isCollectibleRedemptionComplete,
   resolveCollectibleRedemptionPhase,
+  shouldPollCollectibleRedemption,
 } from '../../collectibles/redemption';
 
 describe('resolveCollectibleRedemptionPhase', () => {
@@ -23,5 +24,12 @@ describe('isCollectibleRedemptionComplete', () => {
   it('is true only when settled', () => {
     expect(isCollectibleRedemptionComplete({ status: 'settled' })).toBe(true);
     expect(isCollectibleRedemptionComplete({ status: 'shipped' })).toBe(false);
+  });
+});
+
+describe('shouldPollCollectibleRedemption', () => {
+  it('polls until settled', () => {
+    expect(shouldPollCollectibleRedemption({ status: 'shipped' })).toBe(true);
+    expect(shouldPollCollectibleRedemption({ status: 'settled' })).toBe(false);
   });
 });

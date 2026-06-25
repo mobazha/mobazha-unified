@@ -6,3 +6,4 @@ export * from './primarySale';
 export * from './burnTx';
 export * from './redemption';
 export * from './explorer';
+export * from './shipTo';

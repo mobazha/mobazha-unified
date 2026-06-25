@@ -9,6 +9,7 @@ import {
   resolveCollectiblePrimarySalePhaseMessageKey,
   resolveCollectibleMintErrorMessageKey,
   parseSubmittedMintTxFromError,
+  shouldPollCollectiblePrimarySale,
 } from '../../collectibles/primarySale';
 import type { CollectiblePrimarySale } from '../../collectibles/types';
 
@@ -158,5 +159,66 @@ describe('parseSubmittedMintTxFromError', () => {
         'confirmation timeout (nftMint=abc tx=5VERv8NMzzbY7xB35r3bAbcdefghijkmnopqrstuvwxyz)'
       )
     ).toBe('5VERv8NMzzbY7xB35r3bAbcdefghijkmnopqrstuvwxyz');
+  });
+});
+
+describe('shouldPollCollectiblePrimarySale', () => {
+  const baseSale: CollectiblePrimarySale = {
+    saleID: 'sale-1',
+    hubSlotID: 'slot-1',
+    paidAt: '2026-06-25T00:00:00Z',
+    releaseStatus: 'pending',
+  };
+
+  it('polls while bridge row is missing', () => {
+    expect(shouldPollCollectiblePrimarySale(null)).toBe(true);
+  });
+
+  it('polls while hub slot is minting', () => {
+    expect(shouldPollCollectiblePrimarySale({ ...baseSale, hubSlotStatus: 'minting' })).toBe(true);
+  });
+
+  it('polls after mint while waiting for seller payout', () => {
+    expect(
+      shouldPollCollectiblePrimarySale({
+        ...baseSale,
+        hubSlotStatus: 'minted',
+        nftMint: 'mint-abc',
+      })
+    ).toBe(true);
+  });
+
+  it('stops when hub slot is rejected', () => {
+    expect(
+      shouldPollCollectiblePrimarySale({
+        ...baseSale,
+        hubSlotStatus: 'rejected',
+      })
+    ).toBe(false);
+  });
+
+  it('polls while payout is pending', () => {
+    expect(
+      shouldPollCollectiblePrimarySale({
+        ...baseSale,
+        releaseRequestedAt: '2026-06-25T01:00:00Z',
+      })
+    ).toBe(true);
+  });
+
+  it('stops after payout completes or fails', () => {
+    expect(
+      shouldPollCollectiblePrimarySale({
+        ...baseSale,
+        releaseStatus: 'released',
+        releasedAt: '2026-06-25T02:00:00Z',
+      })
+    ).toBe(false);
+    expect(
+      shouldPollCollectiblePrimarySale({
+        ...baseSale,
+        releaseStatus: 'failed',
+      })
+    ).toBe(false);
   });
 });

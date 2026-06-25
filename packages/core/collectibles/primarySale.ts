@@ -90,3 +90,29 @@ export function parseSubmittedMintTxFromError(lastMintError?: string | null): st
   const txMatch = message.match(/tx=([1-9A-HJ-NP-Za-km-z]+)/);
   return txMatch?.[1] ?? null;
 }
+
+/** Keep polling primary-sale while hub mint or seller payout is still in flight. */
+export function shouldPollCollectiblePrimarySale(sale: CollectiblePrimarySale | null): boolean {
+  if (!sale) {
+    return true;
+  }
+  const releaseStatus = (sale.releaseStatus || '').toLowerCase();
+  if (releaseStatus === 'released' || sale.releasedAt || releaseStatus === 'failed') {
+    return false;
+  }
+  if (sale.releaseRequestedAt) {
+    return true;
+  }
+  const hubStatus = sale.hubSlotStatus?.trim().toLowerCase() ?? '';
+  if (hubStatus === 'rejected') {
+    return false;
+  }
+  if (hubStatus === 'minting') {
+    return true;
+  }
+  if (!sale.nftMint?.trim()) {
+    return hubStatus === '' || hubStatus === 'received';
+  }
+  // Minted — keep polling until seller payout completes (release is server-driven).
+  return true;
+}
