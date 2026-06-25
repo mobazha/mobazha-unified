@@ -46,3 +46,22 @@ export type {
   CreateSourceMaterialArtifactInput,
 } from '../../types/agentArtifact';
 export { MAX_ATTACHED_CHAT_ARTIFACTS } from '../../types/agentArtifact';
+export {
+  ingestProductImport,
+  getProductImportWorkbench,
+  createProductImportProposalApproval,
+  normalizeProductImportIngestResult,
+  normalizeProductImportArtifact,
+  normalizeProductImportWorkbench,
+  formatProductImportDraftPrice,
+  productImportDraftQuantity,
+} from './productImportService';
+export type { IngestProductImportOptions } from './productImportService';
+export type {
+  ProductImportIngestResult,
+  ProductImportWorkbench,
+  ProductImportWorkbenchRow,
+  ProductImportWorkbenchSource,
+  ProductImportDraft,
+  ProductImportDraftPrice,
+} from '../../types/productImport';
