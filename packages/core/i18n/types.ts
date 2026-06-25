@@ -2474,6 +2474,21 @@ export interface TranslationResource {
       failedTitle: string;
       trackingLabel: string;
     };
+    primarySale: {
+      title: string;
+      certNumber: string;
+      viewNft: string;
+      loadFailed: string;
+      supportHint: string;
+      phase: {
+        awaiting_payment: string;
+        awaiting_bridge: string;
+        awaiting_hub: string;
+        payout_pending: string;
+        payout_complete: string;
+        payout_failed: string;
+      };
+    };
   };
 
   // 配送选项配置

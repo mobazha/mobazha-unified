@@ -72,3 +72,37 @@ export interface CollectiblesPagedResult<T> {
   items: T[];
   meta: CollectiblesListMeta;
 }
+
+export type CollectiblePrimarySaleReleaseStatus = 'pending' | 'released' | 'failed' | string;
+
+export type CollectiblePrimarySalePhase =
+  | 'awaiting_payment'
+  | 'awaiting_bridge'
+  | 'awaiting_hub'
+  | 'payout_pending'
+  | 'payout_complete'
+  | 'payout_failed';
+
+export interface CollectiblePrimarySale {
+  saleID: string;
+  tenantID?: string;
+  hubSlotID: string;
+  nftMint?: string;
+  orderID?: string;
+  escrowID?: string;
+  buyerPeerID?: string;
+  sellerPeerID?: string;
+  priceAmount?: string;
+  currencyCode?: string;
+  divisibility?: number;
+  paidAt?: string;
+  releaseStatus?: CollectiblePrimarySaleReleaseStatus;
+  releaseRequestedAt?: string;
+  releaseActionID?: string;
+  releaseTxHash?: string;
+  releaseError?: string;
+  releasedAt?: string;
+  idempotencyKey?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

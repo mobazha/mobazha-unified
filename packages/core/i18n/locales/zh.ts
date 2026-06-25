@@ -4568,6 +4568,21 @@ export const zh: PartialTranslationResource = {
       failedTitle: '赎回失败',
       trackingLabel: '赎回单号',
     },
+    primarySale: {
+      title: '数字化收藏卡',
+      certNumber: '评级编号',
+      viewNft: '查看数字凭证',
+      loadFailed: '无法刷新 Hub 状态，请稍后重试。',
+      supportHint: '放款未能自动完成，如持续出现请联系客服。',
+      phase: {
+        awaiting_payment: '请先完成付款，再进行 Hub 入库与数字凭证铸造。',
+        awaiting_bridge: '付款已确认，正在关联 Hub 台账，通常很快完成。',
+        awaiting_hub: '等待实体卡送达 Hub、完成验货并铸造数字凭证。',
+        payout_pending: '正在从买家保障资金中向卖家确认放款。',
+        payout_complete: '卖家放款已完成，数字凭证状态将与 Hub 同步。',
+        payout_failed: '向卖家的放款未能完成，可能需要人工介入。',
+      },
+    },
   },
   shipping: {
     shippingProfiles: '配送档案',
