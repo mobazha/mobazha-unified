@@ -626,6 +626,7 @@ export const HOSTING_API = {
     `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/ship`,
   COLLECTIBLES_REDEMPTION_SETTLE: (id: string) =>
     `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/settle`,
+  COLLECTIBLES_RECONCILE_RECOVER_MINTS: '/platform/v1/collectibles/reconcile/recover-mints',
   COLLECTIBLES_PRIMARY_SALE_BY_ORDER: (orderId: string) =>
     `/platform/v1/collectibles/primary-sales/by-order/${encodeURIComponent(orderId)}`,
 } as const;

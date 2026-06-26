@@ -60,4 +60,25 @@ describe('collectibles API', () => {
     expect(result.nftMint).toBe('mockpnft456');
     expect(result.hubSlot?.status).toBe('minted');
   });
+
+  it('posts pending mint recovery requests to hosting', async () => {
+    const { recoverCollectiblePendingMints } = await import('../../../services/api/collectibles');
+    mockHostingPost.mockResolvedValueOnce({
+      tenantID: 'tenant-1',
+      generatedAt: '2026-06-26T00:00:00Z',
+      attempted: 1,
+      recovered: 1,
+      skipped: 0,
+      failed: 0,
+      items: [{ hubSlotID: 'slot-1', status: 'recovered' }],
+    });
+
+    const result = await recoverCollectiblePendingMints({ limit: 5, royaltyBps: 250 });
+
+    expect(mockHostingPost).toHaveBeenCalledWith(
+      '/platform/v1/collectibles/reconcile/recover-mints',
+      { limit: 5, royaltyBps: 250 }
+    );
+    expect(result.recovered).toBe(1);
+  });
 });

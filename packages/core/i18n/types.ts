@@ -2553,6 +2553,18 @@ export interface TranslationResource {
       settleFailed: string;
       viewBuyerTracking: string;
       noActions: string;
+      mintRecoveryTitle: string;
+      mintRecoverySubtitle: string;
+      recoveryLimit: string;
+      royaltyBps: string;
+      recoverMints: string;
+      recoverSuccess: string;
+      recoverFailed: string;
+      recovered: string;
+      skipped: string;
+      failed: string;
+      attempted: string;
+      recentResults: string;
     };
   };
 

@@ -7,6 +7,7 @@ import {
   resolveCollectibleRedemptionPhase,
   useI18n,
   type CollectibleRedemption,
+  type CollectiblePendingMintRecoveryReport,
 } from '@mobazha/core';
 import { CollectiblesFeatureGuard } from '@/app/collectibles/CollectiblesFeatureGuard';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,12 @@ export default function CollectiblesHubOpsPage() {
   const [redemption, setRedemption] = useState<CollectibleRedemption | null>(null);
   const [loading, setLoading] = useState(false);
   const [acting, setActing] = useState<'ship' | 'settle' | null>(null);
+  const [recoveryLimit, setRecoveryLimit] = useState('25');
+  const [recoveryRoyaltyBps, setRecoveryRoyaltyBps] = useState('0');
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryReport, setRecoveryReport] = useState<CollectiblePendingMintRecoveryReport | null>(
+    null
+  );
 
   const loadRedemption = useCallback(async () => {
     const id = redemptionId.trim();
@@ -83,6 +90,28 @@ export default function CollectiblesHubOpsPage() {
       setActing(null);
     }
   }, [redemptionId, t, toast]);
+
+  const handleRecoverMints = useCallback(async () => {
+    const limit = Number.parseInt(recoveryLimit, 10);
+    const royaltyBps = Number.parseInt(recoveryRoyaltyBps, 10);
+    setRecoveryLoading(true);
+    try {
+      const report = await collectiblesApi.recoverCollectiblePendingMints({
+        limit: Number.isFinite(limit) && limit > 0 ? limit : undefined,
+        royaltyBps: Number.isFinite(royaltyBps) && royaltyBps >= 0 ? royaltyBps : undefined,
+      });
+      setRecoveryReport(report);
+      toast({ title: t('collectibles.hubOps.recoverSuccess'), variant: 'success' });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: t('collectibles.hubOps.recoverFailed'),
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setRecoveryLoading(false);
+    }
+  }, [recoveryLimit, recoveryRoyaltyBps, t, toast]);
 
   const phase = redemption ? resolveCollectibleRedemptionPhase(redemption) : null;
   const canShip = phase === 'redeem_requested';
@@ -196,6 +225,99 @@ export default function CollectiblesHubOpsPage() {
             ) : null}
           </Card>
         ) : null}
+
+        <Card className="space-y-4 p-4">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">
+              {t('collectibles.hubOps.mintRecoveryTitle')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('collectibles.hubOps.mintRecoverySubtitle')}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="recovery-limit">
+                {t('collectibles.hubOps.recoveryLimit')}
+              </label>
+              <Input
+                id="recovery-limit"
+                type="number"
+                min={1}
+                max={100}
+                value={recoveryLimit}
+                onChange={event => setRecoveryLimit(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="recovery-royalty">
+                {t('collectibles.hubOps.royaltyBps')}
+              </label>
+              <Input
+                id="recovery-royalty"
+                type="number"
+                min={0}
+                max={10000}
+                value={recoveryRoyaltyBps}
+                onChange={event => setRecoveryRoyaltyBps(event.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void handleRecoverMints()}
+              disabled={recoveryLoading}
+            >
+              {recoveryLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {t('collectibles.hubOps.recoverMints')}
+            </Button>
+          </div>
+
+          {recoveryReport ? (
+            <div className="space-y-3 border-t pt-4">
+              <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                <div>
+                  <dt className="text-muted-foreground">{t('collectibles.hubOps.attempted')}</dt>
+                  <dd className="font-medium text-foreground">{recoveryReport.attempted}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">{t('collectibles.hubOps.recovered')}</dt>
+                  <dd className="font-medium text-foreground">{recoveryReport.recovered}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">{t('collectibles.hubOps.skipped')}</dt>
+                  <dd className="font-medium text-foreground">{recoveryReport.skipped}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">{t('collectibles.hubOps.failed')}</dt>
+                  <dd className="font-medium text-foreground">{recoveryReport.failed}</dd>
+                </div>
+              </dl>
+
+              {recoveryReport.items?.length ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('collectibles.hubOps.recentResults')}
+                  </p>
+                  <div className="space-y-2">
+                    {recoveryReport.items.slice(0, 5).map(item => (
+                      <div
+                        key={`${item.hubSlotID}-${item.txSignature || item.status}`}
+                        className="rounded-md border p-3 text-xs"
+                      >
+                        <p className="break-all font-mono text-foreground">{item.hubSlotID}</p>
+                        <p className="mt-1 text-muted-foreground">{item.status}</p>
+                        {item.message ? (
+                          <p className="mt-1 break-words text-muted-foreground">{item.message}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </Card>
       </CollectiblesFeatureGuard>
     </div>
   );

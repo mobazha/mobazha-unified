@@ -61,6 +61,26 @@ export interface CollectibleRedemption {
   updatedAt?: string;
 }
 
+export type CollectiblePendingMintRecoveryStatus = 'recovered' | 'skipped' | 'failed' | string;
+
+export interface CollectiblePendingMintRecoveryItem {
+  hubSlotID: string;
+  nftMint?: string;
+  txSignature?: string;
+  status: CollectiblePendingMintRecoveryStatus;
+  message?: string;
+}
+
+export interface CollectiblePendingMintRecoveryReport {
+  tenantID: string;
+  generatedAt: string;
+  attempted: number;
+  recovered: number;
+  skipped: number;
+  failed: number;
+  items?: CollectiblePendingMintRecoveryItem[];
+}
+
 export interface CollectibleBurnTx {
   nftMint: string;
   holder: string;
