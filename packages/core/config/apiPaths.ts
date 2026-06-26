@@ -141,8 +141,16 @@ export const NODE_API = {
   AGENT_CHAT_SESSION: NODE_API_PATHS.AGENT_CHAT_BY_SESSION_ID,
   /** Smart product import — multipart ingest (full build only; !outpost). */
   AGENT_PRODUCT_IMPORT_INGEST: '/agent/product-import/ingest',
-  AGENT_PRODUCT_IMPORT_WORKBENCH: (runId: string) =>
+  AGENT_PRODUCT_IMPORT_RUNS_ADVANCE: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/advance`,
+  AGENT_PRODUCT_IMPORT_RUNS_WORKBENCH: (runId: string) =>
     `/agent/product-import/runs/${encodeURIComponent(runId)}/workbench`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVALS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approvals`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_DECISIONS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-decisions`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_APPLICATIONS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-applications`,
   AGENT_ARTIFACTS_APPROVAL: (artifactId: string) =>
     `/agent/artifacts/${encodeURIComponent(artifactId)}/approval`,
 

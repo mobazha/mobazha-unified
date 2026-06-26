@@ -3129,6 +3129,37 @@ export interface TranslationResource {
         continueWithAi?: string;
         continueWithAiLabel?: string;
         skillRunMaxReached?: string;
+        chatTitle?: string;
+        runStatusRunning?: string;
+        runStatusWaiting?: string;
+        runStatusCompleted?: string;
+        runStatusFailed?: string;
+        runStatusCancelled?: string;
+        summaryReviewable?: string;
+        summaryActionable?: string;
+        summaryApplied?: string;
+        summaryFailed?: string;
+        selectAll?: string;
+        selectRow?: string;
+        selectedCount?: string;
+        batchPrepare?: string;
+        batchApproveApply?: string;
+        batchReject?: string;
+        batchPrepareSuccess?: string;
+        batchApplySuccess?: string;
+        batchRejectSuccess?: string;
+        batchNothingToPrepare?: string;
+        batchNothingToApprove?: string;
+        batchNothingToReject?: string;
+        noRowDetails?: string;
+        pagination?: string;
+        filter?: {
+          all?: string;
+          needs_review?: string;
+          pending_approval?: string;
+          applied?: string;
+          approval_failed?: string;
+        };
       };
     };
     gumroadImport?: {

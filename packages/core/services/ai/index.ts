@@ -55,18 +55,32 @@ export {
   ingestProductImport,
   getProductImportWorkbench,
   createProductImportProposalApproval,
+  createProductImportRunApprovals,
+  decideProductImportRunApprovals,
+  applyProductImportRunApprovals,
+  advanceProductImportRun,
   normalizeProductImportIngestResult,
   normalizeProductImportArtifact,
   normalizeProductImportWorkbench,
+  normalizeProductImportAdvanceResult,
   formatProductImportDraftPrice,
   productImportDraftQuantity,
 } from './productImportService';
-export type { IngestProductImportOptions } from './productImportService';
+export type {
+  IngestProductImportOptions,
+  ProductImportAdvanceRequest,
+} from './productImportService';
 export type {
   ProductImportIngestResult,
   ProductImportWorkbench,
   ProductImportWorkbenchRow,
   ProductImportWorkbenchSource,
+  ProductImportWorkbenchSummary,
+  ProductImportWorkbenchPage,
+  ProductImportWorkbenchQuery,
+  ProductImportApprovalBatchResult,
+  ProductImportApprovalActionBatchResult,
+  ProductImportAdvanceResult,
   ProductImportDraft,
   ProductImportDraftPrice,
 } from '../../types/productImport';

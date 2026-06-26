@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatProductImportDraftPrice,
+  normalizeProductImportAdvanceResult,
   normalizeProductImportIngestResult,
   normalizeProductImportWorkbench,
   productImportDraftQuantity,
@@ -34,7 +35,7 @@ describe('normalizeProductImportIngestResult', () => {
 });
 
 describe('normalizeProductImportWorkbench', () => {
-  it('preserves workbench rows and counts', () => {
+  it('preserves workbench rows, counts, summary and page', () => {
     const wb = normalizeProductImportWorkbench({
       skillRun: { id: 'run_1', status: 'waiting_for_review' },
       sources: [{ artifactId: 'art_src', status: 'ready', sourceName: 'supplier.csv' }],
@@ -47,9 +48,42 @@ describe('normalizeProductImportWorkbench', () => {
         },
       ],
       counts: { proposal: 1, source: 1 },
+      summary: { reviewableCount: 1, actionableCount: 1, noApprovalCount: 1 },
+      page: { offset: 0, totalRows: 1, returnedRows: 1 },
     });
     expect(wb.rows[0].draft?.title).toBe('Linen Tote');
     expect(wb.counts.proposal).toBe(1);
+    expect(wb.summary.reviewableCount).toBe(1);
+    expect(wb.page.totalRows).toBe(1);
+  });
+
+  it('defaults missing summary and page', () => {
+    const wb = normalizeProductImportWorkbench({
+      skillRun: { id: 'run_1', status: 'running' },
+    });
+    expect(wb.summary.actionableCount).toBe(0);
+    expect(wb.page.totalRows).toBe(0);
+  });
+});
+
+describe('normalizeProductImportAdvanceResult', () => {
+  it('defaults null skipped arrays in nested approval result', () => {
+    const result = normalizeProductImportAdvanceResult({
+      skillRun: { id: 'run_1', status: 'running' },
+      approvalResult: {
+        created: 1,
+        reused: 0,
+        skipped: undefined,
+        page: { totalProposals: 1, selected: 1 },
+      },
+      counts: { proposalCount: 1 },
+      nextActions: undefined,
+      skipped: undefined,
+    });
+    expect(result.approvalResult?.skipped).toEqual([]);
+    expect(result.nextActions).toEqual([]);
+    expect(result.skipped).toEqual([]);
+    expect(result.counts.proposalCount).toBe(1);
   });
 });
 

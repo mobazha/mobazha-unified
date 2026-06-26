@@ -311,6 +311,8 @@ export const NODE_API_PATHS = {
   AGENT_MEMORIES_BY_MEMORY_ID: (memoryId: string) =>
     `/agent/memories/${encodeURIComponent(memoryId)}`,
   AGENT_PRODUCT_IMPORT_INGEST: '/agent/product-import/ingest',
+  AGENT_PRODUCT_IMPORT_RUNS_ADVANCE: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/advance`,
   AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_APPLICATIONS: (runId: string) =>
     `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-applications`,
   AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_DECISIONS: (runId: string) =>
