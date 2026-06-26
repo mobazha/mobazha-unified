@@ -1,7 +1,7 @@
 /**
  * Collectible NFT burn transaction signing (client-side).
  *
- * Mock/dev: backend returns `mock-burn-tx-*` — passed through as burn proof.
+ * Mock/dev: backend returns `mock-burn-tx-*`; client derives `mock-burn-sig-*` as burn proof.
  * Production: base64 serialized tx or Go-shaped JSON instructions → wallet sign + confirm.
  */
 
@@ -23,10 +23,50 @@ import {
 import type { CollectibleBurnTx } from './types';
 
 export const MOCK_BURN_TX_PREFIX = 'mock-burn-tx-';
+export const MOCK_BURN_SIG_PREFIX = 'mock-burn-sig-';
 export const MIN_SOL_LAMPORTS_FOR_BURN_FEE = 5000;
 
 export function isMockCollectibleBurnTransaction(transaction: string): boolean {
   return transaction.trim().startsWith(MOCK_BURN_TX_PREFIX);
+}
+
+/** Mirrors hosting `nft.MockBurnTransaction` for local demo / E2E alignment. */
+export async function deriveMockBurnTransaction(nftMint: string, holder: string): Promise<string> {
+  const mint = nftMint.trim();
+  const wallet = holder.trim();
+  if (!mint || !wallet) {
+    return '';
+  }
+  const digest = await sha256HexPrefix(`burn:${mint}:${wallet}`, 32);
+  return `${MOCK_BURN_TX_PREFIX}${digest}`;
+}
+
+/** Mirrors hosting `nft.MockBurnSignature` — mock provider burn proof, not the unsigned tx. */
+export async function deriveMockBurnSignature(nftMint: string, holder: string): Promise<string> {
+  const tx = await deriveMockBurnTransaction(nftMint, holder);
+  return deriveMockBurnSignatureFromTransaction(tx);
+}
+
+export async function deriveMockBurnSignatureFromTransaction(transaction: string): Promise<string> {
+  const tx = transaction.trim();
+  if (!tx) {
+    return '';
+  }
+  const digest = await sha256HexPrefix(`mock-burn-signature:${tx}`, 32);
+  return `${MOCK_BURN_SIG_PREFIX}${digest}`;
+}
+
+async function sha256HexPrefix(input: string, hexLen: number): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error('Web Crypto API is unavailable');
+  }
+  const hash = await subtle.digest('SHA-256', data);
+  const hex = Array.from(new Uint8Array(hash))
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+  return hex.slice(0, hexLen);
 }
 
 /** Subset of AppKit Solana wallet provider used for burn redemption. */
@@ -57,7 +97,7 @@ export async function signCollectibleBurnTransaction(
   }
 
   if (isMockCollectibleBurnTransaction(txPayload)) {
-    return txPayload;
+    return deriveMockBurnSignatureFromTransaction(txPayload);
   }
 
   const provider = params.walletProvider;

@@ -33,6 +33,7 @@ export interface CollectibleNFT {
   nftMint: string;
   tenantID?: string;
   hubSlotID: string;
+  hubSlot?: CollectibleHubSlot;
   chain?: string;
   tokenStandard?: string;
   metadataURI?: string;

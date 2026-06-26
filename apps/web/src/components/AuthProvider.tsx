@@ -2,7 +2,13 @@
 
 import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useUserStore, useCartStore, useMatrixInit, isStandalone } from '@mobazha/core';
+import {
+  useUserStore,
+  useCartStore,
+  useMatrixInit,
+  isStandalone,
+  usePlatformFeatureFlagsHydration,
+} from '@mobazha/core';
 import {
   hasOAuthCallback,
   getOAuthParams,
@@ -107,6 +113,9 @@ export function AuthProvider({
     enabled: !__OUTPOST__,
     autoConnect: !__OUTPOST__,
   });
+
+  // SaaS: hydrate platform feature flags for all routes (not only /admin).
+  usePlatformFeatureFlagsHydration(isInitialized);
 
   // Sync local cart to backend when user logs in (anonymous → authenticated).
   // Uses undefined sentinel to skip the initial auth transition (session restore).

@@ -65,6 +65,29 @@ export function formatOrderDate(
 }
 
 /**
+ * Nullable ISO datetime for order/redemption surfaces (default: date + time with seconds).
+ */
+export function formatOrderDateTime(
+  dateString: string | undefined | null,
+  options: {
+    locale?: string;
+    includeTime?: boolean;
+    short?: boolean;
+    includeSeconds?: boolean;
+  } = {}
+): string | null {
+  if (!dateString?.trim()) return null;
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return null;
+  const { includeSeconds = true, ...rest } = options;
+  return formatOrderDate(dateString, {
+    ...rest,
+    includeSeconds,
+    includeTime: rest.includeTime ?? true,
+  });
+}
+
+/**
  * 格式化时间
  * @param dateString - ISO 日期字符串
  */
