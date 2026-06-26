@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
 import { AuthGuard } from '@/components';
 import { AdminSidebar, AdminHeader } from '@/components/admin';
 import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs';
@@ -26,7 +26,9 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
     <div className="fixed inset-0 z-30 flex bg-background overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex shrink-0">
-        <AdminSidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+        <Suspense fallback={null}>
+          <AdminSidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+        </Suspense>
       </aside>
 
       {/* Main content area */}
@@ -44,7 +46,9 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
       </div>
 
       {/* Mobile bottom tab bar */}
-      <AdminMobileBottomTabs />
+      <Suspense fallback={null}>
+        <AdminMobileBottomTabs />
+      </Suspense>
 
       {/* AI Assistant floating panel */}
       <AdminFloatingChat />

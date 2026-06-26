@@ -53,6 +53,7 @@ export {
 } from '../../types/agentArtifact';
 export {
   ingestProductImport,
+  ingestProductImportPaste,
   getProductImportWorkbench,
   createProductImportProposalApproval,
   createProductImportRunApprovals,

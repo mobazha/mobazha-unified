@@ -56,12 +56,18 @@ export interface AIConfigSectionProps {
    * configured. The user can expand it via an "Edit" link.
    */
   startCollapsedWhenConfigured?: boolean;
+  /**
+   * Compact layout for `/admin/ai/models`: hides feature cards, collapses BYOK
+   * form when platform AI is active, and hides the redundant enable header.
+   */
+  settingsPageLayout?: boolean;
 }
 
 export function AIConfigSection({
   hideOutpostInstallGuide = false,
   hideFeatureShowcase = false,
   startCollapsedWhenConfigured = false,
+  settingsPageLayout = false,
 }: AIConfigSectionProps = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
@@ -168,14 +174,18 @@ export function AIConfigSection({
           if (providerState?.has_api_key || isOutpost) {
             setFormCollapsed(true);
           }
+        } else if (settingsPageLayout && status?.source === 'platform') {
+          setFormCollapsed(true);
         }
+      } else if (settingsPageLayout && status?.source === 'platform') {
+        setFormCollapsed(true);
       }
     } catch {
       setLoadError(true);
     } finally {
       setLoading(false);
     }
-  }, [applyProviderToForm, startCollapsedWhenConfigured]);
+  }, [applyProviderToForm, startCollapsedWhenConfigured, settingsPageLayout]);
 
   useEffect(() => {
     fetchData();
@@ -292,6 +302,15 @@ export function AIConfigSection({
 
   const isPlatformAI = aiStatus?.source === 'platform';
   const isByokAI = aiStatus?.source === 'byok';
+  const hideEnableHeader = settingsPageLayout && isPlatformAI && !!aiStatus;
+  const showFormCollapseToggle =
+    startCollapsedWhenConfigured || (settingsPageLayout && isPlatformAI);
+  const formCollapseLabel =
+    settingsPageLayout && isPlatformAI
+      ? t('admin.integrations.aiByokExpand')
+      : t('aiAgents.outpost.localLlm.editConfig', {
+          defaultValue: 'Edit AI endpoint configuration',
+        });
 
   const statusBadgeVariant = isByokAI ? 'default' : isPlatformAI ? 'secondary' : 'outline';
   const statusBadgeText = isByokAI
@@ -302,30 +321,31 @@ export function AIConfigSection({
 
   return (
     <div id="ai-endpoint-config" className="space-y-6 scroll-mt-24">
-      {/* Header card with enable toggle */}
-      <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl">
-        <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
-          <Sparkles className="w-5 h-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-foreground">{t('admin.integrations.aiTitle')}</h3>
-            <Badge variant={statusBadgeVariant} className="text-xs">
-              {statusBadgeText}
-            </Badge>
+      {/* Header card with enable toggle — hidden on settings page when platform AI already covers status */}
+      {!hideEnableHeader && (
+        <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl">
+          <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.aiDesc')}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-foreground">{t('admin.integrations.aiTitle')}</h3>
+              <Badge variant={statusBadgeVariant} className="text-xs">
+                {statusBadgeText}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.aiDesc')}</p>
+          </div>
+          <div className="shrink-0 pt-0.5">
+            <Switch
+              id="ai-enabled-header"
+              checked={enabled}
+              onCheckedChange={setEnabled}
+              aria-label={t('admin.integrations.aiEnabled')}
+            />
+          </div>
         </div>
-        <div className="shrink-0 pt-0.5">
-          <Switch
-            id="ai-enabled-header"
-            checked={enabled}
-            onCheckedChange={setEnabled}
-            aria-label={t('admin.integrations.aiEnabled')}
-          />
-        </div>
-      </div>
-
+      )}
       {/* Outpost: Local LLM setup guide.
           Hidden when rendered alongside `LocalLlmEnginePanel` (e.g. on
           `/admin/ai/connect`), which already covers runtime installation with
@@ -439,16 +459,18 @@ export function AIConfigSection({
                 {aiStatus.vision_available === false && ' — off'}
               </Badge>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Key className="w-3 h-3" />
-              <span>{t('admin.integrations.aiPlatformUpgrade')}</span>
-            </div>
+            {!settingsPageLayout && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Key className="w-3 h-3" />
+                <span>{t('admin.integrations.aiPlatformUpgrade')}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Feature showcase — hidden in compact Outpost mode */}
-      {!hideFeatureShowcase && (
+      {/* Feature showcase — hidden in compact Outpost / dedicated settings page */}
+      {!hideFeatureShowcase && !settingsPageLayout && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { icon: Image, text: t('admin.integrations.aiFeatureGenerate') },
@@ -468,7 +490,7 @@ export function AIConfigSection({
 
       {/* Config form card — collapsible in Outpost compact mode */}
       <div className="border border-border rounded-xl bg-card overflow-hidden">
-        {startCollapsedWhenConfigured && (
+        {showFormCollapseToggle && (
           <button
             type="button"
             onClick={() => setFormCollapsed(prev => !prev)}
@@ -476,11 +498,7 @@ export function AIConfigSection({
             aria-expanded={!formCollapsed}
             aria-controls="ai-endpoint-config-form"
           >
-            <span className="text-sm text-muted-foreground">
-              {t('aiAgents.outpost.localLlm.editConfig', {
-                defaultValue: 'Edit AI endpoint configuration',
-              })}
-            </span>
+            <span className="text-sm text-muted-foreground">{formCollapseLabel}</span>
             <ChevronDown
               className={cn(
                 'w-4 h-4 text-muted-foreground transition-transform',
@@ -495,7 +513,7 @@ export function AIConfigSection({
             id="ai-endpoint-config-form"
             className={cn(
               'space-y-4',
-              startCollapsedWhenConfigured ? 'p-5 pt-4 border-t border-border' : 'p-5'
+              showFormCollapseToggle ? 'p-5 pt-4 border-t border-border' : 'p-5'
             )}
           >
             {/* Provider pills — hidden in Outpost (only one provider) */}

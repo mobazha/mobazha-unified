@@ -2,16 +2,16 @@
 
 import { useCallback, useState } from 'react';
 import { useFeature, useI18n, type OrderListItem, type ProductListItem } from '@mobazha/core';
-import { Sparkles } from 'lucide-react';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { useProductLicensePoolHints } from '@/hooks/useProductLicensePoolHints';
 import { useSellerSupplySummaries } from '@/hooks/useSellerSupplySummaries';
 import { useSyncedListingProviders } from '@/hooks/useSyncedListingProviders';
 import { AiWorkspaceSetupBanner } from './AiWorkspaceSetupBanner';
 import { AiWorkspaceStatusBadge } from './AiWorkspaceStatusBadge';
-import { WorkspaceOpportunityCards } from './WorkspaceOpportunityCards';
+import { WorkspaceImportRunBanner, rememberWorkspaceImportRun } from './WorkspaceImportRunBanner';
+import { WorkspaceOpportunitiesRail } from './WorkspaceOpportunityCards';
 import { WorkspacePendingApprovals } from './WorkspacePendingApprovals';
-import { WorkspaceSourceMaterial } from './WorkspaceSourceMaterial';
+import { getWorkspaceImportRunId } from './workspaceImportRunStorage';
 import { useAiWorkspaceStatus } from './useAiWorkspaceStatus';
 import { useWorkspaceOpportunities } from './useWorkspaceOpportunities';
 
@@ -34,6 +34,9 @@ export function AiWorkspacePanel({
 }: AiWorkspacePanelProps) {
   const { t } = useI18n();
   const [seedPrompt, setSeedPrompt] = useState<string | null>(null);
+  const [chatContextLabel, setChatContextLabel] = useState<string | null>(null);
+  const [activeOpportunityId, setActiveOpportunityId] = useState<string | null>(null);
+  const [importRunId, setImportRunId] = useState<string | null>(() => getWorkspaceImportRunId());
   const { available: aiAvailable, loading: aiStatusLoading, status } = useAiWorkspaceStatus();
   const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
   const { getProvider } = useSyncedListingProviders();
@@ -64,12 +67,26 @@ export function AiWorkspacePanel({
     hasNoPaymentMethods,
     isPrivateStore,
     supplyContextFor,
-    includeAskAiCard: aiAvailable,
+    includeAskAiCard: false,
   });
 
-  const handleChatAction = useCallback((prompt: string) => {
-    setSeedPrompt(prompt);
-  }, []);
+  const handleChatAction = useCallback(
+    (prompt: string, contextLabel: string, opportunityId: string) => {
+      setActiveOpportunityId(opportunityId);
+      setChatContextLabel(contextLabel);
+      setSeedPrompt(prompt);
+    },
+    []
+  );
+
+  const handleImportComplete = useCallback(
+    (runId: string) => {
+      rememberWorkspaceImportRun(runId, setImportRunId);
+      setChatContextLabel(t('admin.workspace.importRunTaskTitle'));
+      setActiveOpportunityId('product-import');
+    },
+    [t]
+  );
 
   const cardsLoading = ordersLoading || productsLoading;
 
@@ -77,38 +94,31 @@ export function AiWorkspacePanel({
     <div className="space-y-6" data-testid="admin-ai-workspace">
       {!aiStatusLoading && !aiAvailable && <AiWorkspaceSetupBanner />}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-muted-foreground">{t('admin.workspace.subtitle')}</p>
-        {(aiStatusLoading || aiAvailable) && (
+      {(aiStatusLoading || aiAvailable) && (
+        <div className="flex justify-end">
           <AiWorkspaceStatusBadge status={status} loading={aiStatusLoading} />
-        )}
-      </div>
+        </div>
+      )}
 
       {aiAvailable && (
         <>
+          <WorkspaceImportRunBanner runId={importRunId} onRunIdChange={setImportRunId} />
           <WorkspacePendingApprovals />
-          <WorkspaceSourceMaterial />
-          <div className="rounded-xl border border-border bg-muted/20 px-4 py-3 flex items-start gap-3">
-            <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground">{t('admin.workspace.valueSummary')}</p>
-          </div>
         </>
       )}
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-6 lg:items-start">
+      <div className="lg:grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
         <section className={!aiAvailable ? 'opacity-80' : undefined}>
-          <h3 className="text-sm font-semibold text-foreground mb-3">
-            {t('admin.workspace.opportunitiesTitle')}
-          </h3>
-          {cardsLoading ? (
-            <div className="h-24 rounded-xl bg-muted/40 animate-pulse" />
-          ) : (
-            <WorkspaceOpportunityCards items={opportunities} onChatAction={handleChatAction} />
-          )}
+          <WorkspaceOpportunitiesRail
+            items={opportunities}
+            loading={cardsLoading}
+            activeOpportunityId={activeOpportunityId}
+            onChatAction={handleChatAction}
+          />
         </section>
 
-        <section className="lg:sticky lg:top-4">
-          <h3 className="text-sm font-semibold text-foreground mb-3">
+        <section className="lg:sticky lg:top-4" id="workspace-chat-panel">
+          <h3 className="text-sm font-semibold text-foreground mb-3 hidden lg:block">
             {t('admin.workspace.chatTitle')}
           </h3>
           <AIChatPanel
@@ -118,6 +128,13 @@ export function AiWorkspacePanel({
             aiAvailable={aiAvailable}
             aiStatusLoading={aiStatusLoading}
             setupPromptVariant="minimal"
+            workspaceMode
+            chatContextLabel={chatContextLabel}
+            onChatContextDismiss={() => {
+              setChatContextLabel(null);
+              setActiveOpportunityId(null);
+            }}
+            onImportComplete={handleImportComplete}
           />
         </section>
       </div>

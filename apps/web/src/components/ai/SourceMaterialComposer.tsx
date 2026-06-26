@@ -1,27 +1,34 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { createSourceMaterialArtifact, useI18n } from '@mobazha/core';
+import { createSourceMaterialArtifact, ingestProductImportPaste, useI18n } from '@mobazha/core';
 import { useAIChatStore } from '@mobazha/core/stores';
-import { FileText, Loader2, Paperclip } from 'lucide-react';
+import { FileText, Loader2, Package, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
 interface SourceMaterialComposerProps {
   variant?: 'full' | 'compact';
+  showImportAction?: boolean;
+  onImportComplete?: (runId: string) => void;
 }
 
-export function SourceMaterialComposer({ variant = 'full' }: SourceMaterialComposerProps) {
+export function SourceMaterialComposer({
+  variant = 'full',
+  showImportAction = false,
+  onImportComplete,
+}: SourceMaterialComposerProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const sessionId = useAIChatStore(s => s.sessionId);
   const attachArtifact = useAIChatStore(s => s.attachArtifact);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const handleAttach = useCallback(async () => {
     const material = text.trim();
-    if (!material || busy) return;
+    if (!material || busy || importing) return;
     setBusy(true);
     try {
       const artifact = await createSourceMaterialArtifact({
@@ -61,7 +68,38 @@ export function SourceMaterialComposer({ variant = 'full' }: SourceMaterialCompo
     } finally {
       setBusy(false);
     }
-  }, [attachArtifact, busy, sessionId, t, text, toast, variant]);
+  }, [attachArtifact, busy, importing, sessionId, t, text, toast, variant]);
+
+  const handleImport = useCallback(async () => {
+    const material = text.trim();
+    if (!material || busy || importing) return;
+    setImporting(true);
+    try {
+      const result = await ingestProductImportPaste(material, {
+        threadId: sessionId,
+        sourceName: 'workspace-paste.csv',
+        contentType: 'text/csv',
+      });
+      setText('');
+      onImportComplete?.(result.skillRun.id);
+      toast({
+        title: t('admin.workspace.sourceMaterialImportStartedTitle'),
+        description: t('admin.workspace.sourceMaterialImportStartedDescription'),
+        variant: 'success',
+      });
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description:
+          err instanceof Error ? err.message : t('admin.workspace.sourceMaterialImportFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setImporting(false);
+    }
+  }, [busy, importing, onImportComplete, sessionId, t, text, toast]);
+
+  const actionDisabled = busy || importing || !text.trim();
 
   if (variant === 'compact') {
     return (
@@ -69,26 +107,45 @@ export function SourceMaterialComposer({ variant = 'full' }: SourceMaterialCompo
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder={t('admin.workspace.sourceMaterialPlaceholder')}
+          placeholder={t('admin.workspace.sourceMaterialCompactPlaceholder')}
           className="min-h-[56px] w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           data-testid="source-material-composer-input"
         />
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="min-h-8 h-8 text-xs"
-          disabled={busy || !text.trim()}
-          onClick={() => void handleAttach()}
-          data-testid="source-material-composer-attach"
-        >
-          {busy ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Paperclip className="mr-1.5 h-3.5 w-3.5" />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="min-h-8 h-8 text-xs"
+            disabled={actionDisabled}
+            onClick={() => void handleAttach()}
+            data-testid="source-material-composer-attach"
+          >
+            {busy ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Paperclip className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            {t('admin.workspace.sourceMaterialAttach')}
+          </Button>
+          {showImportAction && (
+            <Button
+              type="button"
+              size="sm"
+              className="min-h-8 h-8 text-xs"
+              disabled={actionDisabled}
+              onClick={() => void handleImport()}
+              data-testid="source-material-composer-import"
+            >
+              {importing ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Package className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              {t('admin.workspace.sourceMaterialImport')}
+            </Button>
           )}
-          {t('admin.workspace.sourceMaterialAttach')}
-        </Button>
+        </div>
       </div>
     );
   }
@@ -117,7 +174,7 @@ export function SourceMaterialComposer({ variant = 'full' }: SourceMaterialCompo
               type="button"
               size="sm"
               className="min-h-9"
-              disabled={busy || !text.trim()}
+              disabled={actionDisabled}
               onClick={() => void handleAttach()}
               data-testid="workspace-source-material-attach"
             >
@@ -128,6 +185,24 @@ export function SourceMaterialComposer({ variant = 'full' }: SourceMaterialCompo
               )}
               {t('admin.workspace.sourceMaterialAttach')}
             </Button>
+            {showImportAction && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="min-h-9"
+                disabled={actionDisabled}
+                onClick={() => void handleImport()}
+                data-testid="workspace-source-material-import"
+              >
+                {importing ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Package className="mr-1.5 h-4 w-4" />
+                )}
+                {t('admin.workspace.sourceMaterialImport')}
+              </Button>
+            )}
           </div>
         </div>
       </div>

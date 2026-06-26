@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileSpreadsheet, Loader2, Package, Sparkles, Upload, X } from 'lucide-react';
 import { ingestProductImport, useI18n } from '@mobazha/core';
+import { rememberWorkspaceImportRun } from '@/components/admin/workspace/WorkspaceImportRunBanner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
@@ -53,6 +54,7 @@ export default function ProductImportHubPage() {
     setUploading(true);
     try {
       const result = await ingestProductImport(files);
+      rememberWorkspaceImportRun(result.skillRun.id);
       router.push(`/admin/products/import/${result.skillRun.id}`);
     } catch (err) {
       toast({

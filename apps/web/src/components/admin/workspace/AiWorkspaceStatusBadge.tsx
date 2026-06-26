@@ -67,9 +67,10 @@ export function AiWorkspaceStatusBadge({
       variant="outline"
       className={cn(statusBadgeClass, className)}
       data-testid="ai-workspace-status-platform"
+      title={t('admin.workspace.badgePlatform')}
     >
       <Cloud className="w-3 h-3" />
-      {t('admin.workspace.badgePlatform')}
+      {t('admin.workspace.badgeReady')}
     </Badge>
   );
 }

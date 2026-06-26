@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   useI18n,
   useUserStore,
@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
+import { isAdminNavItemActive } from './adminNavActive';
 
 interface NavItem {
   id: string;
@@ -163,6 +164,8 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromSettings = searchParams.get('from') === 'settings';
   const { t } = useI18n();
   const { profile } = useUserStore();
   const standaloneMode = useStorefrontMode();
@@ -176,22 +179,15 @@ export function AdminSidebar({ collapsed = false, onToggleCollapse }: AdminSideb
     aiWorkspaceEnabled
   );
 
-  const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin';
-    if (href === '/admin/ai/workspace') {
-      return pathname === href || pathname.startsWith('/admin/ai/');
-    }
-    // /admin/storefront must not match /admin/storefronts — enforce exact
-    // segment boundary rather than bare prefix.
-    return pathname === href || pathname.startsWith(href + '/');
-  };
+  const isActive = (item: NavItem) =>
+    isAdminNavItemActive(item.href, pathname, item.id, fromSettings);
 
   const storePeerID = profile?.peerID;
   const storeUrl = storePeerID ? (standaloneMode ? '/' : `/store/${storePeerID}`) : '/';
 
   const renderNavLink = (item: NavItem) => {
     const Icon = item.icon;
-    const active = isActive(item.href);
+    const active = isActive(item);
     return (
       <Link
         key={item.id}

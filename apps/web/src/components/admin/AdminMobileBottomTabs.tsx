@@ -2,10 +2,11 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useI18n, useFeature } from '@mobazha/core';
 import { LayoutDashboard, Package, ShoppingCart, Settings, WandSparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isAdminNavItemActive } from './adminNavActive';
 
 interface TabItem {
   id: string;
@@ -30,6 +31,8 @@ const aiWorkspaceTab: TabItem = {
 
 export function AdminMobileBottomTabs() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fromSettings = searchParams.get('from') === 'settings';
   const { t } = useI18n();
   const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
 
@@ -41,13 +44,7 @@ export function AdminMobileBottomTabs() {
     return items;
   }, [aiWorkspaceEnabled]);
 
-  const isActive = (tab: TabItem) => {
-    if (tab.href === '/admin') return pathname === '/admin';
-    if (tab.id === 'ai-workspace') {
-      return pathname === tab.href || pathname.startsWith('/admin/ai/');
-    }
-    return pathname === tab.href || pathname.startsWith(tab.href + '/');
-  };
+  const isActive = (tab: TabItem) => isAdminNavItemActive(tab.href, pathname, tab.id, fromSettings);
 
   return (
     <nav

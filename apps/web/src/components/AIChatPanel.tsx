@@ -20,6 +20,8 @@ import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
 import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 import { AttachedArtifactChips } from '@/components/ai/AttachedArtifactChips';
 import { AttachedSkillRunChips } from '@/components/ai/AttachedSkillRunChips';
+import { WorkspaceChatContextBar } from '@/components/admin/workspace/WorkspaceChatContextBar';
+import { WorkspaceUnifiedComposer } from '@/components/admin/workspace/WorkspaceUnifiedComposer';
 import { SourceMaterialComposer } from '@/components/ai/SourceMaterialComposer';
 
 const ReactMarkdown = lazy(() => import('react-markdown'));
@@ -194,6 +196,10 @@ export interface AIChatPanelProps {
   aiStatusLoading?: boolean;
   /** minimal: muted empty state only (workspace banner owns CTA). default: weak configure link. */
   setupPromptVariant?: 'default' | 'minimal';
+  workspaceMode?: boolean;
+  chatContextLabel?: string | null;
+  onChatContextDismiss?: () => void;
+  onImportComplete?: (runId: string) => void;
 }
 
 export function AIChatPanel({
@@ -203,6 +209,10 @@ export function AIChatPanel({
   aiAvailable: aiAvailableProp,
   aiStatusLoading = false,
   setupPromptVariant = 'default',
+  workspaceMode = false,
+  chatContextLabel,
+  onChatContextDismiss,
+  onImportComplete,
 }: AIChatPanelProps) {
   const {
     isOpen,
@@ -224,6 +234,7 @@ export function AIChatPanel({
   const [showHistory, setShowHistory] = useState(false);
   const [internalAiAvailable, setInternalAiAvailable] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastSeedRef = useRef<string | null>(null);
 
@@ -255,15 +266,32 @@ export function AIChatPanel({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, chatContextLabel]);
+
+  const scrollChatIntoView = useCallback(() => {
+    messagesScrollRef.current?.scrollTo({
+      top: messagesScrollRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
+    if (workspaceMode && typeof document !== 'undefined') {
+      document
+        .getElementById('workspace-chat-panel')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [workspaceMode]);
 
   useEffect(() => {
     const prompt = seedPrompt?.trim();
-    if (!prompt || isStreaming || prompt === lastSeedRef.current || !aiAvailable) return;
+    if (!prompt) {
+      lastSeedRef.current = null;
+      return;
+    }
+    if (isStreaming || prompt === lastSeedRef.current || !aiAvailable) return;
     lastSeedRef.current = prompt;
     sendMessage(prompt);
     onSeedPromptConsumed?.();
-  }, [seedPrompt, isStreaming, sendMessage, onSeedPromptConsumed, aiAvailable]);
+    requestAnimationFrame(() => scrollChatIntoView());
+  }, [seedPrompt, isStreaming, sendMessage, onSeedPromptConsumed, aiAvailable, scrollChatIntoView]);
 
   const handleSend = useCallback(() => {
     const text = input.trim();
@@ -271,6 +299,14 @@ export function AIChatPanel({
     setInput('');
     sendMessage(text);
   }, [input, isStreaming, sendMessage, aiAvailable]);
+
+  const handleWorkspaceSend = useCallback(
+    (text: string) => {
+      if (!text.trim() || isStreaming || !aiAvailable) return;
+      sendMessage(text);
+    },
+    [aiAvailable, isStreaming, sendMessage]
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -304,7 +340,9 @@ export function AIChatPanel({
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />
-          <span className="font-medium text-sm">{t('ai.title')}</span>
+          <span className="font-medium text-sm">
+            {workspaceMode ? t('admin.workspace.chatAssistantTitle') : t('ai.title')}
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -333,8 +371,15 @@ export function AIChatPanel({
         </div>
       )}
 
+      {workspaceMode && chatContextLabel && (
+        <WorkspaceChatContextBar
+          label={chatContextLabel}
+          onDismiss={() => onChatContextDismiss?.()}
+        />
+      )}
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+      <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         {!aiChecking && !aiStatusLoading && !aiAvailable && messages.length === 0 && (
           <div
             className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
@@ -353,8 +398,11 @@ export function AIChatPanel({
           </div>
         )}
         {messages.length === 0 && aiAvailable && (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Bot className="w-10 h-10 mb-3 opacity-50" />
+          <div
+            className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
+            data-testid={workspaceMode ? 'workspace-chat-empty' : undefined}
+          >
+            <Bot className="w-10 h-10 mb-3 opacity-40" />
             <p className="text-sm">{t('ai.welcomeMessage')}</p>
             <p className="text-xs mt-1">{t('ai.welcomeHint')}</p>
           </div>
@@ -391,44 +439,58 @@ export function AIChatPanel({
 
       {/* Input */}
       <div className="border-t border-border px-3 py-2">
-        {!isInline && aiAvailable && <SourceMaterialComposer variant="compact" />}
         <AttachedArtifactChips testIdPrefix="chat-attached-artifact" />
         <AttachedSkillRunChips testIdPrefix="chat-attached-skill-run" />
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              !aiAvailable && !aiChecking && !aiStatusLoading
-                ? t('admin.workspace.chatInputDisabled')
-                : t('ai.inputPlaceholder')
-            }
-            aria-label={t('ai.inputPlaceholder')}
-            rows={1}
-            className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24 disabled:opacity-60"
-            disabled={isStreaming || aiChecking || aiStatusLoading || !aiAvailable}
+        {workspaceMode && aiAvailable ? (
+          <WorkspaceUnifiedComposer
+            disabled={aiChecking || aiStatusLoading || !aiAvailable}
+            isStreaming={isStreaming}
+            onSendMessage={handleWorkspaceSend}
+            onCancelStream={cancelStream}
+            onImportComplete={onImportComplete}
           />
-          {isStreaming ? (
-            <button
-              onClick={cancelStream}
-              className="p-2 rounded-lg bg-muted text-foreground border border-border hover:bg-muted/80 transition-colors"
-              aria-label={t('ai.stopGenerating')}
-            >
-              <Square className="w-4 h-4 fill-current" />
-            </button>
-          ) : (
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || !aiAvailable || aiChecking || aiStatusLoading}
-              className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
-              aria-label={t('ai.send')}
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        ) : (
+          <>
+            {aiAvailable && !isInline && (
+              <SourceMaterialComposer variant="compact" onImportComplete={onImportComplete} />
+            )}
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  !aiAvailable && !aiChecking && !aiStatusLoading
+                    ? t('admin.workspace.chatInputDisabled')
+                    : t('ai.inputPlaceholder')
+                }
+                aria-label={t('ai.inputPlaceholder')}
+                rows={1}
+                className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24 disabled:opacity-60"
+                disabled={isStreaming || aiChecking || aiStatusLoading || !aiAvailable}
+              />
+              {isStreaming ? (
+                <button
+                  onClick={cancelStream}
+                  className="p-2 rounded-lg bg-muted text-foreground border border-border hover:bg-muted/80 transition-colors"
+                  aria-label={t('ai.stopGenerating')}
+                >
+                  <Square className="w-4 h-4 fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || !aiAvailable || aiChecking || aiStatusLoading}
+                  className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
+                  aria-label={t('ai.send')}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

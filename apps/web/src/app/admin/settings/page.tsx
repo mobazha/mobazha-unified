@@ -261,7 +261,7 @@ export default function AdminSettingsPage() {
                 icon={Sparkles}
                 title={t('admin.settings.aiModelsCard')}
                 description={t('admin.settings.aiModelsCardDesc')}
-                href="/admin/ai/models"
+                href="/admin/ai/models?from=settings"
               />
             )}
             <SettingsCard
