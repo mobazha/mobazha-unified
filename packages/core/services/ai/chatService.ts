@@ -76,6 +76,7 @@ export interface ChatContext {
   selectedOrderId?: string;
   locale?: string;
   artifactIds?: string[];
+  skillRunIds?: string[];
 }
 
 export async function sendChatMessage(

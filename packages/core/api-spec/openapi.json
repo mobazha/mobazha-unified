@@ -10852,6 +10852,116 @@
         ],
         "summary": "Get an agent artifact",
         "tags": ["ai"]
+      },
+      "patch": {
+        "operationId": "agent-artifact-patch",
+        "parameters": [
+          {
+            "description": "Agent artifact ID.",
+            "in": "path",
+            "name": "artifactId",
+            "required": true,
+            "schema": {
+              "description": "Agent artifact ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Update an agent artifact",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/artifacts/{artifactId}/approval": {
+      "post": {
+        "operationId": "agent-artifact-approval-post",
+        "parameters": [
+          {
+            "description": "Agent artifact ID.",
+            "in": "path",
+            "name": "artifactId",
+            "required": true,
+            "schema": {
+              "description": "Agent artifact ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Create an approval from an agent proposal artifact",
+        "tags": ["ai"]
       }
     },
     "/v1/agent/chat": {
@@ -11050,6 +11160,646 @@
         "tags": ["ai"]
       }
     },
+    "/v1/agent/memories": {
+      "get": {
+        "operationId": "agent-memories-get",
+        "parameters": [
+          {
+            "description": "Comma-separated memory scopes: user,store,tenant,thread,skill.",
+            "explode": false,
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "description": "Comma-separated memory scopes: user,store,tenant,thread,skill.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional memory subject filter.",
+            "explode": false,
+            "in": "query",
+            "name": "subject",
+            "schema": {
+              "description": "Optional memory subject filter.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional full-text memory query.",
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Optional full-text memory query.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of memories to return.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "description": "Maximum number of memories to return.",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Optional store scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "storeId",
+            "schema": {
+              "description": "Optional store scope identifier.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional thread scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "threadId",
+            "schema": {
+              "description": "Optional thread scope identifier.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional skill scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "skillId",
+            "schema": {
+              "description": "Optional skill scope identifier.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          }
+        ],
+        "summary": "List agent memories",
+        "tags": ["agent"]
+      },
+      "post": {
+        "operationId": "agent-memories-post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          }
+        ],
+        "summary": "Save an agent memory",
+        "tags": ["agent"]
+      }
+    },
+    "/v1/agent/memories/{memoryId}": {
+      "delete": {
+        "operationId": "agent-memory-delete",
+        "parameters": [
+          {
+            "description": "Agent memory ID.",
+            "in": "path",
+            "name": "memoryId",
+            "required": true,
+            "schema": {
+              "description": "Agent memory ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional store scope identifier. When set, it must match the current store.",
+            "explode": false,
+            "in": "query",
+            "name": "storeId",
+            "schema": {
+              "description": "Optional store scope identifier. When set, it must match the current store.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional thread scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "threadId",
+            "schema": {
+              "description": "Optional thread scope identifier.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional skill scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "skillId",
+            "schema": {
+              "description": "Optional skill scope identifier.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          }
+        ],
+        "summary": "Delete an agent memory",
+        "tags": ["agent"]
+      },
+      "patch": {
+        "operationId": "agent-memory-patch",
+        "parameters": [
+          {
+            "description": "Agent memory ID.",
+            "in": "path",
+            "name": "memoryId",
+            "required": true,
+            "schema": {
+              "description": "Agent memory ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional store scope identifier. When set, it must match the current store.",
+            "explode": false,
+            "in": "query",
+            "name": "storeId",
+            "schema": {
+              "description": "Optional store scope identifier. When set, it must match the current store.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional thread scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "threadId",
+            "schema": {
+              "description": "Optional thread scope identifier.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional skill scope identifier.",
+            "explode": false,
+            "in": "query",
+            "name": "skillId",
+            "schema": {
+              "description": "Optional skill scope identifier.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          }
+        ],
+        "summary": "Update an agent memory",
+        "tags": ["agent"]
+      }
+    },
+    "/v1/agent/product-import/ingest": {
+      "post": {
+        "operationId": "agent-product-import-ingest-post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Content-Type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "contentMediaType": "application/octet-stream",
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Ingest product import source material",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/product-import/runs/{runId}/approval-applications": {
+      "post": {
+        "operationId": "agent-product-import-run-approval-applications-post",
+        "parameters": [
+          {
+            "description": "Agent skill run ID.",
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "description": "Agent skill run ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_AgentProductImportApprovalApplyBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_AgentProductImportApprovalActionBatchResult",
+                  "description": "Batch approval decision or apply result."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Apply approved product import approval requests",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/product-import/runs/{runId}/approval-decisions": {
+      "post": {
+        "operationId": "agent-product-import-run-approval-decisions-post",
+        "parameters": [
+          {
+            "description": "Agent skill run ID.",
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "description": "Agent skill run ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_AgentProductImportApprovalActionBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_AgentProductImportApprovalActionBatchResult",
+                  "description": "Batch approval decision or apply result."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Approve or reject product import approval requests",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/product-import/runs/{runId}/approvals": {
+      "post": {
+        "operationId": "agent-product-import-run-approvals-post",
+        "parameters": [
+          {
+            "description": "Agent skill run ID.",
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "description": "Agent skill run ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Node_AgentProductImportApprovalBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Create approval requests for product import proposals",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/product-import/runs/{runId}/workbench": {
+      "get": {
+        "operationId": "agent-product-import-workbench-get",
+        "parameters": [
+          {
+            "description": "Agent skill run ID.",
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "description": "Agent skill run ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum workbench proposal rows to return.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "description": "Maximum workbench proposal rows to return.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workbench proposal row offset.",
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "description": "Workbench proposal row offset.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional row filter. summary counts always reflect the full run; page.totalRows reflects filtered rows.",
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "description": "Optional row filter. summary counts always reflect the full run; page.totalRows reflects filtered rows.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_AgentProductImportWorkbench",
+                  "description": "Product import workbench for a skill run."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get product import workbench data",
+        "tags": ["ai"]
+      }
+    },
     "/v1/agent/skill-runs": {
       "get": {
         "operationId": "agent-skill-runs-get",
@@ -11219,6 +11969,64 @@
           }
         ],
         "summary": "Get an agent skill run",
+        "tags": ["ai"]
+      },
+      "patch": {
+        "operationId": "agent-skill-run-patch",
+        "parameters": [
+          {
+            "description": "Agent skill run ID.",
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "description": "Agent skill run ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Update an agent skill run",
         "tags": ["ai"]
       }
     },
@@ -29101,6 +29909,481 @@
         "required": ["name", "description"],
         "type": "object"
       },
+      "Node_AgentProductImportApprovalActionBatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "approvalIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "decision": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalActionBatchResult": {
+        "additionalProperties": false,
+        "properties": {
+          "approvals": {
+            "items": {
+              "$ref": "#/components/schemas/Node_Approval"
+            },
+            "type": ["array", "null"]
+          },
+          "failed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Per-approval batch action outcomes; correlate entries by approvalId.",
+            "items": {
+              "$ref": "#/components/schemas/Node_AgentProductImportApprovalActionItem"
+            },
+            "type": ["array", "null"]
+          },
+          "page": {
+            "$ref": "#/components/schemas/Node_AgentProductImportApprovalActionPage"
+          },
+          "processed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skillRun": {
+            "$ref": "#/components/schemas/Node_SkillRun"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/Node_AgentProductImportApprovalBatchSkip"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "required": ["skillRun", "approvals", "processed", "page"],
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalActionItem": {
+        "additionalProperties": false,
+        "properties": {
+          "approvalId": {
+            "description": "Approval ID when known.",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Human-readable detail when skipped or failed.",
+            "type": "string"
+          },
+          "result": {
+            "description": "Action outcome: processed, skipped, or failed.",
+            "type": "string"
+          },
+          "status": {
+            "description": "Approval status after the action, when applicable.",
+            "type": "string"
+          }
+        },
+        "required": ["result"],
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalActionPage": {
+        "additionalProperties": false,
+        "properties": {
+          "selected": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalApprovals": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["totalApprovals", "selected"],
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalApplyBatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "approvalIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalBatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "proposalArtifactIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalBatchSkip": {
+        "additionalProperties": false,
+        "properties": {
+          "approvalId": {
+            "type": "string"
+          },
+          "proposalArtifactId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": ["reason"],
+        "type": "object"
+      },
+      "Node_AgentProductImportApprovalView": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "requestHash": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "status", "action", "requestHash"],
+        "type": "object"
+      },
+      "Node_AgentProductImportWorkbench": {
+        "additionalProperties": false,
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "page": {
+            "$ref": "#/components/schemas/Node_AgentProductImportWorkbenchPage"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/Node_AgentProductImportWorkbenchRow"
+            },
+            "type": ["array", "null"]
+          },
+          "skillRun": {
+            "$ref": "#/components/schemas/Node_SkillRun"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Node_AgentProductImportWorkbenchSource"
+            },
+            "type": ["array", "null"]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Node_AgentProductImportWorkbenchSummary"
+          },
+          "validationReports": {
+            "items": {
+              "$ref": "#/components/schemas/Node_AgentProductImportWorkbenchValidation"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "required": ["skillRun", "sources", "rows", "counts", "summary", "page"],
+        "type": "object"
+      },
+      "Node_AgentProductImportWorkbenchPage": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "description": "Requested row page size (0 means no limit).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Requested row offset into the filtered result set.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "returnedRows": {
+            "description": "Proposal rows returned in this response page.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Active row status filter, if any.",
+            "type": "string"
+          },
+          "totalRows": {
+            "description": "Proposal rows after status filter, before limit/offset pagination.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": ["offset", "totalRows", "returnedRows"],
+        "type": "object"
+      },
+      "Node_AgentProductImportWorkbenchRow": {
+        "additionalProperties": false,
+        "properties": {
+          "approval": {
+            "$ref": "#/components/schemas/Node_AgentProductImportApprovalView"
+          },
+          "candidateArtifactId": {
+            "type": "string"
+          },
+          "draft": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "fieldSources": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "proposalArtifactId": {
+            "type": "string"
+          },
+          "rowNumber": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sourceArtifactId": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "validation": {
+            "items": {},
+            "type": ["array", "null"]
+          }
+        },
+        "required": ["proposalArtifactId", "status", "updatedAt"],
+        "type": "object"
+      },
+      "Node_AgentProductImportWorkbenchSource": {
+        "additionalProperties": false,
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": ["artifactId", "status"],
+        "type": "object"
+      },
+      "Node_AgentProductImportWorkbenchSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "actionableCount": {
+            "description": "Rows needing merchant action (full run; ignores status filter).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "appliedCount": {
+            "description": "Proposal rows with artifact status applied (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "applyFailedCount": {
+            "description": "Rows with apply_failed approvals (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "applyingCount": {
+            "description": "Rows with approvals currently applying (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "approvedCount": {
+            "description": "Rows with approved but not yet applied approvals (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "noApprovalCount": {
+            "description": "Proposal rows without a linked approval (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pendingApprovalCount": {
+            "description": "Rows with pending approvals (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "rejectedCount": {
+            "description": "Rows with rejected approvals (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "reviewableCount": {
+            "description": "Proposal rows still in review (full run).",
+            "format": "int64",
+            "type": "integer"
+          },
+          "skippedCount": {
+            "description": "Proposal rows marked skipped (full run).",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "noApprovalCount",
+          "pendingApprovalCount",
+          "approvedCount",
+          "applyingCount",
+          "appliedCount",
+          "rejectedCount",
+          "applyFailedCount",
+          "reviewableCount",
+          "skippedCount",
+          "actionableCount"
+        ],
+        "type": "object"
+      },
+      "Node_AgentProductImportWorkbenchValidation": {
+        "additionalProperties": false,
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["artifactId", "status"],
+        "type": "object"
+      },
+      "Node_Approval": {
+        "additionalProperties": false,
+        "properties": {
+          "acting_persona": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actor_id": {
+            "type": "string"
+          },
+          "applied_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "applied_by": {
+            "type": "string"
+          },
+          "apply_error": {
+            "type": "string"
+          },
+          "apply_result": {
+            "type": "string"
+          },
+          "artifact_ids": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decision_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decision_by": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string"
+          },
+          "request_hash": {
+            "type": "string"
+          },
+          "risk": {
+            "type": "string"
+          },
+          "skill_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "store_id": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tenant_id": {
+            "type": "string"
+          },
+          "thread_id": {
+            "type": "string"
+          },
+          "tool_call_id": {
+            "type": "string"
+          },
+          "turn_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "risk",
+          "action",
+          "summary",
+          "request_hash",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "Node_AssetUpdateInput": {
         "additionalProperties": false,
         "properties": {
@@ -29577,6 +30860,61 @@
           }
         },
         "required": ["id", "status", "maskedKey", "licenseType", "maxActivations"],
+        "type": "object"
+      },
+      "Node_SkillRun": {
+        "additionalProperties": false,
+        "properties": {
+          "acting_persona": {
+            "type": "string"
+          },
+          "actor_id": {
+            "type": "string"
+          },
+          "completed_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "input": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          },
+          "skill_id": {
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "store_id": {
+            "type": "string"
+          },
+          "tenant_id": {
+            "type": "string"
+          },
+          "thread_id": {
+            "type": "string"
+          },
+          "turn_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["id", "tenant_id", "skill_id", "status", "started_at", "updated_at"],
         "type": "object"
       },
       "Search_AuthorizationItem": {

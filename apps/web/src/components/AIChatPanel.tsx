@@ -19,6 +19,7 @@ import {
 import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
 import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 import { AttachedArtifactChips } from '@/components/ai/AttachedArtifactChips';
+import { AttachedSkillRunChips } from '@/components/ai/AttachedSkillRunChips';
 import { SourceMaterialComposer } from '@/components/ai/SourceMaterialComposer';
 
 const ReactMarkdown = lazy(() => import('react-markdown'));
@@ -392,6 +393,7 @@ export function AIChatPanel({
       <div className="border-t border-border px-3 py-2">
         {!isInline && aiAvailable && <SourceMaterialComposer variant="compact" />}
         <AttachedArtifactChips testIdPrefix="chat-attached-artifact" />
+        <AttachedSkillRunChips testIdPrefix="chat-attached-skill-run" />
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

@@ -5573,6 +5573,7 @@ export const en: TranslationResource = {
       sourceMaterialRemove: 'Remove attached material',
       sourceMaterialUntitled: 'Pasted material',
       sourceMaterialMaxReached: 'You can attach up to 10 materials per message.',
+      skillRunRemove: 'Remove attached import run',
     },
     ai: {
       models: {
@@ -5769,6 +5770,9 @@ export const en: TranslationResource = {
         statusApplied: 'Listing created',
         statusPendingApproval: 'Awaiting approval',
         statusNeedsReview: 'Needs review',
+        continueWithAi: 'Continue with AI',
+        continueWithAiLabel: 'Import run ({{count}} rows)',
+        skillRunMaxReached: 'You can attach up to 3 import runs per message.',
       },
     },
     gumroadImport: {

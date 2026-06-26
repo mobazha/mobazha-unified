@@ -57,4 +57,14 @@ export interface AttachedChatArtifact {
 /** Max artifacts included on a single chat message (matches node agentChatMaxContextArtifacts). */
 export const MAX_ATTACHED_CHAT_ARTIFACTS = 10;
 
+export interface AttachedChatSkillRun {
+  id: string;
+  label: string;
+  skillId?: string;
+}
+
+/** Max skill runs included on a single chat message (matches node agentChatMaxContextSkillRuns). */
+export const MAX_ATTACHED_CHAT_SKILL_RUNS = 3;
+
 export type AttachArtifactResult = 'attached' | 'duplicate' | 'max_reached';
+export type AttachSkillRunResult = 'attached' | 'duplicate' | 'max_reached';

@@ -5048,6 +5048,7 @@ export const zh: PartialTranslationResource = {
       sourceMaterialRemove: '移除已附加素材',
       sourceMaterialUntitled: '粘贴素材',
       sourceMaterialMaxReached: '每条消息最多附加 10 条素材。',
+      skillRunRemove: '移除已附加导入任务',
     },
     ai: {
       models: {
@@ -5238,6 +5239,9 @@ export const zh: PartialTranslationResource = {
         statusApplied: '商品已创建',
         statusPendingApproval: '待审批',
         statusNeedsReview: '待审阅',
+        continueWithAi: '继续用 AI 处理',
+        continueWithAiLabel: '导入任务（{{count}} 行）',
+        skillRunMaxReached: '每条消息最多附加 3 个导入任务。',
       },
     },
     gumroadImport: {
