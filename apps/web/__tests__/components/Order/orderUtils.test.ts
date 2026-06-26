@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatOrderDate } from '@/components/Order/utils';
+import { formatOrderDate, formatOrderDateTime } from '@/components/Order/utils';
 
 describe('formatOrderDate', () => {
   it('uses zh-CN formatting when locale is zh', () => {
@@ -19,5 +19,18 @@ describe('formatOrderDate', () => {
     });
 
     expect(formatted).toMatch(/May 30, 2026/);
+  });
+});
+
+describe('formatOrderDateTime', () => {
+  it('includes seconds by default', () => {
+    const formatted = formatOrderDateTime('2026-05-30T12:54:12.000Z', { locale: 'en' });
+    expect(formatted).toMatch(/May 30, 2026/);
+    expect(formatted).toMatch(/\d{1,2}:\d{2}:\d{2}/);
+  });
+
+  it('returns null for empty or invalid values', () => {
+    expect(formatOrderDateTime(undefined, { locale: 'en' })).toBeNull();
+    expect(formatOrderDateTime('not-a-date', { locale: 'en' })).toBeNull();
   });
 });

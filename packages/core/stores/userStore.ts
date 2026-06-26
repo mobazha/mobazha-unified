@@ -26,6 +26,7 @@ import {
   type LoginCredentials,
 } from '../services/auth';
 import { connectWebSocket, disconnectWebSocket, setWebSocketBaseUrl } from '../services/websocket';
+import { invalidateFeatureFlags } from '../hooks/useFeatureFlags';
 import {
   getBuyerWebSocketUrl,
   getSellerWebSocketUrl,
@@ -667,6 +668,7 @@ export const useUserStore = create<UserState>()(
           setWebSocketBaseUrl(null);
           setStandaloneBuyerAuth(false);
           clearProfileCache();
+          invalidateFeatureFlags();
           clearAuth();
 
           if (redirectTo) {

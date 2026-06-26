@@ -1,8 +1,12 @@
 import type { Connection } from '@solana/web3.js';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  deriveMockBurnSignature,
+  deriveMockBurnSignatureFromTransaction,
+  deriveMockBurnTransaction,
   isMockCollectibleBurnTransaction,
   MIN_SOL_LAMPORTS_FOR_BURN_FEE,
+  MOCK_BURN_SIG_PREFIX,
   MOCK_BURN_TX_PREFIX,
   signCollectibleBurnTransaction,
 } from '../../collectibles/burnTx';
@@ -30,13 +34,15 @@ describe('signCollectibleBurnTransaction', () => {
     message: 'mock',
   };
 
-  it('returns mock payload without wallet provider', async () => {
+  it('returns mock burn signature without wallet provider', async () => {
     const signature = await signCollectibleBurnTransaction({
       burnTx: mockBurnTx,
       walletProvider: null,
       walletAddress: 'Holder1111111111111111111111111111111111',
     });
-    expect(signature).toBe(mockBurnTx.transaction);
+    expect(signature).toMatch(new RegExp(`^${MOCK_BURN_SIG_PREFIX}`));
+    expect(signature).not.toBe(mockBurnTx.transaction);
+    expect(signature).toBe(await deriveMockBurnSignatureFromTransaction(mockBurnTx.transaction));
   });
 
   it('requires wallet provider for non-mock payloads', async () => {
@@ -125,6 +131,18 @@ describe('signCollectibleBurnTransaction', () => {
     ).rejects.toThrow(/simulation failed/i);
 
     expect(walletProvider.signAndSendTransaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('deriveMockBurnSignature', () => {
+  it('matches hosting mock burn tx and signature binding', async () => {
+    const mint = 'mint-abc';
+    const holder = 'Holder1111111111111111111111111111111111';
+    const tx = await deriveMockBurnTransaction(mint, holder);
+    expect(tx.startsWith(MOCK_BURN_TX_PREFIX)).toBe(true);
+    const sig = await deriveMockBurnSignature(mint, holder);
+    expect(sig.startsWith(MOCK_BURN_SIG_PREFIX)).toBe(true);
+    expect(sig).not.toBe(tx);
   });
 });
 

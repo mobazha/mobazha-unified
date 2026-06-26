@@ -7,13 +7,14 @@ import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useCollectibleNFTs, useFeature, useI18n, truncateAddress } from '@mobazha/core';
+import { useCollectibleNFTs, useFeatureFlags, useI18n, truncateAddress } from '@mobazha/core';
 import { RefreshCw, Shield } from 'lucide-react';
 import { CollectiblesFeatureGuard } from './CollectiblesFeatureGuard';
 
 export default function CollectiblesPage() {
   const { t } = useI18n();
-  const enabled = useFeature('collectiblesHubEnabled');
+  const { isEnabled, loading: flagsLoading } = useFeatureFlags();
+  const enabled = isEnabled('collectiblesHubEnabled') && !flagsLoading;
   const { items, loading, error, refresh } = useCollectibleNFTs({ enabled });
 
   return (
@@ -23,7 +24,7 @@ export default function CollectiblesPage() {
 
       <main className="py-4 sm:py-8">
         <Container size="lg">
-          <CollectiblesFeatureGuard enabled={enabled}>
+          <CollectiblesFeatureGuard>
             <div className="mb-6 text-center sm:mb-8">
               <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
                 {t('collectibles.title')}
@@ -40,7 +41,10 @@ export default function CollectiblesPage() {
               </div>
             </Card>
 
-            <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/collectibles/redemptions">{t('collectibles.redemptions.title')}</Link>
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -69,26 +73,43 @@ export default function CollectiblesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map(nft => (
-                  <Card key={nft.nftMint} className="p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {nft.tokenStandard || t('collectibles.tokenizedCard')}
-                    </p>
-                    <p className="mt-1 font-mono text-sm text-foreground">
-                      {truncateAddress(nft.nftMint)}
-                    </p>
-                    {nft.hubSlotID ? (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {t('collectibles.hubSlot')}: {nft.hubSlotID}
+                {items.map(nft => {
+                  const mint = nft.nftMint?.trim();
+                  const slot = nft.hubSlot;
+                  const cardTitle = slot?.certNumber || t('collectibles.tokenizedCard');
+                  const cardSubtitle = slot?.grade || nft.tokenStandard || nft.chain || '';
+                  return (
+                    <Card key={mint || nft.hubSlotID} className="p-4">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {cardTitle}
                       </p>
-                    ) : null}
-                    <Button asChild className="mt-4 w-full" size="sm">
-                      <Link href={`/collectibles/${encodeURIComponent(nft.nftMint)}`}>
-                        {t('collectibles.viewDetails')}
-                      </Link>
-                    </Button>
-                  </Card>
-                ))}
+                      {cardSubtitle ? (
+                        <p className="mt-1 text-sm font-medium text-foreground">{cardSubtitle}</p>
+                      ) : null}
+                      {mint ? (
+                        <p className="mt-1 font-mono text-sm text-muted-foreground">
+                          {truncateAddress(mint)}
+                        </p>
+                      ) : null}
+                      {nft.hubSlotID ? (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {t('collectibles.hubSlot')}: {nft.hubSlotID}
+                        </p>
+                      ) : null}
+                      {mint ? (
+                        <Button asChild className="mt-4 w-full" size="sm">
+                          <Link href={`/collectibles/${encodeURIComponent(mint)}`}>
+                            {t('collectibles.viewDetails')}
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button className="mt-4 w-full" size="sm" disabled>
+                          {t('collectibles.viewDetails')}
+                        </Button>
+                      )}
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </CollectiblesFeatureGuard>
