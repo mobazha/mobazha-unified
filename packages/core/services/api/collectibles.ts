@@ -1,6 +1,6 @@
 import { HOSTING_API } from '../../config/apiPaths';
 import { ApiError } from './client';
-import { hostingGet, hostingPost } from './helpers';
+import { hostingGet, hostingPost, hostingPut } from './helpers';
 import type {
   CollectibleBurnTx,
   CollectibleHubSlot,
@@ -10,6 +10,11 @@ import type {
   CollectiblesPagedResult,
 } from '../../collectibles/types';
 
+interface CollectibleNFTProjection {
+  nft?: CollectibleNFT;
+  slot?: CollectibleHubSlot;
+}
+
 function buildQuery(params: Record<string, string | number | undefined>): string {
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -18,6 +23,27 @@ function buildQuery(params: Record<string, string | number | undefined>): string
   }
   const serialized = qs.toString();
   return serialized ? `?${serialized}` : '';
+}
+
+function isCollectibleNFTProjection(value: unknown): value is CollectibleNFTProjection {
+  const nft = (value as CollectibleNFTProjection | null)?.nft;
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    'nft' in value &&
+    nft !== null &&
+    typeof nft === 'object'
+  );
+}
+
+function normalizeCollectibleNFT(value: CollectibleNFT | CollectibleNFTProjection): CollectibleNFT {
+  if (isCollectibleNFTProjection(value) && value.nft) {
+    return {
+      ...value.nft,
+      hubSlot: value.slot,
+    };
+  }
+  return value as CollectibleNFT;
 }
 
 export async function listCollectibleHubSlots(params?: {
@@ -47,13 +73,20 @@ export async function listCollectibleNFTs(params?: {
     page: params?.page ?? 1,
     pageSize: params?.pageSize ?? 20,
   });
-  return hostingGet<CollectiblesPagedResult<CollectibleNFT>>(
-    `${HOSTING_API.COLLECTIBLES_NFTS}${query}`
-  );
+  const result = await hostingGet<
+    CollectiblesPagedResult<CollectibleNFT | CollectibleNFTProjection>
+  >(`${HOSTING_API.COLLECTIBLES_NFTS}${query}`);
+  return {
+    ...result,
+    items: result.items.map(normalizeCollectibleNFT),
+  };
 }
 
 export async function getCollectibleNFT(mint: string): Promise<CollectibleNFT> {
-  return hostingGet<CollectibleNFT>(HOSTING_API.COLLECTIBLES_NFT(mint));
+  const result = await hostingGet<CollectibleNFT | CollectibleNFTProjection>(
+    HOSTING_API.COLLECTIBLES_NFT(mint)
+  );
+  return normalizeCollectibleNFT(result);
 }
 
 export async function bindCollectibleWallet(body: {
@@ -81,6 +114,34 @@ export async function createCollectibleRedemption(body: {
 
 export async function getCollectibleRedemption(id: string): Promise<CollectibleRedemption> {
   return hostingGet<CollectibleRedemption>(HOSTING_API.COLLECTIBLES_REDEMPTION(id));
+}
+
+export async function listCollectibleRedemptions(params?: {
+  page?: number;
+  pageSize?: number;
+  nftMint?: string;
+  status?: string;
+}): Promise<CollectiblesPagedResult<CollectibleRedemption>> {
+  const query = buildQuery({
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 20,
+    nftMint: params?.nftMint,
+    status: params?.status,
+  });
+  return hostingGet<CollectiblesPagedResult<CollectibleRedemption>>(
+    `${HOSTING_API.COLLECTIBLES_REDEMPTIONS}${query}`
+  );
+}
+
+export async function shipCollectibleRedemption(
+  id: string,
+  body: { trackingNo: string }
+): Promise<CollectibleRedemption> {
+  return hostingPut<CollectibleRedemption>(HOSTING_API.COLLECTIBLES_REDEMPTION_SHIP(id), body);
+}
+
+export async function settleCollectibleRedemption(id: string): Promise<CollectibleRedemption> {
+  return hostingPut<CollectibleRedemption>(HOSTING_API.COLLECTIBLES_REDEMPTION_SETTLE(id));
 }
 
 export async function getCollectiblePrimarySaleByOrder(
@@ -116,6 +177,9 @@ export const collectiblesApi = {
   bindWallet: bindCollectibleWallet,
   buildBurnTx: buildCollectibleBurnTx,
   createRedemption: createCollectibleRedemption,
+  listRedemptions: listCollectibleRedemptions,
   getRedemption: getCollectibleRedemption,
+  shipRedemption: shipCollectibleRedemption,
+  settleRedemption: settleCollectibleRedemption,
   getPrimarySaleByOrder: getCollectiblePrimarySaleByOrder,
 };

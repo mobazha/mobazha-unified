@@ -12,13 +12,14 @@ import {
   isCollectibleShipToProtected,
   resolveCollectibleRedemptionPhase,
   useCollectibleRedemption,
-  useFeature,
+  useFeatureFlags,
   useI18n,
   getSolanaExplorerTxUrl,
   getEnvConfig,
   truncateAddress,
   type CollectibleRedemptionPhase,
 } from '@mobazha/core';
+import { formatOrderDateTime } from '@/components/Order/utils';
 import { ArrowLeft, CheckCircle2, Clock, ExternalLink, Package, Truck } from 'lucide-react';
 import { CollectiblesFeatureGuard } from '../../CollectiblesFeatureGuard';
 
@@ -31,31 +32,22 @@ const PHASE_CONFIG: Record<
   settled: { icon: CheckCircle2, color: 'text-success', bgColor: 'bg-success/15' },
 };
 
-function formatDateTime(
-  value: string | undefined,
-  formatDate: (date: Date | string | number, options?: Intl.DateTimeFormatOptions) => string
-): string | null {
-  if (!value?.trim()) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return formatDate(date);
-}
-
 export default function CollectibleRedemptionPage() {
   const params = useParams();
   const idParam = params?.id;
   const redemptionId = Array.isArray(idParam) ? idParam[0] : idParam;
-  const { t, formatDate } = useI18n();
-  const enabled = useFeature('collectiblesHubEnabled');
+  const { t, locale } = useI18n();
+  const { isEnabled, loading: flagsLoading } = useFeatureFlags();
+  const enabled = isEnabled('collectiblesHubEnabled') && !flagsLoading;
   const { redemption, loading, error, refresh } = useCollectibleRedemption(redemptionId, enabled);
 
   const phase = useMemo(() => resolveCollectibleRedemptionPhase(redemption), [redemption]);
   const phaseConfig = PHASE_CONFIG[phase];
   const PhaseIcon = phaseConfig.icon;
 
-  const submittedAt = formatDateTime(redemption?.createdAt, formatDate);
-  const burnAt = formatDateTime(redemption?.burnAt, formatDate);
-  const slaDueAt = formatDateTime(redemption?.slaDueAt, formatDate);
+  const submittedAt = formatOrderDateTime(redemption?.createdAt, { locale });
+  const burnAt = formatOrderDateTime(redemption?.burnAt, { locale });
+  const slaDueAt = formatOrderDateTime(redemption?.slaDueAt, { locale });
   const burnTxExplorerUrl = redemption?.burnTxSignature
     ? getSolanaExplorerTxUrl(redemption.burnTxSignature, getEnvConfig().isTestEnv)
     : '';
@@ -67,7 +59,7 @@ export default function CollectibleRedemptionPage() {
 
       <main className="py-4 sm:py-8">
         <Container size="md">
-          <CollectiblesFeatureGuard enabled={enabled}>
+          <CollectiblesFeatureGuard>
             <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
               <Link href="/collectibles">
                 <ArrowLeft className="mr-2 h-4 w-4" />

@@ -265,3 +265,55 @@ export function useCollectibleRedemption(
 
   return { redemption, loading, error, refresh };
 }
+
+export interface UseCollectibleRedemptionsOptions {
+  page?: number;
+  pageSize?: number;
+  nftMint?: string;
+  status?: string;
+  enabled?: boolean;
+}
+
+export function useCollectibleRedemptions(options: UseCollectibleRedemptionsOptions = {}) {
+  const { page = 1, pageSize = 20, nftMint, status, enabled = true } = options;
+  const [data, setData] = useState<CollectiblesPagedResult<CollectibleRedemption> | null>(null);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!enabled) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await collectiblesApi.listRedemptions({
+        page,
+        pageSize,
+        nftMint: nftMint?.trim() || undefined,
+        status: status?.trim() || undefined,
+      });
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [enabled, nftMint, page, pageSize, status]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { data, items: data?.items ?? [], meta: data?.meta, loading, error, refresh };
+}
+
+/** Lookup a single redemption for the current user by NFT mint (e.g. after burn). */
+export function useCollectibleRedemptionByMint(nftMint: string | undefined, enabled = true) {
+  const { items, loading, error, refresh } = useCollectibleRedemptions({
+    nftMint,
+    page: 1,
+    pageSize: 1,
+    enabled: enabled && !!nftMint?.trim(),
+  });
+  return { redemption: items[0] ?? null, loading, error, refresh };
+}

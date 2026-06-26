@@ -227,6 +227,10 @@ if (!__OUTPOST__) {
     // Collectibles Hub+NFT (P1 · SaaS · collectiblesHubEnabled)
     { path: '/collectibles', element: protectedPage(() => import('./app/collectibles/page')) },
     {
+      path: '/collectibles/redemptions',
+      element: protectedPage(() => import('./app/collectibles/redemptions/page')),
+    },
+    {
       path: '/collectibles/redeem/:id',
       element: protectedPage(() => import('./app/collectibles/redeem/[id]/page')),
     },
@@ -349,6 +353,10 @@ if (!__OUTPOST__) {
         {
           path: 'collections/:id',
           element: lazyPage(() => import('./app/admin/collections/[id]/page')),
+        },
+        {
+          path: 'collectibles/ops',
+          element: lazyPage(() => import('./app/admin/collectibles/ops/page')),
         },
         { path: 'storefront', element: lazyPage(() => import('./app/admin/storefront/page')) },
         {

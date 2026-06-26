@@ -2468,6 +2468,8 @@ export interface TranslationResource {
       title: string;
       description: string;
       wallet: string;
+      expectedHolder: string;
+      walletMismatch: string;
       connectWallet: string;
       connecting: string;
       solanaWalletRequired: string;
@@ -2481,6 +2483,13 @@ export interface TranslationResource {
       failedTitle: string;
       trackingLabel: string;
       viewTracking: string;
+    };
+    redemptions: {
+      title: string;
+      subtitle: string;
+      empty: string;
+      viewTracking: string;
+      backToCollectibles: string;
     };
     tracking: {
       title: string;
@@ -2526,6 +2535,24 @@ export interface TranslationResource {
         payout_complete: string;
         payout_failed: string;
       };
+    };
+    hubOps: {
+      title: string;
+      subtitle: string;
+      redemptionId: string;
+      redemptionIdPlaceholder: string;
+      load: string;
+      loadFailed: string;
+      fulfillmentTitle: string;
+      trackingPlaceholder: string;
+      ship: string;
+      settle: string;
+      shipSuccess: string;
+      shipFailed: string;
+      settleSuccess: string;
+      settleFailed: string;
+      viewBuyerTracking: string;
+      noActions: string;
     };
   };
 

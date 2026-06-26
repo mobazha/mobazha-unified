@@ -17,7 +17,8 @@ import {
   signCollectibleBurnTransaction,
   useAppKit,
   useCollectibleNFT,
-  useFeature,
+  useCollectibleRedemptionByMint,
+  useFeatureFlags,
   useI18n,
   truncateAddress,
 } from '@mobazha/core';
@@ -31,8 +32,13 @@ export default function CollectibleDetailPage() {
   const mint = Array.isArray(mintParam) ? mintParam[0] : mintParam;
   const { t } = useI18n();
   const { toast } = useToast();
-  const enabled = useFeature('collectiblesHubEnabled');
+  const { isEnabled, loading: flagsLoading } = useFeatureFlags();
+  const enabled = isEnabled('collectiblesHubEnabled') && !flagsLoading;
   const { nft, loading, error, refresh } = useCollectibleNFT(mint, enabled);
+  const { redemption: existingRedemption } = useCollectibleRedemptionByMint(
+    nft?.burnAt ? nft.nftMint : undefined,
+    enabled
+  );
   const { address, isConnected, isInitializing, connectSolana, getWalletProvider, chain } =
     useAppKit();
 
@@ -43,15 +49,23 @@ export default function CollectibleDetailPage() {
   const [redemptionId, setRedemptionId] = useState<string | null>(null);
 
   const holderWallet = address || '';
+  const expectedHolderWallet = nft?.hubSlot?.currentHolder?.trim() || '';
   const isSolanaWallet =
     isConnected &&
     !!holderWallet &&
     !holderWallet.startsWith('0x') &&
     (chain?.chainNamespace === 'solana' || chain?.chainNamespace === undefined);
+  const isExpectedHolder = !expectedHolderWallet || holderWallet.trim() === expectedHolderWallet;
 
   const canRedeem = useMemo(
-    () => enabled && !!nft && !nft.burnAt && isSolanaWallet && shipTo.trim().length > 8,
-    [enabled, nft, isSolanaWallet, shipTo]
+    () =>
+      enabled &&
+      !!nft &&
+      !nft.burnAt &&
+      isSolanaWallet &&
+      isExpectedHolder &&
+      shipTo.trim().length > 8,
+    [enabled, nft, isSolanaWallet, isExpectedHolder, shipTo]
   );
 
   const handleRedeem = useCallback(async () => {
@@ -106,7 +120,7 @@ export default function CollectibleDetailPage() {
 
       <main className="py-4 sm:py-8">
         <Container size="md">
-          <CollectiblesFeatureGuard enabled={enabled}>
+          <CollectiblesFeatureGuard>
             <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
               <Link href="/collectibles">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -165,10 +179,25 @@ export default function CollectibleDetailPage() {
                 </Card>
 
                 {nft.burnAt ? (
-                  <Card className="border-muted bg-muted/40 p-4">
+                  <Card className="border-muted bg-muted/40 p-4 space-y-3">
                     <p className="text-sm text-muted-foreground">
                       {t('collectibles.alreadyRedeemed')}
                     </p>
+                    {existingRedemption ? (
+                      <Button asChild variant="link" className="h-auto p-0 text-primary">
+                        <Link
+                          href={`/collectibles/redeem/${encodeURIComponent(existingRedemption.redemptionID)}`}
+                        >
+                          {t('collectibles.redeem.viewTracking')}
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button asChild variant="link" className="h-auto p-0 text-primary">
+                        <Link href="/collectibles/redemptions">
+                          {t('collectibles.redemptions.title')}
+                        </Link>
+                      </Button>
+                    )}
                   </Card>
                 ) : (
                   <Card className="p-5">
@@ -185,9 +214,24 @@ export default function CollectibleDetailPage() {
                           {t('collectibles.redeem.wallet')}
                         </p>
                         {isSolanaWallet ? (
-                          <p className="font-mono text-sm text-muted-foreground">
-                            {truncateAddress(holderWallet)}
-                          </p>
+                          <div className="space-y-2">
+                            <p className="font-mono text-sm text-muted-foreground">
+                              {truncateAddress(holderWallet)}
+                            </p>
+                            {expectedHolderWallet ? (
+                              <p className="text-xs text-muted-foreground">
+                                {t('collectibles.redeem.expectedHolder')}:{' '}
+                                <span className="font-mono">
+                                  {truncateAddress(expectedHolderWallet)}
+                                </span>
+                              </p>
+                            ) : null}
+                            {!isExpectedHolder ? (
+                              <p className="text-sm text-destructive">
+                                {t('collectibles.redeem.walletMismatch')}
+                              </p>
+                            ) : null}
+                          </div>
                         ) : isConnected ? (
                           <div className="space-y-2">
                             <p className="text-sm text-muted-foreground">
