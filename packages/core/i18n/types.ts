@@ -2936,6 +2936,7 @@ export interface TranslationResource {
       sourceMaterialRemove?: string;
       sourceMaterialUntitled?: string;
       sourceMaterialMaxReached?: string;
+      skillRunRemove?: string;
     };
     ai?: {
       models?: {
@@ -3125,6 +3126,9 @@ export interface TranslationResource {
         statusApplied?: string;
         statusPendingApproval?: string;
         statusNeedsReview?: string;
+        continueWithAi?: string;
+        continueWithAiLabel?: string;
+        skillRunMaxReached?: string;
       };
     };
     gumroadImport?: {
