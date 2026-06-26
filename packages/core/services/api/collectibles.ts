@@ -5,6 +5,7 @@ import type {
   CollectibleBurnTx,
   CollectibleHubSlot,
   CollectibleNFT,
+  CollectiblePendingMintRecoveryReport,
   CollectiblePrimarySale,
   CollectibleRedemption,
   CollectiblesPagedResult,
@@ -144,6 +145,17 @@ export async function settleCollectibleRedemption(id: string): Promise<Collectib
   return hostingPut<CollectibleRedemption>(HOSTING_API.COLLECTIBLES_REDEMPTION_SETTLE(id));
 }
 
+export async function recoverCollectiblePendingMints(body?: {
+  tenantID?: string;
+  limit?: number;
+  royaltyBps?: number;
+}): Promise<CollectiblePendingMintRecoveryReport> {
+  return hostingPost<CollectiblePendingMintRecoveryReport>(
+    HOSTING_API.COLLECTIBLES_RECONCILE_RECOVER_MINTS,
+    body ?? {}
+  );
+}
+
 export async function getCollectiblePrimarySaleByOrder(
   orderId: string
 ): Promise<CollectiblePrimarySale | null> {
@@ -181,5 +193,6 @@ export const collectiblesApi = {
   getRedemption: getCollectibleRedemption,
   shipRedemption: shipCollectibleRedemption,
   settleRedemption: settleCollectibleRedemption,
+  recoverPendingMints: recoverCollectiblePendingMints,
   getPrimarySaleByOrder: getCollectiblePrimarySaleByOrder,
 };
