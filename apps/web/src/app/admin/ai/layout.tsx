@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFeature } from '@mobazha/core';
 import { AiSectionTabs } from '@/components/admin/ai/AiSectionTabs';
@@ -21,7 +21,9 @@ export default function AdminAiLayout({ children }: { children: ReactNode }) {
 
   return (
     <div data-testid="admin-ai-section">
-      <AiSectionTabs />
+      <Suspense fallback={null}>
+        <AiSectionTabs />
+      </Suspense>
       {children}
     </div>
   );

@@ -373,6 +373,33 @@ export async function ingestProductImport(
   return normalizeProductImportIngestResult(raw);
 }
 
+/** Ingest pasted text/CSV as a product import run (JSON ingest API). */
+export async function ingestProductImportPaste(
+  text: string,
+  options: IngestProductImportOptions & { sourceName?: string; contentType?: string } = {}
+): Promise<ProductImportIngestResult> {
+  const material = text.trim();
+  if (!material) {
+    throw new Error('Paste content is required');
+  }
+  if (material.length > MAX_IMPORT_FILE_BYTES) {
+    throw new Error('Pasted content exceeds 2 MB limit');
+  }
+  const sourceName = options.sourceName?.trim() || 'paste.csv';
+  const contentType = options.contentType?.trim() || 'text/csv';
+  const body: Record<string, unknown> = {
+    files: [{ sourceName, contentType, text: material }],
+  };
+  if (options.threadId?.trim()) body.threadId = options.threadId.trim();
+  if (options.storeId?.trim()) body.storeId = options.storeId.trim();
+
+  const raw = await nodeAuthPost<ProductImportIngestResultRaw>(
+    NODE_API.AGENT_PRODUCT_IMPORT_INGEST,
+    body
+  );
+  return normalizeProductImportIngestResult(raw);
+}
+
 export async function getProductImportWorkbench(
   runId: string,
   query: ProductImportWorkbenchQuery = {}

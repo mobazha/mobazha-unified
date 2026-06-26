@@ -5,7 +5,7 @@ import { AIConfigSection } from '@/app/admin/settings/integrations/AIConfigSecti
 export default function AIModelsPage() {
   return (
     <div data-testid="admin-ai-models">
-      <AIConfigSection />
+      <AIConfigSection settingsPageLayout />
     </div>
   );
 }
