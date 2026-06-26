@@ -161,3 +161,6 @@ export { formatQueryError } from './queryUtils';
 
 // 统一 Feature Flag hook
 export * from './useFeature';
+
+// Product import workbench (AI smart import)
+export * from './useProductImportWorkbench';

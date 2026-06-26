@@ -16,10 +16,6 @@ function wrapData<T>(data: T): string {
   return JSON.stringify({ data });
 }
 
-function wrapError(code: string, message: string): string {
-  return JSON.stringify({ error: { code, message } });
-}
-
 const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const MOCK_BUYER_PEER_ID = 'QmBuyerPeer1234567890abcdefghijk';
 const NOW = new Date().toISOString();
@@ -1147,3 +1143,185 @@ export async function mockAllAPIs(page: Page): Promise<void> {
   await mockImageRoutes(page);
   await mockFiatProvidersAPI(page);
 }
+
+const MOCK_PRODUCT_IMPORT_RUN_ID = 'run_visual_import_1';
+
+const mockProductImportWorkbench = {
+  skillRun: {
+    id: MOCK_PRODUCT_IMPORT_RUN_ID,
+    skillId: 'product.import',
+    status: 'waiting_for_review',
+    startedAt: DAY_AGO,
+    updatedAt: NOW,
+  },
+  sources: [
+    {
+      artifactId: 'art_src_visual',
+      sourceName: 'supplier-catalog.csv',
+      contentType: 'text/csv',
+      status: 'ready',
+    },
+  ],
+  rows: [
+    {
+      proposalArtifactId: 'art_prop_visual_1',
+      sourceName: 'supplier-catalog.csv',
+      rowNumber: 1,
+      status: 'needs_review',
+      draft: {
+        title: 'Linen Tote Bag',
+        description: 'Handwoven linen tote with interior pocket.',
+        price: { amountMinor: 4500, currencyCode: 'USD', divisibility: 2 },
+        inventory: { quantity: 24 },
+      },
+      updatedAt: NOW,
+    },
+    {
+      proposalArtifactId: 'art_prop_visual_2',
+      sourceName: 'supplier-catalog.csv',
+      rowNumber: 2,
+      status: 'needs_review',
+      draft: {
+        title: 'Ceramic Mug Set',
+        price: { amountMinor: 2800, currencyCode: 'USD', divisibility: 2 },
+        inventory: { quantity: 50 },
+      },
+      approval: {
+        id: 'approval_visual_pending',
+        status: 'pending',
+        action: 'create_listing',
+        requestHash: 'hash_visual_pending',
+      },
+      updatedAt: NOW,
+    },
+    {
+      proposalArtifactId: 'art_prop_visual_3',
+      sourceName: 'supplier-catalog.csv',
+      rowNumber: 3,
+      status: 'needs_review',
+      draft: {
+        title: 'Wool Throw Blanket',
+        price: { amountMinor: 8900, currencyCode: 'USD', divisibility: 2 },
+        inventory: { quantity: 12 },
+      },
+      approval: {
+        id: 'approval_visual_approved',
+        status: 'approved',
+        action: 'create_listing',
+        requestHash: 'hash_visual_approved',
+      },
+      updatedAt: NOW,
+    },
+  ],
+  validationReports: [
+    {
+      artifactId: 'art_val_visual',
+      sourceName: 'supplier-catalog.csv',
+      status: 'ready',
+      data: { code: 'preview_rows', message: 'Parsed first 25 rows for preview.' },
+    },
+  ],
+  counts: { source: 1, proposal: 3, validation: 1 },
+  summary: {
+    noApprovalCount: 1,
+    pendingApprovalCount: 1,
+    approvedCount: 1,
+    applyingCount: 0,
+    appliedCount: 0,
+    rejectedCount: 0,
+    applyFailedCount: 0,
+    reviewableCount: 3,
+    skippedCount: 0,
+    actionableCount: 3,
+  },
+  page: { offset: 0, totalRows: 3, returnedRows: 3 },
+};
+
+/**
+ * Mock product import workbench + minimal AI endpoints for visual tests.
+ */
+export async function mockProductImportWorkbenchAPI(page: Page): Promise<void> {
+  await page.route('**/v1/ai/status**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ available: true, provider: 'mock', model: 'mock-model' }),
+    });
+  });
+
+  await page.route('**/v1/agent/chat/sessions**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([]),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/workbench**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockProductImportWorkbench),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/advance**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        skillRun: mockProductImportWorkbench.skillRun,
+        workbench: mockProductImportWorkbench,
+        counts: {
+          sourceCount: 1,
+          candidateCount: 0,
+          proposalCount: 3,
+          validationCount: 1,
+          pendingAIExtractionCount: 0,
+          createdProposalCount: 0,
+          createdValidationCount: 0,
+        },
+        nextActions: [],
+        skipped: [],
+      }),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/approvals**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        created: 1,
+        reused: 0,
+        skipped: [],
+        page: { totalProposals: 3, selected: 1 },
+      }),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/approval-decisions**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ processed: 1, skipped: [], items: [], page: { selected: 1 } }),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/approval-applications**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ processed: 1, skipped: [], items: [], page: { selected: 1 } }),
+    });
+  });
+}
+
+export { MOCK_PRODUCT_IMPORT_RUN_ID };

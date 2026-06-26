@@ -3812,6 +3812,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/agent/product-import/runs/{runId}/advance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Advance a product import run */
+    post: operations['agent-product-import-run-advance-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/agent/product-import/runs/{runId}/approval-applications': {
     parameters: {
       query?: never;
@@ -8904,6 +8921,47 @@ export interface components {
       description: string;
       name: string;
     };
+    Node_AgentProductImportAdvanceCounts: {
+      /** Format: int64 */
+      candidateCount: number;
+      /** Format: int64 */
+      createdProposalCount: number;
+      /** Format: int64 */
+      createdValidationCount: number;
+      /** Format: int64 */
+      pendingAIExtractionCount: number;
+      /** Format: int64 */
+      proposalCount: number;
+      /** Format: int64 */
+      sourceCount: number;
+      /** Format: int64 */
+      validationCount: number;
+    };
+    Node_AgentProductImportAdvanceNextAction: {
+      candidateArtifactId?: string;
+      message: string;
+      sourceArtifactId?: string;
+      type: string;
+    };
+    Node_AgentProductImportAdvanceRequest: {
+      candidateArtifactIds?: string[] | null;
+      createApprovals?: boolean;
+      sourceArtifactIds?: string[] | null;
+    };
+    Node_AgentProductImportAdvanceResult: {
+      approvalResult?: components['schemas']['Node_AgentProductImportApprovalBatchResult'];
+      counts: components['schemas']['Node_AgentProductImportAdvanceCounts'];
+      createdProposalArtifacts?: components['schemas']['Node_Artifact'][] | null;
+      createdValidationReports?: components['schemas']['Node_Artifact'][] | null;
+      nextActions?: components['schemas']['Node_AgentProductImportAdvanceNextAction'][] | null;
+      skillRun: components['schemas']['Node_SkillRun'];
+      skipped?: components['schemas']['Node_AgentProductImportAdvanceSkippedArtifact'][] | null;
+      workbench?: components['schemas']['Node_AgentProductImportWorkbench'];
+    };
+    Node_AgentProductImportAdvanceSkippedArtifact: {
+      artifactId?: string;
+      reason: string;
+    };
     Node_AgentProductImportApprovalActionBatchRequest: {
       approvalIds?: string[] | null;
       decision?: string;
@@ -8941,6 +8999,22 @@ export interface components {
     };
     Node_AgentProductImportApprovalBatchRequest: {
       proposalArtifactIds?: string[] | null;
+    };
+    Node_AgentProductImportApprovalBatchResult: {
+      approvals: components['schemas']['Node_Approval'][] | null;
+      /** Format: int64 */
+      created: number;
+      page: components['schemas']['Node_AgentProductImportApprovalBatchResultPage'];
+      /** Format: int64 */
+      reused: number;
+      skillRun: components['schemas']['Node_SkillRun'];
+      skipped?: components['schemas']['Node_AgentProductImportApprovalBatchSkip'][] | null;
+    };
+    Node_AgentProductImportApprovalBatchResultPage: {
+      /** Format: int64 */
+      selected: number;
+      /** Format: int64 */
+      totalProposals: number;
     };
     Node_AgentProductImportApprovalBatchSkip: {
       approvalId?: string;
@@ -9103,6 +9177,27 @@ export interface components {
       tenant_id: string;
       thread_id?: string;
       tool_call_id?: string;
+      turn_id?: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    Node_Artifact: {
+      content_type?: string;
+      /** Format: date-time */
+      created_at: string;
+      data?: string;
+      id: string;
+      kind: string;
+      name?: string;
+      skill_id?: string;
+      skill_run_id?: string;
+      source_hash?: string;
+      source_name?: string;
+      source_uri?: string;
+      status: string;
+      summary?: string;
+      tenant_id: string;
+      thread_id?: string;
       turn_id?: string;
       /** Format: date-time */
       updated_at: string;
@@ -17563,6 +17658,42 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-product-import-run-advance-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent skill run ID. */
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['Node_AgentProductImportAdvanceRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AgentProductImportAdvanceResult'];
         };
       };
       /** @description Error */

@@ -125,10 +125,107 @@ export interface ProductImportWorkbenchValidation {
   data?: Record<string, unknown>;
 }
 
+export interface ProductImportWorkbenchSummary {
+  noApprovalCount: number;
+  pendingApprovalCount: number;
+  approvedCount: number;
+  applyingCount: number;
+  appliedCount: number;
+  rejectedCount: number;
+  applyFailedCount: number;
+  reviewableCount: number;
+  skippedCount: number;
+  actionableCount: number;
+}
+
+export interface ProductImportWorkbenchPage {
+  limit?: number;
+  offset: number;
+  totalRows: number;
+  returnedRows: number;
+  status?: string;
+}
+
 export interface ProductImportWorkbench {
   skillRun: ProductImportSkillRun;
   sources: ProductImportWorkbenchSource[];
   rows: ProductImportWorkbenchRow[];
   validationReports: ProductImportWorkbenchValidation[];
   counts: Record<string, number>;
+  summary: ProductImportWorkbenchSummary;
+  page: ProductImportWorkbenchPage;
+}
+
+export interface ProductImportWorkbenchQuery {
+  limit?: number;
+  offset?: number;
+  /** Row filter: all | needs_review | pending_approval | applied | approval_failed */
+  status?: string;
+}
+
+export interface ProductImportApprovalBatchSkip {
+  proposalArtifactId?: string;
+  approvalId?: string;
+  reason: string;
+}
+
+export interface ProductImportApprovalBatchResult {
+  created: number;
+  reused: number;
+  skipped: ProductImportApprovalBatchSkip[];
+  page: { totalProposals: number; selected: number };
+}
+
+export interface ProductImportApprovalActionItem {
+  approvalId: string;
+  status?: string;
+  result: string;
+  reason?: string;
+}
+
+export interface ProductImportApprovalActionBatchResult {
+  processed: number;
+  failed?: number;
+  skipped: ProductImportApprovalBatchSkip[];
+  items: ProductImportApprovalActionItem[];
+  page: { selected: number };
+}
+
+export interface ProductImportAdvanceNextAction {
+  type: string;
+  sourceArtifactId?: string;
+  candidateArtifactId?: string;
+  message: string;
+}
+
+export interface ProductImportAdvanceCounts {
+  sourceCount: number;
+  candidateCount: number;
+  proposalCount: number;
+  validationCount: number;
+  pendingAIExtractionCount: number;
+  createdProposalCount: number;
+  createdValidationCount: number;
+}
+
+export interface ProductImportAdvanceSkippedArtifact {
+  artifactId?: string;
+  reason: string;
+}
+
+export interface ProductImportAdvanceRequest {
+  sourceArtifactIds?: string[];
+  candidateArtifactIds?: string[];
+  createApprovals?: boolean;
+}
+
+export interface ProductImportAdvanceResult {
+  skillRun: ProductImportSkillRun;
+  workbench?: ProductImportWorkbench;
+  createdProposalArtifacts: ProductImportArtifact[];
+  createdValidationReports: ProductImportArtifact[];
+  approvalResult?: ProductImportApprovalBatchResult;
+  nextActions: ProductImportAdvanceNextAction[];
+  counts: ProductImportAdvanceCounts;
+  skipped: ProductImportAdvanceSkippedArtifact[];
 }

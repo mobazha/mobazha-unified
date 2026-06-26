@@ -21,6 +21,8 @@ import {
   mockPreferencesAPI,
   mockSearchAPI,
   mockProductDetailAPI,
+  mockProductImportWorkbenchAPI,
+  MOCK_PRODUCT_IMPORT_RUN_ID,
 } from './fixtures/mock-api-routes';
 
 let seededData: SeededVisualData | null = null;
@@ -204,7 +206,7 @@ test.describe('Desktop Visual - Authenticated Main', () => {
   test.beforeAll(async ({ request }) => {
     try {
       seededData = await seedVisualTestData(request);
-      console.log(`Seeded ${seededData.listings.length} listings for desktop visual tests`);
+      console.warn(`Seeded ${seededData.listings.length} listings for desktop visual tests`);
     } catch (e) {
       console.warn('Failed to seed visual data:', e);
     }
@@ -375,6 +377,16 @@ test.describe('Desktop Visual - Authenticated Admin', () => {
     await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/products');
     await expect(page).toHaveScreenshot('desktop-authed-admin-products.png', { fullPage: true });
+  });
+
+  test('authed: admin-product-import-workbench (mocked)', async ({ page }) => {
+    await ensureAuthenticated(page);
+    await mockProductImportWorkbenchAPI(page);
+    await navigateAndVerify(page, `/admin/products/import/${MOCK_PRODUCT_IMPORT_RUN_ID}`);
+    await expect(page.getByTestId('product-import-workbench')).toBeVisible();
+    await expect(page).toHaveScreenshot('desktop-authed-admin-product-import-workbench.png', {
+      fullPage: true,
+    });
   });
 
   test('authed: admin-orders', async ({ page }) => {
