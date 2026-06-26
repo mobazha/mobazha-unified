@@ -3683,6 +3683,24 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
+    /** Update an agent artifact */
+    patch: operations['agent-artifact-patch'];
+    trace?: never;
+  };
+  '/v1/agent/artifacts/{artifactId}/approval': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create an approval from an agent proposal artifact */
+    post: operations['agent-artifact-approval-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
     patch?: never;
     trace?: never;
   };
@@ -3741,6 +3759,127 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/agent/memories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List agent memories */
+    get: operations['agent-memories-get'];
+    put?: never;
+    /** Save an agent memory */
+    post: operations['agent-memories-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/agent/memories/{memoryId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete an agent memory */
+    delete: operations['agent-memory-delete'];
+    options?: never;
+    head?: never;
+    /** Update an agent memory */
+    patch: operations['agent-memory-patch'];
+    trace?: never;
+  };
+  '/v1/agent/product-import/ingest': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Ingest product import source material */
+    post: operations['agent-product-import-ingest-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/agent/product-import/runs/{runId}/approval-applications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply approved product import approval requests */
+    post: operations['agent-product-import-run-approval-applications-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/agent/product-import/runs/{runId}/approval-decisions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Approve or reject product import approval requests */
+    post: operations['agent-product-import-run-approval-decisions-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/agent/product-import/runs/{runId}/approvals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create approval requests for product import proposals */
+    post: operations['agent-product-import-run-approvals-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/agent/product-import/runs/{runId}/workbench': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get product import workbench data */
+    get: operations['agent-product-import-workbench-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/agent/skill-runs': {
     parameters: {
       query?: never;
@@ -3773,7 +3912,8 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    patch?: never;
+    /** Update an agent skill run */
+    patch: operations['agent-skill-run-patch'];
     trace?: never;
   };
   '/v1/ai/generate': {
@@ -8764,6 +8904,209 @@ export interface components {
       description: string;
       name: string;
     };
+    Node_AgentProductImportApprovalActionBatchRequest: {
+      approvalIds?: string[] | null;
+      decision?: string;
+    };
+    Node_AgentProductImportApprovalActionBatchResult: {
+      approvals: components['schemas']['Node_Approval'][] | null;
+      /** Format: int64 */
+      failed?: number;
+      /** @description Per-approval batch action outcomes; correlate entries by approvalId. */
+      items?: components['schemas']['Node_AgentProductImportApprovalActionItem'][] | null;
+      page: components['schemas']['Node_AgentProductImportApprovalActionPage'];
+      /** Format: int64 */
+      processed: number;
+      skillRun: components['schemas']['Node_SkillRun'];
+      skipped?: components['schemas']['Node_AgentProductImportApprovalBatchSkip'][] | null;
+    };
+    Node_AgentProductImportApprovalActionItem: {
+      /** @description Approval ID when known. */
+      approvalId?: string;
+      /** @description Human-readable detail when skipped or failed. */
+      reason?: string;
+      /** @description Action outcome: processed, skipped, or failed. */
+      result: string;
+      /** @description Approval status after the action, when applicable. */
+      status?: string;
+    };
+    Node_AgentProductImportApprovalActionPage: {
+      /** Format: int64 */
+      selected: number;
+      /** Format: int64 */
+      totalApprovals: number;
+    };
+    Node_AgentProductImportApprovalApplyBatchRequest: {
+      approvalIds?: string[] | null;
+    };
+    Node_AgentProductImportApprovalBatchRequest: {
+      proposalArtifactIds?: string[] | null;
+    };
+    Node_AgentProductImportApprovalBatchSkip: {
+      approvalId?: string;
+      proposalArtifactId?: string;
+      reason: string;
+    };
+    Node_AgentProductImportApprovalView: {
+      action: string;
+      id: string;
+      requestHash: string;
+      status: string;
+    };
+    Node_AgentProductImportWorkbench: {
+      counts: {
+        [key: string]: number;
+      };
+      page: components['schemas']['Node_AgentProductImportWorkbenchPage'];
+      rows: components['schemas']['Node_AgentProductImportWorkbenchRow'][] | null;
+      skillRun: components['schemas']['Node_SkillRun'];
+      sources: components['schemas']['Node_AgentProductImportWorkbenchSource'][] | null;
+      summary: components['schemas']['Node_AgentProductImportWorkbenchSummary'];
+      validationReports?:
+        | components['schemas']['Node_AgentProductImportWorkbenchValidation'][]
+        | null;
+    };
+    Node_AgentProductImportWorkbenchPage: {
+      /**
+       * Format: int64
+       * @description Requested row page size (0 means no limit).
+       */
+      limit?: number;
+      /**
+       * Format: int64
+       * @description Requested row offset into the filtered result set.
+       */
+      offset: number;
+      /**
+       * Format: int64
+       * @description Proposal rows returned in this response page.
+       */
+      returnedRows: number;
+      /** @description Active row status filter, if any. */
+      status?: string;
+      /**
+       * Format: int64
+       * @description Proposal rows after status filter, before limit/offset pagination.
+       */
+      totalRows: number;
+    };
+    Node_AgentProductImportWorkbenchRow: {
+      approval?: components['schemas']['Node_AgentProductImportApprovalView'];
+      candidateArtifactId?: string;
+      draft?: {
+        [key: string]: unknown;
+      };
+      fieldSources?: {
+        [key: string]: unknown;
+      };
+      proposalArtifactId: string;
+      /** Format: int64 */
+      rowNumber?: number;
+      sourceArtifactId?: string;
+      sourceName?: string;
+      status: string;
+      /** Format: date-time */
+      updatedAt: string;
+      validation?: unknown[] | null;
+    };
+    Node_AgentProductImportWorkbenchSource: {
+      artifactId: string;
+      contentType?: string;
+      sourceName?: string;
+      status: string;
+      summary?: string;
+    };
+    Node_AgentProductImportWorkbenchSummary: {
+      /**
+       * Format: int64
+       * @description Rows needing merchant action (full run; ignores status filter).
+       */
+      actionableCount: number;
+      /**
+       * Format: int64
+       * @description Proposal rows with artifact status applied (full run).
+       */
+      appliedCount: number;
+      /**
+       * Format: int64
+       * @description Rows with apply_failed approvals (full run).
+       */
+      applyFailedCount: number;
+      /**
+       * Format: int64
+       * @description Rows with approvals currently applying (full run).
+       */
+      applyingCount: number;
+      /**
+       * Format: int64
+       * @description Rows with approved but not yet applied approvals (full run).
+       */
+      approvedCount: number;
+      /**
+       * Format: int64
+       * @description Proposal rows without a linked approval (full run).
+       */
+      noApprovalCount: number;
+      /**
+       * Format: int64
+       * @description Rows with pending approvals (full run).
+       */
+      pendingApprovalCount: number;
+      /**
+       * Format: int64
+       * @description Rows with rejected approvals (full run).
+       */
+      rejectedCount: number;
+      /**
+       * Format: int64
+       * @description Proposal rows still in review (full run).
+       */
+      reviewableCount: number;
+      /**
+       * Format: int64
+       * @description Proposal rows marked skipped (full run).
+       */
+      skippedCount: number;
+    };
+    Node_AgentProductImportWorkbenchValidation: {
+      artifactId: string;
+      data?: {
+        [key: string]: unknown;
+      };
+      sourceName?: string;
+      status: string;
+    };
+    Node_Approval: {
+      acting_persona?: string;
+      action: string;
+      actor_id?: string;
+      /** Format: date-time */
+      applied_at?: string;
+      applied_by?: string;
+      apply_error?: string;
+      apply_result?: string;
+      artifact_ids?: string;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      decision_at?: string;
+      decision_by?: string;
+      id: string;
+      idempotency_key?: string;
+      payload?: string;
+      request_hash: string;
+      risk: string;
+      skill_id?: string;
+      status: string;
+      store_id?: string;
+      summary: string;
+      tenant_id: string;
+      thread_id?: string;
+      tool_call_id?: string;
+      turn_id?: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
     Node_AssetUpdateInput: {
       /** Format: int64 */
       expiryHours?: number;
@@ -8939,6 +9282,26 @@ export interface components {
       maxActivations: number;
       orderId?: string;
       status: string;
+    };
+    Node_SkillRun: {
+      acting_persona?: string;
+      actor_id?: string;
+      /** Format: date-time */
+      completed_at?: string;
+      error?: string;
+      id: string;
+      input?: string;
+      output?: string;
+      skill_id: string;
+      /** Format: date-time */
+      started_at: string;
+      status: string;
+      store_id?: string;
+      tenant_id: string;
+      thread_id?: string;
+      turn_id?: string;
+      /** Format: date-time */
+      updated_at: string;
     };
     Search_AuthorizationItem: {
       authType: string;
@@ -16813,6 +17176,74 @@ export interface operations {
       };
     };
   };
+  'agent-artifact-patch': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent artifact ID. */
+        artifactId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-artifact-approval-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent artifact ID. */
+        artifactId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'agent-chat-stream-post': {
     parameters: {
       query?: never;
@@ -16953,6 +17384,345 @@ export interface operations {
       };
     };
   };
+  'agent-memories-get': {
+    parameters: {
+      query?: {
+        /** @description Comma-separated memory scopes: user,store,tenant,thread,skill. */
+        scope?: string;
+        /** @description Optional memory subject filter. */
+        subject?: string;
+        /** @description Optional full-text memory query. */
+        q?: string;
+        /** @description Maximum number of memories to return. */
+        limit?: number;
+        /** @description Optional store scope identifier. */
+        storeId?: string;
+        /** @description Optional thread scope identifier. */
+        threadId?: string;
+        /** @description Optional skill scope identifier. */
+        skillId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-memories-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-memory-delete': {
+    parameters: {
+      query?: {
+        /** @description Optional store scope identifier. When set, it must match the current store. */
+        storeId?: string;
+        /** @description Optional thread scope identifier. */
+        threadId?: string;
+        /** @description Optional skill scope identifier. */
+        skillId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Agent memory ID. */
+        memoryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-memory-patch': {
+    parameters: {
+      query?: {
+        /** @description Optional store scope identifier. When set, it must match the current store. */
+        storeId?: string;
+        /** @description Optional thread scope identifier. */
+        threadId?: string;
+        /** @description Optional skill scope identifier. */
+        skillId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Agent memory ID. */
+        memoryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-product-import-ingest-post': {
+    parameters: {
+      query?: never;
+      header: {
+        'Content-Type': string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/octet-stream': string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-product-import-run-approval-applications-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent skill run ID. */
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['Node_AgentProductImportApprovalApplyBatchRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AgentProductImportApprovalActionBatchResult'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-product-import-run-approval-decisions-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent skill run ID. */
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['Node_AgentProductImportApprovalActionBatchRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AgentProductImportApprovalActionBatchResult'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-product-import-run-approvals-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent skill run ID. */
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['Node_AgentProductImportApprovalBatchRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-product-import-workbench-get': {
+    parameters: {
+      query?: {
+        /** @description Maximum workbench proposal rows to return. */
+        limit?: string;
+        /** @description Workbench proposal row offset. */
+        offset?: string;
+        /** @description Optional row filter. summary counts always reflect the full run; page.totalRows reflects filtered rows. */
+        status?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Agent skill run ID. */
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AgentProductImportWorkbench'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'agent-skill-runs-get': {
     parameters: {
       query?: {
@@ -17031,6 +17801,42 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-skill-run-patch': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent skill run ID. */
+        runId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
     responses: {
       /** @description OK */
       200: {

@@ -42,10 +42,15 @@ export type {
   AgentArtifactRecord,
   AgentArtifactRecordRaw,
   AttachArtifactResult,
+  AttachSkillRunResult,
   AttachedChatArtifact,
+  AttachedChatSkillRun,
   CreateSourceMaterialArtifactInput,
 } from '../../types/agentArtifact';
-export { MAX_ATTACHED_CHAT_ARTIFACTS } from '../../types/agentArtifact';
+export {
+  MAX_ATTACHED_CHAT_ARTIFACTS,
+  MAX_ATTACHED_CHAT_SKILL_RUNS,
+} from '../../types/agentArtifact';
 export {
   ingestProductImport,
   getProductImportWorkbench,

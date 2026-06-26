@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Loader2, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, RefreshCw, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
 import {
   createProductImportProposalApproval,
   formatProductImportDraftPrice,
@@ -11,6 +11,7 @@ import {
   productImportDraftQuantity,
   useI18n,
 } from '@mobazha/core';
+import { useAIChatStore } from '@mobazha/core/stores';
 import type { ProductImportWorkbench, ProductImportWorkbenchRow } from '@mobazha/core';
 import type { TranslateFunction } from '@mobazha/core/i18n/types';
 import { Button } from '@/components/ui/button';
@@ -122,6 +123,8 @@ export default function ProductImportWorkbenchPage() {
   const params = useParams();
   const runId = typeof params?.runId === 'string' ? params.runId : '';
   const { toast } = useToast();
+  const attachSkillRun = useAIChatStore(s => s.attachSkillRun);
+  const openChat = useAIChatStore(s => s.open);
   const [workbench, setWorkbench] = useState<ProductImportWorkbench | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,6 +162,26 @@ export default function ProductImportWorkbenchPage() {
     });
   }, [workbench]);
 
+  const handleContinueWithAi = () => {
+    if (!workbench) return;
+    const result = attachSkillRun({
+      id: workbench.skillRun.id,
+      label: t('admin.productImport.workbench.continueWithAiLabel', {
+        count: workbench.rows.length,
+      }),
+      skillId: workbench.skillRun.skillId,
+    });
+    if (result === 'max_reached') {
+      toast({
+        title: t('common.error'),
+        description: t('admin.productImport.workbench.skillRunMaxReached'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    openChat();
+  };
+
   if (!runId) {
     return (
       <div className="p-6 text-sm text-muted-foreground">
@@ -187,16 +210,28 @@ export default function ProductImportWorkbenchPage() {
             })}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={loading}
-          onClick={() => void loadWorkbench()}
-        >
-          <RefreshCw className={`mr-1.5 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          {t('common.refresh')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            onClick={() => void loadWorkbench()}
+          >
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            {t('common.refresh')}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={loading || !workbench}
+            onClick={handleContinueWithAi}
+            data-testid="import-workbench-continue-with-ai"
+          >
+            <Sparkles className="mr-1.5 h-4 w-4" />
+            {t('admin.productImport.workbench.continueWithAi')}
+          </Button>
+        </div>
       </div>
 
       {loading && !workbench ? (

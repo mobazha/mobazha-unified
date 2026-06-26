@@ -14,8 +14,11 @@ import { sendChatMessage, listChatSessions, deleteChatSession } from '../service
 import { parseApprovalRequiredResult } from '../services/ai/approvalService';
 import {
   MAX_ATTACHED_CHAT_ARTIFACTS,
+  MAX_ATTACHED_CHAT_SKILL_RUNS,
   type AttachArtifactResult,
+  type AttachSkillRunResult,
   type AttachedChatArtifact,
+  type AttachedChatSkillRun,
 } from '../types/agentArtifact';
 
 let msgCounter = 0;
@@ -52,6 +55,7 @@ interface AIChatState {
   sessions: ChatSession[];
   error: string | null;
   attachedArtifacts: AttachedChatArtifact[];
+  attachedSkillRuns: AttachedChatSkillRun[];
 
   toggle: () => void;
   open: () => void;
@@ -67,6 +71,9 @@ interface AIChatState {
   attachArtifact: (artifact: AttachedChatArtifact) => AttachArtifactResult;
   detachArtifact: (artifactId: string) => void;
   clearAttachedArtifacts: () => void;
+  attachSkillRun: (skillRun: AttachedChatSkillRun) => AttachSkillRunResult;
+  detachSkillRun: (skillRunId: string) => void;
+  clearAttachedSkillRuns: () => void;
   updateToolApproval: (
     messageId: string,
     toolId: string,
@@ -86,6 +93,7 @@ export const useAIChatStore = create<AIChatState>()(
       sessions: [],
       error: null,
       attachedArtifacts: [],
+      attachedSkillRuns: [],
 
       toggle: () => set(s => ({ isOpen: !s.isOpen })),
       open: () => set({ isOpen: true }),
@@ -93,7 +101,13 @@ export const useAIChatStore = create<AIChatState>()(
       clearError: () => set({ error: null }),
 
       newChat: () =>
-        set({ messages: [], sessionId: undefined, error: null, attachedArtifacts: [] }),
+        set({
+          messages: [],
+          sessionId: undefined,
+          error: null,
+          attachedArtifacts: [],
+          attachedSkillRuns: [],
+        }),
 
       attachArtifact: artifact => {
         const state = get();
@@ -116,6 +130,28 @@ export const useAIChatStore = create<AIChatState>()(
         })),
 
       clearAttachedArtifacts: () => set({ attachedArtifacts: [] }),
+
+      attachSkillRun: skillRun => {
+        const state = get();
+        if (state.attachedSkillRuns.some(item => item.id === skillRun.id)) {
+          return 'duplicate';
+        }
+        if (state.attachedSkillRuns.length >= MAX_ATTACHED_CHAT_SKILL_RUNS) {
+          return 'max_reached';
+        }
+        set({
+          attachedSkillRuns: [...state.attachedSkillRuns, skillRun],
+          error: null,
+        });
+        return 'attached';
+      },
+
+      detachSkillRun: skillRunId =>
+        set(s => ({
+          attachedSkillRuns: s.attachedSkillRuns.filter(item => item.id !== skillRunId),
+        })),
+
+      clearAttachedSkillRuns: () => set({ attachedSkillRuns: [] }),
 
       cancelStream: () => {
         if (activeAbortController) {
@@ -147,12 +183,14 @@ export const useAIChatStore = create<AIChatState>()(
         activeAbortController = abortController;
 
         try {
-          const attachedIds = get().attachedArtifacts.map(item => item.id);
+          const attachedArtifactIds = get().attachedArtifacts.map(item => item.id);
+          const attachedSkillRunIds = get().attachedSkillRuns.map(item => item.id);
           const chatContext: ChatContext | undefined =
-            attachedIds.length > 0 || context
+            attachedArtifactIds.length > 0 || attachedSkillRunIds.length > 0 || context
               ? {
                   ...context,
-                  ...(attachedIds.length > 0 ? { artifactIds: attachedIds } : {}),
+                  ...(attachedArtifactIds.length > 0 ? { artifactIds: attachedArtifactIds } : {}),
+                  ...(attachedSkillRunIds.length > 0 ? { skillRunIds: attachedSkillRunIds } : {}),
                 }
               : undefined;
 
@@ -257,6 +295,7 @@ export const useAIChatStore = create<AIChatState>()(
                   isStreaming: false,
                   sessionId: sessionId || get().sessionId,
                   attachedArtifacts: [],
+                  attachedSkillRuns: [],
                 });
               },
 

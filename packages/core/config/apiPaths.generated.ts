@@ -300,11 +300,25 @@ export const NODE_API_PATHS = {
   AGENT_APPROVALS_DECISION: (approvalId: string) =>
     `/agent/approvals/${encodeURIComponent(approvalId)}/decision`,
   AGENT_ARTIFACTS: '/agent/artifacts',
+  AGENT_ARTIFACTS_APPROVAL: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}/approval`,
   AGENT_ARTIFACTS_BY_ARTIFACT_ID: (artifactId: string) =>
     `/agent/artifacts/${encodeURIComponent(artifactId)}`,
   AGENT_CHAT: '/agent/chat',
   AGENT_CHAT_BY_SESSION_ID: (sessionId: string) => `/agent/chat/${encodeURIComponent(sessionId)}`,
   AGENT_CHAT_SESSIONS: '/agent/chat/sessions',
+  AGENT_MEMORIES: '/agent/memories',
+  AGENT_MEMORIES_BY_MEMORY_ID: (memoryId: string) =>
+    `/agent/memories/${encodeURIComponent(memoryId)}`,
+  AGENT_PRODUCT_IMPORT_INGEST: '/agent/product-import/ingest',
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_APPLICATIONS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-applications`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_DECISIONS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-decisions`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVALS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approvals`,
+  AGENT_PRODUCT_IMPORT_RUNS_WORKBENCH: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/workbench`,
   AGENT_SKILL_RUNS: '/agent/skill-runs',
   AGENT_SKILL_RUNS_BY_RUN_ID: (runId: string) => `/agent/skill-runs/${encodeURIComponent(runId)}`,
   AI_GENERATE: '/ai/generate',
