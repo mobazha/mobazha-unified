@@ -365,6 +365,9 @@ export const useAIChatStore = create<AIChatState>()(
           set({
             sessionId: session.id,
             messages: msgs,
+            error: null,
+            attachedArtifacts: [],
+            attachedSkillRuns: [],
           });
         } catch {
           set({ error: 'Failed to load session' });
