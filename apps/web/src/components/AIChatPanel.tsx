@@ -23,12 +23,13 @@ import {
   PanelLeftClose,
   Plus,
 } from 'lucide-react';
-import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
+import type { ChatContext, ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
 import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 import { AttachedArtifactChips } from '@/components/ai/AttachedArtifactChips';
 import { AttachedSkillRunChips } from '@/components/ai/AttachedSkillRunChips';
 import { ChatAttachmentPreview } from '@/components/ai/ChatAttachmentPreview';
 import { ChatSessionList } from '@/components/ai/ChatSessionList';
+import { useToast } from '@/components/ui/use-toast';
 import { WorkspaceAssistantMarkdown } from '@/components/ai/WorkspaceAssistantMarkdown';
 import { WorkspaceChatContextBar } from '@/components/admin/workspace/WorkspaceChatContextBar';
 import { WorkspaceUnifiedComposer } from '@/components/admin/workspace/WorkspaceUnifiedComposer';
@@ -121,9 +122,10 @@ function ChatBubble({ msg, workspaceMode = false }: { msg: ChatMessage; workspac
           ))}
         {isUser && msg.attachmentDisplay && msg.attachmentDisplay.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2">
-            {msg.attachmentDisplay.map(item => (
-              <li key={item.name}>
+            {msg.attachmentDisplay.map((item, index) => (
+              <li key={item.artifactId || `${item.name}-${index}`}>
                 <ChatAttachmentPreview
+                  artifactId={item.artifactId}
                   name={item.name}
                   previewUrl={item.previewUrl}
                   contentType={item.contentType}
@@ -167,6 +169,8 @@ export interface AIChatPanelProps {
   chatContextLabel?: string | null;
   onChatContextDismiss?: () => void;
   onImportComplete?: (runId: string) => void;
+  /** Clears workspace context (task chip, seed prompt) when starting a fresh chat. */
+  onNewChat?: () => void;
   workspaceLayoutControls?: {
     focusMode: boolean;
     railCollapsed: boolean;
@@ -188,6 +192,7 @@ export function AIChatPanel({
   chatContextLabel,
   onChatContextDismiss,
   onImportComplete,
+  onNewChat,
   workspaceLayoutControls,
 }: AIChatPanelProps) {
   const {
@@ -203,7 +208,8 @@ export function AIChatPanel({
     newChat,
   } = useAIChatStore();
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { toast } = useToast();
   const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
   const aiModelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
   const isInline = variant === 'inline';
@@ -222,6 +228,8 @@ export function AIChatPanel({
   const aiAvailable =
     aiAvailableProp !== undefined ? aiAvailableProp : internalAiAvailable === true;
   const aiChecking = aiAvailableProp === undefined && internalAiAvailable === null;
+
+  const chatContext = useCallback((): ChatContext => ({ locale }), [locale]);
 
   useEffect(() => {
     if (aiAvailableProp !== undefined) return;
@@ -253,6 +261,28 @@ export function AIChatPanel({
     });
   }, []);
 
+  const handleNewChat = useCallback(() => {
+    const { sessionId: activeSessionId } = useAIChatStore.getState();
+    const hadContent = messages.length > 0 || Boolean(activeSessionId);
+    newChat();
+    onNewChat?.();
+    if (hadContent) {
+      toast({ title: t('ai.newChat') });
+    } else {
+      requestAnimationFrame(() => {
+        if (workspaceMode) {
+          (
+            document.querySelector(
+              '[data-testid="workspace-unified-composer-input"]'
+            ) as HTMLTextAreaElement | null
+          )?.focus();
+        } else {
+          inputRef.current?.focus();
+        }
+      });
+    }
+  }, [messages.length, newChat, onNewChat, toast, t, workspaceMode]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, chatContextLabel]);
@@ -277,7 +307,7 @@ export function AIChatPanel({
     }
     if (isStreaming || prompt === lastSeedRef.current || !aiAvailable) return;
     lastSeedRef.current = prompt;
-    sendMessage(prompt, undefined, {
+    sendMessage(prompt, chatContext(), {
       onProductImportRun: onImportComplete,
     });
     onSeedPromptConsumed?.();
@@ -290,26 +320,27 @@ export function AIChatPanel({
     onImportComplete,
     aiAvailable,
     scrollChatIntoView,
+    chatContext,
   ]);
 
   const handleSend = useCallback(() => {
     const text = input.trim();
     if (!text || isStreaming || !aiAvailable) return;
     setInput('');
-    sendMessage(text, undefined, {
+    sendMessage(text, chatContext(), {
       onProductImportRun: onImportComplete,
     });
-  }, [input, isStreaming, onImportComplete, sendMessage, aiAvailable]);
+  }, [input, isStreaming, onImportComplete, sendMessage, aiAvailable, chatContext]);
 
   const handleWorkspaceSend = useCallback(
     async (payload: { text: string; turn?: ChatTurnPayload }) => {
       if (!payload.text.trim() || isStreaming || !aiAvailable) return;
-      await sendMessage(payload.text, undefined, {
+      await sendMessage(payload.text, chatContext(), {
         onProductImportRun: onImportComplete,
         turn: payload.turn,
       });
     },
-    [aiAvailable, isStreaming, onImportComplete, sendMessage]
+    [aiAvailable, isStreaming, onImportComplete, sendMessage, chatContext]
   );
 
   const handleKeyDown = useCallback(
@@ -520,15 +551,18 @@ export function AIChatPanel({
             <PanelLeftClose className="w-4 h-4" />
           )}
         </button>
-        <button
-          type="button"
-          onClick={() => newChat()}
-          className="hidden lg:inline-flex p-1.5 hover:bg-muted rounded-md"
-          aria-label={t('ai.newChat')}
-          data-testid="chat-session-rail-new"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        {sessionRailHidden && (
+          <button
+            type="button"
+            onClick={handleNewChat}
+            className="hidden lg:inline-flex p-1.5 hover:bg-muted rounded-md"
+            aria-label={t('ai.newChat')}
+            title={t('ai.newChat')}
+            data-testid="chat-session-rail-new"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
         {workspaceLayoutControls && <WorkspaceLayoutControls {...workspaceLayoutControls} />}
       </div>
     </div>
@@ -579,6 +613,7 @@ export function AIChatPanel({
                 variant="rail"
                 hideHeader
                 onSelect={id => void loadSession(id)}
+                onNewChat={handleNewChat}
                 onToggleCollapse={handleToggleSessionRail}
                 className="min-h-0 h-full"
               />
@@ -598,6 +633,7 @@ export function AIChatPanel({
           <ChatSessionList
             variant="panel"
             onSelect={id => void loadSession(id)}
+            onNewChat={handleNewChat}
             onClose={() => setHistoryDrawerOpen(false)}
             className="h-full"
           />

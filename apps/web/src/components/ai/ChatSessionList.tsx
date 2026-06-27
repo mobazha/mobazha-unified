@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 
 interface ChatSessionListProps {
   onSelect: (id: string) => void;
+  onNewChat?: () => void;
   onClose?: () => void;
   onToggleCollapse?: () => void;
   variant?: 'rail' | 'panel';
@@ -23,6 +24,7 @@ function sessionTitle(session: ChatSession, untitledWithTime: string): string {
 
 export function ChatSessionList({
   onSelect,
+  onNewChat,
   onClose,
   onToggleCollapse,
   variant = 'panel',
@@ -34,7 +36,6 @@ export function ChatSessionList({
   const sessionId = useAIChatStore(s => s.sessionId);
   const loadSessions = useAIChatStore(s => s.loadSessions);
   const deleteSession = useAIChatStore(s => s.deleteSession);
-  const newChat = useAIChatStore(s => s.newChat);
   const [loading, setLoading] = useState(true);
   const isRail = variant === 'rail';
   const closeOnSelect = Boolean(onClose);
@@ -55,7 +56,11 @@ export function ChatSessionList({
   };
 
   const handleNewChat = () => {
-    newChat();
+    if (onNewChat) {
+      onNewChat();
+    } else {
+      useAIChatStore.getState().newChat();
+    }
     onClose?.();
   };
 

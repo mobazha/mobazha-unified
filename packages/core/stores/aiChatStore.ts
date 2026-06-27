@@ -73,6 +73,9 @@ export function normalizeVisibleMessages(messages: ChatMessage[]): ChatMessage[]
       role: message.role,
       content,
       timestamp: message.timestamp,
+      ...(message.role === 'user' && message.attachmentDisplay?.length
+        ? { attachmentDisplay: message.attachmentDisplay }
+        : {}),
     });
     return visible;
   }, []);
@@ -131,14 +134,20 @@ export const useAIChatStore = create<AIChatState>()(
       close: () => set({ isOpen: false }),
       clearError: () => set({ error: null }),
 
-      newChat: () =>
+      newChat: () => {
+        if (activeAbortController) {
+          activeAbortController.abort();
+          activeAbortController = null;
+        }
         set({
           messages: [],
           sessionId: undefined,
+          isStreaming: false,
           error: null,
           attachedArtifacts: [],
           attachedSkillRuns: [],
-        }),
+        });
+      },
 
       attachArtifact: artifact => {
         const state = get();

@@ -41,6 +41,40 @@ describe('normalizeVisibleMessages', () => {
       },
     ]);
   });
+
+  it('preserves user attachment display metadata for session history replay', () => {
+    const messages: ChatMessage[] = [
+      {
+        id: 'user-1',
+        role: 'user',
+        content: 'Import from this image',
+        timestamp: 1,
+        attachmentDisplay: [
+          {
+            artifactId: 'art_img',
+            name: 'cover.jpg',
+            contentType: 'image/jpeg',
+          },
+        ],
+      },
+    ];
+
+    expect(normalizeVisibleMessages(messages)).toEqual([
+      {
+        id: 'user-1',
+        role: 'user',
+        content: 'Import from this image',
+        timestamp: 1,
+        attachmentDisplay: [
+          {
+            artifactId: 'art_img',
+            name: 'cover.jpg',
+            contentType: 'image/jpeg',
+          },
+        ],
+      },
+    ]);
+  });
 });
 
 describe('useAIChatStore attached artifacts', () => {

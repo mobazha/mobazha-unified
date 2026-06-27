@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useI18n } from '@mobazha/core';
+import { useEffect, useState } from 'react';
+import { getAgentArtifact, useI18n } from '@mobazha/core';
 import { FileText, ZoomIn } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface ChatAttachmentPreviewProps {
+  artifactId?: string;
   name: string;
   previewUrl?: string;
   contentType?: string;
@@ -16,6 +17,7 @@ interface ChatAttachmentPreviewProps {
 }
 
 export function ChatAttachmentPreview({
+  artifactId,
   name,
   previewUrl,
   contentType,
@@ -24,7 +26,39 @@ export function ChatAttachmentPreview({
 }: ChatAttachmentPreviewProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const canPreview = Boolean(previewUrl && (contentType?.startsWith('image/') || !contentType));
+  const [fetchedPreview, setFetchedPreview] = useState<
+    { artifactId: string; url?: string } | undefined
+  >();
+  const shouldFetchArtifact = Boolean(
+    !previewUrl && artifactId && contentType?.startsWith('image/')
+  );
+  const artifactPreviewUrl =
+    shouldFetchArtifact && fetchedPreview && fetchedPreview.artifactId === artifactId
+      ? fetchedPreview.url
+      : undefined;
+  const resolvedPreviewUrl = previewUrl || artifactPreviewUrl;
+  const canPreview = Boolean(
+    resolvedPreviewUrl && (contentType?.startsWith('image/') || !contentType)
+  );
+
+  useEffect(() => {
+    if (!shouldFetchArtifact || !artifactId) return;
+    let cancelled = false;
+    void getAgentArtifact(artifactId)
+      .then(artifact => {
+        const dataUrl = artifactImageDataUrl(
+          artifact.data,
+          artifact.contentType || contentType || 'image/jpeg'
+        );
+        if (!cancelled) setFetchedPreview({ artifactId, url: dataUrl });
+      })
+      .catch(() => {
+        if (!cancelled) setFetchedPreview({ artifactId, url: undefined });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [artifactId, contentType, shouldFetchArtifact]);
 
   const chipClass =
     variant === 'user'
@@ -50,7 +84,7 @@ export function ChatAttachmentPreview({
             aria-label={t('admin.workspace.chatAttachmentViewImage', { name })}
             onClick={() => setOpen(true)}
           >
-            <img src={previewUrl} alt="" className="h-14 w-14 object-cover" />
+            <img src={resolvedPreviewUrl} alt="" className="h-14 w-14 object-cover" />
             <span className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 transition-opacity group-hover:opacity-100">
               <ZoomIn className="h-4 w-4 text-white" aria-hidden />
             </span>
@@ -77,7 +111,7 @@ export function ChatAttachmentPreview({
               {t('admin.workspace.chatAttachmentPreviewTitle', { name })}
             </DialogTitle>
             <img
-              src={previewUrl}
+              src={resolvedPreviewUrl}
               alt={name}
               className="max-h-[min(75vh,720px)] w-full rounded-lg object-contain bg-muted/20"
             />
@@ -86,4 +120,30 @@ export function ChatAttachmentPreview({
       )}
     </>
   );
+}
+
+interface ArtifactImageData {
+  contentBase64?: unknown;
+  contentType?: unknown;
+}
+
+function artifactImageDataUrl(
+  rawData: string | undefined,
+  fallbackContentType: string
+): string | undefined {
+  if (!rawData) return undefined;
+  try {
+    const parsed = JSON.parse(rawData) as ArtifactImageData;
+    if (typeof parsed.contentBase64 !== 'string' || !parsed.contentBase64) {
+      return undefined;
+    }
+    const type =
+      typeof parsed.contentType === 'string' && parsed.contentType
+        ? parsed.contentType
+        : fallbackContentType;
+    if (!type.startsWith('image/')) return undefined;
+    return `data:${type};base64,${parsed.contentBase64}`;
+  } catch {
+    return undefined;
+  }
 }
