@@ -5030,6 +5030,8 @@ export const zh: PartialTranslationResource = {
       layoutShowTasks: '显示任务 ({{count}})',
       layoutEnterFocus: '专注对话',
       layoutExitFocus: '退出专注',
+      layoutCollapseHistory: '收起历史',
+      layoutExpandHistory: '展开历史',
       importRunOpenChat: '回到对话',
       badgeAiOff: 'AI 未配置',
       badgeLocalAi: '本地 AI',

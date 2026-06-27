@@ -2965,6 +2965,8 @@ export interface TranslationResource {
       layoutShowTasks?: string;
       layoutEnterFocus?: string;
       layoutExitFocus?: string;
+      layoutCollapseHistory?: string;
+      layoutExpandHistory?: string;
       importRunOpenChat?: string;
       importRunTaskTitle?: string;
       importRunTaskSummary?: string;

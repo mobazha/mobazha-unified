@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useFeature, useI18n, type OrderListItem, type ProductListItem } from '@mobazha/core';
 import { AIChatPanel } from '@/components/AIChatPanel';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,16 +11,11 @@ import { useSyncedListingProviders } from '@/hooks/useSyncedListingProviders';
 import { AiWorkspaceSetupBanner } from './AiWorkspaceSetupBanner';
 import { AiWorkspaceStatusBadge } from './AiWorkspaceStatusBadge';
 import { WorkspaceImportRunBanner, rememberWorkspaceImportRun } from './WorkspaceImportRunBanner';
-import { WorkspaceLayoutControls } from './WorkspaceLayoutControls';
 import { WorkspaceOpportunitiesRail } from './WorkspaceOpportunityCards';
 import { WorkspacePendingApprovals } from './WorkspacePendingApprovals';
 import { getWorkspaceImportRunId } from './workspaceImportRunStorage';
-import {
-  getWorkspaceFocusMode,
-  getWorkspaceRailCollapsed,
-  setWorkspaceFocusMode,
-  setWorkspaceRailCollapsed,
-} from './workspaceLayoutStorage';
+import { getWorkspaceRailCollapsed, setWorkspaceRailCollapsed } from './workspaceLayoutStorage';
+import { useWorkspaceFocus } from './workspaceFocusContext';
 import { useAiWorkspaceStatus } from './useAiWorkspaceStatus';
 import { useWorkspaceOpportunities } from './useWorkspaceOpportunities';
 
@@ -48,7 +43,7 @@ export function AiWorkspacePanel({
   const [activeOpportunityId, setActiveOpportunityId] = useState<string | null>(null);
   const [importRunId, setImportRunId] = useState<string | null>(() => getWorkspaceImportRunId());
   const [railCollapsed, setRailCollapsed] = useState(() => getWorkspaceRailCollapsed());
-  const [focusMode, setFocusMode] = useState(() => getWorkspaceFocusMode());
+  const { focusMode, toggleFocusMode } = useWorkspaceFocus();
   const { available: aiAvailable, loading: aiStatusLoading, status } = useAiWorkspaceStatus();
   const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
   const { getProvider } = useSyncedListingProviders();
@@ -116,85 +111,79 @@ export function AiWorkspacePanel({
   }, []);
 
   const handleToggleFocus = useCallback(() => {
-    setFocusMode(prev => {
-      const next = !prev;
-      setWorkspaceFocusMode(next);
-      if (next) {
-        setRailCollapsed(true);
-        setWorkspaceRailCollapsed(true);
-      }
-      return next;
-    });
-  }, []);
+    const enteringFocus = !focusMode;
+    if (enteringFocus) {
+      setRailCollapsed(true);
+      setWorkspaceRailCollapsed(true);
+    }
+    toggleFocusMode();
+  }, [focusMode, toggleFocusMode]);
 
   const showOpportunitiesRail = !focusMode && !railCollapsed;
 
+  useEffect(() => {
+    const mainInner = document.querySelector<HTMLElement>('main [class*="max-w-7xl"]');
+    if (!mainInner) return;
+    if (focusMode) {
+      mainInner.classList.add('!py-2', '!pb-4');
+    } else {
+      mainInner.classList.remove('!py-2', '!pb-4');
+    }
+    return () => {
+      mainInner.classList.remove('!py-2', '!pb-4');
+    };
+  }, [focusMode]);
+
   return (
     <div
-      className="space-y-6"
+      className={cn('space-y-6', focusMode && 'space-y-0 -mx-4 sm:-mx-6 lg:-mx-8')}
       data-testid="admin-ai-workspace"
       data-workspace-focus={focusMode ? 'true' : undefined}
     >
-      {!aiStatusLoading && !aiAvailable && <AiWorkspaceSetupBanner />}
+      {!focusMode && !aiStatusLoading && !aiAvailable && <AiWorkspaceSetupBanner />}
 
-      {(aiStatusLoading || aiAvailable) && (
+      {!focusMode && (aiStatusLoading || aiAvailable) && (
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <div className="lg:hidden">
-            <WorkspaceLayoutControls
-              railCollapsed={railCollapsed}
-              focusMode={focusMode}
-              opportunityCount={opportunities.length}
-              onToggleRail={handleToggleRail}
-              onToggleFocus={handleToggleFocus}
-              className="flex"
-            />
-          </div>
           <AiWorkspaceStatusBadge status={status} loading={aiStatusLoading} />
         </div>
       )}
 
-      {aiAvailable && (
+      {!focusMode && aiAvailable && (
         <>
           <WorkspaceImportRunBanner runId={importRunId} onRunIdChange={setImportRunId} />
           <WorkspacePendingApprovals />
         </>
       )}
 
+      {!focusMode && (
+        <div className="lg:hidden">
+          <WorkspaceOpportunitiesRail
+            mobileOnly
+            items={opportunities}
+            loading={cardsLoading}
+            activeOpportunityId={activeOpportunityId}
+            onChatAction={handleChatAction}
+          />
+        </div>
+      )}
+
       <div
         className={cn(
           'lg:grid lg:gap-6 lg:items-start space-y-4 lg:space-y-0',
           showOpportunitiesRail
-            ? 'lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]'
-            : 'lg:grid-cols-1'
+            ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,300px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,320px)]'
+            : 'lg:grid-cols-1',
+          focusMode && 'lg:gap-0 space-y-0'
         )}
       >
-        {showOpportunitiesRail && (
-          <section className={cn(!aiAvailable && 'opacity-80', 'order-2 lg:order-1')}>
-            <WorkspaceOpportunitiesRail
-              items={opportunities}
-              loading={cardsLoading}
-              activeOpportunityId={activeOpportunityId}
-              onChatAction={handleChatAction}
-            />
-          </section>
-        )}
-
         <section
-          className={cn('order-1 lg:order-2 min-h-0 w-full', !focusMode && 'lg:sticky lg:top-4')}
+          className={cn(
+            'min-h-0 w-full',
+            !focusMode && 'lg:sticky lg:top-4',
+            focusMode && 'lg:static'
+          )}
           id="workspace-chat-panel"
         >
-          <div className="mb-3 hidden lg:flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-foreground">
-              {t('admin.workspace.chatTitle')}
-            </h3>
-            <WorkspaceLayoutControls
-              railCollapsed={railCollapsed}
-              focusMode={focusMode}
-              opportunityCount={opportunities.length}
-              onToggleRail={handleToggleRail}
-              onToggleFocus={handleToggleFocus}
-            />
-          </div>
           <AIChatPanel
             variant="inline"
             seedPrompt={seedPrompt}
@@ -210,8 +199,32 @@ export function AiWorkspacePanel({
               setActiveOpportunityId(null);
             }}
             onImportComplete={handleImportComplete}
+            workspaceLayoutControls={{
+              focusMode,
+              railCollapsed,
+              opportunityCount: opportunities.length,
+              onToggleRail: handleToggleRail,
+              onToggleFocus: handleToggleFocus,
+            }}
           />
         </section>
+
+        {showOpportunitiesRail && (
+          <section
+            className={cn(
+              !aiAvailable && 'opacity-80',
+              'hidden lg:block min-h-0 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-16rem)] lg:overflow-y-auto'
+            )}
+          >
+            <WorkspaceOpportunitiesRail
+              desktopOnly
+              items={opportunities}
+              loading={cardsLoading}
+              activeOpportunityId={activeOpportunityId}
+              onChatAction={handleChatAction}
+            />
+          </section>
+        )}
       </div>
     </div>
   );

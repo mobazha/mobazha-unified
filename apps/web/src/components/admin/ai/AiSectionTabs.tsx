@@ -6,6 +6,7 @@ import { useI18n, useFeature, getAdminAiModelsPath } from '@mobazha/core';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAiWorkspaceStatus } from '@/components/admin/workspace/useAiWorkspaceStatus';
+import { useWorkspaceFocusOptional } from '@/components/admin/workspace/workspaceFocusContext';
 
 export type AiSectionTab = 'workspace' | 'connect' | 'models';
 
@@ -24,6 +25,8 @@ export function AiSectionTabs() {
   const aiModelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
   const { available: aiAvailable, loading: aiStatusLoading } = useAiWorkspaceStatus();
   const showModelsPending = !aiStatusLoading && !aiAvailable;
+  const workspaceFocus = useWorkspaceFocusOptional();
+  const hideWorkspaceChrome = active === 'workspace' && workspaceFocus?.focusMode;
 
   const fromSettings = searchParams.get('from') === 'settings';
   const backHref = fromSettings ? '/admin/settings' : '/admin/ai/workspace';
@@ -70,6 +73,10 @@ export function AiSectionTabs() {
         </div>
       </div>
     );
+  }
+
+  if (hideWorkspaceChrome) {
+    return null;
   }
 
   return (

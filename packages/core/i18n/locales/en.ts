@@ -5552,6 +5552,8 @@ export const en: TranslationResource = {
       layoutShowTasks: 'Show tasks ({{count}})',
       layoutEnterFocus: 'Focus on chat',
       layoutExitFocus: 'Exit focus',
+      layoutCollapseHistory: 'Hide history',
+      layoutExpandHistory: 'Show history',
       importRunOpenChat: 'Back to chat',
       badgeAiOff: 'AI not configured',
       badgeLocalAi: 'Local AI',
