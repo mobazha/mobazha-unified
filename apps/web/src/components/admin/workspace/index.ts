@@ -6,3 +6,4 @@ export {
   clearWorkspaceImportRunId,
 } from './workspaceImportRunStorage';
 export { looksLikeProductImport } from './workspaceComposerUtils';
+export { WorkspaceFileDraftStrip } from './WorkspaceFileDraftStrip';

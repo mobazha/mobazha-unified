@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -9,27 +10,37 @@ import {
   type KeyboardEvent,
 } from 'react';
 import {
+  buildTextChatAttachment,
   createSourceMaterialArtifact,
-  ingestProductImport,
-  ingestProductImportPaste,
+  MAX_ATTACHED_CHAT_ARTIFACTS,
+  stageFileForAgentChat,
   useI18n,
+  type ChatTurnPayload,
 } from '@mobazha/core';
 import { useAIChatStore } from '@mobazha/core/stores';
 import { Loader2, Paperclip, Send, Square } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { WorkspaceFileDraftStrip } from './WorkspaceFileDraftStrip';
 import {
   filterProductImportFiles,
   looksLikeProductImport,
   PRODUCT_IMPORT_FILE_ACCEPT,
 } from './workspaceComposerUtils';
+import {
+  type ComposerFileDraft,
+  composerFileDraftTotalBytes,
+  MAX_COMPOSER_FILE_DRAFT_BYTES,
+  MAX_COMPOSER_FILE_DRAFTS,
+  mergeComposerFileDrafts,
+  revokeComposerFileDrafts,
+} from './workspaceComposerFileDraft';
 
 interface WorkspaceUnifiedComposerProps {
   disabled?: boolean;
   isStreaming?: boolean;
-  onSendMessage: (text: string) => void;
+  onSendMessage: (payload: { text: string; turn?: ChatTurnPayload }) => Promise<void>;
   onCancelStream?: () => void;
-  onImportComplete?: (runId: string) => void;
 }
 
 export function WorkspaceUnifiedComposer({
@@ -37,41 +48,109 @@ export function WorkspaceUnifiedComposer({
   isStreaming = false,
   onSendMessage,
   onCancelStream,
-  onImportComplete,
 }: WorkspaceUnifiedComposerProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const sessionId = useAIChatStore(s => s.sessionId);
   const attachArtifact = useAIChatStore(s => s.attachArtifact);
+  const attachedArtifactCount = useAIChatStore(s => s.attachedArtifacts.length);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [fileDrafts, setFileDrafts] = useState<ComposerFileDraft[]>([]);
   const dragDepthRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileDraftsRef = useRef(fileDrafts);
+
+  useEffect(() => {
+    fileDraftsRef.current = fileDrafts;
+  }, [fileDrafts]);
+
+  useEffect(() => {
+    return () => {
+      revokeComposerFileDrafts(fileDraftsRef.current);
+    };
+  }, []);
+
+  const attachArtifactRecord = useCallback(
+    async (input: {
+      text: string;
+      name: string;
+      summary?: string;
+      metadata?: Record<string, unknown>;
+    }) => {
+      const artifact = await createSourceMaterialArtifact({
+        text: input.text,
+        name: input.name,
+        summary: input.summary,
+        threadId: sessionId,
+        metadata: input.metadata,
+      });
+      const result = attachArtifact({
+        id: artifact.id,
+        name: artifact.name || artifact.sourceName || input.name,
+        summary: artifact.summary,
+        attachment: buildTextChatAttachment(input.name, input.text),
+      });
+      if (result === 'max_reached') {
+        throw new Error('artifact_max_reached');
+      }
+      return result;
+    },
+    [attachArtifact, sessionId]
+  );
+
+  const buildStagedTurn = useCallback(
+    async (drafts: ComposerFileDraft[]): Promise<ChatTurnPayload> => {
+      if (attachedArtifactCount + drafts.length > MAX_ATTACHED_CHAT_ARTIFACTS) {
+        throw new Error('artifact_max_reached');
+      }
+      if (composerFileDraftTotalBytes(drafts) > MAX_COMPOSER_FILE_DRAFT_BYTES) {
+        throw new Error('file_total_too_large');
+      }
+
+      const artifactIds: string[] = [];
+      const attachments: ChatTurnPayload['attachments'] = [];
+      const display: ChatTurnPayload['display'] = [];
+
+      for (const draft of drafts) {
+        let staged;
+        try {
+          staged = await stageFileForAgentChat({
+            file: draft.file,
+            threadId: sessionId,
+          });
+        } catch (err) {
+          if (err instanceof Error && err.message === 'file_too_large') {
+            throw new Error('file_too_large');
+          }
+          throw err;
+        }
+        const { artifact, attachment } = staged;
+        artifactIds.push(artifact.id);
+        attachments.push(attachment);
+        display.push({
+          name: draft.file.name,
+          contentType: attachment.contentType,
+          previewUrl: draft.previewUrl,
+        });
+      }
+
+      return { artifactIds, attachments, display };
+    },
+    [attachedArtifactCount, sessionId]
+  );
 
   const handleAttachReference = useCallback(async () => {
     const material = text.trim();
     if (!material || busy || isStreaming) return;
     setBusy(true);
     try {
-      const artifact = await createSourceMaterialArtifact({
+      const result = await attachArtifactRecord({
         text: material,
-        threadId: sessionId,
+        name: material.slice(0, 48),
         metadata: { source: 'workspace_unified_composer' },
       });
-      const result = attachArtifact({
-        id: artifact.id,
-        name: artifact.name || artifact.sourceName || t('admin.workspace.sourceMaterialUntitled'),
-        summary: artifact.summary,
-      });
-      if (result === 'max_reached') {
-        toast({
-          title: t('common.error'),
-          description: t('admin.workspace.sourceMaterialMaxReached'),
-          variant: 'destructive',
-        });
-        return;
-      }
       if (result === 'duplicate') return;
       setText('');
       toast({
@@ -83,34 +162,81 @@ export function WorkspaceUnifiedComposer({
       toast({
         title: t('common.error'),
         description:
-          err instanceof Error ? err.message : t('admin.workspace.sourceMaterialAttachFailed'),
+          err instanceof Error && err.message === 'artifact_max_reached'
+            ? t('admin.workspace.sourceMaterialMaxReached')
+            : err instanceof Error
+              ? err.message
+              : t('admin.workspace.sourceMaterialAttachFailed'),
         variant: 'destructive',
       });
     } finally {
       setBusy(false);
     }
-  }, [attachArtifact, busy, isStreaming, sessionId, t, text, toast]);
+  }, [attachArtifactRecord, busy, isStreaming, t, text, toast]);
 
-  const runImport = useCallback(
-    async (material: string, sourceName = 'workspace-paste.csv') => {
-      const result = await ingestProductImportPaste(material, {
-        threadId: sessionId,
-        sourceName,
-        contentType: 'text/csv',
-      });
-      setText('');
-      onImportComplete?.(result.skillRun.id);
-      toast({
-        title: t('admin.workspace.sourceMaterialImportStartedTitle'),
-        description: t('admin.workspace.sourceMaterialImportStartedDescription'),
-        variant: 'success',
+  const resolveOutgoingMessage = useCallback(
+    (material: string, files: File[]) => {
+      if (material) return material;
+      if (files.length === 1) {
+        return t('admin.workspace.composerFileChatDefaultSingle', { name: files[0].name });
+      }
+      return t('admin.workspace.composerFileChatDefaultMultiple', {
+        names: files.map(file => file.name).join(t('admin.workspace.composerFileNameJoiner')),
       });
     },
-    [onImportComplete, sessionId, t, toast]
+    [t]
   );
 
-  const ingestFiles = useCallback(
-    async (files: File[]) => {
+  const handleSend = useCallback(async () => {
+    const material = text.trim();
+    const draftsToSend = [...fileDrafts];
+    const pendingFiles = draftsToSend.map(draft => draft.file);
+    const hasFiles = draftsToSend.length > 0;
+    if ((!material && !hasFiles) || busy || isStreaming || disabled) return;
+
+    setBusy(true);
+    try {
+      const turn = hasFiles ? await buildStagedTurn(draftsToSend) : undefined;
+      const message = resolveOutgoingMessage(material, pendingFiles);
+      await onSendMessage({ text: message, turn });
+      if (hasFiles) {
+        revokeComposerFileDrafts(draftsToSend);
+        setFileDrafts([]);
+      }
+      setText('');
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description:
+          err instanceof Error && err.message === 'artifact_max_reached'
+            ? t('admin.workspace.sourceMaterialMaxReached')
+            : err instanceof Error && err.message === 'file_too_large'
+              ? t('admin.workspace.composerFileTooLargeForText')
+              : err instanceof Error && err.message === 'file_total_too_large'
+                ? t('admin.workspace.composerFileDraftTotalSizeExceeded')
+                : err instanceof Error
+                  ? err.message
+                  : t('admin.workspace.sourceMaterialAttachFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [
+    busy,
+    buildStagedTurn,
+    disabled,
+    fileDrafts,
+    isStreaming,
+    onSendMessage,
+    resolveOutgoingMessage,
+    t,
+    text,
+    toast,
+  ]);
+
+  const addFileDrafts = useCallback(
+    (files: File[]) => {
       const accepted = filterProductImportFiles(files);
       if (!accepted.length) {
         toast({
@@ -125,62 +251,51 @@ export function WorkspaceUnifiedComposer({
           description: t('admin.workspace.composerSomeFilesSkipped'),
         });
       }
-      setBusy(true);
-      try {
-        const result = await ingestProductImport(accepted, { threadId: sessionId });
-        onImportComplete?.(result.skillRun.id);
-        toast({
-          title: t('admin.workspace.sourceMaterialImportStartedTitle'),
-          description: t('admin.workspace.sourceMaterialImportStartedDescription'),
-          variant: 'success',
-        });
-      } catch (err) {
-        toast({
-          title: t('common.error'),
-          description:
-            err instanceof Error ? err.message : t('admin.workspace.sourceMaterialImportFailed'),
-          variant: 'destructive',
-        });
-      } finally {
-        setBusy(false);
-      }
+
+      setFileDrafts(prev => {
+        const { drafts, added, skippedLimit, skippedTotalBytes } = mergeComposerFileDrafts(
+          prev,
+          accepted
+        );
+        if (skippedLimit > 0) {
+          toast({
+            description: t('admin.workspace.composerFileDraftMaxReached', {
+              count: MAX_COMPOSER_FILE_DRAFTS,
+            }),
+          });
+        }
+        if (skippedTotalBytes > 0) {
+          toast({
+            description: t('admin.workspace.composerFileDraftTotalSizeExceeded'),
+          });
+        }
+        if (added === 0) {
+          return prev;
+        }
+        return drafts;
+      });
     },
-    [onImportComplete, sessionId, t, toast]
+    [t, toast]
   );
 
-  const handleSend = useCallback(async () => {
-    const material = text.trim();
-    if (!material || busy || isStreaming || disabled) return;
-
-    if (looksLikeProductImport(material)) {
-      setBusy(true);
-      try {
-        await runImport(material);
-      } catch (err) {
-        toast({
-          title: t('common.error'),
-          description:
-            err instanceof Error ? err.message : t('admin.workspace.sourceMaterialImportFailed'),
-          variant: 'destructive',
-        });
-      } finally {
-        setBusy(false);
+  const removeFileDraft = useCallback((id: string) => {
+    setFileDrafts(prev => {
+      const target = prev.find(draft => draft.id === id);
+      if (target) {
+        revokeComposerFileDrafts([target]);
       }
-      return;
-    }
-
-    setText('');
-    onSendMessage(material);
-  }, [busy, disabled, isStreaming, onSendMessage, runImport, t, text, toast]);
+      return prev.filter(draft => draft.id !== id);
+    });
+  }, []);
 
   const handleFileChange = useCallback(
-    async (e: ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files ? Array.from(e.target.files) : [];
       e.target.value = '';
       if (!files.length || busy || isStreaming || disabled) return;
-      await ingestFiles(files);
+      addFileDrafts(files);
     },
-    [busy, disabled, ingestFiles, isStreaming]
+    [addFileDrafts, busy, disabled, isStreaming]
   );
 
   const handleDragEnter = useCallback(
@@ -207,16 +322,16 @@ export function WorkspaceUnifiedComposer({
   }, []);
 
   const handleDrop = useCallback(
-    async (e: DragEvent) => {
+    (e: DragEvent) => {
       e.preventDefault();
       dragDepthRef.current = 0;
       setIsDragging(false);
       if (disabled || busy || isStreaming) return;
       const files = Array.from(e.dataTransfer.files ?? []);
       if (!files.length) return;
-      await ingestFiles(files);
+      addFileDrafts(files);
     },
-    [busy, disabled, ingestFiles, isStreaming]
+    [addFileDrafts, busy, disabled, isStreaming]
   );
 
   const handleKeyDown = useCallback(
@@ -229,7 +344,8 @@ export function WorkspaceUnifiedComposer({
     [handleSend]
   );
 
-  const actionDisabled = disabled || busy || isStreaming || !text.trim();
+  const hasPendingFiles = fileDrafts.length > 0;
+  const actionDisabled = disabled || busy || isStreaming || (!text.trim() && !hasPendingFiles);
 
   return (
     <div
@@ -241,7 +357,7 @@ export function WorkspaceUnifiedComposer({
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
-      onDrop={e => void handleDrop(e)}
+      onDrop={handleDrop}
     >
       {isDragging && (
         <p
@@ -251,13 +367,18 @@ export function WorkspaceUnifiedComposer({
           {t('admin.workspace.composerDropHint')}
         </p>
       )}
+      <WorkspaceFileDraftStrip
+        drafts={fileDrafts}
+        hint={t('admin.workspace.composerFileDraftHintChat')}
+        onRemove={removeFileDraft}
+      />
       <input
         ref={fileInputRef}
         type="file"
         className="hidden"
         accept={PRODUCT_IMPORT_FILE_ACCEPT}
         multiple
-        onChange={e => void handleFileChange(e)}
+        onChange={handleFileChange}
       />
       <div className="flex items-end gap-2">
         <button
@@ -301,7 +422,7 @@ export function WorkspaceUnifiedComposer({
           </button>
         )}
       </div>
-      {text.trim().length > 0 && !looksLikeProductImport(text) && (
+      {text.trim().length > 0 && !looksLikeProductImport(text) && !hasPendingFiles && (
         <button
           type="button"
           disabled={actionDisabled}
@@ -312,7 +433,9 @@ export function WorkspaceUnifiedComposer({
           {t('admin.workspace.composerAttachReference')}
         </button>
       )}
-      <p className="text-[11px] text-muted-foreground">{t('admin.workspace.composerHint')}</p>
+      {!hasPendingFiles && (
+        <p className="text-[11px] text-muted-foreground">{t('admin.workspace.composerHint')}</p>
+      )}
     </div>
   );
 }

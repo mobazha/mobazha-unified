@@ -13,7 +13,11 @@ export type {
   ChatSSEEvent,
   ChatStreamCallbacks,
   ToolCallInfo,
+  ChatAttachment,
   ChatContext,
+  ChatTurnAttachmentDisplay,
+  ChatTurnPayload,
+  SendMessageOptions,
 } from './chatService';
 export {
   listAgentApprovals,
@@ -25,10 +29,15 @@ export {
   normalizeAgentApprovalRecord,
 } from './approvalService';
 export {
+  buildTextChatAttachment,
   createSourceMaterialArtifact,
+  createStagingFileArtifact,
   getAgentArtifact,
+  MAX_CHAT_ATTACHMENT_TEXT_LEN,
   normalizeAgentArtifactRecord,
+  stageFileForAgentChat,
 } from './artifactService';
+export type { StageFileForAgentChatResult } from './artifactService';
 export type {
   AgentApproval,
   AgentApprovalListParams,
@@ -46,6 +55,7 @@ export type {
   AttachedChatArtifact,
   AttachedChatSkillRun,
   CreateSourceMaterialArtifactInput,
+  CreateStagingFileArtifactInput,
 } from '../../types/agentArtifact';
 export {
   MAX_ATTACHED_CHAT_ARTIFACTS,
@@ -54,6 +64,7 @@ export {
 export {
   ingestProductImport,
   ingestProductImportPaste,
+  PRODUCT_IMPORT_INGEST_INTENT,
   getProductImportWorkbench,
   createProductImportProposalApproval,
   createProductImportRunApprovals,
@@ -67,6 +78,7 @@ export {
   formatProductImportDraftPrice,
   productImportDraftQuantity,
 } from './productImportService';
+export { extractProductImportRunId } from './productImportToolResult';
 export type {
   IngestProductImportOptions,
   ProductImportAdvanceRequest,

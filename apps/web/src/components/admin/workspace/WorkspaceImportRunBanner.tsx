@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getProductImportWorkbench, useI18n } from '@mobazha/core';
-import { ArrowRight, Loader2, Package, X } from 'lucide-react';
+import { ArrowRight, Loader2, MessageSquare, Package, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -11,6 +11,7 @@ import {
   getWorkspaceImportRunId,
   setWorkspaceImportRunId,
 } from './workspaceImportRunStorage';
+import { scrollToWorkspaceChatPanel } from './workspaceLayoutStorage';
 
 interface WorkspaceImportRunBannerProps {
   runId?: string | null;
@@ -100,7 +101,18 @@ export function WorkspaceImportRunBanner({ runId, onRunIdChange }: WorkspaceImpo
           <p className="text-xs text-muted-foreground mt-0.5">{taskSummary}</p>
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-9"
+          onClick={scrollToWorkspaceChatPanel}
+          data-testid="workspace-import-run-scroll-chat"
+        >
+          <MessageSquare className="mr-1.5 h-4 w-4" />
+          {t('admin.workspace.importRunOpenChat')}
+        </Button>
         {canContinueReview && (
           <Button asChild size="sm" className="min-h-9">
             <Link href={`/admin/products/import/${encodeURIComponent(activeRunId)}`}>

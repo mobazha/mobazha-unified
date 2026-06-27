@@ -17,6 +17,8 @@ export interface ChatMessage {
   toolCallId?: string;
   toolName?: string;
   timestamp?: number;
+  /** User-turn attachment previews shown in the chat transcript */
+  attachmentDisplay?: ChatTurnAttachmentDisplay[];
 }
 
 export interface ToolCallInfo {
@@ -70,6 +72,18 @@ export interface ChatStreamCallbacks {
 
 // --- Streaming Chat ---
 
+/** File attached to the current chat turn (matches node ChatAttachment). */
+export interface ChatAttachment {
+  id?: string;
+  name?: string;
+  contentType?: string;
+  url?: string;
+  sourceUri?: string;
+  size?: number;
+  text?: string;
+  contentBase64?: string;
+}
+
 export interface ChatContext {
   currentPage?: string;
   selectedListingSlug?: string;
@@ -77,6 +91,26 @@ export interface ChatContext {
   locale?: string;
   artifactIds?: string[];
   skillRunIds?: string[];
+  attachments?: ChatAttachment[];
+}
+
+export interface ChatTurnAttachmentDisplay {
+  name: string;
+  contentType?: string;
+  previewUrl?: string;
+}
+
+/** Explicit attachment payload for a single chat turn (bypasses store timing). */
+export interface ChatTurnPayload {
+  artifactIds: string[];
+  attachments: ChatAttachment[];
+  display: ChatTurnAttachmentDisplay[];
+}
+
+export interface SendMessageOptions {
+  onProductImportRun?: (runId: string) => void;
+  /** When set, used for this request instead of reading attachedArtifacts from the store */
+  turn?: ChatTurnPayload;
 }
 
 export async function sendChatMessage(

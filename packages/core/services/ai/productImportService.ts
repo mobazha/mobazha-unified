@@ -29,6 +29,8 @@ import type { AgentApprovalRecord, AgentApprovalRecordRaw } from '../../types/ag
 import { nodeAuthGet, nodeAuthPost, nodeAuthRequest } from '../api/helpers';
 import { normalizeAgentApprovalRecord } from './approvalService';
 
+export const PRODUCT_IMPORT_INGEST_INTENT = 'product_import';
+
 const MAX_IMPORT_FILES = 20;
 const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
 
@@ -356,6 +358,7 @@ export async function ingestProductImport(
   }
 
   const formData = new FormData();
+  formData.append('intent', PRODUCT_IMPORT_INGEST_INTENT);
   if (options.threadId?.trim()) {
     formData.append('threadId', options.threadId.trim());
   }
@@ -388,6 +391,7 @@ export async function ingestProductImportPaste(
   const sourceName = options.sourceName?.trim() || 'paste.csv';
   const contentType = options.contentType?.trim() || 'text/csv';
   const body: Record<string, unknown> = {
+    intent: PRODUCT_IMPORT_INGEST_INTENT,
     files: [{ sourceName, contentType, text: material }],
   };
   if (options.threadId?.trim()) body.threadId = options.threadId.trim();

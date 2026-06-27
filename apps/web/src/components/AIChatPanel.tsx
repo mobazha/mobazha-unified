@@ -3,7 +3,13 @@
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import Link from 'next/link';
 import { useAIChatStore } from '@mobazha/core/stores';
-import { useI18n, aiSettingsApi, useFeature, getAdminAiModelsPath } from '@mobazha/core';
+import {
+  useI18n,
+  aiSettingsApi,
+  useFeature,
+  getAdminAiModelsPath,
+  type ChatTurnPayload,
+} from '@mobazha/core';
 import {
   MessageSquare,
   X,
@@ -20,6 +26,8 @@ import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
 import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 import { AttachedArtifactChips } from '@/components/ai/AttachedArtifactChips';
 import { AttachedSkillRunChips } from '@/components/ai/AttachedSkillRunChips';
+import { ChatAttachmentPreview } from '@/components/ai/ChatAttachmentPreview';
+import { WorkspaceAssistantMarkdown } from '@/components/ai/WorkspaceAssistantMarkdown';
 import { WorkspaceChatContextBar } from '@/components/admin/workspace/WorkspaceChatContextBar';
 import { WorkspaceUnifiedComposer } from '@/components/admin/workspace/WorkspaceUnifiedComposer';
 import { SourceMaterialComposer } from '@/components/ai/SourceMaterialComposer';
@@ -71,9 +79,14 @@ function MarkdownContent({ content }: { content: string }) {
   );
 }
 
-function ChatBubble({ msg }: { msg: ChatMessage }) {
+function ChatBubble({ msg, workspaceMode = false }: { msg: ChatMessage; workspaceMode?: boolean }) {
   const isUser = msg.role === 'user';
   const updateToolApproval = useAIChatStore(s => s.updateToolApproval);
+  const bubbleMaxWidth = workspaceMode
+    ? isUser
+      ? 'max-w-[min(100%,28rem)]'
+      : 'max-w-[min(100%,48rem)]'
+    : 'max-w-[80%]';
 
   return (
     <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -85,16 +98,32 @@ function ChatBubble({ msg }: { msg: ChatMessage }) {
         {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
       </div>
       <div
-        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+        className={`${bubbleMaxWidth} rounded-lg px-3 py-2 text-sm ${
           isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
         }`}
       >
         {msg.content &&
           (isUser ? (
             <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+          ) : workspaceMode ? (
+            <WorkspaceAssistantMarkdown content={msg.content} />
           ) : (
             <MarkdownContent content={msg.content} />
           ))}
+        {isUser && msg.attachmentDisplay && msg.attachmentDisplay.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {msg.attachmentDisplay.map(item => (
+              <li key={item.name}>
+                <ChatAttachmentPreview
+                  name={item.name}
+                  previewUrl={item.previewUrl}
+                  contentType={item.contentType}
+                  variant="user"
+                />
+              </li>
+            ))}
+          </ul>
+        )}
         {msg.toolCalls?.map(tc => (
           <div key={tc.id}>
             <ToolCallBadge tool={tc} />
@@ -197,6 +226,8 @@ export interface AIChatPanelProps {
   /** minimal: muted empty state only (workspace banner owns CTA). default: weak configure link. */
   setupPromptVariant?: 'default' | 'minimal';
   workspaceMode?: boolean;
+  /** Full-width workspace layout — taller chat shell */
+  workspaceFocusMode?: boolean;
   chatContextLabel?: string | null;
   onChatContextDismiss?: () => void;
   onImportComplete?: (runId: string) => void;
@@ -210,6 +241,7 @@ export function AIChatPanel({
   aiStatusLoading = false,
   setupPromptVariant = 'default',
   workspaceMode = false,
+  workspaceFocusMode = false,
   chatContextLabel,
   onChatContextDismiss,
   onImportComplete,
@@ -288,24 +320,39 @@ export function AIChatPanel({
     }
     if (isStreaming || prompt === lastSeedRef.current || !aiAvailable) return;
     lastSeedRef.current = prompt;
-    sendMessage(prompt);
+    sendMessage(prompt, undefined, {
+      onProductImportRun: onImportComplete,
+    });
     onSeedPromptConsumed?.();
     requestAnimationFrame(() => scrollChatIntoView());
-  }, [seedPrompt, isStreaming, sendMessage, onSeedPromptConsumed, aiAvailable, scrollChatIntoView]);
+  }, [
+    seedPrompt,
+    isStreaming,
+    sendMessage,
+    onSeedPromptConsumed,
+    onImportComplete,
+    aiAvailable,
+    scrollChatIntoView,
+  ]);
 
   const handleSend = useCallback(() => {
     const text = input.trim();
     if (!text || isStreaming || !aiAvailable) return;
     setInput('');
-    sendMessage(text);
-  }, [input, isStreaming, sendMessage, aiAvailable]);
+    sendMessage(text, undefined, {
+      onProductImportRun: onImportComplete,
+    });
+  }, [input, isStreaming, onImportComplete, sendMessage, aiAvailable]);
 
   const handleWorkspaceSend = useCallback(
-    (text: string) => {
-      if (!text.trim() || isStreaming || !aiAvailable) return;
-      sendMessage(text);
+    async (payload: { text: string; turn?: ChatTurnPayload }) => {
+      if (!payload.text.trim() || isStreaming || !aiAvailable) return;
+      await sendMessage(payload.text, undefined, {
+        onProductImportRun: onImportComplete,
+        turn: payload.turn,
+      });
     },
-    [aiAvailable, isStreaming, sendMessage]
+    [aiAvailable, isStreaming, onImportComplete, sendMessage]
   );
 
   const handleKeyDown = useCallback(
@@ -331,7 +378,11 @@ export function AIChatPanel({
   }
 
   const shellClass = isInline
-    ? 'relative flex flex-col min-h-[420px] h-[min(520px,62vh)] bg-card border border-border rounded-xl overflow-hidden'
+    ? workspaceMode
+      ? workspaceFocusMode
+        ? 'relative flex flex-col min-h-[480px] h-[min(620px,calc(100dvh-17rem))] max-h-[calc(100dvh-17rem)] bg-card border border-border rounded-xl overflow-hidden shadow-sm'
+        : 'relative flex flex-col min-h-[480px] h-[min(560px,calc(100dvh-19rem))] max-h-[calc(100dvh-19rem)] bg-card border border-border rounded-xl overflow-hidden shadow-sm'
+      : 'relative flex flex-col min-h-[420px] h-[min(520px,62vh)] bg-card border border-border rounded-xl overflow-hidden'
     : 'fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 sm:w-[400px] sm:h-[600px] bg-background border border-border sm:rounded-xl shadow-2xl flex flex-col overflow-hidden';
 
   return (
@@ -408,7 +459,7 @@ export function AIChatPanel({
           </div>
         )}
         {messages.map(msg => (
-          <ChatBubble key={msg.id} msg={msg} />
+          <ChatBubble key={msg.id} msg={msg} workspaceMode={workspaceMode} />
         ))}
         {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex gap-2">
@@ -447,13 +498,10 @@ export function AIChatPanel({
             isStreaming={isStreaming}
             onSendMessage={handleWorkspaceSend}
             onCancelStream={cancelStream}
-            onImportComplete={onImportComplete}
           />
         ) : (
           <>
-            {aiAvailable && !isInline && (
-              <SourceMaterialComposer variant="compact" onImportComplete={onImportComplete} />
-            )}
+            {aiAvailable && !isInline && <SourceMaterialComposer variant="compact" />}
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
