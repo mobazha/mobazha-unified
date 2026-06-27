@@ -178,6 +178,8 @@ export interface AIChatPanelProps {
   onImportComplete?: (runId: string) => void;
   /** Clears workspace context (task chip, seed prompt) when starting a fresh chat. */
   onNewChat?: () => void;
+  /** Lets an inline host collapse the panel instead of toggling the global floating state. */
+  onClose?: () => void;
   workspaceLayoutControls?: {
     focusMode: boolean;
     railCollapsed: boolean;
@@ -200,6 +202,7 @@ export function AIChatPanel({
   onChatContextDismiss,
   onImportComplete,
   onNewChat,
+  onClose,
   workspaceLayoutControls,
 }: AIChatPanelProps) {
   const {
@@ -592,7 +595,7 @@ export function AIChatPanel({
           <MessageSquare className="w-4 h-4" />
         </button>
         <button
-          onClick={toggle}
+          onClick={onClose ?? toggle}
           className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-md hover:bg-muted sm:min-h-0 sm:min-w-0 sm:p-1.5"
           aria-label={t('common.close')}
         >

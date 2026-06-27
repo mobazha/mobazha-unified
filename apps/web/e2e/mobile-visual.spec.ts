@@ -8,6 +8,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAndSetup } from './fixtures/auth';
+import { setupMockAuth } from './fixtures/mock-auth';
 import {
   seedVisualTestData,
   injectCartData,
@@ -21,6 +22,8 @@ import {
   mockPreferencesAPI,
   mockSearchAPI,
   mockProductDetailAPI,
+  mockProductImportWorkbenchAPI,
+  MOCK_PRODUCT_IMPORT_RUN_ID,
 } from './fixtures/mock-api-routes';
 
 let seededData: SeededVisualData | null = null;
@@ -371,6 +374,24 @@ test.describe('Mobile Visual - Authenticated Admin', () => {
     await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/products');
     await expect(page).toHaveScreenshot('mobile-authed-admin-products.png', { fullPage: true });
+  });
+
+  test('authed: admin-product-import-workbench (mocked)', async ({ page }) => {
+    await setupMockAuth(page);
+    await mockProductImportWorkbenchAPI(page);
+    await navigateAndVerify(page, `/admin/products/import/${MOCK_PRODUCT_IMPORT_RUN_ID}`);
+    await expect(page.getByTestId('product-import-workbench')).toBeVisible();
+    await expect(page.getByTestId('import-mobile-row-list')).toBeVisible();
+    await expect(page.getByTestId('import-source-preview').first()).toBeVisible();
+    await expect(page.getByTestId('import-mobile-action-bar')).toHaveCount(0);
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+    await expect(page).toHaveScreenshot('mobile-authed-admin-product-import-workbench.png');
+    await expect(page.getByTestId('import-mobile-row-list')).toHaveScreenshot(
+      'mobile-authed-admin-product-import-workbench-rows.png'
+    );
   });
 
   test('authed: admin-orders', async ({ page }) => {

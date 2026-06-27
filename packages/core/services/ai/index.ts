@@ -87,6 +87,8 @@ export {
   ingestProductImportPaste,
   PRODUCT_IMPORT_INGEST_INTENT,
   getProductImportWorkbench,
+  updateProductImportProposalDraft,
+  fetchProductImportSourcePreview,
   createProductImportProposalApproval,
   createProductImportRunApprovals,
   decideProductImportRunApprovals,

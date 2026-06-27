@@ -1,11 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   formatProductImportDraftPrice,
   normalizeProductImportAdvanceResult,
   normalizeProductImportIngestResult,
   normalizeProductImportWorkbench,
   productImportDraftQuantity,
+  updateProductImportProposalDraft,
 } from '../../../services/ai/productImportService';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('normalizeProductImportIngestResult', () => {
   it('maps snake_case skill run and artifacts to camelCase', () => {
@@ -66,11 +71,56 @@ describe('normalizeProductImportWorkbench', () => {
   });
 });
 
+describe('updateProductImportProposalDraft', () => {
+  it('sends an atomic draft patch with the expected artifact version', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            id: 'art_prop',
+            kind: 'proposal',
+            status: 'needs_review',
+            updated_at: '2026-06-28T01:02:04Z',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await updateProductImportProposalDraft(
+      'art_prop',
+      { title: 'Updated title', inventory: { quantity: 3 } },
+      '2026-06-28T01:02:03Z'
+    );
+
+    expect(result.updatedAt).toBe('2026-06-28T01:02:04Z');
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/v1/agent/artifacts/art_prop');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(String(init.body))).toEqual({
+      draftPatch: { title: 'Updated title', inventory: { quantity: 3 } },
+      expectedUpdatedAt: '2026-06-28T01:02:03Z',
+    });
+  });
+});
+
 describe('normalizeProductImportAdvanceResult', () => {
   it('defaults null skipped arrays in nested approval result', () => {
     const result = normalizeProductImportAdvanceResult({
       skillRun: { id: 'run_1', status: 'running' },
       approvalResult: {
+        approvals: [
+          {
+            id: 'appr_1',
+            tenant_id: 'tenant_1',
+            action: 'listings_create',
+            summary: 'Create listing',
+            request_hash: 'hash_1',
+            status: 'pending',
+          },
+        ],
         created: 1,
         reused: 0,
         skipped: undefined,
@@ -81,6 +131,7 @@ describe('normalizeProductImportAdvanceResult', () => {
       skipped: undefined,
     });
     expect(result.approvalResult?.skipped).toEqual([]);
+    expect(result.approvalResult?.approvals.map(approval => approval.id)).toEqual(['appr_1']);
     expect(result.nextActions).toEqual([]);
     expect(result.skipped).toEqual([]);
     expect(result.counts.proposalCount).toBe(1);

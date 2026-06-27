@@ -171,28 +171,26 @@ export function useProductImportWorkbench({
   const batchApproveAndApplySelection = useCallback(
     async (proposalArtifactIds: string[]) => {
       if (!runId || proposalArtifactIds.length === 0) {
-        return { applied: 0, prepared: 0, actionable: false };
+        return { applied: 0, failed: 0, prepared: 0, actionable: false };
       }
       setBatchBusy(true);
       try {
-        await createProductImportRunApprovals(runId, proposalArtifactIds);
-
-        const idSet = new Set(proposalArtifactIds);
-        const full = await getProductImportWorkbench(runId);
-        const selected = full.rows.filter(row => idSet.has(row.proposalArtifactId));
-
-        const pendingIds = selected
-          .filter(row => row.approval?.status === 'pending')
-          .map(row => row.approval!.id);
-        const applyOnlyIds = selected
-          .filter(
-            row => row.approval?.status === 'approved' || row.approval?.status === 'apply_failed'
-          )
-          .map(row => row.approval!.id);
+        const prepared = await createProductImportRunApprovals(runId, proposalArtifactIds);
+        const pendingIds = prepared.approvals
+          .filter(approval => approval.status === 'pending')
+          .map(approval => approval.id);
+        const applyOnlyIds = prepared.approvals
+          .filter(approval => approval.status === 'approved' || approval.status === 'apply_failed')
+          .map(approval => approval.id);
 
         if (pendingIds.length === 0 && applyOnlyIds.length === 0) {
           await loadWorkbench({ silent: true });
-          return { applied: 0, prepared: proposalArtifactIds.length, actionable: false };
+          return {
+            applied: 0,
+            failed: 0,
+            prepared: proposalArtifactIds.length,
+            actionable: false,
+          };
         }
 
         if (pendingIds.length > 0) {
@@ -203,10 +201,11 @@ export function useProductImportWorkbench({
         }
 
         const allApplyIds = [...pendingIds, ...applyOnlyIds];
-        await applyProductImportRunApprovals(runId, allApplyIds);
+        const applyResult = await applyProductImportRunApprovals(runId, allApplyIds);
         await loadWorkbench({ silent: true });
         return {
-          applied: allApplyIds.length,
+          applied: applyResult.processed,
+          failed: prepared.skipped.length + Math.max(0, allApplyIds.length - applyResult.processed),
           prepared: proposalArtifactIds.length,
           actionable: true,
         };
@@ -224,11 +223,10 @@ export function useProductImportWorkbench({
       }
       setBatchBusy(true);
       try {
-        const idSet = new Set(proposalArtifactIds);
-        const full = await getProductImportWorkbench(runId);
-        const pendingIds = full.rows
-          .filter(row => idSet.has(row.proposalArtifactId) && row.approval?.status === 'pending')
-          .map(row => row.approval!.id);
+        const prepared = await createProductImportRunApprovals(runId, proposalArtifactIds);
+        const pendingIds = prepared.approvals
+          .filter(approval => approval.status === 'pending')
+          .map(approval => approval.id);
 
         if (pendingIds.length === 0) {
           return { rejected: 0, actionable: false };

@@ -1,3 +1,9 @@
+import type {
+  AgentApprovalRecord,
+  AgentApprovalRecordRaw,
+  AgentApprovalStatus,
+} from './agentApproval';
+
 /** Product import skill run status from /v1/agent/product-import/*. */
 export type ProductImportSkillRunStatus =
   | 'running'
@@ -91,7 +97,7 @@ export interface ProductImportDraft {
 
 export interface ProductImportRowApproval {
   id: string;
-  status: string;
+  status: AgentApprovalStatus;
   action: string;
   requestHash: string;
 }
@@ -116,6 +122,7 @@ export interface ProductImportWorkbenchSource {
   contentType?: string;
   status: string;
   summary?: string;
+  hasPreview?: boolean;
 }
 
 export interface ProductImportWorkbenchValidation {
@@ -170,10 +177,19 @@ export interface ProductImportApprovalBatchSkip {
 }
 
 export interface ProductImportApprovalBatchResult {
+  approvals: AgentApprovalRecord[];
   created: number;
   reused: number;
   skipped: ProductImportApprovalBatchSkip[];
   page: { totalProposals: number; selected: number };
+}
+
+export interface ProductImportApprovalBatchResultRaw {
+  approvals?: AgentApprovalRecordRaw[];
+  created?: number;
+  reused?: number;
+  skipped?: ProductImportApprovalBatchSkip[];
+  page?: { totalProposals?: number; selected?: number };
 }
 
 export interface ProductImportApprovalActionItem {
