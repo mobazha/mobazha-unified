@@ -29,6 +29,9 @@ export * from './rwaAssetResolver';
 // 国家名称国际化工具
 export * from './countryUtils';
 
+// 商品导入工作台行状态
+export * from './productImportRowState';
+
 // 数据转换函数
 export * from './transforms';
 

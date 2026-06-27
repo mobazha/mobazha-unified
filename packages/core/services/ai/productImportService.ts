@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { NODE_API } from '../../config/apiPaths';
 import type {
   ProductImportArtifact,
@@ -10,6 +11,7 @@ import type {
   ProductImportApprovalActionBatchResult,
   ProductImportApprovalActionItem,
   ProductImportApprovalBatchResult,
+  ProductImportApprovalBatchResultRaw,
   ProductImportApprovalBatchSkip,
   ProductImportDraft,
   ProductImportDraftPrice,
@@ -26,7 +28,8 @@ import type {
   ProductImportWorkbenchValidation,
 } from '../../types/productImport';
 import type { AgentApprovalRecord, AgentApprovalRecordRaw } from '../../types/agentApproval';
-import { nodeAuthGet, nodeAuthPost, nodeAuthRequest } from '../api/helpers';
+import { nodeAuthGet, nodeAuthPatch, nodeAuthPost, nodeAuthRequest } from '../api/helpers';
+import { getAuthHeaders, getGatewayUrl } from '../api/config';
 import { normalizeAgentApprovalRecord } from './approvalService';
 
 export const PRODUCT_IMPORT_INGEST_INTENT = 'product_import';
@@ -105,6 +108,7 @@ function normalizeWorkbenchSource(raw: ProductImportWorkbenchSource): ProductImp
     contentType: raw.contentType,
     status: raw.status,
     summary: raw.summary,
+    hasPreview: raw.hasPreview === true,
   };
 }
 
@@ -177,9 +181,10 @@ function normalizeApprovalBatchSkip(
 }
 
 function normalizeApprovalBatchResult(
-  raw: Partial<ProductImportApprovalBatchResult>
+  raw: ProductImportApprovalBatchResultRaw
 ): ProductImportApprovalBatchResult {
   return {
+    approvals: (raw.approvals ?? []).map(normalizeAgentApprovalRecord),
     created: raw.created ?? 0,
     reused: raw.reused ?? 0,
     skipped: (raw.skipped ?? []).map(normalizeApprovalBatchSkip),
@@ -252,7 +257,7 @@ export function normalizeProductImportAdvanceResult(raw: {
   workbench?: Parameters<typeof normalizeProductImportWorkbench>[0];
   createdProposalArtifacts?: ProductImportArtifactRaw[];
   createdValidationReports?: ProductImportArtifactRaw[];
-  approvalResult?: Partial<ProductImportApprovalBatchResult>;
+  approvalResult?: ProductImportApprovalBatchResultRaw;
   nextActions?: ProductImportAdvanceNextAction[];
   counts?: Partial<ProductImportAdvanceCounts>;
   skipped?: ProductImportAdvanceSkippedArtifact[];
@@ -317,14 +322,15 @@ export function formatProductImportDraftPrice(draft?: ProductImportDraft): strin
   if (!price || price.amountMinor == null) return '—';
   const divisibility = price.divisibility ?? 2;
   const currency = price.currencyCode || 'USD';
-  const major = price.amountMinor / 10 ** divisibility;
+  const major = new BigNumber(price.amountMinor).shiftedBy(-divisibility);
+  if (!major.isFinite()) return '—';
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency,
       minimumFractionDigits: divisibility,
       maximumFractionDigits: divisibility,
-    }).format(major);
+    }).format(major.toNumber());
   } catch {
     return `${major.toFixed(divisibility)} ${currency}`;
   }
@@ -435,7 +441,7 @@ export async function createProductImportRunApprovals(
 ): Promise<ProductImportApprovalBatchResult> {
   const body =
     proposalArtifactIds && proposalArtifactIds.length > 0 ? { proposalArtifactIds } : undefined;
-  const raw = await nodeAuthPost<Partial<ProductImportApprovalBatchResult>>(
+  const raw = await nodeAuthPost<ProductImportApprovalBatchResultRaw>(
     NODE_API.AGENT_PRODUCT_IMPORT_RUNS_APPROVALS(runId),
     body
   );
@@ -490,7 +496,7 @@ export async function advanceProductImportRun(
     workbench?: Parameters<typeof normalizeProductImportWorkbench>[0];
     createdProposalArtifacts?: ProductImportArtifactRaw[];
     createdValidationReports?: ProductImportArtifactRaw[];
-    approvalResult?: Partial<ProductImportApprovalBatchResult>;
+    approvalResult?: ProductImportApprovalBatchResultRaw;
     nextActions?: ProductImportAdvanceNextAction[];
     counts?: Partial<ProductImportAdvanceCounts>;
     skipped?: ProductImportAdvanceSkippedArtifact[];
@@ -499,6 +505,32 @@ export async function advanceProductImportRun(
     Object.keys(body).length ? body : undefined
   );
   return normalizeProductImportAdvanceResult(raw);
+}
+
+export async function updateProductImportProposalDraft(
+  proposalArtifactId: string,
+  draftPatch: Partial<ProductImportDraft>,
+  expectedUpdatedAt: string
+): Promise<ProductImportArtifact> {
+  const raw = await nodeAuthPatch<ProductImportArtifactRaw>(
+    NODE_API.AGENT_ARTIFACT(proposalArtifactId),
+    {
+      draftPatch,
+      expectedUpdatedAt,
+    }
+  );
+  return normalizeProductImportArtifact(raw);
+}
+
+export async function fetchProductImportSourcePreview(artifactId: string): Promise<Blob> {
+  const resp = await fetch(`${getGatewayUrl()}${NODE_API.AGENT_ARTIFACT_CONTENT(artifactId)}`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to load source preview: ${resp.status}`);
+  }
+  return resp.blob();
 }
 
 export type { ProductImportDraftPrice, ProductImportAdvanceRequest };

@@ -9,6 +9,7 @@
  *   - Error (4xx/5xx): { error: { code: string, message: string } }
  */
 
+import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { mustAssetIdFromTokenId } from '@mobazha/core/data';
 
@@ -1157,28 +1158,27 @@ const mockProductImportWorkbench = {
   sources: [
     {
       artifactId: 'art_src_visual',
-      sourceName: 'supplier-catalog.csv',
-      contentType: 'text/csv',
+      sourceName: 'midnight-waves-cover.jpg',
+      contentType: 'image/jpeg',
       status: 'ready',
+      hasPreview: true,
     },
   ],
   rows: [
     {
       proposalArtifactId: 'art_prop_visual_1',
-      sourceName: 'supplier-catalog.csv',
+      sourceName: 'midnight-waves-cover.jpg',
       rowNumber: 1,
       status: 'needs_review',
       draft: {
         title: 'Linen Tote Bag',
         description: 'Handwoven linen tote with interior pocket.',
-        price: { amountMinor: 4500, currencyCode: 'USD', divisibility: 2 },
-        inventory: { quantity: 24 },
       },
       updatedAt: NOW,
     },
     {
       proposalArtifactId: 'art_prop_visual_2',
-      sourceName: 'supplier-catalog.csv',
+      sourceName: 'midnight-waves-cover.jpg',
       rowNumber: 2,
       status: 'needs_review',
       draft: {
@@ -1196,7 +1196,7 @@ const mockProductImportWorkbench = {
     },
     {
       proposalArtifactId: 'art_prop_visual_3',
-      sourceName: 'supplier-catalog.csv',
+      sourceName: 'midnight-waves-cover.jpg',
       rowNumber: 3,
       status: 'needs_review',
       draft: {
@@ -1216,9 +1216,12 @@ const mockProductImportWorkbench = {
   validationReports: [
     {
       artifactId: 'art_val_visual',
-      sourceName: 'supplier-catalog.csv',
+      sourceName: 'midnight-waves-cover.jpg',
       status: 'ready',
-      data: { code: 'preview_rows', message: 'Parsed first 25 rows for preview.' },
+      data: {
+        code: 'image_review',
+        message: 'Review AI-extracted image details before publishing.',
+      },
     },
   ],
   counts: { source: 1, proposal: 3, validation: 1 },
@@ -1241,6 +1244,15 @@ const mockProductImportWorkbench = {
  * Mock product import workbench + minimal AI endpoints for visual tests.
  */
 export async function mockProductImportWorkbenchAPI(page: Page): Promise<void> {
+  await page.route('**/v1/agent/artifacts/art_src_visual/content', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      path: path.resolve('public/icons/icon-512x512.png'),
+    });
+  });
+
   await page.route('**/v1/ai/status**', route => {
     if (route.request().method() !== 'GET') return route.fallback();
     route.fulfill({
@@ -1297,6 +1309,18 @@ export async function mockProductImportWorkbenchAPI(page: Page): Promise<void> {
       status: 200,
       contentType: 'application/json',
       body: wrapData({
+        approvals: [
+          {
+            id: 'approval_visual_created',
+            tenant_id: 'tenant_visual',
+            tool_call_id: 'artifact:art_prop_visual_1',
+            skill_id: 'product.import',
+            action: 'listings_create',
+            summary: 'Create listing from product import proposal',
+            request_hash: 'hash_visual_created',
+            status: 'pending',
+          },
+        ],
         created: 1,
         reused: 0,
         skipped: [],

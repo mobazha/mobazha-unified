@@ -151,6 +151,9 @@ export const NODE_API = {
     `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-decisions`,
   AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_APPLICATIONS: (runId: string) =>
     `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-applications`,
+  AGENT_ARTIFACT: (artifactId: string) => `/agent/artifacts/${encodeURIComponent(artifactId)}`,
+  AGENT_ARTIFACT_CONTENT: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}/content`,
   AGENT_ARTIFACTS_APPROVAL: (artifactId: string) =>
     `/agent/artifacts/${encodeURIComponent(artifactId)}/approval`,
 

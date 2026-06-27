@@ -3,6 +3,7 @@ export type AgentApprovalStatus =
   | 'pending'
   | 'approved'
   | 'rejected'
+  | 'superseded'
   | 'applying'
   | 'applied'
   | 'apply_failed';
