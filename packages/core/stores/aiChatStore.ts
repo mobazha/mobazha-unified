@@ -12,6 +12,8 @@ import type {
   ChatTurnPayload,
 } from '../services/ai/chatService';
 import { sendChatMessage, listChatSessions, deleteChatSession } from '../services/ai/chatService';
+import { upsertChatDeliveries, isProductImportDelivery } from '../services/ai/chatDelivery';
+import type { ChatDelivery } from '../services/ai/chatDelivery';
 import { extractProductImportRunId } from '../services/ai/productImportToolResult';
 import type { SendMessageOptions } from '../services/ai/chatService';
 import { parseApprovalRequiredResult } from '../services/ai/approvalService';
@@ -64,7 +66,9 @@ export function normalizeVisibleMessages(messages: ChatMessage[]): ChatMessage[]
     }
 
     const content = typeof message.content === 'string' ? message.content : '';
-    if (message.role === 'assistant' && !content.trim()) {
+    const deliveries =
+      message.role === 'assistant' && message.deliveries?.length ? message.deliveries : undefined;
+    if (message.role === 'assistant' && !content.trim() && !deliveries?.length) {
       return visible;
     }
 
@@ -76,6 +80,7 @@ export function normalizeVisibleMessages(messages: ChatMessage[]): ChatMessage[]
       ...(message.role === 'user' && message.attachmentDisplay?.length
         ? { attachmentDisplay: message.attachmentDisplay }
         : {}),
+      ...(deliveries ? { deliveries } : {}),
     });
     return visible;
   }, []);
@@ -220,6 +225,28 @@ export const useAIChatStore = create<AIChatState>()(
         let assistantContent = '';
         const assistantMsgId = nextMsgId();
         const toolCalls = new Map<string, ToolCallInfo>();
+        let assistantDeliveries: ChatDelivery[] = [];
+
+        const upsertAssistantMessage = () => {
+          set(s => {
+            const msgs = [...s.messages];
+            const lastIdx = msgs.length - 1;
+            const payload: ChatMessage = {
+              id: assistantMsgId,
+              role: 'assistant',
+              content: assistantContent,
+              toolCalls: Array.from(toolCalls.values()),
+              timestamp: Date.now(),
+              ...(assistantDeliveries.length ? { deliveries: assistantDeliveries } : {}),
+            };
+            if (lastIdx >= 0 && msgs[lastIdx].id === assistantMsgId) {
+              msgs[lastIdx] = { ...msgs[lastIdx], ...payload };
+            } else {
+              msgs.push(payload);
+            }
+            return { messages: msgs };
+          });
+        };
 
         const abortController = new AbortController();
         activeAbortController = abortController;
@@ -252,22 +279,15 @@ export const useAIChatStore = create<AIChatState>()(
             {
               onContent: chunk => {
                 assistantContent += chunk;
-                set(s => {
-                  const msgs = [...s.messages];
-                  const lastIdx = msgs.length - 1;
-                  if (lastIdx >= 0 && msgs[lastIdx].id === assistantMsgId) {
-                    msgs[lastIdx] = { ...msgs[lastIdx], content: assistantContent };
-                  } else {
-                    msgs.push({
-                      id: assistantMsgId,
-                      role: 'assistant',
-                      content: assistantContent,
-                      toolCalls: [],
-                      timestamp: Date.now(),
-                    });
-                  }
-                  return { messages: msgs };
-                });
+                upsertAssistantMessage();
+              },
+
+              onDelivery: delivery => {
+                assistantDeliveries = upsertChatDeliveries(assistantDeliveries, delivery);
+                if (isProductImportDelivery(delivery) && delivery.skillRunId) {
+                  options?.onProductImportRun?.(delivery.skillRunId);
+                }
+                upsertAssistantMessage();
               },
 
               onToolCall: (toolId, toolName, _args) => {
@@ -277,25 +297,7 @@ export const useAIChatStore = create<AIChatState>()(
                   status: 'executing',
                 };
                 toolCalls.set(toolId, tc);
-                set(s => {
-                  const msgs = [...s.messages];
-                  const lastIdx = msgs.length - 1;
-                  if (lastIdx >= 0 && msgs[lastIdx].id === assistantMsgId) {
-                    msgs[lastIdx] = {
-                      ...msgs[lastIdx],
-                      toolCalls: Array.from(toolCalls.values()),
-                    };
-                  } else {
-                    msgs.push({
-                      id: assistantMsgId,
-                      role: 'assistant',
-                      content: assistantContent,
-                      toolCalls: Array.from(toolCalls.values()),
-                      timestamp: Date.now(),
-                    });
-                  }
-                  return { messages: msgs };
-                });
+                upsertAssistantMessage();
               },
 
               onToolResult: (toolId, toolName, result) => {
@@ -319,32 +321,14 @@ export const useAIChatStore = create<AIChatState>()(
                       ? 'error'
                       : 'done';
                 }
-                if (toolName === 'agent_product_import_ingest') {
+                if (toolName === 'agent_product_import_ingest' && !assistantDeliveries.length) {
                   const runId = extractProductImportRunId(result);
                   if (runId) {
                     options?.onProductImportRun?.(runId);
                   }
                 }
                 toolCalls.set(toolId, tc);
-                set(s => {
-                  const msgs = [...s.messages];
-                  const lastIdx = msgs.length - 1;
-                  if (lastIdx >= 0 && msgs[lastIdx].id === assistantMsgId) {
-                    msgs[lastIdx] = {
-                      ...msgs[lastIdx],
-                      toolCalls: Array.from(toolCalls.values()),
-                    };
-                  } else {
-                    msgs.push({
-                      id: assistantMsgId,
-                      role: 'assistant',
-                      content: assistantContent,
-                      toolCalls: Array.from(toolCalls.values()),
-                      timestamp: Date.now(),
-                    });
-                  }
-                  return { messages: msgs };
-                });
+                upsertAssistantMessage();
               },
 
               onDone: sessionId => {
