@@ -95,6 +95,7 @@ export interface ChatContext {
 }
 
 export interface ChatTurnAttachmentDisplay {
+  artifactId?: string;
   name: string;
   contentType?: string;
   previewUrl?: string;

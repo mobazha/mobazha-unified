@@ -130,6 +130,7 @@ export function WorkspaceUnifiedComposer({
         artifactIds.push(artifact.id);
         attachments.push(attachment);
         display.push({
+          artifactId: artifact.id,
           name: draft.file.name,
           contentType: attachment.contentType,
           previewUrl: draft.previewUrl,

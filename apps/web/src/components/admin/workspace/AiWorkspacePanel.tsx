@@ -119,6 +119,12 @@ export function AiWorkspacePanel({
     toggleFocusMode();
   }, [focusMode, toggleFocusMode]);
 
+  const handleWorkspaceNewChat = useCallback(() => {
+    setChatContextLabel(null);
+    setActiveOpportunityId(null);
+    setSeedPrompt(null);
+  }, []);
+
   const showOpportunitiesRail = !focusMode && !railCollapsed;
 
   useEffect(() => {
@@ -199,6 +205,7 @@ export function AiWorkspacePanel({
               setActiveOpportunityId(null);
             }}
             onImportComplete={handleImportComplete}
+            onNewChat={handleWorkspaceNewChat}
             workspaceLayoutControls={{
               focusMode,
               railCollapsed,
