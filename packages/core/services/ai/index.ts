@@ -20,6 +20,27 @@ export type {
   SendMessageOptions,
 } from './chatService';
 export {
+  parseChatDeliveryFromSSE,
+  upsertChatDeliveries,
+  deliveryTranslationParams,
+  deliveryUpsertKey,
+  isProductImportDelivery,
+  translateDeliveryMessage,
+  translateDeliveryNextAction,
+  translateDeliveryItemStatus,
+  CHAT_DELIVERY_STATES,
+  PRODUCT_IMPORT_DELIVERY_MESSAGE_KEYS,
+} from './chatDelivery';
+export type {
+  ChatDelivery,
+  ChatDeliveryState,
+  ProductImportDeliveryCounts,
+  ProductImportDeliveryData,
+  ProductImportDeliveryItem,
+  ProductImportDeliveryNextAction,
+  ProductImportDeliveryMessageKey,
+} from './chatDelivery';
+export {
   listAgentApprovals,
   getAgentApproval,
   decideAgentApproval,

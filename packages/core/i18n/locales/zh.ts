@@ -4898,6 +4898,35 @@ export const zh: PartialTranslationResource = {
       viewInChat: '在对话中查看',
     },
   },
+
+  product_import: {
+    needs_input: '素材已处理，但还需要补充信息才能生成商品草稿。',
+    needs_review: '商品资料已整理完成，{{reviewableCount}} 条草稿待审核。',
+    needs_approval: '商品提案已准备完成，{{pendingApprovalCount}} 条待批准。',
+    completed: '商品导入流程已完成。',
+    partially_completed: '商品导入流程已部分完成。',
+    failed: '商品导入流程失败。',
+    deliveryMetricSources: '素材',
+    deliveryMetricProposals: '草稿',
+    deliveryMetricReviewable: '待审阅',
+    deliveryMetricPendingApproval: '待批准',
+    deliveryOpenWorkbench: '打开导入工作台',
+    structuredStatus: '商品导入状态：{{state}}',
+    nextAction: {
+      extract_candidates: '从素材中提取商品候选',
+      review_proposals: '审核商品草稿提案',
+      provide_product_details: '补充更清晰的商品信息后重试',
+      unknown: '建议操作：{{type}}',
+    },
+    itemStatus: {
+      new: '新建',
+      needs_review: '待审核',
+      ready: '已就绪',
+      skipped: '已跳过',
+      applied: '已应用',
+    },
+  },
+
   moderation: {
     title: '争议案件',
     description: '审核并解决买家和卖家之间的争议',

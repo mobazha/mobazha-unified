@@ -6,6 +6,7 @@
 import { NODE_API } from '../../config/apiPaths';
 import { getGatewayUrl, getAuthHeaders } from '../api/config';
 import { nodeAuthGet, nodeAuthDel } from '../api/helpers';
+import { parseChatDeliveryFromSSE, type ChatDelivery } from './chatDelivery';
 
 // --- Types ---
 
@@ -19,6 +20,8 @@ export interface ChatMessage {
   timestamp?: number;
   /** User-turn attachment previews shown in the chat transcript */
   attachmentDisplay?: ChatTurnAttachmentDisplay[];
+  /** Structured skill delivery cards (assistant turns only). */
+  deliveries?: ChatDelivery[];
 }
 
 export interface ToolCallInfo {
@@ -52,18 +55,24 @@ export interface ChatSession {
 }
 
 export interface ChatSSEEvent {
-  type: 'thinking' | 'content' | 'tool_call' | 'tool_result' | 'done' | 'error';
+  type: 'thinking' | 'content' | 'tool_call' | 'tool_result' | 'delivery' | 'done' | 'error';
   content?: string;
   tool?: string;
   toolId?: string;
   args?: unknown;
   result?: unknown;
+  state?: string;
+  skillId?: string;
+  skillRunId?: string;
+  messageKey?: string;
+  data?: unknown;
   sessionId?: string;
   error?: string;
 }
 
 export interface ChatStreamCallbacks {
   onContent: (text: string) => void;
+  onDelivery: (delivery: ChatDelivery) => void;
   onToolCall: (toolId: string, toolName: string, args: unknown) => void;
   onToolResult: (toolId: string, toolName: string, result: unknown) => void;
   onDone: (sessionId: string) => void;
@@ -166,6 +175,7 @@ export async function sendChatMessage(
 
   const wrappedCallbacks: ChatStreamCallbacks = {
     onContent: callbacks.onContent,
+    onDelivery: callbacks.onDelivery,
     onToolCall: callbacks.onToolCall,
     onToolResult: callbacks.onToolResult,
     onDone: sessionId => {
@@ -236,6 +246,11 @@ function handleSSEEvent(event: ChatSSEEvent, _eventType: string, callbacks: Chat
     case 'content':
       if (event.content) callbacks.onContent(event.content);
       break;
+    case 'delivery': {
+      const delivery = parseChatDeliveryFromSSE(event);
+      if (delivery) callbacks.onDelivery(delivery);
+      break;
+    }
     case 'tool_call':
       if (event.toolId && event.tool) {
         callbacks.onToolCall(event.toolId, event.tool, event.args);

@@ -2745,6 +2745,34 @@ export interface TranslationResource {
     };
   };
 
+  product_import?: {
+    needs_input?: string;
+    needs_review?: string;
+    needs_approval?: string;
+    completed?: string;
+    partially_completed?: string;
+    failed?: string;
+    deliveryMetricSources?: string;
+    deliveryMetricProposals?: string;
+    deliveryMetricReviewable?: string;
+    deliveryMetricPendingApproval?: string;
+    deliveryOpenWorkbench?: string;
+    structuredStatus?: string;
+    nextAction?: {
+      extract_candidates?: string;
+      review_proposals?: string;
+      provide_product_details?: string;
+      unknown?: string;
+    };
+    itemStatus?: {
+      new?: string;
+      needs_review?: string;
+      ready?: string;
+      skipped?: string;
+      applied?: string;
+    };
+  };
+
   standalone?: {
     storeName?: string;
     allProducts?: string;

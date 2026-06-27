@@ -9,12 +9,14 @@ import type { ChatMessage } from '../../services/ai/chatService';
 vi.mock('../../services/ai/chatService', () => ({
   sendChatMessage: vi.fn(),
   listChatSessions: vi.fn().mockResolvedValue([]),
+  getChatSession: vi.fn(),
   deleteChatSession: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { sendChatMessage } from '../../services/ai/chatService';
+import { getChatSession, sendChatMessage } from '../../services/ai/chatService';
 
 const mockSendChatMessage = vi.mocked(sendChatMessage);
+const mockGetChatSession = vi.mocked(getChatSession);
 
 describe('normalizeVisibleMessages', () => {
   it('keeps legitimate assistant JSON while hiding tool and system messages', () => {
@@ -88,6 +90,7 @@ describe('useAIChatStore attached artifacts', () => {
       error: null,
     });
     mockSendChatMessage.mockReset();
+    mockGetChatSession.mockReset();
   });
 
   it('returns max_reached when attaching more than the limit', () => {
@@ -304,5 +307,124 @@ describe('useAIChatStore attached skill runs', () => {
       expect.any(AbortSignal),
       { artifactIds: ['artifact-1'], skillRunIds: ['run_import'] }
     );
+  });
+});
+
+describe('useAIChatStore delivery events', () => {
+  beforeEach(() => {
+    useAIChatStore.setState({
+      messages: [],
+      sessionId: undefined,
+      attachedArtifacts: [],
+      attachedSkillRuns: [],
+      isStreaming: false,
+      error: null,
+    });
+    mockSendChatMessage.mockReset();
+    mockGetChatSession.mockReset();
+  });
+
+  it('renders delivery-only assistant turns without waiting for content', async () => {
+    const onProductImportRun = vi.fn();
+    mockSendChatMessage.mockImplementation(async (_text, _sessionId, callbacks) => {
+      callbacks.onDelivery({
+        state: 'needs_review',
+        skillId: 'product.import',
+        skillRunId: 'run_delivery',
+        messageKey: 'product_import.needs_review',
+        data: {
+          reviewableCount: 1,
+          nextActions: [{ type: 'review_proposals', sourceArtifactId: 'art_1' }],
+        },
+      });
+      callbacks.onDone('session-1');
+    });
+
+    await useAIChatStore
+      .getState()
+      .sendMessage('Import products', undefined, { onProductImportRun });
+
+    const assistant = useAIChatStore.getState().messages.find(msg => msg.role === 'assistant');
+    expect(assistant?.deliveries).toEqual([
+      {
+        state: 'needs_review',
+        skillId: 'product.import',
+        skillRunId: 'run_delivery',
+        messageKey: 'product_import.needs_review',
+        data: {
+          reviewableCount: 1,
+          nextActions: [{ type: 'review_proposals', sourceArtifactId: 'art_1' }],
+        },
+      },
+    ]);
+    expect(assistant?.content).toBe('');
+    expect(useAIChatStore.getState().isStreaming).toBe(false);
+    expect(onProductImportRun).toHaveBeenCalledWith('run_delivery');
+  });
+
+  it('preserves assistant delivery metadata when normalizing session history', () => {
+    const messages: ChatMessage[] = [
+      {
+        id: 'assistant-1',
+        role: 'assistant',
+        content: '',
+        timestamp: 1,
+        deliveries: [
+          {
+            state: 'completed',
+            skillId: 'product.import',
+            skillRunId: 'run_done',
+            messageKey: 'product_import.completed',
+          },
+        ],
+      },
+    ];
+
+    expect(normalizeVisibleMessages(messages)).toEqual(messages);
+  });
+
+  it('restores persisted delivery-only messages when loading a session', async () => {
+    mockGetChatSession.mockResolvedValue({
+      id: 'session-delivery',
+      role: 'seller',
+      title: 'Import products',
+      created_at: '2026-06-27T00:00:00Z',
+      updated_at: '2026-06-27T00:01:00Z',
+      messages: [
+        {
+          id: 'user-1',
+          role: 'user',
+          content: 'Import products',
+        },
+        {
+          id: 'assistant-delivery',
+          role: 'assistant',
+          content: '',
+          deliveries: [
+            {
+              state: 'needs_review',
+              skillId: 'product.import',
+              skillRunId: 'run_persisted',
+              messageKey: 'product_import.needs_review',
+              data: { reviewableCount: 2 },
+            },
+          ],
+        },
+      ],
+    });
+
+    await useAIChatStore.getState().loadSession('session-delivery');
+
+    expect(useAIChatStore.getState().messages[1]).toMatchObject({
+      role: 'assistant',
+      content: '',
+      deliveries: [
+        {
+          state: 'needs_review',
+          skillRunId: 'run_persisted',
+          data: { reviewableCount: 2 },
+        },
+      ],
+    });
   });
 });

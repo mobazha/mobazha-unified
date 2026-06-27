@@ -28,6 +28,7 @@ import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 import { AttachedArtifactChips } from '@/components/ai/AttachedArtifactChips';
 import { AttachedSkillRunChips } from '@/components/ai/AttachedSkillRunChips';
 import { ChatAttachmentPreview } from '@/components/ai/ChatAttachmentPreview';
+import { ChatDeliveryCardList } from '@/components/ai/ChatDeliveryCard';
 import { ChatSessionList } from '@/components/ai/ChatSessionList';
 import { useToast } from '@/components/ui/use-toast';
 import { WorkspaceAssistantMarkdown } from '@/components/ai/WorkspaceAssistantMarkdown';
@@ -92,6 +93,8 @@ function MarkdownContent({ content }: { content: string }) {
 function ChatBubble({ msg, workspaceMode = false }: { msg: ChatMessage; workspaceMode?: boolean }) {
   const isUser = msg.role === 'user';
   const updateToolApproval = useAIChatStore(s => s.updateToolApproval);
+  const hasDeliveries = !isUser && Boolean(msg.deliveries?.length);
+  const showAssistantContent = !isUser && msg.content.trim() && !hasDeliveries;
   const bubbleMaxWidth = workspaceMode
     ? isUser
       ? 'max-w-[min(100%,24rem)]'
@@ -112,14 +115,18 @@ function ChatBubble({ msg, workspaceMode = false }: { msg: ChatMessage; workspac
           isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
         }`}
       >
-        {msg.content &&
-          (isUser ? (
-            <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-          ) : workspaceMode ? (
+        {isUser && msg.content ? (
+          <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+        ) : showAssistantContent ? (
+          workspaceMode ? (
             <WorkspaceAssistantMarkdown content={msg.content} />
           ) : (
             <MarkdownContent content={msg.content} />
-          ))}
+          )
+        ) : null}
+        {hasDeliveries && msg.deliveries && (
+          <ChatDeliveryCardList deliveries={msg.deliveries} className="mt-1" />
+        )}
         {isUser && msg.attachmentDisplay && msg.attachmentDisplay.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-2">
             {msg.attachmentDisplay.map((item, index) => (

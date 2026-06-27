@@ -5415,6 +5415,35 @@ export const en: TranslationResource = {
     },
   },
 
+  product_import: {
+    needs_input:
+      'The source was processed, but more information is needed before a product draft can be created.',
+    needs_review: 'Product materials are ready for review. {{reviewableCount}} draft(s) waiting.',
+    needs_approval: 'Product proposals are ready for approval. {{pendingApprovalCount}} pending.',
+    completed: 'The product import workflow is complete.',
+    partially_completed: 'The product import workflow is partially complete.',
+    failed: 'The product import workflow failed.',
+    deliveryMetricSources: 'Sources',
+    deliveryMetricProposals: 'Drafts',
+    deliveryMetricReviewable: 'Reviewable',
+    deliveryMetricPendingApproval: 'Pending approval',
+    deliveryOpenWorkbench: 'Open import workbench',
+    structuredStatus: 'Product import status: {{state}}',
+    nextAction: {
+      extract_candidates: 'Extract product candidates from source material',
+      review_proposals: 'Review draft product proposals',
+      provide_product_details: 'Add clearer product details and retry',
+      unknown: 'Suggested action: {{type}}',
+    },
+    itemStatus: {
+      new: 'New',
+      needs_review: 'Needs review',
+      ready: 'Ready',
+      skipped: 'Skipped',
+      applied: 'Applied',
+    },
+  },
+
   moderation: {
     title: 'Dispute Cases',
     description: 'Review and resolve disputes between buyers and sellers',
