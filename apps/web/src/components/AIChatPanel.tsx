@@ -10,27 +10,18 @@ import {
   getAdminAiModelsPath,
   type ChatTurnPayload,
 } from '@mobazha/core';
-import {
-  MessageSquare,
-  X,
-  Send,
-  Loader2,
-  Bot,
-  User,
-  Wrench,
-  Trash2,
-  Plus,
-  Square,
-} from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Bot, User, Wrench, Square } from 'lucide-react';
 import type { ChatMessage, ToolCallInfo } from '@mobazha/core/services/ai';
 import { AgentApprovalCard } from '@/components/ai/AgentApprovalCard';
 import { AttachedArtifactChips } from '@/components/ai/AttachedArtifactChips';
 import { AttachedSkillRunChips } from '@/components/ai/AttachedSkillRunChips';
 import { ChatAttachmentPreview } from '@/components/ai/ChatAttachmentPreview';
+import { ChatSessionList } from '@/components/ai/ChatSessionList';
 import { WorkspaceAssistantMarkdown } from '@/components/ai/WorkspaceAssistantMarkdown';
 import { WorkspaceChatContextBar } from '@/components/admin/workspace/WorkspaceChatContextBar';
 import { WorkspaceUnifiedComposer } from '@/components/admin/workspace/WorkspaceUnifiedComposer';
 import { SourceMaterialComposer } from '@/components/ai/SourceMaterialComposer';
+import { cn } from '@/lib/utils';
 
 const ReactMarkdown = lazy(() => import('react-markdown'));
 
@@ -138,79 +129,6 @@ function ChatBubble({ msg, workspaceMode = false }: { msg: ChatMessage; workspac
               )}
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function SessionList({
-  onSelect,
-  onClose,
-}: {
-  onSelect: (id: string) => void;
-  onClose: () => void;
-}) {
-  const { t } = useI18n();
-  const { sessions, loadSessions, deleteSession, newChat } = useAIChatStore();
-
-  useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-        <span className="text-sm font-medium">{t('ai.history')}</span>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-muted rounded"
-          aria-label={t('common.close')}
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-      <button
-        onClick={() => {
-          newChat();
-          onClose();
-        }}
-        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted border-b border-border"
-      >
-        <Plus className="w-4 h-4" />
-        {t('ai.newChat')}
-      </button>
-      <div className="flex-1 overflow-y-auto">
-        {sessions.map(s => (
-          <div
-            key={s.id}
-            className="flex items-center justify-between px-3 py-2 hover:bg-muted cursor-pointer group"
-          >
-            <button
-              className="flex-1 text-left text-sm truncate"
-              onClick={() => {
-                onSelect(s.id);
-                onClose();
-              }}
-            >
-              {s.title || t('ai.untitled')}
-            </button>
-            <button
-              className="p-1 opacity-0 group-hover:opacity-100 hover:text-destructive"
-              aria-label={t('common.delete')}
-              onClick={e => {
-                e.stopPropagation();
-                deleteSession(s.id);
-              }}
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </div>
-        ))}
-        {sessions.length === 0 && (
-          <div className="text-center text-muted-foreground text-xs py-4">
-            {t('ai.noConversations')}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -397,9 +315,13 @@ export function AIChatPanel({
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="p-1.5 hover:bg-muted rounded-md"
+            onClick={() => setShowHistory(prev => !prev)}
+            className={cn(
+              'p-1.5 hover:bg-muted rounded-md',
+              showHistory && 'bg-muted text-primary'
+            )}
             aria-label={t('ai.history')}
+            aria-pressed={showHistory}
           >
             <MessageSquare className="w-4 h-4" />
           </button>
@@ -415,131 +337,137 @@ export function AIChatPanel({
         </div>
       </div>
 
-      {/* History panel overlay */}
-      {showHistory && (
-        <div className="absolute inset-0 top-[49px] z-10 bg-background">
-          <SessionList onSelect={id => loadSession(id)} onClose={() => setShowHistory(false)} />
-        </div>
-      )}
-
-      {workspaceMode && chatContextLabel && (
-        <WorkspaceChatContextBar
-          label={chatContextLabel}
-          onDismiss={() => onChatContextDismiss?.()}
+      {/* History replaces chat body (avoids overlay clipping with composer) */}
+      {showHistory ? (
+        <ChatSessionList
+          onSelect={id => void loadSession(id)}
+          onClose={() => setShowHistory(false)}
         />
-      )}
+      ) : (
+        <>
+          {workspaceMode && chatContextLabel && (
+            <WorkspaceChatContextBar
+              label={chatContextLabel}
+              onDismiss={() => onChatContextDismiss?.()}
+            />
+          )}
 
-      {/* Messages */}
-      <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-        {!aiChecking && !aiStatusLoading && !aiAvailable && messages.length === 0 && (
+          {/* Messages */}
           <div
-            className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
-            data-testid="ai-chat-setup-prompt"
+            ref={messagesScrollRef}
+            className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0"
           >
-            <Bot className="w-10 h-10 mb-3 opacity-40" />
-            <p className="text-sm">{t('admin.workspace.chatInputDisabled')}</p>
-            {setupPromptVariant === 'default' && (
-              <Link
-                href={aiModelsPath}
-                className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline mt-2"
+            {!aiChecking && !aiStatusLoading && !aiAvailable && messages.length === 0 && (
+              <div
+                className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
+                data-testid="ai-chat-setup-prompt"
               >
-                {t('admin.workspace.setupBannerCta')} →
-              </Link>
+                <Bot className="w-10 h-10 mb-3 opacity-40" />
+                <p className="text-sm">{t('admin.workspace.chatInputDisabled')}</p>
+                {setupPromptVariant === 'default' && (
+                  <Link
+                    href={aiModelsPath}
+                    className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline mt-2"
+                  >
+                    {t('admin.workspace.setupBannerCta')} →
+                  </Link>
+                )}
+              </div>
+            )}
+            {messages.length === 0 && aiAvailable && (
+              <div
+                className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
+                data-testid={workspaceMode ? 'workspace-chat-empty' : undefined}
+              >
+                <Bot className="w-10 h-10 mb-3 opacity-40" />
+                <p className="text-sm">{t('ai.welcomeMessage')}</p>
+                <p className="text-xs mt-1">{t('ai.welcomeHint')}</p>
+              </div>
+            )}
+            {messages.map(msg => (
+              <ChatBubble key={msg.id} msg={msg} workspaceMode={workspaceMode} />
+            ))}
+            {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
+              <div className="flex gap-2">
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="bg-muted rounded-lg px-3 py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="px-3 py-2 bg-destructive/10 text-destructive text-xs flex items-center justify-between gap-2 shrink-0">
+              <span className="truncate">
+                {error.toLowerCase().includes('not configured')
+                  ? t('admin.workspace.chatNotConfigured')
+                  : error}
+              </span>
+              <button onClick={clearError} className="ml-2 shrink-0" aria-label={t('common.close')}>
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="border-t border-border px-3 py-2 shrink-0">
+            <AttachedArtifactChips testIdPrefix="chat-attached-artifact" />
+            <AttachedSkillRunChips testIdPrefix="chat-attached-skill-run" />
+            {workspaceMode && aiAvailable ? (
+              <WorkspaceUnifiedComposer
+                disabled={aiChecking || aiStatusLoading || !aiAvailable}
+                isStreaming={isStreaming}
+                onSendMessage={handleWorkspaceSend}
+                onCancelStream={cancelStream}
+              />
+            ) : (
+              <>
+                {aiAvailable && !isInline && <SourceMaterialComposer variant="compact" />}
+                <div className="flex items-end gap-2">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={
+                      !aiAvailable && !aiChecking && !aiStatusLoading
+                        ? t('admin.workspace.chatInputDisabled')
+                        : t('ai.inputPlaceholder')
+                    }
+                    aria-label={t('ai.inputPlaceholder')}
+                    rows={1}
+                    className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24 disabled:opacity-60"
+                    disabled={isStreaming || aiChecking || aiStatusLoading || !aiAvailable}
+                  />
+                  {isStreaming ? (
+                    <button
+                      onClick={cancelStream}
+                      className="p-2 rounded-lg bg-muted text-foreground border border-border hover:bg-muted/80 transition-colors"
+                      aria-label={t('ai.stopGenerating')}
+                    >
+                      <Square className="w-4 h-4 fill-current" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSend}
+                      disabled={!input.trim() || !aiAvailable || aiChecking || aiStatusLoading}
+                      className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
+                      aria-label={t('ai.send')}
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
-        )}
-        {messages.length === 0 && aiAvailable && (
-          <div
-            className="flex flex-col items-center justify-center h-full text-muted-foreground px-4 text-center"
-            data-testid={workspaceMode ? 'workspace-chat-empty' : undefined}
-          >
-            <Bot className="w-10 h-10 mb-3 opacity-40" />
-            <p className="text-sm">{t('ai.welcomeMessage')}</p>
-            <p className="text-xs mt-1">{t('ai.welcomeHint')}</p>
-          </div>
-        )}
-        {messages.map(msg => (
-          <ChatBubble key={msg.id} msg={msg} workspaceMode={workspaceMode} />
-        ))}
-        {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
-          <div className="flex gap-2">
-            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-              <Bot className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="bg-muted rounded-lg px-3 py-2">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="px-3 py-2 bg-destructive/10 text-destructive text-xs flex items-center justify-between gap-2">
-          <span className="truncate">
-            {error.toLowerCase().includes('not configured')
-              ? t('admin.workspace.chatNotConfigured')
-              : error}
-          </span>
-          <button onClick={clearError} className="ml-2 shrink-0" aria-label={t('common.close')}>
-            <X className="w-3 h-3" />
-          </button>
-        </div>
+        </>
       )}
-
-      {/* Input */}
-      <div className="border-t border-border px-3 py-2">
-        <AttachedArtifactChips testIdPrefix="chat-attached-artifact" />
-        <AttachedSkillRunChips testIdPrefix="chat-attached-skill-run" />
-        {workspaceMode && aiAvailable ? (
-          <WorkspaceUnifiedComposer
-            disabled={aiChecking || aiStatusLoading || !aiAvailable}
-            isStreaming={isStreaming}
-            onSendMessage={handleWorkspaceSend}
-            onCancelStream={cancelStream}
-          />
-        ) : (
-          <>
-            {aiAvailable && !isInline && <SourceMaterialComposer variant="compact" />}
-            <div className="flex items-end gap-2">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={
-                  !aiAvailable && !aiChecking && !aiStatusLoading
-                    ? t('admin.workspace.chatInputDisabled')
-                    : t('ai.inputPlaceholder')
-                }
-                aria-label={t('ai.inputPlaceholder')}
-                rows={1}
-                className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary max-h-24 disabled:opacity-60"
-                disabled={isStreaming || aiChecking || aiStatusLoading || !aiAvailable}
-              />
-              {isStreaming ? (
-                <button
-                  onClick={cancelStream}
-                  className="p-2 rounded-lg bg-muted text-foreground border border-border hover:bg-muted/80 transition-colors"
-                  aria-label={t('ai.stopGenerating')}
-                >
-                  <Square className="w-4 h-4 fill-current" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim() || !aiAvailable || aiChecking || aiStatusLoading}
-                  className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
-                  aria-label={t('ai.send')}
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
     </div>
   );
 }

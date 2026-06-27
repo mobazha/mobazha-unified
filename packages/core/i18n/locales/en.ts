@@ -5384,6 +5384,7 @@ export const en: TranslationResource = {
     history: 'History',
     newChat: 'New Chat',
     untitled: 'Untitled',
+    untitledWithTime: 'Untitled · {{time}}',
     noConversations: 'No conversations yet',
     welcomeMessage: 'Ask me anything about your store',
     welcomeHint: 'Products, orders, analytics...',

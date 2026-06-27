@@ -2714,6 +2714,7 @@ export interface TranslationResource {
     history?: string;
     newChat?: string;
     untitled?: string;
+    untitledWithTime?: string;
     noConversations?: string;
     welcomeMessage?: string;
     welcomeHint?: string;

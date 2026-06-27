@@ -4868,6 +4868,7 @@ export const zh: PartialTranslationResource = {
     history: '历史记录',
     newChat: '新对话',
     untitled: '未命名',
+    untitledWithTime: '未命名对话 · {{time}}',
     noConversations: '暂无对话记录',
     welcomeMessage: '有关店铺的任何问题，尽管问我',
     welcomeHint: '商品、订单、数据分析……',
