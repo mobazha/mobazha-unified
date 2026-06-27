@@ -95,6 +95,9 @@ export * from './refundReceivingAddressValidation';
 // 扫码结果解析
 export * from './scanResult';
 
+// AI chat session title derivation
+export * from './chatSessionTitle';
+
 // 仲裁人裁决表单
 export * from './moderatorDisputeRuling';
 

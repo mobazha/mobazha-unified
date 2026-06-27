@@ -215,6 +215,10 @@ interface WorkspaceOpportunitiesRailProps {
   loading?: boolean;
   activeOpportunityId?: string | null;
   onChatAction: (prompt: string, contextLabel: string, opportunityId: string) => void;
+  /** When true, only render the desktop queue rail (lg+). */
+  desktopOnly?: boolean;
+  /** When true, only render the mobile bottom sheet trigger. */
+  mobileOnly?: boolean;
 }
 
 export function WorkspaceOpportunitiesRail({
@@ -222,62 +226,70 @@ export function WorkspaceOpportunitiesRail({
   loading,
   activeOpportunityId,
   onChatAction,
+  desktopOnly = false,
+  mobileOnly = false,
 }: WorkspaceOpportunitiesRailProps) {
   const { t } = useI18n();
+  const showDesktop = !mobileOnly;
+  const showMobile = !desktopOnly;
 
   return (
     <>
-      <div className="hidden lg:block">
-        <h3 className="text-sm font-semibold text-foreground mb-3">
-          {t('admin.workspace.opportunitiesTitle')}
-        </h3>
-        {loading ? (
-          <div className="h-24 rounded-xl bg-muted/40 animate-pulse" />
-        ) : (
-          <WorkspaceOpportunityCards
-            items={items}
-            activeOpportunityId={activeOpportunityId}
-            onChatAction={onChatAction}
-            layout="queue"
-          />
-        )}
-      </div>
+      {showDesktop && (
+        <div className="hidden lg:block">
+          <h3 className="text-sm font-semibold text-foreground mb-3">
+            {t('admin.workspace.opportunitiesTitle')}
+          </h3>
+          {loading ? (
+            <div className="h-24 rounded-xl bg-muted/40 animate-pulse" />
+          ) : (
+            <WorkspaceOpportunityCards
+              items={items}
+              activeOpportunityId={activeOpportunityId}
+              onChatAction={onChatAction}
+              layout="queue"
+            />
+          )}
+        </div>
+      )}
 
-      <div className="lg:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full min-h-11 justify-between"
-              data-testid="workspace-opportunities-mobile-trigger"
-            >
-              <span>{t('admin.workspace.opportunitiesTitle')}</span>
-              <span className="text-muted-foreground text-xs">
-                {items.length > 0
-                  ? t('admin.workspace.opportunitiesMobileCount', { count: items.length })
-                  : t('admin.workspace.noOpportunities')}
-              </span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{t('admin.workspace.opportunitiesTitle')}</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 pb-6">
-              {loading ? (
-                <div className="h-24 rounded-xl bg-muted/40 animate-pulse" />
-              ) : (
-                <WorkspaceOpportunityCards
-                  items={items}
-                  activeOpportunityId={activeOpportunityId}
-                  onChatAction={onChatAction}
-                  layout="queue"
-                />
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+      {showMobile && (
+        <div className="lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full min-h-11 justify-between"
+                data-testid="workspace-opportunities-mobile-trigger"
+              >
+                <span>{t('admin.workspace.opportunitiesTitle')}</span>
+                <span className="text-muted-foreground text-xs">
+                  {items.length > 0
+                    ? t('admin.workspace.opportunitiesMobileCount', { count: items.length })
+                    : t('admin.workspace.noOpportunities')}
+                </span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="max-h-[75vh] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>{t('admin.workspace.opportunitiesTitle')}</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 pb-6">
+                {loading ? (
+                  <div className="h-24 rounded-xl bg-muted/40 animate-pulse" />
+                ) : (
+                  <WorkspaceOpportunityCards
+                    items={items}
+                    activeOpportunityId={activeOpportunityId}
+                    onChatAction={onChatAction}
+                    layout="queue"
+                  />
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
     </>
   );
 }

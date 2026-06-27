@@ -23,6 +23,34 @@ import {
   type AttachedChatArtifact,
   type AttachedChatSkillRun,
 } from '../types/agentArtifact';
+import { deriveChatSessionTitle } from '../utils/chatSessionTitle';
+
+function upsertSessionTitle(
+  sessions: ChatSession[],
+  sessionId: string,
+  title: string
+): ChatSession[] {
+  if (!title.trim()) return sessions;
+  const now = new Date().toISOString();
+  const idx = sessions.findIndex(s => s.id === sessionId);
+  if (idx >= 0) {
+    const existing = sessions[idx];
+    if (existing.title?.trim()) return sessions;
+    const next = [...sessions];
+    next[idx] = { ...existing, title, updated_at: now };
+    return next;
+  }
+  return [
+    {
+      id: sessionId,
+      role: 'seller',
+      title,
+      created_at: now,
+      updated_at: now,
+    },
+    ...sessions,
+  ];
+}
 
 let msgCounter = 0;
 function nextMsgId(): string {
@@ -312,12 +340,16 @@ export const useAIChatStore = create<AIChatState>()(
 
               onDone: sessionId => {
                 activeAbortController = null;
-                set({
+                const id = sessionId || get().sessionId;
+                const title = deriveChatSessionTitle(text);
+                set(s => ({
                   isStreaming: false,
-                  sessionId: sessionId || get().sessionId,
+                  sessionId: id,
                   attachedArtifacts: [],
                   attachedSkillRuns: [],
-                });
+                  sessions: id && title ? upsertSessionTitle(s.sessions, id, title) : s.sessions,
+                }));
+                void get().loadSessions();
               },
 
               onError: error => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useI18n } from '@mobazha/core';
-import { Maximize2, Minimize2, PanelLeft, PanelLeftClose } from 'lucide-react';
+import { Maximize2, Minimize2, PanelRight, PanelRightClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkspaceLayoutControlsProps {
@@ -32,17 +32,14 @@ export function WorkspaceLayoutControls({
         <button
           type="button"
           onClick={onToggleRail}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
-            'hidden lg:inline-flex'
-          )}
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 min-h-11 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors lg:min-h-9 lg:px-2.5 lg:py-1.5"
           aria-pressed={railCollapsed}
           data-testid="workspace-toggle-rail"
         >
           {railCollapsed ? (
-            <PanelLeft className="h-3.5 w-3.5" aria-hidden />
+            <PanelRight className="h-3.5 w-3.5" aria-hidden />
           ) : (
-            <PanelLeftClose className="h-3.5 w-3.5" aria-hidden />
+            <PanelRightClose className="h-3.5 w-3.5" aria-hidden />
           )}
           {railCollapsed
             ? t('admin.workspace.layoutShowTasks', { count: opportunityCount })
@@ -52,7 +49,7 @@ export function WorkspaceLayoutControls({
       <button
         type="button"
         onClick={onToggleFocus}
-        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 min-h-11 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors lg:min-h-9 lg:px-2.5 lg:py-1.5"
         aria-pressed={focusMode}
         data-testid="workspace-toggle-focus"
       >
