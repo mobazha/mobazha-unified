@@ -1,3 +1,5 @@
+import type { ChatAttachment } from '../services/ai/chatService';
+
 /** Raw REST record from /v1/agent/artifacts* (snake_case). */
 export interface AgentArtifactRecordRaw {
   id: string;
@@ -48,10 +50,18 @@ export interface CreateSourceMaterialArtifactInput {
   metadata?: Record<string, unknown>;
 }
 
+export interface CreateStagingFileArtifactInput {
+  file: File;
+  threadId?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface AttachedChatArtifact {
   id: string;
   name: string;
   summary?: string;
+  /** Turn-level attachment metadata sent with POST /v1/agent/chat context.attachments */
+  attachment?: ChatAttachment;
 }
 
 /** Max artifacts included on a single chat message (matches node agentChatMaxContextArtifacts). */

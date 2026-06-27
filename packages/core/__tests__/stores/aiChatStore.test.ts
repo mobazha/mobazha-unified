@@ -92,6 +92,83 @@ describe('useAIChatStore attached artifacts', () => {
     expect(useAIChatStore.getState().sessionId).toBe('session-1');
   });
 
+  it('sends attachments metadata with the next message when present', async () => {
+    useAIChatStore.getState().attachArtifact({
+      id: 'artifact-img',
+      name: 'cover.jpg',
+      attachment: {
+        name: 'cover.jpg',
+        contentType: 'image/jpeg',
+        contentBase64: 'abc123',
+      },
+    });
+
+    mockSendChatMessage.mockImplementation(async (_text, _sessionId, callbacks) => {
+      callbacks.onDone('session-1');
+    });
+
+    await useAIChatStore.getState().sendMessage('Import from this image');
+
+    expect(mockSendChatMessage).toHaveBeenCalledWith(
+      'Import from this image',
+      undefined,
+      expect.any(Object),
+      expect.any(AbortSignal),
+      {
+        artifactIds: ['artifact-img'],
+        attachments: [
+          {
+            name: 'cover.jpg',
+            contentType: 'image/jpeg',
+            contentBase64: 'abc123',
+          },
+        ],
+      }
+    );
+  });
+
+  it('prefers explicit turn payload over store attachments', async () => {
+    useAIChatStore.getState().attachArtifact({ id: 'stale-artifact', name: 'Stale' });
+
+    mockSendChatMessage.mockImplementation(async (_text, _sessionId, callbacks) => {
+      callbacks.onDone('session-1');
+    });
+
+    await useAIChatStore.getState().sendMessage('Import from this image', undefined, {
+      turn: {
+        artifactIds: ['artifact-img'],
+        attachments: [
+          {
+            name: 'cover.jpg',
+            contentType: 'image/jpeg',
+            contentBase64: 'abc123',
+          },
+        ],
+        display: [{ name: 'cover.jpg', contentType: 'image/jpeg', previewUrl: 'blob:preview' }],
+      },
+    });
+
+    expect(mockSendChatMessage).toHaveBeenCalledWith(
+      'Import from this image',
+      undefined,
+      expect.any(Object),
+      expect.any(AbortSignal),
+      {
+        artifactIds: ['artifact-img'],
+        attachments: [
+          {
+            name: 'cover.jpg',
+            contentType: 'image/jpeg',
+            contentBase64: 'abc123',
+          },
+        ],
+      }
+    );
+    expect(useAIChatStore.getState().messages.at(-1)?.attachmentDisplay).toEqual([
+      { name: 'cover.jpg', contentType: 'image/jpeg', previewUrl: 'blob:preview' },
+    ]);
+  });
+
   it('keeps attachments when the stream errors', async () => {
     useAIChatStore.getState().attachArtifact({ id: 'artifact-1', name: 'Supplier notes' });
 

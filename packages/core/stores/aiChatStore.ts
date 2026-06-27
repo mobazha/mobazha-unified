@@ -9,8 +9,11 @@ import type {
   ToolCallInfo,
   ChatSession,
   ChatContext,
+  ChatTurnPayload,
 } from '../services/ai/chatService';
 import { sendChatMessage, listChatSessions, deleteChatSession } from '../services/ai/chatService';
+import { extractProductImportRunId } from '../services/ai/productImportToolResult';
+import type { SendMessageOptions } from '../services/ai/chatService';
 import { parseApprovalRequiredResult } from '../services/ai/approvalService';
 import {
   MAX_ATTACHED_CHAT_ARTIFACTS,
@@ -61,7 +64,7 @@ interface AIChatState {
   open: () => void;
   close: () => void;
 
-  sendMessage: (text: string, context?: ChatContext) => Promise<void>;
+  sendMessage: (text: string, context?: ChatContext, options?: SendMessageOptions) => Promise<void>;
   cancelStream: () => void;
   loadSessions: () => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
@@ -161,12 +164,14 @@ export const useAIChatStore = create<AIChatState>()(
         set({ isStreaming: false });
       },
 
-      sendMessage: async (text: string, context?: ChatContext) => {
+      sendMessage: async (text: string, context?: ChatContext, options?: SendMessageOptions) => {
+        const turn: ChatTurnPayload | undefined = options?.turn;
         const userMsg: ChatMessage = {
           id: nextMsgId(),
           role: 'user',
           content: text,
           timestamp: Date.now(),
+          ...(turn?.display.length ? { attachmentDisplay: turn.display } : {}),
         };
 
         set(s => ({
@@ -183,14 +188,24 @@ export const useAIChatStore = create<AIChatState>()(
         activeAbortController = abortController;
 
         try {
-          const attachedArtifactIds = get().attachedArtifacts.map(item => item.id);
+          const attachedArtifacts = get().attachedArtifacts;
+          const attachedArtifactIds = turn?.artifactIds ?? attachedArtifacts.map(item => item.id);
           const attachedSkillRunIds = get().attachedSkillRuns.map(item => item.id);
+          const attachments =
+            turn?.attachments ??
+            attachedArtifacts
+              .map(item => item.attachment)
+              .filter((item): item is NonNullable<typeof item> => Boolean(item));
           const chatContext: ChatContext | undefined =
-            attachedArtifactIds.length > 0 || attachedSkillRunIds.length > 0 || context
+            attachedArtifactIds.length > 0 ||
+            attachedSkillRunIds.length > 0 ||
+            attachments.length > 0 ||
+            context
               ? {
                   ...context,
                   ...(attachedArtifactIds.length > 0 ? { artifactIds: attachedArtifactIds } : {}),
                   ...(attachedSkillRunIds.length > 0 ? { skillRunIds: attachedSkillRunIds } : {}),
+                  ...(attachments.length > 0 ? { attachments } : {}),
                 }
               : undefined;
 
@@ -266,6 +281,12 @@ export const useAIChatStore = create<AIChatState>()(
                     typeof result === 'object' && result !== null && 'error' in result
                       ? 'error'
                       : 'done';
+                }
+                if (toolName === 'agent_product_import_ingest') {
+                  const runId = extractProductImportRunId(result);
+                  if (runId) {
+                    options?.onProductImportRun?.(runId);
+                  }
                 }
                 toolCalls.set(toolId, tc);
                 set(s => {

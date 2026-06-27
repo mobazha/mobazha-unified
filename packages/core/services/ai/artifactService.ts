@@ -3,8 +3,16 @@ import type {
   AgentArtifactRecord,
   AgentArtifactRecordRaw,
   CreateSourceMaterialArtifactInput,
+  CreateStagingFileArtifactInput,
 } from '../../types/agentArtifact';
 import { nodeAuthGet, nodeAuthPost } from '../api/helpers';
+import type { ChatAttachment } from './chatService';
+
+const MAX_STAGING_FILE_BYTES = 2 * 1024 * 1024;
+/** Matches node agentChatAttachmentTextMaxLen */
+export const MAX_CHAT_ATTACHMENT_TEXT_LEN = 1200;
+
+const TEXT_READABLE_FILE_PATTERN = /\.(txt|md|json|csv)$/i;
 
 export function normalizeAgentArtifactRecord(raw: AgentArtifactRecordRaw): AgentArtifactRecord {
   return {
@@ -61,6 +69,116 @@ function defaultSourceMaterialName(text: string): string {
       ?.trim() || 'Pasted material';
   if (firstLine.length <= 48) return firstLine;
   return `${firstLine.slice(0, 45)}...`;
+}
+
+function isStagingTextReadableFile(file: File): boolean {
+  const type = file.type.toLowerCase();
+  if (type.startsWith('text/')) return true;
+  if (type === 'application/json') return true;
+  return TEXT_READABLE_FILE_PATTERN.test(file.name);
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        reject(new Error('Failed to read file'));
+        return;
+      }
+      const comma = result.indexOf(',');
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+export function buildTextChatAttachment(name: string, text: string): ChatAttachment {
+  return {
+    name,
+    contentType: 'text/plain',
+    text: text.slice(0, MAX_CHAT_ATTACHMENT_TEXT_LEN),
+  };
+}
+
+export interface StageFileForAgentChatResult {
+  artifact: AgentArtifactRecord;
+  attachment: ChatAttachment;
+}
+
+/** Stage a file artifact and build turn-level attachment metadata for agent chat. */
+export async function stageFileForAgentChat(
+  input: CreateStagingFileArtifactInput
+): Promise<StageFileForAgentChatResult> {
+  const { file } = input;
+  if (file.size > MAX_STAGING_FILE_BYTES) {
+    throw new Error('file_too_large');
+  }
+
+  const metadata = {
+    source: 'workspace_file_staging',
+    fileName: file.name,
+    contentType: file.type,
+    staging: true,
+    ...input.metadata,
+  };
+
+  if (isStagingTextReadableFile(file)) {
+    const text = await file.text();
+    const artifact = await createSourceMaterialArtifact({
+      text,
+      name: file.name,
+      summary: file.name,
+      threadId: input.threadId,
+      metadata,
+    });
+    return {
+      artifact,
+      attachment: {
+        ...buildTextChatAttachment(file.name, text),
+        id: artifact.id,
+        size: file.size,
+      },
+    };
+  }
+
+  const contentBase64 = await fileToBase64(file);
+  const contentType = file.type || 'application/octet-stream';
+  const data = await nodeAuthPost<AgentArtifactRecordRaw>(NODE_API.AGENT_ARTIFACTS, {
+    ...(input.threadId ? { threadId: input.threadId } : {}),
+    name: file.name,
+    sourceName: file.name,
+    contentType,
+    summary: file.name,
+    data: {
+      contentBase64,
+      fileName: file.name,
+      contentType,
+      staging: true,
+    },
+    metadata,
+  });
+  const artifact = normalizeAgentArtifactRecord(data);
+  return {
+    artifact,
+    attachment: {
+      id: artifact.id,
+      name: file.name,
+      contentType,
+      size: file.size,
+      contentBase64,
+    },
+  };
+}
+
+/** Stage a chat attachment for agent context (text inline, binary as base64 in artifact data). */
+export async function createStagingFileArtifact(
+  input: CreateStagingFileArtifactInput
+): Promise<AgentArtifactRecord> {
+  const { artifact } = await stageFileForAgentChat(input);
+  return artifact;
 }
 
 function defaultSourceMaterialSummary(text: string): string {
