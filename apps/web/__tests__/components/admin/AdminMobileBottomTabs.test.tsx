@@ -11,10 +11,12 @@ import React from 'react';
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 let mockPathname = '/admin';
+let mockSearchParams = '';
 let mockAiWorkspaceEnabled = false;
 
 vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
+  useSearchParams: () => new URLSearchParams(mockSearchParams),
 }));
 
 vi.mock('next/link', () => ({
@@ -52,6 +54,7 @@ import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs'
 describe('AdminMobileBottomTabs', () => {
   beforeEach(() => {
     mockPathname = '/admin';
+    mockSearchParams = '';
     mockAiWorkspaceEnabled = false;
   });
 
