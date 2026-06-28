@@ -50,8 +50,8 @@ export interface SettlementActionSnapshot {
 
 /**
  * Running tally of confirmed-and-deduplicated payments toward the order's
- * expected amount. Backend rewrites this on every aggregation pass (Phase
- * backend payment aggregation) so the dashboard can render a live
+ * expected amount. Backend rewrites this on every aggregation pass so the
+ * dashboard can render a live
  * "you've paid X of Y" progress bar even before the order flips to
  * "verified" and again afterwards if a late deposit lands.
  *
@@ -127,7 +127,7 @@ export interface OrderListItem {
   shippingName?: string;
   shippingAddress?: string;
   moderated: boolean;
-  /** settlementSpec.escrowType from payment (managed_escrow / utxo_script / solana_escrow) */
+  /** Opaque backend settlement type retained for order routing. */
   paymentEscrowType?: string;
   /** listing metadata contractType (PHYSICAL_GOOD / SERVICE / DIGITAL_GOOD) */
   contractType?: string;

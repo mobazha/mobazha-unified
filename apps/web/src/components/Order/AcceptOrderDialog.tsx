@@ -31,7 +31,7 @@ export interface AcceptOrderDialogProps {
   blockchain?: string;
   /** 支付币种，用于判断是否需要钱包签名。法币格式: "fiat:paypal:USD" */
   paymentCoin?: string;
-  /** settlementSpec.escrowType（managed_escrow / solana_escrow / utxo_script） */
+  /** Opaque backend settlement type. */
   paymentEscrowType?: string;
   /** direct / cancelable / moderated */
   paymentProductMode?: string;

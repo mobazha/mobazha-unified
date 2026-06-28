@@ -80,6 +80,8 @@ export {
   onOpenApiUnauthorized,
 } from './openapi-client';
 
+export { refreshRuntimeConfig } from './runtimeConfig';
+
 // 商品 API
 export * as productsApi from './products';
 export type { StoreListingsResult } from './products';

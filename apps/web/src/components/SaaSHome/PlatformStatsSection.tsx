@@ -5,9 +5,9 @@ import { Container } from '@/components/layouts';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 import {
   useI18n,
+  useRuntimeConfig,
+  useFiatPaymentVisible,
   getVisibleSupportedChainCount,
-  isTronPaymentVisible,
-  isFiatPaymentVisible,
 } from '@mobazha/core';
 
 interface PlatformStatsSectionProps {
@@ -16,17 +16,43 @@ interface PlatformStatsSectionProps {
   isLoading: boolean;
 }
 
-const CHAINS_SUPPORTED = getVisibleSupportedChainCount();
+interface ChainEcosystemEntry {
+  id: string;
+  name: string;
+}
 
-const CHAIN_ECOSYSTEM = [
+const LEGACY_CHAIN_ECOSYSTEM: ChainEcosystemEntry[] = [
   { id: 'BTC', name: 'Bitcoin' },
   { id: 'ETH', name: 'Ethereum' },
   { id: 'BNB', name: 'BNB Chain' },
   { id: 'SOL', name: 'Solana' },
   { id: 'BASE', name: 'Base' },
   { id: 'LTC', name: 'Litecoin' },
-  ...(isTronPaymentVisible() ? [{ id: 'TRX', name: 'TRON' }] : []),
 ];
+
+const CHAIN_ECOSYSTEM_BY_CAPABILITY: Record<string, ChainEcosystemEntry> = {
+  BTC: { id: 'BTC', name: 'Bitcoin' },
+  BCH: { id: 'BCH', name: 'Bitcoin Cash' },
+  LTC: { id: 'LTC', name: 'Litecoin' },
+  ZEC: { id: 'ZEC', name: 'Zcash' },
+  ETH: { id: 'ETH', name: 'Ethereum' },
+  BSC: { id: 'BNB', name: 'BNB Chain' },
+  MATIC: { id: 'MATIC', name: 'Polygon' },
+  BASE: { id: 'BASE', name: 'Base' },
+  CFX: { id: 'CFX', name: 'Conflux' },
+  ARB: { id: 'ARB', name: 'Arbitrum' },
+  OP: { id: 'OP', name: 'Optimism' },
+  AVAX: { id: 'AVAX', name: 'Avalanche' },
+  XDAI: { id: 'XDAI', name: 'Gnosis' },
+  CELO: { id: 'CELO', name: 'Celo' },
+  MNT: { id: 'MNT', name: 'Mantle' },
+  ZKSYNC: { id: 'ZKSYNC', name: 'zkSync Era' },
+  SCRL: { id: 'SCRL', name: 'Scroll' },
+  LINEA: { id: 'LINEA', name: 'Linea' },
+  SOL: { id: 'SOL', name: 'Solana' },
+  TRX: { id: 'TRX', name: 'TRON' },
+  XMR: { id: 'XMR', name: 'Monero' },
+};
 
 const FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
   {
@@ -67,7 +93,17 @@ const FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
 export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.memo(
   ({ storeCount, listingCount, isLoading }) => {
     const { t } = useI18n();
+    const runtimeConfig = useRuntimeConfig();
+    const fiatVisible = useFiatPaymentVisible();
     const hasRealData = storeCount > 0 || listingCount > 0;
+    const chainsSupported = getVisibleSupportedChainCount();
+    const chainEcosystem =
+      runtimeConfig.schemaVersion >= 2
+        ? runtimeConfig.capabilities.payments.methods
+            .filter(method => method.kind === 'crypto')
+            .map(method => CHAIN_ECOSYSTEM_BY_CAPABILITY[method.id.toUpperCase()])
+            .filter((chain): chain is ChainEcosystemEntry => Boolean(chain))
+        : LEGACY_CHAIN_ECOSYSTEM;
 
     if (isLoading) {
       return (
@@ -89,7 +125,7 @@ export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.m
     const stats = [
       { value: storeCount, label: t('saasHome.stats.activeStores') },
       { value: listingCount, label: t('saasHome.stats.productsListed') },
-      { value: CHAINS_SUPPORTED, label: t('saasHome.stats.chainsSupported') },
+      { value: chainsSupported, label: t('saasHome.stats.chainsSupported') },
     ];
 
     return (
@@ -127,12 +163,12 @@ export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.m
             </p>
 
             <div className="flex items-center justify-center gap-2 flex-wrap">
-              {CHAIN_ECOSYSTEM.map(chain => (
+              {chainEcosystem.map(chain => (
                 <span key={chain.id} title={chain.name}>
                   <TokenIcon token={chain.id} size={20} />
                 </span>
               ))}
-              {isFiatPaymentVisible() && (
+              {fiatVisible && (
                 <>
                   <span className="w-px h-4 bg-white/15 mx-0.5" aria-hidden="true" />
                   {FIAT_METHODS.map(method => (
@@ -149,7 +185,7 @@ export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.m
             </div>
 
             <p className="text-white/20 text-[10px] mt-3">
-              {t('saasHome.stats.andMore', { count: CHAINS_SUPPORTED })}
+              {t('saasHome.stats.andMore', { count: chainsSupported })}
             </p>
           </div>
         </Container>

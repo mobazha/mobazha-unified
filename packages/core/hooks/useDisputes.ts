@@ -129,7 +129,7 @@ export function useDisputes() {
   );
 
   /**
-   * 接受裁决（managed moderated 时自动 settlement action + poll）
+   * 接受裁决（需要后端结算时自动提交 settlement action 并轮询）
    */
   const acceptResolution = useCallback(
     async (

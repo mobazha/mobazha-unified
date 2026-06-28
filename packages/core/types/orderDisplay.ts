@@ -227,7 +227,7 @@ export interface DisplayOrder {
   paymentProductMode?: PaymentSessionProductMode;
   /** True when the order uses moderated buyer protection. */
   isModerated?: boolean;
-  /** Escrow implementation from PaymentSent settlementSpec (safe, solana_escrow, utxo_script, …). */
+  /** Opaque backend settlement type from the payment session. */
   paymentEscrowType?: string;
   /** 创建时间 */
   createdAt: string;
@@ -303,7 +303,7 @@ export interface DisplayOrder {
   paymentVerificationFailed?: boolean;
   /**
    * 部分到账进度（来自后端 paymentState.progress）。仅在加密货币支付且后端
-   * 已观测到至少一笔事件时存在。backend payment aggregation — 即使订单已
+   * 已观测到至少一笔事件时存在。即使订单已
    * verified，后端仍会刷新此字段以反映 late deposit。
    */
   paymentProgress?: PaymentProgress;

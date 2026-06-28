@@ -18,7 +18,7 @@ import { setupMockAuth } from './fixtures/mock-auth';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_ORDER_TOKEN = 'mock';
+const MOCK_ORDER_TOKEN = 'gst_test_order';
 
 // Note: paymentAmount is in minimal units (wei for ETH, satoshi for BTC), per backend contract.
 // See pkg/models/guest_order.go + internal/core/guest_order_app_service.go convertToPaymentCoin().
@@ -85,7 +85,7 @@ const MOCK_GUEST_ORDERS_LIST = [
     updatedAt: new Date().toISOString(),
   },
   {
-    orderToken: 'mock',
+    orderToken: 'gst_test_order_2',
     state: 'FUNDED',
     paymentCoin: 'BTC',
     paymentAmount: '45000', // 0.00045 BTC in satoshi

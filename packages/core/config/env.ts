@@ -1,3 +1,5 @@
+import { getRuntimeConfig, type RuntimeConfig } from './runtimeConfig';
+
 /**
  * 环境配置
  * 支持测试环境和生产环境切换
@@ -544,48 +546,44 @@ export function initEnvFromProcess(): void {
 }
 
 /**
- * Apply runtime config injected by the container init script.
+ * Apply runtime config published by the backend bootstrap route.
  *
- * Standalone Docker containers generate /srv/www/runtime-config.js at startup,
- * which sets window.__RUNTIME_CONFIG__ with values from Docker env vars
- * (e.g. SAAS_API_URL). This allows a single generic image to be configured
- * at deploy time without rebuilding the frontend.
+ * Standalone deployments route /runtime-config.js to the node, which sets
+ * window.__RUNTIME_CONFIG__ from the live environment and capability snapshot.
+ * This keeps a single generic frontend image configurable without rebuilding.
  *
  * Runtime values override compile-time defaults set by initEnvFromPublicConfig().
  */
-export function applyRuntimeConfig(): void {
+export function applyRuntimeConfig(runtimeConfig: RuntimeConfig = getRuntimeConfig()): void {
   if (typeof window === 'undefined') return;
   // Note: feature flags (`rc.features` and the legacy `rc.guestCheckoutEnabled`)
   // are consumed by `services/featureFlags.ts`, not this function. Call sites
   // use `featureFlags.isEnabled(key)` or `useFeature(key)` instead of reading
   // env config.
-  const rc = (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ as
-    | {
-        saasUrl?: string;
-        authMode?: string;
-        outpostMode?: boolean;
-        disableExternalResources?: boolean;
-        brand?: {
-          name?: string;
-          shortName?: string;
-          tagline?: string;
-          description?: string;
-          primaryColor?: string;
-          accentColor?: string;
-          logoUrl?: string;
-          faviconUrl?: string;
-          privacyNotice?: string;
-          hidePoweredBy?: boolean;
-          network?: {
-            allowUserCustomNode?: boolean;
-            showAdvancedDiagnostics?: boolean;
-            showNodePoolUI?: boolean;
-            allowDiscoverToggle?: boolean;
-          };
-        };
-      }
-    | undefined;
-  if (!rc) return;
+  const rc = runtimeConfig as {
+    saasUrl?: string;
+    authMode?: string;
+    outpostMode?: boolean;
+    disableExternalResources?: boolean;
+    brand?: {
+      name?: string;
+      shortName?: string;
+      tagline?: string;
+      description?: string;
+      primaryColor?: string;
+      accentColor?: string;
+      logoUrl?: string;
+      faviconUrl?: string;
+      privacyNotice?: string;
+      hidePoweredBy?: boolean;
+      network?: {
+        allowUserCustomNode?: boolean;
+        showAdvancedDiagnostics?: boolean;
+        showNodePoolUI?: boolean;
+        allowDiscoverToggle?: boolean;
+      };
+    };
+  };
 
   if (rc.authMode === 'standalone' || rc.authMode === 'basic' || rc.authMode === 'hosted') {
     currentEnv = {

@@ -11,7 +11,7 @@ import {
   sanitizeCheckoutFiatProvider,
   persistCheckoutTokenSelection,
   persistCheckoutFiatSelection,
-  isFiatPaymentVisible,
+  useFiatPaymentVisible,
 } from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
@@ -66,6 +66,7 @@ function readInitialPaymentSelection(): Pick<
 export function PaymentSelectorProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const fiatVisible = useFiatPaymentVisible();
 
   // 卖家 PeerID — 用于获取该卖家支持的支付方式（crypto + fiat）
   const [vendorPeerID, setVendorPeerID] = useState<string | undefined>();
@@ -196,16 +197,19 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     persistCheckoutTokenSelection(tokenId);
   }, []);
 
-  const setSelectedFiatProvider = useCallback((providerID: string) => {
-    if (!isFiatPaymentVisible() || !sanitizeCheckoutFiatProvider(providerID)) return;
-    setState(prev => ({
-      ...prev,
-      paymentCategory: 'fiat',
-      selectedFiatProvider: providerID,
-      selectedTokenId: undefined,
-    }));
-    persistCheckoutFiatSelection(providerID);
-  }, []);
+  const setSelectedFiatProvider = useCallback(
+    (providerID: string) => {
+      if (!fiatVisible || !sanitizeCheckoutFiatProvider(providerID)) return;
+      setState(prev => ({
+        ...prev,
+        paymentCategory: 'fiat',
+        selectedFiatProvider: providerID,
+        selectedTokenId: undefined,
+      }));
+      persistCheckoutFiatSelection(providerID);
+    },
+    [fiatVisible]
+  );
 
   // 设置选中的仲裁员
   const setSelectedModerator = useCallback((moderator: Moderator) => {

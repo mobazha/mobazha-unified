@@ -56,7 +56,7 @@ import {
   loadRefundReceivingPreferencesSafe,
   persistRefundReceivingAddressBestEffort,
   isRetiredPaymentChain,
-  isFiatPaymentVisible,
+  useFiatPaymentVisible,
   sanitizeCheckoutTokenId,
   type WebSocketMessage,
 } from '@mobazha/core';
@@ -236,6 +236,7 @@ function isPaymentSessionVerified(session?: PaymentSession | null): boolean {
  * - 从订单详情页点击"支付" /payment?orderID=xxx
  */
 export default function PaymentPage() {
+  const fiatVisible = useFiatPaymentVisible();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { renderPairedPrice, rates } = useCurrency();
@@ -367,7 +368,7 @@ export default function PaymentPage() {
   } = usePaymentSelector();
 
   const visibleTokenId = useMemo(() => sanitizeCheckoutTokenId(selectedTokenId), [selectedTokenId]);
-  const visibleFiatProvider = isFiatPaymentVisible() ? selectedFiatProvider : undefined;
+  const visibleFiatProvider = fiatVisible ? selectedFiatProvider : undefined;
 
   const selectedPaymentCoin = useMemo(() => {
     const tokenId = (visibleTokenId || '').trim();
@@ -408,7 +409,7 @@ export default function PaymentPage() {
     };
   }, [selectedPaymentCoin, refundWalletAddress, resolvedRefundAddress]);
 
-  // 地址监听支付信息（UTXO / managed settlement）
+  // 地址监听支付信息（UTXO / backend-managed settlement）
   const [externalWalletInfo, setExternalWalletInfo] = useState<ExternalWalletPaymentInfo | null>(
     null
   );

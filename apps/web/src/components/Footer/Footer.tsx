@@ -15,7 +15,7 @@ import {
   getBrandConfig,
   isOutpostMode,
   isTronPaymentVisible,
-  isFiatPaymentVisible,
+  useFiatPaymentVisible,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
 
@@ -122,6 +122,7 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
+  const fiatVisible = useFiatPaymentVisible();
   const { profile, isAuthenticated } = useUserStore();
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
@@ -346,7 +347,7 @@ export const Footer: React.FC = () => {
                   <TokenIcon token={id} size={20} />
                 </span>
               ))}
-              {isFiatPaymentVisible() && (
+              {fiatVisible && (
                 <>
                   <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
                   {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (

@@ -15,7 +15,8 @@ import {
   type PaymentChainConfig,
   type TokenConfig,
 } from '../data/tokens';
-import { isTronPaymentVisible } from './paymentMethodVisibility';
+import { isVisibleAcceptedCurrency, sanitizeAcceptedPaymentCoins } from './paymentMethodVisibility';
+import { hasRuntimePaymentCapabilities } from './runtimeConfig';
 
 /**
  * Chain IDs (as used in CHAINS / PaymentChainConfig) supported by Guest Checkout KeyDeriver.
@@ -26,12 +27,13 @@ const GUEST_SUPPORTED_CHAIN_IDS = [
   'ETH',
   'LTC',
   'BCH',
+  'ZEC',
   'XMR',
   'BSC',
   'MATIC',
   'BASE',
   'ARBITRUM',
-  ...(isTronPaymentVisible() ? (['TRON'] as const) : []),
+  'TRON',
 ] as const;
 
 /**
@@ -56,7 +58,7 @@ export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = GUEST_SUPPORTED_CHAIN_IDS.m
     if (!chain) return null;
     const nativeToken = TOKENS.find(t => t.chain === chainId && t.isNative);
     const paymentCoin = CHAIN_ID_TO_PAYMENT_COIN[chainId] ?? chainId;
-    if (!isPaymentCoinEnabled(paymentCoin)) return null;
+    if (!isPaymentCoinEnabled(paymentCoin) && paymentCoin !== 'ZEC') return null;
     return {
       chainId: chainId as string,
       paymentCoin,
@@ -66,7 +68,16 @@ export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = GUEST_SUPPORTED_CHAIN_IDS.m
   }
 ).filter((c): c is GuestCoinInfo => c !== null);
 
-export const GUEST_CHECKOUT_DEFAULT_COINS = ['BTC', 'ETH', 'LTC'];
+/** Legacy export retained for consumers; guest checkout now fails closed. */
+export const GUEST_CHECKOUT_DEFAULT_COINS: string[] = [];
+
+/** Intersect the technical guest-checkout catalog with backend runtime capabilities. */
+export function getRuntimeGuestCheckoutCoins(): GuestCoinInfo[] {
+  if (!hasRuntimePaymentCapabilities()) return [];
+  return GUEST_CHECKOUT_COINS.filter(
+    coin => isVisibleAcceptedCurrency(coin.chainId) || isVisibleAcceptedCurrency(coin.paymentCoin)
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Dynamic coin filtering via GET /v1/payment-methods/{peerID}
@@ -80,7 +91,7 @@ let cachedAcceptedCoins: string[] | null = null;
  * across all modes (SaaS, standalone, outpost).
  */
 export function setAcceptedCoins(coins: string[]): void {
-  cachedAcceptedCoins = coins;
+  cachedAcceptedCoins = sanitizeAcceptedPaymentCoins(coins);
 }
 
 export function clearAcceptedCoins(): void {
@@ -97,19 +108,20 @@ export function clearAcceptedCoins(): void {
  * list as a safe fallback so the UI can render immediately.
  */
 export function getAvailableGuestCoins(): GuestCoinInfo[] {
+  const runtimeCoins = getRuntimeGuestCheckoutCoins();
   if (cachedAcceptedCoins !== null) {
     if (cachedAcceptedCoins.length === 0) return [];
-    return GUEST_CHECKOUT_COINS.filter(
+    return runtimeCoins.filter(
       c => cachedAcceptedCoins!.includes(c.chainId) || cachedAcceptedCoins!.includes(c.paymentCoin)
     );
   }
-  return GUEST_CHECKOUT_COINS;
+  return runtimeCoins;
 }
 
 export function getGuestCoinByPaymentCoin(paymentCoin: string): GuestCoinInfo | undefined {
-  return GUEST_CHECKOUT_COINS.find(c => c.paymentCoin === paymentCoin);
+  return getRuntimeGuestCheckoutCoins().find(c => c.paymentCoin === paymentCoin);
 }
 
 export function getGuestCoinByChainId(chainId: string): GuestCoinInfo | undefined {
-  return GUEST_CHECKOUT_COINS.find(c => c.chainId === chainId);
+  return getRuntimeGuestCheckoutCoins().find(c => c.chainId === chainId);
 }

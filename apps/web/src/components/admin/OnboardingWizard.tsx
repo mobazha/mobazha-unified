@@ -11,7 +11,7 @@ import {
   useReceivingAccounts,
   getAdminStorePaymentsPath,
   getAdminXmrWalletPath,
-  isFiatPaymentVisible,
+  useFiatPaymentVisible,
 } from '@mobazha/core';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
@@ -160,6 +160,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, updateProfile, updateSettings } = useUserStore();
+  const fiatVisible = useFiatPaymentVisible();
 
   const standaloneMode = useMemo(() => isStandalone(), []);
   const isOutpost = useMemo(() => isOutpostMode(), []);
@@ -759,7 +760,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                       defaultValue:
                         'Create or restore the wallet that receives buyer payments on this store.',
                     })
-                  : isFiatPaymentVisible()
+                  : fiatVisible
                     ? t('admin.onboarding.setupPaymentsDesc')
                     : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
               </p>

@@ -2,7 +2,7 @@
 
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getAdminFinancePath, isFiatPaymentVisible } from '@mobazha/core';
+import { useI18n, getAdminFinancePath, useFiatPaymentVisible } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
@@ -32,10 +32,11 @@ const PaymentConfirmationSection = lazy(() =>
 
 function PayoutInfoSection() {
   const { t } = useI18n();
+  const fiatVisible = useFiatPaymentVisible();
   const [open, setOpen] = useState(false);
 
   const items = [
-    ...(isFiatPaymentVisible()
+    ...(fiatVisible
       ? [
           {
             icon: <CreditCard className="w-4 h-4 text-[#6772e5]" />,
@@ -100,6 +101,7 @@ function PayoutInfoSection() {
 
 export default function AdminPaymentsPage() {
   const { t } = useI18n();
+  const fiatVisible = useFiatPaymentVisible();
   const router = useRouter();
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export default function AdminPaymentsPage() {
     return <div data-testid="admin-payments" className="min-h-[120px]" aria-busy="true" />;
   }
 
-  const description = isFiatPaymentVisible()
+  const description = fiatVisible
     ? t('admin.payments.pageDesc')
     : t('admin.payments.pageDescCryptoOnly');
 
@@ -145,7 +147,7 @@ export default function AdminPaymentsPage() {
             <PaymentConfirmationSection />
           </SettingsSection>
 
-          {isFiatPaymentVisible() && (
+          {fiatVisible && (
             <SettingsSection className="py-6 md:py-10">
               <PaymentProvidersSection />
             </SettingsSection>

@@ -1,12 +1,12 @@
 import type { AcceptDisputeSettlementContext } from '../services/api/orders';
 import type { PaymentSettlementSpec } from '../types/order';
 
-const BACKEND_SUBMITTED_ESCROW_TYPES = new Set(['managed_escrow', 'solana_escrow', 'utxo_script']);
-
-/** configured backend settlement types use backend-submitted settlement actions. */
+/**
+ * A non-empty settlement type is an opaque backend instruction. The frontend
+ * deliberately does not encode provider- or chain-specific implementation details.
+ */
 export function escrowTypeUsesBackendSubmittedSettlement(escrowType?: string | null): boolean {
-  if (!escrowType) return false;
-  return BACKEND_SUBMITTED_ESCROW_TYPES.has(escrowType.trim().toLowerCase());
+  return Boolean(escrowType?.trim());
 }
 
 function resolveEscrowType(input: {
@@ -17,8 +17,8 @@ function resolveEscrowType(input: {
 }
 
 /**
- * Moderated managed settlement / Solana Anchor / UTXO orders use settlement-actions before complete or dispute-release.
- * Requires escrowType on the payment settlement spec; no payment-coin guessing.
+ * Moderated orders with an opaque backend settlement type use settlement-actions
+ * before complete or dispute-release. No payment-coin guessing is performed.
  */
 export function orderUsesMonitoredBackendSettlement(input: {
   isModerated?: boolean;
@@ -33,8 +33,8 @@ export function orderUsesMonitoredBackendSettlement(input: {
 }
 
 /**
- * Cancelable managed settlement / Solana orders use settlement-actions for confirm/cancel.
- * Mirrors backend settlement service (CANCELABLE method only).
+ * Cancelable orders with an opaque backend settlement type use settlement-actions
+ * for confirm/cancel.
  */
 export function orderUsesCancelableBackendSettlement(input: {
   paymentProductMode?: string | null;

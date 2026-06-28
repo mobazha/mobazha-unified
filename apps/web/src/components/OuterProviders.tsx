@@ -9,6 +9,7 @@ import { ServiceWorkerProvider } from './ServiceWorkerProvider';
 import { AppKitProvider } from './AppKitProvider';
 import { CurrencyProvider } from './CurrencyProvider';
 import { PlatformProvider } from '@/lib/platform';
+import { RuntimeConfigProvider } from '@mobazha/core';
 
 /**
  * Shared outer Provider tree used by BOTH entry points:
@@ -26,9 +27,10 @@ import { PlatformProvider } from '@/lib/platform';
  */
 export function OuterProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
-      <TGMiniAppProvider>
-        {/*
+    <RuntimeConfigProvider>
+      <ThemeProvider>
+        <TGMiniAppProvider>
+          {/*
           PlatformProvider (MVP-1) depends on useTGMiniApp() to detect the
           Telegram SDK, so it must live INSIDE <TGMiniAppProvider>. It exposes
           channel-neutral capabilities (usePrimaryCTA / useBackAction /
@@ -36,16 +38,17 @@ export function OuterProviders({ children }: { children: React.ReactNode }) {
           beneath it. Placed outside Discord / AppKit / Currency so those
           tree branches can consume platform hooks uniformly.
         */}
-        <PlatformProvider>
-          <DiscordActivityProvider>
-            <ServiceWorkerProvider>
-              <AppKitProvider>
-                <CurrencyProvider>{children}</CurrencyProvider>
-              </AppKitProvider>
-            </ServiceWorkerProvider>
-          </DiscordActivityProvider>
-        </PlatformProvider>
-      </TGMiniAppProvider>
-    </ThemeProvider>
+          <PlatformProvider>
+            <DiscordActivityProvider>
+              <ServiceWorkerProvider>
+                <AppKitProvider>
+                  <CurrencyProvider>{children}</CurrencyProvider>
+                </AppKitProvider>
+              </ServiceWorkerProvider>
+            </DiscordActivityProvider>
+          </PlatformProvider>
+        </TGMiniAppProvider>
+      </ThemeProvider>
+    </RuntimeConfigProvider>
   );
 }

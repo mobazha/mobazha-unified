@@ -3,7 +3,12 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { AlertCircle } from 'lucide-react';
-import { useI18n, getAdminStorePaymentsPath, useReceivingAccounts } from '@mobazha/core';
+import {
+  useI18n,
+  getAdminStorePaymentsPath,
+  useReceivingAccounts,
+  useRuntimeConfig,
+} from '@mobazha/core';
 import {
   getGuestCheckoutSettings,
   updateGuestCheckoutSettings,
@@ -34,6 +39,7 @@ function hasActiveReceivingAccount(coin: GuestCoinInfo, accounts: ReceivingAccou
 
 export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPolicySectionProps) {
   const { t } = useI18n();
+  const runtimeConfig = useRuntimeConfig();
   const { data: receivingAccounts = [] } = useReceivingAccounts();
   const [settings, setSettings] = useState<GuestCheckoutSettings | null>(null);
   const [saving, setSaving] = useState(false);
@@ -48,6 +54,14 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
   const showPGPSection = isOutpostMode();
   /** Hidden GA-gated coins kept on server until explicit save + visibility launch. */
   const preservedHiddenCoinsRef = useRef<string[]>([]);
+  const visibleGuestCoins = useMemo(
+    () =>
+      GUEST_CHECKOUT_COINS.filter(
+        coin =>
+          isVisibleAcceptedCurrency(coin.chainId) || isVisibleAcceptedCurrency(coin.paymentCoin)
+      ),
+    [runtimeConfig]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -163,10 +177,10 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
   const coinsMissingAccounts = useMemo(() => {
     if (!settings) return [];
     return settings.acceptedCoins
-      .map(paymentCoin => GUEST_CHECKOUT_COINS.find(c => c.paymentCoin === paymentCoin))
+      .map(paymentCoin => visibleGuestCoins.find(c => c.paymentCoin === paymentCoin))
       .filter((coin): coin is GuestCoinInfo => coin !== undefined)
       .filter(coin => !hasActiveReceivingAccount(coin, receivingAccounts));
-  }, [settings, receivingAccounts]);
+  }, [settings, receivingAccounts, visibleGuestCoins]);
 
   if (!settings && !error) {
     return (
@@ -256,7 +270,7 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
               </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {GUEST_CHECKOUT_COINS.map(coin => {
+              {visibleGuestCoins.map(coin => {
                 const selected = settings.acceptedCoins.includes(coin.paymentCoin);
                 const missingAccount =
                   selected && !hasActiveReceivingAccount(coin, receivingAccounts);

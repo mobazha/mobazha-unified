@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { isFiatPaymentVisible } from '../config/paymentMethodVisibility';
 import * as fiatApi from '../services/api/fiat';
 import type { FiatProviderInfo } from '../types/fiat';
+import { useFiatPaymentVisible } from './useRuntimeConfig';
 
 interface UseFiatProvidersResult {
   providers: FiatProviderInfo[];
@@ -19,11 +19,18 @@ interface UseFiatProvidersResult {
  * Pass vendorPeerID when browsing as a buyer; omit for seller's own config.
  */
 export function useFiatProviders(vendorPeerID?: string): UseFiatProvidersResult {
+  const fiatVisible = useFiatPaymentVisible();
   const [providers, setProviders] = useState<FiatProviderInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProviders = useCallback(async () => {
+    if (!fiatVisible) {
+      setProviders([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -35,13 +42,13 @@ export function useFiatProviders(vendorPeerID?: string): UseFiatProvidersResult 
     } finally {
       setIsLoading(false);
     }
-  }, [vendorPeerID]);
+  }, [fiatVisible, vendorPeerID]);
 
   useEffect(() => {
     fetchProviders();
   }, [fetchProviders]);
 
-  const visibleProviders = useMemo(() => (isFiatPaymentVisible() ? providers : []), [providers]);
+  const visibleProviders = useMemo(() => (fiatVisible ? providers : []), [fiatVisible, providers]);
 
   const activeProviders = useMemo(
     () => visibleProviders.filter(p => p.status === 'active' || p.status === 'restricted'),

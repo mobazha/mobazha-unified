@@ -16,7 +16,7 @@
  */
 import { NODE_API_PATHS, HOSTING_API_PATHS, SEARCH_API_PATHS } from './apiPaths.generated';
 
-/** Settlement action URL path segment (kebab-case). */
+/** Backend settlement action path segment. */
 export type SettlementActionKind = 'confirm' | 'cancel' | 'complete' | 'dispute-release';
 
 // ============================================================
@@ -26,6 +26,9 @@ export type SettlementActionKind = 'confirm' | 'cancel' | 'complete' | 'dispute-
 // ============================================================
 export const NODE_API = {
   ...NODE_API_PATHS,
+  // Public, versioned product capability snapshot.
+  RUNTIME_CONFIG: '/runtime-config',
+
   // --- Profiles ---
   PROFILES: '/profiles',
   PROFILE_AVATAR: (peerID: string, size: string = 'medium') => `/profiles/${peerID}/avatar/${size}`,
@@ -93,7 +96,6 @@ export const NODE_API = {
   ORDER_RATE: (orderId: string) => `/orders/${orderId}/rate`,
   ORDER_SPEND: (orderId: string) => `/orders/${orderId}/spend`,
   ORDER_PAYMENT_REMAINING: (orderId: string) => `/orders/${orderId}/payment/remaining`,
-  /** Backend settlement actions (path segment = action kind). */
   ORDER_SETTLEMENT_ACTION: (orderId: string, action: SettlementActionKind) =>
     `/orders/${orderId}/settlement-actions/${action}`,
   ORDER_SETTLEMENT_ACTION_STATUS: (
@@ -102,7 +104,6 @@ export const NODE_API = {
     actionId: string
   ) =>
     `/orders/${orderId}/settlement-actions/${action}/status?actionId=${encodeURIComponent(actionId)}`,
-
   // --- Disputes (orderID in URL) ---
   DISPUTE_OPEN: (orderId: string) => `/disputes/${orderId}/open`,
   DISPUTE_AFTER_SALE: (orderId: string) => `/disputes/${orderId}/after-sale`,
@@ -352,6 +353,8 @@ export const NODE_API = {
   // PM-3a: Admin-only full order detail (includes shipping address ciphertext)
   GUEST_ORDER_ADMIN_DETAIL: (token: string) => `/guest/orders/${token}/detail`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
+
+  /** Edition capability manifest (safe fallback when absent) */
   SETTINGS_PAYMENT_POLICY: '/settings/payment-policy',
   // PM-3a: Vendor PGP public key (public endpoint for buyer encryption)
   SETTINGS_PGP_KEY: '/settings/pgp-key',

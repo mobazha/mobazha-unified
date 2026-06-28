@@ -72,8 +72,8 @@ export { SessionExpiredDialog } from './SessionExpiredDialog';
 
 // Wallet Components
 export { AppKitProvider } from './AppKitProvider';
-export { WalletConnectButton } from './Wallet';
-export type { WalletConnectButtonProps } from './Wallet';
+export { WalletButton } from './Wallet';
+export type { WalletButtonProps } from './Wallet';
 
 // Share Components
 export { ShareButton } from './Share';

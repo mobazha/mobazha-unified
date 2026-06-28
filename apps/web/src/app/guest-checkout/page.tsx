@@ -8,6 +8,7 @@ import {
   getImageUrl,
   mustAssetIdFromTokenId,
   buildProductHref,
+  sanitizeAcceptedPaymentCoins,
 } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
@@ -21,7 +22,6 @@ import {
 } from '@mobazha/core/services/api/guestCheckout';
 import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
 import { useGuestSupplyQuote } from '@mobazha/core/hooks/useGuestSupplyQuote';
-import { GUEST_CHECKOUT_DEFAULT_COINS } from '@mobazha/core/config/guestCheckoutCoins';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import { getGatewayUrl } from '@mobazha/core/services/api/config';
 import { useAddressEncryption } from '@mobazha/core/hooks/useAddressEncryption';
@@ -146,9 +146,7 @@ export default function GuestCheckoutPage() {
   const [encryptedAddress, setEncryptedAddress] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>('');
-  const [acceptedCoins, setAcceptedCoins] = useState<string[]>(
-    __OUTPOST__ ? [] : GUEST_CHECKOUT_DEFAULT_COINS
-  );
+  const [acceptedCoins, setAcceptedCoins] = useState<string[]>([]);
   const [coinsLoading, setCoinsLoading] = useState(false);
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
   const supplyQuote = useGuestSupplyQuote(items, items.length > 0);
@@ -166,10 +164,10 @@ export default function GuestCheckoutPage() {
         // Use availableCoins (runtime-filtered by the node) so payment methods
         // that lack the required sidecar (e.g. XMR without monero-wallet-rpc)
         // are never shown to the buyer.
-        const coins = res.availableCoins;
-        if (Array.isArray(coins) && coins.length > 0) setAcceptedCoins(coins);
+        const coins = Array.isArray(res.availableCoins) ? res.availableCoins : [];
+        setAcceptedCoins(sanitizeAcceptedPaymentCoins(coins));
       })
-      .catch(() => {});
+      .catch(() => setAcceptedCoins([]));
   }, [items]);
 
   const stepLabels: Record<string, string> = {

@@ -45,6 +45,16 @@
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "ethers@6.16.0>ws": "8.21.0",
+      "jayson@4.3.0>ws": "7.5.11",
+      "jsdom@26.1.0>ws": "8.21.0",
+      "jsdom@27.4.0>ws": "8.21.0",
+      "rpc-websockets@9.3.2>ws": "8.21.0",
+      "viem@2.44.1>ws": "8.21.0"
+    }
+  },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.4.0"
   }

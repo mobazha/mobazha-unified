@@ -6,6 +6,7 @@
 
 // 配置相关
 export * from './useConfig';
+export * from './useRuntimeConfig';
 
 // 商品相关
 export * from './useProducts';

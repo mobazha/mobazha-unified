@@ -1,0 +1,8 @@
+# Reviewed historical examples and public identifiers retained for compatibility.
+f449759c8ba413f91406d79f1685943b85edb6a2:packages/core/services/api/orders.ts:generic-api-key:925
+f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
+f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
+ea34403dcb9453a1afae6a613dd8c0ba8bc05935:packages/core/config/appkit.ts:generic-api-key:69
+42b69d50fd229b02c8c52161267d82a14aca8c36:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
+cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:108
+cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:115

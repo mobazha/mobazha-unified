@@ -3,11 +3,13 @@
  * 统一支付 React Hook - 支持 EVM 链和扫描支付
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useWallet } from './useWallet';
 import { useEscrow } from './useEscrow';
 import { ordersApi } from '../services/api/orders';
 import type { ChainId, EscrowParams, TransactionResult } from '../services/payment/types';
+import { filterVisibleAcceptedCurrencies } from '../config/paymentMethodVisibility';
+import { useRuntimeConfig } from './useRuntimeConfig';
 
 // 支付方式类型
 export type CheckoutPaymentMethod = 'evm_wallet' | 'scan' | 'direct';
@@ -117,12 +119,15 @@ const SUPPORTED_COINS: PaymentCoin[] = [
   // UTXO 币种
   { code: 'BTC', name: 'Bitcoin', type: 'utxo' },
   { code: 'LTC', name: 'Litecoin', type: 'utxo' },
+  { code: 'BCH', name: 'Bitcoin Cash', type: 'utxo' },
+  { code: 'ZEC', name: 'Zcash', type: 'utxo' },
 ];
 
 /**
  * 统一支付 Hook
  */
 export function usePayment(): UsePaymentReturn {
+  const runtimeConfig = useRuntimeConfig();
   const { isConnected, walletInfo, switchChain } = useWallet();
   const {
     createEscrow,
@@ -136,6 +141,13 @@ export function usePayment(): UsePaymentReturn {
   const [error, setError] = useState<string | null>(null);
   const [instructions, setInstructions] = useState<PaymentInstructions | null>(null);
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const supportedCoins = useMemo(() => {
+    if (runtimeConfig.schemaVersion < 2) return [];
+    const visible = new Set(
+      filterVisibleAcceptedCurrencies(SUPPORTED_COINS.map(coin => coin.code))
+    );
+    return SUPPORTED_COINS.filter(coin => visible.has(coin.code));
+  }, [runtimeConfig]);
 
   // 同步 escrow 错误
   useEffect(() => {
@@ -173,7 +185,7 @@ export function usePayment(): UsePaymentReturn {
       setError(null);
 
       // 找到币种对应的链
-      const coin = SUPPORTED_COINS.find(
+      const coin = supportedCoins.find(
         c => c.code === params.currency || c.tokenAddress === params.tokenAddress
       );
       if (!coin?.chainId) {
@@ -233,7 +245,7 @@ export function usePayment(): UsePaymentReturn {
         setIsLoading(false);
       }
     },
-    [isConnected, walletInfo?.chainId, switchChain, createEscrow]
+    [isConnected, walletInfo?.chainId, switchChain, createEscrow, supportedCoins]
   );
 
   const createPaymentSession = useCallback(
@@ -349,7 +361,7 @@ export function usePayment(): UsePaymentReturn {
    */
   const getAvailablePaymentMethods = useCallback(
     (currency: string): CheckoutPaymentMethod[] => {
-      const coin = SUPPORTED_COINS.find(c => c.code === currency);
+      const coin = supportedCoins.find(c => c.code === currency);
       if (!coin) return [];
 
       const methods: CheckoutPaymentMethod[] = [];
@@ -371,15 +383,15 @@ export function usePayment(): UsePaymentReturn {
 
       return methods;
     },
-    [isConnected]
+    [isConnected, supportedCoins]
   );
 
   /**
    * 获取支持的币种
    */
   const getSupportedCoins = useCallback((): PaymentCoin[] => {
-    return SUPPORTED_COINS;
-  }, []);
+    return supportedCoins;
+  }, [supportedCoins]);
 
   /**
    * 重置支付状态

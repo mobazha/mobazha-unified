@@ -34,6 +34,7 @@ import {
   isStandaloneBuyerAuth,
   useUserContext,
   useMarketplaceContext,
+  useRuntimePaymentFlow,
 } from '@mobazha/core';
 import {
   Search,
@@ -49,7 +50,7 @@ import {
 } from 'lucide-react';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { NotificationDropdown } from '../Notification';
-import { WalletConnectButton } from '../Wallet';
+import { WalletButton } from '../Wallet';
 import { CartDrawer } from '../CartDrawer';
 
 export const Header: React.FC = () => {
@@ -79,6 +80,7 @@ export const Header: React.FC = () => {
   const cartOpen = useCartDrawerStore(state => state.isOpen);
   const setCartOpen = useCartDrawerStore(state => state.setOpen);
   const cartItemCount = useCartStore(state => state.getItemCount());
+  const hasExternalWalletPayments = useRuntimePaymentFlow('external-wallet');
 
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
@@ -284,10 +286,10 @@ export const Header: React.FC = () => {
             </button>
             <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
 
-            {/* 已登录：钱包连接 (Outpost 无 AppKit) */}
-            {isAuthenticated && !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
-              <WalletConnectButton />
-            )}
+            {/* Connected backends may expose flows that require an injected wallet. */}
+            {isAuthenticated &&
+              hasExternalWalletPayments &&
+              !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && <WalletButton />}
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />

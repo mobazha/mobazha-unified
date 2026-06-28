@@ -12,7 +12,11 @@ import type { ChainPaymentExecutor, ChainCategory } from './types';
 import { EVMPaymentExecutor } from './evmExecutor';
 import { SolanaPaymentExecutor } from './solanaExecutor';
 import { TronPaymentExecutor } from './tronExecutor';
-import { isCanonicalPaymentCoin, parseCanonicalPaymentCoin } from '../../data/tokens';
+import { getTokenById, isCanonicalPaymentCoin, parseCanonicalPaymentCoin } from '../../data/tokens';
+import {
+  hasRuntimePaymentCapabilities,
+  supportsRuntimePaymentMethod,
+} from '../../config/runtimeConfig';
 
 // ── Registry ────────────────────────────────────────
 
@@ -159,6 +163,20 @@ export function getPaymentExecutor(
   // UTXO 不需要前端执行器（后端监听模式）
   if (!category || category === 'utxo') {
     return null;
+  }
+
+  if (hasRuntimePaymentCapabilities()) {
+    const runtimeIDs = new Set<string>();
+    if (paymentChain?.trim()) runtimeIDs.add(paymentChain.trim());
+    if (coin?.trim()) {
+      runtimeIDs.add(coin.trim());
+      const token = getTokenById(coin.trim());
+      if (token?.chain) runtimeIDs.add(token.chain);
+      if (token?.assetId) runtimeIDs.add(token.assetId);
+    }
+    if (![...runtimeIDs].some(id => supportsRuntimePaymentMethod(id, 'crypto'))) {
+      return null;
+    }
   }
 
   return getExecutorRegistry().get(category) || null;

@@ -6,7 +6,7 @@ import {
   useUserStore,
   getImageUrl,
   getAdminStorePaymentsPath,
-  isFiatPaymentVisible,
+  useFiatPaymentVisible,
 } from '@mobazha/core';
 import { completeInitialSetup } from '@mobazha/core/services/api/system';
 import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
@@ -135,6 +135,7 @@ export default function StandaloneSetupWizard({
   const { t } = useI18n();
   const { toast } = useToast();
   const { profile, updateSettings } = useUserStore();
+  const fiatVisible = useFiatPaymentVisible();
 
   const hasTokenOnMount = useMemo(() => !!getStoredToken(), []);
 
@@ -789,7 +790,7 @@ export default function StandaloneSetupWizard({
                     ? t('outpost.setupPaymentsDesc', {
                         defaultValue: 'Configure XMR wallet-rpc endpoint',
                       })
-                    : isFiatPaymentVisible()
+                    : fiatVisible
                       ? t('admin.onboarding.setupPaymentsDesc') ||
                         'Add crypto wallets, connect Stripe or PayPal'
                       : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
