@@ -1945,6 +1945,8 @@ export const en: TranslationResource = {
         title: 'Crypto Native',
         description: 'Accept BNB, ETH, SOL and more with instant settlement',
       },
+      cryptoNativeDescriptionCommunity:
+        'Accept BTC, BCH, LTC, and transparent Zcash with on-chain settlement',
     },
     featuredStores: {
       title: 'Featured Stores',
@@ -1971,6 +1973,7 @@ export const en: TranslationResource = {
       chainsSupported: 'Chains Supported',
       poweredBy: 'Accepted Payments',
       andMore: '{{count}} blockchains + fiat payments — and growing',
+      utxoPayments: 'BTC · BCH · LTC · transparent ZEC',
     },
     audience: {
       title: 'Built for Every Seller',
@@ -4475,6 +4478,8 @@ export const en: TranslationResource = {
       addProductDesc: 'Create a listing to start selling',
       setupPayment: 'Set up payments',
       setupPaymentDesc: 'Connect Stripe, PayPal, or crypto wallets',
+      setupPaymentDescCommunity:
+        'Add receiving addresses for Bitcoin, Bitcoin Cash, Litecoin, or transparent Zcash',
       setupShipping: 'Configure shipping',
       setupShippingDesc: 'Set up shipping rates and zones',
       customizeStore: 'Customize your store',
@@ -4867,6 +4872,8 @@ export const en: TranslationResource = {
       step3Desc: 'Choose how you want to get paid',
       setupPayments: 'Set up payment methods',
       setupPaymentsDesc: 'Add crypto wallets, connect Stripe or PayPal',
+      setupPaymentsDescCommunity:
+        'Add receiving addresses for Bitcoin, Bitcoin Cash, Litecoin, or transparent Zcash',
       paymentConfigured: 'Payment method configured',
       storeName: 'Store Name',
       storeNamePlaceholder: 'My Awesome Store',
@@ -4882,6 +4889,7 @@ export const en: TranslationResource = {
       featureVariants: 'Variants, pricing & inventory',
       featureShipping: 'Shipping & delivery options',
       featurePricing: 'Crypto & fiat pricing',
+      featurePricingCommunity: 'Bitcoin-family crypto pricing',
       completeTitle: 'Your Store is Ready!',
       completeDesc: 'Your store profile is set up. Add products anytime from the admin panel.',
       designWithAi: 'Design your store with AI',
@@ -4924,6 +4932,7 @@ export const en: TranslationResource = {
       accessControlDesc: 'Whitelist, user groups, and product groups',
       payments: 'Payments',
       paymentsDesc: 'Crypto receiving addresses and card payments',
+      paymentsDescCommunity: 'Bitcoin-family receiving addresses (BTC, BCH, LTC, transparent ZEC)',
       integrations: 'Integrations',
       integrationsDesc: 'Notification channels, AI assistant, and webhooks',
       guestCheckout: 'Guest Checkout',

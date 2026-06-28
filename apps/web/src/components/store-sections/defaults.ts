@@ -6,7 +6,7 @@
  */
 
 import type { StoreConfig, StoreTheme, StoreSection } from '@mobazha/core';
-import { WEB3_TRUST_KIT } from '@mobazha/core';
+import { WEB3_TRUST_KIT, getEditionDefaultPaymentMethodsAnswer } from '@mobazha/core';
 
 // ---------------------------------------------------------------------------
 // Default Section Layout
@@ -322,7 +322,7 @@ export const STORE_PRESETS: StorePreset[] = [
             items: [
               {
                 question: 'What payment methods do you accept?',
-                answer: 'ETH, BNB, SOL, and more.',
+                answer: getEditionDefaultPaymentMethodsAnswer(),
               },
               {
                 question: 'Is there buyer protection?',

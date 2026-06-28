@@ -1,6 +1,9 @@
 // Config
 export * from './config';
 
+// Community Edition capability boundary
+export * from './edition';
+
 // Providers (React Context Providers)
 export * from './providers';
 

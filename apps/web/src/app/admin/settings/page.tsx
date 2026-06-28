@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useI18n, useUserContext } from '@mobazha/core';
+import { useI18n, useUserContext, EDITION_I18N_KEYS } from '@mobazha/core';
 import { useUserStore } from '@mobazha/core/stores/userStore';
 import {
   Shield,
@@ -197,7 +197,7 @@ export default function AdminSettingsPage() {
           <SettingsCard
             icon={Wallet}
             title={t('admin.settings.payments')}
-            description={t('admin.settings.paymentsDesc')}
+            description={t(EDITION_I18N_KEYS.settingsPaymentsDesc)}
             href="/admin/settings/payments"
           />
           <SettingsCard

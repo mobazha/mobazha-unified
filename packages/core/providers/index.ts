@@ -1,5 +1,9 @@
 /**
  * Providers 导出
+ *
+ * Community Edition uses CommunityWalletProvider (no-op) instead of AppKit
+ * so EVM/Solana wallet SDKs are not pulled into the production bundle.
+ * AppKitProvider.tsx remains as dormant compatibility source.
  */
 
 export {
@@ -12,4 +16,4 @@ export {
   type DisconnectResult,
   type SwitchNetworkResult,
   type OpenModalOptions,
-} from './AppKitProvider';
+} from './CommunityWalletProvider';

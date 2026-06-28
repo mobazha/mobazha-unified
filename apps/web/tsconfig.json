@@ -28,6 +28,7 @@
   },
   "include": [
     "next-env.d.ts",
+    "../../packages/core/types/window.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",

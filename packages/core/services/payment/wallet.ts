@@ -195,7 +195,7 @@ class WalletService {
   private detectProviderName(): string {
     if (!this.hasEthereumProvider() || !window.ethereum) return 'Unknown';
 
-    const ethereum = window.ethereum;
+    const ethereum = window.ethereum as unknown as EthereumProvider;
     if (ethereum.isMetaMask) return 'MetaMask';
     if (ethereum.isCoinbaseWallet) return 'Coinbase Wallet';
     if (ethereum.isTrust) return 'Trust Wallet';

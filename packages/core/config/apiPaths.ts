@@ -265,6 +265,9 @@ export const NODE_API = {
   GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${token}/complete`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
 
+  /** Edition capability manifest (Wave 1+ backend seam; safe fallback when absent) */
+  EDITION_CAPABILITIES: '/edition/capabilities',
+
   // --- Misc (deprecated — no backend routes exist) ---
   /** @deprecated Backend has no /resendordermessage route. Feature removed. */
   RESEND_ORDER_MESSAGE: '/resendordermessage',

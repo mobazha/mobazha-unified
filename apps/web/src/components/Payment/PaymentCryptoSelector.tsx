@@ -3,7 +3,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@mobazha/core';
+import { useI18n, isFiatSelectionEnabled, resolvePaymentSelectorTokenIds } from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
 import { TOKENS, CHAINS, FIAT_METHODS, groupTokensByCurrency, getChainById } from './config';
@@ -23,13 +23,15 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   className,
   isRwaTokenPurchase = false,
   rwaBlockchain,
-  showFiatMethods = true,
+  showFiatMethods = false,
 }) => {
   const { t } = useI18n();
   const { isEmbedded } = useMiniAppPayment();
 
   const hasFiat = useMemo(
-    () => showFiatMethods && availableFiatProviders && availableFiatProviders.length > 0,
+    () =>
+      isFiatSelectionEnabled(showFiatMethods) &&
+      Boolean(availableFiatProviders && availableFiatProviders.length > 0),
     [showFiatMethods, availableFiatProviders]
   );
 
@@ -39,27 +41,22 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   }, [hasFiat, availableFiatProviders]);
 
   const availableTokens = useMemo(() => {
-    if (isRwaTokenPurchase && rwaBlockchain) {
-      return TOKENS.filter(
-        token => token.chain === rwaBlockchain && !token.isNative && !token.disabled
-      );
+    const allowedIds = new Set(
+      resolvePaymentSelectorTokenIds({
+        isRwaTokenPurchase,
+        acceptedCurrencies,
+      })
+    );
+    if (allowedIds.size === 0) {
+      return [];
     }
+
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
-    let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain) && !tok.disabled);
-    if (acceptedCurrencies) {
-      const accepted = new Set(
-        acceptedCurrencies
-          .map(value => value?.trim().toLowerCase())
-          .filter((value): value is string => Boolean(value))
-      );
-      tokens = tokens.filter(token => {
-        const tokenID = token.id.trim().toLowerCase();
-        const canonical = token.assetId?.trim().toLowerCase();
-        return accepted.has(tokenID) || (canonical ? accepted.has(canonical) : false);
-      });
-    }
-    return tokens;
-  }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
+    return TOKENS.filter(
+      token =>
+        allowedIds.has(token.id) && !comingSoonChains.includes(token.chain) && !token.disabled
+    );
+  }, [isRwaTokenPurchase, acceptedCurrencies]);
 
   const currencyGroups = useMemo(() => groupTokensByCurrency(availableTokens), [availableTokens]);
 

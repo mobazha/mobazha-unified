@@ -9,6 +9,7 @@ import {
   isStandalone,
   getImageUrl,
   useReceivingAccounts,
+  EDITION_I18N_KEYS,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
@@ -603,7 +604,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               },
               {
                 icon: <Coins className="w-5 h-5 text-primary" />,
-                text: t('admin.onboarding.featurePricing') || 'Crypto & fiat pricing',
+                text: t(EDITION_I18N_KEYS.featurePricing) || 'Bitcoin-family crypto pricing',
               },
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
@@ -689,8 +690,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {t('admin.onboarding.setupPaymentsDesc') ||
-                  'Add crypto wallets, connect Stripe or PayPal'}
+                {t(EDITION_I18N_KEYS.setupPaymentsDesc)}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

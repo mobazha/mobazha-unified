@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useWallet } from './useWallet';
 import { useEscrow } from './useEscrow';
 import { ordersApi } from '../services/api/orders';
+import { getEditionSelectableTokens } from '../edition/capabilities';
 import type { ChainId, EscrowParams, TransactionResult } from '../services/payment/types';
 
 // 支付方式类型
@@ -95,32 +96,12 @@ export interface UsePaymentReturn {
   resetPayment: () => void;
 }
 
-// 支持的币种列表
-const SUPPORTED_COINS: PaymentCoin[] = [
-  // EVM 原生币
-  { code: 'ETH', name: 'Ethereum', type: 'native', chainId: 1 },
-  { code: 'BNB', name: 'BNB Chain', type: 'native', chainId: 56 },
-  { code: 'MATIC', name: 'Polygon', type: 'native', chainId: 137 },
-  { code: 'ARB', name: 'Arbitrum', type: 'native', chainId: 42161 },
-  // 稳定币 (示例)
-  {
-    code: 'USDT',
-    name: 'Tether USD',
-    type: 'token',
-    chainId: 1,
-    tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-  },
-  {
-    code: 'USDC',
-    name: 'USD Coin',
-    type: 'token',
-    chainId: 1,
-    tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-  },
-  // UTXO 币种
-  { code: 'BTC', name: 'Bitcoin', type: 'utxo' },
-  { code: 'LTC', name: 'Litecoin', type: 'utxo' },
-];
+// Community Edition: UTXO native coins only
+const SUPPORTED_COINS: PaymentCoin[] = getEditionSelectableTokens().map(token => ({
+  code: token.token,
+  name: token.chain,
+  type: 'utxo' as const,
+}));
 
 /**
  * 统一支付 Hook

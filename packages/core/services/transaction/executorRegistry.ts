@@ -9,9 +9,6 @@
  */
 
 import type { ChainPaymentExecutor, ChainCategory } from './types';
-import { EVMPaymentExecutor } from './evmExecutor';
-import { SolanaPaymentExecutor } from './solanaExecutor';
-import { TronPaymentExecutor } from './tronExecutor';
 import { isCanonicalPaymentCoin, parseCanonicalPaymentCoin } from '../../data/tokens';
 
 // ── Registry ────────────────────────────────────────
@@ -41,14 +38,14 @@ let registryInstance: ExecutorRegistry | null = null;
 
 /**
  * 获取全局 ExecutorRegistry（单例）
- * 首次调用时自动注册 EVM 和 Solana 执行器
+ *
+ * Community Edition: no frontend payment executors are registered.
+ * UTXO checkout uses backend address monitoring; EVM/Solana/TRON executor
+ * sources remain dormant for compatibility typing only.
  */
 export function getExecutorRegistry(): ExecutorRegistry {
   if (!registryInstance) {
     registryInstance = new ExecutorRegistry();
-    registryInstance.register('evm', new EVMPaymentExecutor());
-    registryInstance.register('solana', new SolanaPaymentExecutor());
-    registryInstance.register('tron', new TronPaymentExecutor());
   }
   return registryInstance;
 }

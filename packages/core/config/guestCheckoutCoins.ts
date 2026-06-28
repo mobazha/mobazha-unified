@@ -1,30 +1,14 @@
 /**
- * Guest Checkout supported coins — derived from tokens.ts (CHAINS + TOKENS),
- * filtered by backend KeyDeriver capability (node_key_deriver.go chainToBIP44CoinType).
+ * Guest Checkout supported coins — Community Edition UTXO allowlist only.
  *
- * SOL is intentionally excluded: Solana guest checkout requires a
- * reference-key mechanism that is not yet implemented.
- *
- * CFX is excluded: not supported by KeyDeriver.
+ * Backend KeyDeriver at the 2026-04-23 anchor supports BTC/BCH/LTC/ZEC for guest checkout.
+ * EVM/Solana/TRON guest checkout is excluded from Community Edition runtime.
  */
 
+import { COMMUNITY_PAYMENT_CHAINS } from '../edition/manifest';
 import { CHAINS, TOKENS, type PaymentChainConfig, type TokenConfig } from '../data/tokens';
 
-/**
- * Chain IDs (as used in CHAINS / PaymentChainConfig) supported by Guest Checkout KeyDeriver.
- * Order determines UI display order.
- */
-const GUEST_SUPPORTED_CHAIN_IDS = [
-  'BTC', 'ETH', 'LTC', 'BCH', 'ZEC', 'BSC', 'MATIC', 'BASE', 'TRON',
-] as const;
-
-/**
- * Map CHAINS.id → iwallet.ChainType (the `paymentCoin` value sent to backend API).
- * Only entries where they differ need to be listed.
- */
-const CHAIN_ID_TO_PAYMENT_COIN: Record<string, string> = {
-  TRON: 'TRX',
-};
+const CHAIN_ID_TO_PAYMENT_COIN: Record<string, string> = {};
 
 export interface GuestCoinInfo {
   chainId: string;
@@ -33,26 +17,26 @@ export interface GuestCoinInfo {
   nativeToken: TokenConfig | undefined;
 }
 
-export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = GUEST_SUPPORTED_CHAIN_IDS
-  .map((chainId): GuestCoinInfo | null => {
-    const chain = CHAINS.find((c) => c.id === chainId);
+export const GUEST_CHECKOUT_COINS: GuestCoinInfo[] = COMMUNITY_PAYMENT_CHAINS.map(
+  (chainId): GuestCoinInfo | null => {
+    const chain = CHAINS.find(c => c.id === chainId);
     if (!chain) return null;
-    const nativeToken = TOKENS.find((t) => t.chain === chainId && t.isNative);
+    const nativeToken = TOKENS.find(t => t.chain === chainId && t.isNative);
     return {
-      chainId: chainId as string,
+      chainId,
       paymentCoin: CHAIN_ID_TO_PAYMENT_COIN[chainId] ?? chainId,
       chain,
       nativeToken,
     };
-  })
-  .filter((c): c is GuestCoinInfo => c !== null);
+  }
+).filter((c): c is GuestCoinInfo => c !== null);
 
-export const GUEST_CHECKOUT_DEFAULT_COINS = ['BTC', 'ETH', 'LTC'];
+export const GUEST_CHECKOUT_DEFAULT_COINS = ['BTC', 'LTC', 'BCH'];
 
 export function getGuestCoinByPaymentCoin(paymentCoin: string): GuestCoinInfo | undefined {
-  return GUEST_CHECKOUT_COINS.find((c) => c.paymentCoin === paymentCoin);
+  return GUEST_CHECKOUT_COINS.find(c => c.paymentCoin === paymentCoin);
 }
 
 export function getGuestCoinByChainId(chainId: string): GuestCoinInfo | undefined {
-  return GUEST_CHECKOUT_COINS.find((c) => c.chainId === chainId);
+  return GUEST_CHECKOUT_COINS.find(c => c.chainId === chainId);
 }

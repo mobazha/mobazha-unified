@@ -5,9 +5,9 @@ import Link from 'next/link';
 import {
   useI18n,
   useReceivingAccounts,
-  useFiatProviders,
   useShippingProfiles,
   useStorefrontConfig,
+  EDITION_I18N_KEYS,
 } from '@mobazha/core';
 import {
   ShoppingBag,
@@ -51,16 +51,12 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
   const [collapsed, setCollapsed] = useState(false);
 
   const { data: receivingAccounts } = useReceivingAccounts();
-  const { activeProviders, isLoading: fiatLoading } = useFiatProviders();
   const { profiles, isLoading: shippingLoading } = useShippingProfiles();
   const { config, isLoading: storefrontLoading } = useStorefrontConfig();
 
   const hasPayment = useMemo(() => {
-    const hasActiveReceiving =
-      Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false);
-    const hasActiveFiat = activeProviders.length > 0;
-    return hasActiveReceiving || hasActiveFiat;
-  }, [receivingAccounts, activeProviders]);
+    return Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false);
+  }, [receivingAccounts]);
 
   const hasShipping = useMemo(() => profiles.length > 0, [profiles]);
 
@@ -83,7 +79,7 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
         id: 'payment',
         icon: CreditCard,
         labelKey: 'admin.checklist.setupPayment',
-        descKey: 'admin.checklist.setupPaymentDesc',
+        descKey: EDITION_I18N_KEYS.setupPaymentChecklistDesc,
         href: '/admin/settings/payments',
         completed: hasPayment,
       },
@@ -107,10 +103,10 @@ export function SetupChecklist({ hasProducts, productsLoading }: SetupChecklistP
     [hasProducts, hasPayment, hasShipping, hasStorefrontCustomized]
   );
 
-  const anyLoading = productsLoading || fiatLoading || shippingLoading || storefrontLoading;
+  const anyLoading = productsLoading || shippingLoading || storefrontLoading;
   const stepLoadingMap: Record<string, boolean> = {
     product: productsLoading,
-    payment: fiatLoading,
+    payment: false,
     shipping: shippingLoading,
     branding: storefrontLoading,
   };

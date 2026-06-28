@@ -2677,6 +2677,7 @@ export interface TranslationResource {
       addProductDesc?: string;
       setupPayment?: string;
       setupPaymentDesc?: string;
+      setupPaymentDescCommunity?: string;
       setupShipping?: string;
       setupShippingDesc?: string;
       customizeStore?: string;
@@ -2983,6 +2984,7 @@ export interface TranslationResource {
       step3Desc?: string;
       setupPayments?: string;
       setupPaymentsDesc?: string;
+      setupPaymentsDescCommunity?: string;
       paymentConfigured?: string;
       storeName?: string;
       storeNamePlaceholder?: string;
@@ -2998,6 +3000,7 @@ export interface TranslationResource {
       featureVariants?: string;
       featureShipping?: string;
       featurePricing?: string;
+      featurePricingCommunity?: string;
       completeTitle?: string;
       completeDesc?: string;
       viewStore?: string;
@@ -3041,6 +3044,7 @@ export interface TranslationResource {
       accessControlDesc?: string;
       payments?: string;
       paymentsDesc?: string;
+      paymentsDescCommunity?: string;
       integrations?: string;
       integrationsDesc?: string;
       guestCheckout?: string;
@@ -3747,6 +3751,7 @@ export interface TranslationResource {
       selfHosted: { title: string; description: string };
       lowFees: { title: string; description: string };
       cryptoNative: { title: string; description: string };
+      cryptoNativeDescriptionCommunity?: string;
     };
     featuredStores: {
       title: string;
@@ -3773,6 +3778,7 @@ export interface TranslationResource {
       chainsSupported: string;
       poweredBy: string;
       andMore: string;
+      utxoPayments?: string;
     };
     audience: {
       title: string;

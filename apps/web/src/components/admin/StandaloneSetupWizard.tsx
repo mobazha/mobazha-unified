@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { useI18n, useUserStore, getImageUrl } from '@mobazha/core';
+import { useI18n, useUserStore, getImageUrl, EDITION_I18N_KEYS } from '@mobazha/core';
 import { completeInitialSetup } from '@mobazha/core/services/api/system';
 import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
@@ -757,8 +757,7 @@ export default function StandaloneSetupWizard({
                   {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {t('admin.onboarding.setupPaymentsDesc') ||
-                    'Add crypto wallets, connect Stripe or PayPal'}
+                  {t(EDITION_I18N_KEYS.setupPaymentsDesc)}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />

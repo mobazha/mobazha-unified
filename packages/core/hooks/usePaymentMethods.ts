@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import * as fiatApi from '../services/api/fiat';
 import type { FiatProviderInfo } from '../types/fiat';
+import { intersectCryptoPaymentMethods, supportsFiatPayments } from '../edition/capabilities';
 
 interface UsePaymentMethodsResult {
   crypto: string[];
@@ -15,8 +16,8 @@ interface UsePaymentMethodsResult {
 }
 
 /**
- * Fetches all accepted payment methods (crypto + fiat) for a seller.
- * Used in buyer checkout flow. Falls back gracefully on error.
+ * Fetches seller payment methods and narrows them to Community Edition capabilities.
+ * Backend responses are authoritative; frontend policy never widens the allowlist.
  */
 export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResult {
   const [crypto, setCrypto] = useState<string[]>([]);
@@ -33,8 +34,8 @@ export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResul
     setError(null);
     try {
       const data = await fiatApi.getPaymentMethods(vendorPeerID);
-      setCrypto(data.crypto);
-      setFiat(data.fiat);
+      setCrypto(intersectCryptoPaymentMethods(data.crypto));
+      setFiat(supportsFiatPayments() ? data.fiat : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load payment methods');
       setCrypto([]);
@@ -49,7 +50,10 @@ export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResul
   }, [fetchMethods]);
 
   const activeFiat = useMemo(
-    () => fiat.filter(p => p.status === 'active' || p.status === 'restricted'),
+    () =>
+      supportsFiatPayments()
+        ? fiat.filter(p => p.status === 'active' || p.status === 'restricted')
+        : [],
     [fiat]
   );
 

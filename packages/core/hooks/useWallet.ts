@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BrowserProvider, JsonRpcSigner, formatEther } from 'ethers';
 import { ChainId, WalletConnectionState, WalletInfo, WalletEvent } from '../services/payment';
-import { useAppKit } from '../providers/AppKitProvider';
+import { useAppKit } from '../providers/CommunityWalletProvider';
 import { getCurrentChainId } from '../config/appkit';
 
 // Default chain ID from appkit config

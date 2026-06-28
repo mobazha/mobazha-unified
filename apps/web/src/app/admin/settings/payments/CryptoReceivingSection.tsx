@@ -26,6 +26,7 @@ import {
   useDeleteReceivingAccount,
   useWallet,
   getEnvConfig,
+  filterEditionReceivingAccountChains,
 } from '@mobazha/core';
 import WAValidator from 'multicoin-address-validator';
 import type { ReceivingAccount, ReceivingAccountInput } from '@mobazha/core/services/api/wallet';
@@ -126,6 +127,8 @@ const CHAINS: ChainMeta[] = [
     ],
   },
 ];
+
+const CONFIGURABLE_CHAINS = filterEditionReceivingAccountChains(CHAINS);
 
 type ValidatorNetwork = 'prod' | 'testnet';
 
@@ -423,7 +426,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
             {t('receivingAccounts.chain')}
           </label>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            {CHAINS.map(c => {
+            {CONFIGURABLE_CHAINS.map(c => {
               const selected = form.chainType === c.id;
               return (
                 <button
