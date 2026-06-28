@@ -91,14 +91,17 @@ mobazha-unified/
 └── packages/ui/                     # Shared UI components
 ```
 
-## Remaining supply-chain review
+## Supply-chain notes
 
-The following dependencies remain in `packages/core` solely to keep dormant compatibility source type-checkable. They are **not** registered in Community Edition production providers or executors. Review for license and SBOM before public release:
+The following dependencies remain solely to keep dormant compatibility source type-checkable. They are **not** registered in Community Edition production providers or executors:
 
-- `@reown/appkit`, `@reown/appkit-adapter-ethers`, `@reown/appkit-adapter-solana`
 - `@solana/web3.js`, `ethers`, `viem`
 
 Apps/web additionally lists `@stripe/*` and `@paypal/react-paypal-js` for dormant fiat UI source.
+
+The historical Reown AppKit provider source is retained but excluded from the Community Edition TypeScript graph. Reown and WalletConnect packages are not Community Edition dependencies.
+
+See [`docs/security/SUPPLY_CHAIN_AUDIT.md`](./docs/security/SUPPLY_CHAIN_AUDIT.md) for the exact-version license review and release-artifact obligations.
 
 ## Contributing
 
