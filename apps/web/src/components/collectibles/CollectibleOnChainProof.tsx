@@ -7,6 +7,7 @@ import { getSolanaExplorerTxUrl, truncateAddress, useI18n } from '@mobazha/core'
 export interface CollectibleOnChainProofProps {
   mintTxSignature?: string;
   mintConfirmedSlot?: number;
+  mintTxExplorerURL?: string;
   isDevnet?: boolean;
   className?: string;
 }
@@ -14,6 +15,7 @@ export interface CollectibleOnChainProofProps {
 export function CollectibleOnChainProof({
   mintTxSignature,
   mintConfirmedSlot,
+  mintTxExplorerURL,
   isDevnet,
   className,
 }: CollectibleOnChainProofProps) {
@@ -21,7 +23,7 @@ export function CollectibleOnChainProof({
   const signature = mintTxSignature?.trim() ?? '';
   if (!signature) return null;
 
-  const explorerUrl = getSolanaExplorerTxUrl(signature, isDevnet);
+  const explorerUrl = mintTxExplorerURL?.trim() || getSolanaExplorerTxUrl(signature, isDevnet);
   const slot = mintConfirmedSlot && mintConfirmedSlot > 0 ? mintConfirmedSlot : undefined;
 
   return (
