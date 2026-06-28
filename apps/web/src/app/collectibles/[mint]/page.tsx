@@ -50,6 +50,8 @@ export default function CollectibleDetailPage() {
 
   const holderWallet = address || '';
   const expectedHolderWallet = nft?.hubSlot?.currentHolder?.trim() || '';
+  const isDevnetNetwork =
+    nft?.network?.trim().toLowerCase() === 'devnet' || getEnvConfig().isTestEnv;
   const isSolanaWallet =
     isConnected &&
     !!holderWallet &&
@@ -83,7 +85,7 @@ export default function CollectibleDetailPage() {
         burnTx,
         walletProvider: getWalletProvider() ?? undefined,
         walletAddress: holderWallet,
-        isDevnet: getEnvConfig().isTestEnv,
+        isDevnet: isDevnetNetwork,
       });
 
       setRedeemStep('submitting');
@@ -172,7 +174,8 @@ export default function CollectibleDetailPage() {
                         className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2"
                         mintTxSignature={nft.mintTxSignature}
                         mintConfirmedSlot={nft.mintConfirmedSlot}
-                        isDevnet={getEnvConfig().isTestEnv}
+                        mintTxExplorerURL={nft.mintTxExplorerURL}
+                        isDevnet={isDevnetNetwork}
                       />
                     </div>
                   </div>

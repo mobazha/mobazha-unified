@@ -41,10 +41,19 @@ export default function CollectiblesPage() {
               </div>
             </Card>
 
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/collectibles/redemptions">{t('collectibles.redemptions.title')}</Link>
-              </Button>
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/collectibles/redemptions">
+                    {t('collectibles.redemptions.title')}
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin/collectibles/ops">
+                    {t('collectibles.hubOps.workbenchNav')}
+                  </Link>
+                </Button>
+              </div>
               <Button
                 type="button"
                 variant="outline"

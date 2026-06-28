@@ -66,7 +66,10 @@ export default function CollectibleRedemptionsPage() {
               </p>
             </div>
 
-            <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/admin/collectibles/ops">{t('collectibles.hubOps.workbenchNav')}</Link>
+              </Button>
               <Button
                 type="button"
                 variant="outline"

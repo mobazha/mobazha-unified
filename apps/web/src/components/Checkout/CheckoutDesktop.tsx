@@ -155,8 +155,54 @@ export function CheckoutDesktop({ checkout }: Props) {
 
                 {isCollectibleHubNftCheckout && (
                   <Card className="border-primary/20 bg-primary/5">
-                    <CardContent className="p-6">
+                    <CardContent className="space-y-3 p-6">
+                      <p className="text-sm font-semibold text-foreground">
+                        {t('collectibles.checkout.hubPrimarySaleTitle')}
+                      </p>
                       <p className="text-sm text-muted-foreground">{t('collectibles.trustNote')}</p>
+                      {checkoutItems.some(
+                        item => item.hubSlotID || item.certNumber || item.nftMint
+                      ) ? (
+                        <dl className="grid grid-cols-1 gap-2 border-t border-primary/10 pt-3 text-sm sm:grid-cols-2">
+                          <div className="sm:col-span-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            {t('collectibles.checkout.metadataTitle')}
+                          </div>
+                          {checkoutItems.map(item => (
+                            <React.Fragment key={item.id}>
+                              {item.certNumber ? (
+                                <div>
+                                  <dt className="text-muted-foreground">
+                                    {t('collectibles.primarySale.certNumber')}
+                                  </dt>
+                                  <dd className="break-all font-medium text-foreground">
+                                    {item.certNumber}
+                                  </dd>
+                                </div>
+                              ) : null}
+                              {item.hubSlotID ? (
+                                <div>
+                                  <dt className="text-muted-foreground">
+                                    {t('collectibles.hubSlot')}
+                                  </dt>
+                                  <dd className="break-all font-mono text-xs text-foreground">
+                                    {item.hubSlotID}
+                                  </dd>
+                                </div>
+                              ) : null}
+                              {item.nftMint ? (
+                                <div className="sm:col-span-2">
+                                  <dt className="text-muted-foreground">
+                                    {t('collectibles.tracking.nftMint')}
+                                  </dt>
+                                  <dd className="break-all font-mono text-xs text-foreground">
+                                    {item.nftMint}
+                                  </dd>
+                                </div>
+                              ) : null}
+                            </React.Fragment>
+                          ))}
+                        </dl>
+                      ) : null}
                     </CardContent>
                   </Card>
                 )}
