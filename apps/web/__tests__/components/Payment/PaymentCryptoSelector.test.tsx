@@ -25,6 +25,7 @@ vi.mock('@mobazha/core', async () => {
       dismissed: false,
       dismiss: vi.fn(),
     }),
+    useFiatPaymentVisible: () => false,
   };
 });
 

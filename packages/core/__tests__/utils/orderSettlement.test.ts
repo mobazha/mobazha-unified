@@ -7,11 +7,11 @@ import {
 } from '../../utils/orderSettlement';
 
 describe('orderSettlement helpers', () => {
-  it('detects managed_escrow, solana_escrow, and utxo_script escrow types', () => {
+  it('treats non-empty backend settlement types as opaque instructions', () => {
     expect(escrowTypeUsesBackendSubmittedSettlement('managed_escrow')).toBe(true);
-    expect(escrowTypeUsesBackendSubmittedSettlement('solana_escrow')).toBe(true);
     expect(escrowTypeUsesBackendSubmittedSettlement('utxo_script')).toBe(true);
-    expect(escrowTypeUsesBackendSubmittedSettlement('evm_contract')).toBe(false);
+    expect(escrowTypeUsesBackendSubmittedSettlement('')).toBe(false);
+    expect(escrowTypeUsesBackendSubmittedSettlement('   ')).toBe(false);
   });
 
   it('requires moderated + backend-submitted escrow for monitored backend settlement', () => {

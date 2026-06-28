@@ -18,6 +18,12 @@
  *  - This module is SSR-safe: all `window` reads are guarded.
  */
 
+import {
+  getRuntimeConfig,
+  readRuntimeConfigFromWindow,
+  type RuntimeConfig,
+} from '../config/runtimeConfig';
+
 /**
  * Scopes where a feature may be overridden. Matches the backend's
  * `pkg/config.Scope` values, kept as a union type so consumers can check
@@ -69,21 +75,6 @@ function normalizeSnapshot(raw: unknown): FeatureSnapshot {
   return out;
 }
 
-interface RuntimeConfigWindow {
-  __RUNTIME_CONFIG__?: {
-    features?: unknown;
-    /**
-     * Legacy single-flag field kept alive by the backend for backward
-     * compatibility (see mobazha3.0 `FEATURE_FLAG_ARCHITECTURE.md §4.3`
-     * "backward compatibility" note). When `features` is absent we synthesize a
-     * `guestCheckout` entry from this so old runtime-configs — and existing
-     * E2E mocks that only inject `{ guestCheckoutEnabled: true }` — keep
-     * working during the rollout.
-     */
-    guestCheckoutEnabled?: boolean;
-  };
-}
-
 const FRONTEND_FEATURE_DEFAULTS: FeatureSnapshot = {
   supplyAvailabilityEnabled: {
     effective: false,
@@ -103,12 +94,12 @@ function mergeWithFrontendDefaults(snapshot: FeatureSnapshot): FeatureSnapshot {
   return { ...FRONTEND_FEATURE_DEFAULTS, ...snapshot };
 }
 
-function readFromRuntimeConfig(): FeatureSnapshot {
-  if (typeof window === 'undefined') return mergeWithFrontendDefaults({});
-  const rc = (window as unknown as RuntimeConfigWindow).__RUNTIME_CONFIG__;
-  if (!rc) return mergeWithFrontendDefaults({});
+function readFromRuntimeConfig(rc: RuntimeConfig): FeatureSnapshot {
   if (rc.features != null) {
-    return mergeWithFrontendDefaults(normalizeSnapshot(rc.features));
+    const normalized = normalizeSnapshot(rc.features);
+    if (Object.keys(normalized).length > 0) {
+      return mergeWithFrontendDefaults(normalized);
+    }
   }
   // Legacy fallback: synthesize a minimal snapshot from the flat field.
   if (typeof rc.guestCheckoutEnabled === 'boolean') {
@@ -179,8 +170,11 @@ export const featureFlags = {
    * call multiple times — re-reads pick up changes if the runtime-config
    * script was refreshed. Returns the resulting snapshot for convenience.
    */
-  initializeFromRuntimeConfig(): FeatureSnapshot {
-    replaceSnapshot(readFromRuntimeConfig());
+  initializeFromRuntimeConfig(runtimeConfig?: RuntimeConfig): FeatureSnapshot {
+    const source =
+      runtimeConfig ??
+      (typeof window === 'undefined' ? getRuntimeConfig() : readRuntimeConfigFromWindow());
+    replaceSnapshot(readFromRuntimeConfig(source));
     return currentSnapshot;
   },
 
@@ -259,15 +253,3 @@ export const featureFlags = {
     emit();
   },
 };
-
-// Auto-bootstrap on module load in the browser. SSR paths import this
-// module too (e.g. Next.js server components), so we guard on `window`.
-// The bootstrap is idempotent: replaying against an empty runtime-config
-// just reseats the empty snapshot.
-if (typeof window !== 'undefined') {
-  try {
-    featureFlags.initializeFromRuntimeConfig();
-  } catch (err) {
-    console.error('[featureFlags] bootstrap failed; using empty snapshot', err);
-  }
-}

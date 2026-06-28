@@ -49,7 +49,7 @@ export interface WalletInfo {
   address: string;
   chainId: ChainId;
   balance: string;
-  provider: string; // MetaMask, WalletConnect, etc.
+  provider: string; // Injected wallet provider name.
 }
 
 // 钱包连接事件
@@ -226,7 +226,7 @@ export const SUPPORTED_STABLECOINS: Record<ChainId, TokenInfo[]> = {
 
 // 钱包服务配置
 export interface WalletServiceConfig {
-  projectId: string; // WalletConnect Project ID
+  projectId: string; // Optional external connector project ID.
   supportedChains: ChainId[];
   defaultChain: ChainId;
   autoConnect: boolean;

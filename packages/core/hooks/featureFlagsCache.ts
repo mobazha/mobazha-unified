@@ -34,10 +34,13 @@ export function getCachedFeatureFlags(): FeatureFlags | null {
  */
 function bridgeToUnifiedFeatureFlags(flags: FeatureFlags | null): void {
   if (!flags) return;
-  const snapshot: FeatureSnapshot = {};
+  const snapshot: FeatureSnapshot = { ...featureFlags.snapshot() };
   for (const [key, value] of Object.entries(flags)) {
     if (typeof value === 'boolean') {
-      snapshot[key] = { effective: value, overridable: [] };
+      snapshot[key] = {
+        effective: value,
+        overridable: snapshot[key]?.overridable ?? [],
+      };
     }
   }
   if (Object.keys(snapshot).length > 0) {

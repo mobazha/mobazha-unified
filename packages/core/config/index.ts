@@ -7,6 +7,7 @@
 
 // 导出环境配置
 export * from './env';
+export * from './runtimeConfig';
 
 // 导出测试账号配置
 export * from './testAccounts';

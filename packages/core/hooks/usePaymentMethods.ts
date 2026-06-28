@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  filterVisibleAcceptedCurrencies,
-  isFiatPaymentVisible,
-} from '../config/paymentMethodVisibility';
+import { filterVisibleAcceptedCurrencies } from '../config/paymentMethodVisibility';
 import * as fiatApi from '../services/api/fiat';
 import type { FiatProviderInfo } from '../types/fiat';
+import { useFiatPaymentVisible } from './useRuntimeConfig';
 
 interface UsePaymentMethodsResult {
   crypto: string[];
@@ -23,6 +21,7 @@ interface UsePaymentMethodsResult {
  * Used in buyer checkout flow. Falls back gracefully on error.
  */
 export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResult {
+  const fiatVisible = useFiatPaymentVisible();
   const [crypto, setCrypto] = useState<string[]>([]);
   const [fiat, setFiat] = useState<FiatProviderInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,9 +52,9 @@ export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResul
   }, [fetchMethods]);
 
   const activeFiat = useMemo(() => {
-    if (!isFiatPaymentVisible()) return [];
+    if (!fiatVisible) return [];
     return fiat.filter(p => p.status === 'active' || p.status === 'restricted');
-  }, [fiat]);
+  }, [fiat, fiatVisible]);
 
   const visibleCrypto = useMemo(() => filterVisibleAcceptedCurrencies(crypto), [crypto]);
 
@@ -66,7 +65,7 @@ export function usePaymentMethods(vendorPeerID?: string): UsePaymentMethodsResul
 
   return {
     crypto: visibleCrypto,
-    fiat: isFiatPaymentVisible() ? fiat : [],
+    fiat: fiatVisible ? fiat : [],
     activeFiat,
     isLoading,
     error,

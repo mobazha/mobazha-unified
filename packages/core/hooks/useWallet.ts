@@ -1,9 +1,7 @@
 /**
  * useWallet Hook
- * 钱包连接 React Hook - 基于 AppKit
- *
- * 改造版本：使用 AppKit provider 替代直接调用 window.ethereum
- * 注意：必须在 AppKitProvider 内部使用
+ * Provider-neutral wallet connection React hook.
+ * Must be used inside the compatibility AppKitProvider.
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -44,7 +42,7 @@ interface UseWalletReturn {
 }
 
 /**
- * useWallet Hook - 使用 AppKit 进行钱包连接
+ * Connect to the wallet provider exposed by the shared provider context.
  *
  * 注意：必须在 AppKitProvider 内部使用此 Hook
  *
@@ -294,7 +292,7 @@ export function useWallet(): UseWalletReturn {
     getCurrentChainId,
     getCurrentAddress,
 
-    // AppKit 扩展
+    // Wallet provider compatibility API
     openModal,
     getProvider,
     getSigner,

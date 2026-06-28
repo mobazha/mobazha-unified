@@ -1,3 +1,3 @@
-// Placeholder — standalone Docker containers overwrite this file at startup
-// via init-data with window.__RUNTIME_CONFIG__ = { saasUrl, authMode, ... }.
-// In SaaS / dev this no-op file prevents a 404 and MIME-type console error.
+// Placeholder for deployments where the backend runtime-config route is absent.
+// Standalone deployments route this exact path to the node at request time.
+// In SaaS / static dev this file prevents a 404 and MIME-type console error.

@@ -84,7 +84,7 @@ interface RealOrderData {
     /**
      * Partial-payment progress card. Backend writes this on every
      * AggregateAndEmit pass when the order has an OrderOpen and a
-     * positive expected amount (backend payment aggregation).
+     * positive expected amount.
      */
     progress?: {
       totalReceived?: string;
@@ -345,7 +345,7 @@ export type CancellationSourceData = {
   contract: CancellationSourceContract;
 };
 
-/** True when a cancel/refund settlement is confirmed on-chain (managed settlement) or recorded on legacy cancel msg. */
+/** True when a cancel/refund settlement is confirmed by the backend or recorded on a legacy cancel message. */
 export function isRefundSettlementConfirmed(
   settlementActions: SettlementActionLike[] | undefined,
   contract: CancellationSourceContract
@@ -363,7 +363,7 @@ export function isRefundSettlementConfirmed(
     return true;
   }
 
-  // Decline tx alone is ambiguous when backend settlement surface exists (failed attempts also carry tx).
+  // A decline tx alone is ambiguous when asynchronous settlement actions exist.
   if (actions.length === 0 && contract.orderDecline?.transactionID?.trim()) {
     return true;
   }

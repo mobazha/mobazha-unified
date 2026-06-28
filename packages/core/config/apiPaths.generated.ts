@@ -30,7 +30,6 @@ export const HOSTING_API_PATHS = {
   ADMIN_MODERATORS_BY_PEER_ID: (peerID: string) =>
     `/platform/v1/admin/moderators/${encodeURIComponent(peerID)}`,
   ADMIN_RELAY_CONFIG: '/platform/v1/admin/relay/config',
-  ADMIN_MANAGED_PAYMENT_CONFIG: '/platform/v1/admin/managed-payment/config',
   ADMIN_SERVICES: '/platform/v1/admin/services',
   ADMIN_STATS: '/platform/v1/admin/stats',
   ADMIN_TENANTS: '/platform/v1/admin/tenants',
@@ -569,10 +568,6 @@ export const NODE_API_PATHS = {
     `/orders/${encodeURIComponent(orderID)}/refund-address`,
   ORDERS_RWA_TOKEN_PAYMENT_INFO: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/rwa-token/payment-info`,
-  ORDERS_SETTLEMENT_ACTIONS: (orderID: string, action: string) =>
-    `/orders/${encodeURIComponent(orderID)}/settlement-actions/${encodeURIComponent(action)}`,
-  ORDERS_SETTLEMENT_ACTIONS_STATUS: (orderID: string, action: string) =>
-    `/orders/${encodeURIComponent(orderID)}/settlement-actions/${encodeURIComponent(action)}/status`,
   ORDERS_SHIP: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/ship`,
   ORDERS_SPEND: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/spend`,
   ORDERS_SUPPLY_QUOTE: '/orders/supply-quote',

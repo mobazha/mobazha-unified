@@ -14,7 +14,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
 
 const OUT = 'test-results/screenshots/guest-checkout';
-const MOCK_ORDER_TOKEN = 'mock';
+const MOCK_ORDER_TOKEN = 'gst_test_order';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 

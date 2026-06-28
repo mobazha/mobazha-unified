@@ -36,11 +36,11 @@ export interface Order {
   rawState?: string;
   /** Moderated buyer-protection order */
   isModerated?: boolean;
-  /** settlementSpec.escrowType (managed_escrow / utxo_script / solana_escrow) */
+  /** Opaque backend settlement type. */
   paymentEscrowType?: string;
   /** 支付币种（用于判断是否需要链上交易） */
   paymentCoin?: string;
-  /** 最新结算动作类型（backend settlement / settlement projection） */
+  /** Latest backend settlement action type. */
   settlementAction?: string;
   /** 最新结算动作 ID */
   settlementActionId?: string;

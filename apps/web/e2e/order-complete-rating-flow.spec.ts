@@ -187,61 +187,14 @@ function isOrderCompletePost(url: string, method: string): boolean {
   }
 }
 
-function isSettlementCompletePost(url: string, method: string): boolean {
-  if (method !== 'POST') return false;
-  try {
-    const path = new URL(url).pathname;
-    return /\/v1\/orders\/[^/]+\/settlement-actions\/complete$/.test(path);
-  } catch {
-    return false;
-  }
-}
-
-function isSettlementCompleteStatusGet(url: string, method: string): boolean {
-  if (method !== 'GET') return false;
-  try {
-    const path = new URL(url).pathname;
-    return /\/v1\/orders\/[^/]+\/settlement-actions\/complete\/status$/.test(path);
-  } catch {
-    return false;
-  }
-}
-
 async function setupOrderFlowMocks(page: Page, options: OrderFlowMockOptions = {}) {
   let orderState = 'SHIPPED';
   const completeCalls: Array<Record<string, unknown>> = [];
-  const settlementCompleteCalls: Array<Record<string, unknown>> = [];
   const rateCalls: Array<Record<string, unknown>> = [];
 
   await page.route('**/v1/orders/**', async route => {
     const url = route.request().url();
     const method = route.request().method();
-
-    if (isSettlementCompletePost(url, method)) {
-      const body = route.request().postDataJSON() as Record<string, unknown>;
-      settlementCompleteCalls.push(body);
-      return route.fulfill({
-        status: 202,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: { mode: 'submitted', actionId: 'mock-complete-action' },
-        }),
-      });
-    }
-
-    if (isSettlementCompleteStatusGet(url, method)) {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            actionId: 'mock-complete-action',
-            state: 'submitted',
-            txHash: '0xmockcompletetxhash',
-          },
-        }),
-      });
-    }
 
     if (isOrderCompletePost(url, method)) {
       const body = route.request().postDataJSON() as Record<string, unknown>;
@@ -285,7 +238,7 @@ async function setupOrderFlowMocks(page: Page, options: OrderFlowMockOptions = {
     });
   });
 
-  return { completeCalls, settlementCompleteCalls, rateCalls };
+  return { completeCalls, rateCalls };
 }
 
 async function openConfirmReceiptFromFooter(page: Page) {
@@ -333,7 +286,7 @@ test.describe('Order complete + rating decoupling', () => {
 
   test('complete → banner → skip → rate only on submit', async ({ page }) => {
     await setupPage(page);
-    const { completeCalls, settlementCompleteCalls, rateCalls } = await setupOrderFlowMocks(page);
+    const { completeCalls, rateCalls } = await setupOrderFlowMocks(page);
 
     await page.goto(`${BASE_URL}/orders/${ORDER_ID}?type=purchase`);
     await page.waitForLoadState('networkidle');
@@ -344,7 +297,6 @@ test.describe('Order complete + rating decoupling', () => {
       .click();
 
     await expect(page.getByTestId('confirm-receipt-dialog')).not.toBeVisible({ timeout: 15000 });
-    expect(settlementCompleteCalls).toHaveLength(1);
     expect(completeCalls).toHaveLength(1);
     expect(completeCalls[0]?.ratings).toBeUndefined();
 

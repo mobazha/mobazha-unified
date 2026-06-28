@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-28",
+  "scope": "pnpm-lock.yaml exact versions with Unknown package metadata",
+  "conclusions": [
+    {
+      "package": "eyes",
+      "version": "0.1.8",
+      "spdx": "MIT",
+      "evidence": "node_modules/eyes/LICENSE"
+    },
+    {
+      "package": "text-encoding-utf-8",
+      "version": "1.0.2",
+      "spdx": "Unlicense",
+      "evidence": "node_modules/text-encoding-utf-8/LICENSE.md"
+    }
+  ]
+}

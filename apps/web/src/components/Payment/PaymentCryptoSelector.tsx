@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   getTokenIdFromPaymentCoin,
   useI18n,
-  isFiatPaymentVisible,
+  useFiatPaymentVisible,
   filterVisiblePaymentTokens,
   applyExchangeUsdtCheckoutTokenOrdering,
   isExchangeUsdtPaymentGuideLocale,
@@ -35,9 +35,10 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   showFiatMethods = true,
 }) => {
   const { t, locale } = useI18n();
+  const fiatVisible = useFiatPaymentVisible();
   const { isEmbedded } = useMiniAppPayment();
 
-  const effectiveShowFiat = showFiatMethods && isFiatPaymentVisible();
+  const effectiveShowFiat = showFiatMethods && fiatVisible;
 
   const hasFiat = useMemo(
     () => effectiveShowFiat && availableFiatProviders && availableFiatProviders.length > 0,
@@ -56,7 +57,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
       );
     }
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
-    let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain) && !tok.disabled);
+    let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain));
     if (acceptedCurrencies) {
       const accepted = new Set<string>();
       for (const value of acceptedCurrencies) {

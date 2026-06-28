@@ -1,4 +1,12 @@
 import { applyRuntimeConfig, initEnvFromPublicConfig } from '@mobazha/core/config/env';
+import {
+  getRuntimeConfig,
+  initializeRuntimeConfigFromWindow,
+  subscribeRuntimeConfig,
+} from '@mobazha/core/config/runtimeConfig';
+import { featureFlags } from '@mobazha/core/services/featureFlags';
+
+const runtimeConfig = initializeRuntimeConfigFromWindow();
 
 initEnvFromPublicConfig({
   envMode: process.env.NEXT_PUBLIC_ENV_MODE,
@@ -14,4 +22,9 @@ initEnvFromPublicConfig({
   storeSubdomainBase: process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE,
 });
 
-applyRuntimeConfig();
+applyRuntimeConfig(runtimeConfig);
+featureFlags.initializeFromRuntimeConfig(runtimeConfig);
+
+subscribeRuntimeConfig(() => {
+  featureFlags.initializeFromRuntimeConfig(getRuntimeConfig());
+});

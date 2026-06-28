@@ -13,3 +13,5 @@ export {
   type SwitchNetworkResult,
   type OpenModalOptions,
 } from './AppKitProvider';
+
+export { RuntimeConfigProvider } from './RuntimeConfigProvider';

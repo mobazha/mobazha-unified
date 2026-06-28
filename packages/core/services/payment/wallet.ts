@@ -28,7 +28,7 @@ interface EthereumProvider {
 
 // 默认配置
 const DEFAULT_CONFIG: WalletServiceConfig = {
-  projectId: '', // WalletConnect Project ID - 需要用户配置
+  projectId: '', // Optional external connector project ID.
   supportedChains: [ChainId.ETHEREUM, ChainId.BSC, ChainId.POLYGON, ChainId.ARBITRUM],
   defaultChain: ChainId.ETHEREUM,
   autoConnect: true,
@@ -195,7 +195,7 @@ class WalletService {
   private detectProviderName(): string {
     if (!this.hasEthereumProvider() || !window.ethereum) return 'Unknown';
 
-    const ethereum = window.ethereum;
+    const ethereum = window.ethereum as unknown as EthereumProvider;
     if (ethereum.isMetaMask) return 'MetaMask';
     if (ethereum.isCoinbaseWallet) return 'Coinbase Wallet';
     if (ethereum.isTrust) return 'Trust Wallet';
