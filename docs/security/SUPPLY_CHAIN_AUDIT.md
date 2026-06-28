@@ -12,6 +12,8 @@ This audit covers the exact dependency graph resolved from `pnpm-lock.yaml` with
   - `text-encoding-utf-8@1.0.2`: Unlicense
 - Reown AppKit 1.8.15 and WalletConnect 2.23.0 packages were removed from the Community Edition dependency graph because their shipped Community License terms are outside the intended open-source dependency boundary.
 - The historical AppKit provider source remains for reference but is excluded from the Community Edition TypeScript and production import graphs.
+- Next.js was raised to 16.2.6 and React Router to 7.15.0. Targeted pnpm overrides pin vulnerable `ws` 7.x/8.x transitive paths to 7.5.11/8.21.0 without widening unrelated peer ranges.
+- `pnpm audit --prod --audit-level high` passes with no High or Critical findings. Remaining Low/Moderate findings must continue to be reviewed during routine dependency updates.
 
 No unresolved dependency-license metadata remains after applying the two exact-version conclusions above.
 
@@ -31,6 +33,7 @@ pnpm typecheck
 pnpm --filter @mobazha/core test
 pnpm --filter @mobazha/web build
 pnpm --filter @mobazha/web build:next
+pnpm audit --prod --audit-level high
 ```
 
 Production bundle checks must additionally confirm that external wallet initializers, non-UTXO payment executors, and fiat checkout SDK initializers are absent from Community Edition output.
