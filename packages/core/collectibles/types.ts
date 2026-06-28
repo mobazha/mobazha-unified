@@ -35,11 +35,14 @@ export interface CollectibleNFT {
   hubSlotID: string;
   hubSlot?: CollectibleHubSlot;
   chain?: string;
+  network?: string;
   tokenStandard?: string;
   metadataURI?: string;
   royaltyBps?: number;
   mintTxSignature?: string;
   mintConfirmedSlot?: number;
+  mintExplorerURL?: string;
+  mintTxExplorerURL?: string;
   mintAt?: string;
   burnAt?: string;
 }
@@ -108,6 +111,12 @@ export type CollectiblePrimarySalePhase =
   | 'payout_pending'
   | 'payout_complete'
   | 'payout_failed';
+
+export interface CollectiblePrimarySaleReleaseRetryResult {
+  tenantID?: string;
+  limit: number;
+  released: number;
+}
 
 export interface CollectiblePrimarySale {
   saleID: string;

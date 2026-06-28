@@ -626,7 +626,10 @@ export const HOSTING_API = {
     `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/ship`,
   COLLECTIBLES_REDEMPTION_SETTLE: (id: string) =>
     `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/settle`,
+  COLLECTIBLES_HUB_REDEMPTIONS: '/platform/v1/collectibles/hub/redemptions',
   COLLECTIBLES_RECONCILE_RECOVER_MINTS: '/platform/v1/collectibles/reconcile/recover-mints',
+  COLLECTIBLES_PRIMARY_SALES_RELEASE_QUEUE: '/platform/v1/collectibles/primary-sales/release-queue',
+  COLLECTIBLES_PRIMARY_SALES_RELEASE_RETRY: '/platform/v1/collectibles/primary-sales/release-retry',
   COLLECTIBLES_PRIMARY_SALE_BY_ORDER: (orderId: string) =>
     `/platform/v1/collectibles/primary-sales/by-order/${encodeURIComponent(orderId)}`,
 } as const;

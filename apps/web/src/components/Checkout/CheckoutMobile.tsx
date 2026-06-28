@@ -168,8 +168,40 @@ export function CheckoutMobile({ checkout }: Props) {
 
             {isCollectibleHubNftCheckout && (
               <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-4">
+                <CardContent className="space-y-3 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    {t('collectibles.checkout.hubPrimarySaleTitle')}
+                  </p>
                   <p className="text-sm text-muted-foreground">{t('collectibles.trustNote')}</p>
+                  {checkoutItems.some(item => item.hubSlotID || item.certNumber || item.nftMint) ? (
+                    <dl className="grid grid-cols-1 gap-2 border-t border-primary/10 pt-3 text-sm">
+                      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {t('collectibles.checkout.metadataTitle')}
+                      </div>
+                      {checkoutItems.map(item => (
+                        <React.Fragment key={item.id}>
+                          {item.certNumber ? (
+                            <div>
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.primarySale.certNumber')}
+                              </dt>
+                              <dd className="break-all font-medium text-foreground">
+                                {item.certNumber}
+                              </dd>
+                            </div>
+                          ) : null}
+                          {item.hubSlotID ? (
+                            <div>
+                              <dt className="text-muted-foreground">{t('collectibles.hubSlot')}</dt>
+                              <dd className="break-all font-mono text-xs text-foreground">
+                                {item.hubSlotID}
+                              </dd>
+                            </div>
+                          ) : null}
+                        </React.Fragment>
+                      ))}
+                    </dl>
+                  ) : null}
                 </CardContent>
               </Card>
             )}

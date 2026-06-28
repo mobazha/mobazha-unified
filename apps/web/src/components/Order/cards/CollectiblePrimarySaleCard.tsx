@@ -151,7 +151,10 @@ export function CollectiblePrimarySaleCard({
               className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2"
               mintTxSignature={mintedNft.mintTxSignature}
               mintConfirmedSlot={mintedNft.mintConfirmedSlot}
-              isDevnet={getEnvConfig().isTestEnv}
+              mintTxExplorerURL={mintedNft.mintTxExplorerURL}
+              isDevnet={
+                mintedNft.network?.trim().toLowerCase() === 'devnet' || getEnvConfig().isTestEnv
+              }
             />
           ) : null}
 
