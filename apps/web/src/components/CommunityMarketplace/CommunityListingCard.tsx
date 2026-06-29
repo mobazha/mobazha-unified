@@ -9,6 +9,10 @@ import {
   useI18n,
   type CommunityListingPreview,
 } from '@mobazha/core';
+import {
+  isCollectibleDemoCardImageUrl,
+  resolveCollectibleListingImageUrl,
+} from '@mobazha/core/curation/collectibleMarketplace';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductImage } from '@/components/ui/product-image';
@@ -16,12 +20,15 @@ import { VStack } from '@/components/layouts';
 
 interface CommunityListingCardProps {
   preview: CommunityListingPreview;
+  productHref?: string;
 }
 
-export function CommunityListingCard({ preview }: CommunityListingCardProps) {
+export function CommunityListingCard({ preview, productHref }: CommunityListingCardProps) {
   const { t } = useI18n();
   const { renderPairedPrice } = useCurrency();
-  const href = communityProductHref(preview.slug, preview.peerID);
+  const href = productHref ?? communityProductHref(preview.slug, preview.peerID);
+  const imageUrl = resolveCollectibleListingImageUrl(preview.slug, preview.imageUrl);
+  const usesDemoCardArt = isCollectibleDemoCardImageUrl(imageUrl);
   const sellerLabel = formatUserName(
     { name: preview.vendorName, peerID: preview.peerID },
     { fallback: t('common.seller'), prefix: 'Store' }
@@ -51,11 +58,11 @@ export function CommunityListingCard({ preview }: CommunityListingCardProps) {
     <Link href={href} className="block h-full">
       <Card className="h-full overflow-hidden transition-all hover:shadow-lg active:scale-[0.99]">
         <div className="relative aspect-[4/3] bg-muted">
-          {preview.imageUrl ? (
+          {imageUrl ? (
             <ProductImage
-              src={preview.imageUrl}
+              src={imageUrl}
               alt={preview.title}
-              className="h-full w-full object-cover"
+              className={`h-full w-full ${usesDemoCardArt ? 'object-contain p-2' : 'object-cover'}`}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-muted text-sm text-muted-foreground">

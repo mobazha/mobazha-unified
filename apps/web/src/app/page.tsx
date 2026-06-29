@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { Container } from '@/components/layouts';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -27,7 +27,11 @@ import {
   productCardPriceFieldsFromListItem,
   isStandalone,
   useIsSubMarket,
+  getCurationHomePath,
+  resolveCurationMarketplaceIdentifier,
+  shouldRenderCurationMarketplaceAtRoot,
 } from '@mobazha/core';
+import { MarketplaceDetailPageContent } from '@/components/CommunityMarketplace/MarketplaceDetailPageContent';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { ProductListItem } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
@@ -91,9 +95,28 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
 }
 
 export default function HomePage() {
+  const pathname = usePathname();
   const storefrontMode = useStorefrontMode();
   const storefrontPeerID = useStorefrontPeerID();
   const isSubMarket = useIsSubMarket();
+  const { needsOnboarding } = useUserStore();
+  const curationHomePath = getCurationHomePath();
+
+  const renderCurationAtRoot = shouldRenderCurationMarketplaceAtRoot({
+    pathname,
+    curationHomePath,
+    isStandalone: isStandalone(),
+    storefrontMode,
+    isSubMarket,
+    needsOnboarding,
+  });
+
+  if (renderCurationAtRoot && curationHomePath) {
+    const marketplaceIdentifier = resolveCurationMarketplaceIdentifier(curationHomePath);
+    if (marketplaceIdentifier) {
+      return <MarketplaceDetailPageContent identifier={marketplaceIdentifier} />;
+    }
+  }
 
   if (isSubMarket) {
     return <MarketplaceHomePage />;

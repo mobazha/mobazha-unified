@@ -9,6 +9,9 @@ export { BasicInfoSection } from './BasicInfoSection';
 
 export { MediaSection } from './MediaSection';
 
+export { SourceCustodyListingFields } from './SourceCustodyListingFields';
+export type { SourceCustodyListingFieldsProps } from './SourceCustodyListingFields';
+
 export { RwaTokenFields } from './RwaTokenFields';
 
 export { PhysicalGoodFields } from './PhysicalGoodFields';

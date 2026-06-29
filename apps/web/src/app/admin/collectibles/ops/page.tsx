@@ -5,13 +5,27 @@ import Link from 'next/link';
 import {
   collectiblesApi,
   resolveCollectibleRedemptionPhase,
+  resolveSourceDepositOperatorNextActionKey,
+  resolveSourceDepositDefaultRefundStatusKey,
+  resolveSourceDepositDefaultActionOutcome,
+  resolveSourceDepositRejectionReason,
+  resolveSourceDepositStatusKey,
+  resolveCollectibleValidityDisplayKey,
+  isSourceDepositDefaultRefundRefreshEligible,
+  isSourceDepositDefaultRefundRetryEligible,
+  isSourceDepositMarkDefaultEligible,
+  isSourceDepositMintEligible,
+  isSourceDepositRecordFirstSaleEligible,
+  isSourceDepositReviewPending,
   useI18n,
   type CollectiblePrimarySale,
   type CollectibleRedemption,
   type CollectiblePendingMintRecoveryReport,
   type CollectibleHubSlot,
+  type CollectibleSourceDeposit,
 } from '@mobazha/core';
 import { CollectiblesFeatureGuard } from '@/app/collectibles/CollectiblesFeatureGuard';
+import { CollectibleSourceDepositEvidencePhotos } from '@/components/collectibles/CollectibleSourceDepositEvidencePhotos';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -54,6 +68,51 @@ export default function CollectiblesHubOpsPage() {
   const [hubSlotsLoading, setHubSlotsLoading] = useState(false);
   const [slotActingId, setSlotActingId] = useState<string | null>(null);
   const [mintHolderDefault, setMintHolderDefault] = useState('');
+
+  const [sourceCertNumber, setSourceCertNumber] = useState('');
+  const [sourceGrade, setSourceGrade] = useState('');
+  const [sourceSerial, setSourceSerial] = useState('');
+  const [sourceSellerPeerID, setSourceSellerPeerID] = useState('');
+  const [sourceHolderWallet, setSourceHolderWallet] = useState('');
+  const [sourceGuaranteeAmount, setSourceGuaranteeAmount] = useState('');
+  const [sourceGuaranteeCurrency, setSourceGuaranteeCurrency] = useState('');
+  const [sourceCreateLoading, setSourceCreateLoading] = useState(false);
+  const [sourceDeposits, setSourceDeposits] = useState<CollectibleSourceDeposit[]>([]);
+  const [sourceDepositsLoading, setSourceDepositsLoading] = useState(false);
+  const [sourceActingId, setSourceActingId] = useState<string | null>(null);
+  const [sourceMintHolderDefault, setSourceMintHolderDefault] = useState('');
+  const [sourceMintRoyaltyBps, setSourceMintRoyaltyBps] = useState('0');
+  const [expandedFirstSaleId, setExpandedFirstSaleId] = useState<string | null>(null);
+  const [firstSaleOrderID, setFirstSaleOrderID] = useState('');
+  const [firstSaleProtectionRef, setFirstSaleProtectionRef] = useState('');
+  const [firstSaleBuyerPeerID, setFirstSaleBuyerPeerID] = useState('');
+  const [firstSalePriceAmount, setFirstSalePriceAmount] = useState('');
+  const [firstSaleCurrencyCode, setFirstSaleCurrencyCode] = useState('');
+  const [firstSaleDivisibility, setFirstSaleDivisibility] = useState('8');
+  const [sourceShipTracking, setSourceShipTracking] = useState<Record<string, string>>({});
+  const [sourceDefaultReason, setSourceDefaultReason] = useState<Record<string, string>>({});
+  const [sourceRejectReason, setSourceRejectReason] = useState<Record<string, string>>({});
+
+  const resetFirstSaleForm = useCallback(() => {
+    setFirstSaleOrderID('');
+    setFirstSaleProtectionRef('');
+    setFirstSaleBuyerPeerID('');
+    setFirstSalePriceAmount('');
+    setFirstSaleCurrencyCode('');
+    setFirstSaleDivisibility('8');
+  }, []);
+
+  const toggleFirstSalePanel = useCallback(
+    (id: string, isExpanded: boolean) => {
+      if (isExpanded) {
+        setExpandedFirstSaleId(null);
+        return;
+      }
+      resetFirstSaleForm();
+      setExpandedFirstSaleId(id);
+    },
+    [resetFirstSaleForm]
+  );
 
   const loadRedemptionById = useCallback(
     async (id: string) => {
@@ -102,6 +161,285 @@ export default function CollectiblesHubOpsPage() {
       setHubSlotsLoading(false);
     }
   }, [t, toast]);
+
+  const loadSourceDeposits = useCallback(async () => {
+    setSourceDepositsLoading(true);
+    try {
+      const result = await collectiblesApi.listCollectibleSourceDeposits({
+        page: 1,
+        pageSize: 25,
+      });
+      setSourceDeposits(result.items ?? []);
+    } catch (err) {
+      setSourceDeposits([]);
+      toast({
+        variant: 'destructive',
+        title: t('collectibles.sourceOps.queueLoadFailed'),
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSourceDepositsLoading(false);
+    }
+  }, [t, toast]);
+
+  const handleCreateSourceDeposit = useCallback(async () => {
+    const certNumber = sourceCertNumber.trim();
+    const sellerPeerID = sourceSellerPeerID.trim();
+    const holderWallet = sourceHolderWallet.trim();
+    if (!certNumber || !sellerPeerID || !holderWallet) return;
+    setSourceCreateLoading(true);
+    try {
+      await collectiblesApi.createCollectibleSourceDeposit({
+        certNumber,
+        grade: sourceGrade.trim() || undefined,
+        serial: sourceSerial.trim() || undefined,
+        sellerPeerID,
+        holderWallet,
+        guaranteeAmount: sourceGuaranteeAmount.trim() || undefined,
+        guaranteeCurrency: sourceGuaranteeCurrency.trim() || undefined,
+      });
+      setSourceCertNumber('');
+      setSourceGrade('');
+      setSourceSerial('');
+      setSourceSellerPeerID('');
+      setSourceHolderWallet('');
+      setSourceGuaranteeAmount('');
+      setSourceGuaranteeCurrency('');
+      toast({ title: t('collectibles.sourceOps.createSuccess'), variant: 'success' });
+      await loadSourceDeposits();
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: t('collectibles.sourceOps.createFailed'),
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSourceCreateLoading(false);
+    }
+  }, [
+    loadSourceDeposits,
+    sourceCertNumber,
+    sourceGrade,
+    sourceGuaranteeAmount,
+    sourceGuaranteeCurrency,
+    sourceHolderWallet,
+    sourceSellerPeerID,
+    sourceSerial,
+    t,
+    toast,
+  ]);
+
+  const handleApproveSourceDeposit = useCallback(
+    async (id: string) => {
+      setSourceActingId(id);
+      try {
+        await collectiblesApi.approveCollectibleSourceDeposit(id);
+        toast({ title: t('collectibles.sourceOps.approveSuccess'), variant: 'success' });
+        await loadSourceDeposits();
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.approveFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [loadSourceDeposits, t, toast]
+  );
+
+  const handleRejectSourceDeposit = useCallback(
+    async (id: string) => {
+      const reason = sourceRejectReason[id]?.trim();
+      if (!reason) return;
+      setSourceActingId(id);
+      try {
+        await collectiblesApi.rejectCollectibleSourceDeposit(id, { reason });
+        toast({ title: t('collectibles.sourceOps.rejectSuccess'), variant: 'success' });
+        setSourceRejectReason(prev => ({ ...prev, [id]: '' }));
+        await loadSourceDeposits();
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.rejectFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [loadSourceDeposits, sourceRejectReason, t, toast]
+  );
+
+  const handleMintSourceDeposit = useCallback(
+    async (deposit: CollectibleSourceDeposit) => {
+      const id = deposit.sourceDepositID;
+      const holder = deposit.holderWallet?.trim() || sourceMintHolderDefault.trim();
+      if (!holder) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.mintFailed'),
+          description: t('collectibles.sourceOps.mintHolderRequired'),
+        });
+        return;
+      }
+      const royaltyBps = Number.parseInt(sourceMintRoyaltyBps, 10);
+      setSourceActingId(id);
+      try {
+        await collectiblesApi.mintCollectibleSourceDeposit(id, {
+          holder,
+          royaltyBps: Number.isFinite(royaltyBps) && royaltyBps >= 0 ? royaltyBps : undefined,
+        });
+        toast({ title: t('collectibles.sourceOps.mintSuccess'), variant: 'success' });
+        await loadSourceDeposits();
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.mintFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [loadSourceDeposits, sourceMintHolderDefault, sourceMintRoyaltyBps, t, toast]
+  );
+
+  const handleRecordFirstSale = useCallback(
+    async (id: string) => {
+      const orderID = firstSaleOrderID.trim();
+      const escrowID = firstSaleProtectionRef.trim();
+      const buyerPeerID = firstSaleBuyerPeerID.trim();
+      const priceAmount = firstSalePriceAmount.trim();
+      const currencyCode = firstSaleCurrencyCode.trim();
+      if (!orderID || !escrowID || !buyerPeerID || !priceAmount || !currencyCode) return;
+      const divisibility = Number.parseInt(firstSaleDivisibility, 10);
+      setSourceActingId(id);
+      try {
+        await collectiblesApi.recordCollectibleSourceDepositFirstSale(id, {
+          orderID,
+          escrowID,
+          buyerPeerID,
+          priceAmount,
+          currencyCode,
+          divisibility: Number.isFinite(divisibility) ? divisibility : undefined,
+        });
+        toast({ title: t('collectibles.sourceOps.firstSaleSuccess'), variant: 'success' });
+        setExpandedFirstSaleId(null);
+        resetFirstSaleForm();
+        await loadSourceDeposits();
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.firstSaleFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [
+      firstSaleBuyerPeerID,
+      firstSaleCurrencyCode,
+      firstSaleDivisibility,
+      firstSaleOrderID,
+      firstSalePriceAmount,
+      firstSaleProtectionRef,
+      loadSourceDeposits,
+      resetFirstSaleForm,
+      t,
+      toast,
+    ]
+  );
+
+  const handleShipSourceDeposit = useCallback(
+    async (id: string) => {
+      const trackingNo = sourceShipTracking[id]?.trim() ?? '';
+      if (!trackingNo) return;
+      setSourceActingId(id);
+      try {
+        await collectiblesApi.shipCollectibleSourceDeposit(id, { trackingNo });
+        toast({ title: t('collectibles.sourceOps.shipSuccess'), variant: 'success' });
+        await loadSourceDeposits();
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.shipFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [loadSourceDeposits, sourceShipTracking, t, toast]
+  );
+
+  const handleSettleSourceDeposit = useCallback(
+    async (id: string) => {
+      setSourceActingId(id);
+      try {
+        await collectiblesApi.settleCollectibleSourceDeposit(id);
+        toast({ title: t('collectibles.sourceOps.settleSuccess'), variant: 'success' });
+        await loadSourceDeposits();
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.settleFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [loadSourceDeposits, t, toast]
+  );
+
+  const handleDefaultSourceDeposit = useCallback(
+    async (deposit: CollectibleSourceDeposit) => {
+      const id = deposit.sourceDepositID;
+      const isRefresh = isSourceDepositDefaultRefundRefreshEligible(deposit);
+      const isRetry = isSourceDepositDefaultRefundRetryEligible(deposit);
+      const defaultReason = sourceDefaultReason[id]?.trim() || deposit.defaultReason?.trim() || '';
+      if (!defaultReason) return;
+
+      setSourceActingId(id);
+      try {
+        const updated = await collectiblesApi.defaultCollectibleSourceDeposit(id, {
+          defaultReason,
+        });
+        await loadSourceDeposits();
+        const outcome = resolveSourceDepositDefaultActionOutcome(updated);
+        if (outcome === 'defaulted') {
+          toast({ title: t('collectibles.sourceOps.defaultSuccess'), variant: 'success' });
+        } else if (outcome === 'refundPending') {
+          toast({
+            title: t('collectibles.sourceOps.defaultRefundPending'),
+            description: isRefresh
+              ? undefined
+              : t('collectibles.sourceOps.defaultRefundPendingNotice'),
+          });
+        } else if (outcome === 'refundFailed') {
+          toast({
+            variant: 'destructive',
+            title: t('collectibles.sourceOps.defaultRefundFailed'),
+            description: updated.defaultRefundError?.trim() || undefined,
+          });
+        } else if (!isRefresh && !isRetry) {
+          toast({ title: t('collectibles.sourceOps.defaultSuccess'), variant: 'success' });
+        }
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: t('collectibles.sourceOps.defaultFailed'),
+          description: err instanceof Error ? err.message : String(err),
+        });
+      } finally {
+        setSourceActingId(null);
+      }
+    },
+    [loadSourceDeposits, sourceDefaultReason, t, toast]
+  );
 
   const handleIntake = useCallback(async () => {
     const certNumber = intakeCertNumber.trim();
@@ -347,6 +685,698 @@ export default function CollectiblesHubOpsPage() {
               <Link href="/collectibles/redemptions">{t('collectibles.redemptions.title')}</Link>
             </Button>
           </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">
+              {t('collectibles.sourceOps.title')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('collectibles.sourceOps.subtitle')}
+            </p>
+          </div>
+
+          <Card className="space-y-4 p-4">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                {t('collectibles.sourceOps.createTitle')}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('collectibles.sourceOps.createSubtitle')}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <label className="text-sm font-medium text-foreground" htmlFor="source-cert">
+                  {t('collectibles.hubOps.certNumber')}
+                </label>
+                <Input
+                  id="source-cert"
+                  value={sourceCertNumber}
+                  onChange={event => setSourceCertNumber(event.target.value)}
+                  placeholder="PSA-12345678"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground" htmlFor="source-grade">
+                  {t('collectibles.hubOps.grade')}
+                </label>
+                <Input
+                  id="source-grade"
+                  value={sourceGrade}
+                  onChange={event => setSourceGrade(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground" htmlFor="source-serial">
+                  {t('collectibles.hubOps.serial')}
+                </label>
+                <Input
+                  id="source-serial"
+                  value={sourceSerial}
+                  onChange={event => setSourceSerial(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <label className="text-sm font-medium text-foreground" htmlFor="source-seller">
+                  {t('collectibles.sourceOps.sellerPeerID')}
+                </label>
+                <Input
+                  id="source-seller"
+                  value={sourceSellerPeerID}
+                  onChange={event => setSourceSellerPeerID(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <label className="text-sm font-medium text-foreground" htmlFor="source-holder">
+                  {t('collectibles.sourceOps.holderWallet')}
+                </label>
+                <Input
+                  id="source-holder"
+                  value={sourceHolderWallet}
+                  onChange={event => setSourceHolderWallet(event.target.value)}
+                  placeholder={t('collectibles.sourceOps.holderWalletPlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="source-guarantee-amt"
+                >
+                  {t('collectibles.sourceOps.guaranteeAmount')}
+                </label>
+                <Input
+                  id="source-guarantee-amt"
+                  value={sourceGuaranteeAmount}
+                  onChange={event => setSourceGuaranteeAmount(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="source-guarantee-cur"
+                >
+                  {t('collectibles.sourceOps.guaranteeCurrency')}
+                </label>
+                <Input
+                  id="source-guarantee-cur"
+                  value={sourceGuaranteeCurrency}
+                  onChange={event => setSourceGuaranteeCurrency(event.target.value)}
+                />
+              </div>
+            </div>
+            <Button
+              type="button"
+              onClick={() => void handleCreateSourceDeposit()}
+              disabled={
+                sourceCreateLoading ||
+                !sourceCertNumber.trim() ||
+                !sourceSellerPeerID.trim() ||
+                !sourceHolderWallet.trim()
+              }
+            >
+              {sourceCreateLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {t('collectibles.sourceOps.submitCreate')}
+            </Button>
+          </Card>
+
+          <Card className="space-y-4 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  {t('collectibles.sourceOps.listTitle')}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t('collectibles.sourceOps.listSubtitle')}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void loadSourceDeposits()}
+                disabled={sourceDepositsLoading}
+              >
+                {sourceDepositsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {t('collectibles.sourceOps.refreshQueue')}
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="source-mint-holder-default"
+                >
+                  {t('collectibles.hubOps.mintHolderDefault')}
+                </label>
+                <Input
+                  id="source-mint-holder-default"
+                  value={sourceMintHolderDefault}
+                  onChange={event => setSourceMintHolderDefault(event.target.value)}
+                  placeholder={t('collectibles.sourceOps.holderWalletPlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="source-mint-royalty"
+                >
+                  {t('collectibles.sourceOps.mintRoyaltyBps')}
+                </label>
+                <Input
+                  id="source-mint-royalty"
+                  type="number"
+                  min={0}
+                  max={10000}
+                  value={sourceMintRoyaltyBps}
+                  onChange={event => setSourceMintRoyaltyBps(event.target.value)}
+                />
+              </div>
+            </div>
+            {sourceDeposits.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('collectibles.sourceOps.queueEmpty')}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {sourceDeposits.map(deposit => {
+                  const id = deposit.sourceDepositID;
+                  const canMint = isSourceDepositMintEligible(deposit);
+                  const canReview = isSourceDepositReviewPending(deposit);
+                  const canRecordFirstSale = isSourceDepositRecordFirstSaleEligible(deposit);
+                  const canShip = deposit.status === 'redeem_requested';
+                  const canSettle = deposit.status === 'shipped';
+                  const canMarkDefault = isSourceDepositMarkDefaultEligible(deposit);
+                  const canRefreshDefaultRefund =
+                    isSourceDepositDefaultRefundRefreshEligible(deposit);
+                  const canRetryDefaultRefund = isSourceDepositDefaultRefundRetryEligible(deposit);
+                  const defaultRefundStatusKey = resolveSourceDepositDefaultRefundStatusKey(
+                    deposit.defaultRefundStatus
+                  );
+                  const isExpanded = expandedFirstSaleId === id;
+
+                  return (
+                    <div key={id} className="space-y-3 rounded-md border p-3 text-sm">
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">{deposit.certNumber}</p>
+                        <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                          {id}
+                        </p>
+                        <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.depositStatus')}
+                            </dt>
+                            <dd className="font-medium text-foreground">
+                              {t(resolveSourceDepositStatusKey(deposit.status))}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.operatorNextAction')}
+                            </dt>
+                            <dd className="font-medium text-foreground">
+                              {t(resolveSourceDepositOperatorNextActionKey(deposit))}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.releaseStatus')}
+                            </dt>
+                            <dd className="font-medium text-foreground">
+                              {deposit.releaseStatus || '—'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.seller')}
+                            </dt>
+                            <dd className="break-all font-medium text-foreground">
+                              {deposit.sellerPeerID || '—'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.holder')}
+                            </dt>
+                            <dd className="break-all font-medium text-foreground">
+                              {deposit.holderWallet || '—'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.nftMint')}
+                            </dt>
+                            <dd className="break-all font-medium text-foreground">
+                              {deposit.nftMint || '—'}
+                            </dd>
+                          </div>
+                          {deposit.nftMint || deposit.hubTitleValidityStatus ? (
+                            <div>
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.sourceOps.hubTitleValidity')}
+                              </dt>
+                              <dd className="font-medium text-foreground">
+                                {deposit.hubTitleValidityStatus
+                                  ? t(
+                                      resolveCollectibleValidityDisplayKey(
+                                        deposit.hubTitleValidityStatus
+                                      )
+                                    )
+                                  : '—'}
+                              </dd>
+                            </div>
+                          ) : null}
+                          {deposit.hubTitleInvalidationReason?.trim() ? (
+                            <div className="sm:col-span-2">
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.validity.invalidationReason')}
+                              </dt>
+                              <dd className="break-words font-medium text-foreground">
+                                {deposit.hubTitleInvalidationReason}
+                              </dd>
+                            </div>
+                          ) : null}
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.order')}
+                            </dt>
+                            <dd className="break-all font-medium text-foreground">
+                              {deposit.firstSaleOrderID || '—'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.tracking')}
+                            </dt>
+                            <dd className="break-all font-medium text-foreground">
+                              {deposit.trackingNo || '—'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.defaultReason')}
+                            </dt>
+                            <dd className="break-words font-medium text-foreground">
+                              {deposit.defaultReason || '—'}
+                            </dd>
+                          </div>
+                          {defaultRefundStatusKey ? (
+                            <div>
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.sourceOps.defaultRefundStatus')}
+                              </dt>
+                              <dd className="font-medium text-foreground">
+                                {t(defaultRefundStatusKey)}
+                              </dd>
+                            </div>
+                          ) : null}
+                          {deposit.defaultRefundError?.trim() ? (
+                            <div className="sm:col-span-2">
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.sourceOps.defaultRefundError')}
+                              </dt>
+                              <dd className="break-words font-medium text-destructive">
+                                {deposit.defaultRefundError}
+                              </dd>
+                            </div>
+                          ) : null}
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.sourceOps.rejectionReason')}
+                            </dt>
+                            <dd className="break-words font-medium text-foreground">
+                              {resolveSourceDepositRejectionReason(deposit) || '—'}
+                            </dd>
+                          </div>
+                        </dl>
+                        {canReview ? (
+                          <CollectibleSourceDepositEvidencePhotos
+                            photosJSON={deposit.photosJSON}
+                            className="mt-3 border-t border-border pt-3"
+                          />
+                        ) : null}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {canReview ? (
+                          <>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => void handleApproveSourceDeposit(id)}
+                              disabled={sourceActingId === id}
+                            >
+                              {sourceActingId === id ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              {t('collectibles.sourceOps.approve')}
+                            </Button>
+                          </>
+                        ) : null}
+                        {canMint ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void handleMintSourceDeposit(deposit)}
+                            disabled={sourceActingId === id}
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.mint')}
+                          </Button>
+                        ) : null}
+                        {canRecordFirstSale ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => toggleFirstSalePanel(id, isExpanded)}
+                          >
+                            {t('collectibles.sourceOps.recordFirstSale')}
+                          </Button>
+                        ) : null}
+                        {canSettle ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => void handleSettleSourceDeposit(id)}
+                            disabled={sourceActingId === id}
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.settle')}
+                          </Button>
+                        ) : null}
+                      </div>
+
+                      {canReview ? (
+                        <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+                          <div className="min-w-[12rem] flex-1 space-y-2">
+                            <label
+                              className="text-sm font-medium text-foreground"
+                              htmlFor={`source-reject-${id}`}
+                            >
+                              {t('collectibles.sourceOps.rejectionReason')}
+                            </label>
+                            <Input
+                              id={`source-reject-${id}`}
+                              value={sourceRejectReason[id] ?? ''}
+                              onChange={event =>
+                                setSourceRejectReason(prev => ({
+                                  ...prev,
+                                  [id]: event.target.value,
+                                }))
+                              }
+                              placeholder={t('collectibles.sourceOps.rejectionReasonPlaceholder')}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => void handleRejectSourceDeposit(id)}
+                            disabled={sourceActingId === id || !sourceRejectReason[id]?.trim()}
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.reject')}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      {canShip ? (
+                        <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+                          <div className="min-w-[12rem] flex-1 space-y-2">
+                            <label
+                              className="text-sm font-medium text-foreground"
+                              htmlFor={`source-ship-${id}`}
+                            >
+                              {t('collectibles.sourceOps.tracking')}
+                            </label>
+                            <Input
+                              id={`source-ship-${id}`}
+                              value={sourceShipTracking[id] ?? ''}
+                              onChange={event =>
+                                setSourceShipTracking(prev => ({
+                                  ...prev,
+                                  [id]: event.target.value,
+                                }))
+                              }
+                              placeholder={t('collectibles.sourceOps.trackingPlaceholder')}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void handleShipSourceDeposit(id)}
+                            disabled={sourceActingId === id || !sourceShipTracking[id]?.trim()}
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.ship')}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      {canRefreshDefaultRefund ? (
+                        <div className="space-y-3 border-t pt-3">
+                          <div className="rounded-md border border-amber-300 bg-amber-100 p-3 dark:border-amber-700 dark:bg-amber-900/40">
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                              {t('collectibles.sourceOps.defaultRefundPendingNotice')}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void handleDefaultSourceDeposit(deposit)}
+                            disabled={sourceActingId === id || !deposit.defaultReason?.trim()}
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.refreshDefaultRefund')}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      {canRetryDefaultRefund ? (
+                        <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+                          <div className="w-full rounded-md border border-destructive/30 bg-destructive/10 p-3">
+                            <p className="text-sm font-medium text-destructive">
+                              {t('collectibles.sourceOps.defaultRefundFailed')}
+                            </p>
+                            {deposit.defaultRefundError?.trim() ? (
+                              <p className="mt-1 break-words text-sm text-destructive/90">
+                                {deposit.defaultRefundError}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="min-w-[12rem] flex-1 space-y-2">
+                            <label
+                              className="text-sm font-medium text-foreground"
+                              htmlFor={`source-default-retry-${id}`}
+                            >
+                              {t('collectibles.sourceOps.defaultReason')}
+                            </label>
+                            <Input
+                              id={`source-default-retry-${id}`}
+                              value={sourceDefaultReason[id] ?? deposit.defaultReason ?? ''}
+                              onChange={event =>
+                                setSourceDefaultReason(prev => ({
+                                  ...prev,
+                                  [id]: event.target.value,
+                                }))
+                              }
+                              placeholder={t('collectibles.sourceOps.defaultReasonPlaceholder')}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => void handleDefaultSourceDeposit(deposit)}
+                            disabled={
+                              sourceActingId === id ||
+                              !(sourceDefaultReason[id]?.trim() || deposit.defaultReason?.trim())
+                            }
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.retryDefaultRefund')}
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      {canMarkDefault ? (
+                        <div className="space-y-3 border-t pt-3">
+                          <div className="rounded-md border border-amber-300 bg-amber-100 p-3 dark:border-amber-700 dark:bg-amber-900/40">
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                              {t('collectibles.sourceOps.markDefaultVoidNotice')}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-end gap-2">
+                            <div className="min-w-[12rem] flex-1 space-y-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`source-default-${id}`}
+                              >
+                                {t('collectibles.sourceOps.defaultReason')}
+                              </label>
+                              <Input
+                                id={`source-default-${id}`}
+                                value={sourceDefaultReason[id] ?? ''}
+                                onChange={event =>
+                                  setSourceDefaultReason(prev => ({
+                                    ...prev,
+                                    [id]: event.target.value,
+                                  }))
+                                }
+                                placeholder={t('collectibles.sourceOps.defaultReasonPlaceholder')}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => void handleDefaultSourceDeposit(deposit)}
+                              disabled={sourceActingId === id || !sourceDefaultReason[id]?.trim()}
+                            >
+                              {sourceActingId === id ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : null}
+                              {t('collectibles.sourceOps.markDefaulted')}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {isExpanded ? (
+                        <div className="space-y-3 border-t pt-3">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {t('collectibles.sourceOps.firstSaleTitle')}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {t('collectibles.sourceOps.firstSaleSubtitle')}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-2 sm:col-span-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`first-sale-order-${id}`}
+                              >
+                                {t('collectibles.hubOps.orderId')}
+                              </label>
+                              <Input
+                                id={`first-sale-order-${id}`}
+                                value={firstSaleOrderID}
+                                onChange={event => setFirstSaleOrderID(event.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`first-sale-protection-${id}`}
+                              >
+                                {t('collectibles.sourceOps.protectionRefId')}
+                              </label>
+                              <Input
+                                id={`first-sale-protection-${id}`}
+                                value={firstSaleProtectionRef}
+                                onChange={event => setFirstSaleProtectionRef(event.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`first-sale-buyer-${id}`}
+                              >
+                                {t('collectibles.sourceOps.buyerPeerID')}
+                              </label>
+                              <Input
+                                id={`first-sale-buyer-${id}`}
+                                value={firstSaleBuyerPeerID}
+                                onChange={event => setFirstSaleBuyerPeerID(event.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`first-sale-price-${id}`}
+                              >
+                                {t('collectibles.sourceOps.priceAmount')}
+                              </label>
+                              <Input
+                                id={`first-sale-price-${id}`}
+                                value={firstSalePriceAmount}
+                                onChange={event => setFirstSalePriceAmount(event.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`first-sale-currency-${id}`}
+                              >
+                                {t('collectibles.sourceOps.currencyCode')}
+                              </label>
+                              <Input
+                                id={`first-sale-currency-${id}`}
+                                value={firstSaleCurrencyCode}
+                                onChange={event => setFirstSaleCurrencyCode(event.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label
+                                className="text-sm font-medium text-foreground"
+                                htmlFor={`first-sale-div-${id}`}
+                              >
+                                {t('collectibles.sourceOps.divisibility')}
+                              </label>
+                              <Input
+                                id={`first-sale-div-${id}`}
+                                type="number"
+                                min={0}
+                                value={firstSaleDivisibility}
+                                onChange={event => setFirstSaleDivisibility(event.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => void handleRecordFirstSale(id)}
+                            disabled={
+                              sourceActingId === id ||
+                              !firstSaleOrderID.trim() ||
+                              !firstSaleProtectionRef.trim() ||
+                              !firstSaleBuyerPeerID.trim() ||
+                              !firstSalePriceAmount.trim() ||
+                              !firstSaleCurrencyCode.trim()
+                            }
+                          >
+                            {sourceActingId === id ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {t('collectibles.sourceOps.recordFirstSale')}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
         </div>
 
         {failedReleases.length > 0 ? (

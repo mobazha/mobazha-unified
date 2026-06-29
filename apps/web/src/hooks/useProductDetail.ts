@@ -22,9 +22,18 @@ import {
   parseArtListingSpecs,
   ART_LISTING_UNIQUE_EDITION,
   isCollectibleHubNftListing,
+  hasAuthoritativeCollectibleTitleMetadata,
+  parseCollectibleListingMetadata,
+  resolveCollectibleTitleNetworkLabel,
+  filterPublicProductDisplayTags,
+  resolveRelatedListingsScopeTag,
   useFeature,
   type ArtListingSpecRow,
 } from '@mobazha/core';
+import {
+  isCollectibleDemoCardImageUrl,
+  resolveCollectibleListingImageUrl,
+} from '@mobazha/core/curation/collectibleMarketplace';
 import { useGuestCartStore } from '@mobazha/core/stores';
 import { isOutpostMode } from '@mobazha/core/config/env';
 import { useHaptic } from '@/lib/platform';
@@ -92,6 +101,7 @@ export interface UseProductDetailReturn {
 
   // Derived
   imageUrls: string[];
+  usesDemoCardArt: boolean;
   priceInfo: { price: number; currency: string; formattedPrice: string; pairedPrice: string };
   compareAtPrice: number | null;
   stock: number;
@@ -104,8 +114,12 @@ export interface UseProductDetailReturn {
   vendorPeerID: string | undefined;
   acceptedCurrencies: string[];
   tags: string[];
+  relatedListingsScopeTag: string | undefined;
   category: string;
   isRwaToken: boolean;
+  isCollectibleTitleListing: boolean;
+  collectibleListingMeta: ReturnType<typeof parseCollectibleListingMetadata> | null;
+  collectibleTitleNetworkLabel: string | undefined;
   rwaTradeMode: string | undefined;
   rwaEscrowTimeoutSeconds: number;
   paymentAvailable: boolean;
@@ -351,11 +365,22 @@ export function useProductDetail({
 
   // Derived values
   const imageUrls = useMemo(() => {
-    if (!product?.item?.images) return [];
-    return product.item.images
-      .map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
-      .filter((url): url is string => !!url);
-  }, [product]);
+    const fromListing =
+      product?.item?.images
+        ?.map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
+        .map(url => resolveCollectibleListingImageUrl(slug, url))
+        .filter((url): url is string => !!url) ?? [];
+
+    if (fromListing.length > 0) return fromListing;
+
+    const fallback = resolveCollectibleListingImageUrl(slug, undefined);
+    return fallback ? [fallback] : [];
+  }, [product, slug]);
+
+  const usesDemoCardArt = useMemo(
+    () => imageUrls.some(url => isCollectibleDemoCardImageUrl(url)),
+    [imageUrls]
+  );
 
   const priceInfo = useMemo(() => {
     if (!product)
@@ -387,7 +412,12 @@ export function useProductDetail({
       ? [product.metadata.pricingCurrency.code]
       : []
     : product?.metadata?.acceptedCurrencies || [];
-  const tags = product?.item.tags || [];
+  const rawTags = product?.item.tags || [];
+  const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
+  const relatedListingsScopeTag = useMemo(
+    () => resolveRelatedListingsScopeTag(rawTags),
+    [rawTags]
+  );
   const category = product?.item.productType || '';
   const isUniquePiece = useMemo(
     () => isUniquePieceListing(product?.item.tags),
@@ -412,6 +442,25 @@ export function useProductDetail({
   } = usePaymentMethods(vendorPeerID);
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
+  const isCollectibleTitleListing =
+    collectiblesHubEnabled && hasAuthoritativeCollectibleTitleMetadata(product);
+  const collectibleListingMeta = useMemo(
+    () => (product && isCollectibleTitleListing ? parseCollectibleListingMetadata(product) : null),
+    [product, isCollectibleTitleListing]
+  );
+  const collectibleTitleNetworkLabel = useMemo(
+    () =>
+      isCollectibleTitleListing
+        ? resolveCollectibleTitleNetworkLabel(product?.item?.blockchain)
+        : undefined,
+    [isCollectibleTitleListing, product?.item?.blockchain]
+  );
+
+  useEffect(() => {
+    if (isCollectibleTitleListing) {
+      setQuantity(1);
+    }
+  }, [isCollectibleTitleListing, product?.slug]);
   const paymentAvailable =
     isOutpostMode() ||
     paymentMethodsLoading ||
@@ -553,7 +602,7 @@ export function useProductDetail({
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
-    if (isRwaToken) return;
+    if (isRwaToken || isCollectibleTitleListing) return;
 
     const thumbnail = selectedSku?.images?.[0] ??
       product.item?.images?.[0] ?? {
@@ -599,11 +648,14 @@ export function useProductDetail({
     openCartDrawer,
     haptic,
     isRwaToken,
+    isCollectibleTitleListing,
   ]);
 
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
-    if (isRwaToken) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN' && !isCollectibleTitleListing) return;
+
+    const checkoutQuantity = isCollectibleTitleListing ? 1 : quantity;
 
     // Outpost mode: add to guest cart and navigate to guest checkout
     if (isOutpostMode()) {
@@ -632,7 +684,7 @@ export function useProductDetail({
       addGuestCartItem({
         slug: product.slug,
         listingHash,
-        quantity,
+        quantity: checkoutQuantity,
         options,
         title: product.item?.title || product.slug,
         price: { amount: effectivePrice, currency, divisibility },
@@ -649,7 +701,7 @@ export function useProductDetail({
     const checkoutParams = new URLSearchParams({
       slug: product.slug,
       peerID: product.vendorID.peerID,
-      quantity: quantity.toString(),
+      quantity: checkoutQuantity.toString(),
     });
 
     if (hasVariants && Object.keys(selectedOptions).length > 0) {
@@ -674,7 +726,7 @@ export function useProductDetail({
     onClose,
     router,
     addGuestCartItem,
-    isRwaToken,
+    isCollectibleTitleListing,
   ]);
 
   const handleCopyLink = useCallback(async () => {
@@ -710,6 +762,7 @@ export function useProductDetail({
     ratingsLoading,
     error,
     imageUrls,
+    usesDemoCardArt,
     priceInfo: effectivePriceInfo,
     compareAtPrice,
     stock: effectiveStock,
@@ -722,6 +775,7 @@ export function useProductDetail({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    relatedListingsScopeTag,
     category,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
@@ -730,6 +784,9 @@ export function useProductDetail({
     authenticityCertificateUrl,
     artListingSpecs,
     isRwaToken,
+    isCollectibleTitleListing,
+    collectibleListingMeta,
+    collectibleTitleNetworkLabel,
     hasVariants,
     selectedOptions,
     selectedSku,
