@@ -6,3 +6,4 @@ ea34403dcb9453a1afae6a613dd8c0ba8bc05935:packages/core/config/appkit.ts:generic-
 42b69d50fd229b02c8c52161267d82a14aca8c36:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
 cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:108
 cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:115
+44853351f91352c79a642a78837ecfbe7a52c6f4:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
