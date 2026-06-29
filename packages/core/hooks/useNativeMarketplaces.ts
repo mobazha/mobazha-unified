@@ -144,11 +144,15 @@ export function useOperatorMarketplace(marketplaceId?: string) {
 
   const counts = useMemo(
     () => ({
+      applied: stores.filter(store => store.status === 'applied').length,
+      invited: stores.filter(store => store.status === 'invited').length,
+      approved: stores.filter(store => store.status === 'approved').length,
+      rejected: stores.filter(store => store.status === 'rejected').length,
+      suspended: stores.filter(store => store.status === 'suspended').length,
       waiting: stores.filter(
         store =>
           store.status === 'invited' || store.status === 'accepted' || store.status === 'applied'
       ).length,
-      approved: stores.filter(store => store.status === 'approved').length,
     }),
     [stores]
   );
@@ -229,13 +233,14 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   const reviewSeller = useCallback(
     async (
       store: MarketplaceStoreMembership,
-      status: Extract<MarketplaceStoreStatus, 'approved' | 'rejected' | 'suspended'>
+      status: Extract<MarketplaceStoreStatus, 'approved' | 'rejected' | 'suspended'>,
+      reason?: string
     ) => {
       if (!marketplaceId) return;
       const actionMarketplaceId = marketplaceId;
       setWorking(`${status}:${store.peerID}`);
       try {
-        await updateMarketplaceSeller(actionMarketplaceId, store.peerID, { status });
+        await updateMarketplaceSeller(actionMarketplaceId, store.peerID, { status, reason });
         if (marketplaceIdRef.current === actionMarketplaceId) {
           await refresh();
         }

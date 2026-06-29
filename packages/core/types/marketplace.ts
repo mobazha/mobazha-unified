@@ -109,8 +109,10 @@ export interface MarketplaceStoreMembership {
   userID?: string;
   peerID: string;
   status: MarketplaceStoreStatus;
+  decisionReason?: string;
   isVisible: boolean;
   productGroupIDs: number[];
+  productGroups: MarketplaceSellerProductGroup[];
   invitedAt?: string;
   appliedAt?: string;
   acceptedAt?: string;
@@ -118,6 +120,13 @@ export interface MarketplaceStoreMembership {
   reviewedBy?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface MarketplaceSellerProductGroup {
+  id: number;
+  name: string;
+  description?: string;
+  itemCount: number;
 }
 
 export interface InviteMarketplaceSellerRequest {
@@ -128,6 +137,7 @@ export interface UpdateMarketplaceSellerRequest {
   status?: Extract<MarketplaceStoreStatus, 'approved' | 'rejected' | 'suspended'>;
   /** Request body field; response uses `isVisible` on MarketplaceStoreMembership. */
   visible?: boolean;
+  reason?: string;
 }
 
 export interface MarketplaceMembershipMarketplaceSummary {
