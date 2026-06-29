@@ -1,5 +1,6 @@
-import { buildProductHref, buildProductOgImageHref } from '@mobazha/core';
+import { buildProductHref, buildProductOgImageHref } from '@mobazha/core/utils/productUrl';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
+import { resolveSsrListingVendorPeer } from '@/lib/ssrSearchCatalog';
 
 const API_BASE = SSR_API_BASE;
 
@@ -36,8 +37,10 @@ export async function fetchSsrProduct(
   peerID?: string
 ): Promise<SsrProductData | null> {
   try {
-    const path = peerID
-      ? `${API_BASE}/v1/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}?usecache=true`
+    const resolvedPeerID =
+      peerID?.trim() || (await resolveSsrListingVendorPeer(slug)) || undefined;
+    const path = resolvedPeerID
+      ? `${API_BASE}/v1/listings/${encodeURIComponent(resolvedPeerID)}/${encodeURIComponent(slug)}?usecache=true`
       : `${API_BASE}/v1/listings/${encodeURIComponent(slug)}`;
     const res = await fetch(path, { next: { revalidate: 300 } });
     if (!res.ok) return null;

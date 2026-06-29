@@ -98,10 +98,10 @@ export function useModerators(options: UseModeratorsOptions = {}): UseModerators
   }, [limit, vendorPeerID, verified]);
 
   useEffect(() => {
-    if (autoFetch) {
+    if (autoFetch && vendorPeerID) {
       fetchModerators();
     }
-  }, [autoFetch, fetchModerators]);
+  }, [autoFetch, fetchModerators, vendorPeerID]);
 
   return {
     moderators,

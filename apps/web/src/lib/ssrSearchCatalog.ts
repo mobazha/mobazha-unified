@@ -1,4 +1,5 @@
-import { SEARCH_API } from '@mobazha/core';
+import { SEARCH_API } from '@mobazha/core/config/apiPaths';
+import { slugToSearchQuery } from '@mobazha/core/utils/productUrl';
 
 import { SSR_SEARCH_BASE } from './ssrSearchBase';
 
@@ -49,6 +50,37 @@ export function parseSearchListingPage(json: unknown): {
   const items = payload?.results?.results ?? [];
   const hasMore = payload?.results?.morePages ?? payload?.morePages ?? false;
   return { items, hasMore };
+}
+
+/** Resolve vendor peerID for SSR product metadata when the URL omits ?peerID=. */
+export async function resolveSsrListingVendorPeer(slug: string): Promise<string | undefined> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return undefined;
+
+  const params = new URLSearchParams({
+    q: slugToSearchQuery(normalizedSlug),
+    p: '1',
+    pageSize: '20',
+    sortBy: 'relevance',
+    browse: 'all',
+  });
+
+  try {
+    const res = await fetch(`${SSR_SEARCH_BASE}${SEARCH_API.SEARCH_LISTINGS}?${params}`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return undefined;
+
+    const { items } = parseSearchListingPage(await res.json());
+    const match = items.find(item => item.data?.slug === normalizedSlug);
+    return (
+      match?.relationships?.vendor?.data?.peerID?.trim() ||
+      match?.data?.vendorPeerID?.trim() ||
+      undefined
+    );
+  } catch {
+    return undefined;
+  }
 }
 
 /** Paginated public search catalog for hosted-mode sitemap generation. */
