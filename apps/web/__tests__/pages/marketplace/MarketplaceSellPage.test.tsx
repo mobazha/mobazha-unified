@@ -52,7 +52,7 @@ vi.mock('@mobazha/core', async importOriginal => {
       open: 'marketplace.enums.catalogMode.open',
       curated: 'marketplace.enums.catalogMode.curated',
     },
-    isCollectibleMarketplaceVertical: () => false,
+    isCollectibleMarketplaceVertical: (vertical?: string) => vertical === 'collectibles',
   };
 });
 
@@ -325,6 +325,89 @@ describe('MarketplaceSellPage', () => {
 
     expect(screen.getByText('marketplace.sell.inviteOnlyPolicy')).toBeInTheDocument();
     expect(screen.queryByTestId('sell-submit-application')).toBeNull();
+  });
+
+  it('shows rejected invite-only admission title, market context, and no duplicated next-step copy', () => {
+    mockSellHook({
+      marketplace: {
+        ...baseMarketplace,
+        joinMode: 'invite',
+        vertical: 'collectibles',
+        description: 'Invite-only marketplace for verified stores',
+      },
+      application: {
+        hasApplication: true,
+        productGroupIDs: [1],
+        autoApproved: false,
+        membership: {
+          status: 'rejected',
+          decisionReason: 'Need stronger profile',
+          unreadReviewCount: 0,
+          marketplaceID: 'mp-1',
+        },
+      },
+    });
+
+    render(<MarketplaceSellPage />);
+
+    expect(screen.getAllByText('marketplace.sell.pageTitleRejected').length).toBeGreaterThanOrEqual(
+      2
+    );
+    expect(screen.getByTestId('sell-market-description')).toHaveTextContent(
+      'Invite-only marketplace for verified stores'
+    );
+    expect(
+      screen.getByRole('link', {
+        name: 'marketplace.sell.viewMarketplace',
+      })
+    ).toHaveAttribute('href', '/marketplace/test-market');
+    expect(screen.queryByTestId('sell-submit-application')).toBeNull();
+    expect(screen.queryByText('marketplace.sell.nextStepInviteOnlyRejected')).toBeNull();
+    expect(
+      screen.getAllByText('marketplace.sell.collectibles.statusNextRejectedInviteOnly')
+    ).toHaveLength(1);
+  });
+
+  it('keeps apply title for self-serve initial state', () => {
+    mockSellHook({
+      application: null,
+      marketplace: {
+        ...baseMarketplace,
+        joinMode: 'approval',
+        sellerEntryMode: 'seller_self_serve',
+      },
+    });
+
+    render(<MarketplaceSellPage />);
+
+    expect(screen.getAllByText('marketplace.sell.title').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('marketplace.sell.subtitle')).toBeInTheDocument();
+  });
+
+  it('shows status-aware subtitle for applied state', () => {
+    mockSellHook({
+      application: {
+        hasApplication: true,
+        productGroupIDs: [1],
+        autoApproved: false,
+        membership: { status: 'applied', unreadReviewCount: 0 },
+      },
+    });
+
+    render(<MarketplaceSellPage />);
+
+    expect(screen.getByText('marketplace.sell.subtitleApplied')).toBeInTheDocument();
+  });
+
+  it('renders view marketplace link as single interactive element', () => {
+    mockSellHook();
+
+    render(<MarketplaceSellPage />);
+
+    const viewMarketplaceLink = screen.getByTestId('sell-view-marketplace-link');
+    expect(viewMarketplaceLink.tagName.toLowerCase()).toBe('a');
+    expect(viewMarketplaceLink).toHaveAttribute('href', '/marketplace/test-market');
+    expect(viewMarketplaceLink).toHaveTextContent('marketplace.sell.viewMarketplace');
   });
 
   it('does not expose submit when seller application failed to load and offers retry', async () => {

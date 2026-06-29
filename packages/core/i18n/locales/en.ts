@@ -3002,9 +3002,33 @@ export const en: TranslationResource = {
     sell: {
       backToMarketplace: 'Back to marketplace',
       title: 'Apply to sell',
+      pageTitleAdmissionStatus: 'Seller admission status',
+      pageTitleApplied: 'Seller application under review',
+      pageTitleApproved: 'Seller admission approved',
+      pageTitleRejected: 'Seller admission not approved',
+      pageTitleSuspended: 'Seller admission suspended',
+      pageTitleLeft: 'Seller application withdrawn',
       subtitle:
         'Submit your store to sell in this marketplace. Admission follows the marketplace policy shown below.',
+      subtitleAdmissionStatus:
+        'Check your current seller-admission status and follow the marketplace guidance below.',
+      subtitleApplied:
+        'Your seller application is under review. We will notify you when the marketplace has an update.',
+      subtitleApproved:
+        'Your seller admission is approved. You can now manage your listings for this marketplace.',
+      subtitleRejected:
+        'Your seller admission was not approved. Review feedback and follow the next-step guidance below.',
+      subtitleSuspended:
+        'Your seller admission is currently suspended. Follow marketplace guidance before applying again.',
+      subtitleLeft:
+        'You have withdrawn your seller application. Submit a new application when you are ready.',
       applyingTo: 'Applying to',
+      marketContextTitle: 'Marketplace for this seller admission',
+      marketContextInReview: 'Marketplace reviewing your seller admission',
+      marketVerticalLabel: 'Business category',
+      marketAdmissionLabel: 'Admission mode',
+      marketCatalogLabel: 'Catalog mode',
+      viewMarketplace: 'View marketplace',
       loginRequired: 'Sign in to apply as a seller in this marketplace.',
       selfServeNotAvailable:
         'This marketplace does not accept self-service seller applications. See the admission policy on the marketplace page.',
@@ -3047,6 +3071,16 @@ export const en: TranslationResource = {
       applicationSubmittedApproved: 'You are approved and can start selling in this marketplace.',
       autoApprovedMessage: 'Your application was approved automatically.',
       reapplyHint: 'You can update your product groups and submit a new application.',
+      nextStepInviteOnlyRejected:
+        'Next step: self-service reapplication is not available for this marketplace. Improve your store profile and contact the marketplace operator, or wait for a new invitation.',
+      nextStepSuspended:
+        'Next step: seller access is paused. Improve your store profile and wait for marketplace guidance before applying again.',
+      resultTitlePending: 'Seller admission in progress',
+      resultTitleApplied: 'Seller application submitted',
+      resultTitleApproved: 'Seller admission approved',
+      resultTitleRejected: 'Seller admission not approved',
+      resultTitleSuspended: 'Seller admission suspended',
+      resultTitleLeft: 'Seller application withdrawn',
       decisionReasonTitle: 'Review reason',
       decisionReasonMissing: 'No detailed reason was provided.',
       reviewUpdatesTitle: 'Review updates',
@@ -3125,6 +3159,8 @@ export const en: TranslationResource = {
           'Next: wait for curator review. You will be notified when there is an update.',
         statusNextRejected:
           'Next: review feedback, update your product groups, and submit a new application if allowed.',
+        statusNextRejectedInviteOnly:
+          'Next: self-service reapplication is not available for this marketplace. Improve your store profile and contact the marketplace operator, or wait for a new invitation.',
         statusNextSuspended:
           'Next: contact support or market operators — your seller access is paused.',
         statusNextDefault: 'Next: complete the steps above or check back for updates.',
