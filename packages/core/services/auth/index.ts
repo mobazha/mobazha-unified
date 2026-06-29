@@ -55,7 +55,10 @@ export {
   isTelegramUser,
   getCasdoorUserId,
   // Storefront cross-domain auth
+  appendStorefrontReturnToState,
+  buildStorefrontAuthRedirect,
   extractStorefrontReturn,
+  getStorefrontReturnUrl,
   isAllowedStorefrontReturn,
   // 类型
   type CasdoorUser,

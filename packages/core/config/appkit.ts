@@ -13,13 +13,28 @@ export const APPKIT_PROJECT_ID = '';
 
 // ============= Metadata =============
 
+const APPKIT_METADATA_FALLBACK_URL = 'https://mobazha.org';
+
+function resolveAppKitMetadataUrl(): string {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!siteUrl) {
+    return APPKIT_METADATA_FALLBACK_URL;
+  }
+  try {
+    new URL(siteUrl);
+    return siteUrl;
+  } catch {
+    return APPKIT_METADATA_FALLBACK_URL;
+  }
+}
+
 /**
  * 应用元数据
  */
 export const APPKIT_METADATA = {
   name: 'Mobazha',
   description: 'Mobazha - Where digital assets trade privately in communities',
-  url: 'https://mobazha.org',
+  url: resolveAppKitMetadataUrl(),
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
 

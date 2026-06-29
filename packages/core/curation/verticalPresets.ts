@@ -71,3 +71,11 @@ export function taxonomyForVertical(
   if (override?.length) return override;
   return presetForVertical(vertical).taxonomy;
 }
+
+const COLLECTIBLE_VERTICAL_IDS = new Set(['collectible', 'collectibles']);
+
+/** True when a public marketplace uses the collectible-card vertical preset. */
+export function isCollectibleMarketplaceVertical(vertical?: string | null): boolean {
+  if (!vertical?.trim()) return false;
+  return COLLECTIBLE_VERTICAL_IDS.has(vertical.trim().toLowerCase());
+}

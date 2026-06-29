@@ -14,10 +14,22 @@ import {
 import {
   getRuntimePaymentCapabilities,
   hasRuntimePaymentCapabilities,
-  supportsRuntimePaymentKind,
   supportsRuntimePaymentMethod,
   type RuntimeConfig,
 } from './runtimeConfig';
+import { isFiatPaymentVisible, isTronPaymentVisible } from './paymentMethodFeatureFlags';
+import {
+  isFiatAllowedByCheckoutPaymentPolicy,
+  normalizeCheckoutPaymentPolicy,
+  readCheckoutPaymentPolicyFromSession,
+  type CheckoutPaymentPolicy,
+} from './checkoutPaymentPolicy';
+
+export {
+  PAYMENT_METHOD_VISIBILITY,
+  isFiatPaymentVisible,
+  isTronPaymentVisible,
+} from './paymentMethodFeatureFlags';
 
 export interface RuntimePaymentDisplayMethod {
   id: string;
@@ -86,15 +98,6 @@ function isTransparentZecRuntimeCapability(token: { chain: string; id: string })
       method.id.trim().toUpperCase() === 'ZEC' &&
       method.addressMode?.trim().toLowerCase() === 'transparent'
   );
-}
-
-export function isTronPaymentVisible(): boolean {
-  if (!hasRuntimePaymentCapabilities()) return false;
-  return supportsRuntimePaymentMethod('TRX', 'crypto');
-}
-
-export function isFiatPaymentVisible(): boolean {
-  return supportsRuntimePaymentKind('fiat', false);
 }
 
 export function isTronPaymentCoin(coinOrChain: string): boolean {
@@ -188,19 +191,27 @@ const CHECKOUT_TOKEN_KEY = 'checkout_selected_token';
 const CHECKOUT_FIAT_KEY = 'checkout_selected_fiat_provider';
 
 /** Read + scrub stale checkout payment selections from sessionStorage. */
-export function syncCheckoutPaymentSessionStorage(): {
+export function syncCheckoutPaymentSessionStorage(options?: {
+  paymentPolicy?: CheckoutPaymentPolicy;
+}): {
   tokenId?: string;
   fiatProvider?: string;
   category: 'crypto' | 'fiat';
+  paymentPolicy: CheckoutPaymentPolicy;
 } {
   if (typeof window === 'undefined') {
-    return { category: 'crypto' };
+    return { category: 'crypto', paymentPolicy: 'all' };
   }
+
+  const paymentPolicy = normalizeCheckoutPaymentPolicy(
+    options?.paymentPolicy ?? readCheckoutPaymentPolicyFromSession()
+  );
+  const fiatAllowed = isFiatAllowedByCheckoutPaymentPolicy(paymentPolicy);
 
   const rawToken = sessionStorage.getItem(CHECKOUT_TOKEN_KEY);
   const rawFiat = sessionStorage.getItem(CHECKOUT_FIAT_KEY);
   const tokenId = sanitizeCheckoutTokenId(rawToken);
-  const fiatProvider = sanitizeCheckoutFiatProvider(rawFiat);
+  let fiatProvider = fiatAllowed ? sanitizeCheckoutFiatProvider(rawFiat) : undefined;
 
   if (rawToken && !tokenId) {
     sessionStorage.removeItem(CHECKOUT_TOKEN_KEY);
@@ -208,11 +219,16 @@ export function syncCheckoutPaymentSessionStorage(): {
   if (rawFiat && !fiatProvider) {
     sessionStorage.removeItem(CHECKOUT_FIAT_KEY);
   }
+  if (!fiatAllowed && rawFiat) {
+    sessionStorage.removeItem(CHECKOUT_FIAT_KEY);
+    fiatProvider = undefined;
+  }
 
   return {
     tokenId,
     fiatProvider,
     category: fiatProvider ? 'fiat' : 'crypto',
+    paymentPolicy,
   };
 }
 

@@ -9,6 +9,7 @@ import type {
   CollectiblePrimarySale,
   CollectiblePrimarySaleReleaseRetryResult,
   CollectibleRedemption,
+  CollectibleSourceDeposit,
   CollectiblesPagedResult,
 } from '../../collectibles/types';
 
@@ -231,6 +232,144 @@ export async function recoverCollectiblePendingMints(body?: {
   );
 }
 
+export async function listMyCollectibleSourceDeposits(params?: {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<CollectiblesPagedResult<CollectibleSourceDeposit>> {
+  const query = buildQuery({
+    status: params?.status,
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 20,
+  });
+  return hostingGet<CollectiblesPagedResult<CollectibleSourceDeposit>>(
+    `${HOSTING_API.COLLECTIBLES_MY_SOURCE_DEPOSITS}${query}`
+  );
+}
+
+export async function submitMyCollectibleSourceDeposit(body: {
+  certNumber: string;
+  holderWallet: string;
+  grade?: string;
+  serial?: string;
+  photos?: string[];
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
+}): Promise<CollectibleSourceDeposit> {
+  return hostingPost<CollectibleSourceDeposit>(HOSTING_API.COLLECTIBLES_MY_SOURCE_DEPOSITS, body);
+}
+
+export async function shipMyCollectibleSourceDeposit(
+  id: string,
+  body: { trackingNo: string }
+): Promise<CollectibleSourceDeposit> {
+  return hostingPut<CollectibleSourceDeposit>(
+    HOSTING_API.COLLECTIBLES_MY_SOURCE_DEPOSIT_SHIP(id),
+    body
+  );
+}
+
+export async function approveCollectibleSourceDeposit(
+  id: string
+): Promise<CollectibleSourceDeposit> {
+  return hostingPut<CollectibleSourceDeposit>(
+    HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_APPROVE(id),
+    {}
+  );
+}
+
+export async function rejectCollectibleSourceDeposit(
+  id: string,
+  body: { reason: string }
+): Promise<CollectibleSourceDeposit> {
+  return hostingPut<CollectibleSourceDeposit>(
+    HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_REJECT(id),
+    body
+  );
+}
+
+export async function listCollectibleSourceDeposits(params?: {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<CollectiblesPagedResult<CollectibleSourceDeposit>> {
+  const query = buildQuery({
+    status: params?.status,
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 20,
+  });
+  return hostingGet<CollectiblesPagedResult<CollectibleSourceDeposit>>(
+    `${HOSTING_API.COLLECTIBLES_SOURCE_DEPOSITS}${query}`
+  );
+}
+
+export async function createCollectibleSourceDeposit(body: {
+  certNumber: string;
+  grade?: string;
+  serial?: string;
+  sellerPeerID: string;
+  holderWallet: string;
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
+  photos?: string[];
+}): Promise<CollectibleSourceDeposit> {
+  return hostingPost<CollectibleSourceDeposit>(HOSTING_API.COLLECTIBLES_SOURCE_DEPOSITS, body);
+}
+
+export async function mintCollectibleSourceDeposit(
+  id: string,
+  body?: { holder?: string; royaltyBps?: number }
+): Promise<CollectibleNFT> {
+  const result = await hostingPost<CollectibleNFT | CollectibleNFTProjection>(
+    HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_MINT(id),
+    body ?? {}
+  );
+  return normalizeCollectibleNFT(result);
+}
+
+export async function recordCollectibleSourceDepositFirstSale(
+  id: string,
+  body: {
+    orderID: string;
+    escrowID: string;
+    buyerPeerID: string;
+    priceAmount: string;
+    currencyCode: string;
+    divisibility?: number;
+  }
+): Promise<CollectibleSourceDeposit> {
+  return hostingPost<CollectibleSourceDeposit>(
+    HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_FIRST_SALE(id),
+    body
+  );
+}
+
+export async function shipCollectibleSourceDeposit(
+  id: string,
+  body: { trackingNo: string }
+): Promise<CollectibleSourceDeposit> {
+  return hostingPut<CollectibleSourceDeposit>(
+    HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_SHIP(id),
+    body
+  );
+}
+
+export async function settleCollectibleSourceDeposit(
+  id: string
+): Promise<CollectibleSourceDeposit> {
+  return hostingPut<CollectibleSourceDeposit>(HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_SETTLE(id));
+}
+
+export async function defaultCollectibleSourceDeposit(
+  id: string,
+  body: { defaultReason: string }
+): Promise<CollectibleSourceDeposit> {
+  return hostingPut<CollectibleSourceDeposit>(
+    HOSTING_API.COLLECTIBLES_SOURCE_DEPOSIT_DEFAULT(id),
+    body
+  );
+}
+
 export async function getCollectiblePrimarySaleByOrder(
   orderId: string
 ): Promise<CollectiblePrimarySale | null> {
@@ -276,4 +415,16 @@ export const collectiblesApi = {
   listPrimarySaleReleaseQueue: listCollectiblePrimarySaleReleaseQueue,
   retryPrimarySaleReleases: retryCollectiblePrimarySaleReleases,
   getPrimarySaleByOrder: getCollectiblePrimarySaleByOrder,
+  listSourceDeposits: listCollectibleSourceDeposits,
+  listMySourceDeposits: listMyCollectibleSourceDeposits,
+  submitMySourceDeposit: submitMyCollectibleSourceDeposit,
+  shipMySourceDeposit: shipMyCollectibleSourceDeposit,
+  approveSourceDeposit: approveCollectibleSourceDeposit,
+  rejectSourceDeposit: rejectCollectibleSourceDeposit,
+  createSourceDeposit: createCollectibleSourceDeposit,
+  mintSourceDeposit: mintCollectibleSourceDeposit,
+  recordSourceDepositFirstSale: recordCollectibleSourceDepositFirstSale,
+  shipSourceDeposit: shipCollectibleSourceDeposit,
+  settleSourceDeposit: settleCollectibleSourceDeposit,
+  defaultSourceDeposit: defaultCollectibleSourceDeposit,
 };

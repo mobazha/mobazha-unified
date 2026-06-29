@@ -76,6 +76,8 @@ export interface ListingFormData {
   minQuantity?: number;
   maxQuantity?: number;
   acceptedCurrencies?: string[];
+  /** Source-deposit listing mode — locks authoritative collectible metadata. */
+  sourceDepositID?: string;
 
   // 媒体
   images: Image[];
@@ -395,7 +397,8 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         if (!formData.blockchain) {
           newErrors.blockchain = 'Blockchain is required';
         }
-        if (!formData.cryptoListingCurrencyCode) {
+        const isSourceCustodyListing = Boolean(formData.sourceDepositID?.trim());
+        if (!isSourceCustodyListing && !formData.cryptoListingCurrencyCode) {
           newErrors.cryptoListingCurrencyCode = 'Token selection is required';
         }
         if (!formData.acceptedCurrencies || formData.acceptedCurrencies.length === 0) {
@@ -539,7 +542,9 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     // RWA Token 特定字段
     if (formData.contractType === 'RWA_TOKEN') {
       (data.item as Record<string, unknown>).blockchain = formData.blockchain;
-      (data.item as Record<string, unknown>).tokenAddress = formData.tokenAddress;
+      if (formData.tokenAddress?.trim()) {
+        (data.item as Record<string, unknown>).tokenAddress = formData.tokenAddress.trim();
+      }
       (data.item as Record<string, unknown>).tokenStandard = formData.tokenStandard || 'RWA';
       (data.item as Record<string, unknown>).cryptoListingCurrencyCode =
         formData.cryptoListingCurrencyCode;

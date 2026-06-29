@@ -8,6 +8,7 @@
 // 导出环境配置
 export * from './env';
 export * from './runtimeConfig';
+export * from './curationHomePath';
 
 // 导出测试账号配置
 export * from './testAccounts';
@@ -20,6 +21,7 @@ export * from './routeConfig';
 export * from './productTypes';
 export * from './guestCheckoutCoins';
 export * from './paymentMethodVisibility';
+export * from './checkoutPaymentPolicy';
 export * from './exchangeUsdtPaymentGuide';
 export * from './aiAdminPaths';
 
