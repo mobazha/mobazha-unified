@@ -17,7 +17,7 @@ function wrapData<T>(data: T): string {
   return JSON.stringify({ data });
 }
 
-const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
+export const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const MOCK_BUYER_PEER_ID = 'QmBuyerPeer1234567890abcdefghijk';
 const NOW = new Date().toISOString();
 const DAY_AGO = new Date(Date.now() - 86400000).toISOString();
@@ -399,6 +399,123 @@ const mockOrderDetail = {
     afterSaleWindowDays: 7,
   },
 };
+
+const mockOperatorMarketplace = {
+  id: 'mp1',
+  name: 'Crypto Collectibles',
+  slug: 'crypto-collectibles',
+  status: 'published',
+  description: 'Curated collectibles marketplace',
+  ownerUserID: 'owner-1',
+  joinMode: 'approval',
+  catalogMode: 'curated',
+  discoverability: 'public',
+  sellerEntryMode: 'operator_invited',
+  vertical: 'collectibles',
+  plan: 'free',
+  domains: [
+    {
+      host: 'crypto.example.test',
+      kind: 'subdomain',
+      verificationStatus: 'verified',
+      isPrimary: true,
+    },
+  ],
+  createdAt: NOW,
+  updatedAt: NOW,
+};
+
+const mockMarketplaceSellerMembership = {
+  id: 1,
+  tenantID: 'tenant-visual',
+  marketplaceID: 'mp1',
+  userID: 'user-visual',
+  peerID: MOCK_PEER_ID,
+  status: 'invited',
+  isVisible: false,
+  invitedAt: DAY_AGO,
+};
+
+const mockMarketplaceMembershipEntry = {
+  membership: mockMarketplaceSellerMembership,
+  marketplace: {
+    id: mockOperatorMarketplace.id,
+    name: mockOperatorMarketplace.name,
+    slug: mockOperatorMarketplace.slug,
+    status: mockOperatorMarketplace.status,
+    description: mockOperatorMarketplace.description,
+  },
+};
+
+/**
+ * Mock native marketplace operator + store invitation APIs.
+ */
+export async function mockMarketplaceOperatorAPI(page: Page): Promise<void> {
+  await page.route('**/platform/v1/marketplaces/mine', (route, request) => {
+    if (request.method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([mockOperatorMarketplace]),
+    });
+  });
+
+  await page.route('**/platform/v1/marketplaces/mp1', (route, request) => {
+    if (request.method() === 'GET') {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapData(mockOperatorMarketplace),
+      });
+      return;
+    }
+    return route.fallback();
+  });
+
+  await page.route('**/platform/v1/marketplaces/mp1/sellers', (route, request) => {
+    if (request.method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([
+        mockMarketplaceSellerMembership,
+        {
+          ...mockMarketplaceSellerMembership,
+          id: 2,
+          peerID: 'QmApprovedSeller1',
+          status: 'approved',
+          isVisible: true,
+          acceptedAt: DAY_AGO,
+        },
+      ]),
+    });
+  });
+
+  await page.route('**/platform/v1/marketplace-memberships/mine', (route, request) => {
+    if (request.method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([mockMarketplaceMembershipEntry]),
+    });
+  });
+
+  await page.route(
+    `**/platform/v1/marketplaces/mp1/sellers/${encodeURIComponent(MOCK_PEER_ID)}/accept`,
+    (route, request) => {
+      if (request.method() !== 'POST') return route.fallback();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapData({
+          ...mockMarketplaceSellerMembership,
+          status: 'accepted',
+          acceptedAt: NOW,
+        }),
+      });
+    }
+  );
+}
 
 /**
  * Set up route mocking for orders pages.

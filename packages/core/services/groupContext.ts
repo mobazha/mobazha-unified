@@ -7,7 +7,9 @@
  */
 
 import type { GroupContext, GroupPlatform } from '../types/access';
-import { getEnvConfig } from '../config/env';
+import { HOSTING_API } from '../config/apiPaths';
+import { getAuthHeaders, getHostingUrl } from './api/config';
+import { post } from './api/client';
 
 // 调试日志（仅在开发环境输出）
 const debug = (...args: unknown[]) => {
@@ -22,6 +24,64 @@ const USER_PEER_ID_KEY = 'user_peer_id';
 
 // 当前用户的 peerID（内存缓存）
 let currentUserPeerID: string | null = null;
+
+type VerifyMemberResponse = {
+  isValid?: boolean;
+  isMember?: boolean;
+  group?: { chatTitle?: string; marketplaceID?: string };
+  chatTitle?: string;
+  marketplaceID?: string;
+};
+
+function readTelegramPlatformUserId(
+  initData?: TelegramWebApp['initDataUnsafe']
+): string | undefined {
+  const userId = initData?.user?.id;
+  return userId != null ? String(userId) : undefined;
+}
+
+function withPlatformUserId<T extends GroupContext>(context: T, platformUserId?: string): T {
+  if (!platformUserId) {
+    return context;
+  }
+  return { ...context, platformUserId };
+}
+
+function buildVerifyMemberBody(
+  platform: string,
+  platformUserId: string
+): { telegramUserId: string } | { discordUserId: string } | null {
+  if (platform === 'telegram') {
+    return { telegramUserId: platformUserId };
+  }
+  if (platform === 'discord') {
+    return { discordUserId: platformUserId };
+  }
+  return null;
+}
+
+function parseVerifyMemberResponse(data: VerifyMemberResponse): {
+  verified: boolean;
+  chatTitle?: string;
+  marketplaceID?: string;
+} {
+  return {
+    verified: Boolean(data.isValid || data.isMember),
+    chatTitle: data.group?.chatTitle ?? data.chatTitle,
+    marketplaceID: data.group?.marketplaceID ?? data.marketplaceID,
+  };
+}
+
+function getHostingRequestHeaders(context?: GroupContext | null): Record<string, string> {
+  return {
+    ...getAuthHeaders(),
+    ...getGroupHeaders(context),
+  };
+}
+
+function resolvePlatformUserId(platformUserId?: string | null): string | null {
+  return platformUserId && platformUserId.length > 0 ? platformUserId : null;
+}
 
 /**
  * 检测当前群组上下文
@@ -44,30 +104,37 @@ export async function detectGroupContext(): Promise<GroupContext | null> {
 
     if (telegramWebApp) {
       const initData = telegramWebApp.initDataUnsafe;
+      const telegramPlatformUserId = readTelegramPlatformUserId(initData);
 
       // 从 start_param 检测群组 ID
       // 格式: start_param=group_-123456789
       const startParam = initData?.start_param;
       if (startParam && startParam.startsWith('group_')) {
         const chatId = startParam.replace('group_', '');
-        return {
-          platform: 'telegram',
-          chatId,
-          needsVerification: true,
-        };
+        return withPlatformUserId(
+          {
+            platform: 'telegram',
+            chatId,
+            needsVerification: true,
+          },
+          telegramPlatformUserId
+        );
       }
 
       // 从 chat 对象检测（群组内直接打开时）
       const chat = initData?.chat;
       if (chat && chat.id) {
-        return {
-          platform: 'telegram',
-          chatId: String(chat.id),
-          chatType: chat.type,
-          chatTitle: chat.title,
-          chatUsername: chat.username,
-          needsVerification: false, // 直接从 WebApp 获取的不需要额外验证
-        };
+        return withPlatformUserId(
+          {
+            platform: 'telegram',
+            chatId: String(chat.id),
+            chatType: chat.type,
+            chatTitle: chat.title,
+            chatUsername: chat.username,
+            needsVerification: false, // 直接从 WebApp 获取的不需要额外验证
+          },
+          telegramPlatformUserId
+        );
       }
     }
 
@@ -77,11 +144,22 @@ export async function detectGroupContext(): Promise<GroupContext | null> {
     const platformParam = (urlParams.get('platform') as GroupPlatform) || 'telegram';
 
     if (groupParam) {
-      return {
-        platform: platformParam,
-        chatId: groupParam,
-        needsVerification: true,
-      };
+      const telegramPlatformUserId =
+        platformParam === 'telegram'
+          ? readTelegramPlatformUserId(
+              (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp
+                ?.initDataUnsafe
+            )
+          : undefined;
+
+      return withPlatformUserId(
+        {
+          platform: platformParam,
+          chatId: groupParam,
+          needsVerification: true,
+        },
+        telegramPlatformUserId
+      );
     }
 
     // 方法3: 从本地存储恢复
@@ -249,35 +327,37 @@ export async function setGroupContextFromDeepLink(params: {
 }
 
 /**
+ * Resolve community marketplace verify-member path for a platform.
+ */
+function communityMarketplaceVerifyPath(platform: string, chatId: string): string {
+  return HOSTING_API.COMMUNITY_MARKETPLACES_VERIFY_MEMBER(platform, chatId);
+}
+
+/**
  * 验证群组成员资格
  * 通过服务端 API 验证用户是否是指定群组的成员
  */
 export async function verifyGroupMembership(
   platform: string,
-  chatId: string
-): Promise<{ verified: boolean; chatTitle?: string }> {
+  chatId: string,
+  platformUserId?: string | null
+): Promise<{ verified: boolean; chatTitle?: string; marketplaceID?: string }> {
+  const resolvedUserId = resolvePlatformUserId(platformUserId);
+  const body = resolvedUserId ? buildVerifyMemberBody(platform, resolvedUserId) : null;
+
+  if (!body) {
+    debug('Verify skipped: platform user ID unavailable');
+    return { verified: false };
+  }
+
   try {
-    const baseUrl = getEnvConfig().api.baseUrl;
-    const response = await fetch(
-      `${baseUrl}/api/v1/group-marketplace/${platform}/${chatId}/verify-member`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getGroupHeaders(),
-        },
-      }
+    const data = await post<VerifyMemberResponse>(
+      `${getHostingUrl()}${communityMarketplaceVerifyPath(platform, chatId)}`,
+      body,
+      getHostingRequestHeaders()
     );
 
-    if (!response.ok) {
-      return { verified: false };
-    }
-
-    const data = await response.json();
-    return {
-      verified: data.isMember || false,
-      chatTitle: data.chatTitle,
-    };
+    return parseVerifyMemberResponse(data);
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {
       console.error('[GroupContext] Verify error:', error);
@@ -305,23 +385,37 @@ export async function initializeGroupMarketplace(): Promise<GroupContext | null>
 
     // 3. 如果需要验证，进行服务端验证
     if (context.needsVerification) {
-      const result = await verifyGroupMembership(context.platform, context.chatId);
+      if (!context.platformUserId) {
+        debug('Membership verification unavailable: missing platform user ID');
+        clearGroupContext();
+        return null;
+      }
+
+      const result = await verifyGroupMembership(
+        context.platform,
+        context.chatId,
+        context.platformUserId
+      );
       if (!result.verified) {
         debug('Membership verification failed');
         clearGroupContext();
         return null;
       }
 
-      // 更新群组标题（如果有）
-      if (result.chatTitle) {
-        context.chatTitle = result.chatTitle;
+      if (result.chatTitle || result.marketplaceID) {
+        if (result.chatTitle) context.chatTitle = result.chatTitle;
+        if (result.marketplaceID) context.marketplaceID = result.marketplaceID;
         context.needsVerification = false;
         await saveGroupContext(context);
       }
     }
 
-    // 4. 注册群组集市
-    await registerGroupMarketplace(context);
+    // 4. 注册 Channel 并获取独立的 Marketplace ID。
+    const marketplaceID = await registerGroupMarketplace(context);
+    if (marketplaceID) {
+      context.marketplaceID = marketplaceID;
+      await saveGroupContext(context);
+    }
 
     debug('Initialized:', context.platform, context.chatId);
     return context;
@@ -336,38 +430,26 @@ export async function initializeGroupMarketplace(): Promise<GroupContext | null>
 /**
  * 注册群组集市到服务端
  */
-async function registerGroupMarketplace(context: GroupContext): Promise<boolean> {
+async function registerGroupMarketplace(context: GroupContext): Promise<string | null> {
   try {
-    const baseUrl = getEnvConfig().api.baseUrl;
-    const response = await fetch(`${baseUrl}/api/v1/group-marketplace/${context.platform}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getGroupHeaders(context),
-      },
-      body: JSON.stringify({
+    const data = await post<{ id?: string }>(
+      `${getHostingUrl()}${HOSTING_API.COMMUNITY_MARKETPLACES_BY_PLATFORM(context.platform)}`,
+      {
         chatID: context.chatId,
-        chatType: context.chatType,
-        chatTitle: context.chatTitle,
-        chatUsername: context.chatUsername || '',
-      }),
-    });
-
-    if (!response.ok) {
-      if (process.env.NODE_ENV !== 'production') {
-        const error = await response.text();
-        console.error('[GroupContext] Register failed:', error);
-      }
-      return false;
-    }
+        chatType: context.chatType ?? '',
+        chatTitle: context.chatTitle ?? '',
+        chatUsername: context.chatUsername ?? '',
+      },
+      getHostingRequestHeaders(context)
+    );
 
     debug('Registered:', context.chatTitle || context.chatId);
-    return true;
+    return data.id ?? null;
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {
       console.error('[GroupContext] Register error:', error);
     }
-    return false;
+    return null;
   }
 }
 

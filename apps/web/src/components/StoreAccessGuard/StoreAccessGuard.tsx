@@ -36,7 +36,9 @@ export function StoreAccessGuard({
   const { t } = useI18n();
   const { profile, isAuthenticated } = useUserStore();
   const requestorPeerID = profile?.peerID || '';
-  const { context: groupContext } = useGroupContext();
+  const { context: groupContext, loading: groupContextLoading } = useGroupContext({
+    autoInit: true,
+  });
 
   const {
     checkAccess,
@@ -63,7 +65,7 @@ export function StoreAccessGuard({
         setChecking(false);
         setAccessCheck({
           hasFullAccess: true,
-          hasGroupAccess: false,
+          hasMarketplaceAccess: false,
           accessType: 'whitelist',
           needsRequest: false,
         });
@@ -76,10 +78,15 @@ export function StoreAccessGuard({
         // 默认允许访问，实际权限由后端控制
         setAccessCheck({
           hasFullAccess: true,
-          hasGroupAccess: false,
+          hasMarketplaceAccess: false,
           accessType: 'whitelist',
           needsRequest: false,
         });
+        return;
+      }
+
+      // 等待群组上下文初始化完成，确保 marketplaceID 已写入后再检查
+      if (groupContextLoading) {
         return;
       }
 
@@ -92,7 +99,7 @@ export function StoreAccessGuard({
         // 出错时默认允许访问
         setAccessCheck({
           hasFullAccess: true,
-          hasGroupAccess: false,
+          hasMarketplaceAccess: false,
           accessType: 'whitelist',
           needsRequest: false,
         });
@@ -102,7 +109,15 @@ export function StoreAccessGuard({
     };
 
     doCheck();
-  }, [storePeerID, requestorPeerID, isAuthenticated, isOwnStore, checkAccess]);
+  }, [
+    storePeerID,
+    requestorPeerID,
+    isAuthenticated,
+    isOwnStore,
+    checkAccess,
+    groupContextLoading,
+    groupContext?.marketplaceID,
+  ]);
 
   // 提交访问申请
   const handleSubmitRequest = useCallback(async () => {
@@ -137,7 +152,7 @@ export function StoreAccessGuard({
   }
 
   // 有访问权限，渲染子组件
-  if (accessCheck?.hasFullAccess || accessCheck?.hasGroupAccess) {
+  if (accessCheck?.hasFullAccess || accessCheck?.hasMarketplaceAccess) {
     return <>{children}</>;
   }
 

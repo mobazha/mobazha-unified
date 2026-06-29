@@ -10,7 +10,8 @@ import type {
   InviteMarketplaceSellerRequest,
   MarketplaceCurationConfig,
   MarketplaceShareLink,
-  MarketplaceSellerWhitelistEntry,
+  MarketplaceStoreMembership,
+  MyMarketplaceMembershipEntry,
   NativeMarketplace,
   PublicGroupMarketplaceDetail,
   PublicGroupMarketplaceListResponse,
@@ -108,8 +109,8 @@ export async function updateMarketplace(
  */
 export async function deleteMarketplace(
   marketplaceId: string
-): Promise<{ deleted: boolean; id: string }> {
-  return hostingDel<{ deleted: boolean; id: string }>(HOSTING_API.MARKETPLACE(marketplaceId));
+): Promise<{ archived: boolean; id: string }> {
+  return hostingDel<{ archived: boolean; id: string }>(HOSTING_API.MARKETPLACE(marketplaceId));
 }
 
 /**
@@ -119,14 +120,18 @@ export async function getMyMarketplaces(): Promise<NativeMarketplace[]> {
   return hostingGet<NativeMarketplace[]>(HOSTING_API.MARKETPLACES_MINE);
 }
 
+export async function getMyMarketplaceMemberships(): Promise<MyMarketplaceMembershipEntry[]> {
+  return hostingGet<MyMarketplaceMembershipEntry[]>(HOSTING_API.MARKETPLACE_MEMBERSHIPS_MINE);
+}
+
 export async function getMarketplaceSellers(
   marketplaceId: string,
   params: { status?: string } = {}
-): Promise<MarketplaceSellerWhitelistEntry[]> {
+): Promise<MarketplaceStoreMembership[]> {
   const queryParams = new URLSearchParams();
   if (params.status) queryParams.set('status', params.status);
   const query = queryParams.toString();
-  return hostingGet<MarketplaceSellerWhitelistEntry[]>(
+  return hostingGet<MarketplaceStoreMembership[]>(
     `${HOSTING_API.MARKETPLACE_SELLERS(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }
@@ -134,10 +139,20 @@ export async function getMarketplaceSellers(
 export async function inviteMarketplaceSeller(
   marketplaceId: string,
   data: InviteMarketplaceSellerRequest
-): Promise<MarketplaceSellerWhitelistEntry> {
-  return hostingPost<MarketplaceSellerWhitelistEntry>(
+): Promise<MarketplaceStoreMembership> {
+  return hostingPost<MarketplaceStoreMembership>(
     HOSTING_API.MARKETPLACE_SELLER_INVITE(marketplaceId),
     data
+  );
+}
+
+export async function acceptMarketplaceSellerInvitation(
+  marketplaceId: string,
+  peerID: string
+): Promise<MarketplaceStoreMembership> {
+  return hostingPost<MarketplaceStoreMembership>(
+    HOSTING_API.MARKETPLACE_SELLER_ACCEPT(marketplaceId, peerID),
+    undefined
   );
 }
 
@@ -145,8 +160,8 @@ export async function updateMarketplaceSeller(
   marketplaceId: string,
   peerID: string,
   data: UpdateMarketplaceSellerRequest
-): Promise<MarketplaceSellerWhitelistEntry> {
-  return hostingPut<MarketplaceSellerWhitelistEntry>(
+): Promise<MarketplaceStoreMembership> {
+  return hostingPut<MarketplaceStoreMembership>(
     HOSTING_API.MARKETPLACE_SELLER(marketplaceId, peerID),
     data
   );

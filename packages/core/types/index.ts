@@ -453,6 +453,18 @@ export { FULFILLMENT_PROVIDERS } from './fulfillment';
 
 // Marketplace types
 export type {
+  NativeMarketplace,
+  CreateNativeMarketplaceRequest,
+  UpdateNativeMarketplaceRequest,
+  MarketplaceLifecycleStatus,
+  MarketplaceJoinMode,
+  MarketplaceCatalogMode,
+  MarketplaceDiscoverability,
+  MarketplaceSellerEntryMode,
+  MarketplaceStoreStatus,
+  MarketplaceStoreMembership,
+  MyMarketplaceMembershipEntry,
+  MarketplaceDomain,
   PublicGroupMarketplace,
   PublicGroupMarketplaceListResponse,
   PublicGroupMarketplaceDetail,

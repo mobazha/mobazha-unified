@@ -89,10 +89,9 @@ export const PRIVATE_ROUTES = [
   // 支付
   '/payment',
 
-  // 市场管理（需要登录）
-  '/marketplace/:slug/admin',
-  '/marketplace/:slug/admin/applications',
-  '/marketplace/:slug/admin/products',
+  // Marketplace 运营台与卖家入驻（需要登录）
+  '/operator/marketplaces',
+  '/operator/marketplaces/:id',
   '/marketplace/:slug/sell',
 ] as const;
 
