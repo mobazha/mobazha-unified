@@ -12,6 +12,12 @@ import {
   persistCheckoutTokenSelection,
   persistCheckoutFiatSelection,
   useFiatPaymentVisible,
+  isFiatAllowedByCheckoutPaymentPolicy,
+  readCheckoutPaymentPolicyFromSession,
+  persistCheckoutPaymentPolicy,
+  sanitizeCheckoutPaymentPolicySession,
+  normalizeCheckoutPaymentPolicy,
+  type CheckoutPaymentPolicy,
 } from '@mobazha/core';
 import { PaymentDrawer, Moderator } from '@/components/Payment';
 
@@ -27,6 +33,7 @@ interface PaymentSelectorState {
   selectedTokenId?: string;
   selectedFiatProvider?: string;
   selectedModerator?: Moderator;
+  checkoutPaymentPolicy: CheckoutPaymentPolicy;
 }
 
 /**
@@ -35,6 +42,7 @@ interface PaymentSelectorState {
 interface PaymentSelectorContextValue extends PaymentSelectorState {
   availableFiatProviders: string[];
   acceptedCurrencies: string[];
+  showFiatCheckoutMethods: boolean;
   openPaymentSelector: (returnUrl?: string) => void;
   openModeratorSelector: (returnUrl?: string) => void;
   closePaymentDrawer: () => void;
@@ -43,20 +51,26 @@ interface PaymentSelectorContextValue extends PaymentSelectorState {
   setSelectedFiatProvider: (providerID: string) => void;
   setSelectedModerator: (moderator: Moderator) => void;
   setVendorPeerID: (peerID: string | undefined) => void;
-  restoreFromSession: () => void;
+  setCheckoutPaymentPolicy: (policy: CheckoutPaymentPolicy, orderID?: string) => void;
+  restoreFromSession: (options?: {
+    orderID?: string;
+    paymentPolicy?: CheckoutPaymentPolicy;
+  }) => void;
 }
 
 const PaymentSelectorContext = createContext<PaymentSelectorContextValue | null>(null);
 
 function readInitialPaymentSelection(): Pick<
   PaymentSelectorState,
-  'paymentCategory' | 'selectedTokenId' | 'selectedFiatProvider'
+  'paymentCategory' | 'selectedTokenId' | 'selectedFiatProvider' | 'checkoutPaymentPolicy'
 > {
-  const session = syncCheckoutPaymentSessionStorage();
+  const checkoutPaymentPolicy = readCheckoutPaymentPolicyFromSession();
+  const session = syncCheckoutPaymentSessionStorage({ paymentPolicy: checkoutPaymentPolicy });
   return {
     paymentCategory: session.category,
     selectedTokenId: session.tokenId,
     selectedFiatProvider: session.fiatProvider,
+    checkoutPaymentPolicy: session.paymentPolicy,
   };
 }
 
@@ -87,6 +101,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         selectedTokenId: undefined,
         selectedFiatProvider: undefined,
         selectedModerator: undefined,
+        checkoutPaymentPolicy: 'all' as CheckoutPaymentPolicy,
       };
     }
 
@@ -100,22 +115,49 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     };
   });
 
-  const restoreFromSession = useCallback(() => {
-    if (typeof window === 'undefined') return;
+  const restoreFromSession = useCallback(
+    (options?: { orderID?: string; paymentPolicy?: CheckoutPaymentPolicy }) => {
+      if (typeof window === 'undefined') return;
 
-    const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
-    const session = syncCheckoutPaymentSessionStorage();
+      const savedModeratorJson = sessionStorage.getItem('checkout_selected_moderator');
+      const checkoutPaymentPolicy = options?.paymentPolicy
+        ? normalizeCheckoutPaymentPolicy(options.paymentPolicy)
+        : readCheckoutPaymentPolicyFromSession(options?.orderID);
+      if (options?.orderID && options.paymentPolicy) {
+        persistCheckoutPaymentPolicy(checkoutPaymentPolicy, options.orderID);
+      }
+      const session = syncCheckoutPaymentSessionStorage({ paymentPolicy: checkoutPaymentPolicy });
 
-    setState(prev => ({
-      ...prev,
-      paymentCategory: session.category,
-      selectedTokenId: session.tokenId,
-      selectedFiatProvider: session.fiatProvider,
-      selectedModerator: savedModeratorJson
-        ? JSON.parse(savedModeratorJson)
-        : prev.selectedModerator,
-    }));
-  }, []);
+      setState(prev => ({
+        ...prev,
+        paymentCategory: session.category,
+        selectedTokenId: session.tokenId,
+        selectedFiatProvider: session.fiatProvider,
+        checkoutPaymentPolicy: session.paymentPolicy,
+        selectedModerator: savedModeratorJson
+          ? JSON.parse(savedModeratorJson)
+          : prev.selectedModerator,
+      }));
+    },
+    []
+  );
+
+  const setCheckoutPaymentPolicy = useCallback(
+    (policy: CheckoutPaymentPolicy, orderID?: string) => {
+      const normalized = normalizeCheckoutPaymentPolicy(policy);
+      persistCheckoutPaymentPolicy(normalized, orderID);
+      sanitizeCheckoutPaymentPolicySession(normalized);
+      const session = syncCheckoutPaymentSessionStorage({ paymentPolicy: normalized });
+      setState(prev => ({
+        ...prev,
+        checkoutPaymentPolicy: normalized,
+        paymentCategory: session.category,
+        selectedTokenId: session.tokenId,
+        selectedFiatProvider: session.fiatProvider,
+      }));
+    },
+    []
+  );
 
   // 打开支付方式选择器
   const openPaymentSelector = useCallback(
@@ -133,6 +175,9 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         if (vendorPeerID) {
           url.searchParams.set('vendor', vendorPeerID);
         }
+        if (state.checkoutPaymentPolicy !== 'all') {
+          url.searchParams.set('paymentPolicy', state.checkoutPaymentPolicy);
+        }
         if (returnUrl) {
           url.searchParams.set('returnUrl', returnUrl);
         } else if (resolvedReturnUrl) {
@@ -143,7 +188,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         setState(prev => ({ ...prev, isPaymentDrawerOpen: true }));
       }
     },
-    [isMobile, router, state.selectedTokenId, vendorPeerID]
+    [isMobile, router, state.selectedTokenId, state.checkoutPaymentPolicy, vendorPeerID]
   );
 
   // 打开仲裁员选择器
@@ -199,7 +244,13 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
 
   const setSelectedFiatProvider = useCallback(
     (providerID: string) => {
-      if (!fiatVisible || !sanitizeCheckoutFiatProvider(providerID)) return;
+      if (
+        !fiatVisible ||
+        !isFiatAllowedByCheckoutPaymentPolicy(state.checkoutPaymentPolicy) ||
+        !sanitizeCheckoutFiatProvider(providerID)
+      ) {
+        return;
+      }
       setState(prev => ({
         ...prev,
         paymentCategory: 'fiat',
@@ -208,7 +259,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
       }));
       persistCheckoutFiatSelection(providerID);
     },
-    [fiatVisible]
+    [fiatVisible, state.checkoutPaymentPolicy]
   );
 
   // 设置选中的仲裁员
@@ -244,10 +295,14 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     [setSelectedModerator, closeModeratorDrawer]
   );
 
+  const showFiatCheckoutMethods =
+    fiatVisible && isFiatAllowedByCheckoutPaymentPolicy(state.checkoutPaymentPolicy);
+
   const contextValue: PaymentSelectorContextValue = {
     ...state,
     availableFiatProviders,
     acceptedCurrencies,
+    showFiatCheckoutMethods,
     openPaymentSelector,
     openModeratorSelector,
     closePaymentDrawer,
@@ -256,6 +311,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     setSelectedFiatProvider,
     setSelectedModerator,
     setVendorPeerID,
+    setCheckoutPaymentPolicy,
     restoreFromSession,
   };
 
@@ -276,6 +332,10 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
             onSelectFiat={handleFiatSelect}
             availableFiatProviders={availableFiatProviders}
             acceptedCurrencies={acceptedCurrencies}
+            showFiatMethods={showFiatCheckoutMethods}
+            paymentPolicyNoteKey={
+              showFiatCheckoutMethods ? undefined : 'collectibles.checkout.escrowCryptoOnlyNote'
+            }
           />
           <PaymentDrawer
             type="moderator"

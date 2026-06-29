@@ -17,6 +17,7 @@ import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
 import { CheckoutContractTypeAlert } from './CheckoutContractTypeAlert';
+import { CollectibleCheckoutHolderWallet } from './CollectibleCheckoutHolderWallet';
 import { SupplyAvailabilityPanel } from '@/components/SupplyAvailability/SupplyAvailabilityPanel';
 import type { UseCheckoutReturn } from './types';
 
@@ -55,6 +56,12 @@ export function CheckoutDesktop({ checkout }: Props) {
     hasMissingContractType,
     isRwaCheckoutBlocked,
     isCollectibleHubNftCheckout,
+    requiresCollectibleHolderWallet,
+    collectibleHolderWallet,
+    isCollectibleHolderWalletReady,
+    isCollectibleHolderWalletWrongNamespace,
+    connectCollectibleHolderWallet,
+    isCollectibleHolderConnecting,
     needsShippingAddress,
     hasAllShippingSelected,
     hasShippingPricingIssue,
@@ -203,6 +210,14 @@ export function CheckoutDesktop({ checkout }: Props) {
                           ))}
                         </dl>
                       ) : null}
+                      <CollectibleCheckoutHolderWallet
+                        requiresHolderWallet={requiresCollectibleHolderWallet}
+                        holderWallet={collectibleHolderWallet}
+                        isReady={isCollectibleHolderWalletReady}
+                        isWrongNamespace={isCollectibleHolderWalletWrongNamespace}
+                        isConnecting={isCollectibleHolderConnecting}
+                        onConnect={connectCollectibleHolderWallet}
+                      />
                     </CardContent>
                   </Card>
                 )}

@@ -14,9 +14,13 @@ import {
   getImageUrl,
   useShippingAddresses,
   useCartStore,
-  isCollectibleHubNftListing,
   parseCollectibleListingMetadata,
+  hasAuthoritativeCollectibleTitleMetadata,
   useFeature,
+  useAppKit,
+  resolveCheckoutPaymentPolicyFromCheckoutItems,
+  persistCheckoutPaymentPolicy,
+  sanitizeCheckoutPaymentPolicySession,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
 import type { OrderItemOption, ProductSku } from '@mobazha/core';
@@ -57,6 +61,13 @@ export function useCheckout(): UseCheckoutReturn {
   const { t } = useI18n();
   const { toast } = useToast();
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const {
+    address: appKitAddress,
+    isConnected: appKitConnected,
+    isInitializing: appKitInitializing,
+    connectSolana,
+    chain: appKitChain,
+  } = useAppKit();
   // ---- URL params ----
   const singleSlug = searchParams.get('slug');
   const singlePeerID = searchParams.get('peerID');
@@ -165,7 +176,7 @@ export function useCheckout(): UseCheckoutReturn {
     setCheckoutItems(prev =>
       prev.map(item => {
         if (item.id !== itemId) return item;
-        const quantity = item.isCollectibleHubNft ? 1 : newQuantity;
+        const quantity = item.isAuthoritativeCollectibleTitle ? 1 : newQuantity;
         return { ...item, quantity };
       })
     );
@@ -208,9 +219,11 @@ export function useCheckout(): UseCheckoutReturn {
         listingHash = String(raw.hash ?? raw.cid ?? '');
       }
 
-      const isCollectibleHubNft = isCollectibleHubNftListing(product);
-      const collectibleMeta = isCollectibleHubNft ? parseCollectibleListingMetadata(product) : null;
-      const resolvedQuantity = isCollectibleHubNft ? 1 : quantity;
+      const isAuthoritativeCollectibleTitle = hasAuthoritativeCollectibleTitleMetadata(product);
+      const collectibleMeta = isAuthoritativeCollectibleTitle
+        ? parseCollectibleListingMetadata(product)
+        : null;
+      const resolvedQuantity = isAuthoritativeCollectibleTitle ? 1 : quantity;
 
       return {
         id:
@@ -233,11 +246,13 @@ export function useCheckout(): UseCheckoutReturn {
         shippingZones: product.shippingProfile
           ? profileToCheckoutZones(product.shippingProfile)
           : undefined,
-        isCollectibleHubNft,
+        isCollectibleHubNft: isAuthoritativeCollectibleTitle,
+        isAuthoritativeCollectibleTitle,
         fulfillment: collectibleMeta?.fulfillment,
         hubSlotID: collectibleMeta?.hubSlotID,
         nftMint: collectibleMeta?.nftMint,
         certNumber: collectibleMeta?.certNumber,
+        hubLocation: collectibleMeta?.hubLocation,
       };
     },
     [findMatchingSku]
@@ -363,6 +378,17 @@ export function useCheckout(): UseCheckoutReturn {
     cartItems,
   ]);
 
+  const checkoutPaymentPolicy = useMemo(
+    () => resolveCheckoutPaymentPolicyFromCheckoutItems(checkoutItems),
+    [checkoutItems]
+  );
+
+  useEffect(() => {
+    if (checkoutItems.length === 0) return;
+    persistCheckoutPaymentPolicy(checkoutPaymentPolicy);
+    sanitizeCheckoutPaymentPolicySession(checkoutPaymentPolicy);
+  }, [checkoutItems.length, checkoutPaymentPolicy]);
+
   // ---- Derived state ----
   const subtotal = useMemo(
     () => checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -483,10 +509,40 @@ export function useCheckout(): UseCheckoutReturn {
     [checkoutItems, collectiblesHubEnabled]
   );
 
+  const requiresCollectibleHolderWallet = useMemo(
+    () =>
+      collectiblesHubEnabled &&
+      checkoutItems.length > 0 &&
+      checkoutItems.every(item => item.isAuthoritativeCollectibleTitle),
+    [checkoutItems, collectiblesHubEnabled]
+  );
+
+  const collectibleSolanaWallet = useMemo(() => {
+    if (!appKitConnected || !appKitAddress?.trim()) return null;
+    if (appKitAddress.startsWith('0x')) return null;
+    if (appKitChain?.chainNamespace && appKitChain.chainNamespace !== 'solana') {
+      return null;
+    }
+    return appKitAddress.trim();
+  }, [appKitConnected, appKitAddress, appKitChain]);
+
+  const isCollectibleHolderWalletReady =
+    !requiresCollectibleHolderWallet || !!collectibleSolanaWallet;
+
+  const isCollectibleHolderWalletWrongNamespace =
+    requiresCollectibleHolderWallet &&
+    appKitConnected &&
+    !!appKitAddress &&
+    !collectibleSolanaWallet;
+
+  const connectCollectibleHolderWallet = useCallback(() => {
+    void connectSolana();
+  }, [connectSolana]);
+
   const isRwaCheckoutBlocked = useMemo(() => {
     return checkoutItems.some(item => {
       if (item.contractType !== 'RWA_TOKEN') return false;
-      if (item.isCollectibleHubNft) return !collectiblesHubEnabled;
+      if (item.isAuthoritativeCollectibleTitle) return !collectiblesHubEnabled;
       return true;
     });
   }, [checkoutItems, collectiblesHubEnabled]);
@@ -522,6 +578,7 @@ export function useCheckout(): UseCheckoutReturn {
   const canSubmit =
     !isRwaCheckoutBlocked &&
     !hasCollectibleQuantityIssue &&
+    isCollectibleHolderWalletReady &&
     (!needsShippingAddress || !!selectedAddress) &&
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
@@ -724,6 +781,16 @@ export function useCheckout(): UseCheckoutReturn {
       });
       return;
     }
+    if (requiresCollectibleHolderWallet && !collectibleSolanaWallet) {
+      toast({
+        title: t('collectibles.checkout.holderWalletTitle'),
+        description: isCollectibleHolderWalletWrongNamespace
+          ? t('collectibles.checkout.holderWalletWrongNamespace')
+          : t('collectibles.checkout.holderWalletMissing'),
+        variant: 'destructive',
+      });
+      return;
+    }
     if (needsShippingAddress && !selectedAddress) {
       toast({ title: t('checkout.selectAddressFirst'), variant: 'destructive' });
       return;
@@ -762,6 +829,7 @@ export function useCheckout(): UseCheckoutReturn {
             hubSlotID?: string;
             nftMint?: string;
             certNumber?: string;
+            holderWallet?: string;
           } = {
             listingHash: item.listingHash || item.id,
             quantity: item.quantity,
@@ -771,11 +839,14 @@ export function useCheckout(): UseCheckoutReturn {
             payload.options = item.options;
           }
 
-          if (item.isCollectibleHubNft) {
+          if (item.isAuthoritativeCollectibleTitle) {
             if (item.fulfillment) payload.fulfillment = item.fulfillment;
             if (item.hubSlotID) payload.hubSlotID = item.hubSlotID;
             if (item.nftMint) payload.nftMint = item.nftMint;
             if (item.certNumber) payload.certNumber = item.certNumber;
+            if (collectibleSolanaWallet) {
+              payload.holderWallet = collectibleSolanaWallet;
+            }
           }
 
           if (item.contractType === 'PHYSICAL_GOOD') {
@@ -807,6 +878,8 @@ export function useCheckout(): UseCheckoutReturn {
       // Build payment URL
       const paymentUrl = new URL('/payment', window.location.origin);
       paymentUrl.searchParams.set('orderID', result.orderID);
+      paymentUrl.searchParams.set('paymentPolicy', checkoutPaymentPolicy);
+      persistCheckoutPaymentPolicy(checkoutPaymentPolicy, result.orderID);
 
       if (result.amount) {
         const divisibility = result.amount.currency?.divisibility ?? 2;
@@ -854,6 +927,10 @@ export function useCheckout(): UseCheckoutReturn {
     appliedDiscounts,
     hasMissingContractType,
     hasMixedContractTypes,
+    requiresCollectibleHolderWallet,
+    collectibleSolanaWallet,
+    isCollectibleHolderWalletWrongNamespace,
+    checkoutPaymentPolicy,
   ]);
 
   return {
@@ -911,6 +988,12 @@ export function useCheckout(): UseCheckoutReturn {
     isRwaToken,
     isRwaCheckoutBlocked,
     isCollectibleHubNftCheckout,
+    requiresCollectibleHolderWallet,
+    collectibleHolderWallet: collectibleSolanaWallet,
+    isCollectibleHolderWalletReady,
+    isCollectibleHolderWalletWrongNamespace,
+    connectCollectibleHolderWallet,
+    isCollectibleHolderConnecting: appKitInitializing,
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,

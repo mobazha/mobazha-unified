@@ -50,6 +50,9 @@ export interface CheckoutItem {
   taxAmount?: number;
   /** Hub+NFT primary sale (Solana collectible) */
   isCollectibleHubNft?: boolean;
+  /** Source-custody listing with locked authoritative metadata */
+  isAuthoritativeCollectibleTitle?: boolean;
+  hubLocation?: string;
   fulfillment?: string;
   hubSlotID?: string;
   nftMint?: string;
@@ -123,6 +126,12 @@ export interface UseCheckoutReturn {
   isRwaToken: boolean;
   isRwaCheckoutBlocked: boolean;
   isCollectibleHubNftCheckout: boolean;
+  requiresCollectibleHolderWallet: boolean;
+  collectibleHolderWallet: string | null;
+  isCollectibleHolderWalletReady: boolean;
+  isCollectibleHolderWalletWrongNamespace: boolean;
+  connectCollectibleHolderWallet: () => void;
+  isCollectibleHolderConnecting: boolean;
   rwaTradeMode: number | undefined;
   needsShippingAddress: boolean;
   hasAllShippingSelected: boolean;

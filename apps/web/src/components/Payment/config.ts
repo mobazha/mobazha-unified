@@ -3,7 +3,11 @@
  * 支付配置 - 代币、链、支付方式
  */
 
-import { TOKENS as CORE_TOKENS, CHAINS as CORE_CHAINS, isPaymentCoinEnabled } from '@mobazha/core';
+import {
+  TOKENS as CORE_TOKENS,
+  CHAINS as CORE_CHAINS,
+  isPaymentCoinEnabled,
+} from '@mobazha/core/data/tokens';
 import { TokenConfig, ChainConfig, FiatMethodConfig } from './types';
 
 // 代币配置统一复用 core 注册表，避免 web 侧手写表漂移。
