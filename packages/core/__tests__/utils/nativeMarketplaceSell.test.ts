@@ -42,6 +42,7 @@ function buildApplication(
       userID: 'user-1',
       peerID: 'QmSeller',
       status: 'applied',
+      unreadReviewCount: 0,
       isVisible: false,
       productGroupIDs: [1],
       createdAt: '2026-01-01T00:00:00Z',

@@ -27,6 +27,7 @@ import {
   useProductGroups,
   useUserStore,
   useI18n,
+  MARKETPLACE_MEMBERSHIP_STATUS_KEYS,
   getCasdoorUserId,
   marketplaceHref,
   marketplaceJoinModeKey,
@@ -136,7 +137,7 @@ function ProductGroupPicker({
 export default function MarketplaceSellPage() {
   const params = useParams();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, formatDate } = useI18n();
   const { toast } = useToast();
   const { isAuthenticated } = useUserStore();
 
@@ -146,13 +147,19 @@ export default function MarketplaceSellPage() {
   const {
     marketplace,
     application,
+    reviewEvents,
     loading,
     error,
+    reviewEventsLoading,
+    reviewEventsError,
+    readingReviewEventID,
     isSubmitting,
     isWithdrawing,
     refresh,
+    refreshReviewEvents,
     submitApplication,
     withdrawApplication,
+    markReviewEventRead,
   } = useNativeMarketplaceSell(identifier);
 
   const marketHref = marketplace
@@ -261,6 +268,18 @@ export default function MarketplaceSellPage() {
       toast({
         title: t('common.error'),
         description: err instanceof Error ? err.message : t('common.error'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleMarkReviewEventRead = async (eventID: number) => {
+    try {
+      await markReviewEventRead(eventID);
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('marketplace.sell.reviewUpdatesMarkReadFailed'),
         variant: 'destructive',
       });
     }
@@ -463,7 +482,7 @@ export default function MarketplaceSellPage() {
                       {t('marketplace.sell.reapplyHint')}
                     </p>
                   )}
-                  {(isRejected || isSuspended) && (
+                  {(isRejected || isSuspended) && reviewEvents.length === 0 && (
                     <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 p-3">
                       <p className="text-xs font-medium text-destructive">
                         {t('marketplace.sell.decisionReasonTitle')}
@@ -488,6 +507,119 @@ export default function MarketplaceSellPage() {
                   ) : null}
                 </Card>
               )}
+
+              {!error && isAuthenticated && application?.membership ? (
+                <Card className="mb-6 p-4 sm:p-5" data-testid="sell-review-updates-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        {t('marketplace.sell.reviewUpdatesTitle')}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {t('marketplace.sell.reviewUpdatesSubtitle')}
+                      </p>
+                    </div>
+                    {application.membership.unreadReviewCount > 0 ? (
+                      <Badge variant="secondary" data-testid="sell-review-unread-badge">
+                        {t('marketplace.sell.reviewUpdatesUnreadCount', {
+                          count: application.membership.unreadReviewCount,
+                        })}
+                      </Badge>
+                    ) : null}
+                  </div>
+
+                  {reviewEventsError ? (
+                    <div
+                      className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3"
+                      data-testid="sell-review-updates-error"
+                    >
+                      <p className="text-sm text-destructive">
+                        {t('marketplace.sell.reviewUpdatesLoadFailed')}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-3"
+                        onClick={() => void refreshReviewEvents()}
+                        data-testid="sell-review-updates-retry"
+                      >
+                        {t('common.retry')}
+                      </Button>
+                    </div>
+                  ) : reviewEventsLoading ? (
+                    <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t('marketplace.sell.reviewUpdatesLoading')}</span>
+                    </div>
+                  ) : reviewEvents.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      {t('marketplace.sell.reviewUpdatesEmpty')}
+                    </p>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {reviewEvents.map(event => {
+                        const isUnread = !event.readAt;
+                        return (
+                          <div
+                            key={event.id}
+                            className={`rounded-md border p-3 ${
+                              isUnread
+                                ? 'border-primary/40 bg-primary/5'
+                                : 'border-border bg-background'
+                            }`}
+                            data-testid={`sell-review-event-${event.id}`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-medium text-foreground">
+                                {t('marketplace.sell.reviewUpdatesTransition', {
+                                  previous: t(
+                                    MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.previousStatus]
+                                  ),
+                                  current: t(MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.status]),
+                                })}
+                              </p>
+                              {isUnread ? (
+                                <Badge variant="secondary">
+                                  {t('marketplace.sell.reviewUpdatesUnread')}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {formatDate(event.createdAt)}
+                            </p>
+                            {event.reason ? (
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                {t('marketplace.sell.reviewUpdatesReason', {
+                                  reason: event.reason,
+                                })}
+                              </p>
+                            ) : null}
+                            {isUnread ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-3"
+                                disabled={readingReviewEventID === String(event.id)}
+                                onClick={() => void handleMarkReviewEventRead(event.id)}
+                                data-testid={`sell-review-mark-read-${event.id}`}
+                              >
+                                {readingReviewEventID === String(event.id) ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    {t('marketplace.sell.reviewUpdatesMarking')}
+                                  </>
+                                ) : (
+                                  t('marketplace.sell.reviewUpdatesMarkRead')
+                                )}
+                              </Button>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              ) : null}
 
               {!error && isAuthenticated && isCollectibleMarketplace && isApproved && (
                 <CollectibleCardSubmissionsWorkspace enabled={isAuthenticated && isApproved} />

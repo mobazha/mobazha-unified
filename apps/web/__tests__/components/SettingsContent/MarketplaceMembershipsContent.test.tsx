@@ -18,6 +18,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       userID: 'user-1',
       peerID: 'peer-1',
       status: 'approved',
+      unreadReviewCount: 0,
       isVisible: true,
       productGroupIDs: [],
       productGroups: [],
@@ -37,6 +38,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       userID: 'user-1',
       peerID: 'peer-1',
       status: 'invited',
+      unreadReviewCount: 2,
       isVisible: false,
       productGroupIDs: [],
       productGroups: [],
@@ -57,6 +59,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       userID: 'user-1',
       peerID: 'peer-1',
       status: 'invited',
+      unreadReviewCount: 1,
       isVisible: false,
       productGroupIDs: [],
       productGroups: [],
@@ -116,6 +119,7 @@ describe('MarketplaceMembershipsContent', () => {
     expect(screen.getByTestId('view-marketplace-mp-published')).toBeInTheDocument();
     expect(screen.queryByTestId('view-marketplace-mp-draft')).not.toBeInTheDocument();
     expect(screen.getByTestId('marketplace-unavailable-mp-draft')).toBeInTheDocument();
+    expect(screen.getByTestId('view-review-updates-mp-draft')).toBeInTheDocument();
   });
 
   it('keeps archived memberships in a separate history section', () => {
@@ -125,6 +129,8 @@ describe('MarketplaceMembershipsContent', () => {
     expect(screen.getByTestId('marketplace-memberships-archived-section')).toBeInTheDocument();
     expect(screen.getByTestId('marketplace-membership-mp-archived')).toBeInTheDocument();
     expect(screen.queryByTestId('view-marketplace-mp-archived')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('view-review-updates-mp-archived')).not.toBeInTheDocument();
+    expect(screen.getByTestId('review-history-static-mp-archived')).toBeInTheDocument();
   });
 
   it('does not offer accept invitation for archived marketplaces', () => {
@@ -132,5 +138,11 @@ describe('MarketplaceMembershipsContent', () => {
 
     expect(screen.getByTestId('accept-marketplace-invite-mp-draft')).toBeInTheDocument();
     expect(screen.queryByTestId('accept-marketplace-invite-mp-archived')).not.toBeInTheDocument();
+  });
+
+  it('shows unread review-updates badge for memberships with unread events', () => {
+    render(<MarketplaceMembershipsContent backHref="/settings" />);
+
+    expect(screen.getAllByText('marketplace.memberships.reviewUpdatesUnreadBadge').length).toBe(2);
   });
 });

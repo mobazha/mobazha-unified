@@ -9,6 +9,7 @@ import type {
   CreateNativeMarketplaceRequest,
   InviteMarketplaceSellerRequest,
   MarketplaceCurationConfig,
+  MarketplaceSellerReviewEvent,
   MarketplaceShareLink,
   MarketplaceStoreMembership,
   MyMarketplaceMembershipEntry,
@@ -184,6 +185,19 @@ export async function getMarketplaceSellers(
   );
 }
 
+export async function getMarketplaceSellerReviewEvents(
+  marketplaceId: string,
+  params: { peerID?: string; limit?: number } = {}
+): Promise<MarketplaceSellerReviewEvent[]> {
+  const queryParams = new URLSearchParams();
+  if (params.peerID) queryParams.set('peerID', params.peerID);
+  if (typeof params.limit === 'number') queryParams.set('limit', params.limit.toString());
+  const query = queryParams.toString();
+  return hostingGet<MarketplaceSellerReviewEvent[]>(
+    `${HOSTING_API.MARKETPLACE_SELLER_REVIEW_EVENTS(marketplaceId)}${query ? `?${query}` : ''}`
+  );
+}
+
 export async function inviteMarketplaceSeller(
   marketplaceId: string,
   data: InviteMarketplaceSellerRequest
@@ -221,6 +235,28 @@ export async function removeMarketplaceSeller(
 ): Promise<{ removed: boolean; peerID: string }> {
   return hostingDel<{ removed: boolean; peerID: string }>(
     HOSTING_API.MARKETPLACE_SELLER(marketplaceId, peerID)
+  );
+}
+
+export async function getMarketplaceMembershipReviewEvents(
+  marketplaceId: string,
+  params: { limit?: number } = {}
+): Promise<MarketplaceSellerReviewEvent[]> {
+  const queryParams = new URLSearchParams();
+  if (typeof params.limit === 'number') queryParams.set('limit', params.limit.toString());
+  const query = queryParams.toString();
+  return hostingGet<MarketplaceSellerReviewEvent[]>(
+    `${HOSTING_API.MARKETPLACE_MEMBERSHIP_REVIEW_EVENTS(marketplaceId)}${query ? `?${query}` : ''}`
+  );
+}
+
+export async function markMarketplaceReviewEventRead(
+  marketplaceId: string,
+  eventId: string | number
+): Promise<MarketplaceSellerReviewEvent> {
+  return hostingPost<MarketplaceSellerReviewEvent>(
+    HOSTING_API.MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ(marketplaceId, eventId),
+    undefined
   );
 }
 
