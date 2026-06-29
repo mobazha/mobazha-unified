@@ -2,12 +2,19 @@
 
 The shared storefront and seller-admin frontend for Mobazha nodes.
 
+Originally developed by [fengzie](https://github.com/fengzie) and maintained by
+the Mobazha contributors. The canonical source repository is
+[mobazha/mobazha-unified](https://github.com/mobazha/mobazha-unified).
+
 The same `main` branch is designed to run against Community Edition and hosted or
 commercial deployments. The frontend does not select an edition at build time:
 the connected backend publishes a versioned runtime capability snapshot, and the
 UI projects only the payment methods that snapshot makes available.
 
 **License:** [Mozilla Public License 2.0](./LICENSE) (MPL-2.0)
+
+Project origin, copyright, and redistribution attribution are recorded in
+[NOTICE](./NOTICE) and [Attribution and source identity](./docs/legal/ATTRIBUTION.md).
 
 ## Backend-driven capabilities
 
@@ -108,4 +115,4 @@ security issues privately as described in [SECURITY.md](./SECURITY.md).
 ## Trademark
 
 The Mobazha name, logo and visual identity are not granted by the MPL-2.0 source
-license. See [TRADEMARKS.md](./TRADEMARKS.md).
+license and remain subject to [the trademark policy](./TRADEMARKS.md).
