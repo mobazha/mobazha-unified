@@ -25,9 +25,9 @@ describe('collectible marketplace display helpers', () => {
     const copy = resolveCollectibleMarketplaceDisplayCopy(
       {
         slug: 'm2-wilson',
-        publicID: 'mp-m2',
+        id: 'mp-m2',
         name: 'M2 Wilson Sports Card Market',
-        publicDescription: 'English API description',
+        description: 'English API description',
       },
       'zh',
       t
@@ -42,9 +42,9 @@ describe('collectible marketplace display helpers', () => {
     const copy = resolveCollectibleMarketplaceDisplayCopy(
       {
         slug: 'other-market',
-        publicID: 'mp-other',
+        id: 'mp-other',
         name: 'Other Market',
-        publicDescription: 'Custom description',
+        description: 'Custom description',
       },
       'zh',
       t

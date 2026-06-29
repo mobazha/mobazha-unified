@@ -449,11 +449,12 @@ export interface PublicMarketplaceProductGroup {
 }
 
 export interface PublicMarketplaceSeller {
-  sellerID: number;
   peerID: string;
   productGroups: PublicMarketplaceProductGroup[];
-  sortOrder: number;
   updatedAt?: string;
+  /** Legacy group marketplace projection */
+  sellerID?: number;
+  sortOrder?: number;
 }
 
 export interface PublicMarketplaceBanner {
@@ -474,6 +475,55 @@ export interface PublicGroupMarketplaceDetail {
   marketplace: PublicGroupMarketplace;
   sellers: PublicMarketplaceSeller[];
   featured: PublicMarketplaceSeller[];
+  banners: PublicMarketplaceBanner[];
+  listings: PublicMarketplaceListings;
+}
+
+/** Native MaaS public marketplace directory item (GET /platform/v1/public-marketplaces). */
+export interface PublicNativeMarketplace {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  publicURL: string;
+  joinMode: MarketplaceJoinMode;
+  catalogMode: MarketplaceCatalogMode;
+  discoverability: MarketplaceDiscoverability;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  vertical: string;
+  sellerCount: number;
+  productCount: number;
+  updatedAt?: string;
+}
+
+export interface PublicNativeMarketplaceListParams {
+  q?: string;
+  vertical?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PublicNativeMarketplaceListResponse {
+  marketplaces: PublicNativeMarketplace[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPage: number;
+}
+
+export interface PublicMarketplaceFeaturedItem {
+  type: string;
+  peerID?: string;
+  slug?: string;
+  sortOrder: number;
+}
+
+export interface PublicNativeMarketplaceDetail {
+  marketplace: PublicNativeMarketplace;
+  sellers: PublicMarketplaceSeller[];
+  featured: PublicMarketplaceFeaturedItem[];
   banners: PublicMarketplaceBanner[];
   listings: PublicMarketplaceListings;
 }

@@ -2848,8 +2848,21 @@ export const en: TranslationResource = {
       'Your seller application has been submitted! You will be notified once approved.',
     communitySubtitle:
       'Discover real Telegram and Discord community markets. Buy from approved sellers or apply to sell.',
-    defaultDescription: 'A community-driven marketplace verified through group membership.',
+    nativeSubtitle:
+      'Browse hosted marketplaces on Mobazha. Shop from approved sellers across curated verticals.',
+    nativeTitle: 'Marketplaces',
+    nativeIntroTitle: 'Hosted marketplaces on Mobazha',
+    nativeIntroDesc:
+      'Browse published public marketplaces by vertical. Each marketplace is operated independently with its own sellers and catalog.',
+    defaultDescription: 'A hosted marketplace with approved sellers and curated listings.',
     allPlatforms: 'All platforms',
+    allVerticals: 'All verticals',
+    vertical: {
+      collectible: 'Collectibles',
+      fashion: 'Fashion',
+      general: 'General',
+      other: 'Other',
+    },
     platformTelegram: 'Telegram',
     platformDiscord: 'Discord',
     platformUnknown: 'Community',
@@ -2861,13 +2874,20 @@ export const en: TranslationResource = {
     emptyPublicTitle: 'No public community markets yet',
     emptyPublicDesc:
       'The first markets appear after operations activate them. Connect a real Telegram or Discord community to apply.',
+    emptyNativeTitle: 'No marketplaces yet',
+    emptyNativeDesc: 'Published marketplaces will appear here once operators make them public.',
     unavailableTitle: 'Community markets unavailable',
+    unavailableNativeTitle: 'Marketplaces unavailable',
     trustMembership: 'Membership verified via Telegram or Discord',
     trustApprovedProducts: 'Only approved, visible seller listings are counted',
     trustOpsActivated: 'Public listing requires operations activation',
+    trustCuratedCatalog: 'Listings come from approved sellers in each marketplace',
+    trustPublishedStores: 'Only published public marketplaces are listed',
+    trustBuyerProtection: 'Checkout can include buyer protection on supported orders',
     joinModeGroupMember: 'Group members',
     joinModePublic: 'Open to join',
     joinModeApproval: 'Approval required',
+    joinModeInvite: 'Invite only',
     updatedAgo: 'Updated {{time}}',
     curatedIntroTitle: 'Curated community markets',
     curatedIntroDesc:
@@ -2876,6 +2896,11 @@ export const en: TranslationResource = {
     detail: {
       joinViaGroup: 'Join via community',
       applySeller: 'Apply to sell',
+      visitPublicSite: 'Visit marketplace site',
+      accessTitle: 'Access & catalog',
+      catalogMode: 'Catalog',
+      discoverability: 'Visibility',
+      sellerEntryMode: 'Seller access',
       productsTab: 'Products',
       sellersTab: 'Sellers',
       aboutTab: 'About',
@@ -2886,11 +2911,13 @@ export const en: TranslationResource = {
       aboutTitle: 'About this market',
       trustSignals: 'Trust signals',
       platformSource: 'Source',
-      joinMethod: 'How to join',
+      sellerAdmissionPolicy: 'Seller admission policy',
       publicActive: 'Public listing: active',
       rulesTitle: 'Market rules',
       rulesBody:
         'Only operations-activated community markets are shown. Sellers and products go through the existing group marketplace review flow.',
+      rulesBodyNative:
+        'Each marketplace is operated independently. Seller admission and catalog curation follow the settings shown on this page.',
       buyerProtectionDesc:
         'Payments on Mobazha can use buyer protection so funds are held until you confirm receipt or a dispute is resolved.',
       joinGuidanceDesc:
@@ -2898,9 +2925,11 @@ export const en: TranslationResource = {
       unavailableTitle: 'Market unavailable',
       unavailableDesc:
         'This community market does not exist or has not been activated for public display.',
-      trustStripTitle: 'Verified community market',
+      unavailableDescNative:
+        'This marketplace does not exist, is not published, or is only available on its branded site.',
+      trustStripTitle: 'Hosted marketplace',
       trustStripBody:
-        'Listings come from approved sellers in this group. Browse products below or join the community to access member-only flows.',
+        'Listings come from approved sellers in this marketplace. Browse products below or visit the branded site when you need marketplace-specific flows.',
       collectibles: {
         badge: 'Collectible cards',
         intro:
@@ -2916,6 +2945,7 @@ export const en: TranslationResource = {
         opsLink: 'Hub operations',
         buyerPathTitle: 'I want to buy',
         sellerPathTitle: 'I want to sell',
+        sellerAdmission: 'Seller admission: {{policy}}',
         buyerStepBrowse: 'Browse cards for sale in this market',
         buyerStepInspect:
           'On digital-title listings, review grade, custody badge, and redemption terms before you pay',

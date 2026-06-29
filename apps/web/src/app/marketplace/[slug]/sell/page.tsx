@@ -229,7 +229,7 @@ export default function MarketplaceSellPage() {
                 <HStack gap="md" align="start">
                   <MarketplaceLogo
                     name={marketplace.name}
-                    publicID={marketplace.publicID}
+                    identifier={marketplace.publicID}
                     logoURL={marketplace.logoURL}
                     size="sm"
                   />

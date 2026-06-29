@@ -11,9 +11,9 @@ export function isM2WilsonCollectibleMarketplace(identifier?: string | null): bo
 
 export interface CollectibleMarketplaceDisplayInput {
   slug?: string | null;
-  publicID: string;
+  id: string;
   name: string;
-  publicDescription?: string | null;
+  description?: string | null;
 }
 
 export interface CollectibleMarketplaceDisplayCopy {
@@ -28,7 +28,7 @@ export function resolveCollectibleMarketplaceDisplayCopy(
   locale: Locale,
   t: (key: string) => string
 ): CollectibleMarketplaceDisplayCopy {
-  const identifier = (marketplace.slug || marketplace.publicID).trim().toLowerCase();
+  const identifier = (marketplace.slug || marketplace.id).trim().toLowerCase();
   const defaultDescription = t('marketplace.detail.collectibles.defaultDescription');
 
   if (locale === 'zh' && isM2WilsonCollectibleMarketplace(identifier)) {
@@ -41,7 +41,7 @@ export function resolveCollectibleMarketplaceDisplayCopy(
 
   return {
     name: marketplace.name?.trim() || t('marketplace.detail.collectibles.badge'),
-    description: marketplace.publicDescription?.trim() || defaultDescription,
+    description: marketplace.description?.trim() || defaultDescription,
     usedLocalizedDemoCopy: false,
   };
 }
