@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  resolveProductPagePeerID,
   resolveListingDisplayPrice,
   formatListingPriceForSchema,
-} from '@mobazha/core';
+} from '@mobazha/core/utils/listingDisplayPrice';
+import { resolveProductPagePeerID } from '@mobazha/core/utils/productUrl';
 import { getCanonicalSiteUrl, getSiteUrl } from '@/lib/siteUrl';
 import { getRequestSearchParam } from '@/lib/requestUrl';
 import {
