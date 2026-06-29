@@ -1,47 +1,22 @@
-## 描述
+## Summary
 
-<!-- 请描述这个 PR 的变更内容 -->
+Describe the problem and the chosen solution.
 
-## 类型
+## Verification
 
-- [ ] 🐛 Bug 修复
-- [ ] ✨ 新功能
-- [ ] 📝 文档更新
-- [ ] 🎨 代码风格/格式化
-- [ ] ♻️ 代码重构
-- [ ] ⚡ 性能优化
-- [ ] ✅ 测试相关
-- [ ] 🔧 配置/构建相关
-- [ ] 🔒 安全相关
+- [ ] Tests added or updated
+- [ ] `corepack pnpm lint`
+- [ ] `corepack pnpm typecheck`
+- [ ] Relevant unit and production builds pass
+- [ ] Desktop and mobile behavior reviewed when UI changed
+- [ ] Documentation updated where required
+- [ ] No credentials, private endpoints, customer data, proprietary code, or generated secrets included
+- [ ] All commits include a DCO sign-off (`Signed-off-by`)
 
-## 相关 Issue
+## Runtime capability and security impact
 
-<!-- 请链接相关的 Issue，例如: Closes #123 -->
+State whether this changes runtime capability projection, payment selection or execution, wallet access, key handling, order state, external inputs, public API compatibility, or production dependencies. Link the accepted design decision when one is required.
 
-## 变更内容
+## Visual evidence
 
-<!-- 列出主要变更 -->
-
--
--
--
-
-## 截图/录屏
-
-<!-- 如果是 UI 变更，请附上截图或录屏 -->
-
-## 测试
-
-<!-- 描述你是如何测试这些变更的 -->
-
-- [ ] 单元测试通过
-- [ ] 本地手动测试
-- [ ] 兼容性测试（如适用）
-
-## 检查清单
-
-- [ ] 我已阅读并遵循项目的贡献指南
-- [ ] 代码符合项目的代码规范
-- [ ] 已添加必要的测试
-- [ ] 已更新相关文档（如适用）
-- [ ] 所有 CI 检查通过
+Include desktop and mobile screenshots or recordings for visible UI changes.

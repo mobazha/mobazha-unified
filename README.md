@@ -99,11 +99,13 @@ must keep the lockfile, license conclusions and security audit in sync.
 
 ## Contributing
 
-Contributions are expected to use Developer Certificate of Origin sign-off.
-Contribution and governance documents will be published before the first stable
-community release.
+Contributions are welcome. Before opening a pull request, read
+[CONTRIBUTING.md](./CONTRIBUTING.md) and sign off commits under the
+[Developer Certificate of Origin](./DCO.md). Project decisions and release
+responsibilities are described in [GOVERNANCE.md](./GOVERNANCE.md). Report
+security issues privately as described in [SECURITY.md](./SECURITY.md).
 
 ## Trademark
 
 The Mobazha name, logo and visual identity are not granted by the MPL-2.0 source
-license and remain subject to a separate trademark policy.
+license. See [TRADEMARKS.md](./TRADEMARKS.md).
