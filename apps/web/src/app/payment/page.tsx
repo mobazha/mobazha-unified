@@ -34,7 +34,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
-import { usePaymentSelector } from '@/hooks';
+import { usePaymentSelector } from '@/hooks/usePaymentSelector';
 import {
   useCurrency,
   useRateFreshness,
@@ -58,9 +58,16 @@ import {
   isRetiredPaymentChain,
   useFiatPaymentVisible,
   sanitizeCheckoutTokenId,
+  resolveCheckoutPaymentPolicyFromCheckoutItems,
+  hasAuthoritativeCollectibleTitleMetadata,
+  parseCollectibleListingMetadata,
   type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
+import {
+  isActivePaymentOrderFetch,
+  resolvePaymentPageRestoreOptions,
+} from './paymentPolicyRestore';
 import { useToast } from '@/components/ui/use-toast';
 import { useHaptic } from '@/lib/platform';
 import { orderDetailPath } from '@/lib/ordersNavigation';
@@ -255,6 +262,7 @@ export default function PaymentPage() {
   const urlQuantity = searchParams.get('quantity');
   const urlContractType = searchParams.get('contractType');
   const urlImage = searchParams.get('image');
+  const urlPaymentPolicy = searchParams.get('paymentPolicy');
 
   // 订单数据状态
   const [isLoadingOrder, setIsLoadingOrder] = useState(true);
@@ -270,6 +278,14 @@ export default function PaymentPage() {
   const shouldBlockNavigation =
     paymentStep === 'confirming' || paymentStep === 'submitted' || paymentStep === 'completing';
   const navigationGuardRef = useRef<((e: Event) => void) | null>(null);
+  /** Order ID whose listing metadata resolved checkout payment policy (authoritative lock). */
+  const orderPaymentPolicyLockedOrderRef = useRef<string | null>(null);
+  const activeOrderIDRef = useRef(orderID);
+
+  useEffect(() => {
+    activeOrderIDRef.current = orderID;
+    orderPaymentPolicyLockedOrderRef.current = null;
+  }, [orderID]);
 
   const clearNavigationGuard = useCallback(() => {
     const handler = navigationGuardRef.current;
@@ -364,11 +380,14 @@ export default function PaymentPage() {
     openPaymentSelector,
     openModeratorSelector,
     restoreFromSession,
+    setCheckoutPaymentPolicy,
     setVendorPeerID,
+    showFiatCheckoutMethods,
   } = usePaymentSelector();
 
   const visibleTokenId = useMemo(() => sanitizeCheckoutTokenId(selectedTokenId), [selectedTokenId]);
-  const visibleFiatProvider = fiatVisible ? selectedFiatProvider : undefined;
+  const visibleFiatProvider =
+    fiatVisible && showFiatCheckoutMethods ? selectedFiatProvider : undefined;
 
   const selectedPaymentCoin = useMemo(() => {
     const tokenId = (visibleTokenId || '').trim();
@@ -587,13 +606,23 @@ export default function PaymentPage() {
     return () => clearInterval(interval);
   }, [rawOrder]);
 
-  // 页面聚焦时恢复 sessionStorage 状态
+  // Restore checkout payment selection from session; URL policy is only a pre-order hint.
   useEffect(() => {
-    restoreFromSession();
+    const restorePaymentSelection = () => {
+      restoreFromSession(
+        resolvePaymentPageRestoreOptions({
+          orderPaymentPolicyLockedForOrderID: orderPaymentPolicyLockedOrderRef.current,
+          orderID: orderID ?? undefined,
+          urlPaymentPolicy,
+        })
+      );
+    };
+
+    restorePaymentSelection();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        restoreFromSession();
+        restorePaymentSelection();
       }
     };
 
@@ -601,7 +630,7 @@ export default function PaymentPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [restoreFromSession]);
+  }, [orderID, restoreFromSession, urlPaymentPolicy]);
 
   // 设置卖家 PeerID 以获取可用法币支付方式
   useEffect(() => {
@@ -613,7 +642,9 @@ export default function PaymentPage() {
   // 加载订单详情
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (!orderID) {
+      const requestedOrderID = orderID;
+
+      if (!requestedOrderID) {
         setError(t('payment.noOrderID'));
         setIsLoadingOrder(false);
         return;
@@ -622,16 +653,24 @@ export default function PaymentPage() {
       setIsLoadingOrder(true);
       setError(null);
 
+      const isCurrentOrder = () =>
+        isActivePaymentOrderFetch(requestedOrderID, activeOrderIDRef.current);
+
       try {
         const storeOptions = urlVendorPeerID ? { vendorPeerID: urlVendorPeerID } : undefined;
         // 调用真实的订单详情 API
-        const order = await ordersApi.getOrderDetails(orderID, storeOptions);
+        const order = await ordersApi.getOrderDetails(requestedOrderID, storeOptions);
         if (!order) {
           throw new Error(t('payment.loadOrderFailed'));
         }
         const session = await ordersApi
-          .getOrderPaymentSession(orderID, storeOptions)
+          .getOrderPaymentSession(requestedOrderID, storeOptions)
           .catch(() => null);
+
+        if (!isCurrentOrder()) {
+          return;
+        }
+
         setPaymentSession(session);
         setRawOrder(order);
 
@@ -641,6 +680,9 @@ export default function PaymentPage() {
           setRefundAddressPrefilled(true);
         } else {
           const settings = await profileApi.getSettings().catch(() => null);
+          if (!isCurrentOrder()) {
+            return;
+          }
           const paymentCoin =
             session?.paymentCoin || order.contract?.paymentSent?.coin || undefined;
           const defaultAddr = resolveAccountDefaultRefundAddress(
@@ -683,9 +725,29 @@ export default function PaymentPage() {
         // 处理 listings（每个元素是 {cid, listing, signature}）
         const normalizedListings = rawListings.map((item: any) => item.listing || item);
 
+        const collectiblePolicyInputs = normalizedListings.map((listing: any) => {
+          const isAuthoritativeCollectibleTitle = hasAuthoritativeCollectibleTitleMetadata(listing);
+          const collectibleMeta = isAuthoritativeCollectibleTitle
+            ? parseCollectibleListingMetadata(listing)
+            : undefined;
+          return {
+            isAuthoritativeCollectibleTitle,
+            hubLocation: collectibleMeta?.hubLocation,
+          };
+        });
+        const hasAuthoritativeCollectibleTitle = collectiblePolicyInputs.some(
+          item => item.isAuthoritativeCollectibleTitle
+        );
+        const authoritativePaymentPolicy =
+          resolveCheckoutPaymentPolicyFromCheckoutItems(collectiblePolicyInputs);
+        if (isCurrentOrder()) {
+          orderPaymentPolicyLockedOrderRef.current = requestedOrderID;
+          setCheckoutPaymentPolicy(authoritativePaymentPolicy, requestedOrderID);
+        }
+
         const metadata = normalizedListings[0]?.metadata as any;
         const contractType = urlContractType || metadata?.contractType;
-        if (contractType === 'RWA_TOKEN') {
+        if (contractType === 'RWA_TOKEN' && !hasAuthoritativeCollectibleTitle) {
           setError(t('payment.rwaNotSupported'));
           return;
         }
@@ -750,6 +812,9 @@ export default function PaymentPage() {
         if (vendorPeerID) {
           try {
             const vendorProfile = await profileApi.getProfile(vendorPeerID);
+            if (!isCurrentOrder()) {
+              return;
+            }
             if (vendorProfile) {
               vendorName = vendorProfile.name || vendorProfile.handle || vendorName;
               // 获取头像 URL
@@ -768,7 +833,7 @@ export default function PaymentPage() {
         }
 
         const orderDetailsData: OrderDetails = {
-          orderID: contract?.OrderID || contract?.orderID || orderID,
+          orderID: contract?.OrderID || contract?.orderID || requestedOrderID,
           status: order?.state || 'AWAITING_PAYMENT',
           items,
           vendor: {
@@ -795,6 +860,9 @@ export default function PaymentPage() {
 
         setOrderDetails(orderDetailsData);
       } catch (err) {
+        if (!isCurrentOrder()) {
+          return;
+        }
         console.error('Failed to fetch order details:', err);
 
         // API 调用失败时，尝试使用 URL 参数构建订单详情
@@ -808,7 +876,7 @@ export default function PaymentPage() {
           const quantityNum = parseInt(urlQuantity || '1', 10);
 
           const fallbackOrderDetails: OrderDetails = {
-            orderID,
+            orderID: requestedOrderID,
             status: 'AWAITING_PAYMENT',
             items: [
               {
@@ -844,7 +912,9 @@ export default function PaymentPage() {
           setError(t('payment.loadOrderFailed'));
         }
       } finally {
-        setIsLoadingOrder(false);
+        if (isCurrentOrder()) {
+          setIsLoadingOrder(false);
+        }
       }
     };
 
@@ -857,6 +927,7 @@ export default function PaymentPage() {
     urlTitle,
     urlVendorName,
     urlVendorPeerID,
+    setCheckoutPaymentPolicy,
     urlQuantity,
     urlContractType,
     urlImage,

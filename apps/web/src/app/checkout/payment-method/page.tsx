@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   useI18n,
@@ -9,6 +9,10 @@ import {
   persistCheckoutTokenSelection,
   persistCheckoutFiatSelection,
   sanitizeCheckoutFiatProvider,
+  isFiatAllowedByCheckoutPaymentPolicy,
+  normalizeCheckoutPaymentPolicy,
+  readCheckoutPaymentPolicyFromSession,
+  type CheckoutPaymentPolicy,
 } from '@mobazha/core';
 import { PaymentCryptoSelector } from '@/components/Payment';
 import { CheckoutSubpageHeader } from '@/components/Checkout/CheckoutSubpageHeader';
@@ -24,14 +28,26 @@ export default function PaymentMethodPage() {
   const { navigateBack } = useCheckoutSubpageReturn('/checkout');
 
   const initialTokenId = searchParams.get('selected') || undefined;
+  const paymentPolicy = useMemo<CheckoutPaymentPolicy>(() => {
+    const fromQuery = searchParams.get('paymentPolicy');
+    if (fromQuery) return normalizeCheckoutPaymentPolicy(fromQuery);
+    if (typeof window === 'undefined') return 'all';
+    return readCheckoutPaymentPolicyFromSession();
+  }, [searchParams]);
+
   const [initialFiatProvider] = useState<string | undefined>(() => {
     if (typeof window === 'undefined') return undefined;
-    return syncCheckoutPaymentSessionStorage().fiatProvider;
+    return syncCheckoutPaymentSessionStorage({ paymentPolicy }).fiatProvider;
   });
   const vendorPeerID = searchParams.get('vendor') || undefined;
 
+  useEffect(() => {
+    syncCheckoutPaymentSessionStorage({ paymentPolicy });
+  }, [paymentPolicy]);
+
   const { activeFiat, crypto: acceptedCurrencies } = usePaymentMethods(vendorPeerID);
   const availableFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
+  const showFiatMethods = isFiatAllowedByCheckoutPaymentPolicy(paymentPolicy);
 
   const handleSelect = useCallback(
     (tokenId: string) => {
@@ -43,11 +59,11 @@ export default function PaymentMethodPage() {
 
   const handleFiatSelect = useCallback(
     (providerID: string) => {
-      if (!sanitizeCheckoutFiatProvider(providerID)) return;
+      if (!showFiatMethods || !sanitizeCheckoutFiatProvider(providerID)) return;
       persistCheckoutFiatSelection(providerID);
       navigateBack();
     },
-    [navigateBack]
+    [navigateBack, showFiatMethods]
   );
 
   return (
@@ -55,6 +71,14 @@ export default function PaymentMethodPage() {
       <CheckoutSubpageHeader title={t('payment.selectPaymentMethod')} onBack={navigateBack} />
 
       <main className="flex-1 p-3">
+        {!showFiatMethods ? (
+          <p
+            className="mb-3 text-xs text-muted-foreground"
+            data-testid="checkout-payment-policy-note"
+          >
+            {t('collectibles.checkout.escrowCryptoOnlyNote')}
+          </p>
+        ) : null}
         <PaymentCryptoSelector
           selectedTokenId={initialTokenId}
           selectedFiatProvider={initialFiatProvider}
@@ -62,7 +86,7 @@ export default function PaymentMethodPage() {
           acceptedCurrencies={acceptedCurrencies}
           onSelect={handleSelect}
           onSelectFiat={handleFiatSelect}
-          showFiatMethods={true}
+          showFiatMethods={showFiatMethods}
         />
       </main>
     </div>
