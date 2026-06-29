@@ -728,6 +728,7 @@ export interface TranslationResource {
       receiving?: string;
       chatEncryption: string;
       advanced: string;
+      marketplaceMemberships?: string;
     };
     // 访问控制
     accessControl?: TranslationSection & {
@@ -1373,6 +1374,8 @@ export interface TranslationResource {
     purchases: string;
     myOrders?: string;
     myCases?: string;
+    operatorMarketplaces?: string;
+    marketplaceInvitations?: string;
     rwaAssets?: string;
     settings: string;
     logout: string;

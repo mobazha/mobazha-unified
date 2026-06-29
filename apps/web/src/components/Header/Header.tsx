@@ -47,6 +47,8 @@ import {
   LayoutDashboard,
   ClipboardList,
   Store,
+  Building2,
+  Mail,
 } from 'lucide-react';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { NotificationDropdown } from '../Notification';
@@ -61,6 +63,7 @@ export const Header: React.FC = () => {
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
   const isModerator = profile?.moderator === true;
   const hideModeration = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const isOutpost = hideModeration;
   const { isEmbeddedApp, shouldUseMobileView } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const [peerIdCopied, setPeerIdCopied] = useState(false);
@@ -83,6 +86,7 @@ export const Header: React.FC = () => {
   const hasExternalWalletPayments = useRuntimePaymentFlow('external-wallet');
 
   const standaloneMode = useStorefrontMode();
+  const showMaasUserMenu = isAuthenticated && isHosted() && !standaloneMode && !isOutpost;
   const storefrontProfile = useStorefrontProfile();
   const {
     isSubMarket,
@@ -417,6 +421,28 @@ export const Header: React.FC = () => {
                       <DropdownMenuSeparator />
                     </>
                   )}
+
+                  {showMaasUserMenu ? (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/operator/marketplaces')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-operator-marketplaces"
+                      >
+                        <Building2 className="mr-2 h-4 w-4" />
+                        {t('userMenu.operatorMarketplaces')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/settings/marketplace-memberships')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-marketplace-invitations"
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        {t('userMenu.marketplaceInvitations')}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  ) : null}
 
                   <DropdownMenuItem
                     onClick={() => router.push('/settings/general')}

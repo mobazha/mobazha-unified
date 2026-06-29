@@ -55,6 +55,8 @@ import {
   Globe,
   ClipboardList,
   Layers,
+  Building2,
+  Mail,
 } from 'lucide-react';
 
 function MeCasesEntry() {
@@ -91,6 +93,7 @@ interface FeatureItemProps {
   onClick?: () => void;
   href?: string;
   rightElement?: React.ReactNode;
+  testId?: string;
 }
 
 const FeatureItem: React.FC<FeatureItemProps> = ({
@@ -100,6 +103,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   onClick,
   href,
   rightElement,
+  testId,
 }) => {
   const content = (
     <div className="flex items-center gap-3 py-3 px-3 min-h-[52px] rounded-lg hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer touch-feedback">
@@ -115,10 +119,18 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return (
+      <Link href={href} data-testid={testId}>
+        {content}
+      </Link>
+    );
   }
 
-  return <div onClick={onClick}>{content}</div>;
+  return (
+    <div onClick={onClick} data-testid={testId}>
+      {content}
+    </div>
+  );
 };
 
 // --- Section label ---
@@ -204,6 +216,9 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
   const { isDark, toggleDarkMode } = useTheme();
   const { isEmbeddedApp: isEmbedded } = usePlatform();
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const standaloneMode = useStorefrontMode();
+  const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const showMaasMenu = authenticated && isHosted() && !standaloneMode && !isOutpost;
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);
 
@@ -237,6 +252,22 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
               description={t('me.refundsDesc')}
               href="/settings/refunds"
             />
+            {showMaasMenu && (
+              <>
+                <FeatureItem
+                  icon={<Building2 className="w-5 h-5" />}
+                  title={t('userMenu.operatorMarketplaces')}
+                  href="/operator/marketplaces"
+                  testId="me-operator-marketplaces"
+                />
+                <FeatureItem
+                  icon={<Mail className="w-5 h-5" />}
+                  title={t('userMenu.marketplaceInvitations')}
+                  href="/settings/marketplace-memberships"
+                  testId="me-marketplace-invitations"
+                />
+              </>
+            )}
           </div>
         </>
       )}

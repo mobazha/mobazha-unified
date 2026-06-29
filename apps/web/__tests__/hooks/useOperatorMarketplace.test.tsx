@@ -11,11 +11,13 @@ vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMyMarketplaceMemberships: vi.fn(),
   inviteMarketplaceSeller: vi.fn(),
   updateMarketplace: vi.fn(),
+  deleteMarketplace: vi.fn(),
   updateMarketplaceSeller: vi.fn(),
   acceptMarketplaceSellerInvitation: vi.fn(),
 }));
 
 import {
+  deleteMarketplace,
   getMarketplace,
   getMarketplaceSellers,
   inviteMarketplaceSeller,
@@ -27,6 +29,7 @@ const mockGetMarketplace = getMarketplace as ReturnType<typeof vi.fn>;
 const mockGetMarketplaceSellers = getMarketplaceSellers as ReturnType<typeof vi.fn>;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplace = updateMarketplace as ReturnType<typeof vi.fn>;
+const mockDeleteMarketplace = deleteMarketplace as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplaceSeller = updateMarketplaceSeller as ReturnType<typeof vi.fn>;
 
 function deferred<T>() {
@@ -487,5 +490,101 @@ describe('useOperatorMarketplace', () => {
     expect(result.current.marketplace).toEqual(marketplaceB);
     expect(result.current.stores).toEqual([buildStore('peer-b', 'id-b')]);
     expect(result.current.loading).toBe(false);
+  });
+
+  it('updates marketplace settings and tracks working state', async () => {
+    const marketplace = buildMarketplace('mp1', 'Original');
+    const updated = { ...marketplace, name: 'Updated' };
+    const updateDeferred = deferred<NativeMarketplace>();
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockUpdateMarketplace.mockImplementation(() => updateDeferred.promise);
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    let updatePromise!: Promise<NativeMarketplace | null>;
+    act(() => {
+      updatePromise = result.current.update({ name: 'Updated' });
+    });
+    expect(result.current.working).toBe('update');
+
+    await act(async () => {
+      updateDeferred.resolve(updated);
+      await updatePromise;
+    });
+
+    expect(mockUpdateMarketplace).toHaveBeenCalledWith('mp1', { name: 'Updated' });
+    expect(result.current.marketplace).toEqual(updated);
+    expect(result.current.working).toBeNull();
+  });
+
+  it('archives marketplace and marks it read-only locally', async () => {
+    const marketplace = buildMarketplace('mp1', 'To Archive');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockDeleteMarketplace.mockResolvedValue({ archived: true, id: 'mp1' });
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.archive();
+    });
+
+    expect(mockDeleteMarketplace).toHaveBeenCalledWith('mp1');
+    expect(result.current.marketplace?.status).toBe('archived');
+    expect(result.current.working).toBeNull();
+  });
+
+  it('ignores stale update results after marketplaceId changes', async () => {
+    const marketplaceA = buildMarketplace('id-a', 'Marketplace A');
+    const marketplaceB = buildMarketplace('id-b', 'Marketplace B');
+    const updatedA = { ...marketplaceA, name: 'Updated A' };
+    const updateDeferred = deferred<NativeMarketplace>();
+
+    mockGetMarketplace.mockImplementation((id: string) => {
+      if (id === 'id-a') return Promise.resolve(marketplaceA);
+      if (id === 'id-b') return Promise.resolve(marketplaceB);
+      return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
+    });
+    mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockUpdateMarketplace.mockImplementation(() => updateDeferred.promise);
+
+    const { result, rerender } = renderHook(
+      ({ marketplaceId }: { marketplaceId?: string }) => useOperatorMarketplace(marketplaceId),
+      { initialProps: { marketplaceId: 'id-a' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    let updatePromise!: Promise<NativeMarketplace | null>;
+    act(() => {
+      updatePromise = result.current.update({ name: 'Updated A' });
+    });
+    expect(result.current.working).toBe('update');
+
+    rerender({ marketplaceId: 'id-b' });
+
+    await waitFor(() => {
+      expect(result.current.marketplace).toEqual(marketplaceB);
+      expect(result.current.working).toBeNull();
+    });
+
+    await act(async () => {
+      updateDeferred.resolve(updatedA);
+      await updatePromise;
+    });
+
+    expect(result.current.marketplace).toEqual(marketplaceB);
+    expect(result.current.working).toBeNull();
   });
 });

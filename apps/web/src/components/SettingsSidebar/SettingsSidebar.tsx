@@ -4,7 +4,18 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n, isStandalone } from '@mobazha/core';
-import { Settings, User, MapPin, Link2, Ban, Key, Wrench, Scale, Wallet } from 'lucide-react';
+import {
+  Settings,
+  User,
+  MapPin,
+  Link2,
+  Ban,
+  Key,
+  Wrench,
+  Scale,
+  Wallet,
+  Store,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarItem {
@@ -70,6 +81,14 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.moderation',
     href: '/settings/moderation',
     icon: <Scale className="w-4 h-4" />,
+    hideOutpost: true,
+  },
+  {
+    id: 'marketplace-memberships',
+    labelKey: 'settings.sidebar.marketplaceMemberships',
+    href: '/settings/marketplace-memberships',
+    icon: <Store className="w-4 h-4" />,
+    saasOnly: true,
     hideOutpost: true,
   },
   {
