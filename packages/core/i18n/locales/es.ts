@@ -3179,8 +3179,24 @@ export const es: PartialTranslationResource = {
     noMoreNotifications: 'No hay más notificaciones',
     totalCount: '{{count}} notificaciones en total',
     allMarkedRead: 'Todas las notificaciones marcadas como leídas',
+    markAllReadFailed: 'Could not mark all notifications as read. Please try again.',
     notificationDeleted: 'Notificación eliminada',
     deleteFailed: 'No se pudo eliminar la notificación. Inténtalo de nuevo.',
+    errors: {
+      fetchFailed: 'No se pudieron cargar las notificaciones',
+      notificationNotFound: 'Notificación no encontrada',
+      marketplaceReviewMetadataMissing: 'Faltan los detalles de revisión del marketplace',
+      markAsReadFailed: 'No se pudo marcar la notificación como leída',
+      markAllNodeFailed:
+        'No se pudieron marcar como leídas las notificaciones de pedidos. Inténtalo de nuevo.',
+      markAllMarketplaceFailed:
+        'No se pudieron marcar como leídas las notificaciones de revisión del marketplace. Inténtalo de nuevo.',
+      markAllBothFailed:
+        'No se pudieron marcar todas las notificaciones como leídas. Inténtalo de nuevo.',
+      deleteImmutableOnly: 'Las notificaciones de revisión del marketplace no se pueden eliminar.',
+      deletePartialImmutable:
+        'Algunas notificaciones de revisión del marketplace no se pueden eliminar y se conservaron.',
+    },
     roles: {
       buyer: 'Comprador',
       seller: 'Vendedor',
@@ -3197,6 +3213,26 @@ export const es: PartialTranslationResource = {
       summary: '{{count}} actualizaciones · {{latest}}',
       moreUpdates: '+ {{count}} actualizaciones más',
       orderRef: 'Pedido #{{orderId}}',
+    },
+    marketplaceReview: {
+      titles: {
+        approved: 'Seller Review Approved',
+        rejected: 'Seller Review Rejected',
+        suspended: 'Seller Access Suspended',
+        updated: 'Seller Review Updated',
+      },
+      messages: {
+        approved: 'Your seller access was approved in {{marketplace}}.',
+        rejected: 'Your seller access was rejected in {{marketplace}}.',
+        rejectedWithReason:
+          'Your seller access was rejected in {{marketplace}}. Reason: {{reason}}',
+        suspended: 'Your seller access was suspended in {{marketplace}}.',
+        suspendedWithReason:
+          'Your seller access was suspended in {{marketplace}}. Reason: {{reason}}',
+        updated: 'Your seller access status was updated in {{marketplace}}.',
+      },
+      fallbackMarketplace: 'Marketplace',
+      reasonLabel: 'Reason',
     },
     order: {
       youPlacedOrder: 'Realizaste un pedido',

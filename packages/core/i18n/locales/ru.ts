@@ -3146,8 +3146,23 @@ export const ru: PartialTranslationResource = {
     noMoreNotifications: 'Больше уведомлений нет',
     totalCount: 'Всего {{count}} уведомлений',
     allMarkedRead: 'Все уведомления отмечены как прочитанные',
+    markAllReadFailed: 'Could not mark all notifications as read. Please try again.',
     notificationDeleted: 'Уведомление удалено',
     deleteFailed: 'Не удалось удалить уведомление. Попробуйте снова.',
+    errors: {
+      fetchFailed: 'Не удалось загрузить уведомления',
+      notificationNotFound: 'Уведомление не найдено',
+      marketplaceReviewMetadataMissing: 'Недоступны данные о проверке маркетплейса',
+      markAsReadFailed: 'Не удалось отметить уведомление как прочитанное',
+      markAllNodeFailed:
+        'Не удалось отметить уведомления заказов как прочитанные. Попробуйте снова.',
+      markAllMarketplaceFailed:
+        'Не удалось отметить уведомления проверки маркетплейса как прочитанные. Попробуйте снова.',
+      markAllBothFailed: 'Не удалось отметить все уведомления как прочитанные. Попробуйте снова.',
+      deleteImmutableOnly: 'Уведомления проверки маркетплейса нельзя удалить.',
+      deletePartialImmutable:
+        'Некоторые уведомления проверки маркетплейса нельзя удалить, они были сохранены.',
+    },
     roles: {
       buyer: 'Покупатель',
       seller: 'Продавец',
@@ -3164,6 +3179,26 @@ export const ru: PartialTranslationResource = {
       summary: '{{count}} обновлений · {{latest}}',
       moreUpdates: '+ ещё {{count}} обновлений',
       orderRef: 'Заказ #{{orderId}}',
+    },
+    marketplaceReview: {
+      titles: {
+        approved: 'Seller Review Approved',
+        rejected: 'Seller Review Rejected',
+        suspended: 'Seller Access Suspended',
+        updated: 'Seller Review Updated',
+      },
+      messages: {
+        approved: 'Your seller access was approved in {{marketplace}}.',
+        rejected: 'Your seller access was rejected in {{marketplace}}.',
+        rejectedWithReason:
+          'Your seller access was rejected in {{marketplace}}. Reason: {{reason}}',
+        suspended: 'Your seller access was suspended in {{marketplace}}.',
+        suspendedWithReason:
+          'Your seller access was suspended in {{marketplace}}. Reason: {{reason}}',
+        updated: 'Your seller access status was updated in {{marketplace}}.',
+      },
+      fallbackMarketplace: 'Marketplace',
+      reasonLabel: 'Reason',
     },
     order: {
       youPlacedOrder: 'Вы сделали заказ',

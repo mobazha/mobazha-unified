@@ -4,8 +4,8 @@
 
 import { withMockFallback } from './mode';
 import { getI18n } from '../../i18n/i18n';
-import { NODE_API } from '../../config/apiPaths';
-import { authPost, authSafeGet } from './helpers';
+import { HOSTING_API, NODE_API } from '../../config/apiPaths';
+import { authPost, authSafeGet, hostingGet, hostingPost } from './helpers';
 import {
   readStringField,
   resolveCaseID,
@@ -97,9 +97,50 @@ interface BackendNotificationsResponse {
   notifications: BackendNotificationRecord[];
 }
 
+export type NotificationSource = 'node' | 'marketplace-review';
+
+export type MarketplaceReviewStatus = 'approved' | 'rejected' | 'suspended';
+
+export interface MarketplaceReviewNotificationMeta {
+  eventID: number;
+  marketplaceID: string;
+  marketplaceName?: string;
+  marketplaceSlug?: string;
+  marketplaceStoreID: number;
+  peerID: string;
+  actorID: string;
+  previousStatus: string;
+  status: string;
+  reason?: string;
+}
+
+interface BackendMarketplaceReviewEvent {
+  id: number;
+  marketplaceID: string;
+  marketplaceName?: string;
+  marketplaceSlug?: string;
+  marketplaceStoreID: number;
+  peerID: string;
+  actorID: string;
+  previousStatus: string;
+  status: string;
+  reason?: string;
+  readAt?: string;
+  createdAt: string;
+}
+
+interface BackendMarketplaceReviewEventsResponse {
+  events: BackendMarketplaceReviewEvent[];
+  total: number;
+  unread: number;
+  hasMore: boolean;
+  nextBeforeID?: number;
+}
+
 // 前端使用的通知项格式
 export interface Notification {
   id: string;
+  source: NotificationSource;
   type: string; // dot-separated 格式
   title: string;
   message: string;
@@ -146,6 +187,7 @@ export interface Notification {
     otherPartyAvatar?: string;
     moderatorName?: string;
     moderatorAvatar?: string;
+    marketplaceReview?: MarketplaceReviewNotificationMeta;
   };
 }
 
@@ -157,9 +199,18 @@ export interface NotificationsResult {
   lastOffsetId?: string;
 }
 
+export interface MarketplaceReviewEventsResult {
+  notifications: Notification[];
+  total: number;
+  unread: number;
+  hasMore: boolean;
+  nextBeforeID?: number;
+}
+
 const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
+    source: 'node',
     type: 'order.created',
     title: 'New Order',
     message: 'Buyer placed an order',
@@ -176,6 +227,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-2',
+    source: 'node',
     type: 'order.funded',
     title: 'Payment Received',
     message: 'Order has been funded',
@@ -191,6 +243,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-3',
+    source: 'node',
     type: 'social.follow',
     title: 'New Follower',
     message: 'Alice Chen started following you',
@@ -204,6 +257,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-4',
+    source: 'node',
     type: 'social.follow',
     title: 'New Follower',
     message: 'TechGear Store started following you',
@@ -216,6 +270,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-5',
+    source: 'node',
     type: 'dispute.opened',
     title: 'Dispute Opened',
     message: 'A dispute has been opened',
@@ -412,6 +467,85 @@ function generateNotificationMessage(
   }
 }
 
+function normalizeMarketplaceReviewStatus(status: string): MarketplaceReviewStatus | null {
+  if (status === 'approved' || status === 'rejected' || status === 'suspended') {
+    return status;
+  }
+  return null;
+}
+
+function getMarketplaceReviewTitle(status: string): string {
+  const { t } = getI18n();
+  const normalizedStatus = normalizeMarketplaceReviewStatus(status);
+  switch (normalizedStatus) {
+    case 'approved':
+      return t('notifications.marketplaceReview.titles.approved');
+    case 'rejected':
+      return t('notifications.marketplaceReview.titles.rejected');
+    case 'suspended':
+      return t('notifications.marketplaceReview.titles.suspended');
+    default:
+      return t('notifications.marketplaceReview.titles.updated');
+  }
+}
+
+function getMarketplaceReviewMessage(
+  event: BackendMarketplaceReviewEvent,
+  fallbackMarketplaceName: string
+): string {
+  const { t } = getI18n();
+  const normalizedStatus = normalizeMarketplaceReviewStatus(event.status);
+  const params = {
+    marketplace: event.marketplaceName || fallbackMarketplaceName,
+    reason: event.reason || '',
+  };
+
+  switch (normalizedStatus) {
+    case 'approved':
+      return t('notifications.marketplaceReview.messages.approved', params);
+    case 'rejected':
+      return event.reason
+        ? t('notifications.marketplaceReview.messages.rejectedWithReason', params)
+        : t('notifications.marketplaceReview.messages.rejected', params);
+    case 'suspended':
+      return event.reason
+        ? t('notifications.marketplaceReview.messages.suspendedWithReason', params)
+        : t('notifications.marketplaceReview.messages.suspended', params);
+    default:
+      return t('notifications.marketplaceReview.messages.updated', params);
+  }
+}
+
+export function mapMarketplaceReviewEventToNotification(
+  event: BackendMarketplaceReviewEvent
+): Notification {
+  const { t } = getI18n();
+  const fallbackMarketplaceName = t('notifications.marketplaceReview.fallbackMarketplace');
+  return {
+    id: `marketplace-review:${event.marketplaceID}:${event.id}`,
+    source: 'marketplace-review',
+    type: 'marketplace.seller_review',
+    title: getMarketplaceReviewTitle(event.status),
+    message: getMarketplaceReviewMessage(event, fallbackMarketplaceName),
+    read: Boolean(event.readAt),
+    timestamp: event.createdAt,
+    data: {
+      marketplaceReview: {
+        eventID: event.id,
+        marketplaceID: event.marketplaceID,
+        marketplaceName: event.marketplaceName,
+        marketplaceSlug: event.marketplaceSlug,
+        marketplaceStoreID: event.marketplaceStoreID,
+        peerID: event.peerID,
+        actorID: event.actorID,
+        previousStatus: event.previousStatus,
+        status: event.status,
+        reason: event.reason,
+      },
+    },
+  };
+}
+
 export async function getNotifications(
   options: {
     limit?: number;
@@ -448,6 +582,7 @@ export async function getNotifications(
           resolveNotificationID(notifRecord) || `${record.type}-${record.timestamp}-${index}`;
         return {
           id: uniqueId,
+          source: 'node',
           type: record.type,
           title: generateNotificationTitle(record.type, notif),
           message: generateNotificationMessage(record.type, notif),
@@ -545,6 +680,81 @@ export async function getNotifications(
 export async function getNotificationsList(limit = 20, offsetId = ''): Promise<Notification[]> {
   const result = await getNotifications({ limit, offsetId });
   return result.notifications;
+}
+
+export async function getMarketplaceReviewEvents(
+  options: { limit?: number; beforeID?: number } = {}
+): Promise<MarketplaceReviewEventsResult> {
+  const { limit = 20, beforeID } = options;
+
+  const realFn = async () => {
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    if (typeof beforeID === 'number') {
+      params.append('beforeID', String(beforeID));
+    }
+
+    const response = await hostingGet<BackendMarketplaceReviewEventsResponse>(
+      `${HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS}?${params.toString()}`
+    );
+
+    return {
+      notifications: (response.events || []).map(mapMarketplaceReviewEventToNotification),
+      total: response.total || 0,
+      unread: response.unread || 0,
+      hasMore: Boolean(response.hasMore),
+      nextBeforeID: response.nextBeforeID,
+    };
+  };
+
+  const mockFn = async () => ({
+    notifications: [] as Notification[],
+    total: 0,
+    unread: 0,
+    hasMore: false,
+    nextBeforeID: undefined,
+  });
+
+  return withMockFallback(realFn, mockFn, HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS);
+}
+
+export async function markMarketplaceReviewEventAsRead(
+  marketplaceID: string,
+  eventID: number
+): Promise<{ success: boolean }> {
+  const realFn = async () => {
+    await hostingPost<{ success?: boolean }>(
+      HOSTING_API.MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ(marketplaceID, eventID),
+      {}
+    );
+    return { success: true };
+  };
+  const mockFn = async () => ({ success: true });
+  return withMockFallback(
+    realFn,
+    mockFn,
+    HOSTING_API.MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ(marketplaceID, eventID)
+  );
+}
+
+export async function markAllMarketplaceReviewEventsAsRead(): Promise<{
+  success: boolean;
+  updated?: number;
+  unread?: number;
+}> {
+  const realFn = async () => {
+    const response = await hostingPost<{ updated: number; unread: number }>(
+      HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL,
+      {}
+    );
+    return { success: true, updated: response.updated, unread: response.unread };
+  };
+  const mockFn = async () => ({ success: true, updated: 0, unread: 0 });
+  return withMockFallback(
+    realFn,
+    mockFn,
+    HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL
+  );
 }
 
 export async function getUnreadNotificationCount(): Promise<number> {
@@ -649,7 +859,15 @@ export async function deleteNotification(notificationId: string): Promise<{ succ
 const GUEST_ORDER_TOKEN_PREFIX = 'gst_';
 
 export function getNotificationRoute(notification: Notification): string | null {
-  const { type, data } = notification;
+  const { source, type, data } = notification;
+  if (source === 'marketplace-review') {
+    const marketplaceSlug = data?.marketplaceReview?.marketplaceSlug;
+    if (marketplaceSlug) {
+      return `/marketplace/${marketplaceSlug}/sell`;
+    }
+    return '/marketplaces';
+  }
+
   const orderOrCaseId = resolveOrderOrCaseID(data);
 
   if (type.startsWith('order.') || type.startsWith('payment.')) {
@@ -684,9 +902,12 @@ export function getNotificationRoute(notification: Notification): string | null 
 export const notificationsApi = {
   getNotifications,
   getNotificationsList,
+  getMarketplaceReviewEvents,
   getUnreadNotificationCount,
   markNotificationAsRead,
+  markMarketplaceReviewEventAsRead,
   markAllNotificationsAsRead,
+  markAllMarketplaceReviewEventsAsRead,
   batchNotifications,
   deleteNotification,
   getNotificationRoute,

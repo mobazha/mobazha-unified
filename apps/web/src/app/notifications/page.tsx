@@ -99,8 +99,16 @@ export default function NotificationsPage() {
 
   // 处理标记全部已读
   const handleMarkAllAsRead = useCallback(async () => {
-    await markAllAsRead();
-    toast({ title: t('notifications.allMarkedRead') });
+    const result = await markAllAsRead();
+    if (result.success) {
+      toast({ title: t('notifications.allMarkedRead') });
+      return;
+    }
+    toast({
+      title: t('common.error'),
+      description: result.error ?? t('notifications.markAllReadFailed'),
+      variant: 'destructive',
+    });
   }, [markAllAsRead, t]);
 
   const handleMarkGroupAsRead = useCallback(
@@ -315,6 +323,8 @@ export default function NotificationsPage() {
                 const isUnread =
                   item.kind === 'order-group' ? item.hasUnread : !item.notification.read;
                 const itemIds = getDisplayItemsNotificationIds(item);
+                const canDelete =
+                  item.kind === 'order-group' ? true : item.notification.source === 'node';
 
                 return (
                   <Card
@@ -326,28 +336,30 @@ export default function NotificationsPage() {
                   >
                     <div className="relative group">
                       {renderDisplayItem(item)}
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          void handleDeleteDisplayItem(itemIds);
-                        }}
-                        aria-label={t('common.delete')}
-                        className="absolute bottom-2 right-3 sm:top-3 sm:bottom-auto p-1.5 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] sm:p-2 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors opacity-0 active:opacity-100 sm:active:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      {canDelete && (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            void handleDeleteDisplayItem(itemIds);
+                          }}
+                          aria-label={t('common.delete')}
+                          className="absolute bottom-2 right-3 sm:top-3 sm:bottom-auto p-1.5 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] sm:p-2 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors opacity-0 active:opacity-100 sm:active:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   </Card>
                 );

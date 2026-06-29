@@ -22,6 +22,7 @@ import {
   formatUserName,
   formatNotificationCounterparty,
   getNotificationCtaKey,
+  getNotificationRoute,
 } from '@mobazha/core';
 import type { Notification as ApiNotification } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,19 @@ function getNotificationIcon(type: string): React.ReactNode {
     default:
       return <Clock className={cn(iconClass, 'text-muted-foreground')} />;
   }
+}
+
+function getMarketplaceReviewStatusIcon(status?: string): React.ReactNode {
+  if (status === 'approved') {
+    return <CheckCircle className="h-5 w-5 text-success" />;
+  }
+  if (status === 'rejected') {
+    return <XCircle className="h-5 w-5 text-error" />;
+  }
+  if (status === 'suspended') {
+    return <AlertTriangle className="h-5 w-5 text-warning" />;
+  }
+  return <Clock className="h-5 w-5 text-muted-foreground" />;
 }
 
 /**
@@ -547,10 +561,75 @@ export function DisputeNotificationCard({
   return content;
 }
 
+export function MarketplaceReviewNotificationCard({
+  notification,
+  onClick,
+  route,
+  className,
+}: OrderNotificationCardProps) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const { data, read, timestamp, message } = notification;
+  const review = data?.marketplaceReview;
+  const timeAgoText = formatTimeAgo(timestamp, t);
+  const accessibleLabel = `${message} ${timeAgoText}`;
+
+  const handleClick = () => {
+    onClick?.();
+    if (route) {
+      router.push(route);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={accessibleLabel}
+      className={cn(
+        'w-full text-left flex items-start gap-3 p-3 sm:p-4 min-h-[56px] rounded-lg transition-all',
+        !read ? 'bg-primary/5 border-l-4 border-l-primary' : 'bg-transparent hover:bg-muted/50',
+        className
+      )}
+      onClick={handleClick}
+    >
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+        {getMarketplaceReviewStatusIcon(review?.status)}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p
+              className={cn(
+                'text-sm',
+                read ? 'text-text-secondary' : 'text-text-primary font-medium'
+              )}
+            >
+              {message}
+            </p>
+          </div>
+          <span className="text-xs text-text-tertiary flex-shrink-0">{timeAgoText}</span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 // ============ 通用通知卡片 ============
 
 export function NotificationCard({ notification, onClick, className }: NotificationCardProps) {
-  const { type } = notification;
+  const { type, source } = notification;
+
+  if (source === 'marketplace-review') {
+    return (
+      <MarketplaceReviewNotificationCard
+        notification={notification}
+        onClick={onClick}
+        route={getNotificationRoute(notification)}
+        className={className}
+      />
+    );
+  }
 
   // 根据通知类型选择合适的卡片组件
   const isOrderNotification = type.startsWith('order.') || type.startsWith('payment.');
