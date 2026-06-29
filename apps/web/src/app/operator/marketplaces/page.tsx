@@ -14,7 +14,84 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowRight, Loader2, Plus } from 'lucide-react';
+import { ArrowRight, ChevronDown, Loader2, Plus } from 'lucide-react';
+import type { NativeMarketplace } from '@mobazha/core';
+
+function MarketplaceListCard({
+  marketplace,
+  onOpen,
+}: {
+  marketplace: NativeMarketplace;
+  onOpen: (id: string) => void;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <button
+      key={marketplace.id}
+      className="w-full text-left"
+      data-testid={`operator-marketplace-card-${marketplace.id}`}
+      onClick={() => onOpen(marketplace.id)}
+    >
+      <Card className="transition-colors hover:border-primary/50">
+        <CardContent className="flex items-center justify-between gap-4 py-5">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="font-semibold">{marketplace.name}</h2>
+              <Badge variant="outline">
+                {t(MARKETPLACE_LIFECYCLE_STATUS_KEYS[marketplace.status])}
+              </Badge>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {marketplace.slug} · {marketplace.vertical} ·{' '}
+              {t('marketplace.operator.domainCount', {
+                count: marketplace.domains.length,
+              })}
+            </p>
+          </div>
+          <ArrowRight className="h-5 w-5 text-muted-foreground" />
+        </CardContent>
+      </Card>
+    </button>
+  );
+}
+
+function ArchivedMarketplacesSection({
+  marketplaces,
+  onOpen,
+}: {
+  marketplaces: NativeMarketplace[];
+  onOpen: (id: string) => void;
+}) {
+  const { t } = useI18n();
+
+  if (marketplaces.length === 0) return null;
+
+  return (
+    <details
+      className="group rounded-lg border border-border bg-muted/20 open:bg-muted/30"
+      data-testid="operator-marketplaces-archived-section"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+        <div>
+          <div>{t('marketplace.operator.archivedSectionTitle')}</div>
+          <p className="mt-1 text-xs font-normal">
+            {t('marketplace.operator.archivedSectionDesc')}
+          </p>
+        </div>
+        <ChevronDown
+          className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <div className="space-y-4 border-t border-border px-4 pb-4 pt-4">
+        {marketplaces.map(marketplace => (
+          <MarketplaceListCard key={marketplace.id} marketplace={marketplace} onOpen={onOpen} />
+        ))}
+      </div>
+    </details>
+  );
+}
 
 export default function MarketplaceOperatorPage() {
   const router = useRouter();
@@ -26,6 +103,11 @@ export default function MarketplaceOperatorPage() {
   const [name, setName] = useState('');
   const [vertical, setVertical] = useState('general');
   const [subdomain, setSubdomain] = useState('');
+
+  const activeMarketplaces = marketplaces.filter(marketplace => marketplace.status !== 'archived');
+  const archivedMarketplaces = marketplaces.filter(
+    marketplace => marketplace.status === 'archived'
+  );
 
   async function createMarketplace() {
     if (!name.trim()) return;
@@ -129,35 +211,44 @@ export default function MarketplaceOperatorPage() {
                 </CardContent>
               </Card>
             ) : (
-              marketplaces.map(marketplace => (
-                <button
-                  key={marketplace.id}
-                  className="text-left"
-                  onClick={() =>
-                    router.push(`/operator/marketplaces/${encodeURIComponent(marketplace.id)}`)
-                  }
-                >
-                  <Card className="transition-colors hover:border-primary/50">
-                    <CardContent className="flex items-center justify-between gap-4 py-5">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h2 className="font-semibold">{marketplace.name}</h2>
-                          <Badge variant="outline">
-                            {t(MARKETPLACE_LIFECYCLE_STATUS_KEYS[marketplace.status])}
-                          </Badge>
-                        </div>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {marketplace.slug} · {marketplace.vertical} ·{' '}
-                          {t('marketplace.operator.domainCount', {
-                            count: marketplace.domains.length,
-                          })}
-                        </p>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+              <>
+                {activeMarketplaces.length > 0 ? (
+                  <div className="space-y-4" data-testid="operator-marketplaces-active-section">
+                    {activeMarketplaces.length > 0 && archivedMarketplaces.length > 0 ? (
+                      <h2 className="text-sm font-medium text-muted-foreground">
+                        {t('marketplace.operator.activeSectionTitle')}
+                      </h2>
+                    ) : null}
+                    {activeMarketplaces.map(marketplace => (
+                      <MarketplaceListCard
+                        key={marketplace.id}
+                        marketplace={marketplace}
+                        onOpen={marketplaceId =>
+                          router.push(`/operator/marketplaces/${encodeURIComponent(marketplaceId)}`)
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : null}
+
+                {activeMarketplaces.length === 0 && archivedMarketplaces.length > 0 ? (
+                  <Card>
+                    <CardContent className="py-10 text-center">
+                      <p className="font-medium">{t('marketplace.operator.activeSectionTitle')}</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {t('marketplace.operator.archivedSectionDesc')}
+                      </p>
                     </CardContent>
                   </Card>
-                </button>
-              ))
+                ) : null}
+
+                <ArchivedMarketplacesSection
+                  marketplaces={archivedMarketplaces}
+                  onOpen={marketplaceId =>
+                    router.push(`/operator/marketplaces/${encodeURIComponent(marketplaceId)}`)
+                  }
+                />
+              </>
             )}
           </div>
         </Container>

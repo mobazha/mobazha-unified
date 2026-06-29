@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   MARKETPLACE_CATALOG_MODE_KEYS,
   MARKETPLACE_DISCOVERABILITY_KEYS,
@@ -16,6 +16,7 @@ import {
 } from '@mobazha/core';
 import type { MarketplaceStoreMembership } from '@mobazha/core';
 import { Header, Footer } from '@/components';
+import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import { ArrowLeft, Check, Loader2, Send, ShieldCheck } from 'lucide-react';
 
 export default function MarketplaceOperatorDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = String(params.id ?? '');
   const { t } = useI18n();
   const { toast } = useToast();
@@ -37,10 +39,13 @@ export default function MarketplaceOperatorDetailPage() {
     loadFailed,
     working,
     publish,
+    update,
+    archive,
     invite,
     reviewSeller,
   } = useOperatorMarketplace(id);
   const [peerID, setPeerID] = useState('');
+  const isArchived = marketplace?.status === 'archived';
 
   async function handlePublish() {
     try {
@@ -84,6 +89,35 @@ export default function MarketplaceOperatorDetailPage() {
       toast({
         variant: 'destructive',
         title: t('marketplace.operator.reviewFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleSaveSettings(data: Parameters<typeof update>[0]) {
+    try {
+      const updated = await update(data);
+      toast({ title: t('marketplace.operator.saveSuccess') });
+      return updated;
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.saveFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+      return null;
+    }
+  }
+
+  async function handleArchive() {
+    try {
+      await archive();
+      toast({ title: t('marketplace.operator.archiveSuccess') });
+      router.push('/operator/marketplaces');
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.archiveFailedTitle'),
         description: error instanceof Error ? error.message : t('common.retry'),
       });
     }
@@ -146,7 +180,7 @@ export default function MarketplaceOperatorDetailPage() {
                 {marketplace.description || t('marketplace.operator.noDescription')}
               </p>
             </div>
-            {marketplace.status === 'draft' && (
+            {marketplace.status === 'draft' && !isArchived && (
               <Button onClick={() => void handlePublish()} disabled={Boolean(working)}>
                 {working === 'publish' ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -156,6 +190,16 @@ export default function MarketplaceOperatorDetailPage() {
                 {t('marketplace.operator.publish')}
               </Button>
             )}
+          </div>
+
+          <div className="mt-8">
+            <OperatorMarketplaceSettingsCard
+              key={marketplace.id}
+              marketplace={marketplace}
+              working={working}
+              onSave={handleSaveSettings}
+              onArchive={handleArchive}
+            />
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-3">
@@ -205,25 +249,27 @@ export default function MarketplaceOperatorDetailPage() {
             </Card>
           </div>
 
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>{t('marketplace.operator.inviteStore')}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                value={peerID}
-                onChange={event => setPeerID(event.target.value)}
-                placeholder={t('marketplace.operator.peerIdPlaceholder')}
-              />
-              <Button
-                onClick={() => void handleInvite()}
-                disabled={!peerID.trim() || Boolean(working)}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                {t('marketplace.operator.sendInvite')}
-              </Button>
-            </CardContent>
-          </Card>
+          {!isArchived ? (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>{t('marketplace.operator.inviteStore')}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3 sm:flex-row">
+                <Input
+                  value={peerID}
+                  onChange={event => setPeerID(event.target.value)}
+                  placeholder={t('marketplace.operator.peerIdPlaceholder')}
+                />
+                <Button
+                  onClick={() => void handleInvite()}
+                  disabled={!peerID.trim() || Boolean(working)}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  {t('marketplace.operator.sendInvite')}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card className="mt-6">
             <CardHeader>
@@ -258,7 +304,7 @@ export default function MarketplaceOperatorDetailPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {canApprove && (
+                        {canApprove && !isArchived ? (
                           <Button
                             size="sm"
                             onClick={() => void handleReview(store, 'approved')}
@@ -267,8 +313,8 @@ export default function MarketplaceOperatorDetailPage() {
                             <Check className="mr-1 h-4 w-4" />
                             {t('marketplace.operator.approve')}
                           </Button>
-                        )}
-                        {store.status !== 'rejected' && store.status !== 'left' && (
+                        ) : null}
+                        {!isArchived && store.status !== 'rejected' && store.status !== 'left' ? (
                           <Button
                             size="sm"
                             variant="outline"
@@ -284,7 +330,7 @@ export default function MarketplaceOperatorDetailPage() {
                               ? t('marketplace.operator.suspend')
                               : t('marketplace.operator.reject')}
                           </Button>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   );

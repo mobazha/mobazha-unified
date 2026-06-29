@@ -7,10 +7,12 @@ import type {
   MarketplaceStoreStatus,
   MyMarketplaceMembershipEntry,
   NativeMarketplace,
+  UpdateNativeMarketplaceRequest,
 } from '../types/marketplace';
 import {
   acceptMarketplaceSellerInvitation,
   createMarketplace,
+  deleteMarketplace,
   getMarketplace,
   getMarketplaceSellers,
   getMyMarketplaceMemberships,
@@ -168,6 +170,43 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     }
   }, [marketplaceId]);
 
+  const update = useCallback(
+    async (data: UpdateNativeMarketplaceRequest) => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      setWorking('update');
+      try {
+        const updated = await updateMarketplace(actionMarketplaceId, data);
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setMarketplace(updated);
+        }
+        return updated;
+      } finally {
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setWorking(null);
+        }
+      }
+    },
+    [marketplaceId]
+  );
+
+  const archive = useCallback(async () => {
+    if (!marketplaceId) return null;
+    const actionMarketplaceId = marketplaceId;
+    setWorking('archive');
+    try {
+      const result = await deleteMarketplace(actionMarketplaceId);
+      if (marketplaceIdRef.current === actionMarketplaceId) {
+        setMarketplace(prev => (prev ? { ...prev, status: 'archived' } : null));
+      }
+      return result;
+    } finally {
+      if (marketplaceIdRef.current === actionMarketplaceId) {
+        setWorking(null);
+      }
+    }
+  }, [marketplaceId]);
+
   const invite = useCallback(
     async (peerID: string) => {
       if (!marketplaceId) return;
@@ -219,6 +258,8 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     working,
     refresh,
     publish,
+    update,
+    archive,
     invite,
     reviewSeller,
   };

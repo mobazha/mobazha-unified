@@ -3,6 +3,7 @@ import type {
   MarketplaceDiscoverability,
   MarketplaceDomain,
   MarketplaceLifecycleStatus,
+  MarketplaceSellerEntryMode,
   MarketplaceStoreStatus,
 } from '../types/marketplace';
 
@@ -19,6 +20,10 @@ export type MarketplaceDiscoverabilityKey =
 export type MarketplaceCatalogModeKey =
   | 'marketplace.enums.catalogMode.open'
   | 'marketplace.enums.catalogMode.curated';
+
+export type MarketplaceSellerEntryModeKey =
+  | 'marketplace.enums.sellerEntryMode.operatorInvited'
+  | 'marketplace.enums.sellerEntryMode.sellerSelfServe';
 
 export type MarketplaceDomainKindKey =
   | 'marketplace.enums.domainKind.subdomain'
@@ -61,6 +66,14 @@ export const MARKETPLACE_CATALOG_MODE_KEYS: Record<
 > = {
   open: 'marketplace.enums.catalogMode.open',
   curated: 'marketplace.enums.catalogMode.curated',
+};
+
+export const MARKETPLACE_SELLER_ENTRY_MODE_KEYS: Record<
+  MarketplaceSellerEntryMode,
+  MarketplaceSellerEntryModeKey
+> = {
+  operator_invited: 'marketplace.enums.sellerEntryMode.operatorInvited',
+  seller_self_serve: 'marketplace.enums.sellerEntryMode.sellerSelfServe',
 };
 
 export const MARKETPLACE_DOMAIN_KIND_KEYS: Record<
