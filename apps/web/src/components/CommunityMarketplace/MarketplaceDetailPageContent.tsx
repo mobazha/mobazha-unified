@@ -22,6 +22,7 @@ import {
   useCollectibleMarketplaceAttribution,
   useI18n,
   isCollectibleMarketplaceVertical,
+  isNativeMarketplaceSelfServeEligible,
   marketplaceJoinModeKey,
   marketplaceVerticalKey,
   MARKETPLACE_CATALOG_MODE_KEYS,
@@ -104,6 +105,14 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     hasCollectibleCategoryFilter && filteredPreviews.length === 0;
 
   const publicSiteUrl = marketplace?.publicURL?.trim() ?? '';
+  const selfServeEligible = marketplace ? isNativeMarketplaceSelfServeEligible(marketplace) : false;
+  const sellHref = marketplace
+    ? `/marketplace/${marketplace.slug || marketplace.id}/sell`
+    : '/marketplace';
+  const sellerAdmissionBlockedMessage =
+    marketplace?.joinMode === 'invite'
+      ? t('marketplace.detail.sellerAdmissionInviteOnly')
+      : t('marketplace.detail.sellerAdmissionOperatorInvited');
 
   if (loading) {
     return (
@@ -250,16 +259,29 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         </VStack>
                       </HStack>
                     </div>
-                    {publicSiteUrl ? (
-                      <VStack gap="sm" className="w-full sm:w-auto">
-                        <Button asChild className="w-full sm:w-auto">
+                    <VStack gap="sm" className="w-full sm:w-auto">
+                      {selfServeEligible ? (
+                        <Button
+                          asChild
+                          className="w-full sm:w-auto"
+                          data-testid="marketplace-apply-to-sell"
+                        >
+                          <Link href={sellHref}>{t('marketplace.detail.applyToSell')}</Link>
+                        </Button>
+                      ) : (
+                        <div className="max-w-xs rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                          {sellerAdmissionBlockedMessage}
+                        </div>
+                      )}
+                      {publicSiteUrl ? (
+                        <Button asChild variant="outline" className="w-full sm:w-auto">
                           <a href={publicSiteUrl} target="_blank" rel="noopener noreferrer">
                             {t('marketplace.detail.visitPublicSite')}
                             <ExternalLink className="ml-2 h-4 w-4" aria-hidden />
                           </a>
                         </Button>
-                      </VStack>
-                    ) : null}
+                      ) : null}
+                    </VStack>
                   </HStack>
                 </div>
               </HStack>

@@ -540,6 +540,10 @@ export const HOSTING_API = {
   PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
   PUBLIC_MARKETPLACE_DETAIL: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}`,
+  PUBLIC_MARKETPLACE_SELLER_APPLICATIONS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications`,
+  PUBLIC_MARKETPLACE_SELLER_APPLICATION_MINE: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
   COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
   COMMUNITY_MARKETPLACES_VERIFY_MEMBER: (platform: string, instanceId: string) =>
@@ -564,10 +568,6 @@ export const HOSTING_API = {
   COMMUNITY_MARKETPLACE_GROUPS: '/platform/v1/community-marketplaces/groups',
   COMMUNITY_MARKETPLACE_PUBLIC_DETAIL: (identifier: string) =>
     `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}`,
-  COMMUNITY_MARKETPLACE_PUBLIC_SELLER_APPLICATION: (identifier: string) =>
-    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}/seller-application`,
-  COMMUNITY_MARKETPLACE_PUBLIC_SELLER_APPLY: (identifier: string) =>
-    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}/sellers/apply`,
   // --- Auth Tokens (MCP / API) ---
   AUTH_TOKENS: '/platform/v1/auth/tokens',
   AUTH_TOKEN: (tokenID: string) => `/platform/v1/auth/tokens/${tokenID}`,

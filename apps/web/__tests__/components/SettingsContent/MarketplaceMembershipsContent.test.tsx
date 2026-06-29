@@ -19,6 +19,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       peerID: 'peer-1',
       status: 'approved',
       isVisible: true,
+      productGroupIDs: [],
     },
   },
   {
@@ -36,6 +37,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       peerID: 'peer-1',
       status: 'invited',
       isVisible: false,
+      productGroupIDs: [],
       invitedAt: '2026-01-02T00:00:00Z',
     },
   },
@@ -54,6 +56,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       peerID: 'peer-1',
       status: 'invited',
       isVisible: false,
+      productGroupIDs: [],
       invitedAt: '2026-01-03T00:00:00Z',
     },
   },
