@@ -89,6 +89,7 @@ export * from './useUserGroups';
 export * from './useProductGroups';
 export * from './useGroupContext';
 export * from './useCommunityMarketplaces';
+export * from './usePublicMarketplaces';
 export * from './useCommunityMarketplaceEnrichment';
 export * from './useCommunityMarketplaceSell';
 
@@ -158,6 +159,7 @@ export * from './useNativeMarketplaces';
 export * from './useFeatureFlags';
 export * from './usePlatformFeatureFlagsHydration';
 export * from './useCollectibles';
+export * from './useCollectibleMarketplaceAttribution';
 
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';

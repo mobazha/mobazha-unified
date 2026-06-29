@@ -19,8 +19,9 @@ interface CommunitySellerCardProps {
 
 export function CommunitySellerCard({ seller, profile }: CommunitySellerCardProps) {
   const { t } = useI18n();
-  const productCount = seller.productGroups.reduce((sum, g) => sum + g.itemCount, 0);
-  const groupNames = seller.productGroups.map(g => g.name).filter(Boolean);
+  const productGroups = seller.productGroups ?? [];
+  const productCount = productGroups.reduce((sum, g) => sum + g.itemCount, 0);
+  const groupNames = productGroups.map(g => g.name).filter(Boolean);
   const groupDisplayName = groupNames[0]?.trim();
   const displayName = formatUserName(
     { name: profile?.displayName || groupDisplayName, peerID: seller.peerID },
@@ -44,7 +45,7 @@ export function CommunitySellerCard({ seller, profile }: CommunitySellerCardProp
           ) : (
             <MarketplaceLogo
               name={displayName}
-              publicID={seller.peerID}
+              identifier={seller.peerID}
               size="sm"
               className="rounded-full"
             />

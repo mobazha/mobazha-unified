@@ -19,13 +19,13 @@ import {
 } from 'lucide-react';
 
 export interface CollectibleMarketplaceSignalProps {
-  sellHref: string;
   listingsSectionId: string;
+  sellerAdmissionLabel?: string;
 }
 
 export function CollectibleMarketplaceSignal({
-  sellHref,
   listingsSectionId,
+  sellerAdmissionLabel,
 }: CollectibleMarketplaceSignalProps) {
   const { t } = useI18n();
 
@@ -76,9 +76,6 @@ export function CollectibleMarketplaceSignal({
             <ArrowDown className="mr-2 h-4 w-4" aria-hidden />
             {t('marketplace.detail.collectibles.browseListingsCta')}
           </Button>
-          <Button asChild variant="default" size="sm">
-            <Link href={sellHref}>{t('marketplace.detail.collectibles.applySellerCta')}</Link>
-          </Button>
         </HStack>
 
         <HStack gap="sm" align="center" className="flex-wrap text-sm">
@@ -128,6 +125,13 @@ export function CollectibleMarketplaceSignal({
             <h2 className="mb-3 text-sm font-semibold text-foreground">
               {t('marketplace.detail.collectibles.sellerPathTitle')}
             </h2>
+            {sellerAdmissionLabel ? (
+              <p className="mb-3 text-sm text-muted-foreground">
+                {t('marketplace.detail.collectibles.sellerAdmission', {
+                  policy: sellerAdmissionLabel,
+                })}
+              </p>
+            ) : null}
             <ol className="space-y-3">
               {sellerSteps.map(({ icon: Icon, label }, index) => (
                 <li key={label} className="flex items-start gap-3">
@@ -150,10 +154,7 @@ export function CollectibleMarketplaceSignal({
           </div>
         </div>
 
-        <div
-          className="border-t border-border pt-4"
-          data-testid="collectible-marketplace-trust"
-        >
+        <div className="border-t border-border pt-4" data-testid="collectible-marketplace-trust">
           <HStack gap="sm" align="center" className="mb-3">
             <ShieldCheck className="h-4 w-4 text-primary" aria-hidden />
             <p className="text-xs font-medium text-muted-foreground">
