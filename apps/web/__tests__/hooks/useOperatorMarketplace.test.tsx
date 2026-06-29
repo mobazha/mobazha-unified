@@ -69,8 +69,10 @@ function buildStore(peerID: string, marketplaceID = 'latest-id'): MarketplaceSto
     userID: 'user-1',
     peerID,
     status: 'approved',
+    decisionReason: undefined,
     isVisible: true,
     productGroupIDs: [],
+    productGroups: [],
   };
 }
 
@@ -521,6 +523,55 @@ describe('useOperatorMarketplace', () => {
     expect(mockUpdateMarketplace).toHaveBeenCalledWith('mp1', { name: 'Updated' });
     expect(result.current.marketplace).toEqual(updated);
     expect(result.current.working).toBeNull();
+  });
+
+  it('exposes marketplace seller counts by status', async () => {
+    const marketplace = buildMarketplace('mp1', 'Counts Marketplace');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([
+      { ...buildStore('peer-applied'), status: 'applied' },
+      { ...buildStore('peer-invited'), status: 'invited' },
+      { ...buildStore('peer-approved'), status: 'approved' },
+      { ...buildStore('peer-rejected'), status: 'rejected' },
+      { ...buildStore('peer-suspended'), status: 'suspended' },
+      { ...buildStore('peer-accepted'), status: 'accepted' },
+    ]);
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.counts.applied).toBe(1);
+    expect(result.current.counts.invited).toBe(1);
+    expect(result.current.counts.approved).toBe(1);
+    expect(result.current.counts.rejected).toBe(1);
+    expect(result.current.counts.suspended).toBe(1);
+    expect(result.current.counts.waiting).toBe(3);
+  });
+
+  it('forwards optional review reason to marketplace seller update API', async () => {
+    const marketplace = buildMarketplace('mp1', 'Review Marketplace');
+    const store = buildStore('peer-review', 'mp1');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([store]);
+    mockUpdateMarketplaceSeller.mockResolvedValue({ ...store, status: 'rejected' });
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.reviewSeller(store, 'rejected', 'missing compliance document');
+    });
+
+    expect(mockUpdateMarketplaceSeller).toHaveBeenCalledWith('mp1', 'peer-review', {
+      status: 'rejected',
+      reason: 'missing compliance document',
+    });
   });
 
   it('archives marketplace and marks it read-only locally', async () => {

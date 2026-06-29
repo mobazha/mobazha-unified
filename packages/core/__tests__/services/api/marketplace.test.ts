@@ -136,6 +136,7 @@ describe('Marketplace API', () => {
           status: 'invited',
           isVisible: false,
           productGroupIDs: [],
+          productGroups: [],
           invitedAt: '2024-01-15T00:00:00Z',
         },
         marketplace: {
@@ -165,6 +166,8 @@ describe('Marketplace API', () => {
         peerID: 'QmSeller1',
         status: 'approved',
         isVisible: true,
+        productGroupIDs: [],
+        productGroups: [],
         appliedAt: '2024-01-15T00:00:00Z',
       };
 
@@ -198,10 +201,11 @@ describe('Marketplace API', () => {
       await marketplaceApi.updateMarketplaceSeller('mp1', 'QmSeller1', {
         status: 'approved',
         visible: true,
+        reason: 'compliance approved',
       });
       expect(mockHostingPut).toHaveBeenCalledWith(
         '/platform/v1/marketplaces/mp1/sellers/QmSeller1',
-        { status: 'approved', visible: true }
+        { status: 'approved', visible: true, reason: 'compliance approved' }
       );
 
       mockHostingDel.mockResolvedValueOnce({ removed: true, peerID: 'QmSeller1' });
@@ -226,6 +230,7 @@ describe('Marketplace API', () => {
           status: 'applied',
           isVisible: false,
           productGroupIDs: [1, 2],
+          productGroups: [],
           createdAt: '2026-01-01T00:00:00Z',
           updatedAt: '2026-01-01T00:00:00Z',
         },

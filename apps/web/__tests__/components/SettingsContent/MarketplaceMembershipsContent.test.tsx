@@ -20,6 +20,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       status: 'approved',
       isVisible: true,
       productGroupIDs: [],
+      productGroups: [],
     },
   },
   {
@@ -38,6 +39,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       status: 'invited',
       isVisible: false,
       productGroupIDs: [],
+      productGroups: [],
       invitedAt: '2026-01-02T00:00:00Z',
     },
   },
@@ -57,6 +59,7 @@ const mockMemberships: MyMarketplaceMembershipEntry[] = [
       status: 'invited',
       isVisible: false,
       productGroupIDs: [],
+      productGroups: [],
       invitedAt: '2026-01-03T00:00:00Z',
     },
   },

@@ -283,6 +283,7 @@ export default function MarketplaceSellPage() {
     if (isApplied) return t('marketplace.sell.applicationPending');
     return t('marketplace.sell.applicationPending');
   })();
+  const decisionReason = application?.membership?.decisionReason?.trim();
 
   const applicationRequirementsMet = policy?.requiresProductGroups
     ? selectedGroupIds.length > 0
@@ -457,10 +458,20 @@ export default function MarketplaceSellPage() {
                       {t('marketplace.sell.autoApprovedMessage')}
                     </p>
                   )}
-                  {(isRejected || isLeft) && (
+                  {(isRejected || isLeft) && policy.showSubmit && (
                     <p className="mt-2 text-sm text-muted-foreground">
                       {t('marketplace.sell.reapplyHint')}
                     </p>
+                  )}
+                  {(isRejected || isSuspended) && (
+                    <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 p-3">
+                      <p className="text-xs font-medium text-destructive">
+                        {t('marketplace.sell.decisionReasonTitle')}
+                      </p>
+                      <p className="mt-1 text-sm text-foreground">
+                        {decisionReason || t('marketplace.sell.decisionReasonMissing')}
+                      </p>
+                    </div>
                   )}
                   {isCollectibleMarketplace ? (
                     <p className="mt-2 text-sm text-muted-foreground">
