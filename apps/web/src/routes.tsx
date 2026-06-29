@@ -166,18 +166,14 @@ if (!__OUTPOST__) {
     },
     { path: '/listing/import', element: protectedPage(() => import('./app/listing/import/page')) },
 
-    // 市场管理（需要登录）
+    // Marketplace 运营台与买家市场分离，避免把店铺后台和市场治理混在一起。
     {
-      path: '/marketplace/:slug/admin',
-      element: protectedPage(() => import('./app/marketplace/[slug]/admin/page')),
+      path: '/operator/marketplaces',
+      element: protectedPage(() => import('./app/operator/marketplaces/page')),
     },
     {
-      path: '/marketplace/:slug/admin/applications',
-      element: protectedPage(() => import('./app/marketplace/[slug]/admin/applications/page')),
-    },
-    {
-      path: '/marketplace/:slug/admin/products',
-      element: protectedPage(() => import('./app/marketplace/[slug]/admin/products/page')),
+      path: '/operator/marketplaces/:id',
+      element: protectedPage(() => import('./app/operator/marketplaces/[id]/page')),
     },
     {
       path: '/marketplace/:slug/sell',
@@ -287,6 +283,10 @@ if (!__OUTPOST__) {
         },
         { path: 'system', element: lazyPage(() => import('./app/settings/system/page')) },
         { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
+        {
+          path: 'marketplace-memberships',
+          element: lazyPage(() => import('./app/settings/marketplace-memberships/page')),
+        },
       ],
     },
 
@@ -421,6 +421,10 @@ if (!__OUTPOST__) {
         {
           path: 'settings/sales-channels',
           element: lazyPage(() => import('./app/admin/settings/sales-channels/page')),
+        },
+        {
+          path: 'settings/marketplace-memberships',
+          element: lazyPage(() => import('./app/admin/settings/marketplace-memberships/page')),
         },
         {
           path: 'settings/access-control',

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { HStack, VStack } from '@/components/layouts';
@@ -32,11 +32,15 @@ import {
   getCasdoorUserId,
   useGroupContext,
   useI18n,
+  useMyMarketplaceMemberships,
   type ProductGroupAuthorization,
   type AuthorizationType,
+  type MarketplaceStoreStatus,
 } from '@mobazha/core';
 import { Loader2, Plus, Trash2, Shield, Users, Globe, ChevronLeft } from 'lucide-react';
 import { SettingsReferrerBanner } from '@/components/SettingsContent';
+
+const ELIGIBLE_MARKETPLACE_STATUSES: MarketplaceStoreStatus[] = ['applied', 'accepted', 'approved'];
 
 export default function ProductGroupAuthorizationPage() {
   const params = useParams();
@@ -62,7 +66,12 @@ export default function ProductGroupAuthorizationPage() {
     autoLoad: false,
   });
 
-  const { context: groupContext } = useGroupContext();
+  const { context: groupContext } = useGroupContext({ autoInit: true });
+  const {
+    memberships,
+    pendingInvitations,
+    loading: membershipsLoading,
+  } = useMyMarketplaceMemberships();
 
   const [authorizations, setAuthorizations] = useState<ProductGroupAuthorization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,11 +79,63 @@ export default function ProductGroupAuthorizationPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAuthType, setNewAuthType] = useState<AuthorizationType>('user_group');
   const [selectedUserGroupId, setSelectedUserGroupId] = useState<string>('');
+  const [selectedMarketplaceID, setSelectedMarketplaceID] = useState('');
   const [saving, setSaving] = useState(false);
   const [removingAuthId, setRemovingAuthId] = useState<number | null>(null);
 
-  // 获取当前产品组
   const currentGroup = productGroups.find(g => g.id === groupId);
+
+  const eligibleMemberships = useMemo(
+    () =>
+      memberships.filter(entry => ELIGIBLE_MARKETPLACE_STATUSES.includes(entry.membership.status)),
+    [memberships]
+  );
+
+  const marketplaceOptions = useMemo(() => {
+    const options: Array<{ id: string; label: string }> = [];
+    const seen = new Set<string>();
+
+    if (groupContext?.marketplaceID) {
+      seen.add(groupContext.marketplaceID);
+      options.push({
+        id: groupContext.marketplaceID,
+        label: groupContext.chatTitle || t('settings.accessControl.currentCommunityMarketplace'),
+      });
+    }
+
+    for (const entry of eligibleMemberships) {
+      const id = entry.marketplace.id;
+      if (!seen.has(id)) {
+        seen.add(id);
+        options.push({
+          id,
+          label: entry.marketplace.name || entry.marketplace.slug || id,
+        });
+      }
+    }
+
+    return options;
+  }, [groupContext?.marketplaceID, groupContext?.chatTitle, eligibleMemberships, t]);
+
+  useEffect(() => {
+    if (!showAddModal || newAuthType !== 'marketplace') {
+      return;
+    }
+    if (marketplaceOptions.length === 0) {
+      setSelectedMarketplaceID('');
+      return;
+    }
+    setSelectedMarketplaceID(prev => {
+      if (prev && marketplaceOptions.some(option => option.id === prev)) {
+        return prev;
+      }
+      const fromGroupContext = groupContext?.marketplaceID;
+      if (fromGroupContext && marketplaceOptions.some(option => option.id === fromGroupContext)) {
+        return fromGroupContext;
+      }
+      return marketplaceOptions[0].id;
+    });
+  }, [showAddModal, newAuthType, marketplaceOptions, groupContext?.marketplaceID]);
 
   // 加载数据
   useEffect(() => {
@@ -125,11 +186,10 @@ export default function ProductGroupAuthorizationPage() {
           authType: 'user_group',
           userGroupID: parseInt(selectedUserGroupId),
         });
-      } else if (newAuthType === 'group_marketplace' && groupContext) {
+      } else if (newAuthType === 'marketplace' && selectedMarketplaceID) {
         result = await addAuthorization(groupId, {
-          authType: 'group_marketplace',
-          groupPlatform: groupContext.platform,
-          groupChatID: groupContext.chatId,
+          authType: 'marketplace',
+          marketplaceID: selectedMarketplaceID,
         });
       }
 
@@ -138,13 +198,14 @@ export default function ProductGroupAuthorizationPage() {
         setShowAddModal(false);
         setNewAuthType('user_group');
         setSelectedUserGroupId('');
+        setSelectedMarketplaceID('');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '添加失败');
     } finally {
       setSaving(false);
     }
-  }, [groupId, newAuthType, selectedUserGroupId, groupContext, addAuthorization]);
+  }, [groupId, newAuthType, selectedUserGroupId, selectedMarketplaceID, addAuthorization]);
 
   // 移除授权
   const handleRemoveAuthorization = useCallback(async () => {
@@ -170,7 +231,7 @@ export default function ProductGroupAuthorizationPage() {
     if (auth.authType === 'user_group') {
       return auth.userGroupName || `${t('settings.accessControl.userGroup')} #${auth.userGroupID}`;
     }
-    return `${t('settings.accessControl.groupMarketplace')}: ${auth.groupPlatform}/${auth.groupChatID}`;
+    return `${t('settings.accessControl.groupMarketplace')}: ${auth.marketplaceID}`;
   };
 
   const getAuthTypeIcon = (authType: AuthorizationType) => {
@@ -310,9 +371,14 @@ export default function ProductGroupAuthorizationPage() {
                   <SelectItem value="user_group">
                     {t('settings.accessControl.userGroupAuth')}
                   </SelectItem>
-                  <SelectItem value="group_marketplace" disabled={!groupContext}>
+                  <SelectItem
+                    value="marketplace"
+                    disabled={!membershipsLoading && marketplaceOptions.length === 0}
+                  >
                     {t('settings.accessControl.groupMarketplaceAuth')}{' '}
-                    {!groupContext && `(${t('settings.accessControl.notInGroup')})`}
+                    {!membershipsLoading &&
+                      marketplaceOptions.length === 0 &&
+                      `(${t('settings.accessControl.marketplaceAuthNoEligible')})`}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -351,21 +417,78 @@ export default function ProductGroupAuthorizationPage() {
               </div>
             )}
 
-            {newAuthType === 'group_marketplace' && groupContext && (
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground mb-2">
-                  {t('settings.accessControl.willAuthorizeGroup')}
-                </p>
-                <p className="font-medium">{groupContext.chatTitle || groupContext.chatId}</p>
-                <p className="text-xs text-muted-foreground">
-                  {groupContext.platform} · {groupContext.chatId}
-                </p>
+            {newAuthType === 'marketplace' && (
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t('settings.accessControl.selectMarketplace')}
+                </label>
+                {membershipsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('settings.accessControl.marketplaceAuthLoading')}
+                  </div>
+                ) : marketplaceOptions.length === 0 ? (
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <p>{t('settings.accessControl.marketplaceAuthNoEligibleDesc')}</p>
+                    {pendingInvitations.length > 0 && (
+                      <p>
+                        {t('settings.accessControl.marketplaceAuthPendingInvitationsDesc')}{' '}
+                        <Link
+                          href="/settings/marketplace-memberships"
+                          className="text-primary hover:underline"
+                        >
+                          {t('settings.accessControl.marketplaceAuthAcceptInvitationsLink')}
+                        </Link>
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Select value={selectedMarketplaceID} onValueChange={setSelectedMarketplaceID}>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('settings.accessControl.selectMarketplacePlaceholder')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {marketplaceOptions.map(option => (
+                          <SelectItem key={option.id} value={option.id}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t('settings.accessControl.marketplaceAuthHelper')}
+                    </p>
+                    {pendingInvitations.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t('settings.accessControl.marketplaceAuthPendingInvitationsDesc')}{' '}
+                        <Link
+                          href="/settings/marketplace-memberships"
+                          className="text-primary hover:underline"
+                        >
+                          {t('settings.accessControl.marketplaceAuthAcceptInvitationsLink')}
+                        </Link>
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </VStack>
 
           <HStack justify="end" gap="sm" className="mt-6">
-            <Button variant="ghost" onClick={() => setShowAddModal(false)} disabled={saving}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowAddModal(false);
+                setNewAuthType('user_group');
+                setSelectedUserGroupId('');
+                setSelectedMarketplaceID('');
+              }}
+              disabled={saving}
+            >
               {t('common.cancel')}
             </Button>
             <Button
@@ -373,7 +496,7 @@ export default function ProductGroupAuthorizationPage() {
               disabled={
                 saving ||
                 (newAuthType === 'user_group' && !selectedUserGroupId) ||
-                (newAuthType === 'group_marketplace' && !groupContext)
+                (newAuthType === 'marketplace' && (membershipsLoading || !selectedMarketplaceID))
               }
             >
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

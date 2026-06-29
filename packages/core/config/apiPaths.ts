@@ -534,6 +534,17 @@ export const HOSTING_API = {
   MARKETPLACE_SELLER_INVITE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/invite`,
   MARKETPLACE_SELLER: (marketplaceId: string, peerID: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}`,
+  MARKETPLACE_SELLER_ACCEPT: (marketplaceId: string, peerID: string) =>
+    `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}/accept`,
+  MARKETPLACE_MEMBERSHIPS_MINE: '/platform/v1/marketplace-memberships/mine',
+  COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
+  COMMUNITY_MARKETPLACES_VERIFY_MEMBER: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceId)}/verify-member`,
+  COMMUNITY_MARKETPLACES_TELEGRAM_VERIFY_MEMBER: (instanceId: string) =>
+    `/platform/v1/community-marketplaces/telegram/${encodeURIComponent(instanceId)}/verify-member`,
+  COMMUNITY_MARKETPLACES_DISCORD_VERIFY_MEMBER: (instanceId: string) =>
+    `/platform/v1/community-marketplaces/discord/${encodeURIComponent(instanceId)}/verify-member`,
   COMMUNITY_MARKETPLACE_PLATFORM_LISTINGS: (platform: string, instanceId: string) =>
     `/platform/v1/community-marketplaces/${platform}/${instanceId}/listings`,
   COMMUNITY_MARKETPLACE_PLATFORM_SELLERS: (platform: string, instanceId: string) =>

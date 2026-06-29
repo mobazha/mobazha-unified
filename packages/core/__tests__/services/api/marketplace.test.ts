@@ -36,16 +36,19 @@ import type { Marketplace } from '../../../types/marketplace';
 describe('Marketplace API', () => {
   const mockNativeMarketplace = {
     id: 'mp1',
-    platform: 'native',
     name: 'Crypto Collectibles',
-    publicID: 'mp1',
     slug: 'crypto-collectibles',
-    visibility: 'active',
+    status: 'published',
+    ownerUserID: 'owner-1',
     joinMode: 'approval',
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',
     vertical: 'collectibles',
+    plan: 'free',
+    domains: [],
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
   } as const;
 
   beforeEach(() => {
@@ -74,7 +77,7 @@ describe('Marketplace API', () => {
 
       const result = await marketplaceApi.createMarketplace({
         name: 'Crypto Collectibles',
-        publicDescription: 'A marketplace for digital collectibles',
+        description: 'A marketplace for digital collectibles',
         joinMode: 'approval',
         catalogMode: 'curated',
       });
@@ -100,13 +103,13 @@ describe('Marketplace API', () => {
   });
 
   describe('deleteMarketplace', () => {
-    it('should delete a marketplace', async () => {
-      mockHostingDel.mockResolvedValueOnce({ deleted: true, id: 'mp1' });
+    it('should archive a marketplace', async () => {
+      mockHostingDel.mockResolvedValueOnce({ archived: true, id: 'mp1' });
 
       const result = await marketplaceApi.deleteMarketplace('mp1');
 
       expect(mockHostingDel).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1');
-      expect(result.deleted).toBe(true);
+      expect(result.archived).toBe(true);
     });
   });
 
@@ -121,8 +124,38 @@ describe('Marketplace API', () => {
     });
   });
 
-  describe('marketplace seller whitelist', () => {
-    it('should manage seller whitelist entries', async () => {
+  describe('getMyMarketplaceMemberships', () => {
+    it('should fetch store-side marketplace memberships', async () => {
+      const entry = {
+        membership: {
+          id: 1,
+          tenantID: 'tenant1',
+          marketplaceID: 'mp1',
+          userID: 'user1',
+          peerID: 'QmSeller1',
+          status: 'invited',
+          isVisible: false,
+          invitedAt: '2024-01-15T00:00:00Z',
+        },
+        marketplace: {
+          id: 'mp1',
+          name: 'Crypto Collectibles',
+          slug: 'crypto-collectibles',
+          status: 'published',
+        },
+      };
+      mockHostingGet.mockResolvedValueOnce([entry]);
+
+      const result = await marketplaceApi.getMyMarketplaceMemberships();
+
+      expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplace-memberships/mine');
+      expect(result).toHaveLength(1);
+      expect(result[0].membership.isVisible).toBe(false);
+    });
+  });
+
+  describe('marketplace store memberships', () => {
+    it('should enforce invitation acceptance before operator review', async () => {
       const mockSeller = {
         id: 1,
         tenantID: 'tenant1',
@@ -140,13 +173,24 @@ describe('Marketplace API', () => {
         '/platform/v1/marketplaces/mp1/sellers?status=approved'
       );
 
-      mockHostingPost.mockResolvedValueOnce({ ...mockSeller, status: 'pending', isVisible: false });
+      mockHostingPost.mockResolvedValueOnce({ ...mockSeller, status: 'invited', isVisible: false });
       await marketplaceApi.inviteMarketplaceSeller('mp1', {
         peerID: 'QmSeller1',
       });
       expect(mockHostingPost).toHaveBeenCalledWith(
         '/platform/v1/marketplaces/mp1/sellers/invite',
         expect.objectContaining({ peerID: 'QmSeller1' })
+      );
+
+      mockHostingPost.mockResolvedValueOnce({
+        ...mockSeller,
+        status: 'accepted',
+        isVisible: false,
+      });
+      await marketplaceApi.acceptMarketplaceSellerInvitation('mp1', 'QmSeller1');
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/sellers/QmSeller1/accept',
+        undefined
       );
 
       mockHostingPut.mockResolvedValueOnce(mockSeller);

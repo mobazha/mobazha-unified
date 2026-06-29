@@ -152,6 +152,7 @@ export * from './useStorefrontMode';
 
 // Native vertical sub-market (runtime host context)
 export * from './useMarketplaceContext';
+export * from './useNativeMarketplaces';
 
 // Feature Flags (Phase MS — server-driven toggles + kill switches)
 export * from './useFeatureFlags';

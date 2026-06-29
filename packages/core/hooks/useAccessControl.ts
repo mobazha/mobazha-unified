@@ -135,12 +135,8 @@ export function useAccessControl(options: UseAccessControlOptions = {}): UseAcce
       setError(null);
 
       try {
-        // 获取群组上下文
         const groupContext = getCurrentGroupContext();
-        const groupPlatform = groupContext?.platform;
-        const groupChatID = groupContext?.chatId;
-
-        const result = await checkStoreAccess(store, requestor, groupPlatform, groupChatID);
+        const result = await checkStoreAccess(store, requestor, groupContext?.marketplaceID);
         setAccessCheck(result);
         return result;
       } catch (err) {

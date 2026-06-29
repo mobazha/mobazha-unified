@@ -98,7 +98,7 @@ export interface UpdateProductGroupRequest {
 /**
  * 授权类型
  */
-export type AuthorizationType = 'group_marketplace' | 'user_group';
+export type AuthorizationType = 'marketplace' | 'user_group';
 
 /**
  * 产品组授权规则
@@ -108,10 +108,8 @@ export interface ProductGroupAuthorization {
   id: number;
   productGroupId: number;
   authType: AuthorizationType;
-  /** 群组平台 (group_marketplace 时使用) */
-  groupPlatform?: string;
-  /** 群组 Chat ID (group_marketplace 时使用) */
-  groupChatID?: string;
+  /** Marketplace ID (marketplace 时使用) */
+  marketplaceID?: string;
   /** 用户组 ID (user_group 时使用) */
   userGroupID?: number;
   /** 用户组名称 (响应中返回) */
@@ -124,10 +122,8 @@ export interface ProductGroupAuthorization {
  */
 export interface AddProductGroupAuthorizationRequest {
   authType: AuthorizationType;
-  /** 群组平台 (group_marketplace 时必填) */
-  groupPlatform?: string;
-  /** 群组 Chat ID (group_marketplace 时必填) */
-  groupChatID?: string;
+  /** Marketplace ID (marketplace 时必填) */
+  marketplaceID?: string;
   /** 用户组 ID (user_group 时必填) */
   userGroupID?: number;
 }
@@ -221,19 +217,19 @@ export interface StoreAccessSettings {
 export interface StoreAccessCheckResult {
   /** 是否有完整访问权限（白名单） */
   hasFullAccess: boolean;
-  /** 是否有群组集市访问权限（受限） */
-  hasGroupAccess: boolean;
+  /** 是否有 Marketplace 访问权限（受限） */
+  hasMarketplaceAccess: boolean;
   /** 访问类型 */
-  accessType: 'whitelist' | 'group_marketplace' | 'none';
+  accessType: 'whitelist' | 'marketplace' | 'none';
   /** 是否需要申请 */
   needsRequest: boolean;
   /** 申请状态 */
   requestStatus?: AccessRequestStatus;
-  /** 群组信息（如果是群组访问） */
-  groupInfo?: {
-    platform: string;
-    chatId: string;
-    chatTitle?: string;
+  /** Marketplace 信息（如果是 Marketplace 访问） */
+  marketplace?: {
+    id: string;
+    name: string;
+    slug: string;
   };
 }
 
@@ -263,9 +259,12 @@ export type GroupPlatform = 'telegram' | 'discord';
 export interface GroupContext {
   platform: GroupPlatform;
   chatId: string;
+  marketplaceID?: string;
   chatType?: string;
   chatTitle?: string;
   chatUsername?: string;
+  /** Platform-native user ID (e.g. Telegram user id) for verify-member requests */
+  platformUserId?: string;
   /** 是否需要服务端验证 */
   needsVerification?: boolean;
 }

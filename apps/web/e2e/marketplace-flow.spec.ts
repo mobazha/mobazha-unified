@@ -82,75 +82,73 @@ test.describe('Marketplace - Seller Apply', () => {
         await page.screenshot({ path: 'e2e-screenshots/marketplace-sell.png', fullPage: true });
       }
     } else {
-      test
-        .info()
-        .annotations.push({
-          type: 'note',
-          description: 'No marketplaces available for seller apply',
-        });
+      test.info().annotations.push({
+        type: 'note',
+        description: 'No marketplaces available for seller apply',
+      });
     }
   });
 });
 
-test.describe('Marketplace - Admin Management', () => {
-  test.beforeEach(async () => {
+test.describe('Marketplace - Operator & Invitations', () => {
+  test.beforeEach(async ({ page }) => {
     test.skip(!TEST_PASSWORD, 'E2E_TEST_PASSWORD env var not set');
+    await performCasdoorLogin(page);
   });
 
-  test('should access admin applications page', async ({ page }) => {
-    await performCasdoorLogin(page);
-
-    await page.goto('/marketplace');
+  test('should access operator marketplace console', async ({ page }) => {
+    await page.goto('/operator/marketplaces');
     await page.waitForLoadState('domcontentloaded');
 
-    const marketplaceLink = page.locator('a[href*="/marketplace/"]').first();
-    const hasMarketplaces = await marketplaceLink.isVisible().catch(() => false);
+    expect(page.url()).toContain('/operator/marketplaces');
+    expect(page.url()).not.toContain('/login');
+    await expect(page.getByTestId('operator-marketplaces-page')).toBeVisible();
+    await page.screenshot({
+      path: 'e2e-screenshots/marketplace-operator-list.png',
+      fullPage: true,
+    });
+  });
 
-    if (hasMarketplaces) {
-      const href = await marketplaceLink.getAttribute('href');
-      if (href) {
-        const slug = href.replace('/marketplace/', '').split('/')[0];
+  test('should access operator marketplace detail', async ({ page }) => {
+    await page.goto('/operator/marketplaces');
+    await page.waitForLoadState('domcontentloaded');
 
-        // Navigate to admin applications page
-        await page.goto(`/marketplace/${slug}/admin/applications`);
-        await page.waitForLoadState('domcontentloaded');
+    const detailLink = page.locator('a[href*="/operator/marketplaces/"]').first();
+    const hasMarketplace = await detailLink.isVisible().catch(() => false);
 
-        // May redirect to login if user is not admin, or show applications list
-        await page.screenshot({
-          path: 'e2e-screenshots/marketplace-admin-applications.png',
-          fullPage: true,
-        });
-      }
-    } else {
-      test.info().annotations.push({
-        type: 'note',
-        description: 'No marketplaces available for admin management',
+    if (hasMarketplace) {
+      await detailLink.click();
+      await page.waitForLoadState('domcontentloaded');
+      expect(page.url()).toMatch(/\/operator\/marketplaces\/.+/);
+      expect(page.url()).not.toContain('/login');
+      await expect(page.getByTestId('operator-marketplace-detail')).toBeVisible();
+      await page.screenshot({
+        path: 'e2e-screenshots/marketplace-operator-detail.png',
+        fullPage: true,
       });
+      return;
     }
+
+    await page.goto('/operator/marketplaces/mp1');
+    await page.waitForLoadState('domcontentloaded');
+    expect(page.url()).toContain('/operator/marketplaces/mp1');
+    expect(page.url()).not.toContain('/login');
+    await page.screenshot({
+      path: 'e2e-screenshots/marketplace-operator-detail.png',
+      fullPage: true,
+    });
   });
 
-  test('should access admin products page', async ({ page }) => {
-    await performCasdoorLogin(page);
-
-    await page.goto('/marketplace');
+  test('should access store marketplace invitation inbox', async ({ page }) => {
+    await page.goto('/admin/settings/marketplace-memberships');
     await page.waitForLoadState('domcontentloaded');
 
-    const marketplaceLink = page.locator('a[href*="/marketplace/"]').first();
-    const hasMarketplaces = await marketplaceLink.isVisible().catch(() => false);
-
-    if (hasMarketplaces) {
-      const href = await marketplaceLink.getAttribute('href');
-      if (href) {
-        const slug = href.replace('/marketplace/', '').split('/')[0];
-
-        await page.goto(`/marketplace/${slug}/admin/products`);
-        await page.waitForLoadState('domcontentloaded');
-
-        await page.screenshot({
-          path: 'e2e-screenshots/marketplace-admin-products.png',
-          fullPage: true,
-        });
-      }
-    }
+    expect(page.url()).toContain('/admin/settings/marketplace-memberships');
+    expect(page.url()).not.toContain('/login');
+    await expect(page.getByTestId('marketplace-memberships-page')).toBeVisible();
+    await page.screenshot({
+      path: 'e2e-screenshots/marketplace-store-invitations.png',
+      fullPage: true,
+    });
   });
 });

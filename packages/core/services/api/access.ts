@@ -592,14 +592,12 @@ export async function reviewAccessRequest(
 export async function checkStoreAccess(
   storePeerID: string,
   requestorPeerID: string,
-  groupPlatform?: string,
-  groupChatID?: string
+  marketplaceID?: string
 ): Promise<StoreAccessCheckResult> {
   let url = `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_CHECK}?storePeerID=${storePeerID}&requestorPeerID=${requestorPeerID}`;
 
-  // 添加群组上下文参数（如果有）
-  if (groupPlatform && groupChatID) {
-    url += `&groupPlatform=${encodeURIComponent(groupPlatform)}&groupChatID=${encodeURIComponent(groupChatID)}`;
+  if (marketplaceID) {
+    url += `&marketplaceID=${encodeURIComponent(marketplaceID)}`;
   }
 
   const response = await fetch(url, {

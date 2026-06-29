@@ -278,22 +278,22 @@ test.describe('UX Audit - Dynamic Pages (Store/Product/Order)', () => {
     await takeFullScreenshot(page, '95-marketplace-sell');
   });
 
-  test('[96-marketplace-admin] 集市管理', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin', { waitUntil: 'domcontentloaded' });
+  test('[96-marketplace-operator] Marketplace 运营台', async ({ page }) => {
+    await page.goto('/operator/marketplaces', { waitUntil: 'domcontentloaded' });
     await waitForPageStable(page);
-    await takeFullScreenshot(page, '96-marketplace-admin');
+    await takeFullScreenshot(page, '96-marketplace-operator');
   });
 
-  test('[97-marketplace-admin-products] 集市管理 - 产品', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/products', { waitUntil: 'domcontentloaded' });
+  test('[97-marketplace-operator-detail] Marketplace 运营详情', async ({ page }) => {
+    await page.goto('/operator/marketplaces/mp1', { waitUntil: 'domcontentloaded' });
     await waitForPageStable(page);
-    await takeFullScreenshot(page, '97-marketplace-admin-products');
+    await takeFullScreenshot(page, '97-marketplace-operator-detail');
   });
 
-  test('[98-marketplace-admin-applications] 集市管理 - 申请', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/applications', { waitUntil: 'domcontentloaded' });
+  test('[98-marketplace-store-invitations] 店铺 Marketplace 邀请', async ({ page }) => {
+    await page.goto('/admin/settings/marketplace-memberships', { waitUntil: 'domcontentloaded' });
     await waitForPageStable(page);
-    await takeFullScreenshot(page, '98-marketplace-admin-applications');
+    await takeFullScreenshot(page, '98-marketplace-store-invitations');
   });
 
   test('[99-wallet-btc] 钱包 BTC 页面', async ({ page }) => {
