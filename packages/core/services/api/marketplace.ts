@@ -18,7 +18,7 @@ import type {
   PublicNativeMarketplaceDetail,
   PublicNativeMarketplaceListParams,
   PublicNativeMarketplaceListResponse,
-  PublicMarketplaceSellerApplication,
+  NativeMarketplaceSellerApplication,
   UpdateMarketplaceSellerRequest,
   UpdateNativeMarketplaceRequest,
 } from '../../types/marketplace';
@@ -92,26 +92,38 @@ export async function getPublicGroupMarketplaceDetail(
 }
 
 /**
- * 获取当前租户在公开社区市场的卖家申请状态（通过 slug 或 publicID，不暴露 chatID）。
+ * Get the current store's native MaaS seller application for a public marketplace.
  */
-export async function getPublicMarketplaceSellerApplication(
+export async function getNativeMarketplaceSellerApplication(
   identifier: string
-): Promise<PublicMarketplaceSellerApplication> {
-  return hostingGet<PublicMarketplaceSellerApplication>(
-    HOSTING_API.COMMUNITY_MARKETPLACE_PUBLIC_SELLER_APPLICATION(identifier)
+): Promise<NativeMarketplaceSellerApplication> {
+  return hostingGet<NativeMarketplaceSellerApplication>(
+    HOSTING_API.PUBLIC_MARKETPLACE_SELLER_APPLICATION_MINE(identifier)
   );
 }
 
 /**
- * 向公开社区市场提交卖家申请（通过 slug 或 publicID）。
+ * Submit a native MaaS seller application for the current store.
  */
-export async function applyAsPublicMarketplaceSeller(
+export async function applyToNativeMarketplace(
   identifier: string,
   productGroupIDs: number[]
-): Promise<unknown> {
-  return hostingPost(HOSTING_API.COMMUNITY_MARKETPLACE_PUBLIC_SELLER_APPLY(identifier), {
-    productGroupIDs,
-  });
+): Promise<NativeMarketplaceSellerApplication> {
+  return hostingPost<NativeMarketplaceSellerApplication>(
+    HOSTING_API.PUBLIC_MARKETPLACE_SELLER_APPLICATIONS(identifier),
+    { productGroupIDs }
+  );
+}
+
+/**
+ * Withdraw the current store's pending native MaaS seller application.
+ */
+export async function withdrawNativeMarketplaceSellerApplication(
+  identifier: string
+): Promise<NativeMarketplaceSellerApplication> {
+  return hostingDel<NativeMarketplaceSellerApplication>(
+    HOSTING_API.PUBLIC_MARKETPLACE_SELLER_APPLICATION_MINE(identifier)
+  );
 }
 
 /**

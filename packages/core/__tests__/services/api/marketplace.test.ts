@@ -135,6 +135,7 @@ describe('Marketplace API', () => {
           peerID: 'QmSeller1',
           status: 'invited',
           isVisible: false,
+          productGroupIDs: [],
           invitedAt: '2024-01-15T00:00:00Z',
         },
         marketplace: {
@@ -207,6 +208,49 @@ describe('Marketplace API', () => {
       await marketplaceApi.removeMarketplaceSeller('mp1', 'QmSeller1');
       expect(mockHostingDel).toHaveBeenCalledWith(
         '/platform/v1/marketplaces/mp1/sellers/QmSeller1'
+      );
+    });
+  });
+
+  describe('native public marketplace seller applications', () => {
+    it('should fetch, submit, and withdraw native seller applications', async () => {
+      const mockApplication = {
+        hasApplication: true,
+        productGroupIDs: [1, 2],
+        autoApproved: false,
+        membership: {
+          id: 1,
+          tenantID: 'tenant1',
+          marketplaceID: 'mp1',
+          peerID: 'QmSeller1',
+          status: 'applied',
+          isVisible: false,
+          productGroupIDs: [1, 2],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        },
+      };
+
+      mockHostingGet.mockResolvedValueOnce(mockApplication);
+      await marketplaceApi.getNativeMarketplaceSellerApplication('collectibles');
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/public-marketplaces/collectibles/seller-applications/mine'
+      );
+
+      mockHostingPost.mockResolvedValueOnce({ ...mockApplication, autoApproved: true });
+      await marketplaceApi.applyToNativeMarketplace('collectibles', [1, 2]);
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/public-marketplaces/collectibles/seller-applications',
+        { productGroupIDs: [1, 2] }
+      );
+
+      mockHostingDel.mockResolvedValueOnce({
+        ...mockApplication,
+        membership: { ...mockApplication.membership, status: 'left' },
+      });
+      await marketplaceApi.withdrawNativeMarketplaceSellerApplication('collectibles');
+      expect(mockHostingDel).toHaveBeenCalledWith(
+        '/platform/v1/public-marketplaces/collectibles/seller-applications/mine'
       );
     });
   });

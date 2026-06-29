@@ -473,7 +473,7 @@ export type {
   PublicNativeMarketplaceListResponse,
   PublicNativeMarketplaceDetail,
   PublicMarketplaceFeaturedItem,
-  PublicMarketplaceSellerApplication,
+  NativeMarketplaceSellerApplication,
   PublicMarketplaceListingRef,
   PublicMarketplaceSeller,
   PublicMarketplaceProductGroup,
