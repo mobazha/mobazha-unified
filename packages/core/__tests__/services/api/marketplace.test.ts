@@ -134,6 +134,7 @@ describe('Marketplace API', () => {
           userID: 'user1',
           peerID: 'QmSeller1',
           status: 'invited',
+          unreadReviewCount: 0,
           isVisible: false,
           productGroupIDs: [],
           productGroups: [],
@@ -165,6 +166,7 @@ describe('Marketplace API', () => {
         userID: 'user1',
         peerID: 'QmSeller1',
         status: 'approved',
+        unreadReviewCount: 0,
         isVisible: true,
         productGroupIDs: [],
         productGroups: [],
@@ -228,6 +230,7 @@ describe('Marketplace API', () => {
           marketplaceID: 'mp1',
           peerID: 'QmSeller1',
           status: 'applied',
+          unreadReviewCount: 0,
           isVisible: false,
           productGroupIDs: [1, 2],
           productGroups: [],
@@ -287,6 +290,49 @@ describe('Marketplace API', () => {
       mockHostingGet.mockResolvedValueOnce({ url: 'https://crypto.example.test', qrText: 'mp1' });
       await marketplaceApi.getMarketplaceLink('mp1');
       expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/link');
+    });
+  });
+
+  describe('marketplace seller review events', () => {
+    it('loads operator review events with peer and limit query params', async () => {
+      mockHostingGet.mockResolvedValueOnce([]);
+
+      await marketplaceApi.getMarketplaceSellerReviewEvents('mp1', {
+        peerID: 'QmSeller1',
+        limit: 10,
+      });
+
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/seller-review-events?peerID=QmSeller1&limit=10'
+      );
+    });
+
+    it('loads membership review events and marks event read', async () => {
+      const mockEvent = {
+        id: 11,
+        marketplaceID: 'mp1',
+        marketplaceStoreID: 3,
+        peerID: 'QmSeller1',
+        actorID: 'QmOperator1',
+        previousStatus: 'applied',
+        status: 'rejected',
+        reason: 'Policy mismatch',
+        readAt: '2026-01-01T00:00:00Z',
+        createdAt: '2026-01-01T00:00:00Z',
+      };
+      mockHostingGet.mockResolvedValueOnce([mockEvent]);
+      mockHostingPost.mockResolvedValueOnce(mockEvent);
+
+      await marketplaceApi.getMarketplaceMembershipReviewEvents('mp1', { limit: 5 });
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplace-memberships/mp1/review-events?limit=5'
+      );
+
+      await marketplaceApi.markMarketplaceReviewEventRead('mp1', 11);
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplace-memberships/mp1/review-events/11/read',
+        undefined
+      );
     });
   });
 });

@@ -536,7 +536,13 @@ export const HOSTING_API = {
     `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}`,
   MARKETPLACE_SELLER_ACCEPT: (marketplaceId: string, peerID: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}/accept`,
+  MARKETPLACE_SELLER_REVIEW_EVENTS: (marketplaceId: string) =>
+    `/platform/v1/marketplaces/${marketplaceId}/seller-review-events`,
   MARKETPLACE_MEMBERSHIPS_MINE: '/platform/v1/marketplace-memberships/mine',
+  MARKETPLACE_MEMBERSHIP_REVIEW_EVENTS: (marketplaceId: string) =>
+    `/platform/v1/marketplace-memberships/${marketplaceId}/review-events`,
+  MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ: (marketplaceId: string, eventId: string | number) =>
+    `/platform/v1/marketplace-memberships/${marketplaceId}/review-events/${encodeURIComponent(String(eventId))}/read`,
   PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
   PUBLIC_MARKETPLACE_DETAIL: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}`,

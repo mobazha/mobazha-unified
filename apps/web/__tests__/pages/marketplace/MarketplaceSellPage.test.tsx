@@ -5,6 +5,7 @@ import React from 'react';
 const mockSubmitApplication = vi.fn();
 const mockWithdrawApplication = vi.fn();
 const mockUseProductGroups = vi.fn();
+const mockToast = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ slug: 'test-market' }),
@@ -29,7 +30,7 @@ vi.mock('@/components/CommunityMarketplace/CollectibleCardSubmissionsWorkspace',
 }));
 
 vi.mock('@/components/ui/use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() }),
+  useToast: () => ({ toast: mockToast }),
 }));
 
 vi.mock('@mobazha/core', async importOriginal => {
@@ -40,7 +41,7 @@ vi.mock('@mobazha/core', async importOriginal => {
     useProductGroups: (...args: unknown[]) => mockUseProductGroups(...args),
     useUserStore: () => ({ isAuthenticated: true }),
     getCasdoorUserId: () => 'user-1',
-    useI18n: () => ({ t: (key: string) => key }),
+    useI18n: () => ({ t: (key: string) => key, formatDate: (value: string) => `date:${value}` }),
     isHosted: () => false,
     startCasdoorLogin: vi.fn(),
     resolveCurationMarketBackHref: (href: string) => href,
@@ -79,13 +80,19 @@ function mockSellHook(overrides: Record<string, unknown> = {}) {
   mockUseNativeMarketplaceSell.mockReturnValue({
     marketplace: baseMarketplace,
     application: null,
+    reviewEvents: [],
     loading: false,
     error: null,
+    reviewEventsLoading: false,
+    reviewEventsError: null,
+    readingReviewEventID: null,
     isSubmitting: false,
     isWithdrawing: false,
     refresh,
+    refreshReviewEvents: vi.fn(),
     submitApplication: mockSubmitApplication,
     withdrawApplication: mockWithdrawApplication,
+    markReviewEventRead: vi.fn(),
     ...overrides,
   });
   return { refresh };
@@ -158,7 +165,7 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [1],
         autoApproved: false,
-        membership: { status: 'applied' },
+        membership: { status: 'applied', unreadReviewCount: 0 },
       },
     });
 
@@ -175,7 +182,11 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [1],
         autoApproved: false,
-        membership: { status: 'rejected', decisionReason: 'Missing compliance document' },
+        membership: {
+          status: 'rejected',
+          decisionReason: 'Missing compliance document',
+          unreadReviewCount: 0,
+        },
       },
     });
 
@@ -192,7 +203,7 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [1],
         autoApproved: false,
-        membership: { status: 'applied' },
+        membership: { status: 'applied', unreadReviewCount: 0 },
       },
       isWithdrawing: true,
     });
@@ -230,7 +241,7 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [1],
         autoApproved: false,
-        membership: { status: 'applied' },
+        membership: { status: 'applied', unreadReviewCount: 0 },
       },
     });
 
@@ -242,7 +253,7 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [],
         autoApproved: false,
-        membership: { status: 'left' },
+        membership: { status: 'left', unreadReviewCount: 0 },
       },
     });
     rerender(<MarketplaceSellPage />);
@@ -269,7 +280,7 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [],
         autoApproved: false,
-        membership: { status: 'rejected' },
+        membership: { status: 'rejected', unreadReviewCount: 0 },
       },
     });
 
@@ -286,7 +297,7 @@ describe('MarketplaceSellPage', () => {
         hasApplication: true,
         productGroupIDs: [1],
         autoApproved: false,
-        membership: { status: 'rejected' },
+        membership: { status: 'rejected', unreadReviewCount: 0 },
       },
     });
     rerender(<MarketplaceSellPage />);
@@ -330,5 +341,97 @@ describe('MarketplaceSellPage', () => {
 
     fireEvent.click(screen.getByTestId('sell-load-retry'));
     expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders review updates card with unread event mark-read action', async () => {
+    const markReviewEventRead = vi.fn();
+    const refreshReviewEvents = vi.fn();
+    mockSellHook({
+      application: {
+        hasApplication: true,
+        productGroupIDs: [1],
+        autoApproved: false,
+        membership: { status: 'rejected', unreadReviewCount: 1, marketplaceID: 'mp-1' },
+      },
+      reviewEvents: [
+        {
+          id: 44,
+          marketplaceID: 'mp-1',
+          marketplaceStoreID: 3,
+          peerID: 'QmSeller',
+          actorID: 'QmOperator',
+          previousStatus: 'applied',
+          status: 'rejected',
+          reason: 'Need compliance docs',
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      markReviewEventRead,
+      refreshReviewEvents,
+    });
+
+    render(<MarketplaceSellPage />);
+
+    expect(screen.getByTestId('sell-review-updates-card')).toBeInTheDocument();
+    expect(screen.getByTestId('sell-review-unread-badge')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('sell-review-mark-read-44'));
+    expect(markReviewEventRead).toHaveBeenCalledWith(44);
+    expect(refreshReviewEvents).not.toHaveBeenCalled();
+  });
+
+  it('shows localized generic review-updates load error without raw API text', () => {
+    mockSellHook({
+      application: {
+        hasApplication: true,
+        productGroupIDs: [1],
+        autoApproved: false,
+        membership: { status: 'rejected', unreadReviewCount: 1, marketplaceID: 'mp-1' },
+      },
+      reviewEventsError: 'RAW_BACKEND_ERROR',
+    });
+
+    render(<MarketplaceSellPage />);
+
+    expect(screen.getByText('marketplace.sell.reviewUpdatesLoadFailed')).toBeInTheDocument();
+    expect(screen.queryByText('RAW_BACKEND_ERROR')).not.toBeInTheDocument();
+  });
+
+  it('catches mark-read failure and shows localized toast', async () => {
+    const markReviewEventRead = vi.fn().mockRejectedValue(new Error('boom'));
+    mockSellHook({
+      application: {
+        hasApplication: true,
+        productGroupIDs: [1],
+        autoApproved: false,
+        membership: { status: 'rejected', unreadReviewCount: 1, marketplaceID: 'mp-1' },
+      },
+      reviewEvents: [
+        {
+          id: 55,
+          marketplaceID: 'mp-1',
+          marketplaceStoreID: 3,
+          peerID: 'QmSeller',
+          actorID: 'QmOperator',
+          previousStatus: 'applied',
+          status: 'rejected',
+          reason: 'Need docs',
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      markReviewEventRead,
+    });
+
+    render(<MarketplaceSellPage />);
+    fireEvent.click(screen.getByTestId('sell-review-mark-read-55'));
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'common.error',
+          description: 'marketplace.sell.reviewUpdatesMarkReadFailed',
+          variant: 'destructive',
+        })
+      );
+    });
   });
 });

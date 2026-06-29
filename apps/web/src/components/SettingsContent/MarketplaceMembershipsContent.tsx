@@ -34,6 +34,9 @@ function MembershipCard({
   const canAcceptInvitation = isInvited && marketplace.status !== 'archived';
   const invitedDate = membership.invitedAt ? formatDate(new Date(membership.invitedAt)) : null;
   const canViewPublicMarketplace = marketplace.status === 'published';
+  const reviewUpdatesHref = `/marketplace/${encodeURIComponent(marketplace.slug)}/sell`;
+  const showUnreadReviewUpdates = membership.unreadReviewCount > 0;
+  const isArchivedMarketplace = marketplace.status === 'archived';
 
   return (
     <Card
@@ -78,6 +81,38 @@ function MembershipCard({
               )}
             </Button>
           ) : null}
+          {isArchivedMarketplace ? (
+            <div
+              className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm text-muted-foreground"
+              data-testid={`review-history-static-${marketplace.id}`}
+            >
+              <span>{t('marketplace.memberships.reviewHistory')}</span>
+              {showUnreadReviewUpdates ? (
+                <Badge variant="secondary" className="ml-2">
+                  {t('marketplace.memberships.reviewUpdatesUnreadBadge', {
+                    count: membership.unreadReviewCount,
+                  })}
+                </Badge>
+              ) : null}
+            </div>
+          ) : (
+            <Button
+              asChild
+              variant="secondary"
+              data-testid={`view-review-updates-${marketplace.id}`}
+            >
+              <Link href={reviewUpdatesHref}>
+                {t('marketplace.memberships.reviewUpdates')}
+                {showUnreadReviewUpdates ? (
+                  <Badge variant="secondary" className="ml-2">
+                    {t('marketplace.memberships.reviewUpdatesUnreadBadge', {
+                      count: membership.unreadReviewCount,
+                    })}
+                  </Badge>
+                ) : null}
+              </Link>
+            </Button>
+          )}
           {canViewPublicMarketplace ? (
             <Button asChild variant="outline" data-testid={`view-marketplace-${marketplace.id}`}>
               <Link href={`/marketplace/${encodeURIComponent(marketplace.slug)}`}>

@@ -77,10 +77,13 @@ export default function MarketplaceOperatorDetailPage() {
   const {
     marketplace,
     stores,
+    reviewEvents,
     counts,
     loading,
     loadFailed,
+    reviewEventsError,
     working,
+    refresh,
     publish,
     update,
     archive,
@@ -136,6 +139,22 @@ export default function MarketplaceOperatorDetailPage() {
     }
     return sortedStores.filter(store => store.status === membershipFilter);
   }, [membershipFilter, sortedStores]);
+
+  const reviewEventsByPeerID = useMemo(() => {
+    const map = new Map<string, typeof reviewEvents>();
+    for (const event of reviewEvents) {
+      const bucket = map.get(event.peerID);
+      if (bucket) {
+        bucket.push(event);
+      } else {
+        map.set(event.peerID, [event]);
+      }
+    }
+    for (const [, bucket] of map) {
+      bucket.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    }
+    return map;
+  }, [reviewEvents]);
 
   const filterMeta: Array<{ key: MembershipFilter; labelKey: string }> = [
     { key: 'all', labelKey: 'marketplace.operator.filterAll' },
@@ -445,6 +464,26 @@ export default function MarketplaceOperatorDetailPage() {
               <p className="text-xs text-muted-foreground">
                 {t('marketplace.operator.pendingFirstHint')}
               </p>
+              {reviewEventsError ? (
+                <div
+                  className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
+                  data-testid="operator-review-events-error"
+                >
+                  <p className="text-xs text-destructive">
+                    {t('marketplace.operator.reviewHistoryLoadFailed')}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => void refresh()}
+                    disabled={Boolean(working)}
+                    data-testid="operator-review-events-retry"
+                  >
+                    {t('common.retry')}
+                  </Button>
+                </div>
+              ) : null}
               {stores.length === 0 ? (
                 <p className="py-8 text-center text-muted-foreground">
                   {t('marketplace.operator.noStoresYet')}
@@ -455,6 +494,7 @@ export default function MarketplaceOperatorDetailPage() {
                 </p>
               ) : (
                 visibleStores.map(store => {
+                  const storeReviewEvents = reviewEventsByPeerID.get(store.peerID) ?? [];
                   const canApprove =
                     !isArchived && (store.status === 'accepted' || store.status === 'applied');
                   const canReject =
@@ -543,6 +583,58 @@ export default function MarketplaceOperatorDetailPage() {
                             })}
                           </p>
                         ) : null}
+                        <details
+                          className="rounded-md border border-border/70 p-2 text-xs"
+                          data-testid={`operator-review-history-${store.peerID}`}
+                        >
+                          <summary className="cursor-pointer list-none font-medium text-foreground">
+                            {t('marketplace.operator.reviewHistoryTitle', {
+                              count: storeReviewEvents.length,
+                            })}
+                          </summary>
+                          <div className="mt-2 space-y-2">
+                            {storeReviewEvents.length === 0 ? (
+                              <p className="text-muted-foreground">
+                                {t('marketplace.operator.reviewHistoryEmpty')}
+                              </p>
+                            ) : (
+                              storeReviewEvents.map(event => (
+                                <div
+                                  key={event.id}
+                                  className="rounded-md border border-border/60 p-2"
+                                >
+                                  <p className="text-foreground">
+                                    {t('marketplace.operator.reviewHistoryTransition', {
+                                      previous: t(
+                                        MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.previousStatus]
+                                      ),
+                                      current: t(MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.status]),
+                                    })}
+                                  </p>
+                                  <p className="mt-1 text-muted-foreground">
+                                    {t('marketplace.operator.reviewHistoryBy', {
+                                      actor: formatUserName(
+                                        { peerID: event.actorID },
+                                        {
+                                          fallback: t('marketplace.operator.reviewActorFallback'),
+                                          prefix: t('marketplace.operator.reviewActorPrefix'),
+                                        }
+                                      ),
+                                      date: formatDate(event.createdAt),
+                                    })}
+                                  </p>
+                                  {event.reason ? (
+                                    <p className="mt-1 text-muted-foreground">
+                                      {t('marketplace.operator.reviewHistoryReason', {
+                                        reason: event.reason,
+                                      })}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </details>
                       </div>
                       <div className="flex gap-2">
                         {canApprove ? (
