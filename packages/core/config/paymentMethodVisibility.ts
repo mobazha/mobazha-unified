@@ -16,7 +16,60 @@ import {
   hasRuntimePaymentCapabilities,
   supportsRuntimePaymentKind,
   supportsRuntimePaymentMethod,
+  type RuntimeConfig,
 } from './runtimeConfig';
+
+export interface RuntimePaymentDisplayMethod {
+  id: string;
+  name: string;
+}
+
+const RUNTIME_PAYMENT_DISPLAY: Record<string, RuntimePaymentDisplayMethod> = {
+  BTC: { id: 'BTC', name: 'Bitcoin' },
+  BCH: { id: 'BCH', name: 'Bitcoin Cash' },
+  LTC: { id: 'LTC', name: 'Litecoin' },
+  ZEC: { id: 'ZEC', name: 'Zcash' },
+  ETH: { id: 'ETH', name: 'Ethereum' },
+  BNB: { id: 'BNB', name: 'BNB Chain' },
+  BASE: { id: 'BASE', name: 'Base' },
+  MATIC: { id: 'MATIC', name: 'Polygon' },
+  ARBITRUM: { id: 'ARBITRUM', name: 'Arbitrum' },
+  SOL: { id: 'SOL', name: 'Solana' },
+  TRX: { id: 'TRX', name: 'TRON' },
+  XMR: { id: 'XMR', name: 'Monero' },
+  USDT: { id: 'USDT', name: 'Tether (USDT)' },
+  USDC: { id: 'USDC', name: 'USD Coin (USDC)' },
+};
+
+const RUNTIME_PAYMENT_ALIASES: Record<string, string> = {
+  ETHEREUM: 'ETH',
+  BSC: 'BNB',
+  POLYGON: 'MATIC',
+  ARB: 'ARBITRUM',
+  SOLANA: 'SOL',
+  TRON: 'TRX',
+  MONERO: 'XMR',
+};
+
+/** Marketing projection that fails closed until the backend publishes schema v2. */
+export function projectRuntimeCryptoPaymentMethods(
+  config: RuntimeConfig
+): RuntimePaymentDisplayMethod[] {
+  if (config.schemaVersion < 2) return [];
+
+  const projected: RuntimePaymentDisplayMethod[] = [];
+  const seen = new Set<string>();
+  for (const method of config.capabilities.payments.methods) {
+    if (method.kind !== 'crypto') continue;
+    const upper = method.id.trim().toUpperCase();
+    if (!upper) continue;
+    const canonical = RUNTIME_PAYMENT_ALIASES[upper] ?? upper;
+    if (seen.has(canonical)) continue;
+    seen.add(canonical);
+    projected.push(RUNTIME_PAYMENT_DISPLAY[canonical] ?? { id: canonical, name: method.id });
+  }
+  return projected;
+}
 
 function runtimeChainID(chain: string): string {
   const upper = chain.trim().toUpperCase();

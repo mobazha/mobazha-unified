@@ -14,31 +14,11 @@ import {
   stripHtmlTags,
   getBrandConfig,
   isOutpostMode,
-  isTronPaymentVisible,
+  projectRuntimeCryptoPaymentMethods,
   useFiatPaymentVisible,
+  useRuntimeConfig,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
-
-const FOOTER_CRYPTO_TOKENS_FULL = [
-  { id: 'BTC', name: 'Bitcoin' },
-  { id: 'ETH', name: 'Ethereum' },
-  { id: 'BNB', name: 'BNB Chain' },
-  { id: 'BASE', name: 'Base' },
-  { id: 'MATIC', name: 'Polygon' },
-  { id: 'ARBITRUM', name: 'Arbitrum' },
-  { id: 'SOL', name: 'Solana' },
-  { id: 'BCH', name: 'Bitcoin Cash' },
-  { id: 'LTC', name: 'Litecoin' },
-  ...(isTronPaymentVisible() ? [{ id: 'TRX', name: 'TRON' }] : []),
-  { id: 'USDT', name: 'Tether (USDT)' },
-  { id: 'USDC', name: 'USD Coin (USDC)' },
-];
-
-const FOOTER_CRYPTO_TOKENS_OUTPOST = [{ id: 'XMR', name: 'Monero' }];
-
-function getFooterCryptoTokens() {
-  return isOutpostMode() ? FOOTER_CRYPTO_TOKENS_OUTPOST : FOOTER_CRYPTO_TOKENS_FULL;
-}
 
 const FOOTER_FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
   {
@@ -122,7 +102,10 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
+  const runtimeConfig = useRuntimeConfig();
   const fiatVisible = useFiatPaymentVisible();
+  const footerCryptoTokens = projectRuntimeCryptoPaymentMethods(runtimeConfig);
+  const showPaymentMethods = footerCryptoTokens.length > 0 || fiatVisible;
   const { profile, isAuthenticated } = useUserStore();
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
@@ -337,28 +320,32 @@ export const Footer: React.FC = () => {
           </Grid>
 
           {/* Payment Methods */}
-          <div className="flex items-center gap-3 mb-8">
-            <span className="text-xs text-muted-foreground/60 uppercase tracking-wide">
-              {t('footer.paymentMethods')}
-            </span>
-            <div className="flex items-center gap-2 opacity-60">
-              {getFooterCryptoTokens().map(({ id, name }) => (
-                <span key={id} title={name}>
-                  <TokenIcon token={id} size={20} />
-                </span>
-              ))}
-              {fiatVisible && (
-                <>
-                  <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
-                  {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
-                    <span key={id} title={name} className="flex items-center">
-                      {icon}
-                    </span>
-                  ))}
-                </>
-              )}
+          {showPaymentMethods && (
+            <div className="flex items-center gap-3 mb-8">
+              <span className="text-xs text-muted-foreground/60 uppercase tracking-wide">
+                {t('footer.paymentMethods')}
+              </span>
+              <div className="flex items-center gap-2 opacity-60">
+                {footerCryptoTokens.map(({ id, name }) => (
+                  <span key={id} title={name}>
+                    <TokenIcon token={id} size={20} />
+                  </span>
+                ))}
+                {fiatVisible && (
+                  <>
+                    {footerCryptoTokens.length > 0 && (
+                      <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                    )}
+                    {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
+                      <span key={id} title={name} className="flex items-center">
+                        {icon}
+                      </span>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">

@@ -9,6 +9,7 @@ import {
   isFiatPaymentVisible,
   isTronPaymentCoin,
   isTronPaymentVisible,
+  projectRuntimeCryptoPaymentMethods,
   sanitizeAcceptedPaymentCoins,
   sanitizeCheckoutFiatProvider,
   sanitizeCheckoutTokenId,
@@ -30,7 +31,7 @@ describe('paymentMethodVisibility', () => {
   });
 
   it('projects versioned backend payment capabilities', () => {
-    initializeRuntimeConfig({
+    const runtimeConfig = initializeRuntimeConfig({
       schemaVersion: 2,
       capabilities: {
         payments: {
@@ -51,6 +52,33 @@ describe('paymentMethodVisibility', () => {
     expect(sanitizeCheckoutFiatProvider('paypal')).toBeUndefined();
     expect(sanitizeCheckoutTokenId('ZEC')).toBe('ZEC');
     expect(getVisibleSupportedChainCount()).toBe(2);
+    expect(projectRuntimeCryptoPaymentMethods(runtimeConfig)).toEqual([
+      { id: 'BTC', name: 'Bitcoin' },
+      { id: 'ZEC', name: 'Zcash' },
+    ]);
+  });
+
+  it('fails closed and normalizes aliases for marketing payment methods', () => {
+    expect(projectRuntimeCryptoPaymentMethods(initializeRuntimeConfig({}))).toEqual([]);
+
+    const runtimeConfig = initializeRuntimeConfig({
+      schemaVersion: 2,
+      capabilities: {
+        payments: {
+          methods: [
+            { id: 'ETHEREUM', kind: 'crypto', flow: 'external-wallet' },
+            { id: 'SOLANA', kind: 'crypto', flow: 'external-wallet' },
+            { id: 'ethereum', kind: 'crypto', flow: 'external-wallet' },
+            { id: 'stripe', kind: 'fiat', flow: 'provider-session' },
+          ],
+        },
+      },
+    });
+
+    expect(projectRuntimeCryptoPaymentMethods(runtimeConfig)).toEqual([
+      { id: 'ETH', name: 'Ethereum' },
+      { id: 'SOL', name: 'Solana' },
+    ]);
   });
 
   it('identifies TRON payment coins and filters tokens when unsupported', () => {
