@@ -3098,8 +3098,21 @@ export const ko: PartialTranslationResource = {
     noMoreNotifications: '더 이상 알림 없음',
     totalCount: '총 {{count}}개의 알림',
     allMarkedRead: '모든 알림을 읽음으로 표시했습니다',
+    markAllReadFailed: 'Could not mark all notifications as read. Please try again.',
     notificationDeleted: '알림이 삭제되었습니다',
     deleteFailed: '알림을 삭제하지 못했습니다. 다시 시도해 주세요.',
+    errors: {
+      fetchFailed: '알림을 불러오지 못했습니다',
+      notificationNotFound: '알림을 찾을 수 없습니다',
+      marketplaceReviewMetadataMissing: '마켓플레이스 심사 알림 상세 정보가 없습니다',
+      markAsReadFailed: '알림을 읽음으로 표시하지 못했습니다',
+      markAllNodeFailed: '주문 알림을 모두 읽음으로 표시하지 못했습니다. 다시 시도해 주세요.',
+      markAllMarketplaceFailed:
+        '마켓플레이스 심사 알림을 모두 읽음으로 표시하지 못했습니다. 다시 시도해 주세요.',
+      markAllBothFailed: '모든 알림을 읽음으로 표시하지 못했습니다. 다시 시도해 주세요.',
+      deleteImmutableOnly: '마켓플레이스 심사 알림은 삭제할 수 없습니다.',
+      deletePartialImmutable: '일부 마켓플레이스 심사 알림은 삭제할 수 없어 그대로 유지되었습니다.',
+    },
     roles: {
       buyer: '구매자',
       seller: '판매자',
@@ -3116,6 +3129,26 @@ export const ko: PartialTranslationResource = {
       summary: '{{count}}건의 업데이트 · {{latest}}',
       moreUpdates: '+ {{count}}건 더',
       orderRef: '주문 #{{orderId}}',
+    },
+    marketplaceReview: {
+      titles: {
+        approved: 'Seller Review Approved',
+        rejected: 'Seller Review Rejected',
+        suspended: 'Seller Access Suspended',
+        updated: 'Seller Review Updated',
+      },
+      messages: {
+        approved: 'Your seller access was approved in {{marketplace}}.',
+        rejected: 'Your seller access was rejected in {{marketplace}}.',
+        rejectedWithReason:
+          'Your seller access was rejected in {{marketplace}}. Reason: {{reason}}',
+        suspended: 'Your seller access was suspended in {{marketplace}}.',
+        suspendedWithReason:
+          'Your seller access was suspended in {{marketplace}}. Reason: {{reason}}',
+        updated: 'Your seller access status was updated in {{marketplace}}.',
+      },
+      fallbackMarketplace: 'Marketplace',
+      reasonLabel: 'Reason',
     },
     order: {
       youPlacedOrder: '주문을 했습니다',

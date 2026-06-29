@@ -3125,8 +3125,21 @@ export const ja: PartialTranslationResource = {
     noMoreNotifications: 'これ以上の通知はありません',
     totalCount: '合計{{count}}件の通知',
     allMarkedRead: 'すべての通知を既読にしました',
+    markAllReadFailed: 'Could not mark all notifications as read. Please try again.',
     notificationDeleted: '通知を削除しました',
     deleteFailed: '通知を削除できませんでした。もう一度お試しください。',
+    errors: {
+      fetchFailed: '通知の取得に失敗しました',
+      notificationNotFound: '通知が見つかりません',
+      marketplaceReviewMetadataMissing: 'マーケットプレイス審査通知の詳細が不足しています',
+      markAsReadFailed: '通知を既読にできませんでした',
+      markAllNodeFailed: '注文通知をすべて既読にできませんでした。もう一度お試しください。',
+      markAllMarketplaceFailed:
+        'マーケットプレイス審査通知をすべて既読にできませんでした。もう一度お試しください。',
+      markAllBothFailed: 'すべての通知を既読にできませんでした。もう一度お試しください。',
+      deleteImmutableOnly: 'マーケットプレイス審査通知は削除できません。',
+      deletePartialImmutable: '一部のマーケットプレイス審査通知は削除できず、保持されました。',
+    },
     roles: {
       buyer: '購入者',
       seller: '出品者',
@@ -3143,6 +3156,26 @@ export const ja: PartialTranslationResource = {
       summary: '{{count}}件の更新 · {{latest}}',
       moreUpdates: '他 {{count}}件の更新',
       orderRef: '注文 #{{orderId}}',
+    },
+    marketplaceReview: {
+      titles: {
+        approved: 'Seller Review Approved',
+        rejected: 'Seller Review Rejected',
+        suspended: 'Seller Access Suspended',
+        updated: 'Seller Review Updated',
+      },
+      messages: {
+        approved: 'Your seller access was approved in {{marketplace}}.',
+        rejected: 'Your seller access was rejected in {{marketplace}}.',
+        rejectedWithReason:
+          'Your seller access was rejected in {{marketplace}}. Reason: {{reason}}',
+        suspended: 'Your seller access was suspended in {{marketplace}}.',
+        suspendedWithReason:
+          'Your seller access was suspended in {{marketplace}}. Reason: {{reason}}',
+        updated: 'Your seller access status was updated in {{marketplace}}.',
+      },
+      fallbackMarketplace: 'Marketplace',
+      reasonLabel: 'Reason',
     },
     order: {
       youPlacedOrder: '注文しました',

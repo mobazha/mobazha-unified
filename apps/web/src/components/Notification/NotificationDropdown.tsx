@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -34,8 +35,23 @@ import { cn } from '@/lib/utils';
 /**
  * 获取通知图标
  */
-function getNotificationIcon(type: string) {
+function getNotificationIcon(notification: Notification) {
+  const { type, source, data } = notification;
   const iconClass = 'h-4 w-4';
+
+  if (source === 'marketplace-review') {
+    const status = data?.marketplaceReview?.status;
+    if (status === 'approved') {
+      return <CheckCircle className={cn(iconClass, 'text-success')} />;
+    }
+    if (status === 'rejected') {
+      return <XCircle className={cn(iconClass, 'text-error')} />;
+    }
+    if (status === 'suspended') {
+      return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
+    }
+    return <Bell className={cn(iconClass, 'text-muted-foreground')} />;
+  }
 
   switch (type) {
     case 'order.created':
@@ -109,7 +125,7 @@ function NotificationItem({
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const { renderPairedPrice } = useCurrency();
-  const icon = getNotificationIcon(notification.type);
+  const icon = getNotificationIcon(notification);
   const route = getNotificationRoute(notification);
   const { data, read, timestamp, type, message } = notification;
   const counterpartyLabel = formatNotificationCounterparty(data, t);
@@ -152,7 +168,6 @@ function NotificationItem({
           )}
           {message}
         </p>
-
         {/* 订单商品预览 */}
         {isOrderType && data?.productTitle && (
           <div className="flex items-center gap-2 mt-1.5">
@@ -243,8 +258,15 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
   );
 
   const handleMarkAllAsRead = useCallback(async () => {
-    await markAllAsRead();
-  }, [markAllAsRead]);
+    const result = await markAllAsRead();
+    if (!result.success) {
+      toast({
+        title: t('common.error'),
+        description: result.error ?? t('notifications.markAllReadFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [markAllAsRead, t]);
 
   // 聚合后显示最近条目（下拉只做摘要）
   const displayItems = groupNotificationsForDisplay(apiNotifications).slice(0, 10);

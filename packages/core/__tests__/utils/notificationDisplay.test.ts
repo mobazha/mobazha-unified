@@ -16,6 +16,7 @@ function makeNotification(
 ): Notification {
   return {
     id,
+    source: 'node',
     type,
     title: 'Payment Received',
     message: `Update for ${orderID}`,

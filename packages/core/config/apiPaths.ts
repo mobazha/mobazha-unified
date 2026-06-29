@@ -539,6 +539,9 @@ export const HOSTING_API = {
   MARKETPLACE_SELLER_REVIEW_EVENTS: (marketplaceId: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/seller-review-events`,
   MARKETPLACE_MEMBERSHIPS_MINE: '/platform/v1/marketplace-memberships/mine',
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS: '/platform/v1/marketplace-memberships/review-events',
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL:
+    '/platform/v1/marketplace-memberships/review-events/read-all',
   MARKETPLACE_MEMBERSHIP_REVIEW_EVENTS: (marketplaceId: string) =>
     `/platform/v1/marketplace-memberships/${marketplaceId}/review-events`,
   MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ: (marketplaceId: string, eventId: string | number) =>

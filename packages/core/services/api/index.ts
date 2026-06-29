@@ -143,7 +143,14 @@ export type {
 
 // 通知 API
 export * as notificationsApi from './notifications';
-export type { Notification, NotificationFilter, NotificationsResult } from './notifications';
+export type {
+  Notification,
+  NotificationFilter,
+  NotificationsResult,
+  NotificationSource,
+  MarketplaceReviewStatus,
+  MarketplaceReviewEventsResult,
+} from './notifications';
 export { getNotificationRoute, NOTIFICATION_FILTER_TYPES } from './notifications';
 
 // 争议/仲裁 API

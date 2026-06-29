@@ -4329,8 +4329,22 @@ export const en: TranslationResource = {
     // Misc
     totalCount: '{{count}} notifications in total',
     allMarkedRead: 'All notifications marked as read',
+    markAllReadFailed: 'Could not mark all notifications as read. Please try again.',
     notificationDeleted: 'Notification deleted',
     deleteFailed: 'Could not delete notification. Please try again.',
+    errors: {
+      fetchFailed: 'Failed to fetch notifications',
+      notificationNotFound: 'Notification not found',
+      marketplaceReviewMetadataMissing: 'Marketplace review details are unavailable',
+      markAsReadFailed: 'Failed to mark notification as read',
+      markAllNodeFailed: 'Could not mark order notifications as read. Please try again.',
+      markAllMarketplaceFailed:
+        'Could not mark marketplace review notifications as read. Please try again.',
+      markAllBothFailed: 'Could not mark all notifications as read. Please try again.',
+      deleteImmutableOnly: 'Marketplace review notifications cannot be deleted.',
+      deletePartialImmutable:
+        'Some marketplace review notifications cannot be deleted and were kept.',
+    },
     roles: {
       buyer: 'Buyer',
       seller: 'Seller',
@@ -4347,6 +4361,26 @@ export const en: TranslationResource = {
       summary: '{{count}} updates · {{latest}}',
       moreUpdates: '+ {{count}} more updates',
       orderRef: 'Order #{{orderId}}',
+    },
+    marketplaceReview: {
+      titles: {
+        approved: 'Seller Review Approved',
+        rejected: 'Seller Review Rejected',
+        suspended: 'Seller Access Suspended',
+        updated: 'Seller Review Updated',
+      },
+      messages: {
+        approved: 'Your seller access was approved in {{marketplace}}.',
+        rejected: 'Your seller access was rejected in {{marketplace}}.',
+        rejectedWithReason:
+          'Your seller access was rejected in {{marketplace}}. Reason: {{reason}}',
+        suspended: 'Your seller access was suspended in {{marketplace}}.',
+        suspendedWithReason:
+          'Your seller access was suspended in {{marketplace}}. Reason: {{reason}}',
+        updated: 'Your seller access status was updated in {{marketplace}}.',
+      },
+      fallbackMarketplace: 'Marketplace',
+      reasonLabel: 'Reason',
     },
     // Order notifications
     order: {
