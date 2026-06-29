@@ -463,6 +463,7 @@ export type {
   MarketplaceSellerEntryMode,
   MarketplaceStoreStatus,
   MarketplaceStoreMembership,
+  MarketplaceSellerReviewEvent,
   MyMarketplaceMembershipEntry,
   MarketplaceDomain,
   PublicGroupMarketplace,

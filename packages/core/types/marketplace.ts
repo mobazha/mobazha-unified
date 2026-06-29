@@ -109,6 +109,7 @@ export interface MarketplaceStoreMembership {
   userID?: string;
   peerID: string;
   status: MarketplaceStoreStatus;
+  unreadReviewCount: number;
   decisionReason?: string;
   isVisible: boolean;
   productGroupIDs: number[];
@@ -152,6 +153,19 @@ export interface MarketplaceMembershipMarketplaceSummary {
 export interface MyMarketplaceMembershipEntry {
   membership: MarketplaceStoreMembership;
   marketplace: MarketplaceMembershipMarketplaceSummary;
+}
+
+export interface MarketplaceSellerReviewEvent {
+  id: number;
+  marketplaceID: string;
+  marketplaceStoreID: number;
+  peerID: string;
+  actorID: string;
+  previousStatus: MarketplaceStoreStatus;
+  status: MarketplaceStoreStatus;
+  reason?: string;
+  readAt?: string;
+  createdAt: string;
 }
 
 export interface MarketplaceCurationFeaturedItem {

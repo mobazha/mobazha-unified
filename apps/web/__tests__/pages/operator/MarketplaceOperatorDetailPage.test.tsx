@@ -6,6 +6,7 @@ import type { MarketplaceStoreMembership, NativeMarketplace } from '@mobazha/cor
 const mockToast = vi.fn();
 const mockReviewSeller = vi.fn();
 const mockPush = vi.fn();
+let mockReviewEventsError: string | null = null;
 
 const marketplace: NativeMarketplace = {
   id: 'mp-1',
@@ -34,6 +35,7 @@ function buildStore(
     marketplaceID: 'mp-1',
     peerID,
     status: 'invited',
+    unreadReviewCount: 0,
     isVisible: false,
     productGroupIDs: [],
     productGroups: [],
@@ -122,6 +124,19 @@ vi.mock('@mobazha/core', async importOriginal => {
     useOperatorMarketplace: () => ({
       marketplace,
       stores,
+      reviewEvents: [
+        {
+          id: 8,
+          marketplaceID: 'mp-1',
+          marketplaceStoreID: 2,
+          peerID: 'peer-applied',
+          actorID: 'actor-1',
+          previousStatus: 'accepted',
+          status: 'applied',
+          reason: 'Need more details',
+          createdAt: '2026-02-02T00:00:00Z',
+        },
+      ],
       counts: {
         waiting: 4,
         applied: 1,
@@ -132,7 +147,9 @@ vi.mock('@mobazha/core', async importOriginal => {
       },
       loading: false,
       loadFailed: false,
+      reviewEventsError: mockReviewEventsError,
       working: null,
+      refresh: vi.fn(),
       publish: vi.fn(),
       update: vi.fn(),
       archive: vi.fn(),
@@ -160,6 +177,7 @@ import MarketplaceOperatorDetailPage from '@/app/operator/marketplaces/[id]/page
 describe('MarketplaceOperatorDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReviewEventsError = null;
   });
 
   it('shows pending count/filter without invited stores', async () => {
@@ -278,5 +296,25 @@ describe('MarketplaceOperatorDetailPage', () => {
         'missing compliance docs'
       );
     });
+  });
+
+  it('renders per-store review history disclosure', () => {
+    render(<MarketplaceOperatorDetailPage />);
+
+    const disclosure = screen.getByTestId('operator-review-history-peer-applied');
+    expect(disclosure).toBeInTheDocument();
+    fireEvent.click(disclosure.querySelector('summary') as HTMLElement);
+    expect(screen.getByText('marketplace.operator.reviewHistoryTransition')).toBeInTheDocument();
+    expect(screen.getByText('marketplace.operator.reviewHistoryBy')).toBeInTheDocument();
+    expect(screen.getByText('marketplace.operator.reviewHistoryReason')).toBeInTheDocument();
+  });
+
+  it('shows localized generic review-history load error without raw API text', () => {
+    mockReviewEventsError = 'RAW_REVIEW_HISTORY_FAILURE';
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-review-events-error')).toBeInTheDocument();
+    expect(screen.getByText('marketplace.operator.reviewHistoryLoadFailed')).toBeInTheDocument();
+    expect(screen.queryByText('RAW_REVIEW_HISTORY_FAILURE')).not.toBeInTheDocument();
   });
 });

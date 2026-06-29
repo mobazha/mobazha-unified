@@ -6,6 +6,7 @@ import { useOperatorMarketplace } from '@mobazha/core';
 vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMarketplace: vi.fn(),
   getMarketplaceSellers: vi.fn(),
+  getMarketplaceSellerReviewEvents: vi.fn(),
   createMarketplace: vi.fn(),
   getMyMarketplaces: vi.fn(),
   getMyMarketplaceMemberships: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock('@mobazha/core/services/api/marketplace', () => ({
 import {
   deleteMarketplace,
   getMarketplace,
+  getMarketplaceSellerReviewEvents,
   getMarketplaceSellers,
   inviteMarketplaceSeller,
   updateMarketplace,
@@ -27,6 +29,9 @@ import {
 
 const mockGetMarketplace = getMarketplace as ReturnType<typeof vi.fn>;
 const mockGetMarketplaceSellers = getMarketplaceSellers as ReturnType<typeof vi.fn>;
+const mockGetMarketplaceSellerReviewEvents = getMarketplaceSellerReviewEvents as ReturnType<
+  typeof vi.fn
+>;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplace = updateMarketplace as ReturnType<typeof vi.fn>;
 const mockDeleteMarketplace = deleteMarketplace as ReturnType<typeof vi.fn>;
@@ -69,6 +74,7 @@ function buildStore(peerID: string, marketplaceID = 'latest-id'): MarketplaceSto
     userID: 'user-1',
     peerID,
     status: 'approved',
+    unreadReviewCount: 0,
     decisionReason: undefined,
     isVisible: true,
     productGroupIDs: [],
@@ -99,6 +105,7 @@ describe('useOperatorMarketplace', () => {
       if (id === 'latest-id') return latestStoresDeferred.promise;
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
 
     const { result, rerender } = renderHook(
       ({ marketplaceId }: { marketplaceId?: string }) => useOperatorMarketplace(marketplaceId),
@@ -151,6 +158,7 @@ describe('useOperatorMarketplace', () => {
       if (id === 'latest-id') return latestStoresDeferred.promise;
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
 
     const { result, rerender } = renderHook(
       ({ marketplaceId }: { marketplaceId?: string }) => useOperatorMarketplace(marketplaceId),
@@ -198,6 +206,7 @@ describe('useOperatorMarketplace', () => {
       if (id === 'id-b') return loadBStoresDeferred.promise;
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockUpdateMarketplace.mockImplementation((id: string) => {
       if (id === 'id-a') return publishADeferred.promise;
       if (id === 'id-b') return publishBDeferred.promise;
@@ -271,6 +280,7 @@ describe('useOperatorMarketplace', () => {
       if (id === 'id-b') return loadBStoresDeferred.promise;
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockInviteMarketplaceSeller.mockImplementation(() => inviteADeferred.promise);
     mockUpdateMarketplaceSeller.mockImplementation(() => reviewBDeferred.promise);
 
@@ -364,6 +374,7 @@ describe('useOperatorMarketplace', () => {
       if (id === 'id-b') return loadBStoresDeferred.promise;
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockUpdateMarketplaceSeller.mockImplementation(() => reviewADeferred.promise);
     mockInviteMarketplaceSeller.mockImplementation(() => inviteBDeferred.promise);
 
@@ -501,6 +512,7 @@ describe('useOperatorMarketplace', () => {
     const updateDeferred = deferred<NativeMarketplace>();
     mockGetMarketplace.mockResolvedValue(marketplace);
     mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockUpdateMarketplace.mockImplementation(() => updateDeferred.promise);
 
     const { result } = renderHook(() => useOperatorMarketplace('mp1'));
@@ -536,6 +548,7 @@ describe('useOperatorMarketplace', () => {
       { ...buildStore('peer-suspended'), status: 'suspended' },
       { ...buildStore('peer-accepted'), status: 'accepted' },
     ]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
 
     const { result } = renderHook(() => useOperatorMarketplace('mp1'));
 
@@ -556,6 +569,7 @@ describe('useOperatorMarketplace', () => {
     const store = buildStore('peer-review', 'mp1');
     mockGetMarketplace.mockResolvedValue(marketplace);
     mockGetMarketplaceSellers.mockResolvedValue([store]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockUpdateMarketplaceSeller.mockResolvedValue({ ...store, status: 'rejected' });
 
     const { result } = renderHook(() => useOperatorMarketplace('mp1'));
@@ -574,10 +588,44 @@ describe('useOperatorMarketplace', () => {
     });
   });
 
+  it('refreshes review events after completing a seller review decision', async () => {
+    const marketplace = buildMarketplace('mp1', 'Review Marketplace');
+    const store = buildStore('peer-review', 'mp1');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([store]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        id: 2,
+        marketplaceID: 'mp1',
+        marketplaceStoreID: 1,
+        peerID: 'peer-review',
+        actorID: 'actor-1',
+        previousStatus: 'applied',
+        status: 'approved',
+        createdAt: '2026-01-02T00:00:00Z',
+      },
+    ]);
+    mockUpdateMarketplaceSeller.mockResolvedValue({ ...store, status: 'approved' });
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.reviewSeller(store, 'approved');
+    });
+
+    expect(mockGetMarketplaceSellerReviewEvents).toHaveBeenCalledTimes(2);
+    expect(result.current.reviewEvents[0]?.status).toBe('approved');
+  });
+
   it('archives marketplace and marks it read-only locally', async () => {
     const marketplace = buildMarketplace('mp1', 'To Archive');
     mockGetMarketplace.mockResolvedValue(marketplace);
     mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockDeleteMarketplace.mockResolvedValue({ archived: true, id: 'mp1' });
 
     const { result } = renderHook(() => useOperatorMarketplace('mp1'));
@@ -607,6 +655,7 @@ describe('useOperatorMarketplace', () => {
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
     mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
     mockUpdateMarketplace.mockImplementation(() => updateDeferred.promise);
 
     const { result, rerender } = renderHook(
@@ -638,5 +687,129 @@ describe('useOperatorMarketplace', () => {
 
     expect(result.current.marketplace).toEqual(marketplaceB);
     expect(result.current.working).toBeNull();
+  });
+
+  it('keeps marketplace and stores when review-events request fails', async () => {
+    const marketplace = buildMarketplace('mp1', 'Main Marketplace');
+    const store = buildStore('peer-main', 'mp1');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([store]);
+    mockGetMarketplaceSellerReviewEvents.mockRejectedValue(new Error('events failed'));
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.loadFailed).toBe(false);
+    expect(result.current.marketplace).toEqual(marketplace);
+    expect(result.current.stores).toEqual([store]);
+    expect(result.current.reviewEvents).toEqual([]);
+    expect(result.current.reviewEventsError).toBe('events failed');
+  });
+
+  it('ignores stale review-events results after marketplaceId changes', async () => {
+    const staleEventsDeferred = deferred<
+      Array<{
+        id: number;
+        marketplaceID: string;
+        marketplaceStoreID: number;
+        peerID: string;
+        actorID: string;
+        previousStatus: 'applied';
+        status: 'approved';
+        createdAt: string;
+      }>
+    >();
+    mockGetMarketplace.mockImplementation((id: string) =>
+      Promise.resolve(buildMarketplace(id, `Marketplace ${id}`))
+    );
+    mockGetMarketplaceSellers.mockImplementation((id: string) =>
+      Promise.resolve([buildStore(`peer-${id}`, id)])
+    );
+    mockGetMarketplaceSellerReviewEvents.mockImplementation((id: string) => {
+      if (id === 'stale-id') return staleEventsDeferred.promise;
+      return Promise.resolve([]);
+    });
+
+    const { result, rerender } = renderHook(
+      ({ marketplaceId }: { marketplaceId?: string }) => useOperatorMarketplace(marketplaceId),
+      { initialProps: { marketplaceId: 'stale-id' } }
+    );
+
+    rerender({ marketplaceId: 'latest-id' });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.marketplace?.id).toBe('latest-id');
+    expect(result.current.reviewEvents).toEqual([]);
+
+    await act(async () => {
+      staleEventsDeferred.resolve([
+        {
+          id: 1,
+          marketplaceID: 'stale-id',
+          marketplaceStoreID: 1,
+          peerID: 'peer-stale',
+          actorID: 'actor-stale',
+          previousStatus: 'applied',
+          status: 'approved',
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ]);
+    });
+
+    expect(result.current.marketplace?.id).toBe('latest-id');
+    expect(result.current.reviewEvents).toEqual([]);
+    expect(result.current.reviewEventsError).toBeNull();
+  });
+
+  it('clears previous review events when marketplaceId changes and new auxiliary fetch fails', async () => {
+    mockGetMarketplace.mockImplementation((id: string) =>
+      Promise.resolve(buildMarketplace(id, `Marketplace ${id}`))
+    );
+    mockGetMarketplaceSellers.mockImplementation((id: string) =>
+      Promise.resolve([buildStore(`peer-${id}`, id)])
+    );
+    mockGetMarketplaceSellerReviewEvents.mockImplementation((id: string) => {
+      if (id === 'id-a') {
+        return Promise.resolve([
+          {
+            id: 11,
+            marketplaceID: 'id-a',
+            marketplaceStoreID: 1,
+            peerID: 'peer-id-a',
+            actorID: 'actor-a',
+            previousStatus: 'applied',
+            status: 'approved',
+            createdAt: '2026-01-01T00:00:00Z',
+          },
+        ]);
+      }
+      return Promise.reject(new Error('id-b-events-failed'));
+    });
+
+    const { result, rerender } = renderHook(
+      ({ marketplaceId }: { marketplaceId?: string }) => useOperatorMarketplace(marketplaceId),
+      { initialProps: { marketplaceId: 'id-a' } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.reviewEvents.length).toBe(1);
+
+    rerender({ marketplaceId: 'id-b' });
+
+    expect(result.current.reviewEvents).toEqual([]);
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.marketplace?.id).toBe('id-b');
+    expect(result.current.reviewEvents).toEqual([]);
+    expect(result.current.reviewEventsError).toBe('id-b-events-failed');
   });
 });
