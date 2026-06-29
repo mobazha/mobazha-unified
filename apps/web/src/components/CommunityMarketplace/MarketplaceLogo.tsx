@@ -5,7 +5,7 @@ import { marketplaceLogoInitials } from '@mobazha/core';
 
 interface MarketplaceLogoProps {
   name: string;
-  publicID: string;
+  identifier: string;
   logoURL?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -19,12 +19,12 @@ const sizeClasses = {
 
 export function MarketplaceLogo({
   name,
-  publicID,
+  identifier,
   logoURL,
   size = 'md',
   className = '',
 }: MarketplaceLogoProps) {
-  const initials = marketplaceLogoInitials(name, publicID);
+  const initials = marketplaceLogoInitials(name, identifier);
 
   if (logoURL) {
     return (

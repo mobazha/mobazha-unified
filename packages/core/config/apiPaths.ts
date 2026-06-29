@@ -537,6 +537,9 @@ export const HOSTING_API = {
   MARKETPLACE_SELLER_ACCEPT: (marketplaceId: string, peerID: string) =>
     `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}/accept`,
   MARKETPLACE_MEMBERSHIPS_MINE: '/platform/v1/marketplace-memberships/mine',
+  PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
+  PUBLIC_MARKETPLACE_DETAIL: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}`,
   COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
   COMMUNITY_MARKETPLACES_VERIFY_MEMBER: (platform: string, instanceId: string) =>

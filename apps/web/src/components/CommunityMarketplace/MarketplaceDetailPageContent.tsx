@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
@@ -17,24 +17,22 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { Badge } from '@/components/ui/badge';
 import {
-  useCommunityMarketplaceDetail,
+  usePublicMarketplaceDetail,
   useCommunityMarketplaceEnrichment,
+  useCollectibleMarketplaceAttribution,
   useI18n,
   isCollectibleMarketplaceVertical,
   marketplaceJoinModeKey,
-  marketplacePlatformKey,
+  marketplaceVerticalKey,
+  MARKETPLACE_CATALOG_MODE_KEYS,
+  MARKETPLACE_DISCOVERABILITY_KEYS,
+  MARKETPLACE_SELLER_ENTRY_MODE_KEYS,
   COLLECTIBLE_MARKETPLACE_CATEGORY_FILTERS,
   COLLECTIBLE_MARKETPLACE_LISTINGS_SECTION_ID,
   appendCollectibleAttributionToHref,
   communityProductHref,
   filterCollectibleListingPreviews,
-  mergeCollectibleAttribution,
-  parseCollectibleAttributionFromSearchParams,
-  readCollectibleAttributionFromSessionStorage,
-  writeCollectibleAttributionToSessionStorage,
   resolveCollectibleMarketplaceDisplayCopy,
-  shouldShowCollectibleMarketplaceJoinCta,
-  type CollectibleAttributionParams,
   type CollectibleMarketplaceCategoryFilter,
 } from '@mobazha/core';
 import { ExternalLink, Package, RefreshCw, Search, ShieldCheck, Store, Users } from 'lucide-react';
@@ -43,7 +41,11 @@ type DetailTab = 'products' | 'sellers' | 'about';
 
 const COLLECTIBLE_FILTER_I18N: Record<
   CollectibleMarketplaceCategoryFilter,
-  'marketplace.detail.collectibles.filterAll' | 'marketplace.detail.collectibles.filterSports' | 'marketplace.detail.collectibles.filterPokemon' | 'marketplace.detail.collectibles.filterMtg' | 'marketplace.detail.collectibles.filterOtherTcg'
+  | 'marketplace.detail.collectibles.filterAll'
+  | 'marketplace.detail.collectibles.filterSports'
+  | 'marketplace.detail.collectibles.filterPokemon'
+  | 'marketplace.detail.collectibles.filterMtg'
+  | 'marketplace.detail.collectibles.filterOtherTcg'
 > = {
   all: 'marketplace.detail.collectibles.filterAll',
   sports: 'marketplace.detail.collectibles.filterSports',
@@ -58,17 +60,15 @@ export interface MarketplaceDetailPageContentProps {
 
 export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPageContentProps) {
   const { t, formatRelativeTime, locale } = useI18n();
-  const { detail, loading, error, refresh } = useCommunityMarketplaceDetail(identifier);
+  const { detail, loading, error, refresh } = usePublicMarketplaceDetail(identifier);
   const [activeTab, setActiveTab] = useState<DetailTab>('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [collectibleCategory, setCollectibleCategory] =
     useState<CollectibleMarketplaceCategoryFilter>('all');
-  const [collectibleAttribution, setCollectibleAttribution] =
-    useState<CollectibleAttributionParams>({});
 
   const marketplace = detail?.marketplace;
   const listingRefs = useMemo(() => detail?.listings.listings ?? [], [detail?.listings.listings]);
-  const sellers = detail?.sellers ?? [];
+  const sellers = useMemo(() => detail?.sellers ?? [], [detail?.sellers]);
   const sellerPeerIDs = useMemo(() => sellers.map(s => s.peerID), [sellers]);
 
   const { listingPreviews, sellerProfiles } = useCommunityMarketplaceEnrichment(
@@ -77,20 +77,10 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
   );
 
   const isCollectibleMarketplace = isCollectibleMarketplaceVertical(marketplace?.vertical);
-
-  useEffect(() => {
-    if (!isCollectibleMarketplace) return;
-
-    const incoming = parseCollectibleAttributionFromSearchParams(
-      new URLSearchParams(window.location.search)
-    );
-    const merged = mergeCollectibleAttribution(
-      readCollectibleAttributionFromSessionStorage(),
-      incoming
-    );
-    writeCollectibleAttributionToSessionStorage(merged);
-    setCollectibleAttribution(merged);
-  }, [identifier, isCollectibleMarketplace]);
+  const collectibleAttribution = useCollectibleMarketplaceAttribution(
+    isCollectibleMarketplace,
+    identifier
+  );
 
   const filteredPreviews = useMemo(() => {
     let result = listingPreviews;
@@ -109,22 +99,11 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     );
   }, [listingPreviews, searchQuery, isCollectibleMarketplace, collectibleCategory]);
 
-  const hasCollectibleCategoryFilter =
-    isCollectibleMarketplace && collectibleCategory !== 'all';
+  const hasCollectibleCategoryFilter = isCollectibleMarketplace && collectibleCategory !== 'all';
   const showCollectibleCategoryEmpty =
     hasCollectibleCategoryFilter && filteredPreviews.length === 0;
 
-  const handleJoinGuidance = () => {
-    const platform = marketplace?.platform;
-    if (platform === 'telegram') {
-      window.open('https://telegram.org/', '_blank', 'noopener,noreferrer');
-      return;
-    }
-    if (platform === 'discord') {
-      window.open('https://discord.com/', '_blank', 'noopener,noreferrer');
-      return;
-    }
-  };
+  const publicSiteUrl = marketplace?.publicURL?.trim() ?? '';
 
   if (loading) {
     return (
@@ -161,7 +140,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                     {t('marketplace.detail.unavailableTitle')}
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    {error || t('marketplace.detail.unavailableDesc')}
+                    {error || t('marketplace.detail.unavailableDescNative')}
                   </p>
                 </div>
                 <HStack gap="sm" className="flex-wrap justify-center">
@@ -182,25 +161,24 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     );
   }
 
-  const platformName = t(marketplacePlatformKey(marketplace.platform));
+  const verticalLabel = t(marketplaceVerticalKey(marketplace.vertical));
   const joinLabel = t(marketplaceJoinModeKey(marketplace.joinMode));
+  const catalogLabel = t(MARKETPLACE_CATALOG_MODE_KEYS[marketplace.catalogMode]);
+  const discoverabilityLabel = t(MARKETPLACE_DISCOVERABILITY_KEYS[marketplace.discoverability]);
+  const sellerEntryLabel = t(MARKETPLACE_SELLER_ENTRY_MODE_KEYS[marketplace.sellerEntryMode]);
   const displayCopy = isCollectibleMarketplace
     ? resolveCollectibleMarketplaceDisplayCopy(marketplace, locale, t)
     : null;
   const description =
     displayCopy?.description ||
-    marketplace.publicDescription?.trim() ||
+    marketplace.description?.trim() ||
     (isCollectibleMarketplace
       ? t('marketplace.detail.collectibles.defaultDescription')
       : t('marketplace.defaultDescription'));
   const marketplaceTitle = displayCopy?.name || marketplace.name;
-  const showJoinCta =
-    !isCollectibleMarketplace || shouldShowCollectibleMarketplaceJoinCta(marketplace.platform);
-  const showJoinGuidance = showJoinCta;
   const updatedLabel = marketplace.updatedAt
     ? t('marketplace.updatedAgo', { time: formatRelativeTime(marketplace.updatedAt) })
     : null;
-  const sellHref = `/marketplace/${marketplace.slug || marketplace.publicID}/sell`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -223,7 +201,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
               <HStack gap="lg" align="start" className="flex-wrap">
                 <MarketplaceLogo
                   name={marketplace.name}
-                  publicID={marketplace.publicID}
+                  identifier={marketplace.id}
                   logoURL={marketplace.logoURL}
                   size="lg"
                   className="-mt-10 border-4 border-background shadow-lg sm:-mt-12"
@@ -235,23 +213,20 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         <h1 className="min-w-0 max-w-full break-words text-2xl font-bold text-foreground sm:text-3xl">
                           {marketplaceTitle}
                         </h1>
-                        {marketplace.isFeatured && <Badge>{t('marketplace.featured')}</Badge>}
                         {isCollectibleMarketplace && (
                           <Badge variant="secondary">
                             {t('marketplace.detail.collectibles.badge')}
                           </Badge>
                         )}
-                        <Badge variant="secondary">{platformName}</Badge>
+                        <Badge variant="secondary">{verticalLabel}</Badge>
                       </HStack>
                       <p className="mb-3 max-w-3xl text-sm text-muted-foreground sm:text-base">
                         {description}
                       </p>
                       <HStack gap="xs" className="mb-4 flex-wrap">
-                        {showJoinGuidance ? (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                            {joinLabel}
-                          </span>
-                        ) : null}
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          {catalogLabel}
+                        </span>
                         {updatedLabel && (
                           <span className="text-xs text-muted-foreground">{updatedLabel}</span>
                         )}
@@ -275,18 +250,14 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         </VStack>
                       </HStack>
                     </div>
-                    {!isCollectibleMarketplace ? (
+                    {publicSiteUrl ? (
                       <VStack gap="sm" className="w-full sm:w-auto">
-                        {showJoinCta ? (
-                          <Button onClick={handleJoinGuidance} className="w-full sm:w-auto">
-                            {t('marketplace.detail.joinViaGroup')}
-                          </Button>
-                        ) : null}
-                        <Link href={sellHref}>
-                          <Button variant="outline" className="w-full sm:w-auto">
-                            {t('marketplace.detail.applySeller')}
-                          </Button>
-                        </Link>
+                        <Button asChild className="w-full sm:w-auto">
+                          <a href={publicSiteUrl} target="_blank" rel="noopener noreferrer">
+                            {t('marketplace.detail.visitPublicSite')}
+                            <ExternalLink className="ml-2 h-4 w-4" aria-hidden />
+                          </a>
+                        </Button>
                       </VStack>
                     ) : null}
                   </HStack>
@@ -297,8 +268,8 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
 
           {isCollectibleMarketplace ? (
             <CollectibleMarketplaceSignal
-              sellHref={sellHref}
               listingsSectionId={COLLECTIBLE_MARKETPLACE_LISTINGS_SECTION_ID}
+              sellerAdmissionLabel={joinLabel}
             />
           ) : (
             <MarketplaceTrustStrip />
@@ -413,7 +384,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
               {sellers.length > 0 ? (
                 sellers.map(seller => (
                   <CommunitySellerCard
-                    key={seller.sellerID}
+                    key={seller.peerID}
                     seller={seller}
                     profile={sellerProfiles[seller.peerID]}
                   />
@@ -440,30 +411,28 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                 <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
                   {description}
                 </p>
-                {showJoinGuidance ? (
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    {t('marketplace.detail.joinGuidanceDesc')}
-                  </p>
-                ) : null}
               </Card>
               <div className="space-y-4">
                 <Card className="p-5">
                   <HStack gap="sm" align="center" className="mb-3">
                     <ShieldCheck className="h-5 w-5 text-primary" />
                     <h3 className="font-semibold text-foreground">
-                      {t('marketplace.detail.trustSignals')}
+                      {t('marketplace.detail.accessTitle')}
                     </h3>
                   </HStack>
                   <VStack gap="sm" className="text-sm text-muted-foreground">
                     <span>
-                      {t('marketplace.detail.platformSource')}: {platformName}
+                      {t('marketplace.detail.sellerAdmissionPolicy')}: {joinLabel}
                     </span>
-                    {showJoinGuidance ? (
-                      <span>
-                        {t('marketplace.detail.joinMethod')}: {joinLabel}
-                      </span>
-                    ) : null}
-                    <span>{t('marketplace.detail.publicActive')}</span>
+                    <span>
+                      {t('marketplace.detail.catalogMode')}: {catalogLabel}
+                    </span>
+                    <span>
+                      {t('marketplace.detail.discoverability')}: {discoverabilityLabel}
+                    </span>
+                    <span>
+                      {t('marketplace.detail.sellerEntryMode')}: {sellerEntryLabel}
+                    </span>
                   </VStack>
                 </Card>
                 <Card className="p-5">
@@ -474,7 +443,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                     </h3>
                   </HStack>
                   <p className="text-sm text-muted-foreground">
-                    {t('marketplace.detail.rulesBody')}
+                    {t('marketplace.detail.rulesBodyNative')}
                   </p>
                 </Card>
                 <Card className="p-5">

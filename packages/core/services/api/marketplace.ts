@@ -15,6 +15,9 @@ import type {
   NativeMarketplace,
   PublicGroupMarketplaceDetail,
   PublicGroupMarketplaceListResponse,
+  PublicNativeMarketplaceDetail,
+  PublicNativeMarketplaceListParams,
+  PublicNativeMarketplaceListResponse,
   PublicMarketplaceSellerApplication,
   UpdateMarketplaceSellerRequest,
   UpdateNativeMarketplaceRequest,
@@ -22,6 +25,39 @@ import type {
 import { HOSTING_API } from '../../config/apiPaths';
 
 // ============ 集市基础 API ============
+
+/**
+ * 获取原生 MaaS 公开市场目录。
+ */
+export async function getPublicMarketplaces(
+  params: PublicNativeMarketplaceListParams = {}
+): Promise<PublicNativeMarketplaceListResponse> {
+  const queryParams = new URLSearchParams();
+  if (params.q) queryParams.set('q', params.q);
+  if (params.vertical) queryParams.set('vertical', params.vertical);
+  if (params.page) queryParams.set('page', params.page.toString());
+  if (params.pageSize) queryParams.set('pageSize', params.pageSize.toString());
+  const query = queryParams.toString();
+  return apiClient.get<PublicNativeMarketplaceListResponse>(
+    `${HOSTING_API.PUBLIC_MARKETPLACES}${query ? `?${query}` : ''}`
+  );
+}
+
+/**
+ * 通过 slug 或 id 获取原生 MaaS 公开市场详情。
+ */
+export async function getPublicMarketplaceDetail(
+  identifier: string,
+  params: { page?: number; pageSize?: number } = {}
+): Promise<PublicNativeMarketplaceDetail> {
+  const queryParams = new URLSearchParams();
+  if (params.page) queryParams.set('page', params.page.toString());
+  if (params.pageSize) queryParams.set('pageSize', params.pageSize.toString());
+  const query = queryParams.toString();
+  return apiClient.get<PublicNativeMarketplaceDetail>(
+    `${HOSTING_API.PUBLIC_MARKETPLACE_DETAIL(identifier)}${query ? `?${query}` : ''}`
+  );
+}
 
 /**
  * 获取真实群组社区市场公开目录。
