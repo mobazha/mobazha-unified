@@ -1,0 +1,20 @@
+Mobazha Unified
+
+Originally developed by fengzie (https://github.com/fengzie) and maintained by
+the Mobazha contributors.
+
+Canonical source: https://github.com/mobazha/mobazha-unified
+
+Copyright (c) 2026 fengzie and the respective contributors.
+
+This file contains attribution and license notices that form part of the Source
+Code Form notices described by Section 3.4 of the Mozilla Public License 2.0.
+
+Except for separately identified third-party material, Mobazha-authored source
+in this repository is distributed under the Mozilla Public License 2.0 in the
+root LICENSE file.
+
+Individual dependencies, vendored code, generated artifacts, and assets may be
+governed by their own licenses. Their copyright and license notices remain the
+property of their respective owners. Binary redistributors must review and
+satisfy those terms independently.
