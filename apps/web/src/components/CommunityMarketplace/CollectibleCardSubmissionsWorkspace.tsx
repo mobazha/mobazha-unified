@@ -32,11 +32,11 @@ const SELLER_LIFECYCLE_STEPS: SourceDepositLifecycleStep[] = [
 ];
 
 const SELLER_LIFECYCLE_KEYS: Record<SourceDepositLifecycleStep, string> = {
-  submit: 'marketplace.sell.collectibles.lifecycle.submit',
-  review: 'marketplace.sell.collectibles.lifecycle.review',
-  list: 'marketplace.sell.collectibles.lifecycle.list',
-  listed: 'marketplace.sell.collectibles.lifecycle.listed',
-  redeem: 'marketplace.sell.collectibles.lifecycle.redeem',
+  submit: 'marketplace.sell.collectibles.workspace.lifecycle.submit',
+  review: 'marketplace.sell.collectibles.workspace.lifecycle.review',
+  list: 'marketplace.sell.collectibles.workspace.lifecycle.list',
+  listed: 'marketplace.sell.collectibles.workspace.lifecycle.listed',
+  redeem: 'marketplace.sell.collectibles.workspace.lifecycle.redeem',
 };
 
 export interface CollectibleCardSubmissionsWorkspaceProps {
@@ -91,7 +91,10 @@ export function CollectibleCardSubmissionsWorkspace({
     setLoading(true);
     setLoadError(null);
     try {
-      const result = await collectiblesApi.listMyCollectibleSourceDeposits({ page: 1, pageSize: 50 });
+      const result = await collectiblesApi.listMyCollectibleSourceDeposits({
+        page: 1,
+        pageSize: 50,
+      });
       setItems(result.items ?? []);
     } catch (err) {
       setItems([]);
@@ -142,7 +145,9 @@ export function CollectibleCardSubmissionsWorkspace({
       toast({
         title: t('common.error'),
         description:
-          err instanceof Error ? err.message : t('marketplace.sell.collectibles.workspace.submitFailed'),
+          err instanceof Error
+            ? err.message
+            : t('marketplace.sell.collectibles.workspace.submitFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -179,7 +184,9 @@ export function CollectibleCardSubmissionsWorkspace({
       toast({
         title: t('common.error'),
         description:
-          err instanceof Error ? err.message : t('marketplace.sell.collectibles.workspace.shipFailed'),
+          err instanceof Error
+            ? err.message
+            : t('marketplace.sell.collectibles.workspace.shipFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -459,7 +466,9 @@ export function CollectibleCardSubmissionsWorkspace({
                         <p className="text-xs text-muted-foreground">{deposit.grade}</p>
                       ) : null}
                     </div>
-                    <Badge variant="secondary">{t(resolveSourceDepositStatusKey(deposit.status))}</Badge>
+                    <Badge variant="secondary">
+                      {t(resolveSourceDepositStatusKey(deposit.status))}
+                    </Badge>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {t('marketplace.sell.collectibles.workspace.nextActionLabel')}:{' '}
@@ -469,11 +478,17 @@ export function CollectibleCardSubmissionsWorkspace({
                   </p>
                   {rejectionReason ? (
                     <p className="mt-2 text-xs text-destructive" role="status">
-                      {t('marketplace.sell.collectibles.workspace.rejectionReason')}: {rejectionReason}
+                      {t('marketplace.sell.collectibles.workspace.rejectionReason')}:{' '}
+                      {rejectionReason}
                     </p>
                   ) : null}
                   {listingReady && deposit.hubSlotID ? (
-                    <Button asChild size="sm" className="mt-3" data-testid="create-listing-from-deposit">
+                    <Button
+                      asChild
+                      size="sm"
+                      className="mt-3"
+                      data-testid="create-listing-from-deposit"
+                    >
                       <Link
                         href={buildSourceDepositListingUrl({
                           sourceDepositID: deposit.sourceDepositID,
@@ -541,7 +556,8 @@ export function CollectibleCardSubmissionsWorkspace({
                     </div>
                   ) : null}
                   <p className="sr-only">
-                    {t('marketplace.sell.collectibles.workspace.lifecycleAria')}: {activeStep}
+                    {t('marketplace.sell.collectibles.workspace.lifecycleAria')}:{' '}
+                    {t(SELLER_LIFECYCLE_KEYS[activeStep])}
                   </p>
                 </div>
               );
