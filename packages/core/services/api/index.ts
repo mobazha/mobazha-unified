@@ -85,6 +85,7 @@ export { refreshRuntimeConfig } from './runtimeConfig';
 // 商品 API
 export * as productsApi from './products';
 export type { StoreListingsResult } from './products';
+export type { StoreRelatedListingsOptions } from './products';
 
 // 订单 API
 export * as ordersApi from './orders';

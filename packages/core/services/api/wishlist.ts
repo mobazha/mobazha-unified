@@ -3,8 +3,12 @@
  */
 
 import { withMockFallback } from './mode';
+import { ApiError } from './client';
 import { NODE_API } from '../../config/apiPaths';
 import { authGet, authPost, authDel } from './helpers';
+
+const isExpectedUnauthenticatedWishlistError = (error: unknown): boolean =>
+  error instanceof ApiError && error.status === 401;
 
 export interface WishlistItem {
   peerID: string;
@@ -34,7 +38,9 @@ export async function getWishlist(): Promise<WishlistItem[]> {
     return mockWishlistData;
   };
 
-  return withMockFallback(realFn, mockFn, '/wishlists');
+  return withMockFallback(realFn, mockFn, '/wishlists', {
+    quietFallbackWhen: isExpectedUnauthenticatedWishlistError,
+  });
 }
 
 export async function addToWishlist(params: AddWishlistParams): Promise<WishlistItem> {

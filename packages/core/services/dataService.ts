@@ -19,6 +19,7 @@ import type { Order } from '../types/order';
 import type { UserProfile } from '../types/user';
 import type { Wallet, Transaction, FeeLevel, SendTransactionRequest } from '../types/wallet';
 import type { CryptoType } from '../types/common';
+import { filterListingsByScopeTag } from '../utils/storeRelatedListings';
 
 // ============ Product Data Service ============
 
@@ -54,6 +55,24 @@ export const productDataService = {
     // 使用网关 API 直接获取店铺商品列表，比搜索服务 (fetchStoreListings) 更可靠
     // 搜索服务可能没有索引到某些店铺的数据
     return await productsApi.getStoreListingIndex(peerID);
+  },
+
+  /**
+   * Related listings for product detail "More from this store".
+   * Filters out cross-vendor catalog bleed; mock mode stamps vendorPeerID for demo UX.
+   */
+  async getStoreRelatedListings(
+    peerID: string,
+    options: productsApi.StoreRelatedListingsOptions = {}
+  ): Promise<ProductListItem[]> {
+    if (isMockMode()) {
+      const items = await mockServices.products.getStoreListings(peerID);
+      const stamped = items.map(item => ({ ...item, vendorPeerID: peerID }));
+      const limit = options.limit ?? 12;
+      const scoped = filterListingsByScopeTag(stamped, options.scopeTag);
+      return scoped.filter(item => item.slug !== options.excludeSlug).slice(0, limit);
+    }
+    return productsApi.getStoreRelatedListings(peerID, options);
   },
 
   /**

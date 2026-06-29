@@ -5,9 +5,11 @@
 
 import { useEffect } from 'react';
 import { useWishlistStore } from '../stores/wishlistStore';
+import { useUserStore } from '../stores/userStore';
 import type { AddWishlistParams } from '../services/api/wishlist';
 
 export function useWishlist() {
+  const isAuthenticated = useUserStore(s => s.isAuthenticated);
   const items = useWishlistStore(s => s.items);
   const isLoading = useWishlistStore(s => s.isLoading);
   const error = useWishlistStore(s => s.error);
@@ -20,10 +22,11 @@ export function useWishlist() {
   const getItemCount = useWishlistStore(s => s.getItemCount);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (!_fetched && !isLoading) {
       fetchWishlist();
     }
-  }, [_fetched, isLoading, fetchWishlist]);
+  }, [isAuthenticated, _fetched, isLoading, fetchWishlist]);
 
   return {
     items,

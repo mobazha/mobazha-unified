@@ -1,4 +1,6 @@
+import { CHAINS, getChainFromCoin } from '../data/tokens';
 import { COLLECTIBLE_FULFILLMENT_NFT } from './metadata';
+import { parseCollectibleListingTag, parseCollectibleListingTagMap } from './listingTags';
 
 export interface CollectibleListingSource {
   metadata?: { contractType?: string };
@@ -10,22 +12,15 @@ export interface CollectibleListingSource {
   };
 }
 
-const COLLECTIBLE_TAG_PREFIX = 'collectibles:';
-
-function parseCollectibleTag(tag: string): { key: string; value: string } | null {
-  const trimmed = tag.trim();
-  if (!trimmed.startsWith(COLLECTIBLE_TAG_PREFIX)) return null;
-  const body = trimmed.slice(COLLECTIBLE_TAG_PREFIX.length);
-  const eq = body.indexOf('=');
-  if (eq <= 0) return null;
-  return { key: body.slice(0, eq).trim(), value: body.slice(eq + 1).trim() };
-}
-
 export interface ParsedCollectibleListingMetadata {
   fulfillment: string;
   hubSlotID?: string;
   nftMint?: string;
   certNumber?: string;
+  grade?: string;
+  serial?: string;
+  /** `source-custody` | `hub` | other hubLocation values from listing tags */
+  hubLocation?: string;
 }
 
 /**
@@ -44,10 +39,9 @@ export function isCollectibleHubNftListing(
 
   const tags = product.item?.tags ?? [];
   return tags.some(tag => {
-    const parsed = parseCollectibleTag(tag);
-    return (
-      parsed?.key === 'fulfillment' || parsed?.key === 'hub_slot_id' || parsed?.key === 'nft_mint'
-    );
+    const parsed = parseCollectibleListingTag(tag);
+    const key = parsed?.key.replace(/@\d+\/\d+$/, '') ?? '';
+    return key === 'fulfillment' || key === 'hub_slot_id' || key === 'nft_mint';
   });
 }
 
@@ -63,11 +57,7 @@ export function parseCollectibleListingMetadata(
   product: CollectibleListingSource
 ): ParsedCollectibleListingMetadata {
   const tags = product.item?.tags ?? [];
-  const fromTags: Record<string, string> = {};
-  for (const tag of tags) {
-    const parsed = parseCollectibleTag(tag);
-    if (parsed?.key && parsed.value) fromTags[parsed.key] = parsed.value;
-  }
+  const fromTags = parseCollectibleListingTagMap(tags);
 
   const nftMint = fromTags.nft_mint?.trim() || product.item?.tokenAddress?.trim() || undefined;
 
@@ -76,5 +66,70 @@ export function parseCollectibleListingMetadata(
     hubSlotID: fromTags.hub_slot_id?.trim() || undefined,
     nftMint,
     certNumber: fromTags.cert_number?.trim() || undefined,
+    grade: fromTags.grade?.trim() || undefined,
+    serial: fromTags.serial?.trim() || undefined,
+    hubLocation: fromTags.hub_location?.trim() || undefined,
   };
+}
+
+export type CollectibleListingCustodyKind = 'source' | 'hub' | 'unknown';
+
+/** Human-readable title network from listing blockchain (e.g. solana → Solana). */
+export function resolveCollectibleTitleNetworkLabel(
+  blockchain?: string | null
+): string | undefined {
+  const normalized = (blockchain ?? '').trim().toLowerCase();
+  if (!normalized) return undefined;
+
+  if (normalized === 'solana' || normalized === 'sol') return 'Solana';
+
+  const chainId = getChainFromCoin(blockchain!.trim());
+  if (!chainId) return undefined;
+
+  const config = CHAINS.find(chain => chain.id.toUpperCase() === chainId);
+  return config?.name ?? chainId;
+}
+
+/** Derive custody display from listing tags — does not infer Hub custody for source-held cards. */
+export function resolveCollectibleListingCustodyKind(
+  meta: Pick<ParsedCollectibleListingMetadata, 'hubLocation'>
+): CollectibleListingCustodyKind {
+  const location = (meta.hubLocation || '').trim().toLowerCase();
+  if (location === 'source-custody' || location === 'source') {
+    return 'source';
+  }
+  if (location === 'hub' || location.startsWith('hub-')) {
+    return 'hub';
+  }
+  return 'unknown';
+}
+
+function isAuthoritativeCollectibleHubLocation(location: string | undefined): boolean {
+  const normalized = (location ?? '').trim().toLowerCase();
+  if (!normalized) return false;
+  return (
+    normalized === 'source-custody' ||
+    normalized === 'source' ||
+    normalized === 'hub' ||
+    normalized.startsWith('hub-')
+  );
+}
+
+/**
+ * Strict gate for digital-title / source-custody UX.
+ * Ordinary PHYSICAL_GOOD listings and RWA listings without explicit collectible tags
+ * must keep standard shipping/purchase flows.
+ */
+export function hasAuthoritativeCollectibleTitleMetadata(
+  product: CollectibleListingSource | null | undefined
+): boolean {
+  if (!isCollectibleHubNftListing(product)) return false;
+
+  const meta = parseCollectibleListingMetadata(product!);
+  if (meta.fulfillment !== COLLECTIBLE_FULFILLMENT_NFT) return false;
+  if (!meta.certNumber?.trim()) return false;
+  if (!meta.hubSlotID?.trim()) return false;
+  if (!isAuthoritativeCollectibleHubLocation(meta.hubLocation)) return false;
+
+  return true;
 }

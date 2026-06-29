@@ -8,6 +8,7 @@ import { getGatewayUrl, getBuyerGatewayUrl, getSearchUrl, getAuthHeaders } from 
 import { isStandaloneMode } from '../../config/env';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
 import { authGet, authPost, authPut, publicGet, publicPost, searchPost } from './helpers';
+import { isAuthenticated } from '../auth/token';
 import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
 
 /**
@@ -98,6 +99,18 @@ export async function fetchPublicProfilesBatch(
 ): Promise<PublicProfileSnapshot[]> {
   const unique = [...new Set(peerIDs.filter(Boolean))];
   if (!unique.length) return [];
+
+  // Hosted gateways reject anonymous POST /profiles/batch (401). Use public
+  // search profile snapshots instead so marketplace cards stay logged-out safe.
+  if (!isAuthenticated()) {
+    const snapshots = await Promise.all(
+      unique.map(async peerID => {
+        const profile = await fetchProfileFromSearch(peerID);
+        return profile ? snapshotFromProfile(peerID, profile) : null;
+      })
+    );
+    return snapshots.filter((profile): profile is PublicProfileSnapshot => profile !== null);
+  }
 
   const snapshots: PublicProfileSnapshot[] = [];
   const missing: string[] = [];

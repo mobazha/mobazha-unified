@@ -6,6 +6,7 @@ import { getPublicListing } from '../services/api/products';
 import { fetchPublicProfilesBatch } from '../services/api/profile';
 import { getImageUrl } from '../services/api/config';
 import { formatListingSlugTitle } from '../utils/communityMarketplace';
+import { resolveCollectibleListingImageUrl } from '../curation/collectibleMarketplace';
 
 export interface CommunityListingPreview {
   key: string;
@@ -17,6 +18,8 @@ export interface CommunityListingPreview {
   currency?: string;
   divisibility?: number;
   vendorName?: string;
+  categories?: string[];
+  tags?: string[];
   loading: boolean;
   failed: boolean;
 }
@@ -90,8 +93,12 @@ export function useCommunityMarketplaceEnrichment(
           try {
             const { listing } = await getPublicListing(ref.slug, ref.peerID);
             const title = listing?.item?.title || formatListingSlugTitle(ref.slug);
+            const tags = listing?.item?.tags?.filter(Boolean) ?? [];
+            const categories = listing?.item?.productType?.trim()
+              ? [listing.item.productType.trim()]
+              : [];
             const thumb = listing?.item?.images?.[0];
-            const imageUrl =
+            const apiImageUrl =
               typeof thumb === 'string'
                 ? getImageUrl(thumb, ref.peerID) || getImageUrl(thumb) || undefined
                 : thumb
@@ -99,6 +106,7 @@ export function useCommunityMarketplaceEnrichment(
                     getImageUrl(thumb.small || thumb.medium) ||
                     undefined
                   : undefined;
+            const imageUrl = resolveCollectibleListingImageUrl(ref.slug, apiImageUrl);
             return {
               key,
               slug: ref.slug,
@@ -109,6 +117,8 @@ export function useCommunityMarketplaceEnrichment(
               currency: listing?.metadata?.pricingCurrency?.code,
               divisibility: listing?.metadata?.pricingCurrency?.divisibility,
               vendorName: listing?.vendorID?.name || listing?.vendorID?.handle,
+              categories,
+              tags,
               loading: false,
               failed: !listing,
             } satisfies CommunityListingPreview;

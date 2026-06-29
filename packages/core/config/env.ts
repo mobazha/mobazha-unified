@@ -545,6 +545,8 @@ export function initEnvFromProcess(): void {
   });
 }
 
+import { setCurationHomePathFromRuntimeConfig } from './curationHomePath';
+
 /**
  * Apply runtime config published by the backend bootstrap route.
  *
@@ -562,6 +564,7 @@ export function applyRuntimeConfig(runtimeConfig: RuntimeConfig = getRuntimeConf
   // env config.
   const rc = runtimeConfig as {
     saasUrl?: string;
+    curationHomePath?: string;
     authMode?: string;
     outpostMode?: boolean;
     disableExternalResources?: boolean;
@@ -584,6 +587,10 @@ export function applyRuntimeConfig(runtimeConfig: RuntimeConfig = getRuntimeConf
       };
     };
   };
+
+  if ('curationHomePath' in rc) {
+    setCurationHomePathFromRuntimeConfig(rc.curationHomePath);
+  }
 
   if (rc.authMode === 'standalone' || rc.authMode === 'basic' || rc.authMode === 'hosted') {
     currentEnv = {

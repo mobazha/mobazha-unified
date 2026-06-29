@@ -6,7 +6,7 @@
  * profile 能力补齐展示信息。
  */
 
-import { apiClient } from './client';
+import { apiClient, ApiError } from './client';
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
 import { truncatePeerId } from '../../utils/identity';
 import { fetchVerifiedModerators } from '../verifiedModerators';
@@ -297,6 +297,9 @@ async function getStoreModeratorEntries(
       if (policy || entries.length > 0) {
         return entries;
       }
+    }
+    if (error instanceof ApiError && error.status === 401) {
+      return [];
     }
     console.warn('Error fetching store policy moderators:', error);
     return [];

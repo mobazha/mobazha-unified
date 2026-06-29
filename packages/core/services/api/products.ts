@@ -35,6 +35,12 @@ import {
   HOMEPAGE_FEED_FETCH_BATCHES,
   HOMEPAGE_MIN_VENDORS_FOR_HOT,
 } from '../../utils/homepageFeeds';
+import {
+  excludeListingBySlug,
+  filterListingsByScopeTag,
+  filterStoreOwnedListings,
+} from '../../utils/storeRelatedListings';
+import { slugToSearchQuery } from '../../utils/productUrl';
 
 // API 返回的搜索结果格式
 interface SearchResultItem {
@@ -351,6 +357,12 @@ function mapSearchListingItem(item: ProfileListingItem, storePeerID: string): Pr
   if (basePrice) mapped.basePrice = basePrice;
   if (priceMax) mapped.priceMax = priceMax;
   if (typeof item.priceHasRange === 'boolean') mapped.priceHasRange = item.priceHasRange;
+  if (Array.isArray(item.tags)) {
+    const tags = item.tags.filter(
+      (tag): tag is string => typeof tag === 'string' && tag.trim().length > 0
+    );
+    if (tags.length > 0) mapped.tags = tags;
+  }
   return mapped;
 }
 
@@ -369,6 +381,24 @@ export async function fetchStoreListings(
     const mapped = mapSearchListingItem(item, storePeerID);
     return mapped;
   });
+}
+
+/** Search fallback for related listings — requires explicit store ownership on each row. */
+async function fetchStrictStoreListingsFromSearch(
+  storePeerID: string,
+  pageSize: number
+): Promise<ProductListItem[]> {
+  const raw = await searchSafeGet<ProfileListingItem[]>(
+    `${SEARCH_API.PROFILE_LISTINGS(storePeerID)}?pageSize=${pageSize}`,
+    []
+  );
+
+  return raw
+    .filter(item => {
+      const owner = (item.vendorPeerID ?? item.peerID)?.trim();
+      return owner === storePeerID;
+    })
+    .map(item => mapSearchListingItem(item, storePeerID));
 }
 
 /**
@@ -446,6 +476,49 @@ export async function getStoreListingsWithFallback(
   }
 }
 
+export interface StoreRelatedListingsOptions {
+  /** Exclude the current product from recommendations */
+  excludeSlug?: string;
+  /** Maximum number of related listings to return */
+  limit?: number;
+  /** Page size when querying search fallback */
+  pageSize?: number;
+  /** When set, only return same-store listings carrying this tag (curated cohort scope). */
+  scopeTag?: string;
+}
+
+/**
+ * Store-scoped related listings for product detail "More from this store".
+ *
+ * Node index rows without vendorPeerID are untrusted (production can return
+ * global demo catalog). Only explicit vendorPeerID matches are kept; strict
+ * search fallback uses the same ownership rule. Mock mode stamps vendorPeerID
+ * in dataService before this path runs.
+ */
+export async function getStoreRelatedListings(
+  peerID: string,
+  options: StoreRelatedListingsOptions = {}
+): Promise<ProductListItem[]> {
+  const storePeerID = peerID.trim();
+  if (!storePeerID) return [];
+
+  const limit = options.limit ?? 12;
+  const pageSize = options.pageSize ?? Math.max(limit + 1, 12);
+
+  let listings = filterStoreOwnedListings(await getStoreListingIndex(storePeerID), storePeerID);
+
+  if (listings.length === 0) {
+    listings = filterStoreOwnedListings(
+      await fetchStrictStoreListingsFromSearch(storePeerID, pageSize),
+      storePeerID
+    );
+  }
+
+  listings = filterListingsByScopeTag(listings, options.scopeTag);
+
+  return excludeListingBySlug(listings, options.excludeSlug).slice(0, limit);
+}
+
 /**
  * 获取商品详情
  */
@@ -511,29 +584,45 @@ async function getListingFromSearchFallback(peerID: string, slug: string): Promi
 }
 
 /**
- * 获取公开商品详情（无需认证）
- *
- * When the store is offline, falls back to search-index summary data so the
- * UI can render a degraded (read-only) product page with an offline banner
- * instead of showing a jarring "connection failed" modal.
+ * Resolve vendor peerID for canonical /product/{slug} URLs via public search.
+ * Hosted gateways require peerID for GET /listings/{peerID}/{slug}.
  */
-export async function getPublicListing(
+export async function resolveListingVendorPeerFromSearch(
+  slug: string
+): Promise<string | undefined> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return undefined;
+
+  try {
+    const { products } = await searchListings({
+      query: slugToSearchQuery(normalizedSlug),
+      pageSize: 20,
+      browse: 'all',
+      sortBy: 'relevance',
+    });
+    const match = products.find(item => item.slug === normalizedSlug);
+    const peerID = match?.vendorPeerID?.trim();
+    return peerID || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchPublicListingWithPeer(
   slug: string,
-  peerID?: string
+  peerID: string
 ): Promise<PublicListingResult> {
-  if (peerID && isStoreKnownOffline(peerID)) {
+  if (isStoreKnownOffline(peerID)) {
     const fallback = await getListingFromSearchFallback(peerID, slug);
     return { listing: fallback, isOffline: true };
   }
 
-  const path = !peerID
-    ? NODE_API.LISTING(slug)
-    : `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
+  const path = `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
 
   try {
     const data = await publicGet<{ listing?: Product } & Product>(path);
     const listing = data.listing ?? data;
-    if (peerID) markStoreOnline(peerID);
+    markStoreOnline(peerID);
 
     if (listing?.item?.images?.length) {
       return {
@@ -549,11 +638,55 @@ export async function getPublicListing(
     }
     return { listing, isOffline: false };
   } catch (err) {
-    if (peerID && isStoreUnavailableError(err)) {
+    if (isStoreUnavailableError(err)) {
       markStoreOffline(peerID);
       const fallback = await getListingFromSearchFallback(peerID, slug);
       return { listing: fallback, isOffline: true };
     }
+    return { listing: null, isOffline: false };
+  }
+}
+
+/**
+ * 获取公开商品详情（无需认证）
+ *
+ * When the store is offline, falls back to search-index summary data so the
+ * UI can render a degraded (read-only) product page with an offline banner
+ * instead of showing a jarring "connection failed" modal.
+ */
+export async function getPublicListing(
+  slug: string,
+  peerID?: string
+): Promise<PublicListingResult> {
+  const explicitPeerID = peerID?.trim() || undefined;
+  if (explicitPeerID) {
+    return fetchPublicListingWithPeer(slug, explicitPeerID);
+  }
+
+  const resolvedPeerID = await resolveListingVendorPeerFromSearch(slug);
+  if (resolvedPeerID) {
+    return fetchPublicListingWithPeer(slug, resolvedPeerID);
+  }
+
+  // Legacy slug-only node path (local seller / contexts where it remains public).
+  try {
+    const data = await publicGet<{ listing?: Product } & Product>(NODE_API.LISTING(slug));
+    const listing = data.listing ?? data;
+
+    if (listing?.item?.images?.length) {
+      return {
+        listing: {
+          ...listing,
+          thumbnail: listing.item.images[0],
+          title: listing.item.title,
+          slug: listing.slug ?? slug,
+          vendorPeerID: listing.vendorID?.peerID,
+        } as Product,
+        isOffline: false,
+      };
+    }
+    return { listing, isOffline: false };
+  } catch {
     return { listing: null, isOffline: false };
   }
 }

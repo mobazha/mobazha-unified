@@ -84,43 +84,88 @@ export function getSaaSMainOrigin(): string | null {
  * if so, otherwise null.
  */
 export function getStorefrontReturnOrigin(): string | null {
+  const returnUrl = getStorefrontReturnUrl();
+  if (!returnUrl) return null;
+  try {
+    return new URL(returnUrl).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Full storefront return URL (origin + pathname + search) when the user is on
+ * a branded subdomain.  Excludes hash — the auth token is appended on bounce-back.
+ */
+export function getStorefrontReturnUrl(): string | null {
   if (typeof window === 'undefined') return null;
 
   const subdomainBase = getStoreSubdomainBase();
   const host = window.location.hostname;
 
-  if (host.endsWith(`.${subdomainBase}`)) {
-    return window.location.origin;
+  if (!host.endsWith(`.${subdomainBase}`)) {
+    return null;
   }
-  return null;
+
+  const returnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+  return isAllowedStorefrontReturn(returnUrl) ? returnUrl : null;
 }
 
 /**
  * Validate that a return URL belongs to a trusted storefront domain.
+ * Accepts origin-only URLs (legacy ::sf) and origin + path + search (current).
  */
 export function isAllowedStorefrontReturn(url: string): boolean {
   try {
     const u = new URL(url);
-    const subdomainBase = getStoreSubdomainBase();
-    return u.hostname.endsWith(`.${subdomainBase}`) && u.protocol === 'https:';
+    const subdomainBase = getStoreSubdomainBase().toLowerCase();
+    const host = u.hostname.toLowerCase();
+
+    if (u.protocol !== 'https:') return false;
+    if (u.username || u.password) return false;
+    if (u.hash) return false;
+    if (host === subdomainBase) return false;
+    if (!host.endsWith(`.${subdomainBase}`)) return false;
+
+    return true;
   } catch {
     return false;
   }
 }
 
 /**
+ * Append validated storefront return URL to OAuth state.
+ */
+export function appendStorefrontReturnToState(state: string, returnUrl: string): string {
+  if (!isAllowedStorefrontReturn(returnUrl)) {
+    return state;
+  }
+  return `${state}${SF_RETURN_SEPARATOR}${encodeURIComponent(returnUrl)}`;
+}
+
+/**
  * Extract storefront return URL from an OAuth state parameter.
- * Returns [cleanState, returnOrigin | null].
+ * Returns [cleanState, returnUrl | null].
  */
 export function extractStorefrontReturn(state: string): [string, string | null] {
   const idx = state.indexOf(SF_RETURN_SEPARATOR);
   if (idx === -1) return [state, null];
   const cleanState = state.substring(0, idx);
-  const returnOrigin = decodeURIComponent(state.substring(idx + SF_RETURN_SEPARATOR.length));
-  if (!isAllowedStorefrontReturn(returnOrigin)) {
+  const returnUrl = decodeURIComponent(state.substring(idx + SF_RETURN_SEPARATOR.length));
+  if (!isAllowedStorefrontReturn(returnUrl)) {
     return [cleanState, null];
   }
-  return [cleanState, returnOrigin];
+  return [cleanState, returnUrl];
+}
+
+/**
+ * Build the cross-domain bounce URL after OAuth completes on the SaaS gateway.
+ * Token is passed via hash fragment to avoid leaking it in server logs.
+ */
+export function buildStorefrontAuthRedirect(returnUrl: string, token: string): string {
+  const u = new URL(returnUrl);
+  u.hash = `_auth_token=${encodeURIComponent(token)}`;
+  return u.toString();
 }
 
 /**
@@ -142,11 +187,11 @@ function buildOAuthCallbackParams(
     return { callbackUrl: explicitRedirectUri, state };
   }
 
-  const sfReturnOrigin = getStorefrontReturnOrigin();
-  if (sfReturnOrigin) {
+  const sfReturnUrl = getStorefrontReturnUrl();
+  if (sfReturnUrl) {
     const mainOrigin = getSaaSMainOrigin();
     if (mainOrigin) {
-      state += `${SF_RETURN_SEPARATOR}${encodeURIComponent(sfReturnOrigin)}`;
+      state = appendStorefrontReturnToState(state, sfReturnUrl);
       return { callbackUrl: `${mainOrigin}${redirectPath}`, state };
     }
   }
@@ -164,8 +209,8 @@ export function getOAuthRedirectUri(redirectUri?: string): string {
     return redirectUri;
   }
 
-  const sfReturnOrigin = getStorefrontReturnOrigin();
-  if (sfReturnOrigin) {
+  const sfReturnUrl = getStorefrontReturnUrl();
+  if (sfReturnUrl) {
     const mainOrigin = getSaaSMainOrigin();
     if (mainOrigin) {
       return `${mainOrigin}${redirectPath}`;

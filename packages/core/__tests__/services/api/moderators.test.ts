@@ -6,15 +6,19 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import type { Moderator, ModeratorListResponse, Dispute } from '../../../services/api/moderators';
 
-// Mock the apiClient
-vi.mock('../../../services/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  },
-}));
+// Mock the apiClient; keep ApiError for instanceof checks in production code
+vi.mock('../../../services/api/client', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../../services/api/client')>();
+  return {
+    ...actual,
+    apiClient: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+    },
+  };
+});
 
 vi.mock('../../../services/verifiedModerators', () => ({
   fetchVerifiedModerators: vi.fn().mockResolvedValue(new Set<string>()),
@@ -47,7 +51,7 @@ vi.mock('../../../services/api/storeMetadata', () => ({
   ) => resp?.metadata?.find(m => m.metadataType === type)?.data ?? null,
 }));
 
-import { apiClient } from '../../../services/api/client';
+import { apiClient, ApiError } from '../../../services/api/client';
 import * as moderatorsApi from '../../../services/api/moderators';
 import { fetchVerifiedModerators } from '../../../services/verifiedModerators';
 
@@ -176,6 +180,31 @@ describe('Moderators API', () => {
       expect(mockPublicGet).toHaveBeenCalledWith('/store-policy/QmSeller/published');
       expect(mockPublicPost).not.toHaveBeenCalled();
       expect(result.moderators).toHaveLength(0);
+    });
+
+    it('should silently return empty when seller public StorePolicy returns 401', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      mockPublicGet.mockRejectedValueOnce(new ApiError('Unauthorized', 401));
+      mockFetchStoreMetadata.mockResolvedValueOnce(null);
+
+      const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
+
+      expect(result.moderators).toHaveLength(0);
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
+    it('should warn when seller public StorePolicy returns non-401 ApiError', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const apiError = new ApiError('Internal Server Error', 500);
+      mockPublicGet.mockRejectedValueOnce(apiError);
+      mockFetchStoreMetadata.mockResolvedValueOnce(null);
+
+      const result = await moderatorsApi.getModerators({ vendorPeerID: 'QmSeller' });
+
+      expect(result.moderators).toHaveLength(0);
+      expect(warnSpy).toHaveBeenCalledWith('Error fetching store policy moderators:', apiError);
+      warnSpy.mockRestore();
     });
 
     it('should fallback to search store_policy metadata for seller public StorePolicy', async () => {

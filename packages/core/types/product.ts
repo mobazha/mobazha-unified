@@ -52,6 +52,8 @@ export interface ProductListItem {
   quantity?: number;
   /** 卖家管理列表可用的供给/可售摘要；公开列表和旧节点可能不返回。 */
   supplySummary?: ListingSupplySummaryItem;
+  /** Search/index tags when available (used for curated related-listing scope). */
+  tags?: string[];
 }
 
 /**

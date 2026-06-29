@@ -632,6 +632,26 @@ export const HOSTING_API = {
   COLLECTIBLES_PRIMARY_SALES_RELEASE_RETRY: '/platform/v1/collectibles/primary-sales/release-retry',
   COLLECTIBLES_PRIMARY_SALE_BY_ORDER: (orderId: string) =>
     `/platform/v1/collectibles/primary-sales/by-order/${encodeURIComponent(orderId)}`,
+  COLLECTIBLES_SOURCE_DEPOSITS: '/platform/v1/collectibles/source-deposits',
+  COLLECTIBLES_MY_SOURCE_DEPOSITS: '/platform/v1/collectibles/my/source-deposits',
+  COLLECTIBLES_MY_SOURCE_DEPOSIT_SHIP: (id: string) =>
+    `/platform/v1/collectibles/my/source-deposits/${encodeURIComponent(id)}/ship`,
+  COLLECTIBLES_SOURCE_DEPOSIT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}`,
+  COLLECTIBLES_SOURCE_DEPOSIT_APPROVE: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/approve`,
+  COLLECTIBLES_SOURCE_DEPOSIT_REJECT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/reject`,
+  COLLECTIBLES_SOURCE_DEPOSIT_MINT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/mint`,
+  COLLECTIBLES_SOURCE_DEPOSIT_FIRST_SALE: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/first-sale`,
+  COLLECTIBLES_SOURCE_DEPOSIT_SHIP: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/ship`,
+  COLLECTIBLES_SOURCE_DEPOSIT_SETTLE: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/settle`,
+  COLLECTIBLES_SOURCE_DEPOSIT_DEFAULT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/default`,
 } as const;
 
 // ============================================================

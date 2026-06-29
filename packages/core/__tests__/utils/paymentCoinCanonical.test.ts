@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { EVM_CHAIN_IDS, getEvmNativeSymbol } from '../../data/chainMetadata';
 import {
@@ -71,6 +71,19 @@ describe('mustCanonicalCoin', () => {
     expect(getChainFromCoin('crypto:bip122:000000000019d6689c085ae165831e93:native')).toBe('BTC');
     expect(getChainFromCoin('crypto:eip155:11155111:native')).toBe('ETH');
     expect(getChainFromCoin('crypto:tron:mainnet:native')).toBe('TRON');
+  });
+
+  it('maps backend payment coin aliases to canonical chain ids without warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(getChainFromCoin('ARB')).toBe('ARBITRUM');
+    expect(getChainFromCoin('TRX')).toBe('TRON');
+    expect(getChainFromCoin('ARBITRUM')).toBe('ARBITRUM');
+    expect(
+      warn.mock.calls.some(([message]) =>
+        String(message).includes('[getChainFromCoin] Unknown coin/chain')
+      )
+    ).toBe(false);
+    warn.mockRestore();
   });
 
   it('maps chain-level native payment methods to the displayed token id', () => {

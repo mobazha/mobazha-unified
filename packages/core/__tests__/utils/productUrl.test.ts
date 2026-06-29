@@ -10,6 +10,7 @@ import {
   parseCompositeListingSlug,
   resolveProductModalPeerID,
   resolveProductPagePeerID,
+  slugToSearchQuery,
 } from '../../utils/productUrl';
 
 describe('productUrl', () => {
@@ -129,5 +130,13 @@ describe('productUrl', () => {
     setAuthMode('standalone');
 
     expect(resolveProductPagePeerID(undefined, 'QmVendor')).toBeUndefined();
+  });
+
+  it('turns slug separators into a search-friendly query', () => {
+    expect(slugToSearchQuery('m2-wilson-mtg-card-demo-003-psa-10-testnet')).toBe(
+      'm2 wilson mtg card demo 003 psa 10 testnet'
+    );
+    expect(slugToSearchQuery('  icon_pack-demo  ')).toBe('icon pack demo');
+    expect(slugToSearchQuery('')).toBe('');
   });
 });
