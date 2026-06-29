@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import {
   useI18n,
   useUserStore,
@@ -155,8 +156,8 @@ export const MobileHeader: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0" />
-                      <div className="w-24 h-4 rounded bg-muted animate-pulse" />
+                      <MobazhaLogo size={30} className="text-primary flex-shrink-0" />
+                      <span className="font-bold text-base text-foreground truncate">Mobazha</span>
                     </>
                   )}
                 </Link>
