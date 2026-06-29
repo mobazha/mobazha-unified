@@ -35,7 +35,6 @@ import {
   MARKETPLACE_CATALOG_MODE_KEYS,
   resolveCurationMarketBackHref,
   resolveNativeMarketplaceSellPolicy,
-  nativeMarketplaceSellStatusKey,
   getNativeMarketplaceMembershipStatus,
   isCollectibleMarketplaceVertical,
   isHosted,
@@ -207,6 +206,7 @@ export default function MarketplaceSellPage() {
   }, [marketplace, application, selectedGroupIds.length, isSubmitting, isWithdrawing]);
 
   const membershipStatus = policy?.membershipStatus;
+  const hasApplication = Boolean(application?.hasApplication);
   const isApproved = membershipStatus === 'approved';
   const isRejected = membershipStatus === 'rejected';
   const isSuspended = membershipStatus === 'suspended';
@@ -293,16 +293,62 @@ export default function MarketplaceSellPage() {
         : t('marketplace.sell.selfServeNotAvailable')
     : '';
 
-  const statusMessage = (() => {
-    if (!application?.hasApplication) return null;
-    if (isApproved) return t('marketplace.sell.alreadyApproved');
-    if (isRejected) return t('marketplace.sell.statusRejected');
-    if (isSuspended) return t('marketplace.sell.statusSuspended');
-    if (isLeft) return t('marketplace.sell.statusLeft');
-    if (isApplied) return t('marketplace.sell.applicationPending');
-    return t('marketplace.sell.applicationPending');
-  })();
   const decisionReason = application?.membership?.decisionReason?.trim();
+  const sellerCanSelfServe =
+    marketplace?.sellerEntryMode === 'seller_self_serve' && marketplace?.joinMode !== 'invite';
+
+  const pageTitleKey = (() => {
+    if (!hasApplication && sellerCanSelfServe) return 'marketplace.sell.title';
+    if (isApproved) return 'marketplace.sell.pageTitleApproved';
+    if (isApplied) return 'marketplace.sell.pageTitleApplied';
+    if (isRejected) return 'marketplace.sell.pageTitleRejected';
+    if (isSuspended) return 'marketplace.sell.pageTitleSuspended';
+    if (isLeft) return 'marketplace.sell.pageTitleLeft';
+    return sellerCanSelfServe
+      ? 'marketplace.sell.title'
+      : 'marketplace.sell.pageTitleAdmissionStatus';
+  })();
+  const pageTitle = t(pageTitleKey);
+  const pageSubtitleKey = (() => {
+    if (!hasApplication && sellerCanSelfServe) return 'marketplace.sell.subtitle';
+    if (isApplied) return 'marketplace.sell.subtitleApplied';
+    if (isApproved) return 'marketplace.sell.subtitleApproved';
+    if (isRejected) return 'marketplace.sell.subtitleRejected';
+    if (isSuspended) return 'marketplace.sell.subtitleSuspended';
+    if (isLeft) return 'marketplace.sell.subtitleLeft';
+    return 'marketplace.sell.subtitleAdmissionStatus';
+  })();
+  const pageSubtitle = t(pageSubtitleKey);
+  const isInviteControlledRejected =
+    isRejected &&
+    marketplace &&
+    (marketplace.sellerEntryMode === 'operator_invited' || marketplace.joinMode === 'invite');
+  const statusResultTitle = (() => {
+    if (isApproved) return t('marketplace.sell.resultTitleApproved');
+    if (isApplied) return t('marketplace.sell.resultTitleApplied');
+    if (isRejected) return t('marketplace.sell.resultTitleRejected');
+    if (isSuspended) return t('marketplace.sell.resultTitleSuspended');
+    if (isLeft) return t('marketplace.sell.resultTitleLeft');
+    return t('marketplace.sell.resultTitlePending');
+  })();
+  const statusNextStep = (() => {
+    if (isInviteControlledRejected) return t('marketplace.sell.nextStepInviteOnlyRejected');
+    if (isSuspended) return t('marketplace.sell.nextStepSuspended');
+    if (isRejected && policy?.showSubmit) return t('marketplace.sell.reapplyHint');
+    return null;
+  })();
+  const collectibleStatusNextStep = (() => {
+    if (!isCollectibleMarketplace) return null;
+    if (isApproved) return t('marketplace.sell.collectibles.statusNextApprovedWithSubmissions');
+    if (isRejected) {
+      return isInviteControlledRejected
+        ? t('marketplace.sell.collectibles.statusNextRejectedInviteOnly')
+        : t('marketplace.sell.collectibles.statusNextRejected');
+    }
+    if (isSuspended) return t('marketplace.sell.collectibles.statusNextSuspended');
+    if (isApplied) return t('marketplace.sell.collectibles.statusNextPendingBlocked');
+    return t('marketplace.sell.collectibles.statusNextDefault');
+  })();
 
   const applicationRequirementsMet = policy?.requiresProductGroups
     ? selectedGroupIds.length > 0
@@ -311,7 +357,7 @@ export default function MarketplaceSellPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <MobilePageHeader title={t('marketplace.sell.title')} />
+      <MobilePageHeader title={pageTitle} />
 
       <main className="py-6 sm:py-8">
         <Container size="lg">
@@ -348,9 +394,9 @@ export default function MarketplaceSellPage() {
                     {t('common.retry')}
                   </Button>
                 )}
-                <Link href="/marketplace">
-                  <Button variant="outline">{t('marketplace.title')}</Button>
-                </Link>
+                <Button asChild variant="outline" className="h-11">
+                  <Link href="/marketplace">{t('marketplace.title')}</Link>
+                </Button>
               </HStack>
             </Card>
           )}
@@ -358,12 +404,8 @@ export default function MarketplaceSellPage() {
           {!loading && marketplace && policy && (
             <>
               <div className="mb-6">
-                <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
-                  {t('marketplace.sell.title')}
-                </h1>
-                <p className="text-sm text-muted-foreground sm:text-base">
-                  {t('marketplace.sell.subtitle')}
-                </p>
+                <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">{pageTitle}</h1>
+                <p className="text-sm text-muted-foreground sm:text-base">{pageSubtitle}</p>
               </div>
 
               {error && (
@@ -380,8 +422,8 @@ export default function MarketplaceSellPage() {
                 </Card>
               )}
 
-              <Card className="mb-6 p-4 sm:p-5">
-                <HStack gap="md" align="start">
+              <Card className="mb-6 p-4 sm:p-5" data-testid="sell-market-info-card">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <MarketplaceLogo
                     name={marketplace.name}
                     identifier={marketplace.id}
@@ -390,16 +432,49 @@ export default function MarketplaceSellPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-muted-foreground">
-                      {t('marketplace.sell.applyingTo')}
+                      {isApplied
+                        ? t('marketplace.sell.marketContextInReview')
+                        : t('marketplace.sell.marketContextTitle')}
                     </p>
                     <h2 className="text-lg font-bold text-foreground">{marketplace.name}</h2>
-                    <HStack gap="xs" className="mt-2 flex-wrap">
-                      <Badge variant="secondary">{verticalLabel}</Badge>
-                      <Badge variant="outline">{joinLabel}</Badge>
-                      <Badge variant="outline">{catalogLabel}</Badge>
-                    </HStack>
+                    {marketplace.description ? (
+                      <p
+                        className="mt-2 text-sm text-muted-foreground"
+                        data-testid="sell-market-description"
+                      >
+                        {marketplace.description}
+                      </p>
+                    ) : null}
+                    <dl className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('marketplace.sell.marketVerticalLabel')}
+                        </dt>
+                        <dd className="mt-1 text-sm text-foreground">{verticalLabel}</dd>
+                      </div>
+                      <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('marketplace.sell.marketAdmissionLabel')}
+                        </dt>
+                        <dd className="mt-1 text-sm text-foreground">{joinLabel}</dd>
+                      </div>
+                      <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('marketplace.sell.marketCatalogLabel')}
+                        </dt>
+                        <dd className="mt-1 text-sm text-foreground">{catalogLabel}</dd>
+                      </div>
+                    </dl>
                   </div>
-                </HStack>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-11 w-full sm:w-auto"
+                    data-testid="sell-view-marketplace-link"
+                  >
+                    <Link href={marketHref}>{t('marketplace.sell.viewMarketplace')}</Link>
+                  </Button>
+                </div>
               </Card>
 
               {policy.allowsSelfServe && (
@@ -465,24 +540,20 @@ export default function MarketplaceSellPage() {
 
               {!error && isAuthenticated && application?.hasApplication && (
                 <Card
-                  className="mb-6 border-primary/20 bg-primary/5 p-4"
+                  className={`mb-6 p-4 ${
+                    isRejected || isSuspended
+                      ? 'border-destructive/30 bg-destructive/5'
+                      : 'border-primary/20 bg-primary/5'
+                  }`}
                   data-testid="sell-status-card"
                 >
-                  <p className="text-sm text-foreground">{statusMessage}</p>
-                  <p className="mt-1 text-sm font-medium text-primary">
-                    {t(nativeMarketplaceSellStatusKey(membershipStatus))}
-                  </p>
+                  <h3 className="text-base font-semibold text-foreground">{statusResultTitle}</h3>
                   {application.autoApproved && isApproved && (
                     <p className="mt-2 text-sm text-muted-foreground">
                       {t('marketplace.sell.autoApprovedMessage')}
                     </p>
                   )}
-                  {(isRejected || isLeft) && policy.showSubmit && (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {t('marketplace.sell.reapplyHint')}
-                    </p>
-                  )}
-                  {(isRejected || isSuspended) && reviewEvents.length === 0 && (
+                  {(isRejected || isSuspended) && (
                     <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 p-3">
                       <p className="text-xs font-medium text-destructive">
                         {t('marketplace.sell.decisionReasonTitle')}
@@ -492,17 +563,12 @@ export default function MarketplaceSellPage() {
                       </p>
                     </div>
                   )}
-                  {isCollectibleMarketplace ? (
+                  {!isCollectibleMarketplace && statusNextStep ? (
+                    <p className="mt-3 text-sm text-muted-foreground">{statusNextStep}</p>
+                  ) : null}
+                  {collectibleStatusNextStep ? (
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {isApproved
-                        ? t('marketplace.sell.collectibles.statusNextApprovedWithSubmissions')
-                        : isRejected
-                          ? t('marketplace.sell.collectibles.statusNextRejected')
-                          : isSuspended
-                            ? t('marketplace.sell.collectibles.statusNextSuspended')
-                            : isApplied
-                              ? t('marketplace.sell.collectibles.statusNextPendingBlocked')
-                              : t('marketplace.sell.collectibles.statusNextDefault')}
+                      {collectibleStatusNextStep}
                     </p>
                   ) : null}
                 </Card>
@@ -660,14 +726,16 @@ export default function MarketplaceSellPage() {
                             </p>
                           </div>
                           <HStack gap="sm" className="flex-wrap justify-center">
-                            <Link href="/settings/product-groups">
-                              <Button>{t('marketplace.sell.manageProductGroups')}</Button>
-                            </Link>
-                            <Link href="/listing/new">
-                              <Button variant="outline">
+                            <Button asChild className="h-11 w-full sm:w-auto">
+                              <Link href="/settings/product-groups">
+                                {t('marketplace.sell.manageProductGroups')}
+                              </Link>
+                            </Button>
+                            <Button asChild variant="outline" className="h-11 w-full sm:w-auto">
+                              <Link href="/listing/new">
                                 {t('marketplace.sell.createFirstProduct')}
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                           </HStack>
                         </VStack>
                       )}
