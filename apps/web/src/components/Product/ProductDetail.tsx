@@ -35,11 +35,17 @@ import {
   filterVisibleAcceptedCurrencies,
   buildProductHref,
   isCollectibleHubNftListing,
+  filterPublicProductDisplayTags,
+  resolveRelatedListingsScopeTag,
   useFeature,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
+import {
+  isCollectibleDemoCardImageUrl,
+  resolveCollectibleListingImageUrl,
+} from '@mobazha/core/curation/collectibleMarketplace';
 import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
 import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
@@ -337,11 +343,22 @@ export function ProductDetail({
 
   // 计算图片 URL 数组
   const imageUrls = useMemo(() => {
-    if (!product?.item?.images) return [];
-    return product.item.images
-      .map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
-      .filter((url): url is string => !!url);
-  }, [product]);
+    const fromListing =
+      product?.item?.images
+        ?.map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
+        .map(url => resolveCollectibleListingImageUrl(slug, url))
+        .filter((url): url is string => !!url) ?? [];
+
+    if (fromListing.length > 0) return fromListing;
+
+    const fallback = resolveCollectibleListingImageUrl(slug, undefined);
+    return fallback ? [fallback] : [];
+  }, [product, slug]);
+
+  const usesDemoCardArt = useMemo(
+    () => imageUrls.some(url => isCollectibleDemoCardImageUrl(url)),
+    [imageUrls]
+  );
 
   const imageSwipeHandlers = useSwipeGesture({
     onSwipeLeft: useCallback(
@@ -587,7 +604,12 @@ export function ProductDetail({
   const rwaTradeMode = product.metadata?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
     product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
-  const tags = product.item.tags || [];
+  const rawTags = product.item.tags || [];
+  const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
+  const relatedListingsScopeTag = useMemo(
+    () => resolveRelatedListingsScopeTag(rawTags),
+    [rawTags]
+  );
   const category = product.item.productType || '';
 
   const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
@@ -719,7 +741,7 @@ export function ProductDetail({
                   <img
                     src={imageUrls[selectedImage] || imageUrls[0]}
                     alt={product.item.title}
-                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal ? 'object-contain' : 'object-cover'}`}
+                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal || usesDemoCardArt ? 'object-contain' : 'object-cover'}`}
                   />
                   {/* 放大提示 */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -1442,6 +1464,7 @@ export function ProductDetail({
               vendorPeerID={vendorPeerID}
               vendorName={vendor?.name}
               currentSlug={product.slug}
+              scopeTag={relatedListingsScopeTag}
               maxItems={isModal ? 4 : 6}
               compact={isModal}
             />

@@ -36,6 +36,7 @@ import { VariantSelector } from './VariantSelector';
 import { UniquePieceBadge } from './UniquePieceBadge';
 import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
 import { ArtListingSpecsTable } from './ArtListingSpecsTable';
+import { CollectibleTitleListingPanel } from './CollectibleTitleListingPanel';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -70,6 +71,7 @@ export function ProductDetailMobile({
     ratingsLoading,
     error,
     imageUrls,
+    usesDemoCardArt,
     priceInfo,
     compareAtPrice,
     stock,
@@ -82,7 +84,11 @@ export function ProductDetailMobile({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    relatedListingsScopeTag,
     isRwaToken,
+    isCollectibleTitleListing,
+    collectibleListingMeta,
+    collectibleTitleNetworkLabel,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
@@ -227,7 +233,7 @@ export function ProductDetailMobile({
             <img
               src={imageUrls[selectedImage] || imageUrls[0]}
               alt={product.item.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full ${usesDemoCardArt ? 'object-contain p-2' : 'object-cover'}`}
               onClick={() => setIsImagePreviewOpen(true)}
             />
             {/* Counter badge */}
@@ -298,8 +304,16 @@ export function ProductDetailMobile({
               {renderPairedPrice(compareAtPrice, priceInfo.currency)}
             </span>
           )}
-          {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" />}
+          {!__OUTPOST__ && !isCollectibleTitleListing && <BuyerProtectionBadge variant="inline" />}
         </div>
+
+        {isCollectibleTitleListing && collectibleListingMeta ? (
+          <CollectibleTitleListingPanel
+            meta={collectibleListingMeta}
+            titleNetworkLabel={collectibleTitleNetworkLabel}
+            compact
+          />
+        ) : null}
 
         {(isUniquePiece || authenticityCertificateUrl) && (
           <div className="space-y-2">
@@ -365,7 +379,7 @@ export function ProductDetailMobile({
         )}
 
         {/* Shipping quick info */}
-        {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+        {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
           <div className="flex items-center gap-2 text-xs">
             {freeShipping ? (
               <span className="inline-flex items-center gap-1 text-primary font-medium">
@@ -432,8 +446,8 @@ export function ProductDetailMobile({
           )}
         </div>
 
-        {/* RWA Detail */}
-        {product.metadata?.contractType === 'RWA_TOKEN' && (
+        {/* RWA Detail — legacy EVM only */}
+        {product.metadata?.contractType === 'RWA_TOKEN' && !isCollectibleTitleListing && (
           <RwaAssetDetail
             product={product}
             compact
@@ -464,7 +478,7 @@ export function ProductDetailMobile({
         )}
 
         {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
-        {!isOwnProduct && !__OUTPOST__ && <BuyerProtectionBanner />}
+        {!isOwnProduct && !__OUTPOST__ && !isCollectibleTitleListing && <BuyerProtectionBanner />}
 
         {/* Payment unavailable warning */}
         {!isOwnProduct && !paymentAvailable && stock > 0 && (
@@ -481,8 +495,8 @@ export function ProductDetailMobile({
           </div>
         )}
 
-        {/* Stock + Quantity (only for buyer) */}
-        {!isOwnProduct && (
+        {/* Stock + Quantity (only for buyer, ordinary listings) */}
+        {!isOwnProduct && !isCollectibleTitleListing && (
           <div className="flex items-center justify-between py-2">
             <div>
               {stock === 0 ? (
@@ -501,14 +515,21 @@ export function ProductDetailMobile({
                   onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
                   className="w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback"
                   aria-label={t('cart.decreaseQuantity')}
+                  data-testid="product-detail-qty-decrease"
                 >
                   -
                 </button>
-                <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+                <span
+                  className="w-8 text-center text-sm font-medium"
+                  data-testid="product-detail-qty-input"
+                >
+                  {quantity}
+                </span>
                 <button
                   onClick={() => setQuantity(prev => Math.min(stock, prev + 1))}
                   className="w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback"
                   aria-label={t('cart.increaseQuantity')}
+                  data-testid="product-detail-qty-increase"
                 >
                   +
                 </button>
@@ -559,7 +580,7 @@ export function ProductDetailMobile({
           </details>
 
           {/* Shipping Options */}
-          {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+          {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
             <details className="group">
               <summary className="flex items-center justify-between py-3 cursor-pointer touch-feedback list-none">
                 <span className="font-semibold text-sm text-foreground">
@@ -656,6 +677,7 @@ export function ProductDetailMobile({
             vendorPeerID={vendorPeerID}
             vendorName={vendor?.name}
             currentSlug={product.slug}
+            scopeTag={relatedListingsScopeTag}
             maxItems={4}
             compact
           />
@@ -750,42 +772,64 @@ export function ProductDetailMobile({
             </div>
             {/* Action buttons */}
             <div className="flex flex-1 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
-                onClick={handleAddToCart}
-                disabled={purchaseDisabled}
-              >
-                {cartSuccess ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : isOffline ? (
-                  t('product.sellerOffline', { defaultValue: 'Seller Offline' })
-                ) : !paymentAvailable ? (
-                  t('payment.paymentUnavailable')
-                ) : isRwaToken ? (
-                  t('payment.rwaNotSupported')
-                ) : stock === 0 ? (
-                  t('product.outOfStock')
-                ) : (
-                  t('product.addToCart')
-                )}
-              </Button>
-              {!purchaseDisabled && (
+              {isCollectibleTitleListing ? (
                 <Button
                   size="sm"
                   className="flex-1 h-11 text-sm font-medium touch-feedback"
                   onClick={handleBuyNow}
+                  disabled={purchaseDisabled}
+                  data-testid="product-detail-purchase-title"
                 >
-                  {t('product.buyNow')}
+                  {isOffline
+                    ? t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                    : !paymentAvailable
+                      ? t('payment.paymentUnavailable')
+                      : stock === 0
+                        ? t('product.outOfStock')
+                        : t('product.collectibleTitle.purchaseTitle')}
                 </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
+                    onClick={handleAddToCart}
+                    disabled={purchaseDisabled}
+                    data-testid="product-detail-add-to-cart"
+                  >
+                    {cartSuccess ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : isOffline ? (
+                      t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                    ) : !paymentAvailable ? (
+                      t('payment.paymentUnavailable')
+                    ) : isRwaToken ? (
+                      t('payment.rwaNotSupported')
+                    ) : stock === 0 ? (
+                      t('product.outOfStock')
+                    ) : (
+                      t('product.addToCart')
+                    )}
+                  </Button>
+                  {!purchaseDisabled && (
+                    <Button
+                      size="sm"
+                      className="flex-1 h-11 text-sm font-medium touch-feedback"
+                      onClick={handleBuyNow}
+                      data-testid="product-detail-buy-now"
+                    >
+                      {t('product.buyNow')}
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>

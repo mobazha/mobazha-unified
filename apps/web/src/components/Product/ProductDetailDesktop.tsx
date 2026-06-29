@@ -35,6 +35,7 @@ import { VariantSelector } from './VariantSelector';
 import { UniquePieceBadge } from './UniquePieceBadge';
 import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
 import { ArtListingSpecsTable } from './ArtListingSpecsTable';
+import { CollectibleTitleListingPanel } from './CollectibleTitleListingPanel';
 
 export interface ProductDetailProps {
   slug: string;
@@ -74,6 +75,7 @@ export function ProductDetailDesktop({
     ratingsLoading,
     error,
     imageUrls,
+    usesDemoCardArt,
     priceInfo,
     compareAtPrice,
     stock,
@@ -86,8 +88,12 @@ export function ProductDetailDesktop({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    relatedListingsScopeTag,
     category,
     isRwaToken,
+    isCollectibleTitleListing,
+    collectibleListingMeta,
+    collectibleTitleNetworkLabel,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
@@ -328,7 +334,7 @@ export function ProductDetailDesktop({
                   <img
                     src={imageUrls[selectedImage] || imageUrls[0]}
                     alt={product.item.title}
-                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal ? 'object-contain' : 'object-cover'}`}
+                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal || usesDemoCardArt ? 'object-contain' : 'object-cover'}`}
                   />
                   {/* 放大提示 */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -468,7 +474,17 @@ export function ProductDetailDesktop({
               </div>
             )}
 
-            {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
+            {isCollectibleTitleListing && collectibleListingMeta ? (
+              <CollectibleTitleListingPanel
+                meta={collectibleListingMeta}
+                titleNetworkLabel={collectibleTitleNetworkLabel}
+                compact={isModal}
+              />
+            ) : null}
+
+            {!__OUTPOST__ && !isCollectibleTitleListing && (
+              <BuyerProtectionBadge variant="inline" className="mt-1" />
+            )}
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (
@@ -515,8 +531,8 @@ export function ProductDetailDesktop({
               </div>
             )}
 
-            {/* Shipping - 仅对实物商品显示 */}
-            {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+            {/* Shipping - physical goods only; not collectible digital-title listings */}
+            {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
               <div
                 className={cn(
                   'flex items-center gap-2 flex-wrap',
@@ -615,8 +631,8 @@ export function ProductDetailDesktop({
               )}
             </div>
 
-            {/* RWA 资产详情 - 仅对 RWA_TOKEN 类型商品显示 */}
-            {product.metadata?.contractType === 'RWA_TOKEN' && (
+            {/* RWA asset detail — legacy EVM flow only */}
+            {product.metadata?.contractType === 'RWA_TOKEN' && !isCollectibleTitleListing && (
               <RwaAssetDetail
                 product={product}
                 compact={isModal}
@@ -662,7 +678,9 @@ export function ProductDetailDesktop({
             {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
             {/* Buyer Protection */}
-            {!isOwnProduct && !__OUTPOST__ && <BuyerProtectionBanner />}
+            {!isOwnProduct && !__OUTPOST__ && !isCollectibleTitleListing && (
+              <BuyerProtectionBanner />
+            )}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (
@@ -791,126 +809,157 @@ export function ProductDetailDesktop({
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {t('product.quantity')}
-                  </span>
-                  <HStack gap="sm" align="center">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Decrease quantity"
-                      data-testid="product-detail-qty-decrease"
-                      className={cn(
-                        'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 || !paymentAvailable
-                          ? 'opacity-50 cursor-not-allowed bg-muted'
-                          : 'hover:bg-muted'
-                      )}
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      max={stock}
-                      value={quantity}
-                      disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Quantity"
-                      data-testid="product-detail-qty-input"
-                      onChange={e => {
-                        const val = parseInt(e.target.value, 10);
-                        if (!isNaN(val) && val >= 1) {
-                          setQuantity(Math.min(stock, val));
-                        }
-                      }}
-                      onKeyDown={e => {
-                        if (stock === 0) return;
-                        if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setQuantity(prev => Math.min(stock, prev + 1));
-                        } else if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setQuantity(prev => Math.max(1, prev - 1));
-                        }
-                      }}
-                      className={cn(
-                        'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-                        stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
-                      )}
-                    />
-                    <button
-                      onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                      disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Increase quantity"
-                      data-testid="product-detail-qty-increase"
-                      className={cn(
-                        'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 || !paymentAvailable
-                          ? 'opacity-50 cursor-not-allowed bg-muted'
-                          : 'hover:bg-muted'
-                      )}
-                    >
-                      +
-                    </button>
-                  </HStack>
+                  {!isCollectibleTitleListing ? (
+                    <>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {t('product.quantity')}
+                      </span>
+                      <HStack gap="sm" align="center">
+                        <button
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          disabled={stock === 0 || !paymentAvailable}
+                          aria-label="Decrease quantity"
+                          data-testid="product-detail-qty-decrease"
+                          className={cn(
+                            'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                            stock === 0 || !paymentAvailable
+                              ? 'opacity-50 cursor-not-allowed bg-muted'
+                              : 'hover:bg-muted'
+                          )}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max={stock}
+                          value={quantity}
+                          disabled={stock === 0 || !paymentAvailable}
+                          aria-label="Quantity"
+                          data-testid="product-detail-qty-input"
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1) {
+                              setQuantity(Math.min(stock, val));
+                            }
+                          }}
+                          onKeyDown={e => {
+                            if (stock === 0) return;
+                            if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              setQuantity(prev => Math.min(stock, prev + 1));
+                            } else if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              setQuantity(prev => Math.max(1, prev - 1));
+                            }
+                          }}
+                          className={cn(
+                            'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+                            stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
+                          )}
+                        />
+                        <button
+                          onClick={() => setQuantity(Math.min(stock, quantity + 1))}
+                          disabled={stock === 0 || !paymentAvailable}
+                          aria-label="Increase quantity"
+                          data-testid="product-detail-qty-increase"
+                          className={cn(
+                            'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                            stock === 0 || !paymentAvailable
+                              ? 'opacity-50 cursor-not-allowed bg-muted'
+                              : 'hover:bg-muted'
+                          )}
+                        >
+                          +
+                        </button>
+                      </HStack>
+                    </>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {t('product.collectibleTitle.purchaseTitle')}
+                    </span>
+                  )}
                 </div>
 
-                {stock > 0 && (
+                {stock > 0 && !isCollectibleTitleListing && (
                   <span className="text-xs text-muted-foreground">
                     {stock} {t('product.inStock')}
                   </span>
                 )}
 
                 <VStack gap="xs">
-                  <Button
-                    size="default"
-                    className={cn(
-                      'w-full touch-feedback',
-                      purchaseDisabled && 'opacity-50 cursor-not-allowed'
-                    )}
-                    onClick={handleAddToCart}
-                    disabled={purchaseDisabled}
-                    data-testid="product-detail-add-to-cart"
-                  >
-                    {cartSuccess ? (
-                      <span className="flex items-center gap-2">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        {t('product.addedToCart')}
-                      </span>
-                    ) : isOffline ? (
-                      t('product.sellerOffline', { defaultValue: 'Seller Offline' })
-                    ) : !paymentAvailable ? (
-                      t('payment.paymentUnavailable')
-                    ) : isRwaToken ? (
-                      t('payment.rwaNotSupported')
-                    ) : stock === 0 ? (
-                      t('product.outOfStock')
-                    ) : (
-                      t('product.addToCart')
-                    )}
-                  </Button>
-                  {showBuyNow && (
+                  {isCollectibleTitleListing ? (
                     <Button
-                      variant="outline"
                       size="default"
-                      className="w-full touch-feedback"
+                      className={cn(
+                        'w-full touch-feedback',
+                        purchaseDisabled && 'opacity-50 cursor-not-allowed'
+                      )}
                       onClick={handleBuyNow}
-                      data-testid="product-detail-buy-now"
+                      disabled={purchaseDisabled}
+                      data-testid="product-detail-purchase-title"
                     >
-                      {t('product.buyNow')}
+                      {isOffline
+                        ? t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                        : !paymentAvailable
+                          ? t('payment.paymentUnavailable')
+                          : stock === 0
+                            ? t('product.outOfStock')
+                            : t('product.collectibleTitle.purchaseTitle')}
                     </Button>
+                  ) : (
+                    <>
+                      <Button
+                        size="default"
+                        className={cn(
+                          'w-full touch-feedback',
+                          purchaseDisabled && 'opacity-50 cursor-not-allowed'
+                        )}
+                        onClick={handleAddToCart}
+                        disabled={purchaseDisabled}
+                        data-testid="product-detail-add-to-cart"
+                      >
+                        {cartSuccess ? (
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            {t('product.addedToCart')}
+                          </span>
+                        ) : isOffline ? (
+                          t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                        ) : !paymentAvailable ? (
+                          t('payment.paymentUnavailable')
+                        ) : isRwaToken ? (
+                          t('payment.rwaNotSupported')
+                        ) : stock === 0 ? (
+                          t('product.outOfStock')
+                        ) : (
+                          t('product.addToCart')
+                        )}
+                      </Button>
+                      {showBuyNow && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="w-full touch-feedback"
+                          onClick={handleBuyNow}
+                          data-testid="product-detail-buy-now"
+                        >
+                          {t('product.buyNow')}
+                        </Button>
+                      )}
+                    </>
                   )}
                   {onToggleWishlist && (
                     <Button
@@ -1019,8 +1068,8 @@ export function ProductDetailDesktop({
               />
             </Card>
 
-            {/* Shipping Options - 仅对实物商品显示 */}
-            {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+            {/* Shipping Options - physical goods only */}
+            {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
               <ShippingOptionsSection shippingProfile={product.shippingProfile} />
             )}
           </div>
@@ -1068,6 +1117,7 @@ export function ProductDetailDesktop({
               vendorPeerID={vendorPeerID}
               vendorName={vendor?.name}
               currentSlug={product.slug}
+              scopeTag={relatedListingsScopeTag}
               maxItems={isModal ? 4 : 6}
               compact={isModal}
             />

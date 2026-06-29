@@ -45,6 +45,12 @@ import {
   DEFAULT_LOCAL_CURRENCY,
   useUserStore,
   buildProductHref,
+  initialFormData,
+  mustAssetIdFromTokenId,
+  parseSourceDepositListingSearchParams,
+  buildSourceDepositListingFormPrefill,
+  getSourceDepositLockedTags,
+  type SourceDepositListingPrefillInput,
 } from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile, ListingFormData } from '@mobazha/core';
 
@@ -53,6 +59,7 @@ import {
   BasicInfoSection,
   MediaSection,
   RwaTokenFields,
+  SourceCustodyListingFields,
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
@@ -141,6 +148,16 @@ function CreateListingContent() {
   const fromAdmin = fromParam === 'admin';
   const returnToDashboard = fromOnboarding || fromAdmin;
 
+  const sourceDepositPrefillInput = useMemo(
+    (): SourceDepositListingPrefillInput | null => parseSourceDepositListingSearchParams(searchParams),
+    [searchParams]
+  );
+  const isSourceDepositListingMode = sourceDepositPrefillInput !== null;
+  const sourceDepositLockedTags = useMemo(
+    () => (sourceDepositPrefillInput ? getSourceDepositLockedTags(sourceDepositPrefillInput) : []),
+    [sourceDepositPrefillInput]
+  );
+
   // 克隆数据加载状态
   const [cloneData, setCloneData] = useState<Partial<ListingFormData> | null>(null);
   const [isLoadingClone, setIsLoadingClone] = useState(false);
@@ -179,7 +196,22 @@ function CreateListingContent() {
   }, [cloneSlug, loadCloneData]);
 
   // 初始表单数据
-  const initialData = useMemo(() => cloneData || undefined, [cloneData]);
+  const initialData = useMemo(() => {
+    if (cloneData) return cloneData;
+    if (!sourceDepositPrefillInput) return undefined;
+
+    const prefill = buildSourceDepositListingFormPrefill(sourceDepositPrefillInput);
+    return {
+      ...prefill,
+      acceptedCurrencies: [mustAssetIdFromTokenId('ETH')],
+      skus: [
+        {
+          ...initialFormData.skus[0],
+          quantity: 1,
+        },
+      ],
+    };
+  }, [cloneData, sourceDepositPrefillInput]);
 
   // 使用 useListingForm hook
   const {
@@ -283,14 +315,15 @@ function CreateListingContent() {
   // 标签变化处理（通过 addTag/removeTag 保持与 useListingForm 同步）
   const handleTagsChange = useCallback(
     (newTags: string[]) => {
-      // 找出新增的标签
-      const added = newTags.filter(t => !formData.tags.includes(t));
-      // 找出被移除的标签
-      const removed = formData.tags.filter(t => !newTags.includes(t));
+      const mergedTags = isSourceDepositListingMode
+        ? [...new Set([...sourceDepositLockedTags, ...newTags])]
+        : newTags;
+      const added = mergedTags.filter(t => !formData.tags.includes(t));
+      const removed = formData.tags.filter(t => !mergedTags.includes(t));
       added.forEach(t => addTag(t));
       removed.forEach(t => removeTag(t));
     },
-    [formData.tags, addTag, removeTag]
+    [formData.tags, addTag, removeTag, isSourceDepositListingMode, sourceDepositLockedTags]
   );
 
   // 处理图片变化
@@ -469,6 +502,7 @@ function CreateListingContent() {
           aiImageUrls={aiImageUrls}
           aiNotConfigured={aiNotConfigured}
           onAiApplyAll={handleAiApplyAll}
+          sourceDepositPrefillInput={sourceDepositPrefillInput}
         />
         <Dialog open={!!publishSuccessSlug} onOpenChange={() => setPublishSuccessSlug(null)}>
           <DialogContent className="sm:max-w-md">
@@ -670,22 +704,33 @@ function CreateListingContent() {
             {/* 主内容区域 */}
             <div className="lg:col-span-10 space-y-6">
               {/* 商品类型选择 */}
-              <Card
-                className="p-6"
-                ref={el => {
-                  sectionRefs.current.general = el;
-                }}
-              >
-                <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {t('listing.productType')}
-                </h2>
-                <ProductTypeSelector
-                  value={formData.contractType}
-                  onChange={changeContractType}
-                  disabled={isSubmitting}
-                  data-testid="listing-form-type-selector"
-                />
-              </Card>
+              {isSourceDepositListingMode ? (
+                <Card className="border-primary/20 bg-primary/5 p-6">
+                  <h2 className="mb-2 text-lg font-semibold text-foreground">
+                    {t('listing.productType')}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {t('listing.sourceDeposit.lockedTypeHint')}
+                  </p>
+                </Card>
+              ) : (
+                <Card
+                  className="p-6"
+                  ref={el => {
+                    sectionRefs.current.general = el;
+                  }}
+                >
+                  <h2 className="text-lg font-semibold text-foreground mb-4">
+                    {t('listing.productType')}
+                  </h2>
+                  <ProductTypeSelector
+                    value={formData.contractType}
+                    onChange={changeContractType}
+                    disabled={isSubmitting}
+                    data-testid="listing-form-type-selector"
+                  />
+                </Card>
+              )}
 
               {formData.contractType !== 'RWA_TOKEN' && (
                 <ListingPriceHierarchyBanner
@@ -746,7 +791,55 @@ function CreateListingContent() {
               )}
 
               {/* RWA Token 专用字段 */}
-              {formData.contractType === 'RWA_TOKEN' && (
+              {formData.contractType === 'RWA_TOKEN' && sourceDepositPrefillInput ? (
+                <>
+                  <Card className="p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.basicInfo')}
+                    </h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.title')} <span className="text-destructive">*</span>
+                        </label>
+                        <Input
+                          value={formData.title}
+                          onChange={e => updateField('title', e.target.value)}
+                          placeholder={t('listing.titlePlaceholder')}
+                          maxLength={140}
+                          className={errors.title ? 'border-destructive' : ''}
+                        />
+                        {errors.title && (
+                          <p className="text-destructive text-sm mt-1">{errors.title}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.description')}
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={e => updateField('description', e.target.value)}
+                          rows={4}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={t('listing.descriptionPlaceholder')}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <SourceCustodyListingFields
+                    prefill={sourceDepositPrefillInput}
+                    price={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    acceptedCurrencies={formData.acceptedCurrencies || []}
+                    onPriceChange={handlePriceInput}
+                    onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                    onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                    errors={errors}
+                  />
+                </>
+              ) : formData.contractType === 'RWA_TOKEN' ? (
                 <>
                   <Card className="p-6">
                     <h2 className="text-lg font-semibold text-foreground mb-4">
@@ -805,7 +898,7 @@ function CreateListingContent() {
                     errors={errors}
                   />
                 </>
-              )}
+              ) : null}
 
               {/* 图片/视频上传 */}
               <div

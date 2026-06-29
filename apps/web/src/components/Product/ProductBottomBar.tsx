@@ -11,6 +11,8 @@ import {
   useChatStore,
   selectUnreadCountByPeerID,
   buildProductHref,
+  useFeature,
+  hasAuthoritativeCollectibleTitleMetadata,
 } from '@mobazha/core';
 import type { OrderItemOption, Product, ProductSku } from '@mobazha/core';
 import { useHaptic } from '@/lib/platform';
@@ -56,6 +58,11 @@ export function ProductBottomBar({
   const [linkCopied, setLinkCopied] = useState(false);
 
   const haptic = useHaptic();
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const isCollectibleTitleListing =
+    collectiblesHubEnabled && product
+      ? hasAuthoritativeCollectibleTitleMetadata(product)
+      : false;
   const addCartItem = useCartStore(state => state.addItem);
   const cartItemCount = useCartStore(state => state.getItemCount());
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
@@ -67,11 +74,13 @@ export function ProductBottomBar({
       : undefined;
   const effectiveStock = selectedSku?.quantity != null ? Number(selectedSku.quantity) || 0 : stock;
   const isRwaProduct = product?.metadata?.contractType === 'RWA_TOKEN';
-  const purchaseDisabled = effectiveStock === 0 || !paymentAvailable || isRwaProduct;
+  const purchaseDisabled =
+    effectiveStock === 0 || !paymentAvailable || (isRwaProduct && !isCollectibleTitleListing);
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
-    if (product.metadata?.contractType === 'RWA_TOKEN') return;
+    if (isRwaProduct && !isCollectibleTitleListing) return;
+    if (isCollectibleTitleListing) return;
 
     const thumbnail = selectedSku?.images?.[0] ??
       product.item?.images?.[0] ?? {
@@ -101,17 +110,19 @@ export function ProductBottomBar({
     haptic.impact('light');
     setCartSuccess(true);
     setTimeout(() => setCartSuccess(false), 2000);
-  }, [product, selectedSku, quantity, orderOptions, addCartItem, haptic]);
+  }, [product, selectedSku, quantity, orderOptions, addCartItem, haptic, isCollectibleTitleListing, isRwaProduct]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
-    if (product.metadata?.contractType === 'RWA_TOKEN') return;
+    if (isRwaProduct && !isCollectibleTitleListing) return;
+
+    const checkoutQuantity = isCollectibleTitleListing ? 1 : quantity;
 
     const checkoutParams = new URLSearchParams({
       slug: product.slug,
       peerID: product.vendorID.peerID,
-      quantity: quantity.toString(),
+      quantity: checkoutQuantity.toString(),
     });
     if (orderOptions && orderOptions.length > 0) {
       checkoutParams.set(
@@ -121,7 +132,7 @@ export function ProductBottomBar({
     }
 
     router.push(`/checkout?${checkoutParams.toString()}`);
-  }, [product, quantity, orderOptions, router]);
+  }, [product, quantity, orderOptions, router, isCollectibleTitleListing, isRwaProduct]);
 
   const handleMessage = useCallback(() => {
     const vendorPeerID = product?.vendorID?.peerID;
@@ -262,39 +273,59 @@ export function ProductBottomBar({
 
         {/* 右侧操作按钮组 */}
         <HStack gap="sm" className="flex-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
-            onClick={handleAddToCart}
-            disabled={purchaseDisabled}
-          >
-            {cartSuccess ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            ) : effectiveStock === 0 ? (
-              t('product.outOfStock')
-            ) : !paymentAvailable ? (
-              t('payment.paymentUnavailable')
-            ) : (
-              t('product.addToCart')
-            )}
-          </Button>
+          {isCollectibleTitleListing ? (
+            <Button
+              size="sm"
+              className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback"
+              onClick={handleBuyNow}
+              disabled={purchaseDisabled}
+              data-testid="product-detail-purchase-title"
+            >
+              {effectiveStock === 0
+                ? t('product.outOfStock')
+                : !paymentAvailable
+                  ? t('payment.paymentUnavailable')
+                  : t('product.collectibleTitle.purchaseTitle')}
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
+                onClick={handleAddToCart}
+                disabled={purchaseDisabled}
+                data-testid="product-detail-add-to-cart"
+              >
+                {cartSuccess ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                ) : effectiveStock === 0 ? (
+                  t('product.outOfStock')
+                ) : !paymentAvailable ? (
+                  t('payment.paymentUnavailable')
+                ) : (
+                  t('product.addToCart')
+                )}
+              </Button>
 
-          <Button
-            size="sm"
-            className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback"
-            onClick={handleBuyNow}
-            disabled={purchaseDisabled}
-          >
-            {t('product.buyNow')}
-          </Button>
+              <Button
+                size="sm"
+                className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback"
+                onClick={handleBuyNow}
+                disabled={purchaseDisabled}
+                data-testid="product-detail-buy-now"
+              >
+                {t('product.buyNow')}
+              </Button>
+            </>
+          )}
         </HStack>
       </HStack>
     </div>
