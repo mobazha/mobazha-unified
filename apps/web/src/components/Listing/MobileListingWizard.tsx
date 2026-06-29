@@ -21,7 +21,7 @@ import {
   DEFAULT_LOCAL_CURRENCY,
   resolveProductSupplyMode,
 } from '@mobazha/core';
-import type { ContractType, Image, ShippingProfile } from '@mobazha/core';
+import type { ContractType, Image, ShippingProfile, SourceDepositListingPrefillInput } from '@mobazha/core';
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,6 +31,7 @@ import {
   BasicInfoSection,
   MediaSection,
   RwaTokenFields,
+  SourceCustodyListingFields,
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
@@ -83,6 +84,7 @@ interface MobileListingWizardProps {
   aiImageUrls?: string[];
   aiNotConfigured?: boolean;
   onAiApplyAll?: (result: import('@mobazha/core').AiGenerateResponse) => void;
+  sourceDepositPrefillInput?: SourceDepositListingPrefillInput | null;
 }
 
 interface AccordionItemProps {
@@ -152,6 +154,7 @@ export function MobileListingWizard({
   aiImageUrls,
   aiNotConfigured,
   onAiApplyAll,
+  sourceDepositPrefillInput = null,
 }: MobileListingWizardProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
@@ -337,7 +340,7 @@ export function MobileListingWizard({
         step: 'details',
       });
     }
-    if (formData.contractType === 'RWA_TOKEN') {
+    if (formData.contractType === 'RWA_TOKEN' && !sourceDepositPrefillInput) {
       items.push(
         {
           label: t('listing.tokenAddress', { defaultValue: 'Token Address' }),
@@ -354,7 +357,7 @@ export function MobileListingWizard({
       );
     }
     return items;
-  }, [formData, t]);
+  }, [formData, t, sourceDepositPrefillInput]);
 
   return (
     <div
@@ -449,16 +452,27 @@ export function MobileListingWizard({
         {/* Step 1: Essentials */}
         {currentStep === 'essentials' && (
           <>
-            <Card className="p-4">
-              <h2 className="text-base font-semibold text-foreground mb-3">
-                {t('listing.productType')}
-              </h2>
-              <ProductTypeSelector
-                value={formData.contractType}
-                onChange={changeContractType}
-                disabled={isSubmitting}
-              />
-            </Card>
+            {sourceDepositPrefillInput ? (
+              <Card className="border-primary/20 bg-primary/5 p-4">
+                <h2 className="mb-2 text-base font-semibold text-foreground">
+                  {t('listing.productType')}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('listing.sourceDeposit.lockedTypeHint')}
+                </p>
+              </Card>
+            ) : (
+              <Card className="p-4">
+                <h2 className="text-base font-semibold text-foreground mb-3">
+                  {t('listing.productType')}
+                </h2>
+                <ProductTypeSelector
+                  value={formData.contractType}
+                  onChange={changeContractType}
+                  disabled={isSubmitting}
+                />
+              </Card>
+            )}
 
             {formData.contractType !== 'RWA_TOKEN' ? (
               <>
@@ -509,6 +523,57 @@ export function MobileListingWizard({
                   onAiImproveTitle={onAiImproveTitle}
                   onAiPolishDescription={onAiPolishDescription}
                   aiLoadingAction={aiLoadingAction}
+                />
+              </>
+            ) : sourceDepositPrefillInput ? (
+              <>
+                <Card className="p-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3">
+                    {t('listing.basicInfo')}
+                  </h2>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.title')} <span className="text-destructive">*</span>
+                      </label>
+                      <input
+                        value={formData.title}
+                        onChange={e => updateField('title', e.target.value)}
+                        placeholder={t('listing.titlePlaceholder')}
+                        maxLength={140}
+                        className={cn(
+                          'w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm',
+                          errors.title ? 'border-destructive' : 'border-border'
+                        )}
+                      />
+                      {errors.title && (
+                        <p className="text-destructive text-xs mt-1">{errors.title}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.description')}
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={e => updateField('description', e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm resize-none"
+                        placeholder={t('listing.descriptionPlaceholder')}
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <SourceCustodyListingFields
+                  prefill={sourceDepositPrefillInput}
+                  price={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  acceptedCurrencies={formData.acceptedCurrencies || []}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
+                  onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                  onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                  errors={errors}
                 />
               </>
             ) : (

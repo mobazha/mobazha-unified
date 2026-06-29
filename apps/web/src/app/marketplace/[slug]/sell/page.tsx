@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { MarketplaceLogo } from '@/components/CommunityMarketplace';
+import { CollectibleCardSubmissionsWorkspace } from '@/components/CommunityMarketplace/CollectibleCardSubmissionsWorkspace';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -18,12 +19,14 @@ import {
   getCasdoorUserId,
   marketplacePlatformKey,
   marketplaceHref,
+  resolveCurationMarketBackHref,
   isHosted,
+  isCollectibleMarketplaceVertical,
   startCasdoorLogin,
   type ProductGroup,
 } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
-import { ChevronLeft, Loader2, Package, Store } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Loader2, Package, Store } from 'lucide-react';
 
 function statusLabel(t: (key: string) => string, status?: string): string {
   switch (status) {
@@ -109,6 +112,7 @@ export default function MarketplaceSellPage() {
   const marketHref = marketplace
     ? marketplaceHref(marketplace.slug, marketplace.publicID)
     : `/marketplace/${identifier}`;
+  const marketBackHref = resolveCurationMarketBackHref(marketHref);
 
   const casdoorUserId = getCasdoorUserId();
   const productGroupUserID = casdoorUserId || '';
@@ -135,7 +139,11 @@ export default function MarketplaceSellPage() {
 
   const applicationStatus = application?.status;
   const isApproved = applicationStatus === 'approved';
+  const isRejected = applicationStatus === 'rejected';
+  const isSuspended = applicationStatus === 'suspended';
+  const isPending = application?.hasApplication && !isApproved && !isRejected && !isSuspended;
   const canSubmit = selectedGroupIds.length > 0 && !isApproved && !isApplying;
+  const isCollectibleMarketplace = isCollectibleMarketplaceVertical(marketplace?.vertical);
 
   const platformName = marketplace ? t(marketplacePlatformKey(marketplace.platform)) : '';
 
@@ -156,7 +164,7 @@ export default function MarketplaceSellPage() {
         description: t('marketplace.applicationSubmitted'),
         variant: 'success',
       });
-      router.push(marketHref);
+      router.push(marketBackHref);
     } catch (err) {
       toast({
         title: t('common.error'),
@@ -181,7 +189,7 @@ export default function MarketplaceSellPage() {
       <main className="py-6 sm:py-8">
         <Container size="lg">
           <Link
-            href={marketHref}
+            href={marketBackHref}
             className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -237,6 +245,27 @@ export default function MarketplaceSellPage() {
                 </HStack>
               </Card>
 
+              {isCollectibleMarketplace ? (
+                <Card className="mb-6 p-4 sm:p-5" data-testid="collectible-sell-checklist">
+                  <HStack gap="sm" align="center" className="mb-3">
+                    <ClipboardList className="h-5 w-5 text-primary" aria-hidden />
+                    <h2 className="text-base font-semibold text-foreground">
+                      {t('marketplace.sell.collectibles.checklistTitle')}
+                    </h2>
+                  </HStack>
+                  <ol className="space-y-2 text-sm text-muted-foreground">
+                    <li>1. {t('marketplace.sell.collectibles.checklistLogin')}</li>
+                    <li>2. {t('marketplace.sell.collectibles.checklistProducts')}</li>
+                    <li>3. {t('marketplace.sell.collectibles.checklistApply')}</li>
+                    <li>4. {t('marketplace.sell.collectibles.checklistReview')}</li>
+                    <li>5. {t('marketplace.sell.collectibles.checklistListed')}</li>
+                  </ol>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {t('marketplace.sell.collectibles.custodyProcessNote')}
+                  </p>
+                </Card>
+              ) : null}
+
               {!isAuthenticated && (
                 <Card className="mb-6 p-6 text-center">
                   <p className="mb-4 text-sm text-muted-foreground">
@@ -261,12 +290,33 @@ export default function MarketplaceSellPage() {
                   <p className="text-sm text-foreground">
                     {isApproved
                       ? t('marketplace.sell.alreadyApproved')
-                      : t('marketplace.sell.applicationPending')}
+                      : isRejected
+                        ? t('marketplace.sell.statusRejected')
+                        : isSuspended
+                          ? t('marketplace.sell.statusSuspended')
+                          : t('marketplace.sell.applicationPending')}
                   </p>
                   <p className="mt-1 text-sm font-medium text-primary">
                     {statusLabel(t, applicationStatus)}
                   </p>
+                  {isCollectibleMarketplace ? (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {isApproved
+                        ? t('marketplace.sell.collectibles.statusNextApprovedWithSubmissions')
+                        : isRejected
+                          ? t('marketplace.sell.collectibles.statusNextRejected')
+                          : isSuspended
+                            ? t('marketplace.sell.collectibles.statusNextSuspended')
+                            : isPending
+                              ? t('marketplace.sell.collectibles.statusNextPendingBlocked')
+                              : t('marketplace.sell.collectibles.statusNextDefault')}
+                    </p>
+                  ) : null}
                 </Card>
+              )}
+
+              {isAuthenticated && isCollectibleMarketplace && isApproved && (
+                <CollectibleCardSubmissionsWorkspace enabled={isAuthenticated && isApproved} />
               )}
 
               {isAuthenticated && (

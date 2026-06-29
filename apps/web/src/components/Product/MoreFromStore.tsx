@@ -24,6 +24,8 @@ export interface MoreFromStoreProps {
   vendorName?: string;
   /** 当前商品 slug（用于过滤） */
   currentSlug?: string;
+  /** 精选 cohort 标签；设置时仅展示同标签的店铺商品 */
+  scopeTag?: string;
   /** 显示的商品数量 */
   maxItems?: number;
   /** 紧凑模式（弹窗内使用） */
@@ -50,6 +52,7 @@ export const MoreFromStore = memo(function MoreFromStore({
   vendorPeerID,
   vendorName,
   currentSlug,
+  scopeTag,
   maxItems = 6,
   compact = false,
   className,
@@ -71,16 +74,15 @@ export const MoreFromStore = memo(function MoreFromStore({
     const fetchStoreProducts = async () => {
       setIsLoading(true);
       try {
-        // 获取店铺商品列表
-        const storeProducts = await productDataService.getStoreListings(vendorPeerID);
+        const storeProducts = await productDataService.getStoreRelatedListings(vendorPeerID, {
+          excludeSlug: currentSlug,
+          limit: maxItems,
+          scopeTag,
+        });
 
         if (isCancelled) return;
 
-        // 过滤掉当前商品
-        const filteredProducts = storeProducts.filter(p => p.slug !== currentSlug);
-
-        // 限制数量
-        setProducts(filteredProducts.slice(0, maxItems));
+        setProducts(storeProducts);
       } catch (error) {
         console.error('Failed to fetch store products:', error);
       } finally {
@@ -95,7 +97,7 @@ export const MoreFromStore = memo(function MoreFromStore({
     return () => {
       isCancelled = true;
     };
-  }, [vendorPeerID, currentSlug, maxItems]);
+  }, [vendorPeerID, currentSlug, scopeTag, maxItems]);
 
   // 如果没有 vendorPeerID 或没有其他商品，不渲染
   if (!vendorPeerID) {
