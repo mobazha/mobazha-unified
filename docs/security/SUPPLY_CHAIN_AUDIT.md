@@ -17,8 +17,12 @@ dependencies included in their artifacts.
   - `text-encoding-utf-8@1.0.2`: Unlicense
 - Reown AppKit and WalletConnect packages are absent from the dependency graph.
   The frontend uses browser-injected provider standards instead.
-- The resolved security baseline is Next.js 16.2.9, React Router 7.15.0 and
-  `ws` 7.5.11/8.21.0.
+- The resolved security baseline is Next.js 16.2.9, React Router 7.18.0,
+  Vite 7.3.6, Vitest 3.2.6, Rollup 4.59.0 and `ws` 7.5.11/8.21.0.
+- `pnpm audit --prod --audit-level=high` reports no High or Critical
+  production advisory. The complete development graph also reports no High or
+  Critical advisory after applying exact patched-version overrides; its
+  remaining findings are 5 Low and 24 Moderate.
 
 No unresolved dependency-license metadata remains after applying the recorded
 exact-version conclusions.
@@ -52,7 +56,8 @@ corepack pnpm typecheck
 corepack pnpm --filter @mobazha/core test
 corepack pnpm --filter @mobazha/web build
 corepack pnpm --filter @mobazha/web build:next
-corepack pnpm audit --prod --audit-level high
+corepack pnpm audit --prod --audit-level=high
+corepack pnpm audit --audit-level=high
 ```
 
 Production bundle checks must additionally confirm that unapproved wallet SDKs
