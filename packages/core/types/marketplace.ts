@@ -36,47 +36,55 @@ export enum MarketplaceRole {
   MEMBER = 'member',
 }
 
-export type MarketplacePlatform = 'native' | 'telegram' | 'discord' | 'slack' | string;
-export type MarketplaceVisibility = 'draft' | 'active' | 'hidden' | 'suspended';
+export type MarketplaceLifecycleStatus = 'draft' | 'published' | 'suspended' | 'archived';
 export type MarketplaceJoinMode = 'open' | 'approval' | 'invite';
 export type MarketplaceCatalogMode = 'open' | 'curated';
 export type MarketplaceDiscoverability = 'public' | 'unlisted';
 export type MarketplaceSellerEntryMode = 'operator_invited' | 'seller_self_serve';
-export type MarketplaceSellerWhitelistStatus = 'pending' | 'approved' | 'rejected';
+export type MarketplaceStoreStatus =
+  | 'invited'
+  | 'applied'
+  | 'accepted'
+  | 'approved'
+  | 'rejected'
+  | 'suspended'
+  | 'left';
+
+export interface MarketplaceDomain {
+  host: string;
+  kind: 'subdomain' | 'custom';
+  verificationStatus: 'pending' | 'verified';
+  isPrimary: boolean;
+}
 
 export interface NativeMarketplace {
   id: string;
-  platform: MarketplacePlatform;
   name: string;
-  publicID?: string;
-  slug?: string;
-  visibility: MarketplaceVisibility;
-  publicDescription?: string;
+  slug: string;
+  status: MarketplaceLifecycleStatus;
+  description?: string;
   logoURL?: string;
   bannerURL?: string;
-  isFeatured?: boolean;
-  sortOrder?: number;
-  ownerUserID?: string;
+  ownerUserID: string;
   joinMode: MarketplaceJoinMode;
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;
   vertical: string;
-  domain?: string;
-  subdomain?: string;
   catalogQuery?: string;
-  themeJSON?: string;
+  theme?: Record<string, unknown>;
   attribution?: string;
-  subStatus?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  plan: string;
+  domains: MarketplaceDomain[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateNativeMarketplaceRequest {
   name: string;
   vertical?: string;
   slug?: string;
-  publicDescription?: string;
+  description?: string;
   logoURL?: string;
   bannerURL?: string;
   joinMode?: MarketplaceJoinMode;
@@ -86,23 +94,25 @@ export interface CreateNativeMarketplaceRequest {
   subdomain?: string;
   catalogQuery?: string;
   theme?: Record<string, unknown>;
-  themeJSON?: string;
   attribution?: string;
   sellerEntryMode?: MarketplaceSellerEntryMode;
-  visibility?: MarketplaceVisibility;
 }
 
-export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest>;
+export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest> & {
+  status?: MarketplaceLifecycleStatus;
+};
 
-export interface MarketplaceSellerWhitelistEntry {
+export interface MarketplaceStoreMembership {
   id: number;
   tenantID: string;
   marketplaceID: string;
   userID: string;
   peerID: string;
-  status: MarketplaceSellerWhitelistStatus;
+  status: MarketplaceStoreStatus;
   isVisible: boolean;
-  appliedAt: string;
+  invitedAt?: string;
+  appliedAt?: string;
+  acceptedAt?: string;
   reviewedAt?: string;
   reviewedBy?: string;
   createdAt?: string;
@@ -111,15 +121,26 @@ export interface MarketplaceSellerWhitelistEntry {
 
 export interface InviteMarketplaceSellerRequest {
   peerID: string;
-  userID?: string;
-  tenantID?: string;
-  status?: MarketplaceSellerWhitelistStatus;
-  visible?: boolean;
 }
 
 export interface UpdateMarketplaceSellerRequest {
-  status?: MarketplaceSellerWhitelistStatus;
+  status?: Extract<MarketplaceStoreStatus, 'approved' | 'rejected' | 'suspended'>;
+  /** Request body field; response uses `isVisible` on MarketplaceStoreMembership. */
   visible?: boolean;
+}
+
+export interface MarketplaceMembershipMarketplaceSummary {
+  id: string;
+  name: string;
+  slug: string;
+  status: MarketplaceLifecycleStatus;
+  description?: string;
+  logoURL?: string;
+}
+
+export interface MyMarketplaceMembershipEntry {
+  membership: MarketplaceStoreMembership;
+  marketplace: MarketplaceMembershipMarketplaceSummary;
 }
 
 export interface MarketplaceCurationFeaturedItem {

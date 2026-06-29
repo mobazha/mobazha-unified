@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Download,
   Sparkles,
+  Store,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -245,6 +246,12 @@ export default function AdminSettingsPage() {
               title={t('admin.settings.salesChannels')}
               description={t('admin.settings.salesChannelsDesc')}
               href="/admin/settings/sales-channels"
+            />
+            <SettingsCard
+              icon={Store}
+              title={t('marketplace.memberships.settingsCardTitle')}
+              description={t('marketplace.memberships.settingsCardDesc')}
+              href="/admin/settings/marketplace-memberships"
             />
           </SettingsSection>
         )}
