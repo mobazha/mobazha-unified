@@ -190,5 +190,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Install dependencies
+        run: HUSKY=0 pnpm install --frozen-lockfile
+
       - name: Check for outdated dependencies
         run: pnpm outdated || true

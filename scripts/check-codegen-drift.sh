@@ -13,6 +13,9 @@ cd "$ROOT_DIR"
 
 echo "=== Regenerating types + paths from committed spec ==="
 pnpm --filter @mobazha/core generate:api
+pnpm exec prettier --write \
+  packages/core/types/api-generated.d.ts \
+  packages/core/config/apiPaths.generated.ts
 
 echo "=== Checking for drift ==="
 DRIFT_FILES=(
