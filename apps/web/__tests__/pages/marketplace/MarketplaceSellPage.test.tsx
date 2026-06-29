@@ -169,6 +169,23 @@ describe('MarketplaceSellPage', () => {
     expect(screen.getByTestId('sell-status-card')).toBeInTheDocument();
   });
 
+  it('shows seller-visible decision reason for rejected applications', async () => {
+    mockSellHook({
+      application: {
+        hasApplication: true,
+        productGroupIDs: [1],
+        autoApproved: false,
+        membership: { status: 'rejected', decisionReason: 'Missing compliance document' },
+      },
+    });
+
+    render(<MarketplaceSellPage />);
+
+    expect(screen.getByText('marketplace.sell.decisionReasonTitle')).toBeInTheDocument();
+    expect(screen.getByText('Missing compliance document')).toBeInTheDocument();
+    expect(screen.getByTestId('sell-submit-application')).toBeEnabled();
+  });
+
   it('keeps withdraw mounted and disabled while withdrawing', async () => {
     mockSellHook({
       application: {

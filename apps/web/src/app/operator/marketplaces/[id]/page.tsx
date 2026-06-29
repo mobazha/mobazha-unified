@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -22,14 +22,57 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Check, Loader2, Send, ShieldCheck } from 'lucide-react';
+
+type MembershipFilter =
+  | 'all'
+  | 'pending'
+  | 'applied'
+  | 'accepted'
+  | 'invited'
+  | 'approved'
+  | 'rejected'
+  | 'suspended';
+
+const PENDING_STATUSES: ReadonlySet<MarketplaceStoreMembership['status']> = new Set([
+  'applied',
+  'accepted',
+]);
+
+const STORE_STATUS_PRIORITY: Record<MarketplaceStoreMembership['status'], number> = {
+  applied: 0,
+  accepted: 1,
+  invited: 2,
+  approved: 3,
+  rejected: 4,
+  suspended: 5,
+  left: 6,
+};
 
 export default function MarketplaceOperatorDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = String(params.id ?? '');
-  const { t } = useI18n();
+  const { t, formatDate } = useI18n();
   const { toast } = useToast();
   const {
     marketplace,
@@ -45,7 +88,72 @@ export default function MarketplaceOperatorDetailPage() {
     reviewSeller,
   } = useOperatorMarketplace(id);
   const [peerID, setPeerID] = useState('');
+  const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>('all');
+  const [approveTarget, setApproveTarget] = useState<MarketplaceStoreMembership | null>(null);
+  const [reasonTarget, setReasonTarget] = useState<MarketplaceStoreMembership | null>(null);
+  const [reasonAction, setReasonAction] = useState<'rejected' | 'suspended' | null>(null);
+  const [reasonInput, setReasonInput] = useState('');
+  const [reasonTouched, setReasonTouched] = useState(false);
   const isArchived = marketplace?.status === 'archived';
+  const trimmedReason = reasonInput.trim();
+  const reasonTooLong = trimmedReason.length > 1000;
+  const reasonInvalid = trimmedReason.length === 0 || reasonTooLong;
+  const acceptedCount = useMemo(
+    () => stores.filter(store => store.status === 'accepted').length,
+    [stores]
+  );
+
+  const filterCounts = useMemo(
+    () => ({
+      all: stores.length,
+      pending: stores.filter(store => PENDING_STATUSES.has(store.status)).length,
+      applied: counts.applied,
+      accepted: acceptedCount,
+      invited: counts.invited,
+      approved: counts.approved,
+      rejected: counts.rejected,
+      suspended: counts.suspended,
+    }),
+    [acceptedCount, counts, stores]
+  );
+
+  const sortedStores = useMemo(() => {
+    return [...stores].sort((a, b) => {
+      const statusOrderDelta = STORE_STATUS_PRIORITY[a.status] - STORE_STATUS_PRIORITY[b.status];
+      if (statusOrderDelta !== 0) return statusOrderDelta;
+      const aTime =
+        Date.parse(a.appliedAt ?? a.acceptedAt ?? a.invitedAt ?? a.createdAt ?? '') || 0;
+      const bTime =
+        Date.parse(b.appliedAt ?? b.acceptedAt ?? b.invitedAt ?? b.createdAt ?? '') || 0;
+      return bTime - aTime;
+    });
+  }, [stores]);
+
+  const visibleStores = useMemo(() => {
+    if (membershipFilter === 'all') return sortedStores;
+    if (membershipFilter === 'pending') {
+      return sortedStores.filter(store => PENDING_STATUSES.has(store.status));
+    }
+    return sortedStores.filter(store => store.status === membershipFilter);
+  }, [membershipFilter, sortedStores]);
+
+  const filterMeta: Array<{ key: MembershipFilter; labelKey: string }> = [
+    { key: 'all', labelKey: 'marketplace.operator.filterAll' },
+    { key: 'pending', labelKey: 'marketplace.operator.filterPending' },
+    { key: 'applied', labelKey: 'marketplace.operator.filterApplied' },
+    { key: 'accepted', labelKey: 'marketplace.operator.filterAccepted' },
+    { key: 'invited', labelKey: 'marketplace.operator.filterInvited' },
+    { key: 'approved', labelKey: 'marketplace.operator.filterApproved' },
+    { key: 'rejected', labelKey: 'marketplace.operator.filterRejected' },
+    { key: 'suspended', labelKey: 'marketplace.operator.filterSuspended' },
+  ];
+
+  function resetReasonDialog() {
+    setReasonTarget(null);
+    setReasonAction(null);
+    setReasonInput('');
+    setReasonTouched(false);
+  }
 
   async function handlePublish() {
     try {
@@ -81,16 +189,46 @@ export default function MarketplaceOperatorDetailPage() {
 
   async function handleReview(
     store: MarketplaceStoreMembership,
-    status: 'approved' | 'rejected' | 'suspended'
-  ) {
+    status: 'approved' | 'rejected' | 'suspended',
+    reason?: string
+  ): Promise<boolean> {
     try {
-      await reviewSeller(store, status);
+      await reviewSeller(store, status, reason);
+      toast({
+        title:
+          status === 'approved'
+            ? t('marketplace.operator.approveSuccess')
+            : status === 'rejected'
+              ? t('marketplace.operator.rejectSuccess')
+              : t('marketplace.operator.suspendSuccess'),
+      });
+      return true;
     } catch (error) {
       toast({
         variant: 'destructive',
         title: t('marketplace.operator.reviewFailedTitle'),
         description: error instanceof Error ? error.message : t('common.retry'),
       });
+      return false;
+    }
+  }
+
+  async function handleApproveConfirm() {
+    if (!approveTarget || isArchived) return;
+    const succeeded = await handleReview(approveTarget, 'approved');
+    if (succeeded) {
+      setApproveTarget(null);
+    }
+  }
+
+  async function handleReasonSubmit() {
+    if (!reasonTarget || !reasonAction || reasonInvalid || isArchived) {
+      setReasonTouched(true);
+      return;
+    }
+    const succeeded = await handleReview(reasonTarget, reasonAction, trimmedReason);
+    if (succeeded) {
+      resetReasonDialog();
     }
   }
 
@@ -273,24 +411,73 @@ export default function MarketplaceOperatorDetailPage() {
 
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle>{t('marketplace.operator.storeMemberships')}</CardTitle>
+              <CardTitle>{t('marketplace.operator.applicationReviewWorkspace')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {isArchived ? (
+                <p className="text-sm text-muted-foreground">
+                  {t('marketplace.operator.readOnlyArchived')}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2" data-testid="operator-membership-filters">
+                {filterMeta.map(filter => {
+                  const active = membershipFilter === filter.key;
+                  return (
+                    <Button
+                      key={filter.key}
+                      size="sm"
+                      variant={active ? 'default' : 'outline'}
+                      aria-pressed={active}
+                      onClick={() => setMembershipFilter(filter.key)}
+                      data-testid={`operator-filter-${filter.key}`}
+                    >
+                      <span>{t(filter.labelKey)}</span>
+                      <span
+                        className="ml-2 text-xs opacity-80"
+                        data-testid={`operator-filter-count-${filter.key}`}
+                      >
+                        {filterCounts[filter.key]}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('marketplace.operator.pendingFirstHint')}
+              </p>
               {stores.length === 0 ? (
                 <p className="py-8 text-center text-muted-foreground">
                   {t('marketplace.operator.noStoresYet')}
                 </p>
+              ) : visibleStores.length === 0 ? (
+                <p className="py-8 text-center text-muted-foreground">
+                  {t('marketplace.operator.noStoresMatchFilter')}
+                </p>
               ) : (
-                stores.map(store => {
-                  const canApprove = store.status === 'accepted' || store.status === 'applied';
+                visibleStores.map(store => {
+                  const canApprove =
+                    !isArchived && (store.status === 'accepted' || store.status === 'applied');
+                  const canReject =
+                    !isArchived && (store.status === 'accepted' || store.status === 'applied');
+                  const canSuspend = !isArchived && store.status === 'approved';
+                  const appliedAt = store.appliedAt;
+                  const groupedItems = store.productGroups.reduce(
+                    (sum, group) => sum + (group.itemCount ?? 0),
+                    0
+                  );
                   return (
                     <div
                       key={store.id}
+                      data-testid="operator-membership-row"
+                      data-peerid={store.peerID}
                       className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div>
+                      <div className="space-y-2">
                         <div className="text-sm font-medium">
-                          {formatUserName({ peerID: store.peerID }, { prefix: 'Store' })}
+                          {formatUserName(
+                            { peerID: store.peerID },
+                            { prefix: t('marketplace.operator.storeNamePrefix') }
+                          )}
                         </div>
                         <div className="mt-1 flex items-center gap-2">
                           <Badge variant="outline">
@@ -302,33 +489,103 @@ export default function MarketplaceOperatorDetailPage() {
                             </span>
                           )}
                         </div>
+                        <div className="text-xs text-muted-foreground">
+                          {appliedAt ? (
+                            <p>
+                              {t('marketplace.operator.appliedAt', { date: formatDate(appliedAt) })}
+                            </p>
+                          ) : null}
+                          {store.reviewedAt ? (
+                            <p>
+                              {t('marketplace.operator.reviewedAt', {
+                                date: formatDate(store.reviewedAt),
+                              })}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          <p>
+                            {store.productGroups.length > 0
+                              ? t('marketplace.operator.productGroupsCount', {
+                                  count: store.productGroups.length,
+                                  items: groupedItems,
+                                })
+                              : store.productGroupIDs.length > 0
+                                ? t('marketplace.operator.productGroupsSummary', {
+                                    count: store.productGroupIDs.length,
+                                  })
+                                : marketplace.catalogMode === 'open'
+                                  ? t('marketplace.operator.productGroupsFullCatalog')
+                                  : t('marketplace.operator.productGroupsNoneSelectedCurated')}
+                          </p>
+                          {store.productGroups.length > 0 ? (
+                            <ul className="mt-2 space-y-1">
+                              {store.productGroups.map(group => (
+                                <li key={group.id} className="rounded-md border px-2 py-1">
+                                  <p className="text-foreground">
+                                    {t('marketplace.operator.productGroupWithCount', {
+                                      name: group.name,
+                                      count: group.itemCount,
+                                    })}
+                                  </p>
+                                  {group.description ? (
+                                    <p className="text-muted-foreground">{group.description}</p>
+                                  ) : null}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                        {store.decisionReason ? (
+                          <p className="text-xs text-muted-foreground">
+                            {t('marketplace.operator.decisionReasonLabel', {
+                              reason: store.decisionReason,
+                            })}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="flex gap-2">
-                        {canApprove && !isArchived ? (
+                        {canApprove ? (
                           <Button
                             size="sm"
-                            onClick={() => void handleReview(store, 'approved')}
+                            onClick={() => setApproveTarget(store)}
                             disabled={Boolean(working)}
+                            data-testid={`operator-approve-${store.peerID}`}
                           >
                             <Check className="mr-1 h-4 w-4" />
                             {t('marketplace.operator.approve')}
                           </Button>
                         ) : null}
-                        {!isArchived && store.status !== 'rejected' && store.status !== 'left' ? (
+                        {canReject ? (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              void handleReview(
-                                store,
-                                store.status === 'approved' ? 'suspended' : 'rejected'
-                              )
-                            }
+                            onClick={() => {
+                              setReasonTarget(store);
+                              setReasonAction('rejected');
+                              setReasonInput('');
+                              setReasonTouched(false);
+                            }}
                             disabled={Boolean(working)}
+                            data-testid={`operator-reject-${store.peerID}`}
                           >
-                            {store.status === 'approved'
-                              ? t('marketplace.operator.suspend')
-                              : t('marketplace.operator.reject')}
+                            {t('marketplace.operator.reject')}
+                          </Button>
+                        ) : null}
+                        {canSuspend ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setReasonTarget(store);
+                              setReasonAction('suspended');
+                              setReasonInput('');
+                              setReasonTouched(false);
+                            }}
+                            disabled={Boolean(working)}
+                            data-testid={`operator-suspend-${store.peerID}`}
+                          >
+                            {t('marketplace.operator.suspend')}
                           </Button>
                         ) : null}
                       </div>
@@ -340,6 +597,91 @@ export default function MarketplaceOperatorDetailPage() {
           </Card>
         </Container>
       </main>
+      <AlertDialog
+        open={Boolean(approveTarget)}
+        onOpenChange={open => (!open ? setApproveTarget(null) : undefined)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('marketplace.operator.approveConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('marketplace.operator.approveConfirmDesc')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(working)}>{t('common.cancel')}</AlertDialogCancel>
+            <Button
+              onClick={() => void handleApproveConfirm()}
+              type="button"
+              disabled={Boolean(working)}
+              data-testid="operator-approve-confirm"
+            >
+              {t('marketplace.operator.approve')}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Dialog
+        open={Boolean(reasonTarget && reasonAction)}
+        onOpenChange={open => {
+          if (!open) resetReasonDialog();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t(
+                reasonAction === 'suspended'
+                  ? 'marketplace.operator.reasonDialogTitleSuspend'
+                  : 'marketplace.operator.reasonDialogTitleReject'
+              )}
+            </DialogTitle>
+            <DialogDescription>{t('marketplace.operator.reasonDialogDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label htmlFor="review-reason" className="text-sm font-medium text-foreground">
+              {t('marketplace.operator.reasonLabel')}
+            </label>
+            <Textarea
+              id="review-reason"
+              value={reasonInput}
+              maxLength={1000}
+              onChange={event => setReasonInput(event.target.value)}
+              onBlur={() => setReasonTouched(true)}
+              placeholder={t(
+                reasonAction === 'suspended'
+                  ? 'marketplace.operator.reasonPlaceholderSuspend'
+                  : 'marketplace.operator.reasonPlaceholderReject'
+              )}
+              data-testid="operator-review-reason-input"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('marketplace.operator.reasonCharCount', { count: trimmedReason.length })}
+            </p>
+            {reasonTouched && reasonInvalid ? (
+              <p className="text-xs text-destructive">
+                {reasonTooLong
+                  ? t('marketplace.operator.reasonLength')
+                  : t('marketplace.operator.reasonRequired')}
+              </p>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetReasonDialog} disabled={Boolean(working)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={() => void handleReasonSubmit()}
+              disabled={Boolean(working) || reasonInvalid}
+              data-testid="operator-review-reason-submit"
+            >
+              {reasonAction === 'suspended'
+                ? t('marketplace.operator.submitSuspend')
+                : t('marketplace.operator.submitReject')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Footer />
     </div>
   );
