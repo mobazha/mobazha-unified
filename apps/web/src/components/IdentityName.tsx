@@ -1,5 +1,5 @@
 import React from 'react';
-import { identityNameProps } from '@mobazha/core';
+import { identityNameProps } from '@mobazha/core/utils/identity';
 import { cn } from '@/lib/utils';
 
 type IdentityNameElement = 'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'a';

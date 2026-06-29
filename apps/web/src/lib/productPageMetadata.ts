@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import {
-  resolveProductPagePeerID,
   resolveListingDisplayPrice,
   formatListingPriceForSchema,
-} from '@mobazha/core';
+} from '@mobazha/core/utils/listingDisplayPrice';
+import { resolveProductPagePeerID } from '@mobazha/core/utils/productUrl';
 import { getCanonicalSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 import {
   buildProductPageUrl,

@@ -225,7 +225,7 @@ if (!__OUTPOST__) {
     { path: '/rwa-dashboard', element: protectedPage(() => import('./app/rwa-dashboard/page')) },
 
     // Collectibles Hub+NFT (P1 · SaaS · collectiblesHubEnabled)
-    { path: '/collectibles', element: protectedPage(() => import('./app/collectibles/page')) },
+    { path: '/collectibles', element: lazyPage(() => import('./app/collectibles/page')) },
     {
       path: '/collectibles/redemptions',
       element: protectedPage(() => import('./app/collectibles/redemptions/page')),
@@ -236,7 +236,7 @@ if (!__OUTPOST__) {
     },
     {
       path: '/collectibles/:mint',
-      element: protectedPage(() => import('./app/collectibles/[mint]/page')),
+      element: lazyPage(() => import('./app/collectibles/[mint]/page')),
     },
 
     // 设置 — 嵌套路由（共享 SettingsLayout 含侧边栏）

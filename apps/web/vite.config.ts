@@ -311,6 +311,7 @@ export default defineConfig(({ mode }) => {
       'process.env.NEXT_PUBLIC_SAAS_URL': JSON.stringify(
         isOutpost ? '' : env.NEXT_PUBLIC_SAAS_URL || ''
       ),
+      'process.env.NEXT_PUBLIC_SITE_URL': JSON.stringify(env.NEXT_PUBLIC_SITE_URL || ''),
       'process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE': JSON.stringify(
         env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE || ''
       ),

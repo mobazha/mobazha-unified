@@ -22,6 +22,7 @@ import {
   storefrontContextService,
   standaloneStoresApi,
   resolveStoreShortCode,
+  buildStorefrontAuthRedirect,
   extractStorefrontReturn,
   buildTelegramMiniAppStoreContextFromWindow,
 } from '@mobazha/core';
@@ -295,14 +296,14 @@ export function AuthProvider({
         clearOAuthParams();
 
         if (code && state) {
-          const [, sfReturnOrigin] = extractStorefrontReturn(state);
+          const [, sfReturnUrl] = extractStorefrontReturn(state);
 
           const success = await loginWithOAuth(code, state);
 
-          if (success && sfReturnOrigin) {
+          if (success && sfReturnUrl) {
             const token = useUserStore.getState().token;
             if (token) {
-              window.location.href = `${sfReturnOrigin}/#_auth_token=${encodeURIComponent(token)}`;
+              window.location.href = buildStorefrontAuthRedirect(sfReturnUrl, token);
               return;
             }
           }

@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next';
 
 import '@/lib/initPublicEnv';
-import { buildProductHref, isHostedMode, parseCompositeListingSlug } from '@mobazha/core';
+import { isHostedMode } from '@mobazha/core/config/env';
+import { buildProductHref, parseCompositeListingSlug } from '@mobazha/core/utils/productUrl';
 import { fetchSearchListingCatalog, type SitemapListingItem } from '@/lib/ssrSearchCatalog';
 import { getSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';

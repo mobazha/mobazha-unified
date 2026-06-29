@@ -90,6 +90,7 @@ const PUBLIC_ROUTES = [
   '/moderators',
   '/collections',
   '/collections/',
+  '/collectibles',
 ];
 
 /**
@@ -128,6 +129,18 @@ function isPublicRoute(pathname: string): boolean {
     const segments = pathname.split('/').filter(Boolean);
     if (segments.length === 2) {
       return true;
+    }
+  }
+
+  // 特殊处理 /collectibles/:mint（单级 mint 凭证详情公开）
+  // 排除 /collectibles/redemptions 与 /collectibles/redeem/*
+  if (pathname.startsWith('/collectibles/')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 2 && segments[0] === 'collectibles') {
+      const sub = segments[1];
+      if (sub !== 'redemptions' && sub !== 'redeem') {
+        return true;
+      }
     }
   }
 

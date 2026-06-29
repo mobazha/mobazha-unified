@@ -1,10 +1,10 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import {
-  buildEmbedProductHref,
   resolveListingDisplayPrice,
   formatListingPriceForSchema,
-} from '@mobazha/core';
+} from '@mobazha/core/utils/listingDisplayPrice';
+import { buildEmbedProductHref } from '@mobazha/core/utils/productUrl';
 import { EmbedResizer } from '../../_components/EmbedResizer';
 import { getSiteUrl } from '@/lib/siteUrl';
 
