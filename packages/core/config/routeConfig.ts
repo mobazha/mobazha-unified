@@ -35,6 +35,10 @@ export const PUBLIC_ROUTES = [
   // Collections（standalone 独立站公开浏览）
   '/collections',
   '/collections/:id',
+
+  // Collectibles Hub（目录与凭证详情公开；redemptions/redeem/ops 受保护）
+  '/collectibles',
+  '/collectibles/:mint',
 ] as const;
 
 /**
@@ -101,7 +105,7 @@ function patternToRegex(pattern: string): RegExp {
   // 转义特殊字符，然后将 :param 替换为匹配任意非斜杠字符的正则
   const escaped = pattern
     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // 转义特殊字符
-    .replace(/\\:\w+/g, '[^/]+'); // :param -> [^/]+
+    .replace(/:\w+/g, '[^/]+'); // :param -> [^/]+
 
   return new RegExp(`^${escaped}$`);
 }
@@ -119,6 +123,16 @@ function matchPattern(pathname: string, pattern: string): boolean {
 
   // 包含动态参数时使用正则匹配
   if (pattern.includes(':')) {
+    if (pattern === '/collectibles/:mint') {
+      const segments = pathname.split('/').filter(Boolean);
+      if (segments.length === 2 && segments[0] === 'collectibles') {
+        const sub = segments[1];
+        if (sub === 'redemptions' || sub === 'redeem') {
+          return false;
+        }
+      }
+    }
+
     const regex = patternToRegex(pattern);
     return regex.test(pathname);
   }

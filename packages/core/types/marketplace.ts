@@ -394,6 +394,8 @@ export interface PublicGroupMarketplace {
   publicID: string;
   slug?: string;
   platform: 'telegram' | 'discord' | string;
+  /** Marketplace vertical preset (e.g. general, collectible, collectibles). */
+  vertical?: string;
   name: string;
   publicDescription?: string;
   logoURL?: string;

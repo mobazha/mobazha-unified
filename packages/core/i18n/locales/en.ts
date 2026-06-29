@@ -463,6 +463,36 @@ export const en: TranslationResource = {
     // More from store
     moreFromStore: 'More from this store',
     viewAllProducts: 'View All',
+    collectibleTitle: {
+      whatYouReceiveTitle: 'What you receive',
+      whatYouReceiveBody:
+        'A digital ownership title in your wallet plus the exclusive right to redeem the physical graded card.',
+      deliveryNote:
+        'Purchase delivery is the digital title. Physical shipping is requested and quoted when you redeem — not at checkout.',
+      sourceEscrowPaymentNote:
+        'Checkout supports buyer-protection crypto only: ETH, Solana USDC, and Solana USDT. Fiat methods are not available for source-custody first sale yet.',
+      lifecycleTitle: 'After purchase',
+      lifecycle: {
+        buy: 'Browse & pay',
+        title: 'Digital title in My cards',
+        hold: 'Hold in wallet',
+        redeem: 'Redeem physical card',
+      },
+      certNumber: 'Cert #',
+      grade: 'Grade',
+      serial: 'Serial',
+      titleNetwork: 'Title network',
+      custody: {
+        source: 'Physical card held by the approved source custodian until redemption.',
+        hub: 'Physical card held in Hub custody until redemption.',
+        unknown:
+          'Physical custody follows the listing custodian — confirm details before purchase.',
+      },
+      trustLimitation:
+        'Buyer protection covers the transaction — not grading, authentication, or future resale. Hold or redeem when ready; secondary resale is not supported here yet.',
+      catalogLink: 'View custody catalog',
+      purchaseTitle: 'Purchase title',
+    },
   },
 
   search: {
@@ -2859,6 +2889,60 @@ export const en: TranslationResource = {
       trustStripTitle: 'Verified community market',
       trustStripBody:
         'Listings come from approved sellers in this group. Browse products below or join the community to access member-only flows.',
+      collectibles: {
+        badge: 'Collectible cards',
+        intro:
+          'Browse cards for sale in this market. Listings marked with digital-title custody include on-chain ownership and redemption rights; other physical cards ship like ordinary goods.',
+        defaultDescription:
+          'A curated marketplace for collectible cards. Some listings include digital-title custody and redemption; others are standard physical goods unless explicitly marked.',
+        browseCta: 'Browse collectibles',
+        browseListingsCta: 'Browse listed cards',
+        applySellerCta: 'Apply to sell',
+        catalogCta: 'Hosted card catalog',
+        myCardsCta: 'My cards & redemptions',
+        redemptionsCta: 'My redemptions',
+        opsLink: 'Hub operations',
+        buyerPathTitle: 'I want to buy',
+        sellerPathTitle: 'I want to sell',
+        buyerStepBrowse: 'Browse cards for sale in this market',
+        buyerStepInspect:
+          'On digital-title listings, review grade, custody badge, and redemption terms before you pay',
+        buyerStepOwn: 'After payment, the digital title appears in My cards when custody applies',
+        buyerStepRedeem:
+          'Redeem for physical shipment when ready — only on marked digital-title listings',
+        sellerStepLogin: 'Sign in and create listings in product groups',
+        sellerStepApply: 'Submit graded-card evidence for curator review',
+        sellerStepList: 'After approval, create a listing — digital title mints when a buyer pays',
+        sellerStepCustody:
+          'Ship the physical card after the buyer redeems; first-sale funds stay locked until settlement',
+        sellerCustodyNote:
+          'Submit evidence → curator review → create listing → buyer pays (title mints) → ship after redemption → settlement releases funds.',
+        flowTitle: 'How it works',
+        flowSource: 'Physical card held by an approved source custodian',
+        flowToken: 'Ownership and redemption rights recorded as a digital title you can trade',
+        flowRedeem:
+          'After redemption, the source custodian ships the physical card per project flow',
+        filterAll: 'All',
+        filterSports: 'Sports',
+        filterPokemon: 'Pokémon',
+        filterMtg: 'MTG',
+        filterOtherTcg: 'Other TCG',
+        noCategoryProducts: 'No cards in this category',
+        noCategoryProductsDesc: 'Try another category or browse all listings.',
+        trustWhitelist: 'Marketplace sellers are reviewed against an approved whitelist.',
+        trustDisclaimer:
+          'Buyer protection covers your transaction — it is not a grading or authenticity guarantee.',
+        trustCustody:
+          'Only listings explicitly marked with digital-title custody include on-chain ownership and redemption. Other cards are ordinary physical goods unless the listing says otherwise.',
+        poweredBy: 'Powered by Mobazha',
+        demo: {
+          m2Wilson: {
+            name: 'M2 Wilson Graded Card Market',
+            description:
+              'Curated PSA-graded sports, Pokémon, and TCG cards. Cards stay with approved source custodians; on-chain digital titles record ownership and redemption rights, with physical redemption per project flow.',
+          },
+        },
+      },
     },
     admin: {
       applicationApproved: 'Application approved',
@@ -2921,6 +3005,76 @@ export const en: TranslationResource = {
       step1: 'Your application will be reviewed by marketplace admins',
       step2: "You'll receive a notification when approved",
       step3: 'Start listing and selling your products!',
+      collectibles: {
+        checklistTitle: 'Before you apply',
+        checklistLogin: 'Sign in with your Mobazha account',
+        checklistProducts: 'Create listings and add them to at least one product group',
+        checklistApply: 'Select product groups and submit your seller application here',
+        checklistReview: 'Wait for curator review — you cannot list in this market until approved',
+        checklistListed: 'After approval, approved product groups appear in this market',
+        custodyProcessNote:
+          'Source custody registration and fulfillment materials are a separate step after approval — this form does not register custody, schedule shipping, or mint on-chain.',
+        statusNextPendingBlocked:
+          'Next: wait for curator review. Card submissions and market listing stay blocked until approved.',
+        statusNextApprovedWithSubmissions:
+          'Next: submit graded-card evidence below. After approval, create a listing — the digital title mints when a buyer pays, not before.',
+        statusNextApproved:
+          'Next: your approved product groups are visible in this market. Manage listings from your store admin.',
+        statusNextPending:
+          'Next: wait for curator review. You will be notified when there is an update.',
+        statusNextRejected:
+          'Next: review feedback from curators, update your product groups, and submit a new application if allowed.',
+        statusNextSuspended:
+          'Next: contact support or market operators — your seller access is paused.',
+        statusNextDefault: 'Next: complete the steps above or check back for updates.',
+        workspace: {
+          title: 'Card submissions',
+          subtitle:
+            'Submit grade, certification, holder wallet, and front/back evidence URLs for curator review. Approved cards are ready to list — no pre-sale mint.',
+          lifecycleAria: 'Card submission lifecycle',
+          lifecycle: {
+            submit: 'Submit evidence',
+            review: 'Curator review',
+            list: 'Create listing',
+            listed: 'Buyer pays / title mints',
+            redeem: 'Redeem & ship',
+          },
+          custodyNote:
+            'You keep the physical card until a buyer redeems. After approval, create a listing; the digital title mints to the buyer on first paid sale. First-sale funds stay locked until settlement after you ship.',
+          certNumber: 'Certification number',
+          grade: 'Grade',
+          serial: 'Serial (optional)',
+          holderWallet: 'Your Solana wallet (custody record)',
+          holderWalletPlaceholder: 'Your current Solana wallet for this custody submission',
+          holderWalletHint:
+            'Recorded for custody only. The buyer receives the digital title to the wallet they provide at checkout.',
+          photoFrontUrl: 'Front photo URL',
+          photoBackUrl: 'Back photo URL',
+          guaranteeAmount: 'Guarantee amount (optional)',
+          guaranteeCurrency: 'Guarantee currency (optional)',
+          submitCard: 'Submit card for review',
+          submitSuccess: 'Card submitted for curator review',
+          submitFailed: 'Could not submit card',
+          mySubmissionsTitle: 'Your submissions',
+          emptySubmissions: 'No card submissions yet.',
+          nextActionLabel: 'Next',
+          rejectionReason: 'Rejection reason',
+          createListingCta: 'Create listing',
+          trackingNumber: 'Tracking number',
+          markShipped: 'Mark shipped',
+          shipSuccess: 'Shipment recorded',
+          shipFailed: 'Could not record shipment',
+          validation: {
+            certNumber: 'Enter a certification number.',
+            grade: 'Enter a grade.',
+            holderWallet: 'Enter your Solana wallet for the custody record.',
+            photoFrontUrl: 'Enter a valid http(s) URL for the front photo.',
+            photoBackUrl: 'Enter a valid http(s) URL for the back photo.',
+            photosDistinct: 'Front and back URLs must be different.',
+            trackingNumber: 'Enter a tracking number.',
+          },
+        },
+      },
     },
     allTypes: 'All types',
   },
@@ -4775,6 +4929,23 @@ export const en: TranslationResource = {
     tokenAddress: 'Token address',
     uploadFailed: 'One or more images failed to upload.',
 
+    sourceDeposit: {
+      summaryTitle: 'Source custody card',
+      summarySubtitle:
+        'This listing is linked to your approved source deposit. Card metadata is locked; the digital title mints to the buyer’s Solana wallet on first paid sale.',
+      certNumber: 'Cert number',
+      grade: 'Grade',
+      serial: 'Serial',
+      hubSlot: 'Hub slot',
+      sourceDepositId: 'Source deposit',
+      mintOnFirstSaleNote:
+        'No NFT mint exists yet — the platform mints the digital title when a buyer completes payment.',
+      escrowCryptoPaymentNote:
+        'First-sale checkout accepts buyer-protection crypto only: ETH, Solana USDC, and Solana USDT. Fiat checkout is not supported for source custody yet.',
+      quantityLocked: 'One card per listing (first sale only).',
+      lockedTypeHint: 'Product type is fixed for source custody listings.',
+    },
+
     // Digital downloads (Supply Chain Phase 1.0)
     digital: {
       title: 'Digital downloads',
@@ -5023,13 +5194,48 @@ export const en: TranslationResource = {
   collectibles: {
     title: 'Collectible Cards',
     subtitle:
-      'Tokenized graded cards held in the Mobazha Hub. Trade on-chain and redeem the physical card when you are ready.',
+      'Digital-title cards in circulation with source or Hub custody. Ordinary physical listings in the market are not shown here unless tokenized.',
+    catalog: {
+      title: 'Hosted cards catalog',
+      custodyCatalogTitle: 'Custody catalog',
+      custodyCatalogSubtitle:
+        'Browse digital-title cards in circulation. Connect a wallet on My cards to see titles you hold. Not every market listing is tokenized.',
+      tabCatalog: 'Custody catalog',
+      tabMyCards: 'My cards',
+      tabRedemptions: 'Redemption progress',
+      navAria: 'Collectibles views',
+      myCardsConnectPrompt: 'Connect a wallet to see digital titles linked to your address.',
+      connectWalletCta: 'Connect wallet',
+      myCardsHoldHint: 'Hold or redeem your cards. Secondary resale is not supported here yet.',
+      myCardsEmpty: 'No digital titles match your connected wallet in this catalog.',
+      subtitle:
+        'Cards with digital titles show custody proof here. Physical cards without on-chain titles are purchased and shipped like ordinary goods.',
+      backToMarketplace: 'Back to curated market',
+      myCardsCta: 'My cards & redemptions',
+      viewCustodyCta: 'View custody proof',
+      onChainProofTitle: 'On-chain & custody proof',
+      redeemableYes: 'Redemption available',
+      redeemableNo: 'Redemption unavailable',
+      display: {
+        m2Wilson001: {
+          name: '1909-11 T206 Honus Wagner (demo)',
+        },
+      },
+      custody: {
+        inHub: 'In Hub custody',
+        sourceCustody: 'Held by source custodian',
+        redeemRequested: 'Redemption in progress',
+        redeemed: 'Physical redemption started',
+        pending: 'Hub intake in progress',
+        unknown: 'Custody status pending',
+      },
+    },
     detailTitle: 'Card details',
     backToList: 'Back to collectibles',
     featureDisabled: 'Collectible Hub is not available on this store yet.',
     trustNote:
-      'Buyer protection covers the transaction — it is not a grading or authentication guarantee. Physical cards are stored in the Hub until you redeem.',
-    empty: 'No tokenized cards in circulation yet.',
+      'This catalog shows digital-title cards only. Buyer protection covers the transaction — not grading or authentication. Redemption applies only to cards you hold here.',
+    empty: 'No digital-title cards in circulation yet.',
     tokenizedCard: 'Tokenized card',
     hubSlot: 'Hub slot',
     chain: 'Network',
@@ -5037,6 +5243,17 @@ export const en: TranslationResource = {
     viewDetails: 'View details',
     alreadyRedeemed:
       'This digital title has been burned and a physical shipment is in progress or complete.',
+    validity: {
+      active: 'Credential active',
+      burned: 'Credential burned',
+      voided: 'Credential voided',
+      unknown: 'Credential status pending',
+      voidedDetailTitle: 'This digital title credential is voided',
+      voidedDetailBody:
+        'Redemption and ownership actions are unavailable. Contact support if you believe this is an error.',
+      invalidationReason: 'Reason',
+      invalidatedAt: 'Invalidated',
+    },
     onChain: {
       mintTx: 'Mint record',
       mintConfirmedSlot: 'Confirmed block',
@@ -5048,11 +5265,34 @@ export const en: TranslationResource = {
       onePerOrderDesc: 'Tokenized card checkout supports one card per order (quantity 1).',
       hubPrimarySaleTitle: 'Hub-managed NFT primary sale',
       metadataTitle: 'Collectible details',
+      holderWalletTitle: 'Digital title wallet',
+      holderWalletDesc:
+        'Connect your Solana wallet to receive the digital title when payment completes.',
+      holderWalletConnected: 'Connected',
+      holderWalletMissing: 'Connect a Solana wallet before placing this order.',
+      holderWalletWrongNamespace:
+        'Switch to a Solana wallet — EVM addresses cannot receive this digital title.',
+      connectSolanaWallet: 'Connect Solana wallet',
+      switchSolanaWallet: 'Switch Solana wallet',
+      connectingWallet: 'Connecting…',
+      escrowCryptoOnlyNote:
+        'Source-custody first sale checkout supports buyer-protection crypto only (ETH, Solana USDC, Solana USDT). Card and other fiat methods are not available yet.',
     },
     redeem: {
       title: 'Redeem physical card',
       description:
-        'Connect the wallet that holds this digital title, confirm the on-chain transfer, and submit your shipping details.',
+        'Only the wallet holding this digital title can request redemption. After you submit, the custodian or source custodian arranges shipment per project flow — on-chain steps happen in your wallet first.',
+      mint: 'Digital title (mint)',
+      holderOnlyNote:
+        'Redemption requests must come from the current digital title holder. The custodian or source custodian fulfills shipment after your submission is accepted.',
+      stepWallet: 'Connect holder wallet',
+      stepVerify: 'Verify ownership',
+      stepVerifyDesc:
+        'We confirm your wallet holds this digital title before you can submit a redemption request.',
+      stepAddress: 'Enter shipping address',
+      stepSubmit: 'Submit redemption request',
+      stepSubmitDesc:
+        'Your wallet will sign the on-chain step, then the custodian or source custodian processes physical shipment per project flow. Tracking appears after dispatch.',
       wallet: 'Holder wallet',
       expectedHolder: 'Expected holder',
       walletMismatch: 'This wallet is not the current holder of the digital title.',
@@ -5212,6 +5452,138 @@ export const en: TranslationResource = {
       alertMintError: 'Mint error on primary sale',
       backToCollectibles: 'Back to collectibles',
       workbenchNav: 'Hub operations',
+    },
+    sourceOps: {
+      title: 'M2 Wilson Source Custody',
+      subtitle:
+        'Card stays with the seller; buyer receives NFT redemption rights. Model A long lock on first-sale funds.',
+      createTitle: 'Create source deposit',
+      createSubtitle:
+        'Register a graded card held at the seller before minting the redemption NFT.',
+      sellerPeerID: 'Seller ID',
+      holderWallet: 'Holder wallet',
+      holderWalletPlaceholder: 'Solana wallet address',
+      guaranteeAmount: 'Guarantee amount',
+      guaranteeCurrency: 'Guarantee currency',
+      submitCreate: 'Create source deposit',
+      createSuccess: 'Source deposit created',
+      createFailed: 'Could not create source deposit',
+      listTitle: 'Source deposits',
+      listSubtitle:
+        'Model A keeps locked first-sale funds under buyer protection until redemption completes. Does not trigger M3 hub intake payout.',
+      depositStatus: 'Status',
+      seller: 'Seller',
+      holder: 'Holder',
+      nftMint: 'NFT mint',
+      order: 'Order',
+      tracking: 'Tracking',
+      defaultReason: 'Default reason',
+      defaultReasonPlaceholder: 'Reason for default',
+      mintRoyaltyBps: 'Royalty bps',
+      mint: 'Mint NFT',
+      mintSuccess: 'Mint submitted',
+      mintFailed: 'Mint failed',
+      mintHolderRequired:
+        'Enter a holder wallet on the deposit or in the default mint holder field before minting.',
+      recordFirstSale: 'Record first sale',
+      firstSaleTitle: 'Record first sale (Model A)',
+      firstSaleSubtitle:
+        'Long lock — locked first-sale funds stay under buyer protection until redemption completes. Does not trigger M3 hub intake payout.',
+      buyerPeerID: 'Buyer ID',
+      priceAmount: 'Price amount',
+      currencyCode: 'Currency',
+      divisibility: 'Divisibility',
+      protectionRefId: 'Buyer protection reference',
+      firstSaleSuccess: 'First sale recorded',
+      firstSaleFailed: 'Could not record first sale',
+      ship: 'Mark shipped',
+      shipSuccess: 'Source deposit marked as shipped',
+      shipFailed: 'Could not mark as shipped',
+      settle: 'Release after redemption completion',
+      settleSuccess: 'Source deposit settled',
+      settleFailed: 'Could not settle source deposit',
+      markDefaulted: 'Mark defaulted',
+      markDefaultVoidNotice:
+        'Confirming default refunds the buyer and voids any unburned Hub title credential linked to this deposit after refund completes.',
+      hubTitleValidity: 'Hub title validity',
+      defaultSuccess: 'Source deposit marked as defaulted',
+      defaultFailed: 'Could not mark as defaulted',
+      defaultRefundStatus: 'Refund status',
+      defaultRefundError: 'Refund error',
+      defaultRefundPendingNotice:
+        'Buyer refund is processing. Click refresh again later to confirm on-chain completion.',
+      refreshDefaultRefund: 'Refresh refund status',
+      retryDefaultRefund: 'Retry refund',
+      defaultRefundPending: 'Refund still processing',
+      defaultRefundFailed: 'Refund failed',
+      refreshQueue: 'Refresh',
+      queueLoadFailed: 'Could not load source deposits',
+      queueEmpty: 'No source deposits found.',
+      releaseStatus: 'Release status',
+      trackingPlaceholder: 'Carrier tracking number',
+      approve: 'Approve',
+      reject: 'Reject',
+      approveSuccess: 'Source deposit approved',
+      approveFailed: 'Could not approve source deposit',
+      rejectSuccess: 'Source deposit rejected',
+      rejectFailed: 'Could not reject source deposit',
+      rejectionReason: 'Rejection reason',
+      rejectionReasonPlaceholder: 'Reason shown to the seller',
+      operatorNextAction: 'Next operational action',
+      submissionEvidence: 'Seller submission evidence',
+      evidenceFront: 'Front',
+      evidenceBack: 'Back',
+      evidenceOpenLink: 'Open full image',
+      evidenceFrontAlt: 'Front photo of the graded card',
+      evidenceBackAlt: 'Back photo of the graded card',
+    },
+    sourceDeposit: {
+      status: {
+        submitted: 'Submitted for review',
+        sourceHeld: 'Approved — ready to list',
+        rejected: 'Rejected',
+        minting: 'Minting digital title (first sale)',
+        minted: 'Digital title minted',
+        inCirculation: 'Buyer holds digital title',
+        redeemRequested: 'Redemption requested — ship card',
+        shipped: 'Shipped — await settlement',
+        settled: 'Complete — funds released',
+        defaulted: 'Defaulted',
+        unknown: 'Status pending',
+      },
+      nextAction: {
+        submitted: 'Wait for curator review',
+        sourceHeld: 'Create a listing — digital title mints when a buyer pays',
+        rejected: 'Review feedback and submit again if allowed',
+        minting: 'First-sale mint in progress — no action needed',
+        minted: 'Listing live — wait for buyer or redemption',
+        inCirculation: 'Buyer holds the title — ship after redemption request',
+        redeemRequested: 'Ship the physical card within SLA',
+        shipped: 'Await settlement after delivery',
+        settled: 'Complete',
+        defaulted: 'Contact support',
+        unknown: 'Check back for updates',
+      },
+      operatorNext: {
+        review: 'Review submission — approve or reject',
+        awaitingListing: 'Awaiting seller listing and first paid sale',
+        mint: 'Retry interrupted first-sale mint',
+        firstSale: 'Monitor first sale / title mint',
+        ship: 'Ship physical card for redemption',
+        settle: 'Settle after delivery confirmed',
+        complete: 'No action required',
+        rejected: 'Closed — seller must resubmit',
+        defaultRefundPending: 'Refresh default refund status',
+        defaultRefundFailed: 'Retry buyer refund',
+      },
+      defaultRefund: {
+        status: {
+          pending: 'Refund processing',
+          refunded: 'Refund confirmed',
+          failed: 'Refund failed',
+          unknown: 'Refund status pending',
+        },
+      },
     },
   },
 

@@ -847,6 +847,15 @@ export function getSupportedChains(): PaymentChainConfig[] {
 export const UTXO_CHAINS = ['BTC', 'LTC', 'BCH', 'ZEC'] as const;
 
 /**
+ * Backend/iWallet payment coin symbols that differ from CHAINS.id.
+ * Mirrors guest checkout CHAIN_ID_TO_PAYMENT_COIN (inverse mapping).
+ */
+export const PAYMENT_COIN_TO_CHAIN_ID: Record<string, string> = {
+  ARB: 'ARBITRUM',
+  TRX: 'TRON',
+};
+
+/**
  * 根据代币 ID 或链 ID 获取链类型
  * 支持输入：
  * - 链 ID: 'ETH', 'BTC', 'SOL'
@@ -872,6 +881,11 @@ export function getChainFromCoin(coinOrChain?: string): string {
   const chainConfig = CHAINS.find(c => c.id.toUpperCase() === upper);
   if (chainConfig) {
     return upper;
+  }
+
+  const aliasedChainId = PAYMENT_COIN_TO_CHAIN_ID[upper];
+  if (aliasedChainId) {
+    return aliasedChainId;
   }
 
   // 尝试解析 canonical coin（crypto:...）

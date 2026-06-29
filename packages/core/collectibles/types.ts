@@ -12,6 +12,9 @@ export type CollectibleHubSlotStatus =
 
 export type CollectibleTokenStandard = 'metaplex_pnft' | 'metaplex_cnft';
 
+/** Hub title credential lifecycle — unknown backend values pass through as string. */
+export type CollectibleNFTValidityStatus = 'active' | 'burned' | 'voided' | string;
+
 export interface CollectibleHubSlot {
   hubSlotID: string;
   tenantID?: string;
@@ -45,6 +48,9 @@ export interface CollectibleNFT {
   mintTxExplorerURL?: string;
   mintAt?: string;
   burnAt?: string;
+  validityStatus?: CollectibleNFTValidityStatus;
+  invalidatedAt?: string;
+  invalidationReason?: string;
 }
 
 export interface CollectibleRedemption {
@@ -116,6 +122,67 @@ export interface CollectiblePrimarySaleReleaseRetryResult {
   tenantID?: string;
   limit: number;
   released: number;
+}
+
+export type CollectibleSourceDepositStatus =
+  | 'source_held'
+  | 'submitted'
+  | 'rejected'
+  | 'minting'
+  | 'minted'
+  | 'in_circulation'
+  | 'redeem_requested'
+  | 'shipped'
+  | 'settled'
+  | 'defaulted'
+  | string;
+
+export type CollectibleSourceDepositReleaseStatus = 'pending' | 'released' | 'failed' | string;
+
+export type CollectibleSourceDepositDefaultRefundStatus =
+  | 'pending'
+  | 'refunded'
+  | 'failed'
+  | string;
+
+export interface CollectibleSourceDeposit {
+  sourceDepositID: string;
+  tenantID?: string;
+  hubSlotID?: string;
+  sellerPeerID?: string;
+  holderWallet?: string;
+  certNumber: string;
+  grade?: string;
+  serial?: string;
+  photosJSON?: string;
+  guaranteeAmount?: string;
+  guaranteeCurrency?: string;
+  nftMint?: string;
+  firstSaleOrderID?: string;
+  firstSaleEscrowID?: string;
+  buyerPeerID?: string;
+  priceAmount?: string;
+  currencyCode?: string;
+  divisibility?: number;
+  status: CollectibleSourceDepositStatus;
+  releaseStatus?: CollectibleSourceDepositReleaseStatus;
+  trackingNo?: string;
+  defaultReason?: string;
+  defaultRefundStatus?: CollectibleSourceDepositDefaultRefundStatus;
+  defaultRefundActionID?: string;
+  defaultRefundTxHash?: string;
+  defaultRefundError?: string;
+  defaultRefundRequestedAt?: string;
+  defaultRefundedAt?: string;
+  rejectionReason?: string;
+  /** Hub title credential snapshot when available (e.g. after default/refund). */
+  hubTitleValidityStatus?: string;
+  hubTitleInvalidatedAt?: string;
+  hubTitleInvalidationReason?: string;
+  releaseRequestedAt?: string;
+  releasedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CollectiblePrimarySale {

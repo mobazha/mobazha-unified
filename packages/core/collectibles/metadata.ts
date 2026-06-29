@@ -11,6 +11,7 @@ export const COLLECTIBLE_FEATURE_KEYS = {
   hubSlotId: 'hub_slot_id',
   nftMint: 'nft_mint',
   certNumber: 'cert_number',
+  holderWallet: 'holder_wallet',
 } as const;
 
 export type CollectibleFeatureKey =
@@ -21,6 +22,8 @@ export interface CollectiblePurchaseFields {
   hubSlotID?: string;
   nftMint?: string;
   certNumber?: string;
+  /** Buyer Solana wallet — mint destination on authoritative first sale. */
+  holderWallet?: string;
   optionalFeatures?: string[];
 }
 
@@ -53,6 +56,7 @@ export function purchaseItemOptionalFeaturesWithCollectibleMetadata(
   append(COLLECTIBLE_FEATURE_KEYS.hubSlotId, fields.hubSlotID);
   append(COLLECTIBLE_FEATURE_KEYS.nftMint, fields.nftMint);
   append(COLLECTIBLE_FEATURE_KEYS.certNumber, fields.certNumber);
+  append(COLLECTIBLE_FEATURE_KEYS.holderWallet, fields.holderWallet);
 
   return features;
 }
@@ -65,6 +69,7 @@ export function buildCollectiblePurchaseItemPayload(fields: CollectiblePurchaseF
     ...(fields.hubSlotID?.trim() ? { hubSlotID: fields.hubSlotID.trim() } : {}),
     ...(fields.nftMint?.trim() ? { nftMint: fields.nftMint.trim() } : {}),
     ...(fields.certNumber?.trim() ? { certNumber: fields.certNumber.trim() } : {}),
+    ...(fields.holderWallet?.trim() ? { holderWallet: fields.holderWallet.trim() } : {}),
     ...(optionalFeatures.length > 0 ? { optionalFeatures } : {}),
   };
 }

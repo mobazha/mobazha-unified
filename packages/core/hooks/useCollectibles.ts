@@ -6,6 +6,7 @@ import type {
   CollectibleNFT,
   CollectiblePrimarySale,
   CollectibleRedemption,
+  CollectibleSourceDeposit,
   CollectiblesPagedResult,
 } from '../collectibles/types';
 
@@ -264,6 +265,40 @@ export function useCollectibleRedemption(
   );
 
   return { redemption, loading, error, refresh };
+}
+
+export function useMyCollectibleSourceDeposits(
+  options: { page?: number; pageSize?: number; status?: string; enabled?: boolean } = {}
+) {
+  const { page = 1, pageSize = 20, status, enabled = true } = options;
+  const [data, setData] = useState<CollectiblesPagedResult<CollectibleSourceDeposit> | null>(null);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!enabled) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await collectiblesApi.listMySourceDeposits({
+        page,
+        pageSize,
+        status: status?.trim() || undefined,
+      });
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [enabled, page, pageSize, status]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { data, items: data?.items ?? [], meta: data?.meta, loading, error, refresh };
 }
 
 export interface UseCollectibleRedemptionsOptions {

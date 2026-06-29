@@ -277,6 +277,31 @@ export interface TranslationResource {
     viewAllReviews: string;
     anonymous: string;
     rwaToken?: string;
+    collectibleTitle?: {
+      whatYouReceiveTitle: string;
+      whatYouReceiveBody: string;
+      deliveryNote: string;
+      sourceEscrowPaymentNote?: string;
+      lifecycleTitle: string;
+      lifecycle: {
+        buy: string;
+        title: string;
+        hold: string;
+        redeem: string;
+      };
+      certNumber: string;
+      grade: string;
+      serial: string;
+      titleNetwork: string;
+      custody: {
+        source: string;
+        hub: string;
+        unknown: string;
+      };
+      trustLimitation: string;
+      catalogLink: string;
+      purchaseTitle: string;
+    };
   };
 
   // 搜索
@@ -2443,6 +2468,39 @@ export interface TranslationResource {
   collectibles?: {
     title: string;
     subtitle: string;
+    catalog?: {
+      title: string;
+      custodyCatalogTitle?: string;
+      custodyCatalogSubtitle?: string;
+      tabCatalog?: string;
+      tabMyCards?: string;
+      tabRedemptions?: string;
+      navAria?: string;
+      myCardsConnectPrompt?: string;
+      connectWalletCta?: string;
+      myCardsHoldHint?: string;
+      myCardsEmpty?: string;
+      subtitle: string;
+      backToMarketplace: string;
+      myCardsCta: string;
+      viewCustodyCta: string;
+      onChainProofTitle: string;
+      redeemableYes: string;
+      redeemableNo: string;
+      display: {
+        m2Wilson001: {
+          name: string;
+        };
+      };
+      custody: {
+        inHub: string;
+        sourceCustody: string;
+        redeemRequested: string;
+        redeemed: string;
+        pending: string;
+        unknown: string;
+      };
+    };
     detailTitle: string;
     backToList: string;
     featureDisabled: string;
@@ -2454,6 +2512,16 @@ export interface TranslationResource {
     metadata: string;
     viewDetails: string;
     alreadyRedeemed: string;
+    validity?: {
+      active: string;
+      burned: string;
+      voided: string;
+      unknown: string;
+      voidedDetailTitle: string;
+      voidedDetailBody: string;
+      invalidationReason: string;
+      invalidatedAt: string;
+    };
     onChain: {
       mintTx: string;
       mintConfirmedSlot: string;
@@ -2465,10 +2533,27 @@ export interface TranslationResource {
       onePerOrderDesc: string;
       hubPrimarySaleTitle: string;
       metadataTitle: string;
+      holderWalletTitle: string;
+      holderWalletDesc: string;
+      holderWalletConnected: string;
+      holderWalletMissing: string;
+      holderWalletWrongNamespace: string;
+      connectSolanaWallet: string;
+      switchSolanaWallet: string;
+      connectingWallet: string;
+      escrowCryptoOnlyNote?: string;
     };
     redeem: {
       title: string;
       description: string;
+      mint?: string;
+      holderOnlyNote?: string;
+      stepWallet?: string;
+      stepVerify?: string;
+      stepVerifyDesc?: string;
+      stepAddress?: string;
+      stepSubmit?: string;
+      stepSubmitDesc?: string;
       wallet: string;
       expectedHolder: string;
       walletMismatch: string;
@@ -2612,6 +2697,91 @@ export interface TranslationResource {
       alertMintError: string;
       backToCollectibles: string;
       workbenchNav: string;
+    };
+    sourceOps: {
+      title: string;
+      subtitle: string;
+      createTitle: string;
+      createSubtitle: string;
+      sellerPeerID: string;
+      holderWallet: string;
+      holderWalletPlaceholder: string;
+      guaranteeAmount: string;
+      guaranteeCurrency: string;
+      submitCreate: string;
+      createSuccess: string;
+      createFailed: string;
+      listTitle: string;
+      listSubtitle: string;
+      depositStatus: string;
+      seller: string;
+      holder: string;
+      nftMint: string;
+      order: string;
+      tracking: string;
+      defaultReason: string;
+      defaultReasonPlaceholder: string;
+      mintRoyaltyBps: string;
+      mint: string;
+      mintSuccess: string;
+      mintFailed: string;
+      mintHolderRequired: string;
+      recordFirstSale: string;
+      firstSaleTitle: string;
+      firstSaleSubtitle: string;
+      buyerPeerID: string;
+      priceAmount: string;
+      currencyCode: string;
+      divisibility: string;
+      protectionRefId: string;
+      firstSaleSuccess: string;
+      firstSaleFailed: string;
+      ship: string;
+      shipSuccess: string;
+      shipFailed: string;
+      settle: string;
+      settleSuccess: string;
+      settleFailed: string;
+      markDefaulted: string;
+      markDefaultVoidNotice?: string;
+      hubTitleValidity?: string;
+      defaultSuccess: string;
+      defaultFailed: string;
+      defaultRefundStatus: string;
+      defaultRefundError: string;
+      defaultRefundPendingNotice: string;
+      refreshDefaultRefund: string;
+      retryDefaultRefund: string;
+      defaultRefundPending: string;
+      defaultRefundFailed: string;
+      refreshQueue: string;
+      queueLoadFailed: string;
+      queueEmpty: string;
+      releaseStatus: string;
+      trackingPlaceholder: string;
+      approve?: string;
+      reject?: string;
+      approveSuccess?: string;
+      approveFailed?: string;
+      rejectSuccess?: string;
+      rejectFailed?: string;
+      rejectionReason?: string;
+      rejectionReasonPlaceholder?: string;
+      operatorNextAction?: string;
+      submissionEvidence?: string;
+      evidenceFront?: string;
+      evidenceBack?: string;
+      evidenceOpenLink?: string;
+      evidenceFrontAlt?: string;
+      evidenceBackAlt?: string;
+    };
+    sourceDeposit?: {
+      status: Record<string, string>;
+      nextAction: Record<string, string>;
+      operatorNext: Record<string, string>;
+      defaultRefund?: {
+        status: Record<string, string>;
+      };
     };
   };
 

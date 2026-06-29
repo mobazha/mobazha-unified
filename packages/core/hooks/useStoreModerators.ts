@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as moderatorsApi from '../services/api/moderators';
+import { useUserStore } from '../stores/userStore';
 import { queryKeys } from './queryKeys';
 
 export interface UseStoreModeratorsReturn {
@@ -17,6 +18,7 @@ export interface UseStoreModeratorsReturn {
 
 export function useStoreModerators(): UseStoreModeratorsReturn {
   const queryClient = useQueryClient();
+  const isAuthenticated = useUserStore(s => s.isAuthenticated);
 
   const {
     data: moderators = [],
@@ -30,6 +32,7 @@ export function useStoreModerators(): UseStoreModeratorsReturn {
       return response.moderators;
     },
     staleTime: 30_000,
+    enabled: isAuthenticated,
   });
 
   const invalidate = useCallback(async () => {

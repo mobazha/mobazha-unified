@@ -85,13 +85,19 @@ export function logApiRequest(endpoint: string, method: string, usedMock: boolea
   }
 }
 
+export interface MockFallbackOptions {
+  /** When true, skip the console.warn before falling back to mock. */
+  quietFallbackWhen?: (error: unknown) => boolean;
+}
+
 /**
  * 创建带 Mock 回退的 API 调用
  */
 export async function withMockFallback<T>(
   realFn: () => Promise<T>,
   mockFn: () => Promise<T>,
-  endpoint: string
+  endpoint: string,
+  options?: MockFallbackOptions
 ): Promise<T> {
   const mode = getApiMode();
 
@@ -115,7 +121,10 @@ export async function withMockFallback<T>(
     return result;
   } catch (error) {
     if (shouldFallbackToMock()) {
-      console.warn(`[API] Real API failed for ${endpoint}, falling back to mock:`, error);
+      const quiet = options?.quietFallbackWhen?.(error) ?? false;
+      if (!quiet) {
+        console.warn(`[API] Real API failed for ${endpoint}, falling back to mock:`, error);
+      }
       await mockDelay();
       logApiRequest(endpoint, 'GET', true);
       return mockFn();
@@ -143,4 +152,3 @@ export function initApiModeFromEnv(): void {
 if (typeof window !== 'undefined') {
   initApiModeFromEnv();
 }
-

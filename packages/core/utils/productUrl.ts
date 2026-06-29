@@ -91,6 +91,16 @@ export function resolveProductPagePeerID(
   return vendor || undefined;
 }
 
+/** Turn URL slug separators into a search-friendly query string. */
+export function slugToSearchQuery(slug: string): string {
+  const trimmed = slug.trim();
+  if (!trimmed) return '';
+  return trimmed
+    .replace(/[-_/]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Parse composite index slugs like `{peerID}/{slug}` from listing indexes. */
 export function parseCompositeListingSlug(rawSlug: string): { slug: string; peerID?: string } {
   const trimmed = rawSlug.trim();

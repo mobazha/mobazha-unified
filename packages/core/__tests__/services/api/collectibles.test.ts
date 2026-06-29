@@ -169,4 +169,82 @@ describe('collectibles API', () => {
     expect(mint.mintTxExplorerURL).toContain('sig-mint-1');
     expect(rejected.status).toBe('rejected');
   });
+
+  it('lists and submits seller-scoped source deposits', async () => {
+    const { listMyCollectibleSourceDeposits, submitMyCollectibleSourceDeposit } =
+      await import('../../../services/api/collectibles');
+    mockHostingGet.mockResolvedValueOnce({
+      items: [{ sourceDepositID: 'dep-1', certNumber: 'PSA-1', status: 'submitted' }],
+      meta: { total: 1, page: 1, pageSize: 20 },
+    });
+    mockHostingPost.mockResolvedValueOnce({
+      sourceDepositID: 'dep-2',
+      certNumber: 'PSA-2',
+      status: 'submitted',
+    });
+
+    const listed = await listMyCollectibleSourceDeposits({ status: 'submitted' });
+    const created = await submitMyCollectibleSourceDeposit({
+      certNumber: 'PSA-2',
+      holderWallet: 'Holder11111111111111111111111111111111',
+      grade: '10',
+    });
+
+    expect(mockHostingGet).toHaveBeenCalledWith(
+      '/platform/v1/collectibles/my/source-deposits?status=submitted&page=1&pageSize=20'
+    );
+    expect(mockHostingPost).toHaveBeenCalledWith('/platform/v1/collectibles/my/source-deposits', {
+      certNumber: 'PSA-2',
+      holderWallet: 'Holder11111111111111111111111111111111',
+      grade: '10',
+    });
+    expect(listed.items[0].sourceDepositID).toBe('dep-1');
+    expect(created.sourceDepositID).toBe('dep-2');
+  });
+
+  it('ships seller-scoped source deposits with tracking number', async () => {
+    const { shipMyCollectibleSourceDeposit } = await import('../../../services/api/collectibles');
+    mockHostingPut.mockResolvedValueOnce({
+      sourceDepositID: 'dep-redeem',
+      status: 'shipped',
+      trackingNo: 'TRK-123',
+    });
+
+    const shipped = await shipMyCollectibleSourceDeposit('dep-redeem', {
+      trackingNo: 'TRK-123',
+    });
+
+    expect(mockHostingPut).toHaveBeenCalledWith(
+      '/platform/v1/collectibles/my/source-deposits/dep-redeem/ship',
+      { trackingNo: 'TRK-123' }
+    );
+    expect(shipped.status).toBe('shipped');
+    expect(shipped.trackingNo).toBe('TRK-123');
+  });
+
+  it('approves and rejects operator source deposits', async () => {
+    const { approveCollectibleSourceDeposit, rejectCollectibleSourceDeposit } =
+      await import('../../../services/api/collectibles');
+    mockHostingPut
+      .mockResolvedValueOnce({ sourceDepositID: 'dep-1', status: 'source_held' })
+      .mockResolvedValueOnce({ sourceDepositID: 'dep-2', status: 'rejected' });
+
+    const approved = await approveCollectibleSourceDeposit('dep-1');
+    const rejected = await rejectCollectibleSourceDeposit('dep-2', {
+      reason: 'Photos unclear',
+    });
+
+    expect(mockHostingPut).toHaveBeenNthCalledWith(
+      1,
+      '/platform/v1/collectibles/source-deposits/dep-1/approve',
+      {}
+    );
+    expect(mockHostingPut).toHaveBeenNthCalledWith(
+      2,
+      '/platform/v1/collectibles/source-deposits/dep-2/reject',
+      { reason: 'Photos unclear' }
+    );
+    expect(approved.status).toBe('source_held');
+    expect(rejected.status).toBe('rejected');
+  });
 });
