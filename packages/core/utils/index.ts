@@ -51,6 +51,7 @@ export * from './identity';
 
 // 社区市场展示工具
 export * from './communityMarketplace';
+export * from './nativeMarketplaceSell';
 
 // 商品链接
 export * from './productUrl';

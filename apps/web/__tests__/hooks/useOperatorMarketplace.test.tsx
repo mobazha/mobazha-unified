@@ -70,6 +70,7 @@ function buildStore(peerID: string, marketplaceID = 'latest-id'): MarketplaceSto
     peerID,
     status: 'approved',
     isVisible: true,
+    productGroupIDs: [],
   };
 }
 

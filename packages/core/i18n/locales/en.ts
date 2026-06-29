@@ -2896,6 +2896,12 @@ export const en: TranslationResource = {
     detail: {
       joinViaGroup: 'Join via community',
       applySeller: 'Apply to sell',
+      applyToSell: 'Apply to sell',
+      applyToSellDesc: 'Submit your store to list products in this marketplace.',
+      sellerAdmissionInviteOnly:
+        'Seller access is by invitation only. Contact the marketplace operator to request admission.',
+      sellerAdmissionOperatorInvited:
+        'The operator invites sellers directly. Self-service applications are not available for this marketplace.',
       visitPublicSite: 'Visit marketplace site',
       accessTitle: 'Access & catalog',
       catalogMode: 'Catalog',
@@ -2994,26 +3000,58 @@ export const en: TranslationResource = {
       searchPlaceholder: 'Search members...',
     },
     sell: {
-      backToMarketplace: 'Back to community market',
-      title: 'Become a Seller',
+      backToMarketplace: 'Back to marketplace',
+      title: 'Apply to sell',
       subtitle:
-        'Select product groups to list in this community market. An admin will review your application.',
+        'Submit your store to sell in this marketplace. Admission follows the marketplace policy shown below.',
       applyingTo: 'Applying to',
-      loginRequired: 'Sign in to apply as a seller in this community market.',
+      loginRequired: 'Sign in to apply as a seller in this marketplace.',
+      selfServeNotAvailable:
+        'This marketplace does not accept self-service seller applications. See the admission policy on the marketplace page.',
+      inviteOnlyPolicy:
+        'Seller access is by invitation only. Contact the marketplace operator if you want to sell here.',
+      operatorInvitedPolicy:
+        'The operator invites sellers directly. You cannot submit a self-service application for this marketplace.',
+      autoApprovalNote:
+        'Open admission: your application is approved immediately after you submit. Product groups are optional when the catalog is open.',
+      reviewRequiredNote:
+        'Approval required: your application is reviewed before your listings appear in this marketplace.',
+      openCatalogGroupsOptional:
+        'Product groups are optional for open catalogs. You can submit with zero groups selected.',
       selectProductGroups: 'Product groups to list',
       selectProductGroupsDesc:
-        'Choose which product groups you want to expose in this market. Create groups in store settings first.',
+        'Choose which product groups you want to expose in this marketplace. Create groups in store settings first.',
+      selectProductGroupsDescCurated:
+        'This marketplace uses a curated catalog. Select at least one owned product group before you submit.',
+      selectProductGroupsDescOpen:
+        'Product groups are optional. Select any groups you want visible, or submit without groups for an open catalog.',
       manageProductGroups: 'Manage product groups',
       emptyGroupsTitle: 'No product groups yet',
       emptyGroupsDesc:
-        'Create a product group and add listings before applying to this community market.',
+        'Create at least one owned product group before applying to this curated marketplace.',
+      emptyGroupsDescOpen:
+        'You can submit without product groups, or create groups first to control what appears in this marketplace.',
       completeHint: 'Select at least one product group to submit.',
+      completeHintOpen: 'You can submit now, or select product groups to scope your catalog.',
+      groupsRequiredCurated: 'At least one product group is required for curated marketplaces.',
       statusPending: 'Pending review',
+      statusApplied: 'Application submitted',
       statusApproved: 'Approved',
       statusRejected: 'Rejected',
       statusSuspended: 'Suspended',
-      alreadyApproved: 'You are already an approved seller in this market.',
-      applicationPending: 'Your application is pending admin review.',
+      statusLeft: 'Withdrawn',
+      alreadyApproved: 'You are already an approved seller in this marketplace.',
+      applicationPending: 'Your application is waiting for review.',
+      applicationSubmittedReview:
+        'Application submitted. You will be notified when there is an update.',
+      applicationSubmittedApproved: 'You are approved and can start selling in this marketplace.',
+      autoApprovedMessage: 'Your application was approved automatically.',
+      reapplyHint: 'You can update your product groups and submit a new application.',
+      withdrawApplication: 'Withdraw application',
+      withdrawConfirmTitle: 'Withdraw application?',
+      withdrawConfirmDesc:
+        'Your pending application will be withdrawn. You can submit again later with updated product groups.',
+      withdrawSuccess: 'Application withdrawn.',
       sellerProfile: 'Seller Profile',
       bioLabel: 'Bio *',
       bioPlaceholder: 'Tell buyers about yourself and what you sell...',
@@ -3039,25 +3077,31 @@ export const en: TranslationResource = {
       noProducts: "You don't have any products yet.",
       createFirstProduct: 'Create Your First Product',
       applicationSummary: 'Application Summary',
-      productsSelected: 'Products Selected',
-      profileComplete: 'Profile Complete',
+      productGroupsSelected: 'Product groups selected',
+      applicationRequirementsMet: 'Application requirements met',
       submitApplication: 'Submit Application',
       termsAgreement: "By applying, you agree to the marketplace's terms and conditions.",
-      whatHappensNext: 'What Happens Next?',
-      step1: 'Your application will be reviewed by marketplace admins',
+      whatHappensNext: 'What happens next?',
+      step1: 'Your application will be reviewed by marketplace operators',
       step2: "You'll receive a notification when approved",
       step3: 'Start listing and selling your products!',
+      step1Open: 'Your application is approved immediately',
+      step2Open: 'Selected product groups become visible when applicable',
+      step3Open: 'Start listing and selling your products!',
+      step1Approval: 'Marketplace operators review your application',
+      step2Approval: "You'll be notified when there is a decision",
+      step3Approval: 'After approval, your selected groups appear in this marketplace',
       collectibles: {
         checklistTitle: 'Before you apply',
         checklistLogin: 'Sign in with your Mobazha account',
         checklistProducts: 'Create listings and add them to at least one product group',
         checklistApply: 'Select product groups and submit your seller application here',
-        checklistReview: 'Wait for curator review — you cannot list in this market until approved',
+        checklistReview: 'Wait for operator review — you cannot list in this market until approved',
         checklistListed: 'After approval, approved product groups appear in this market',
         custodyProcessNote:
           'Source custody registration and fulfillment materials are a separate step after approval — this form does not register custody, schedule shipping, or mint on-chain.',
         statusNextPendingBlocked:
-          'Next: wait for curator review. Card submissions and market listing stay blocked until approved.',
+          'Next: wait for operator review. Card submissions and market listing stay blocked until approved.',
         statusNextApprovedWithSubmissions:
           'Next: submit graded-card evidence below. After approval, create a listing — the digital title mints when a buyer pays, not before.',
         statusNextApproved:
@@ -3065,7 +3109,7 @@ export const en: TranslationResource = {
         statusNextPending:
           'Next: wait for curator review. You will be notified when there is an update.',
         statusNextRejected:
-          'Next: review feedback from curators, update your product groups, and submit a new application if allowed.',
+          'Next: review feedback, update your product groups, and submit a new application if allowed.',
         statusNextSuspended:
           'Next: contact support or market operators — your seller access is paused.',
         statusNextDefault: 'Next: complete the steps above or check back for updates.',

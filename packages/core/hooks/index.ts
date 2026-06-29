@@ -91,7 +91,7 @@ export * from './useGroupContext';
 export * from './useCommunityMarketplaces';
 export * from './usePublicMarketplaces';
 export * from './useCommunityMarketplaceEnrichment';
-export * from './useCommunityMarketplaceSell';
+export * from './useNativeMarketplaceSell';
 
 // RWA 资产相关
 export * from './useRwaAssets';

@@ -12,34 +12,70 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  useCommunityMarketplaceSell,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  useNativeMarketplaceSell,
   useProductGroups,
   useUserStore,
   useI18n,
   getCasdoorUserId,
-  marketplacePlatformKey,
   marketplaceHref,
+  marketplaceJoinModeKey,
+  marketplaceVerticalKey,
+  MARKETPLACE_CATALOG_MODE_KEYS,
   resolveCurationMarketBackHref,
-  isHosted,
+  resolveNativeMarketplaceSellPolicy,
+  nativeMarketplaceSellStatusKey,
+  getNativeMarketplaceMembershipStatus,
   isCollectibleMarketplaceVertical,
+  isHosted,
   startCasdoorLogin,
+  type NativeMarketplaceSellerApplication,
   type ProductGroup,
 } from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import { ChevronLeft, ClipboardList, Loader2, Package, Store } from 'lucide-react';
 
-function statusLabel(t: (key: string) => string, status?: string): string {
-  switch (status) {
-    case 'approved':
-      return t('marketplace.sell.statusApproved');
-    case 'rejected':
-      return t('marketplace.sell.statusRejected');
-    case 'suspended':
-      return t('marketplace.sell.statusSuspended');
-    case 'pending':
-    default:
-      return t('marketplace.sell.statusPending');
-  }
+type ProductGroupSelectionKey = {
+  identifier: string;
+  membershipStatus: string | undefined;
+  serverGroupIdsKey: string;
+};
+
+type ProductGroupSelectionDraft = {
+  key: ProductGroupSelectionKey;
+  selectedIds: number[];
+};
+
+function buildProductGroupSelectionKey(
+  identifier: string | undefined,
+  application: NativeMarketplaceSellerApplication | null | undefined
+): ProductGroupSelectionKey {
+  return {
+    identifier: identifier ?? '',
+    membershipStatus: getNativeMarketplaceMembershipStatus(application),
+    serverGroupIdsKey: JSON.stringify(application?.productGroupIDs ?? []),
+  };
+}
+
+function productGroupSelectionKeysMatch(
+  a: ProductGroupSelectionKey,
+  b: ProductGroupSelectionKey
+): boolean {
+  return (
+    a.identifier === b.identifier &&
+    a.membershipStatus === b.membershipStatus &&
+    a.serverGroupIdsKey === b.serverGroupIdsKey
+  );
 }
 
 function ProductGroupPicker({
@@ -64,6 +100,7 @@ function ProductGroupPicker({
             key={group.id}
             type="button"
             disabled={disabled}
+            aria-pressed={selected}
             onClick={() => onToggle(group.id)}
             className={`rounded-lg border-2 p-4 text-left transition-all ${
               selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
@@ -106,11 +143,20 @@ export default function MarketplaceSellPage() {
   const slugParam = params.slug;
   const identifier = Array.isArray(slugParam) ? slugParam[0] : slugParam;
 
-  const { marketplace, application, loading, error, submitApplication } =
-    useCommunityMarketplaceSell(identifier);
+  const {
+    marketplace,
+    application,
+    loading,
+    error,
+    isSubmitting,
+    isWithdrawing,
+    refresh,
+    submitApplication,
+    withdrawApplication,
+  } = useNativeMarketplaceSell(identifier);
 
   const marketHref = marketplace
-    ? marketplaceHref(marketplace.slug, marketplace.publicID)
+    ? marketplaceHref(marketplace.slug, marketplace.id)
     : `/marketplace/${identifier}`;
   const marketBackHref = resolveCurationMarketBackHref(marketHref);
 
@@ -122,8 +168,22 @@ export default function MarketplaceSellPage() {
     loadGroups,
   } = useProductGroups({ userID: productGroupUserID, autoLoad: false });
 
-  const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
-  const [isApplying, setIsApplying] = useState(false);
+  const selectionKey = useMemo(
+    () => buildProductGroupSelectionKey(identifier, application),
+    [identifier, application]
+  );
+  const serverGroupIds = useMemo(
+    () => JSON.parse(selectionKey.serverGroupIdsKey) as number[],
+    [selectionKey.serverGroupIdsKey]
+  );
+  const [selectionDraft, setSelectionDraft] = useState<ProductGroupSelectionDraft | null>(null);
+
+  const selectedGroupIds = useMemo(() => {
+    if (selectionDraft && productGroupSelectionKeysMatch(selectionDraft.key, selectionKey)) {
+      return selectionDraft.selectedIds;
+    }
+    return serverGroupIds;
+  }, [selectionDraft, selectionKey, serverGroupIds]);
 
   useEffect(() => {
     if (isAuthenticated && productGroupUserID) {
@@ -131,55 +191,102 @@ export default function MarketplaceSellPage() {
     }
   }, [isAuthenticated, productGroupUserID, loadGroups]);
 
-  useEffect(() => {
-    if (application?.productGroupIDs?.length) {
-      setSelectedGroupIds(application.productGroupIDs);
-    }
-  }, [application?.productGroupIDs]);
+  const policy = useMemo(() => {
+    if (!marketplace) return null;
+    return resolveNativeMarketplaceSellPolicy(marketplace, application, selectedGroupIds.length, {
+      isSubmitting,
+      isWithdrawing,
+    });
+  }, [marketplace, application, selectedGroupIds.length, isSubmitting, isWithdrawing]);
 
-  const applicationStatus = application?.status;
-  const isApproved = applicationStatus === 'approved';
-  const isRejected = applicationStatus === 'rejected';
-  const isSuspended = applicationStatus === 'suspended';
-  const isPending = application?.hasApplication && !isApproved && !isRejected && !isSuspended;
-  const canSubmit = selectedGroupIds.length > 0 && !isApproved && !isApplying;
+  const membershipStatus = policy?.membershipStatus;
+  const isApproved = membershipStatus === 'approved';
+  const isRejected = membershipStatus === 'rejected';
+  const isSuspended = membershipStatus === 'suspended';
+  const isApplied = membershipStatus === 'applied';
+  const isLeft = membershipStatus === 'left';
   const isCollectibleMarketplace = isCollectibleMarketplaceVertical(marketplace?.vertical);
 
-  const platformName = marketplace ? t(marketplacePlatformKey(marketplace.platform)) : '';
+  const verticalLabel = marketplace ? t(marketplaceVerticalKey(marketplace.vertical)) : '';
+  const joinLabel = marketplace ? t(marketplaceJoinModeKey(marketplace.joinMode)) : '';
+  const catalogLabel = marketplace ? t(MARKETPLACE_CATALOG_MODE_KEYS[marketplace.catalogMode]) : '';
+
+  const productGroupsDesc = policy?.requiresProductGroups
+    ? t('marketplace.sell.selectProductGroupsDescCurated')
+    : t('marketplace.sell.selectProductGroupsDescOpen');
 
   const toggleGroup = (id: number) => {
-    if (isApproved) return;
-    setSelectedGroupIds(prev =>
-      prev.includes(id) ? prev.filter(gid => gid !== id) : [...prev, id]
-    );
+    if (policy?.isSelectionLocked) return;
+    setSelectionDraft(prev => {
+      const currentIds =
+        prev && productGroupSelectionKeysMatch(prev.key, selectionKey)
+          ? prev.selectedIds
+          : serverGroupIds;
+      const nextIds = currentIds.includes(id)
+        ? currentIds.filter(gid => gid !== id)
+        : [...currentIds, id];
+      return { key: selectionKey, selectedIds: nextIds };
+    });
   };
 
   const handleApply = async () => {
-    if (!canSubmit) return;
-    setIsApplying(true);
+    if (!policy?.showSubmit || !policy.canSubmit) return;
     try {
-      await submitApplication(selectedGroupIds);
+      const result = await submitApplication(selectedGroupIds);
       toast({
         title: t('common.success'),
-        description: t('marketplace.applicationSubmitted'),
+        description: result.autoApproved
+          ? t('marketplace.sell.applicationSubmittedApproved')
+          : t('marketplace.sell.applicationSubmittedReview'),
         variant: 'success',
       });
-      router.push(marketBackHref);
     } catch (err) {
       toast({
         title: t('common.error'),
         description: err instanceof Error ? err.message : t('common.error'),
         variant: 'destructive',
       });
-    } finally {
-      setIsApplying(false);
     }
   };
 
-  const groupsWithItems = useMemo(
-    () => productGroups.filter(g => (g.itemCount ?? 0) > 0),
-    [productGroups]
-  );
+  const handleWithdraw = async () => {
+    try {
+      await withdrawApplication();
+      toast({
+        title: t('common.success'),
+        description: t('marketplace.sell.withdrawSuccess'),
+        variant: 'success',
+      });
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: err instanceof Error ? err.message : t('common.error'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const admissionPolicyMessage = marketplace
+    ? marketplace.sellerEntryMode === 'operator_invited'
+      ? t('marketplace.sell.operatorInvitedPolicy')
+      : marketplace.joinMode === 'invite'
+        ? t('marketplace.sell.inviteOnlyPolicy')
+        : t('marketplace.sell.selfServeNotAvailable')
+    : '';
+
+  const statusMessage = (() => {
+    if (!application?.hasApplication) return null;
+    if (isApproved) return t('marketplace.sell.alreadyApproved');
+    if (isRejected) return t('marketplace.sell.statusRejected');
+    if (isSuspended) return t('marketplace.sell.statusSuspended');
+    if (isLeft) return t('marketplace.sell.statusLeft');
+    if (isApplied) return t('marketplace.sell.applicationPending');
+    return t('marketplace.sell.applicationPending');
+  })();
+
+  const applicationRequirementsMet = policy?.requiresProductGroups
+    ? selectedGroupIds.length > 0
+    : true;
 
   return (
     <div className="min-h-screen bg-background">
@@ -198,23 +305,37 @@ export default function MarketplaceSellPage() {
 
           {loading && (
             <Card className="flex items-center justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2
+                className="h-8 w-8 animate-spin text-primary"
+                aria-label={t('common.loading')}
+              />
             </Card>
           )}
 
-          {!loading && (error || !marketplace) && (
+          {!loading && !marketplace && (
             <Card className="p-8 text-center">
               <Store className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {error || t('marketplace.detail.unavailableDesc')}
+                {error || t('marketplace.detail.unavailableDescNative')}
               </p>
-              <Link href="/marketplace" className="mt-4 inline-block">
-                <Button variant="outline">{t('marketplace.title')}</Button>
-              </Link>
+              <HStack gap="sm" className="mt-4 justify-center">
+                {error && (
+                  <Button
+                    variant="default"
+                    onClick={() => void refresh()}
+                    data-testid="sell-load-retry"
+                  >
+                    {t('common.retry')}
+                  </Button>
+                )}
+                <Link href="/marketplace">
+                  <Button variant="outline">{t('marketplace.title')}</Button>
+                </Link>
+              </HStack>
             </Card>
           )}
 
-          {!loading && marketplace && (
+          {!loading && marketplace && policy && (
             <>
               <div className="mb-6">
                 <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
@@ -225,11 +346,25 @@ export default function MarketplaceSellPage() {
                 </p>
               </div>
 
+              {error && (
+                <Card className="mb-6 border-destructive/30 bg-destructive/5 p-4 sm:p-5">
+                  <p className="text-sm text-destructive">{error}</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => void refresh()}
+                    data-testid="sell-load-retry"
+                  >
+                    {t('common.retry')}
+                  </Button>
+                </Card>
+              )}
+
               <Card className="mb-6 p-4 sm:p-5">
                 <HStack gap="md" align="start">
                   <MarketplaceLogo
                     name={marketplace.name}
-                    identifier={marketplace.publicID}
+                    identifier={marketplace.id}
                     logoURL={marketplace.logoURL}
                     size="sm"
                   />
@@ -238,14 +373,37 @@ export default function MarketplaceSellPage() {
                       {t('marketplace.sell.applyingTo')}
                     </p>
                     <h2 className="text-lg font-bold text-foreground">{marketplace.name}</h2>
-                    <Badge variant="secondary" className="mt-2">
-                      {platformName}
-                    </Badge>
+                    <HStack gap="xs" className="mt-2 flex-wrap">
+                      <Badge variant="secondary">{verticalLabel}</Badge>
+                      <Badge variant="outline">{joinLabel}</Badge>
+                      <Badge variant="outline">{catalogLabel}</Badge>
+                    </HStack>
                   </div>
                 </HStack>
               </Card>
 
-              {isCollectibleMarketplace ? (
+              {policy.allowsSelfServe && (
+                <Card className="mb-6 border-primary/20 bg-primary/5 p-4 sm:p-5">
+                  <p className="text-sm text-foreground">
+                    {policy.isAutoApproval
+                      ? t('marketplace.sell.autoApprovalNote')
+                      : t('marketplace.sell.reviewRequiredNote')}
+                  </p>
+                  {!policy.requiresProductGroups && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {t('marketplace.sell.openCatalogGroupsOptional')}
+                    </p>
+                  )}
+                </Card>
+              )}
+
+              {!policy.allowsSelfServe && (
+                <Card className="mb-6 p-4 sm:p-5">
+                  <p className="text-sm text-muted-foreground">{admissionPolicyMessage}</p>
+                </Card>
+              )}
+
+              {isCollectibleMarketplace && policy.allowsSelfServe ? (
                 <Card className="mb-6 p-4 sm:p-5" data-testid="collectible-sell-checklist">
                   <HStack gap="sm" align="center" className="mb-3">
                     <ClipboardList className="h-5 w-5 text-primary" aria-hidden />
@@ -266,7 +424,7 @@ export default function MarketplaceSellPage() {
                 </Card>
               ) : null}
 
-              {!isAuthenticated && (
+              {!isAuthenticated && policy.allowsSelfServe && (
                 <Card className="mb-6 p-6 text-center">
                   <p className="mb-4 text-sm text-muted-foreground">
                     {t('marketplace.sell.loginRequired')}
@@ -285,20 +443,25 @@ export default function MarketplaceSellPage() {
                 </Card>
               )}
 
-              {isAuthenticated && application?.hasApplication && (
-                <Card className="mb-6 border-primary/20 bg-primary/5 p-4">
-                  <p className="text-sm text-foreground">
-                    {isApproved
-                      ? t('marketplace.sell.alreadyApproved')
-                      : isRejected
-                        ? t('marketplace.sell.statusRejected')
-                        : isSuspended
-                          ? t('marketplace.sell.statusSuspended')
-                          : t('marketplace.sell.applicationPending')}
-                  </p>
+              {!error && isAuthenticated && application?.hasApplication && (
+                <Card
+                  className="mb-6 border-primary/20 bg-primary/5 p-4"
+                  data-testid="sell-status-card"
+                >
+                  <p className="text-sm text-foreground">{statusMessage}</p>
                   <p className="mt-1 text-sm font-medium text-primary">
-                    {statusLabel(t, applicationStatus)}
+                    {t(nativeMarketplaceSellStatusKey(membershipStatus))}
                   </p>
+                  {application.autoApproved && isApproved && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {t('marketplace.sell.autoApprovedMessage')}
+                    </p>
+                  )}
+                  {(isRejected || isLeft) && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {t('marketplace.sell.reapplyHint')}
+                    </p>
+                  )}
                   {isCollectibleMarketplace ? (
                     <p className="mt-2 text-sm text-muted-foreground">
                       {isApproved
@@ -307,7 +470,7 @@ export default function MarketplaceSellPage() {
                           ? t('marketplace.sell.collectibles.statusNextRejected')
                           : isSuspended
                             ? t('marketplace.sell.collectibles.statusNextSuspended')
-                            : isPending
+                            : isApplied
                               ? t('marketplace.sell.collectibles.statusNextPendingBlocked')
                               : t('marketplace.sell.collectibles.statusNextDefault')}
                     </p>
@@ -315,31 +478,29 @@ export default function MarketplaceSellPage() {
                 </Card>
               )}
 
-              {isAuthenticated && isCollectibleMarketplace && isApproved && (
+              {!error && isAuthenticated && isCollectibleMarketplace && isApproved && (
                 <CollectibleCardSubmissionsWorkspace enabled={isAuthenticated && isApproved} />
               )}
 
-              {isAuthenticated && (
+              {!error && isAuthenticated && policy.showApplicationForm && (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div className="space-y-6 lg:col-span-2">
                     <Card className="p-4 sm:p-6">
                       <h2 className="mb-2 text-lg font-semibold text-foreground">
                         {t('marketplace.sell.selectProductGroups')}
                       </h2>
-                      <p className="mb-4 text-sm text-muted-foreground">
-                        {t('marketplace.sell.selectProductGroupsDesc')}
-                      </p>
+                      <p className="mb-4 text-sm text-muted-foreground">{productGroupsDesc}</p>
 
                       {groupsLoading ? (
                         <div className="flex justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin text-primary" />
                         </div>
-                      ) : groupsWithItems.length > 0 ? (
+                      ) : productGroups.length > 0 ? (
                         <ProductGroupPicker
-                          groups={groupsWithItems}
+                          groups={productGroups}
                           selectedIds={selectedGroupIds}
                           onToggle={toggleGroup}
-                          disabled={isApproved}
+                          disabled={policy.isSelectionLocked}
                           itemCountLabel={count => `${count} ${t('marketplace.products')}`}
                         />
                       ) : (
@@ -350,7 +511,9 @@ export default function MarketplaceSellPage() {
                               {t('marketplace.sell.emptyGroupsTitle')}
                             </h3>
                             <p className="mt-1 text-sm text-muted-foreground">
-                              {t('marketplace.sell.emptyGroupsDesc')}
+                              {policy.requiresProductGroups
+                                ? t('marketplace.sell.emptyGroupsDesc')
+                                : t('marketplace.sell.emptyGroupsDescOpen')}
                             </p>
                           </div>
                           <HStack gap="sm" className="flex-wrap justify-center">
@@ -376,7 +539,7 @@ export default function MarketplaceSellPage() {
                       <VStack gap="md" className="mb-4">
                         <HStack justify="between">
                           <span className="text-sm text-muted-foreground">
-                            {t('marketplace.sell.productsSelected')}
+                            {t('marketplace.sell.productGroupsSelected')}
                           </span>
                           <span className="font-medium text-foreground">
                             {selectedGroupIds.length}
@@ -384,34 +547,89 @@ export default function MarketplaceSellPage() {
                         </HStack>
                         <HStack justify="between">
                           <span className="text-sm text-muted-foreground">
-                            {t('marketplace.sell.profileComplete')}
+                            {t('marketplace.sell.applicationRequirementsMet')}
                           </span>
                           <span
                             className={`font-medium ${
-                              selectedGroupIds.length > 0 ? 'text-primary' : 'text-warning'
+                              applicationRequirementsMet ? 'text-primary' : 'text-warning'
                             }`}
                           >
-                            {selectedGroupIds.length > 0 ? t('common.yes') : t('common.no')}
+                            {applicationRequirementsMet ? t('common.yes') : t('common.no')}
                           </span>
                         </HStack>
                       </VStack>
 
-                      {!canSubmit && !isApproved && selectedGroupIds.length === 0 && (
+                      {policy.showGroupsValidation && (
                         <p className="mb-3 text-xs text-muted-foreground">
-                          {t('marketplace.sell.completeHint')}
+                          {t('marketplace.sell.groupsRequiredCurated')}
                         </p>
                       )}
 
-                      <Button className="w-full" disabled={!canSubmit} onClick={handleApply}>
-                        {isApplying ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {t('common.submitting')}
-                          </>
-                        ) : (
-                          t('marketplace.sell.submitApplication')
+                      {!policy.showSubmit &&
+                        !isApproved &&
+                        !policy.requiresProductGroups &&
+                        selectedGroupIds.length === 0 &&
+                        !isApplied && (
+                          <p className="mb-3 text-xs text-muted-foreground">
+                            {t('marketplace.sell.completeHintOpen')}
+                          </p>
                         )}
-                      </Button>
+
+                      {policy.showSubmit && (
+                        <Button
+                          className="w-full"
+                          disabled={!policy.canSubmit}
+                          onClick={handleApply}
+                          data-testid="sell-submit-application"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              {t('common.submitting')}
+                            </>
+                          ) : (
+                            t('marketplace.sell.submitApplication')
+                          )}
+                        </Button>
+                      )}
+
+                      {policy.showWithdraw && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="mt-3 w-full"
+                              disabled={!policy.canWithdraw}
+                              data-testid="sell-withdraw-application"
+                            >
+                              {isWithdrawing ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  {t('common.submitting')}
+                                </>
+                              ) : (
+                                t('marketplace.sell.withdrawApplication')
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {t('marketplace.sell.withdrawConfirmTitle')}
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t('marketplace.sell.withdrawConfirmDesc')}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleWithdraw}>
+                                {t('marketplace.sell.withdrawApplication')}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
 
                       <p className="mt-4 text-center text-xs text-muted-foreground">
                         {t('marketplace.sell.termsAgreement')}
@@ -423,9 +641,19 @@ export default function MarketplaceSellPage() {
                         {t('marketplace.sell.whatHappensNext')}
                       </h3>
                       <VStack gap="md" className="text-sm text-muted-foreground">
-                        <p>1. {t('marketplace.sell.step1')}</p>
-                        <p>2. {t('marketplace.sell.step2')}</p>
-                        <p>3. {t('marketplace.sell.step3')}</p>
+                        {policy.isAutoApproval ? (
+                          <>
+                            <p>1. {t('marketplace.sell.step1Open')}</p>
+                            <p>2. {t('marketplace.sell.step2Open')}</p>
+                            <p>3. {t('marketplace.sell.step3Open')}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p>1. {t('marketplace.sell.step1Approval')}</p>
+                            <p>2. {t('marketplace.sell.step2Approval')}</p>
+                            <p>3. {t('marketplace.sell.step3Approval')}</p>
+                          </>
+                        )}
                       </VStack>
                     </Card>
                   </div>

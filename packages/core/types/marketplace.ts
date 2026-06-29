@@ -106,10 +106,11 @@ export interface MarketplaceStoreMembership {
   id: number;
   tenantID: string;
   marketplaceID: string;
-  userID: string;
+  userID?: string;
   peerID: string;
   status: MarketplaceStoreStatus;
   isVisible: boolean;
+  productGroupIDs: number[];
   invitedAt?: string;
   appliedAt?: string;
   acceptedAt?: string;
@@ -528,11 +529,12 @@ export interface PublicNativeMarketplaceDetail {
   listings: PublicMarketplaceListings;
 }
 
-/** Current tenant's seller application for a public community marketplace. */
-export interface PublicMarketplaceSellerApplication {
+/** Current store's native MaaS seller application (GET/POST seller-applications). */
+export interface NativeMarketplaceSellerApplication {
   hasApplication: boolean;
-  status?: 'pending' | 'approved' | 'rejected' | 'suspended' | string;
-  productGroupIDs?: number[];
+  membership?: MarketplaceStoreMembership;
+  productGroupIDs: number[];
+  autoApproved: boolean;
 }
 
 // 商品列表参数
