@@ -8,9 +8,12 @@ const mockReviewSeller = vi.fn();
 const mockPush = vi.fn();
 const mockUpdateMarketplace = vi.fn();
 const mockArchiveMarketplace = vi.fn();
+const mockVerifyCustomDomain = vi.fn();
+const mockRefresh = vi.fn();
 let mockReviewEventsError: string | null = null;
 let latestSettingsCardProps: {
   onSave: (data: Record<string, unknown>) => Promise<unknown>;
+  onVerifyCustomDomain: () => Promise<unknown>;
   onArchive: () => Promise<unknown>;
 } | null = null;
 
@@ -155,12 +158,13 @@ vi.mock('@mobazha/core', async importOriginal => {
       loadFailed: false,
       reviewEventsError: mockReviewEventsError,
       working: null,
-      refresh: vi.fn(),
+      refresh: mockRefresh,
       publish: vi.fn(),
       update: mockUpdateMarketplace,
       archive: mockArchiveMarketplace,
       invite: vi.fn(),
       reviewSeller: mockReviewSeller,
+      verifyCustomDomain: mockVerifyCustomDomain,
     }),
   };
 });
@@ -177,6 +181,7 @@ vi.mock('@/components/ui/use-toast', () => ({
 vi.mock('@/components/Operator/OperatorMarketplaceSettingsCard', () => ({
   OperatorMarketplaceSettingsCard: (props: {
     onSave: (data: Record<string, unknown>) => Promise<unknown>;
+    onVerifyCustomDomain: () => Promise<unknown>;
     onArchive: () => Promise<unknown>;
   }) => {
     latestSettingsCardProps = props;
@@ -193,6 +198,16 @@ describe('MarketplaceOperatorDetailPage', () => {
     latestSettingsCardProps = null;
     mockUpdateMarketplace.mockResolvedValue(marketplace);
     mockArchiveMarketplace.mockResolvedValue({ archived: true, id: marketplace.id });
+    mockVerifyCustomDomain.mockResolvedValue({
+      domain: {
+        host: 'shop.example.com',
+        kind: 'custom',
+        verificationStatus: 'verified',
+        isPrimary: true,
+      },
+      verified: true,
+      result: 'verified',
+    });
   });
 
   it('wires settings save to useOperatorMarketplace.update and shows success toast', async () => {
@@ -235,6 +250,61 @@ describe('MarketplaceOperatorDetailPage', () => {
 
     expect(mockArchiveMarketplace).toHaveBeenCalledTimes(1);
     expect(mockPush).toHaveBeenCalledWith('/operator/marketplaces');
+  });
+
+  it('shows localized toast for custom-domain verify result variants', async () => {
+    render(<MarketplaceOperatorDetailPage />);
+    expect(latestSettingsCardProps).not.toBeNull();
+
+    await act(async () => {
+      await latestSettingsCardProps?.onVerifyCustomDomain();
+    });
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'marketplace.operator.customDomainVerifySuccessTitle',
+      })
+    );
+
+    mockVerifyCustomDomain.mockResolvedValueOnce({
+      domain: {
+        host: 'shop.example.com',
+        kind: 'custom',
+        verificationStatus: 'pending',
+        isPrimary: false,
+      },
+      verified: false,
+      result: 'record_not_found',
+    });
+    await act(async () => {
+      await latestSettingsCardProps?.onVerifyCustomDomain();
+    });
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'marketplace.operator.customDomainVerifyPendingTitle',
+        description: 'marketplace.operator.customDomainVerifyRecordNotFound',
+      })
+    );
+
+    mockVerifyCustomDomain.mockResolvedValueOnce({
+      domain: {
+        host: 'shop.example.com',
+        kind: 'custom',
+        verificationStatus: 'pending',
+        isPrimary: false,
+      },
+      verified: false,
+      result: 'challenge_unavailable',
+    });
+    await act(async () => {
+      await latestSettingsCardProps?.onVerifyCustomDomain();
+    });
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variant: 'destructive',
+        title: 'marketplace.operator.customDomainVerifyFailedTitle',
+        description: 'marketplace.operator.customDomainVerifyChallengeUnavailable',
+      })
+    );
   });
 
   it('shows pending count/filter without invited stores', async () => {

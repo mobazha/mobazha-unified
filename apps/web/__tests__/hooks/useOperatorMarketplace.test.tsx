@@ -11,6 +11,7 @@ vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMyMarketplaces: vi.fn(),
   getMyMarketplaceMemberships: vi.fn(),
   inviteMarketplaceSeller: vi.fn(),
+  verifyMarketplaceCustomDomain: vi.fn(),
   updateMarketplace: vi.fn(),
   deleteMarketplace: vi.fn(),
   updateMarketplaceSeller: vi.fn(),
@@ -23,6 +24,7 @@ import {
   getMarketplaceSellerReviewEvents,
   getMarketplaceSellers,
   inviteMarketplaceSeller,
+  verifyMarketplaceCustomDomain,
   updateMarketplace,
   updateMarketplaceSeller,
 } from '@mobazha/core/services/api/marketplace';
@@ -33,6 +35,7 @@ const mockGetMarketplaceSellerReviewEvents = getMarketplaceSellerReviewEvents as
   typeof vi.fn
 >;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
+const mockVerifyMarketplaceCustomDomain = verifyMarketplaceCustomDomain as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplace = updateMarketplace as ReturnType<typeof vi.fn>;
 const mockDeleteMarketplace = deleteMarketplace as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplaceSeller = updateMarketplaceSeller as ReturnType<typeof vi.fn>;
@@ -534,6 +537,84 @@ describe('useOperatorMarketplace', () => {
 
     expect(mockUpdateMarketplace).toHaveBeenCalledWith('mp1', { name: 'Updated' });
     expect(result.current.marketplace).toEqual(updated);
+    expect(result.current.working).toBeNull();
+  });
+
+  it('verifies custom domain and refreshes marketplace when verified', async () => {
+    const marketplace = buildMarketplace('mp1', 'Domain Marketplace');
+    const refreshedMarketplace = {
+      ...marketplace,
+      domains: [
+        {
+          host: 'shop.example.com',
+          kind: 'custom' as const,
+          verificationStatus: 'verified' as const,
+          isPrimary: true,
+        },
+      ],
+    };
+    mockGetMarketplace
+      .mockResolvedValueOnce(marketplace)
+      .mockResolvedValueOnce(refreshedMarketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
+    mockVerifyMarketplaceCustomDomain.mockResolvedValue({
+      domain: {
+        host: 'shop.example.com',
+        kind: 'custom',
+        verificationStatus: 'verified',
+        isPrimary: true,
+      },
+      verified: true,
+      result: 'verified',
+    });
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      const verifyResult = await result.current.verifyCustomDomain();
+      expect(verifyResult?.result).toBe('verified');
+    });
+
+    expect(mockVerifyMarketplaceCustomDomain).toHaveBeenCalledWith('mp1');
+    expect(mockGetMarketplace).toHaveBeenCalledTimes(2);
+    expect(result.current.marketplace).toEqual(refreshedMarketplace);
+    expect(result.current.working).toBeNull();
+  });
+
+  it('does not refresh marketplace when verify result is not verified', async () => {
+    const marketplace = buildMarketplace('mp1', 'Domain Marketplace');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
+    mockVerifyMarketplaceCustomDomain.mockResolvedValue({
+      domain: {
+        host: 'shop.example.com',
+        kind: 'custom',
+        verificationStatus: 'pending',
+        isPrimary: false,
+      },
+      verified: false,
+      result: 'record_not_found',
+    });
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      const verifyResult = await result.current.verifyCustomDomain();
+      expect(verifyResult?.result).toBe('record_not_found');
+    });
+
+    expect(mockGetMarketplace).toHaveBeenCalledTimes(1);
+    expect(result.current.marketplace).toEqual(marketplace);
     expect(result.current.working).toBeNull();
   });
 

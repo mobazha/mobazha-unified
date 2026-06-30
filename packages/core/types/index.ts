@@ -475,6 +475,8 @@ export type {
   PublicNativeMarketplaceDetail,
   PublicMarketplaceFeaturedItem,
   NativeMarketplaceSellerApplication,
+  MarketplaceCustomDomainVerifyResult,
+  VerifyMarketplaceCustomDomainResponse,
   PublicMarketplaceListingRef,
   PublicMarketplaceSeller,
   PublicMarketplaceProductGroup,

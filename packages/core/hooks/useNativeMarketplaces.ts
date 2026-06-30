@@ -9,6 +9,7 @@ import type {
   MyMarketplaceMembershipEntry,
   NativeMarketplace,
   UpdateNativeMarketplaceRequest,
+  VerifyMarketplaceCustomDomainResponse,
 } from '../types/marketplace';
 import {
   acceptMarketplaceSellerInvitation,
@@ -20,6 +21,7 @@ import {
   getMyMarketplaceMemberships,
   getMyMarketplaces,
   inviteMarketplaceSeller,
+  verifyMarketplaceCustomDomain,
   updateMarketplace,
   updateMarketplaceSeller,
 } from '../services/api/marketplace';
@@ -283,6 +285,24 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     [marketplaceId, refresh]
   );
 
+  const verifyCustomDomain =
+    useCallback(async (): Promise<VerifyMarketplaceCustomDomainResponse | null> => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      setWorking('verifyCustomDomain');
+      try {
+        const result = await verifyMarketplaceCustomDomain(actionMarketplaceId);
+        if (marketplaceIdRef.current === actionMarketplaceId && result.verified) {
+          await refresh();
+        }
+        return result;
+      } finally {
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setWorking(null);
+        }
+      }
+    }, [marketplaceId, refresh]);
+
   return {
     marketplace,
     stores,
@@ -299,6 +319,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     archive,
     invite,
     reviewSeller,
+    verifyCustomDomain,
   };
 }
 
