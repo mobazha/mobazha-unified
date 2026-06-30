@@ -3282,6 +3282,18 @@ export const en: TranslationResource = {
       responsibilityBoundary: 'Responsibility boundary',
       responsibilityDesc:
         'The marketplace owns brand, distribution, catalog, and admission. Stores keep products, orders, payments, support, and fulfillment.',
+      attributionFunnelTitle: 'Recent 30-day attribution funnel',
+      attributionSummaryLoading: 'Loading attribution summary...',
+      attributionSummaryLoadFailed: 'Failed to load attribution summary. Please try again.',
+      attributionNoData: 'No real visit data collected yet.',
+      attributionImpressions: 'Marketplace visits',
+      attributionListingClicks: 'Listing clicks',
+      attributionCheckoutHandoffs: 'Entered checkout',
+      attributionListingClickRate: 'Visit -> click conversion',
+      attributionCheckoutRate: 'Click -> checkout conversion',
+      attributionCheckoutMeaning:
+        'Entered checkout means traffic was handed to a specific store. It does not indicate order creation or payment success.',
+      attributionRateUnavailable: 'N/A',
       inviteStore: 'Invite store',
       peerIdPlaceholder: 'Store Peer ID',
       sendInvite: 'Send invitation',

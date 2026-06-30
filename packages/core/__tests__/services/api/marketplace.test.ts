@@ -263,6 +263,55 @@ describe('Marketplace API', () => {
     });
   });
 
+  describe('native marketplace attribution', () => {
+    it('submits public marketplace attribution events', async () => {
+      mockHostingPost.mockResolvedValueOnce({ accepted: true, duplicate: false });
+
+      await marketplaceApi.submitPublicMarketplaceAttributionEvent('collectibles', {
+        eventID: 'evt-1',
+        journeyID: 'journey-1',
+        eventType: 'listing_click',
+        listingSlug: 'topps-2026',
+        peerID: 'QmSeller1',
+        source: 'newsletter',
+      });
+
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/public-marketplaces/collectibles/attribution-events',
+        expect.objectContaining({
+          eventID: 'evt-1',
+          journeyID: 'journey-1',
+          eventType: 'listing_click',
+          listingSlug: 'topps-2026',
+          peerID: 'QmSeller1',
+          source: 'newsletter',
+        })
+      );
+    });
+
+    it('loads marketplace attribution summary with optional range query', async () => {
+      mockHostingGet.mockResolvedValueOnce({
+        from: '2026-01-01T00:00:00Z',
+        to: '2026-01-31T00:00:00Z',
+        impressions: 100,
+        listingClicks: 40,
+        checkoutHandoffs: 12,
+        listingClickRate: 0.4,
+        checkoutHandoffRate: 0.3,
+        hasData: true,
+      });
+
+      await marketplaceApi.getMarketplaceAttributionSummary('mp1', {
+        from: '2026-01-01T00:00:00Z',
+        to: '2026-01-31T00:00:00Z',
+      });
+
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/attribution-summary?from=2026-01-01T00%3A00%3A00Z&to=2026-01-31T00%3A00%3A00Z'
+      );
+    });
+  });
+
   describe('marketplace curation config', () => {
     it('should fetch config and share link', async () => {
       const mockConfig = {

@@ -24,6 +24,7 @@ export function SearchDesktop() {
       key={product.id}
       href={buildProductHref(product.slug, product.vendor.peerID)}
       onClick={e => {
+        search.trackMarketplaceListingClick(product);
         if (!isMobile) {
           e.preventDefault();
           openProduct(product.slug, product.vendor.peerID);

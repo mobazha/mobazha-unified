@@ -11,6 +11,7 @@ import {
   parsePriceFields,
   listingDisplayPriceFromListItem,
   useMarketplaceContext,
+  useNativeMarketplaceAttribution,
   useCurrency,
 } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
@@ -209,6 +210,9 @@ export function useSearch() {
     config: marketplaceConfig,
     loading: isMarketplaceContextLoading,
   } = useMarketplaceContext();
+  const { trackListingClick } = useNativeMarketplaceAttribution(
+    isSubMarket ? (marketplaceConfig?.id ?? null) : null
+  );
 
   // Search state
   const [searchQuery, setSearchQuery] = useState(queryParam);
@@ -706,6 +710,17 @@ export function useSearch() {
     [toggleItem, t]
   );
 
+  const trackMarketplaceListingClick = useCallback(
+    (product: Pick<DisplayProduct, 'slug' | 'vendor'>) => {
+      if (!isSubMarket || !marketplaceConfig?.id) return;
+      trackListingClick({
+        listingSlug: product.slug,
+        peerID: product.vendor.peerID,
+      });
+    },
+    [isSubMarket, marketplaceConfig?.id, trackListingClick]
+  );
+
   const isLoading = isLoadingProducts || isLoadingUsers;
 
   return {
@@ -764,6 +779,7 @@ export function useSearch() {
     clearRecentSearches,
     removeRecentSearch,
     handleToggleWishlist,
+    trackMarketplaceListingClick,
     isLoading,
 
     // Recent searches

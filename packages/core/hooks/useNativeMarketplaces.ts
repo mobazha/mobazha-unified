@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   CreateNativeMarketplaceRequest,
+  MarketplaceAttributionSummary,
   MarketplaceSellerReviewEvent,
   MarketplaceStoreMembership,
   MarketplaceStoreStatus,
@@ -16,6 +17,7 @@ import {
   createMarketplace,
   deleteMarketplace,
   getMarketplace,
+  getMarketplaceAttributionSummary,
   getMarketplaceSellerReviewEvents,
   getMarketplaceSellers,
   getMyMarketplaceMemberships,
@@ -76,14 +78,52 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   const [marketplace, setMarketplace] = useState<NativeMarketplace | null>(null);
   const [stores, setStores] = useState<MarketplaceStoreMembership[]>([]);
   const [reviewEvents, setReviewEvents] = useState<MarketplaceSellerReviewEvent[]>([]);
+  const [attributionSummary, setAttributionSummary] =
+    useState<MarketplaceAttributionSummary | null>(null);
   const [loading, setLoading] = useState(Boolean(marketplaceId));
   const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reviewEventsError, setReviewEventsError] = useState<string | null>(null);
+  const [attributionSummaryError, setAttributionSummaryError] = useState<string | null>(null);
+  const [attributionSummaryLoading, setAttributionSummaryLoading] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const requestSeqRef = useRef(0);
   const marketplaceIdRef = useRef(marketplaceId);
   marketplaceIdRef.current = marketplaceId;
+
+  const loadAttributionSummary = useCallback(
+    async (requestMarketplaceId: string, requestSeq: number) => {
+      setAttributionSummaryLoading(true);
+      try {
+        const summary = await getMarketplaceAttributionSummary(requestMarketplaceId);
+        if (
+          requestSeq !== requestSeqRef.current ||
+          marketplaceIdRef.current !== requestMarketplaceId
+        ) {
+          return;
+        }
+        setAttributionSummary(summary);
+        setAttributionSummaryError(null);
+      } catch (err) {
+        if (
+          requestSeq !== requestSeqRef.current ||
+          marketplaceIdRef.current !== requestMarketplaceId
+        ) {
+          return;
+        }
+        setAttributionSummary(null);
+        setAttributionSummaryError(toErrorMessage(err, 'Failed to load attribution summary'));
+      } finally {
+        if (
+          requestSeq === requestSeqRef.current &&
+          marketplaceIdRef.current === requestMarketplaceId
+        ) {
+          setAttributionSummaryLoading(false);
+        }
+      }
+    },
+    []
+  );
 
   const refresh = useCallback(async () => {
     const requestMarketplaceId = marketplaceId;
@@ -98,10 +138,13 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       setMarketplace(null);
       setStores([]);
       setReviewEvents([]);
+      setAttributionSummary(null);
       setLoading(false);
       setLoadFailed(false);
       setError(null);
       setReviewEventsError(null);
+      setAttributionSummaryError(null);
+      setAttributionSummaryLoading(false);
       return;
     }
 
@@ -109,6 +152,9 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     setLoadFailed(false);
     setError(null);
     setReviewEventsError(null);
+    setAttributionSummary(null);
+    setAttributionSummaryError(null);
+    setAttributionSummaryLoading(false);
     try {
       const [marketplaceResult, membershipsResult, reviewEventsResult] = await Promise.allSettled([
         getMarketplace(requestMarketplaceId),
@@ -138,6 +184,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
           toErrorMessage(reviewEventsResult.reason, 'Failed to load review events')
         );
       }
+      void loadAttributionSummary(requestMarketplaceId, requestSeq);
     } catch (err) {
       if (
         requestSeq !== requestSeqRef.current ||
@@ -150,7 +197,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       setMarketplace(null);
       setStores([]);
       setReviewEvents([]);
+      setAttributionSummary(null);
       setReviewEventsError(null);
+      setAttributionSummaryError(null);
+      setAttributionSummaryLoading(false);
     } finally {
       if (
         requestSeq === requestSeqRef.current &&
@@ -159,7 +209,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         setLoading(false);
       }
     }
-  }, [marketplaceId]);
+  }, [loadAttributionSummary, marketplaceId]);
 
   useEffect(() => {
     void refresh();
@@ -172,6 +222,9 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   useEffect(() => {
     setReviewEvents([]);
     setReviewEventsError(null);
+    setAttributionSummary(null);
+    setAttributionSummaryError(null);
+    setAttributionSummaryLoading(false);
   }, [marketplaceId]);
 
   const counts = useMemo(
@@ -307,11 +360,14 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     marketplace,
     stores,
     reviewEvents,
+    attributionSummary,
     counts,
     loading,
     loadFailed,
     error,
     reviewEventsError,
+    attributionSummaryError,
+    attributionSummaryLoading,
     working,
     refresh,
     publish,
