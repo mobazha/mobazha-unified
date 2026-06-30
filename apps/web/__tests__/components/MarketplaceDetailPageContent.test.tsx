@@ -222,6 +222,67 @@ describe('MarketplaceDetailPageContent', () => {
     });
   });
 
+  it('renders curated listings without hiding fallback catalog listings', () => {
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'curated-1',
+          slug: 'featured-card',
+          peerID: 'QmSellerA',
+          title: 'Featured Card',
+          vendorName: 'Seller A',
+          loading: false,
+        },
+        {
+          key: 'fallback-1',
+          slug: 'catalog-one',
+          peerID: 'QmSellerB',
+          title: 'Catalog One',
+          vendorName: 'Seller B',
+          loading: false,
+        },
+        {
+          key: 'fallback-2',
+          slug: 'catalog-two',
+          peerID: 'QmSellerC',
+          title: 'Catalog Two',
+          vendorName: 'Seller C',
+          loading: false,
+        },
+      ],
+      sellerProfiles: {},
+    });
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: {
+        marketplace: baseMarketplace,
+        sellers: [],
+        featured: [{ type: 'listing', peerID: 'QmSellerA', slug: 'featured-card', sortOrder: 1 }],
+        banners: [],
+        listings: {
+          listings: [
+            { peerID: 'QmSellerB', slug: 'catalog-one' },
+            { peerID: 'QmSellerC', slug: 'catalog-two' },
+          ],
+          total: 2,
+          page: 1,
+          pageSize: 24,
+          totalPage: 1,
+        },
+      },
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+
+    render(<MarketplaceDetailPageContent identifier="test-market" />);
+
+    expect(screen.getByText('marketplace.detail.featuredListingsTitle')).toBeInTheDocument();
+    expect(screen.getByText('marketplace.detail.allListingsTitle')).toBeInTheDocument();
+    expect(screen.getByTestId('listing-featured-card')).toBeInTheDocument();
+    expect(screen.getByTestId('listing-catalog-one')).toBeInTheDocument();
+    expect(screen.getByTestId('listing-catalog-two')).toBeInTheDocument();
+  });
+
   it('falls back to original seller list when curated sellers are all absent from detail.sellers', () => {
     mockUsePublicMarketplaceDetail.mockReturnValue({
       detail: {
@@ -254,13 +315,14 @@ describe('MarketplaceDetailPageContent', () => {
     expect(screen.getByTestId('seller-QmSellerB')).toBeInTheDocument();
   });
 
-  it('keeps only matched curated sellers when at least one curated peer exists in detail.sellers', () => {
+  it('renders featured sellers and keeps other approved sellers in all sellers section', () => {
     mockUsePublicMarketplaceDetail.mockReturnValue({
       detail: {
         marketplace: baseMarketplace,
         sellers: [
           { peerID: 'QmSellerA', productGroups: [] },
           { peerID: 'QmSellerB', productGroups: [] },
+          { peerID: 'QmSellerC', productGroups: [] },
         ],
         featured: [
           { type: 'seller', peerID: 'QmMissingSeller', sortOrder: 1 },
@@ -284,8 +346,12 @@ describe('MarketplaceDetailPageContent', () => {
 
     fireEvent.click(screen.getByText('marketplace.detail.sellersTab'));
 
+    expect(screen.getByText('marketplace.detail.featuredSellersTitle')).toBeInTheDocument();
+    expect(screen.getByText('marketplace.detail.allSellersTitle')).toBeInTheDocument();
     expect(screen.queryByTestId('seller-QmMissingSeller')).toBeNull();
-    expect(screen.queryByTestId('seller-QmSellerA')).toBeNull();
+    expect(screen.getByTestId('seller-QmSellerA')).toBeInTheDocument();
     expect(screen.getByTestId('seller-QmSellerB')).toBeInTheDocument();
+    expect(screen.getByTestId('seller-QmSellerC')).toBeInTheDocument();
+    expect(screen.getAllByTestId('seller-QmSellerB')).toHaveLength(1);
   });
 });

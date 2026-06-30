@@ -89,6 +89,7 @@ export default function MarketplaceOperatorDetailPage() {
     curationItems,
     curationCandidates,
     curationLoading,
+    curationCandidatesLoading,
     curationError,
     working,
     refresh,
@@ -102,6 +103,7 @@ export default function MarketplaceOperatorDetailPage() {
     reorderCurationByKind,
     toggleCurationItem,
     removeCurationItem,
+    loadCurationCandidates,
   } = useOperatorMarketplace(id);
   const [peerID, setPeerID] = useState('');
   const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>('all');
@@ -404,6 +406,24 @@ export default function MarketplaceOperatorDetailPage() {
     }
   }
 
+  async function handleLoadCurationCandidates(params: {
+    q?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    try {
+      await loadCurationCandidates(params);
+      return true;
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.curation.candidatesLoadFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+      return false;
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -625,6 +645,7 @@ export default function MarketplaceOperatorDetailPage() {
             items={curationItems}
             candidates={curationCandidates}
             loading={curationLoading}
+            candidatesLoading={curationCandidatesLoading}
             error={curationError}
             working={working}
             isReadOnly={Boolean(curationReadOnly)}
@@ -633,6 +654,7 @@ export default function MarketplaceOperatorDetailPage() {
             onReorder={handleReorderCurationByKind}
             onToggle={handleToggleCurationItem}
             onRemove={handleRemoveCurationItem}
+            onLoadCandidates={handleLoadCurationCandidates}
           />
 
           {!isArchived ? (

@@ -9,6 +9,7 @@ import type {
   CreateMarketplaceCurationItemRequest,
   CreateNativeMarketplaceRequest,
   MarketplaceCurationCandidates,
+  MarketplaceCurationCandidatesParams,
   MarketplaceCurationItem,
   InviteMarketplaceSellerRequest,
   MarketplaceAttributionSummary,
@@ -339,10 +340,16 @@ export async function getMarketplaceCuration(
 }
 
 export async function getMarketplaceCurationCandidates(
-  marketplaceId: string
+  marketplaceId: string,
+  params: MarketplaceCurationCandidatesParams = {}
 ): Promise<MarketplaceCurationCandidates> {
+  const queryParams = new URLSearchParams();
+  if (params.q) queryParams.set('q', params.q);
+  if (typeof params.page === 'number') queryParams.set('page', params.page.toString());
+  if (typeof params.pageSize === 'number') queryParams.set('pageSize', params.pageSize.toString());
+  const query = queryParams.toString();
   return hostingGet<MarketplaceCurationCandidates>(
-    HOSTING_API.MARKETPLACE_CURATION_CANDIDATES(marketplaceId)
+    `${HOSTING_API.MARKETPLACE_CURATION_CANDIDATES(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }
 

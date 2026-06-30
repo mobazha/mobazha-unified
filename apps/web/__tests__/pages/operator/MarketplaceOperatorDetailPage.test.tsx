@@ -14,6 +14,7 @@ const mockAddCurationItem = vi.fn();
 const mockReorderCurationByKind = vi.fn();
 const mockToggleCurationItem = vi.fn();
 const mockRemoveCurationItem = vi.fn();
+const mockLoadCurationCandidates = vi.fn();
 let mockReviewEventsError: string | null = null;
 let mockAttributionSummaryError: string | null = null;
 let mockAttributionSummaryLoading = false;
@@ -40,6 +41,7 @@ let latestCurationPanelProps: {
   onReorder: (kind: 'listing' | 'seller' | 'banner', itemIDs: number[]) => Promise<void> | void;
   onToggle: (itemID: number, isActive: boolean) => Promise<void> | void;
   onRemove: (itemID: number) => Promise<void> | void;
+  onLoadCandidates: (params: { q?: string; page?: number; pageSize?: number }) => Promise<unknown>;
 } | null = null;
 
 const marketplace: NativeMarketplace = {
@@ -186,8 +188,16 @@ vi.mock('@mobazha/core', async importOriginal => {
       attributionSummaryError: mockAttributionSummaryError,
       attributionSummaryLoading: mockAttributionSummaryLoading,
       curationItems: [],
-      curationCandidates: { sellers: [], listings: [] },
+      curationCandidates: {
+        sellers: [],
+        listings: [],
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPage: 0,
+      },
       curationLoading: false,
+      curationCandidatesLoading: false,
       curationError: null,
       working: null,
       refresh: mockRefresh,
@@ -201,6 +211,7 @@ vi.mock('@mobazha/core', async importOriginal => {
       reorderCurationByKind: mockReorderCurationByKind,
       toggleCurationItem: mockToggleCurationItem,
       removeCurationItem: mockRemoveCurationItem,
+      loadCurationCandidates: mockLoadCurationCandidates,
     }),
   };
 });
@@ -234,6 +245,11 @@ vi.mock('@/components/Operator/OperatorMarketplaceCurationPanel', () => ({
     onReorder: (kind: 'listing' | 'seller' | 'banner', itemIDs: number[]) => Promise<void> | void;
     onToggle: (itemID: number, isActive: boolean) => Promise<void> | void;
     onRemove: (itemID: number) => Promise<void> | void;
+    onLoadCandidates: (params: {
+      q?: string;
+      page?: number;
+      pageSize?: number;
+    }) => Promise<unknown>;
   }) => {
     latestCurationPanelProps = props;
     return <div data-testid="curation-panel" />;
@@ -275,6 +291,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockReorderCurationByKind.mockResolvedValue(undefined);
     mockToggleCurationItem.mockResolvedValue(undefined);
     mockRemoveCurationItem.mockResolvedValue(undefined);
+    mockLoadCurationCandidates.mockResolvedValue(undefined);
     latestCurationPanelProps = null;
   });
 
@@ -509,6 +526,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockReorderCurationByKind.mockRejectedValueOnce(new Error('reorder failed'));
     mockToggleCurationItem.mockRejectedValueOnce(new Error('toggle failed'));
     mockRemoveCurationItem.mockRejectedValueOnce(new Error('remove failed'));
+    mockLoadCurationCandidates.mockRejectedValueOnce(new Error('candidate failed'));
 
     render(<MarketplaceOperatorDetailPage />);
     expect(latestCurationPanelProps).not.toBeNull();
@@ -521,12 +539,22 @@ describe('MarketplaceOperatorDetailPage', () => {
     ).resolves.toBeUndefined();
     await expect(latestCurationPanelProps?.onToggle(99, false)).resolves.toBeUndefined();
     await expect(latestCurationPanelProps?.onRemove(99)).resolves.toBeUndefined();
+    await expect(
+      latestCurationPanelProps?.onLoadCandidates({ q: 'rare', page: 2, pageSize: 20 })
+    ).resolves.toBe(false);
 
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({
         variant: 'destructive',
         title: 'marketplace.operator.curation.addFailedTitle',
         description: 'add failed',
+      })
+    );
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variant: 'destructive',
+        title: 'marketplace.operator.curation.candidatesLoadFailedTitle',
+        description: 'candidate failed',
       })
     );
     expect(mockToast).toHaveBeenCalledWith(

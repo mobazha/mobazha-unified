@@ -109,6 +109,10 @@ const sampleItems: MarketplaceCurationItem[] = [
 const sampleCandidates: MarketplaceCurationCandidates = {
   sellers: [{ peerID: 'QmStoreA' }, { peerID: 'QmStoreB' }],
   listings: [{ peerID: 'QmStoreA', slug: 'alpha', title: 'Alpha' }],
+  page: 1,
+  pageSize: 20,
+  total: 1,
+  totalPage: 1,
 };
 
 describe('useOperatorMarketplace curation actions', () => {
@@ -180,5 +184,40 @@ describe('useOperatorMarketplace curation actions', () => {
       await result.current.removeCurationItem(11);
     });
     expect(mockDeleteMarketplaceCurationItem).toHaveBeenCalledWith('mp-1', 11);
+  });
+
+  it('loads paged candidates without clearing curation and preserves results on failure', async () => {
+    const { result } = renderHook(() => useOperatorMarketplace('mp-1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    const pageTwo: MarketplaceCurationCandidates = {
+      ...sampleCandidates,
+      query: 'beta',
+      page: 2,
+      total: 21,
+      totalPage: 2,
+      listings: [{ peerID: 'QmStoreB', slug: 'beta', title: 'Beta' }],
+    };
+    mockGetMarketplaceCurationCandidates.mockResolvedValueOnce(pageTwo);
+    await act(async () => {
+      await result.current.loadCurationCandidates({ q: 'beta', page: 2, pageSize: 20 });
+    });
+    expect(mockGetMarketplaceCurationCandidates).toHaveBeenLastCalledWith('mp-1', {
+      q: 'beta',
+      page: 2,
+      pageSize: 20,
+    });
+    expect(result.current.curationCandidates).toEqual(pageTwo);
+    expect(result.current.curationItems).toEqual(sampleItems);
+
+    mockGetMarketplaceCurationCandidates.mockRejectedValueOnce(new Error('candidate outage'));
+    await act(async () => {
+      await expect(
+        result.current.loadCurationCandidates({ q: 'gamma', page: 1, pageSize: 20 })
+      ).rejects.toThrow('candidate outage');
+    });
+    expect(result.current.curationCandidates).toEqual(pageTwo);
+    expect(result.current.curationItems).toEqual(sampleItems);
+    expect(result.current.curationCandidatesLoading).toBe(false);
   });
 });
