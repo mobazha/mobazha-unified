@@ -273,7 +273,11 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
     <>
       <div className="grid grid-cols-2 gap-2">
         {search.products.map((product: DisplayProduct) => (
-          <Link key={product.id} href={buildProductHref(product.slug, product.vendor.peerID)}>
+          <Link
+            key={product.id}
+            href={buildProductHref(product.slug, product.vendor.peerID)}
+            onClick={() => search.trackMarketplaceListingClick(product)}
+          >
             <ProductCard
               title={product.title}
               imageUrl={product.image}

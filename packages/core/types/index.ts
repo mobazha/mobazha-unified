@@ -482,6 +482,10 @@ export type {
   PublicMarketplaceProductGroup,
   PublicMarketplaceBanner,
   PublicMarketplaceListings,
+  MarketplaceAttributionEventType,
+  SubmitMarketplaceAttributionEventRequest,
+  SubmitMarketplaceAttributionEventResponse,
+  MarketplaceAttributionSummary,
 } from './marketplace';
 
 // Digital asset types (Supply Chain Phase 1.0 — Core MVP)

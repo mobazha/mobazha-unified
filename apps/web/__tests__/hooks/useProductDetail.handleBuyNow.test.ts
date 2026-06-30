@@ -5,6 +5,24 @@ import { useProductDetail } from '@/hooks/useProductDetail';
 
 const mockPush = vi.fn();
 const mockGetPublicProduct = vi.fn();
+const mockTrackCheckoutHandoff = vi.fn();
+const mockIsOutpostMode = vi.fn(() => false);
+let mockMarketplaceContext = {
+  isSubMarket: true,
+  subdomain: 'collectibles',
+  domain: null,
+  marketplaceKey: 'collectibles',
+  config: {
+    id: 'mp-1',
+    attribution: {
+      marketplaceId: 'mp-1',
+      utmSource: 'collectibles',
+    },
+  },
+  loading: false,
+  error: null,
+  retry: vi.fn(),
+};
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -23,7 +41,7 @@ vi.mock('@mobazha/core/config/env', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core/config/env')>();
   return {
     ...actual,
-    isOutpostMode: () => false,
+    isOutpostMode: () => mockIsOutpostMode(),
   };
 });
 
@@ -37,6 +55,12 @@ vi.mock('@mobazha/core', async importOriginal => {
       renderPairedPrice: () => '$1.00',
     }),
     useFeature: () => true,
+    useMarketplaceContext: () => mockMarketplaceContext,
+    useNativeMarketplaceAttribution: () => ({
+      trackImpression: vi.fn(),
+      trackListingClick: vi.fn(),
+      trackCheckoutHandoff: mockTrackCheckoutHandoff,
+    }),
     useUserStore: () => ({ isAuthenticated: false, profile: null }),
     useCartStore: (selector: (state: { addItem: () => void }) => unknown) =>
       selector({ addItem: vi.fn() }),
@@ -106,6 +130,25 @@ describe('useProductDetail handleBuyNow RWA gating', () => {
   beforeEach(() => {
     mockPush.mockReset();
     mockGetPublicProduct.mockReset();
+    mockTrackCheckoutHandoff.mockReset();
+    mockIsOutpostMode.mockReset();
+    mockIsOutpostMode.mockReturnValue(false);
+    mockMarketplaceContext = {
+      isSubMarket: true,
+      subdomain: 'collectibles',
+      domain: null,
+      marketplaceKey: 'collectibles',
+      config: {
+        id: 'mp-1',
+        attribution: {
+          marketplaceId: 'mp-1',
+          utmSource: 'collectibles',
+        },
+      },
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+    };
   });
 
   it('navigates authoritative RWA title listings to checkout with quantity=1', async () => {
@@ -152,5 +195,54 @@ describe('useProductDetail handleBuyNow RWA gating', () => {
     });
 
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('tracks checkout handoff before normal checkout navigation in sub-market mode', async () => {
+    mockGetPublicProduct.mockResolvedValue({
+      product: authoritativeRwaProduct,
+      isOffline: false,
+    });
+
+    const { result } = renderHook(() => useProductDetail({ slug: 'psa-charizard' }));
+
+    await waitFor(() => {
+      expect(result.current.product).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.handleBuyNow();
+    });
+
+    expect(mockTrackCheckoutHandoff).toHaveBeenCalledWith({
+      listingSlug: 'psa-charizard',
+      peerID: 'QmSeller',
+    });
+    expect(mockPush).toHaveBeenCalledWith(
+      '/checkout?slug=psa-charizard&peerID=QmSeller&quantity=1'
+    );
+  });
+
+  it('tracks checkout handoff before guest checkout navigation in outpost mode', async () => {
+    mockIsOutpostMode.mockReturnValue(true);
+    mockGetPublicProduct.mockResolvedValue({
+      product: authoritativeRwaProduct,
+      isOffline: false,
+    });
+
+    const { result } = renderHook(() => useProductDetail({ slug: 'psa-charizard' }));
+
+    await waitFor(() => {
+      expect(result.current.product).not.toBeNull();
+    });
+
+    act(() => {
+      result.current.handleBuyNow();
+    });
+
+    expect(mockTrackCheckoutHandoff).toHaveBeenCalledWith({
+      listingSlug: 'psa-charizard',
+      peerID: 'QmSeller',
+    });
+    expect(mockPush).toHaveBeenCalledWith('/guest-checkout');
   });
 });

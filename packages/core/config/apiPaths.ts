@@ -555,6 +555,10 @@ export const HOSTING_API = {
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications`,
   PUBLIC_MARKETPLACE_SELLER_APPLICATION_MINE: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
+  PUBLIC_MARKETPLACE_ATTRIBUTION_EVENTS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
+  MARKETPLACE_ATTRIBUTION_SUMMARY: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/attribution-summary`,
   COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
   COMMUNITY_MARKETPLACES_VERIFY_MEMBER: (platform: string, instanceId: string) =>

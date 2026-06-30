@@ -28,6 +28,8 @@ import {
   filterPublicProductDisplayTags,
   resolveRelatedListingsScopeTag,
   useFeature,
+  useMarketplaceContext,
+  useNativeMarketplaceAttribution,
   type ArtListingSpecRow,
 } from '@mobazha/core';
 import {
@@ -167,6 +169,9 @@ export function useProductDetail({
   const { t } = useI18n();
   const router = useRouter();
   const { formatPrice, renderPairedPrice } = useCurrency();
+  const { isSubMarket, config: marketplaceConfig } = useMarketplaceContext();
+  const marketplaceID = marketplaceConfig?.attribution?.marketplaceId || marketplaceConfig?.id;
+  const { trackCheckoutHandoff } = useNativeMarketplaceAttribution(marketplaceID);
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -414,10 +419,7 @@ export function useProductDetail({
     : product?.metadata?.acceptedCurrencies || [];
   const rawTags = product?.item.tags || [];
   const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
-  const relatedListingsScopeTag = useMemo(
-    () => resolveRelatedListingsScopeTag(rawTags),
-    [rawTags]
-  );
+  const relatedListingsScopeTag = useMemo(() => resolveRelatedListingsScopeTag(rawTags), [rawTags]);
   const category = product?.item.productType || '';
   const isUniquePiece = useMemo(
     () => isUniquePieceListing(product?.item.tags),
@@ -657,6 +659,13 @@ export function useProductDetail({
 
     const checkoutQuantity = isCollectibleTitleListing ? 1 : quantity;
 
+    if (isSubMarket && marketplaceID) {
+      trackCheckoutHandoff({
+        listingSlug: product.slug,
+        peerID: product.vendorID.peerID,
+      });
+    }
+
     // Outpost mode: add to guest cart and navigate to guest checkout
     if (isOutpostMode()) {
       const rawProduct = product as unknown as Record<string, unknown>;
@@ -716,6 +725,8 @@ export function useProductDetail({
     if (isModal && onClose) onClose();
     router.push(`/checkout?${checkoutParams.toString()}`);
   }, [
+    isSubMarket,
+    marketplaceID,
     product,
     quantity,
     effectivePrice,
@@ -727,6 +738,7 @@ export function useProductDetail({
     router,
     addGuestCartItem,
     isCollectibleTitleListing,
+    trackCheckoutHandoff,
   ]);
 
   const handleCopyLink = useCallback(async () => {

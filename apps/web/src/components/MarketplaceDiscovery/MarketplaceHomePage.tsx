@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer, ProductSection } from '@/components';
 import { Container } from '@/components/layouts';
@@ -15,6 +15,7 @@ import {
   taxonomyForVertical,
   useCuration,
   useI18n,
+  useNativeMarketplaceAttribution,
   type ProductListItem,
 } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
@@ -109,6 +110,8 @@ function MarketplaceShellState({
 export function MarketplaceHomePage() {
   const { t } = useI18n();
   const { config, loading, error, retry } = useCuration();
+  const marketplaceID = config?.attribution?.marketplaceId || config?.id;
+  const { trackImpression, trackListingClick } = useNativeMarketplaceAttribution(marketplaceID);
   const [latestProducts, setLatestProducts] = useState<DisplayProduct[]>([]);
   const [popularProducts, setPopularProducts] = useState<DisplayProduct[]>([]);
   const [featuredStores, setFeaturedStores] = useState<SearchedUser[]>([]);
@@ -224,6 +227,22 @@ export function MarketplaceHomePage() {
     };
   }, [config]);
 
+  useEffect(() => {
+    if (!marketplaceID || !config) return;
+    trackImpression();
+  }, [config, marketplaceID, trackImpression]);
+
+  const handleProductCardClick = useCallback(
+    (product: { slug: string; vendorPeerID?: string }) => {
+      if (!marketplaceID) return;
+      trackListingClick({
+        listingSlug: product.slug,
+        peerID: product.vendorPeerID,
+      });
+    },
+    [marketplaceID, trackListingClick]
+  );
+
   if (loading) {
     return (
       <MarketplaceShellState
@@ -331,6 +350,7 @@ export function MarketplaceHomePage() {
             isLoading={isLoadingPopular}
             showViewAll
             viewAllHref={searchHref}
+            onProductClick={handleProductCardClick}
           />
         )}
 
@@ -345,6 +365,7 @@ export function MarketplaceHomePage() {
             showViewAll
             viewAllHref={`/search?q=${encodeURIComponent(config.catalogQuery || '*')}&sortBy=newest`}
             showStoreAttribution
+            onProductClick={handleProductCardClick}
           />
         )}
 

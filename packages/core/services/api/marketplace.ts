@@ -8,6 +8,7 @@ import { hostingDel, hostingGet, hostingPost, hostingPut } from './helpers';
 import type {
   CreateNativeMarketplaceRequest,
   InviteMarketplaceSellerRequest,
+  MarketplaceAttributionSummary,
   MarketplaceCurationConfig,
   MarketplaceSellerReviewEvent,
   MarketplaceShareLink,
@@ -20,6 +21,8 @@ import type {
   PublicNativeMarketplaceListParams,
   PublicNativeMarketplaceListResponse,
   NativeMarketplaceSellerApplication,
+  SubmitMarketplaceAttributionEventRequest,
+  SubmitMarketplaceAttributionEventResponse,
   VerifyMarketplaceCustomDomainResponse,
   UpdateMarketplaceSellerRequest,
   UpdateNativeMarketplaceRequest,
@@ -125,6 +128,19 @@ export async function withdrawNativeMarketplaceSellerApplication(
 ): Promise<NativeMarketplaceSellerApplication> {
   return hostingDel<NativeMarketplaceSellerApplication>(
     HOSTING_API.PUBLIC_MARKETPLACE_SELLER_APPLICATION_MINE(identifier)
+  );
+}
+
+/**
+ * Submit a best-effort attribution event for a public native marketplace.
+ */
+export async function submitPublicMarketplaceAttributionEvent(
+  identifier: string,
+  data: SubmitMarketplaceAttributionEventRequest
+): Promise<SubmitMarketplaceAttributionEventResponse> {
+  return hostingPost<SubmitMarketplaceAttributionEventResponse>(
+    HOSTING_API.PUBLIC_MARKETPLACE_ATTRIBUTION_EVENTS(identifier),
+    data
   );
 }
 
@@ -290,5 +306,18 @@ export async function verifyMarketplaceCustomDomain(
   return hostingPost<VerifyMarketplaceCustomDomainResponse>(
     HOSTING_API.MARKETPLACE_CUSTOM_DOMAIN_VERIFY(marketplaceId),
     undefined
+  );
+}
+
+export async function getMarketplaceAttributionSummary(
+  marketplaceId: string,
+  params: { from?: string; to?: string } = {}
+): Promise<MarketplaceAttributionSummary> {
+  const queryParams = new URLSearchParams();
+  if (params.from) queryParams.set('from', params.from);
+  if (params.to) queryParams.set('to', params.to);
+  const query = queryParams.toString();
+  return hostingGet<MarketplaceAttributionSummary>(
+    `${HOSTING_API.MARKETPLACE_ATTRIBUTION_SUMMARY(marketplaceId)}${query ? `?${query}` : ''}`
   );
 }

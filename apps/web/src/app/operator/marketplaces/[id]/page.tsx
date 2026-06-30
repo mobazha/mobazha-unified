@@ -82,6 +82,9 @@ export default function MarketplaceOperatorDetailPage() {
     loading,
     loadFailed,
     reviewEventsError,
+    attributionSummary,
+    attributionSummaryError,
+    attributionSummaryLoading,
     working,
     refresh,
     publish,
@@ -457,6 +460,89 @@ export default function MarketplaceOperatorDetailPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6" data-testid="operator-attribution-funnel-card">
+            <CardHeader>
+              <CardTitle>{t('marketplace.operator.attributionFunnelTitle')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {attributionSummaryLoading ? (
+                <p
+                  className="text-muted-foreground"
+                  data-testid="operator-attribution-summary-loading"
+                >
+                  {t('marketplace.operator.attributionSummaryLoading')}
+                </p>
+              ) : attributionSummaryError ? (
+                <div
+                  className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
+                  data-testid="operator-attribution-summary-error"
+                >
+                  <p className="text-xs text-destructive">
+                    {t('marketplace.operator.attributionSummaryLoadFailed')}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => void refresh()}
+                    disabled={Boolean(working)}
+                    data-testid="operator-attribution-summary-retry"
+                  >
+                    {t('common.retry')}
+                  </Button>
+                </div>
+              ) : attributionSummary?.hasData ? (
+                <div className="space-y-2" data-testid="operator-attribution-has-data">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {t('marketplace.operator.attributionImpressions')}
+                    </span>
+                    <span>{attributionSummary.impressions}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {t('marketplace.operator.attributionListingClicks')}
+                    </span>
+                    <span>{attributionSummary.listingClicks}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {t('marketplace.operator.attributionCheckoutHandoffs')}
+                    </span>
+                    <span>{attributionSummary.checkoutHandoffs}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {t('marketplace.operator.attributionListingClickRate')}
+                    </span>
+                    <span>
+                      {attributionSummary.listingClickRate == null
+                        ? t('marketplace.operator.attributionRateUnavailable')
+                        : `${(attributionSummary.listingClickRate * 100).toFixed(1)}%`}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {t('marketplace.operator.attributionCheckoutRate')}
+                    </span>
+                    <span>
+                      {attributionSummary.checkoutHandoffRate == null
+                        ? t('marketplace.operator.attributionRateUnavailable')
+                        : `${(attributionSummary.checkoutHandoffRate * 100).toFixed(1)}%`}
+                    </span>
+                  </div>
+                </div>
+              ) : attributionSummary?.hasData === false ? (
+                <p className="text-muted-foreground" data-testid="operator-attribution-no-data">
+                  {t('marketplace.operator.attributionNoData')}
+                </p>
+              ) : null}
+              <p className="text-xs text-muted-foreground" data-testid="operator-attribution-note">
+                {t('marketplace.operator.attributionCheckoutMeaning')}
+              </p>
+            </CardContent>
+          </Card>
 
           {!isArchived ? (
             <Card className="mt-6">

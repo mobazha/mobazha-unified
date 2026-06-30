@@ -58,6 +58,8 @@ export interface ProductSectionProps {
   titleClassName?: string;
   /** 为每个商品卡片展示 "from {storeName}" 店铺归属 */
   showStoreAttribution?: boolean;
+  /** 可选：监听商品卡片点击（不影响默认导航/弹窗行为） */
+  onProductClick?: (product: Product) => void;
 }
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
@@ -70,6 +72,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   containerSize = 'xl',
   titleClassName,
   showStoreAttribution = false,
+  onProductClick,
 }) => {
   const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
@@ -80,6 +83,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   // 处理商品点击
   const handleProductClick = useCallback(
     (e: React.MouseEvent, product: Product) => {
+      onProductClick?.(product);
       // 阻止 Link 的默认导航（桌面端）
       if (!isMobile) {
         e.preventDefault();
@@ -87,7 +91,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
       }
       // 移动端让 Link 正常工作
     },
-    [isMobile, openProduct]
+    [isMobile, onProductClick, openProduct]
   );
 
   // 处理举报

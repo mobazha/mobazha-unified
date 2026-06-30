@@ -1,12 +1,17 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MarketplaceStoreMembership, NativeMarketplace } from '@mobazha/core';
+import type {
+  MarketplaceAttributionSummary,
+  MarketplaceStoreMembership,
+  NativeMarketplace,
+} from '@mobazha/core';
 import { useOperatorMarketplace } from '@mobazha/core';
 
 vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMarketplace: vi.fn(),
   getMarketplaceSellers: vi.fn(),
   getMarketplaceSellerReviewEvents: vi.fn(),
+  getMarketplaceAttributionSummary: vi.fn(),
   createMarketplace: vi.fn(),
   getMyMarketplaces: vi.fn(),
   getMyMarketplaceMemberships: vi.fn(),
@@ -22,6 +27,7 @@ import {
   deleteMarketplace,
   getMarketplace,
   getMarketplaceSellerReviewEvents,
+  getMarketplaceAttributionSummary,
   getMarketplaceSellers,
   inviteMarketplaceSeller,
   verifyMarketplaceCustomDomain,
@@ -32,6 +38,9 @@ import {
 const mockGetMarketplace = getMarketplace as ReturnType<typeof vi.fn>;
 const mockGetMarketplaceSellers = getMarketplaceSellers as ReturnType<typeof vi.fn>;
 const mockGetMarketplaceSellerReviewEvents = getMarketplaceSellerReviewEvents as ReturnType<
+  typeof vi.fn
+>;
+const mockGetMarketplaceAttributionSummary = getMarketplaceAttributionSummary as ReturnType<
   typeof vi.fn
 >;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
@@ -86,8 +95,100 @@ function buildStore(peerID: string, marketplaceID = 'latest-id'): MarketplaceSto
 }
 
 describe('useOperatorMarketplace', () => {
+  const noDataSummary = {
+    from: '2026-01-01T00:00:00Z',
+    to: '2026-01-31T00:00:00Z',
+    impressions: 0,
+    listingClicks: 0,
+    checkoutHandoffs: 0,
+    listingClickRate: null,
+    checkoutHandoffRate: null,
+    hasData: false,
+  } as const;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetMarketplaceAttributionSummary.mockResolvedValue(noDataSummary);
+  });
+
+  it('keeps marketplace usable while attribution summary is still loading', async () => {
+    const marketplace = buildMarketplace('mp1', 'Main Marketplace');
+    const store = buildStore('peer-main', 'mp1');
+    const summaryDeferred = deferred<typeof noDataSummary>();
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([store]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
+    mockGetMarketplaceAttributionSummary.mockImplementation(() => summaryDeferred.promise);
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.marketplace).toEqual(marketplace);
+    expect(result.current.stores).toEqual([store]);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.attributionSummaryLoading).toBe(true);
+    expect(result.current.attributionSummary).toBeNull();
+    expect(result.current.attributionSummaryError).toBeNull();
+
+    await act(async () => {
+      summaryDeferred.resolve(noDataSummary);
+    });
+
+    await waitFor(() => {
+      expect(result.current.attributionSummary).toEqual(noDataSummary);
+    });
+    expect(result.current.attributionSummaryLoading).toBe(false);
+  });
+
+  it('ignores stale attribution summary responses after marketplaceId changes', async () => {
+    const staleSummaryDeferred = deferred<MarketplaceAttributionSummary>();
+    const latestSummary: MarketplaceAttributionSummary = {
+      ...noDataSummary,
+      from: '2026-02-01T00:00:00Z',
+      to: '2026-02-28T00:00:00Z',
+    };
+
+    mockGetMarketplace.mockImplementation((id: string) =>
+      Promise.resolve(buildMarketplace(id, `Marketplace ${id}`))
+    );
+    mockGetMarketplaceSellers.mockImplementation((id: string) =>
+      Promise.resolve([buildStore(`peer-${id}`, id)])
+    );
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
+    mockGetMarketplaceAttributionSummary.mockImplementation((id: string) => {
+      if (id === 'stale-id') return staleSummaryDeferred.promise;
+      return Promise.resolve(latestSummary);
+    });
+
+    const { result, rerender } = renderHook(
+      ({ marketplaceId }: { marketplaceId?: string }) => useOperatorMarketplace(marketplaceId),
+      { initialProps: { marketplaceId: 'stale-id' } }
+    );
+
+    rerender({ marketplaceId: 'latest-id' });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.marketplace?.id).toBe('latest-id');
+    });
+
+    await waitFor(() => {
+      expect(result.current.attributionSummary).toEqual(latestSummary);
+    });
+
+    await act(async () => {
+      staleSummaryDeferred.resolve({
+        ...latestSummary,
+        impressions: 999,
+        hasData: true,
+      });
+    });
+
+    expect(result.current.marketplace?.id).toBe('latest-id');
+    expect(result.current.attributionSummary).toEqual(latestSummary);
   });
 
   it('ignores stale async responses when marketplaceId changes before earlier requests finish', async () => {
