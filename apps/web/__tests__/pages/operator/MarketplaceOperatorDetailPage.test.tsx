@@ -11,6 +11,18 @@ const mockArchiveMarketplace = vi.fn();
 const mockVerifyCustomDomain = vi.fn();
 const mockRefresh = vi.fn();
 let mockReviewEventsError: string | null = null;
+let mockAttributionSummaryError: string | null = null;
+let mockAttributionSummaryLoading = false;
+let mockAttributionSummary: {
+  from: string;
+  to: string;
+  impressions: number;
+  listingClicks: number;
+  checkoutHandoffs: number;
+  listingClickRate: number | null;
+  checkoutHandoffRate: number | null;
+  hasData: boolean;
+} | null = null;
 let latestSettingsCardProps: {
   onSave: (data: Record<string, unknown>) => Promise<unknown>;
   onVerifyCustomDomain: () => Promise<unknown>;
@@ -157,6 +169,9 @@ vi.mock('@mobazha/core', async importOriginal => {
       loading: false,
       loadFailed: false,
       reviewEventsError: mockReviewEventsError,
+      attributionSummary: mockAttributionSummary,
+      attributionSummaryError: mockAttributionSummaryError,
+      attributionSummaryLoading: mockAttributionSummaryLoading,
       working: null,
       refresh: mockRefresh,
       publish: vi.fn(),
@@ -195,6 +210,18 @@ describe('MarketplaceOperatorDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockReviewEventsError = null;
+    mockAttributionSummaryError = null;
+    mockAttributionSummaryLoading = false;
+    mockAttributionSummary = {
+      from: '2026-01-01T00:00:00Z',
+      to: '2026-01-31T00:00:00Z',
+      impressions: 80,
+      listingClicks: 30,
+      checkoutHandoffs: 9,
+      listingClickRate: 0.375,
+      checkoutHandoffRate: 0.3,
+      hasData: true,
+    };
     latestSettingsCardProps = null;
     mockUpdateMarketplace.mockResolvedValue(marketplace);
     mockArchiveMarketplace.mockResolvedValue({ archived: true, id: marketplace.id });
@@ -443,5 +470,60 @@ describe('MarketplaceOperatorDetailPage', () => {
     expect(screen.getByTestId('operator-review-events-error')).toBeInTheDocument();
     expect(screen.getByText('marketplace.operator.reviewHistoryLoadFailed')).toBeInTheDocument();
     expect(screen.queryByText('RAW_REVIEW_HISTORY_FAILURE')).not.toBeInTheDocument();
+  });
+
+  it('renders attribution funnel metrics when summary has data', () => {
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-attribution-has-data')).toBeInTheDocument();
+    expect(screen.getByText('80')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(screen.getByText('9')).toBeInTheDocument();
+    expect(screen.getByText('37.5%')).toBeInTheDocument();
+    expect(screen.getByText('30.0%')).toBeInTheDocument();
+  });
+
+  it('renders empty-state copy when attribution summary has no data', () => {
+    mockAttributionSummary = {
+      from: '2026-01-01T00:00:00Z',
+      to: '2026-01-31T00:00:00Z',
+      impressions: 0,
+      listingClicks: 0,
+      checkoutHandoffs: 0,
+      listingClickRate: null,
+      checkoutHandoffRate: null,
+      hasData: false,
+    };
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-attribution-no-data')).toBeInTheDocument();
+  });
+
+  it('shows summary-load error state without no-data fallback and provides retry', async () => {
+    mockAttributionSummary = null;
+    mockAttributionSummaryError = 'summary failed';
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-attribution-summary-error')).toBeInTheDocument();
+    expect(screen.queryByTestId('operator-attribution-no-data')).not.toBeInTheDocument();
+    expect(screen.getByTestId('operator-attribution-summary-retry')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-membership-filters')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('operator-attribution-summary-retry'));
+    });
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders summary loading state without no-data or error state', () => {
+    mockAttributionSummaryLoading = true;
+    mockAttributionSummary = null;
+    mockAttributionSummaryError = null;
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-attribution-summary-loading')).toBeInTheDocument();
+    expect(screen.queryByTestId('operator-attribution-no-data')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('operator-attribution-summary-error')).not.toBeInTheDocument();
   });
 });

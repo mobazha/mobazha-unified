@@ -577,6 +577,36 @@ export interface NativeMarketplaceSellerApplication {
   autoApproved: boolean;
 }
 
+export type MarketplaceAttributionEventType = 'impression' | 'listing_click' | 'checkout_handoff';
+
+export interface SubmitMarketplaceAttributionEventRequest {
+  eventID: string;
+  journeyID: string;
+  eventType: MarketplaceAttributionEventType;
+  listingSlug?: string;
+  peerID?: string;
+  source?: string;
+  medium?: string;
+  campaign?: string;
+  referrerHost?: string;
+}
+
+export interface SubmitMarketplaceAttributionEventResponse {
+  accepted: boolean;
+  duplicate: boolean;
+}
+
+export interface MarketplaceAttributionSummary {
+  from: string;
+  to: string;
+  impressions: number;
+  listingClicks: number;
+  checkoutHandoffs: number;
+  listingClickRate: number | null;
+  checkoutHandoffRate: number | null;
+  hasData: boolean;
+}
+
 // 商品列表参数
 export interface MarketplaceProductListParams {
   marketplaceId: string;
