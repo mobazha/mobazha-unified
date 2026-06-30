@@ -368,6 +368,24 @@ export interface paths {
     patch: operations['admin-patch-relay-config'];
     trace?: never;
   };
+  '/platform/v1/admin/safe-payment/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Safe payment platform fee configuration (admin) */
+    get: operations['admin-get-safe-payment-config'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Patch Safe payment platform fee configuration (admin) */
+    patch: operations['admin-patch-safe-payment-config'];
+    trace?: never;
+  };
   '/platform/v1/admin/services': {
     parameters: {
       query?: never;
@@ -3686,6 +3704,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/agent/artifacts/{artifactId}/content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get binary content for an agent source artifact */
+    get: operations['agent-artifact-content-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/agent/attachments/analyze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Analyze a chat attachment on demand */
+    post: operations['agent-attachments-analyze-post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/agent/chat': {
     parameters: {
       query?: never;
@@ -5105,7 +5157,7 @@ export interface paths {
     put?: never;
     /**
      * Legacy dispute release instructions
-     * @description Compatibility endpoint for legacy client-signed moderated dispute payouts.
+     * @description Compatibility endpoint for client-signed moderated dispute payouts. Safe-backed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.
      */
     post: operations['disputes-post-instructions-release'];
     delete?: never;
@@ -6766,7 +6818,7 @@ export interface paths {
     put?: never;
     /**
      * Legacy completion payout instructions
-     * @description Compatibility endpoint for legacy client-signed moderated completion flows.
+     * @description Compatibility endpoint for client-signed moderated completion flows. Safe-backed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.
      */
     post: operations['orders-post-instructions-complete'];
     delete?: never;
@@ -6852,7 +6904,7 @@ export interface paths {
     };
     /**
      * Unified payment session view for an order
-     * @description Returns a PaymentSession projection for supported address-monitored UTXO payments and read-only legacy order compatibility.
+     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, Safe-backed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).
      */
     get: operations['orders-get-payment-session'];
     put?: never;
@@ -6986,6 +7038,46 @@ export interface paths {
      * @description Returns buyer and vendor chain identity addresses for RWA token purchases.
      */
     post: operations['orders-post-rwa-token-payment-info'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/settlement-actions/{action}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute backend settlement action
+     * @description Runs backend-submitted settlement for crypto orders (Safe EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.
+     */
+    post: operations['orders-post-settlement-action'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/orders/{orderID}/settlement-actions/{action}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read unified settlement action status
+     * @description Returns the latest status for a previously issued backend settlement action. Safe-backed flows expose relay task correlation and confirmations through this endpoint.
+     */
+    get: operations['orders-get-settlement-action-status'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -7332,6 +7424,23 @@ export interface paths {
     };
     /** Retrieve a normalized rating blob */
     get: operations['ratings-get-by-id'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/runtime-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Frontend runtime features and capabilities */
+    get: operations['runtime-config-get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -8414,6 +8523,14 @@ export interface components {
       /** Format: int64 */
       max_gas_price?: number;
     };
+    Platform_AdminPatchSafePaymentConfigInputBody: {
+      platform_addrs?: {
+        [key: string]: string;
+      };
+      release_fee_usd_cents?: {
+        [key: string]: number;
+      };
+    };
     Platform_AdminPatchServiceTogglesInputBody: {
       cross_store_enabled?: boolean;
       matrix_enabled?: boolean;
@@ -9020,6 +9137,8 @@ export interface components {
     Node_AgentProductImportWorkbenchSource: {
       artifactId: string;
       contentType?: string;
+      /** @description True when source image bytes are available for preview. */
+      hasPreview?: boolean;
       sourceName?: string;
       status: string;
       summary?: string;
@@ -10253,6 +10372,68 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-get-safe-payment-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-patch-safe-payment-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_AdminPatchSafePaymentConfigInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
       };
       /** @description Error */
       default: {
@@ -16912,7 +17093,7 @@ export interface operations {
   'agent-approvals-get': {
     parameters: {
       query?: {
-        /** @description Approval status filter: pending, approved, rejected, applying, applied, apply_failed, or all. */
+        /** @description Approval status filter: pending, approved, rejected, superseded, applying, applied, apply_failed, or all. */
         status?: string;
         limit?: string;
         offset?: string;
@@ -17190,6 +17371,77 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-artifact-content-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Agent artifact ID. */
+        artifactId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          'Cache-Control'?: string;
+          'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
+          'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': string;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'agent-attachments-analyze-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
     responses: {
       /** @description OK */
       200: {
@@ -18605,7 +18857,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -23074,7 +23329,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -23278,7 +23536,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -23379,7 +23640,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -24321,7 +24585,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -24874,6 +25141,81 @@ export interface operations {
         'application/json': unknown;
       };
     };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-post-settlement-action': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+        /** @description Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release. */
+        action: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'orders-get-settlement-action-status': {
+    parameters: {
+      query: {
+        /** @description Opaque settlement action poll key returned by POST settlement-actions. */
+        actionId: string;
+      };
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+        /** @description Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release. */
+        action: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description OK */
       200: {
@@ -25540,7 +25882,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -25577,7 +25922,10 @@ export interface operations {
         headers: {
           'Cache-Control'?: string;
           'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
           'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -25804,6 +26152,35 @@ export interface operations {
         /** @description CID of SignedRating protobuf. */
         ratingID: string;
       };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'runtime-config-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;

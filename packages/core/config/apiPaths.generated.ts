@@ -30,6 +30,7 @@ export const HOSTING_API_PATHS = {
   ADMIN_MODERATORS_BY_PEER_ID: (peerID: string) =>
     `/platform/v1/admin/moderators/${encodeURIComponent(peerID)}`,
   ADMIN_RELAY_CONFIG: '/platform/v1/admin/relay/config',
+  ADMIN_SAFE_PAYMENT_CONFIG: '/platform/v1/admin/safe-payment/config',
   ADMIN_SERVICES: '/platform/v1/admin/services',
   ADMIN_STATS: '/platform/v1/admin/stats',
   ADMIN_TENANTS: '/platform/v1/admin/tenants',
@@ -303,6 +304,9 @@ export const NODE_API_PATHS = {
     `/agent/artifacts/${encodeURIComponent(artifactId)}/approval`,
   AGENT_ARTIFACTS_BY_ARTIFACT_ID: (artifactId: string) =>
     `/agent/artifacts/${encodeURIComponent(artifactId)}`,
+  AGENT_ARTIFACTS_CONTENT: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}/content`,
+  AGENT_ATTACHMENTS_ANALYZE: '/agent/attachments/analyze',
   AGENT_CHAT: '/agent/chat',
   AGENT_CHAT_BY_SESSION_ID: (sessionId: string) => `/agent/chat/${encodeURIComponent(sessionId)}`,
   AGENT_CHAT_SESSIONS: '/agent/chat/sessions',
@@ -568,6 +572,10 @@ export const NODE_API_PATHS = {
     `/orders/${encodeURIComponent(orderID)}/refund-address`,
   ORDERS_RWA_TOKEN_PAYMENT_INFO: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/rwa-token/payment-info`,
+  ORDERS_SETTLEMENT_ACTIONS: (orderID: string, action: string) =>
+    `/orders/${encodeURIComponent(orderID)}/settlement-actions/${encodeURIComponent(action)}`,
+  ORDERS_SETTLEMENT_ACTIONS_STATUS: (orderID: string, action: string) =>
+    `/orders/${encodeURIComponent(orderID)}/settlement-actions/${encodeURIComponent(action)}/status`,
   ORDERS_SHIP: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/ship`,
   ORDERS_SPEND: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/spend`,
   ORDERS_SUPPLY_QUOTE: '/orders/supply-quote',
@@ -594,6 +602,7 @@ export const NODE_API_PATHS = {
     `/ratings/index/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}`,
   RATINGS_INDEX_BY_PEER_IDOR_SLUG: (peerIDOrSlug: string) =>
     `/ratings/index/${encodeURIComponent(peerIDOrSlug)}`,
+  RUNTIME_CONFIG: '/runtime-config',
   SALES: '/sales',
   SETTINGS_AI: '/settings/ai',
   SETTINGS_AI_PROVIDERS: '/settings/ai/providers',

@@ -1019,6 +1019,82 @@
         "tags": ["admin"]
       }
     },
+    "/platform/v1/admin/safe-payment/config": {
+      "get": {
+        "operationId": "admin-get-safe-payment-config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Safe payment platform fee configuration (admin)",
+        "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "admin-patch-safe-payment-config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_AdminPatchSafePaymentConfigInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Patch Safe payment platform fee configuration (admin)",
+        "tags": ["admin"]
+      }
+    },
     "/platform/v1/admin/services": {
       "get": {
         "operationId": "admin-get-service-toggles",
@@ -10371,12 +10447,12 @@
         "operationId": "agent-approvals-get",
         "parameters": [
           {
-            "description": "Approval status filter: pending, approved, rejected, applying, applied, apply_failed, or all.",
+            "description": "Approval status filter: pending, approved, rejected, superseded, applying, applied, apply_failed, or all.",
             "explode": false,
             "in": "query",
             "name": "status",
             "schema": {
-              "description": "Approval status filter: pending, approved, rejected, applying, applied, apply_failed, or all.",
+              "description": "Approval status filter: pending, approved, rejected, superseded, applying, applied, apply_failed, or all.",
               "type": "string"
             }
           },
@@ -10885,6 +10961,145 @@
           }
         ],
         "summary": "Create an approval from an agent proposal artifact",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/artifacts/{artifactId}/content": {
+      "get": {
+        "operationId": "agent-artifact-content-get",
+        "parameters": [
+          {
+            "description": "Agent artifact ID.",
+            "in": "path",
+            "name": "artifactId",
+            "required": true,
+            "schema": {
+              "description": "Agent artifact ID.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "contentEncoding": "base64",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "description": "Cache directive.",
+                  "type": "string"
+                }
+              },
+              "Content-Disposition": {
+                "schema": {
+                  "description": "Attachment hint for downloads.",
+                  "type": "string"
+                }
+              },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "Content-Type": {
+                "schema": {
+                  "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Get binary content for an agent source artifact",
+        "tags": ["ai"]
+      }
+    },
+    "/v1/agent/attachments/analyze": {
+      "post": {
+        "operationId": "agent-attachments-analyze-post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Analyze a chat attachment on demand",
         "tags": ["ai"]
       }
     },
@@ -13151,9 +13366,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -16821,7 +17054,7 @@
     },
     "/v1/disputes/{orderID}/instructions/release": {
       "post": {
-        "description": "Compatibility endpoint for legacy client-signed moderated dispute payouts.",
+        "description": "Compatibility endpoint for client-signed moderated dispute payouts. Safe-backed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.",
         "operationId": "disputes-post-instructions-release",
         "parameters": [
           {
@@ -20241,9 +20474,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -20567,9 +20818,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -20725,9 +20994,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -22231,9 +22518,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -22369,7 +22674,7 @@
     },
     "/v1/orders/{orderID}/instructions/complete": {
       "post": {
-        "description": "Compatibility endpoint for legacy client-signed moderated completion flows.",
+        "description": "Compatibility endpoint for client-signed moderated completion flows. Safe-backed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.",
         "operationId": "orders-post-instructions-complete",
         "parameters": [
           {
@@ -22670,7 +22975,7 @@
     },
     "/v1/orders/{orderID}/payment-session": {
       "get": {
-        "description": "Returns a PaymentSession projection for supported address-monitored UTXO payments and read-only legacy order compatibility.",
+        "description": "Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, Safe-backed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).",
         "operationId": "orders-get-payment-session",
         "parameters": [
           {
@@ -23176,6 +23481,151 @@
         ],
         "summary": "Get RWA token identity payment info",
         "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderID}/settlement-actions/{action}": {
+      "post": {
+        "description": "Runs backend-submitted settlement for crypto orders (Safe EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.",
+        "operationId": "orders-post-settlement-action",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Execute backend settlement action",
+        "tags": ["orders", "payments"]
+      }
+    },
+    "/v1/orders/{orderID}/settlement-actions/{action}/status": {
+      "get": {
+        "description": "Returns the latest status for a previously issued backend settlement action. Safe-backed flows expose relay task correlation and confirmations through this endpoint.",
+        "operationId": "orders-get-settlement-action-status",
+        "parameters": [
+          {
+            "description": "Order ID.",
+            "in": "path",
+            "name": "orderID",
+            "required": true,
+            "schema": {
+              "description": "Order ID.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "description": "Settlement intent: confirm, cancel, seller-decline-refund, complete, or dispute-release.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque settlement action poll key returned by POST settlement-actions.",
+            "explode": false,
+            "in": "query",
+            "name": "actionId",
+            "required": true,
+            "schema": {
+              "description": "Opaque settlement action poll key returned by POST settlement-actions.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerJWT": []
+          },
+          {
+            "apiToken": []
+          }
+        ],
+        "summary": "Read unified settlement action status",
+        "tags": ["orders", "payments"]
       }
     },
     "/v1/orders/{orderID}/ship": {
@@ -24125,9 +24575,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -24197,9 +24665,27 @@
                   "type": "string"
                 }
               },
+              "Content-Security-Policy": {
+                "schema": {
+                  "description": "Content security policy from legacy handler.",
+                  "type": "string"
+                }
+              },
               "Content-Type": {
                 "schema": {
                   "description": "MIME type from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "description": "Entity tag from legacy handler.",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "description": "MIME sniffing policy from legacy handler.",
                   "type": "string"
                 }
               }
@@ -24557,6 +25043,35 @@
         },
         "summary": "Retrieve a normalized rating blob",
         "tags": ["ratings"]
+      }
+    },
+    "/v1/runtime-config": {
+      "get": {
+        "operationId": "runtime-config-get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Node_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Frontend runtime features and capabilities",
+        "tags": ["system"]
       }
     },
     "/v1/sales": {
@@ -28431,6 +28946,26 @@
         },
         "type": "object"
       },
+      "Platform_AdminPatchSafePaymentConfigInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "platform_addrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "release_fee_usd_cents": {
+            "additionalProperties": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "Platform_AdminPatchServiceTogglesInputBody": {
         "additionalProperties": false,
         "properties": {
@@ -30194,6 +30729,10 @@
           },
           "contentType": {
             "type": "string"
+          },
+          "hasPreview": {
+            "description": "True when source image bytes are available for preview.",
+            "type": "boolean"
           },
           "sourceName": {
             "type": "string"
