@@ -6,7 +6,10 @@
 import { apiClient } from './client';
 import { hostingDel, hostingGet, hostingPost, hostingPut } from './helpers';
 import type {
+  CreateMarketplaceCurationItemRequest,
   CreateNativeMarketplaceRequest,
+  MarketplaceCurationCandidates,
+  MarketplaceCurationItem,
   InviteMarketplaceSellerRequest,
   MarketplaceAttributionSummary,
   MarketplaceCurationConfig,
@@ -20,9 +23,11 @@ import type {
   PublicNativeMarketplaceDetail,
   PublicNativeMarketplaceListParams,
   PublicNativeMarketplaceListResponse,
+  ReorderMarketplaceCurationRequest,
   NativeMarketplaceSellerApplication,
   SubmitMarketplaceAttributionEventRequest,
   SubmitMarketplaceAttributionEventResponse,
+  UpdateMarketplaceCurationItemRequest,
   VerifyMarketplaceCustomDomainResponse,
   UpdateMarketplaceSellerRequest,
   UpdateNativeMarketplaceRequest,
@@ -324,5 +329,59 @@ export async function getMarketplaceAttributionSummary(
   const query = queryParams.toString();
   return hostingGet<MarketplaceAttributionSummary>(
     `${HOSTING_API.MARKETPLACE_ATTRIBUTION_SUMMARY(marketplaceId)}${query ? `?${query}` : ''}`
+  );
+}
+
+export async function getMarketplaceCuration(
+  marketplaceId: string
+): Promise<MarketplaceCurationItem[]> {
+  return hostingGet<MarketplaceCurationItem[]>(HOSTING_API.MARKETPLACE_CURATION(marketplaceId));
+}
+
+export async function getMarketplaceCurationCandidates(
+  marketplaceId: string
+): Promise<MarketplaceCurationCandidates> {
+  return hostingGet<MarketplaceCurationCandidates>(
+    HOSTING_API.MARKETPLACE_CURATION_CANDIDATES(marketplaceId)
+  );
+}
+
+export async function createMarketplaceCurationItem(
+  marketplaceId: string,
+  data: CreateMarketplaceCurationItemRequest
+): Promise<MarketplaceCurationItem> {
+  return hostingPost<MarketplaceCurationItem>(
+    HOSTING_API.MARKETPLACE_CURATION(marketplaceId),
+    data
+  );
+}
+
+export async function reorderMarketplaceCuration(
+  marketplaceId: string,
+  data: ReorderMarketplaceCurationRequest
+): Promise<MarketplaceCurationItem[]> {
+  return hostingPut<MarketplaceCurationItem[]>(
+    HOSTING_API.MARKETPLACE_CURATION_REORDER(marketplaceId),
+    data
+  );
+}
+
+export async function updateMarketplaceCurationItem(
+  marketplaceId: string,
+  itemID: number,
+  data: UpdateMarketplaceCurationItemRequest
+): Promise<MarketplaceCurationItem> {
+  return hostingPut<MarketplaceCurationItem>(
+    HOSTING_API.MARKETPLACE_CURATION_ITEM(marketplaceId, itemID),
+    data
+  );
+}
+
+export async function deleteMarketplaceCurationItem(
+  marketplaceId: string,
+  itemID: number
+): Promise<{ deleted: boolean; id: number }> {
+  return hostingDel<{ deleted: boolean; id: number }>(
+    HOSTING_API.MARKETPLACE_CURATION_ITEM(marketplaceId, itemID)
   );
 }

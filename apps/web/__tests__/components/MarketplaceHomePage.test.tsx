@@ -6,6 +6,8 @@ const mockTrackImpression = vi.fn();
 const mockTrackListingClick = vi.fn();
 const mockSearchListings = vi.fn();
 const mockSearchProfiles = vi.fn();
+const mockUsePublicMarketplaceDetail = vi.fn();
+const mockUseCommunityMarketplaceEnrichment = vi.fn();
 
 vi.mock('@/components', () => ({
   Header: () => <div data-testid="header" />,
@@ -101,6 +103,9 @@ vi.mock('@mobazha/core', async importOriginal => {
       trackListingClick: mockTrackListingClick,
       trackCheckoutHandoff: vi.fn(),
     }),
+    usePublicMarketplaceDetail: (...args: unknown[]) => mockUsePublicMarketplaceDetail(...args),
+    useCommunityMarketplaceEnrichment: (...args: unknown[]) =>
+      mockUseCommunityMarketplaceEnrichment(...args),
   };
 });
 
@@ -109,18 +114,31 @@ import { MarketplaceHomePage } from '@/components/MarketplaceDiscovery/Marketpla
 describe('MarketplaceHomePage attribution', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSearchListings.mockResolvedValue({
-      products: [
-        {
-          slug: 'psa-charizard',
-          title: 'PSA Charizard',
-          vendorPeerID: 'QmSeller',
-          averageRating: 4.8,
-          ratingCount: 12,
-        },
-      ],
+    mockSearchListings.mockImplementation((params: { sortBy?: string }) => {
+      const isPopular = params.sortBy === 'online-desc';
+      return Promise.resolve({
+        products: [
+          {
+            slug: isPopular ? 'popular-charizard' : 'latest-charizard',
+            title: isPopular ? 'Popular Charizard' : 'Latest Charizard',
+            vendorPeerID: 'QmSeller',
+            averageRating: isPopular ? 4.7 : 4.8,
+            ratingCount: isPopular ? 8 : 12,
+          },
+        ],
+      });
     });
     mockSearchProfiles.mockResolvedValue({ users: [] });
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: null,
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [],
+      sellerProfiles: {},
+    });
   });
 
   it('tracks impression after marketplace config is ready', async () => {
@@ -140,8 +158,140 @@ describe('MarketplaceHomePage attribution', () => {
     fireEvent.click(popularButton);
 
     expect(mockTrackListingClick).toHaveBeenCalledWith({
-      listingSlug: 'psa-charizard',
+      listingSlug: 'popular-charizard',
       peerID: 'QmSeller',
     });
+  });
+
+  it('renders curated picks once and keeps popular/latest discovery feeds unchanged', async () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: {
+        marketplace: {
+          id: 'mp-1',
+          name: 'Curated Market',
+          slug: 'curated-market',
+          publicURL: 'https://example.com',
+          joinMode: 'approval',
+          catalogMode: 'curated',
+          discoverability: 'public',
+          sellerEntryMode: 'operator_invited',
+          vertical: 'collectibles',
+          sellerCount: 1,
+          productCount: 3,
+        },
+        sellers: [
+          { peerID: 'QmCurated', productGroups: [{ id: 1, name: 'Sports Cards', itemCount: 5 }] },
+        ],
+        featured: [{ type: 'listing', peerID: 'QmCurated', slug: 'curated-listing', sortOrder: 1 }],
+        banners: [],
+        listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+      },
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'QmCurated:curated-listing',
+          slug: 'curated-listing',
+          peerID: 'QmCurated',
+          title: 'Curated Listing',
+          vendorName: 'Curated Store',
+          loading: false,
+          failed: false,
+        },
+      ],
+      sellerProfiles: {},
+    });
+    mockSearchListings.mockImplementation((params: { sortBy?: string }) => {
+      const isPopular = params.sortBy === 'online-desc';
+      return Promise.resolve({
+        products: [
+          {
+            slug: isPopular ? 'popular-only' : 'latest-only',
+            title: isPopular ? 'Popular Only' : 'Latest Only',
+            vendorPeerID: 'QmSeller',
+            averageRating: isPopular ? 4.7 : 4.8,
+            ratingCount: isPopular ? 8 : 12,
+          },
+        ],
+      });
+    });
+
+    render(<MarketplaceHomePage />);
+
+    const curatedButton = await screen.findByTestId(
+      'product-click-marketplaceStarter.curatedTitle'
+    );
+    const popularButton = await screen.findByTestId(
+      'product-click-marketplaceStarter.popularTitle'
+    );
+    const latestButton = await screen.findByTestId('product-click-marketplaceStarter.latestTitle');
+
+    fireEvent.click(curatedButton);
+    fireEvent.click(popularButton);
+    fireEvent.click(latestButton);
+
+    expect(mockTrackListingClick).toHaveBeenNthCalledWith(1, {
+      listingSlug: 'curated-listing',
+      peerID: 'QmCurated',
+    });
+    expect(mockTrackListingClick).toHaveBeenNthCalledWith(2, {
+      listingSlug: 'popular-only',
+      peerID: 'QmSeller',
+    });
+    expect(mockTrackListingClick).toHaveBeenNthCalledWith(3, {
+      listingSlug: 'latest-only',
+      peerID: 'QmSeller',
+    });
+  });
+
+  it('omits curated section when curated previews are not enriched', async () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: {
+        marketplace: {
+          id: 'mp-1',
+          name: 'Curated Market',
+          slug: 'curated-market',
+          publicURL: 'https://example.com',
+          joinMode: 'approval',
+          catalogMode: 'curated',
+          discoverability: 'public',
+          sellerEntryMode: 'operator_invited',
+          vertical: 'collectibles',
+          sellerCount: 1,
+          productCount: 3,
+        },
+        sellers: [{ peerID: 'QmCurated', productGroups: [] }],
+        featured: [{ type: 'listing', peerID: 'QmCurated', slug: 'curated-listing', sortOrder: 1 }],
+        banners: [],
+        listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+      },
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'QmCurated:curated-listing',
+          slug: 'curated-listing',
+          peerID: 'QmCurated',
+          title: 'Curated Listing',
+          loading: false,
+          failed: true,
+        },
+      ],
+      sellerProfiles: {},
+    });
+
+    render(<MarketplaceHomePage />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('product-click-marketplaceStarter.curatedTitle')).toBeNull();
+    });
+    expect(screen.getByTestId('product-click-marketplaceStarter.popularTitle')).toBeInTheDocument();
+    expect(screen.getByTestId('product-click-marketplaceStarter.latestTitle')).toBeInTheDocument();
   });
 });

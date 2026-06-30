@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   CreateNativeMarketplaceRequest,
   MarketplaceAttributionSummary,
+  MarketplaceCurationCandidates,
+  MarketplaceCurationItem,
+  MarketplaceCurationKind,
   MarketplaceSellerReviewEvent,
   MarketplaceStoreMembership,
   MarketplaceStoreStatus,
@@ -15,14 +18,20 @@ import type {
 import {
   acceptMarketplaceSellerInvitation,
   createMarketplace,
+  createMarketplaceCurationItem,
+  deleteMarketplaceCurationItem,
   deleteMarketplace,
   getMarketplace,
   getMarketplaceAttributionSummary,
+  getMarketplaceCuration,
+  getMarketplaceCurationCandidates,
   getMarketplaceSellerReviewEvents,
   getMarketplaceSellers,
   getMyMarketplaceMemberships,
   getMyMarketplaces,
   inviteMarketplaceSeller,
+  reorderMarketplaceCuration,
+  updateMarketplaceCurationItem,
   verifyMarketplaceCustomDomain,
   updateMarketplace,
   updateMarketplaceSeller,
@@ -78,6 +87,11 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   const [marketplace, setMarketplace] = useState<NativeMarketplace | null>(null);
   const [stores, setStores] = useState<MarketplaceStoreMembership[]>([]);
   const [reviewEvents, setReviewEvents] = useState<MarketplaceSellerReviewEvent[]>([]);
+  const [curationItems, setCurationItems] = useState<MarketplaceCurationItem[]>([]);
+  const [curationCandidates, setCurationCandidates] =
+    useState<MarketplaceCurationCandidates | null>(null);
+  const [curationLoading, setCurationLoading] = useState(false);
+  const [curationError, setCurationError] = useState<string | null>(null);
   const [attributionSummary, setAttributionSummary] =
     useState<MarketplaceAttributionSummary | null>(null);
   const [loading, setLoading] = useState(Boolean(marketplaceId));
@@ -138,6 +152,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       setMarketplace(null);
       setStores([]);
       setReviewEvents([]);
+      setCurationItems([]);
+      setCurationCandidates(null);
+      setCurationLoading(false);
+      setCurationError(null);
       setAttributionSummary(null);
       setLoading(false);
       setLoadFailed(false);
@@ -152,14 +170,26 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     setLoadFailed(false);
     setError(null);
     setReviewEventsError(null);
+    setCurationItems([]);
+    setCurationCandidates(null);
+    setCurationError(null);
+    setCurationLoading(true);
     setAttributionSummary(null);
     setAttributionSummaryError(null);
     setAttributionSummaryLoading(false);
     try {
-      const [marketplaceResult, membershipsResult, reviewEventsResult] = await Promise.allSettled([
+      const [
+        marketplaceResult,
+        membershipsResult,
+        reviewEventsResult,
+        curationResult,
+        candidatesResult,
+      ] = await Promise.allSettled([
         getMarketplace(requestMarketplaceId),
         getMarketplaceSellers(requestMarketplaceId),
         getMarketplaceSellerReviewEvents(requestMarketplaceId),
+        getMarketplaceCuration(requestMarketplaceId),
+        getMarketplaceCurationCandidates(requestMarketplaceId),
       ]);
       if (
         requestSeq !== requestSeqRef.current ||
@@ -184,6 +214,21 @@ export function useOperatorMarketplace(marketplaceId?: string) {
           toErrorMessage(reviewEventsResult.reason, 'Failed to load review events')
         );
       }
+      if (curationResult.status === 'fulfilled' && candidatesResult.status === 'fulfilled') {
+        setCurationItems(curationResult.value);
+        setCurationCandidates(candidatesResult.value);
+        setCurationError(null);
+      } else {
+        setCurationItems([]);
+        setCurationCandidates(null);
+        const source =
+          curationResult.status === 'rejected'
+            ? curationResult.reason
+            : candidatesResult.status === 'rejected'
+              ? candidatesResult.reason
+              : new Error('Failed to load curation');
+        setCurationError(toErrorMessage(source, 'Failed to load curation'));
+      }
       void loadAttributionSummary(requestMarketplaceId, requestSeq);
     } catch (err) {
       if (
@@ -197,6 +242,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       setMarketplace(null);
       setStores([]);
       setReviewEvents([]);
+      setCurationItems([]);
+      setCurationCandidates(null);
+      setCurationLoading(false);
+      setCurationError(null);
       setAttributionSummary(null);
       setReviewEventsError(null);
       setAttributionSummaryError(null);
@@ -207,6 +256,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         marketplaceIdRef.current === requestMarketplaceId
       ) {
         setLoading(false);
+        setCurationLoading(false);
       }
     }
   }, [loadAttributionSummary, marketplaceId]);
@@ -222,6 +272,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   useEffect(() => {
     setReviewEvents([]);
     setReviewEventsError(null);
+    setCurationItems([]);
+    setCurationCandidates(null);
+    setCurationLoading(false);
+    setCurationError(null);
     setAttributionSummary(null);
     setAttributionSummaryError(null);
     setAttributionSummaryLoading(false);
@@ -356,10 +410,100 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       }
     }, [marketplaceId, refresh]);
 
+  const addCurationItem = useCallback(
+    async (kind: MarketplaceCurationKind, payload: { peerID?: string; listingSlug?: string }) => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      setWorking(`curation:add:${kind}`);
+      try {
+        const created = await createMarketplaceCurationItem(actionMarketplaceId, {
+          kind,
+          peerID: payload.peerID,
+          listingSlug: payload.listingSlug,
+        });
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          await refresh();
+        }
+        return created;
+      } finally {
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setWorking(null);
+        }
+      }
+    },
+    [marketplaceId, refresh]
+  );
+
+  const reorderCurationByKind = useCallback(
+    async (kind: MarketplaceCurationKind, itemIDs: number[]) => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      setWorking(`curation:reorder:${kind}`);
+      try {
+        const updated = await reorderMarketplaceCuration(actionMarketplaceId, { kind, itemIDs });
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          await refresh();
+        }
+        return updated;
+      } finally {
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setWorking(null);
+        }
+      }
+    },
+    [marketplaceId, refresh]
+  );
+
+  const toggleCurationItem = useCallback(
+    async (itemID: number, isActive: boolean) => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      setWorking(`curation:toggle:${itemID}`);
+      try {
+        const updated = await updateMarketplaceCurationItem(actionMarketplaceId, itemID, {
+          isActive,
+        });
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          await refresh();
+        }
+        return updated;
+      } finally {
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setWorking(null);
+        }
+      }
+    },
+    [marketplaceId, refresh]
+  );
+
+  const removeCurationItem = useCallback(
+    async (itemID: number) => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      setWorking(`curation:remove:${itemID}`);
+      try {
+        const result = await deleteMarketplaceCurationItem(actionMarketplaceId, itemID);
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          await refresh();
+        }
+        return result;
+      } finally {
+        if (marketplaceIdRef.current === actionMarketplaceId) {
+          setWorking(null);
+        }
+      }
+    },
+    [marketplaceId, refresh]
+  );
+
   return {
     marketplace,
     stores,
     reviewEvents,
+    curationItems,
+    curationCandidates,
+    curationLoading,
+    curationError,
     attributionSummary,
     counts,
     loading,
@@ -376,6 +520,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     invite,
     reviewSeller,
     verifyCustomDomain,
+    addCurationItem,
+    reorderCurationByKind,
+    toggleCurationItem,
+    removeCurationItem,
   };
 }
 

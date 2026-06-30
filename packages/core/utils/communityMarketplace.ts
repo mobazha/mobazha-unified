@@ -3,6 +3,10 @@
  */
 
 import { buildProductHref } from './productUrl';
+import type {
+  PublicMarketplaceListingRef,
+  PublicNativeMarketplaceDetail,
+} from '../types/marketplace';
 
 /** Turn listing slug into a readable title when API title is unavailable. */
 export function formatListingSlugTitle(slug: string): string {
@@ -66,4 +70,112 @@ export function marketplaceHref(slug: string | undefined, id: string): string {
 
 export function communityProductHref(slug: string, peerID: string): string {
   return buildProductHref(slug, peerID);
+}
+
+export interface PublicMarketplaceCurationRefs {
+  curatedListingRefs: PublicMarketplaceListingRef[];
+  curatedSellerPeerIDs: string[];
+  bannerListingRefs: PublicMarketplaceListingRef[];
+  fallbackListingRefs: PublicMarketplaceListingRef[];
+  fallbackSellerPeerIDs: string[];
+}
+
+function pushUniqueListing(
+  target: PublicMarketplaceListingRef[],
+  seen: Set<string>,
+  peerID: string | undefined,
+  slug: string | undefined
+) {
+  const normalizedPeerID = peerID?.trim();
+  const normalizedSlug = slug?.trim();
+  if (!normalizedPeerID || !normalizedSlug) return;
+  const key = `${normalizedPeerID}::${normalizedSlug}`;
+  if (seen.has(key)) return;
+  seen.add(key);
+  target.push({ peerID: normalizedPeerID, slug: normalizedSlug });
+}
+
+function pushUniquePeer(target: string[], seen: Set<string>, peerID: string | undefined) {
+  const normalizedPeerID = peerID?.trim();
+  if (!normalizedPeerID || seen.has(normalizedPeerID)) return;
+  seen.add(normalizedPeerID);
+  target.push(normalizedPeerID);
+}
+
+function sortBySortOrder<T extends { sortOrder: number }>(items: T[]): T[] {
+  return [...items]
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      if (a.item.sortOrder !== b.item.sortOrder) {
+        return a.item.sortOrder - b.item.sortOrder;
+      }
+      return a.index - b.index;
+    })
+    .map(row => row.item);
+}
+
+/**
+ * Partition native public marketplace detail into curation refs while preserving operator order.
+ */
+export function derivePublicMarketplaceCurationRefs(
+  detail: PublicNativeMarketplaceDetail | null | undefined
+): PublicMarketplaceCurationRefs {
+  const curatedListingRefs: PublicMarketplaceListingRef[] = [];
+  const curatedSellerPeerIDs: string[] = [];
+  const bannerListingRefs: PublicMarketplaceListingRef[] = [];
+  const fallbackListingRefs: PublicMarketplaceListingRef[] = [];
+  const fallbackSellerPeerIDs: string[] = [];
+
+  if (!detail) {
+    return {
+      curatedListingRefs,
+      curatedSellerPeerIDs,
+      bannerListingRefs,
+      fallbackListingRefs,
+      fallbackSellerPeerIDs,
+    };
+  }
+
+  const featured = sortBySortOrder(detail.featured ?? []);
+  const banners = sortBySortOrder(detail.banners ?? []);
+
+  const curatedListingSeen = new Set<string>();
+  const curatedSellerSeen = new Set<string>();
+  const bannerSeen = new Set<string>();
+  const fallbackListingSeen = new Set<string>();
+  const fallbackSellerSeen = new Set<string>();
+
+  for (const item of featured) {
+    if (item.type === 'listing') {
+      pushUniqueListing(curatedListingRefs, curatedListingSeen, item.peerID, item.slug);
+      continue;
+    }
+    if (item.type === 'seller') {
+      pushUniquePeer(curatedSellerPeerIDs, curatedSellerSeen, item.peerID);
+      continue;
+    }
+    if (item.type === 'banner') {
+      pushUniqueListing(bannerListingRefs, bannerSeen, item.peerID, item.slug);
+    }
+  }
+
+  for (const banner of banners) {
+    pushUniqueListing(bannerListingRefs, bannerSeen, banner.peerID, banner.slug);
+  }
+
+  for (const ref of detail.listings?.listings ?? []) {
+    pushUniqueListing(fallbackListingRefs, fallbackListingSeen, ref.peerID, ref.slug);
+  }
+
+  for (const seller of detail.sellers ?? []) {
+    pushUniquePeer(fallbackSellerPeerIDs, fallbackSellerSeen, seller.peerID);
+  }
+
+  return {
+    curatedListingRefs,
+    curatedSellerPeerIDs,
+    bannerListingRefs,
+    fallbackListingRefs,
+    fallbackSellerPeerIDs,
+  };
 }

@@ -16,6 +16,7 @@ import {
 } from '@mobazha/core';
 import type { MarketplaceStoreMembership } from '@mobazha/core';
 import { Header, Footer } from '@/components';
+import { OperatorMarketplaceCurationPanel } from '@/components/Operator/OperatorMarketplaceCurationPanel';
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
 import { Container } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,10 @@ export default function MarketplaceOperatorDetailPage() {
     attributionSummary,
     attributionSummaryError,
     attributionSummaryLoading,
+    curationItems,
+    curationCandidates,
+    curationLoading,
+    curationError,
     working,
     refresh,
     publish,
@@ -93,6 +98,10 @@ export default function MarketplaceOperatorDetailPage() {
     invite,
     reviewSeller,
     verifyCustomDomain,
+    addCurationItem,
+    reorderCurationByKind,
+    toggleCurationItem,
+    removeCurationItem,
   } = useOperatorMarketplace(id);
   const [peerID, setPeerID] = useState('');
   const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>('all');
@@ -102,6 +111,7 @@ export default function MarketplaceOperatorDetailPage() {
   const [reasonInput, setReasonInput] = useState('');
   const [reasonTouched, setReasonTouched] = useState(false);
   const isArchived = marketplace?.status === 'archived';
+  const curationReadOnly = isArchived;
   const trimmedReason = reasonInput.trim();
   const reasonTooLong = trimmedReason.length > 1000;
   const reasonInvalid = trimmedReason.length === 0 || reasonTooLong;
@@ -327,6 +337,73 @@ export default function MarketplaceOperatorDetailPage() {
     }
   }
 
+  async function handleAddCurationItem(
+    kind: Parameters<typeof addCurationItem>[0],
+    payload: Parameters<typeof addCurationItem>[1]
+  ) {
+    if (curationReadOnly) return false;
+    try {
+      await addCurationItem(kind, payload);
+      toast({ title: t('marketplace.operator.curation.addSuccess') });
+      return true;
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.curation.addFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+      return false;
+    }
+  }
+
+  async function handleReorderCurationByKind(
+    kind: Parameters<typeof reorderCurationByKind>[0],
+    itemIDs: Parameters<typeof reorderCurationByKind>[1]
+  ) {
+    if (curationReadOnly) return;
+    try {
+      await reorderCurationByKind(kind, itemIDs);
+      toast({ title: t('marketplace.operator.curation.reorderSuccess') });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.curation.reorderFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleToggleCurationItem(
+    itemID: Parameters<typeof toggleCurationItem>[0],
+    isActive: Parameters<typeof toggleCurationItem>[1]
+  ) {
+    if (curationReadOnly) return;
+    try {
+      await toggleCurationItem(itemID, isActive);
+      toast({ title: t('marketplace.operator.curation.toggleSuccess') });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.curation.toggleFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleRemoveCurationItem(itemID: Parameters<typeof removeCurationItem>[0]) {
+    if (curationReadOnly) return;
+    try {
+      await removeCurationItem(itemID);
+      toast({ title: t('marketplace.operator.curation.removeSuccess') });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.curation.removeFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -543,6 +620,20 @@ export default function MarketplaceOperatorDetailPage() {
               </p>
             </CardContent>
           </Card>
+
+          <OperatorMarketplaceCurationPanel
+            items={curationItems}
+            candidates={curationCandidates}
+            loading={curationLoading}
+            error={curationError}
+            working={working}
+            isReadOnly={Boolean(curationReadOnly)}
+            onRetry={refresh}
+            onAdd={handleAddCurationItem}
+            onReorder={handleReorderCurationByKind}
+            onToggle={handleToggleCurationItem}
+            onRemove={handleRemoveCurationItem}
+          />
 
           {!isArchived ? (
             <Card className="mt-6">
