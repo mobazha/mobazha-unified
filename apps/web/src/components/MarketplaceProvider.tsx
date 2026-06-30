@@ -13,7 +13,13 @@ import {
   type MarketplaceContextValue,
 } from '@mobazha/core/hooks/useMarketplaceContext';
 import { resolveMarketplaceSubdomainFromWindow } from '@mobazha/core/marketplace/subdomain';
+import { getCurationHomePath } from '@mobazha/core/config/curationHomePath';
 import { getCurrentMarketplaceConfig } from '@mobazha/core/services/api/marketplace';
+
+function normalizeWindowHostname(hostname: string): string | null {
+  const normalized = hostname.trim().toLowerCase().replace(/\.$/, '');
+  return normalized || null;
+}
 
 function MarketplaceContextBridge({
   subdomain,
@@ -57,13 +63,26 @@ export function MarketplaceProvider({
   children: ReactNode;
 }) {
   const skipWindowResolve = !!(initialSubdomain || initialDomain || initialConfig);
+  const hasCurationHomePath = !!getCurationHomePath();
+  const windowDomain = useSyncExternalStore(
+    () => () => {},
+    () => {
+      if (skipWindowResolve || !hasCurationHomePath || typeof window === 'undefined') {
+        return null;
+      }
+      return normalizeWindowHostname(window.location.hostname);
+    },
+    () => null
+  );
   const windowSubdomain = useSyncExternalStore(
     () => () => {},
-    () => (skipWindowResolve ? null : resolveMarketplaceSubdomainFromWindow()),
+    () => (skipWindowResolve || windowDomain ? null : resolveMarketplaceSubdomainFromWindow()),
     () => null
   );
   const subdomain = initialSubdomain ?? initialConfig?.subdomain ?? windowSubdomain;
-  const [domain] = useState<string | null>(initialDomain ?? initialConfig?.domain ?? null);
+  const [domain] = useState<string | null>(
+    initialDomain ?? initialConfig?.domain ?? windowDomain ?? null
+  );
 
   const isSubMarket = !!subdomain || !!domain || !!initialConfig;
   const marketplaceKey =
