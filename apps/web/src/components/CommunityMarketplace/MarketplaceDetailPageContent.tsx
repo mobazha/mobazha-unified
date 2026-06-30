@@ -135,11 +135,6 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     [curationRefs.fallbackListingRefs, resolvePreview]
   );
 
-  const activeListingPreviews = useMemo(
-    () => (curatedListingPreviews.length > 0 ? curatedListingPreviews : fallbackListingPreviews),
-    [curatedListingPreviews, fallbackListingPreviews]
-  );
-
   const sellersByPeerID = useMemo(() => {
     const lookup = new Map<string, PublicMarketplaceSeller>();
     for (const seller of sellers) {
@@ -153,9 +148,14 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     [curationRefs.curatedSellerPeerIDs, sellersByPeerID]
   );
 
-  const activeSellers = useMemo(
-    () => (curatedSellers.length > 0 ? curatedSellers : sellers),
-    [curatedSellers, sellers]
+  const curatedSellerPeerIDSet = useMemo(
+    () => new Set(curatedSellers.map(seller => seller.peerID)),
+    [curatedSellers]
+  );
+
+  const remainingSellers = useMemo(
+    () => sellers.filter(seller => !curatedSellerPeerIDSet.has(seller.peerID)),
+    [sellers, curatedSellerPeerIDSet]
   );
 
   const isCollectibleMarketplace = isCollectibleMarketplaceVertical(marketplace?.vertical);
@@ -182,7 +182,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
   );
 
   const filteredPreviews = useMemo(() => {
-    let result = activeListingPreviews;
+    let result = fallbackListingPreviews;
 
     if (isCollectibleMarketplace && collectibleCategory !== 'all') {
       result = filterCollectibleListingPreviews(result, collectibleCategory);
@@ -196,7 +196,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
         preview.slug.toLowerCase().includes(q) ||
         (preview.vendorName || '').toLowerCase().includes(q)
     );
-  }, [activeListingPreviews, searchQuery, isCollectibleMarketplace, collectibleCategory]);
+  }, [fallbackListingPreviews, searchQuery, isCollectibleMarketplace, collectibleCategory]);
 
   const hasCollectibleCategoryFilter = isCollectibleMarketplace && collectibleCategory !== 'all';
   const showCollectibleCategoryEmpty =
@@ -446,6 +446,30 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                 </div>
               ) : null}
 
+              {curatedListingPreviews.length > 0 ? (
+                <div className="mb-6">
+                  <h2 className="mb-3 text-lg font-semibold text-foreground">
+                    {t('marketplace.detail.featuredListingsTitle')}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {curatedListingPreviews.map(preview => {
+                      const baseHref = communityProductHref(preview.slug, preview.peerID);
+                      const productHref = isCollectibleMarketplace
+                        ? appendCollectibleAttributionToHref(baseHref, collectibleAttribution)
+                        : undefined;
+                      return (
+                        <CommunityListingCard
+                          key={`curated-${preview.key}`}
+                          preview={preview}
+                          productHref={productHref}
+                          onClick={() => handleListingPreviewClick(preview)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mb-5">
                 <Input
                   value={searchQuery}
@@ -483,22 +507,29 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
               )}
 
               {filteredPreviews.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                  {filteredPreviews.map(preview => {
-                    const baseHref = communityProductHref(preview.slug, preview.peerID);
-                    const productHref = isCollectibleMarketplace
-                      ? appendCollectibleAttributionToHref(baseHref, collectibleAttribution)
-                      : undefined;
+                <div>
+                  {curatedListingPreviews.length > 0 ? (
+                    <h2 className="mb-3 text-lg font-semibold text-foreground">
+                      {t('marketplace.detail.allListingsTitle')}
+                    </h2>
+                  ) : null}
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {filteredPreviews.map(preview => {
+                      const baseHref = communityProductHref(preview.slug, preview.peerID);
+                      const productHref = isCollectibleMarketplace
+                        ? appendCollectibleAttributionToHref(baseHref, collectibleAttribution)
+                        : undefined;
 
-                    return (
-                      <CommunityListingCard
-                        key={preview.key}
-                        preview={preview}
-                        productHref={productHref}
-                        onClick={() => handleListingPreviewClick(preview)}
-                      />
-                    );
-                  })}
+                      return (
+                        <CommunityListingCard
+                          key={preview.key}
+                          preview={preview}
+                          productHref={productHref}
+                          onClick={() => handleListingPreviewClick(preview)}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <Card className="py-12 text-center">
@@ -525,15 +556,51 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
           )}
 
           {activeTab === 'sellers' && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {activeSellers.length > 0 ? (
-                activeSellers.map(seller => (
-                  <CommunitySellerCard
-                    key={seller.peerID}
-                    seller={seller}
-                    profile={sellerProfiles[seller.peerID]}
-                  />
-                ))
+            <div>
+              {curatedSellers.length > 0 ? (
+                <div className="mb-6">
+                  <h2 className="mb-3 text-lg font-semibold text-foreground">
+                    {t('marketplace.detail.featuredSellersTitle')}
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {curatedSellers.map(seller => (
+                      <CommunitySellerCard
+                        key={`featured-${seller.peerID}`}
+                        seller={seller}
+                        profile={sellerProfiles[seller.peerID]}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {curatedSellers.length > 0 ? (
+                remainingSellers.length > 0 ? (
+                  <div>
+                    <h2 className="mb-3 text-lg font-semibold text-foreground">
+                      {t('marketplace.detail.allSellersTitle')}
+                    </h2>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {remainingSellers.map(seller => (
+                        <CommunitySellerCard
+                          key={seller.peerID}
+                          seller={seller}
+                          profile={sellerProfiles[seller.peerID]}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null
+              ) : sellers.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {sellers.map(seller => (
+                    <CommunitySellerCard
+                      key={seller.peerID}
+                      seller={seller}
+                      profile={sellerProfiles[seller.peerID]}
+                    />
+                  ))}
+                </div>
               ) : (
                 <Card className="col-span-full py-12 text-center">
                   <VStack gap="md" align="center">

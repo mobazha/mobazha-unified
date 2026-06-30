@@ -1,16 +1,29 @@
 'use client';
 
-import { type ReactNode, useMemo, useState } from 'react';
+import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 import {
   buildProductHref,
   formatListingSlugTitle,
   formatUserName,
   type MarketplaceCurationCandidates,
+  type MarketplaceCurationCandidatesParams,
   type MarketplaceCurationItem,
   type MarketplaceCurationKind,
+  type PublicMarketplaceListingRef,
+  useCommunityMarketplaceEnrichment,
   useI18n,
 } from '@mobazha/core';
-import { ArrowDown, ArrowUp, ExternalLink, Loader2, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +32,7 @@ interface OperatorMarketplaceCurationPanelProps {
   items: MarketplaceCurationItem[];
   candidates: MarketplaceCurationCandidates | null;
   loading: boolean;
+  candidatesLoading?: boolean;
   error: string | null;
   working: string | null;
   isReadOnly: boolean;
@@ -30,6 +44,9 @@ interface OperatorMarketplaceCurationPanelProps {
   onReorder: (kind: MarketplaceCurationKind, itemIDs: number[]) => Promise<void> | void;
   onToggle: (itemID: number, isActive: boolean) => Promise<void> | void;
   onRemove: (itemID: number) => Promise<void> | void;
+  onLoadCandidates?: (
+    params: MarketplaceCurationCandidatesParams
+  ) => Promise<boolean | void> | boolean | void;
 }
 
 interface ListingCandidateOption {
@@ -50,10 +67,16 @@ function listBySortOrder<T extends { sortOrder: number; id: number }>(rows: T[])
   });
 }
 
+function abbreviatePeerID(peerID: string): string {
+  if (peerID.length <= 18) return peerID;
+  return `${peerID.slice(0, 8)}…${peerID.slice(-6)}`;
+}
+
 export function OperatorMarketplaceCurationPanel({
   items,
   candidates,
   loading,
+  candidatesLoading = false,
   error,
   working,
   isReadOnly,
@@ -62,12 +85,23 @@ export function OperatorMarketplaceCurationPanel({
   onReorder,
   onToggle,
   onRemove,
+  onLoadCandidates = () => undefined,
 }: OperatorMarketplaceCurationPanelProps) {
   const { t } = useI18n();
   const [selectedListingKey, setSelectedListingKey] = useState('');
   const [selectedSellerPeerID, setSelectedSellerPeerID] = useState('');
   const [selectedBannerKey, setSelectedBannerKey] = useState('');
+  const serverCandidateQuery = candidates?.query ?? '';
+  const [candidateQueryDraft, setCandidateQueryDraft] = useState({
+    source: serverCandidateQuery,
+    value: serverCandidateQuery,
+  });
+  const candidateQuery =
+    candidateQueryDraft.source === serverCandidateQuery
+      ? candidateQueryDraft.value
+      : serverCandidateQuery;
   const actionLocked = isReadOnly || Boolean(working);
+  const candidateActionLocked = actionLocked || candidatesLoading;
 
   const itemsByKind = useMemo(() => {
     return {
@@ -90,6 +124,48 @@ export function OperatorMarketplaceCurationPanel({
     [itemsByKind.seller]
   );
 
+  const enrichmentListingRefs = useMemo<PublicMarketplaceListingRef[]>(() => {
+    const refs = new Map<string, PublicMarketplaceListingRef>();
+    for (const candidate of candidates?.listings ?? []) {
+      if (!candidate.peerID || !candidate.slug) continue;
+      refs.set(listingKey({ peerID: candidate.peerID, listingSlug: candidate.slug }), {
+        peerID: candidate.peerID,
+        slug: candidate.slug,
+      });
+    }
+    for (const item of items) {
+      if (item.kind === 'seller' || !item.peerID || !item.listingSlug) continue;
+      refs.set(listingKey(item), { peerID: item.peerID, slug: item.listingSlug });
+    }
+    return [...refs.values()];
+  }, [candidates?.listings, items]);
+
+  const enrichmentSellerPeerIDs = useMemo(() => {
+    const peerIDs = new Set<string>();
+    for (const candidate of candidates?.sellers ?? []) {
+      if (candidate.peerID) peerIDs.add(candidate.peerID);
+    }
+    for (const item of itemsByKind.seller) {
+      if (item.peerID) peerIDs.add(item.peerID);
+    }
+    return [...peerIDs];
+  }, [candidates?.sellers, itemsByKind.seller]);
+
+  const { listingPreviews, sellerProfiles } = useCommunityMarketplaceEnrichment(
+    enrichmentListingRefs,
+    enrichmentSellerPeerIDs
+  );
+
+  const enrichedListingLookup = useMemo(() => {
+    const lookup = new Map<string, (typeof listingPreviews)[number]>();
+    for (const preview of listingPreviews) {
+      if (!preview.failed) {
+        lookup.set(listingKey({ peerID: preview.peerID, listingSlug: preview.slug }), preview);
+      }
+    }
+    return lookup;
+  }, [listingPreviews]);
+
   const listingCandidates = useMemo<ListingCandidateOption[]>(() => {
     if (!candidates) return [];
     return candidates.listings
@@ -99,12 +175,15 @@ export function OperatorMarketplaceCurationPanel({
         peerID: candidate.peerID as string,
         slug: candidate.slug,
         title:
+          enrichedListingLookup
+            .get(listingKey({ peerID: candidate.peerID, listingSlug: candidate.slug }))
+            ?.title?.trim() ||
           candidate.title?.trim() ||
           formatListingSlugTitle(candidate.slug) ||
           candidate.vendorName?.trim() ||
           t('marketplace.operator.curation.listingFallbackTitle'),
       }));
-  }, [candidates, t]);
+  }, [candidates, enrichedListingLookup, t]);
 
   const availableListingCandidates = useMemo(
     () => listingCandidates.filter(candidate => !existingListingKeys.has(candidate.key)),
@@ -127,6 +206,39 @@ export function OperatorMarketplaceCurationPanel({
     for (const candidate of listingCandidates) lookup.set(candidate.key, candidate);
     return lookup;
   }, [listingCandidates]);
+
+  function sellerDisplayName(peerID: string): string {
+    const profileName = sellerProfiles[peerID]?.displayName?.trim();
+    return (
+      profileName ||
+      formatUserName(
+        { peerID },
+        {
+          fallback: t('marketplace.operator.curation.sellerFallbackTitle'),
+          prefix: t('marketplace.operator.storeNamePrefix'),
+        }
+      )
+    );
+  }
+
+  async function handleCandidateSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (candidateActionLocked) return;
+    await onLoadCandidates({
+      q: candidateQuery.trim() || undefined,
+      page: 1,
+      pageSize: candidates?.pageSize || 20,
+    });
+  }
+
+  async function handleCandidatePage(page: number) {
+    if (candidateActionLocked || page < 1 || page > (candidates?.totalPage || 1)) return;
+    await onLoadCandidates({
+      q: candidates?.query || undefined,
+      page,
+      pageSize: candidates?.pageSize || 20,
+    });
+  }
 
   async function handleAdd(kind: MarketplaceCurationKind) {
     if (actionLocked) return;
@@ -164,15 +276,16 @@ export function OperatorMarketplaceCurationPanel({
 
   function renderRow(item: MarketplaceCurationItem, index: number, kind: MarketplaceCurationKind) {
     const listingMeta = listingLookup.get(listingKey(item));
+    const enrichedListing = enrichedListingLookup.get(listingKey(item));
     const listingTitle =
+      enrichedListing?.title?.trim() ||
       listingMeta?.title ||
       formatListingSlugTitle(item.listingSlug || '') ||
       t('marketplace.operator.curation.listingFallbackTitle');
     const secondary = [item.peerID, item.listingSlug].filter(Boolean).join(' / ');
-    const sellerPrimary = formatUserName(
-      { peerID: item.peerID },
-      { prefix: t('marketplace.operator.storeNamePrefix') }
-    );
+    const sellerPrimary = item.peerID
+      ? sellerDisplayName(item.peerID)
+      : t('marketplace.operator.curation.sellerFallbackTitle');
     const previewHref =
       kind === 'seller'
         ? item.peerID
@@ -327,17 +440,91 @@ export function OperatorMarketplaceCurationPanel({
           </div>
         ) : (
           <div className="space-y-8">
+            <div className="rounded-lg border border-border/80 p-4">
+              <form
+                className="flex flex-col gap-2 sm:flex-row sm:items-center"
+                onSubmit={event => void handleCandidateSearch(event)}
+              >
+                <label className="sr-only" htmlFor="operator-curation-candidate-search">
+                  {t('marketplace.operator.curation.searchCandidates')}
+                </label>
+                <input
+                  id="operator-curation-candidate-search"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
+                  value={candidateQuery}
+                  onChange={event =>
+                    setCandidateQueryDraft({
+                      source: serverCandidateQuery,
+                      value: event.target.value,
+                    })
+                  }
+                  placeholder={t('marketplace.operator.curation.searchCandidatesPlaceholder')}
+                  disabled={candidateActionLocked}
+                  data-testid="operator-curation-candidate-search"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant="outline"
+                  disabled={candidateActionLocked}
+                  data-testid="operator-curation-candidate-search-submit"
+                >
+                  {candidatesLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="mr-2 h-4 w-4" />
+                  )}
+                  {t('marketplace.operator.curation.search')}
+                </Button>
+              </form>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+                <span data-testid="operator-curation-candidate-page-status">
+                  {t('marketplace.operator.curation.pageStatus', {
+                    page: candidates?.page || 1,
+                    totalPage: candidates?.totalPage || 1,
+                    total: candidates?.total || 0,
+                  })}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void handleCandidatePage((candidates?.page || 1) - 1)}
+                    disabled={candidateActionLocked || (candidates?.page || 1) <= 1}
+                    aria-label={t('marketplace.operator.curation.previousPage')}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void handleCandidatePage((candidates?.page || 1) + 1)}
+                    disabled={
+                      candidateActionLocked ||
+                      (candidates?.page || 1) >= (candidates?.totalPage || 1)
+                    }
+                    aria-label={t('marketplace.operator.curation.nextPage')}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
             {renderSection(
               'listing',
               'marketplace.operator.curation.sections.listings',
               'marketplace.operator.curation.sections.listingsDesc',
               availableListingCandidates.length,
-              actionLocked || availableListingCandidates.length === 0 || !selectedListingKey,
+              candidateActionLocked ||
+                availableListingCandidates.length === 0 ||
+                !selectedListingKey,
               <select
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
                 value={selectedListingKey}
                 onChange={event => setSelectedListingKey(event.target.value)}
-                disabled={actionLocked || availableListingCandidates.length === 0}
+                disabled={candidateActionLocked || availableListingCandidates.length === 0}
                 data-testid="operator-curation-select-listing"
               >
                 <option value="">{t('marketplace.operator.curation.selectListing')}</option>
@@ -354,18 +541,20 @@ export function OperatorMarketplaceCurationPanel({
               'marketplace.operator.curation.sections.sellers',
               'marketplace.operator.curation.sections.sellersDesc',
               availableSellerCandidates.length,
-              actionLocked || availableSellerCandidates.length === 0 || !selectedSellerPeerID,
+              candidateActionLocked ||
+                availableSellerCandidates.length === 0 ||
+                !selectedSellerPeerID,
               <select
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
                 value={selectedSellerPeerID}
                 onChange={event => setSelectedSellerPeerID(event.target.value)}
-                disabled={actionLocked || availableSellerCandidates.length === 0}
+                disabled={candidateActionLocked || availableSellerCandidates.length === 0}
                 data-testid="operator-curation-select-seller"
               >
                 <option value="">{t('marketplace.operator.curation.selectSeller')}</option>
                 {availableSellerCandidates.map(candidate => (
                   <option key={candidate.peerID} value={candidate.peerID}>
-                    {candidate.peerID}
+                    {sellerDisplayName(candidate.peerID)} ({abbreviatePeerID(candidate.peerID)})
                   </option>
                 ))}
               </select>,
@@ -376,12 +565,12 @@ export function OperatorMarketplaceCurationPanel({
               'marketplace.operator.curation.sections.banners',
               'marketplace.operator.curation.sections.bannersDesc',
               availableBannerCandidates.length,
-              actionLocked || availableBannerCandidates.length === 0 || !selectedBannerKey,
+              candidateActionLocked || availableBannerCandidates.length === 0 || !selectedBannerKey,
               <select
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
                 value={selectedBannerKey}
                 onChange={event => setSelectedBannerKey(event.target.value)}
-                disabled={actionLocked || availableBannerCandidates.length === 0}
+                disabled={candidateActionLocked || availableBannerCandidates.length === 0}
                 data-testid="operator-curation-select-banner"
               >
                 <option value="">{t('marketplace.operator.curation.selectBanner')}</option>
