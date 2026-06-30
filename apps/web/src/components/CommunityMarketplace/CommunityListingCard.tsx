@@ -21,9 +21,10 @@ import { VStack } from '@/components/layouts';
 interface CommunityListingCardProps {
   preview: CommunityListingPreview;
   productHref?: string;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }
 
-export function CommunityListingCard({ preview, productHref }: CommunityListingCardProps) {
+export function CommunityListingCard({ preview, productHref, onClick }: CommunityListingCardProps) {
   const { t } = useI18n();
   const { renderPairedPrice } = useCurrency();
   const href = productHref ?? communityProductHref(preview.slug, preview.peerID);
@@ -55,7 +56,7 @@ export function CommunityListingCard({ preview, productHref }: CommunityListingC
   }
 
   return (
-    <Link href={href} className="block h-full">
+    <Link href={href} className="block h-full" onClick={onClick}>
       <Card className="h-full overflow-hidden transition-all hover:shadow-lg active:scale-[0.99]">
         <div className="relative aspect-[4/3] bg-muted">
           {imageUrl ? (

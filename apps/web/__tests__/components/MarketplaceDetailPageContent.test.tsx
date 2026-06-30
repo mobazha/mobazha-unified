@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 vi.mock('next/link', () => ({
@@ -19,8 +19,22 @@ vi.mock('@/components/MobilePageHeader/MobilePageHeader', () => ({
   MobilePageHeader: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
+const mockTrackImpression = vi.fn();
+const mockTrackListingClick = vi.fn();
+const mockUseCommunityMarketplaceEnrichment = vi.fn();
+
 vi.mock('@/components/CommunityMarketplace', () => ({
-  CommunityListingCard: () => null,
+  CommunityListingCard: ({
+    preview,
+    onClick,
+  }: {
+    preview: { slug: string };
+    onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+  }) => (
+    <a href={`/product/${preview.slug}`} data-testid={`listing-${preview.slug}`} onClick={onClick}>
+      {preview.slug}
+    </a>
+  ),
   CommunitySellerCard: () => null,
   CollectibleMarketplaceSignal: () => null,
   MarketplaceLogo: () => <div data-testid="marketplace-logo" />,
@@ -34,8 +48,14 @@ vi.mock('@mobazha/core', async importOriginal => {
   return {
     ...actual,
     usePublicMarketplaceDetail: (...args: unknown[]) => mockUsePublicMarketplaceDetail(...args),
-    useCommunityMarketplaceEnrichment: () => ({ listingPreviews: [], sellerProfiles: {} }),
+    useCommunityMarketplaceEnrichment: (...args: unknown[]) =>
+      mockUseCommunityMarketplaceEnrichment(...args),
     useCollectibleMarketplaceAttribution: () => null,
+    useNativeMarketplaceAttribution: () => ({
+      trackImpression: mockTrackImpression,
+      trackListingClick: mockTrackListingClick,
+      trackCheckoutHandoff: vi.fn(),
+    }),
     useI18n: () => ({
       t: (key: string) => key,
       formatRelativeTime: () => '1d',
@@ -85,6 +105,19 @@ const baseMarketplace = {
 describe('MarketplaceDetailPageContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'listing-1',
+          slug: 'psa-charizard',
+          peerID: 'QmSeller',
+          title: 'PSA Charizard',
+          vendorName: 'Seller',
+          loading: false,
+        },
+      ],
+      sellerProfiles: {},
+    });
     mockUsePublicMarketplaceDetail.mockReturnValue({
       detail: {
         marketplace: baseMarketplace,
@@ -125,5 +158,47 @@ describe('MarketplaceDetailPageContent', () => {
 
     expect(screen.queryByTestId('marketplace-apply-to-sell')).toBeNull();
     expect(screen.getByText('marketplace.detail.sellerAdmissionInviteOnly')).toBeInTheDocument();
+  });
+
+  it('tracks impression only after a marketplace detail successfully resolves', async () => {
+    mockUsePublicMarketplaceDetail
+      .mockReturnValueOnce({
+        detail: null,
+        loading: true,
+        error: null,
+        refresh: vi.fn(),
+      })
+      .mockReturnValue({
+        detail: {
+          marketplace: baseMarketplace,
+          sellers: [],
+          featured: [],
+          banners: [],
+          listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+        },
+        loading: false,
+        error: null,
+        refresh: vi.fn(),
+      });
+
+    const view = render(<MarketplaceDetailPageContent identifier="test-market" />);
+    expect(mockTrackImpression).not.toHaveBeenCalled();
+
+    view.rerender(<MarketplaceDetailPageContent identifier="test-market" />);
+
+    await waitFor(() => {
+      expect(mockTrackImpression).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('tracks listing click with exact slug and peerID payload', () => {
+    render(<MarketplaceDetailPageContent identifier="test-market" />);
+
+    fireEvent.click(screen.getByTestId('listing-psa-charizard'));
+
+    expect(mockTrackListingClick).toHaveBeenCalledWith({
+      listingSlug: 'psa-charizard',
+      peerID: 'QmSeller',
+    });
   });
 });

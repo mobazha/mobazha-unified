@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
@@ -20,6 +20,7 @@ import {
   usePublicMarketplaceDetail,
   useCommunityMarketplaceEnrichment,
   useCollectibleMarketplaceAttribution,
+  useNativeMarketplaceAttribution,
   useI18n,
   isCollectibleMarketplaceVertical,
   isNativeMarketplaceSelfServeEligible,
@@ -81,6 +82,23 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
   const collectibleAttribution = useCollectibleMarketplaceAttribution(
     isCollectibleMarketplace,
     identifier
+  );
+  const { trackImpression, trackListingClick } = useNativeMarketplaceAttribution(marketplace?.id);
+
+  useEffect(() => {
+    if (loading || error || !marketplace) return;
+    trackImpression();
+  }, [loading, error, marketplace, trackImpression]);
+
+  const handleListingPreviewClick = useCallback(
+    (preview: { slug: string; peerID?: string; loading?: boolean }) => {
+      if (preview.loading) return;
+      trackListingClick({
+        listingSlug: preview.slug,
+        peerID: preview.peerID,
+      });
+    },
+    [trackListingClick]
   );
 
   const filteredPreviews = useMemo(() => {
@@ -373,6 +391,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         key={preview.key}
                         preview={preview}
                         productHref={productHref}
+                        onClick={() => handleListingPreviewClick(preview)}
                       />
                     );
                   })}
