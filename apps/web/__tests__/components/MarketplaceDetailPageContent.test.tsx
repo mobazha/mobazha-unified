@@ -35,7 +35,9 @@ vi.mock('@/components/CommunityMarketplace', () => ({
       {preview.slug}
     </a>
   ),
-  CommunitySellerCard: () => null,
+  CommunitySellerCard: ({ seller }: { seller: { peerID: string } }) => (
+    <div data-testid={`seller-${seller.peerID}`}>{seller.peerID}</div>
+  ),
   CollectibleMarketplaceSignal: () => null,
   MarketplaceLogo: () => <div data-testid="marketplace-logo" />,
   MarketplaceTrustStrip: () => null,
@@ -124,7 +126,13 @@ describe('MarketplaceDetailPageContent', () => {
         sellers: [],
         featured: [],
         banners: [],
-        listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+        listings: {
+          listings: [{ peerID: 'QmSeller', slug: 'psa-charizard' }],
+          total: 1,
+          page: 1,
+          pageSize: 24,
+          totalPage: 1,
+        },
       },
       loading: false,
       error: null,
@@ -147,7 +155,13 @@ describe('MarketplaceDetailPageContent', () => {
         sellers: [],
         featured: [],
         banners: [],
-        listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+        listings: {
+          listings: [{ peerID: 'QmSeller', slug: 'psa-charizard' }],
+          total: 1,
+          page: 1,
+          pageSize: 24,
+          totalPage: 1,
+        },
       },
       loading: false,
       error: null,
@@ -174,7 +188,13 @@ describe('MarketplaceDetailPageContent', () => {
           sellers: [],
           featured: [],
           banners: [],
-          listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+          listings: {
+            listings: [{ peerID: 'QmSeller', slug: 'psa-charizard' }],
+            total: 1,
+            page: 1,
+            pageSize: 24,
+            totalPage: 1,
+          },
         },
         loading: false,
         error: null,
@@ -200,5 +220,72 @@ describe('MarketplaceDetailPageContent', () => {
       listingSlug: 'psa-charizard',
       peerID: 'QmSeller',
     });
+  });
+
+  it('falls back to original seller list when curated sellers are all absent from detail.sellers', () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: {
+        marketplace: baseMarketplace,
+        sellers: [
+          { peerID: 'QmSellerA', productGroups: [] },
+          { peerID: 'QmSellerB', productGroups: [] },
+        ],
+        featured: [{ type: 'seller', peerID: 'QmMissingSeller', sortOrder: 1 }],
+        banners: [],
+        listings: {
+          listings: [{ peerID: 'QmSellerA', slug: 'psa-charizard' }],
+          total: 1,
+          page: 1,
+          pageSize: 24,
+          totalPage: 1,
+        },
+      },
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+
+    render(<MarketplaceDetailPageContent identifier="test-market" />);
+
+    fireEvent.click(screen.getByText('marketplace.detail.sellersTab'));
+
+    expect(screen.queryByTestId('seller-QmMissingSeller')).toBeNull();
+    expect(screen.getByTestId('seller-QmSellerA')).toBeInTheDocument();
+    expect(screen.getByTestId('seller-QmSellerB')).toBeInTheDocument();
+  });
+
+  it('keeps only matched curated sellers when at least one curated peer exists in detail.sellers', () => {
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: {
+        marketplace: baseMarketplace,
+        sellers: [
+          { peerID: 'QmSellerA', productGroups: [] },
+          { peerID: 'QmSellerB', productGroups: [] },
+        ],
+        featured: [
+          { type: 'seller', peerID: 'QmMissingSeller', sortOrder: 1 },
+          { type: 'seller', peerID: 'QmSellerB', sortOrder: 2 },
+        ],
+        banners: [],
+        listings: {
+          listings: [{ peerID: 'QmSellerA', slug: 'psa-charizard' }],
+          total: 1,
+          page: 1,
+          pageSize: 24,
+          totalPage: 1,
+        },
+      },
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+
+    render(<MarketplaceDetailPageContent identifier="test-market" />);
+
+    fireEvent.click(screen.getByText('marketplace.detail.sellersTab'));
+
+    expect(screen.queryByTestId('seller-QmMissingSeller')).toBeNull();
+    expect(screen.queryByTestId('seller-QmSellerA')).toBeNull();
+    expect(screen.getByTestId('seller-QmSellerB')).toBeInTheDocument();
   });
 });

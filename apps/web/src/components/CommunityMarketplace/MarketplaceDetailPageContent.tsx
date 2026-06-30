@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input-compat';
 import { Badge } from '@/components/ui/badge';
 import {
+  derivePublicMarketplaceCurationRefs,
   usePublicMarketplaceDetail,
   useCommunityMarketplaceEnrichment,
   useCollectibleMarketplaceAttribution,
@@ -36,10 +37,16 @@ import {
   filterCollectibleListingPreviews,
   resolveCollectibleMarketplaceDisplayCopy,
   type CollectibleMarketplaceCategoryFilter,
+  type PublicMarketplaceListingRef,
+  type PublicMarketplaceSeller,
 } from '@mobazha/core';
 import { ExternalLink, Package, RefreshCw, Search, ShieldCheck, Store, Users } from 'lucide-react';
 
 type DetailTab = 'products' | 'sellers' | 'about';
+
+function isRenderablePreview<T extends { failed: boolean }>(preview: T | undefined): preview is T {
+  return preview !== undefined && !preview.failed;
+}
 
 const COLLECTIBLE_FILTER_I18N: Record<
   CollectibleMarketplaceCategoryFilter,
@@ -69,13 +76,86 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     useState<CollectibleMarketplaceCategoryFilter>('all');
 
   const marketplace = detail?.marketplace;
-  const listingRefs = useMemo(() => detail?.listings.listings ?? [], [detail?.listings.listings]);
+  const curationRefs = useMemo(() => derivePublicMarketplaceCurationRefs(detail), [detail]);
   const sellers = useMemo(() => detail?.sellers ?? [], [detail?.sellers]);
-  const sellerPeerIDs = useMemo(() => sellers.map(s => s.peerID), [sellers]);
+
+  const listingRefs = useMemo<PublicMarketplaceListingRef[]>(() => {
+    const seen = new Set<string>();
+    const ordered: PublicMarketplaceListingRef[] = [];
+    const push = (ref: PublicMarketplaceListingRef) => {
+      const key = `${ref.peerID}:${ref.slug}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      ordered.push(ref);
+    };
+    curationRefs.bannerListingRefs.forEach(push);
+    curationRefs.curatedListingRefs.forEach(push);
+    curationRefs.fallbackListingRefs.forEach(push);
+    return ordered;
+  }, [curationRefs]);
+
+  const sellerPeerIDs = useMemo(
+    () =>
+      Array.from(
+        new Set([...curationRefs.curatedSellerPeerIDs, ...curationRefs.fallbackSellerPeerIDs])
+      ),
+    [curationRefs.curatedSellerPeerIDs, curationRefs.fallbackSellerPeerIDs]
+  );
 
   const { listingPreviews, sellerProfiles } = useCommunityMarketplaceEnrichment(
     listingRefs,
     sellerPeerIDs
+  );
+
+  const listingPreviewLookup = useMemo(() => {
+    const lookup = new Map<string, (typeof listingPreviews)[number]>();
+    for (const preview of listingPreviews) {
+      lookup.set(`${preview.peerID}:${preview.slug}`, preview);
+    }
+    return lookup;
+  }, [listingPreviews]);
+
+  const resolvePreview = useCallback(
+    (ref: PublicMarketplaceListingRef) => listingPreviewLookup.get(`${ref.peerID}:${ref.slug}`),
+    [listingPreviewLookup]
+  );
+
+  const bannerPreviews = useMemo(
+    () => curationRefs.bannerListingRefs.map(resolvePreview).filter(isRenderablePreview),
+    [curationRefs.bannerListingRefs, resolvePreview]
+  );
+
+  const curatedListingPreviews = useMemo(
+    () => curationRefs.curatedListingRefs.map(resolvePreview).filter(isRenderablePreview),
+    [curationRefs.curatedListingRefs, resolvePreview]
+  );
+
+  const fallbackListingPreviews = useMemo(
+    () => curationRefs.fallbackListingRefs.map(resolvePreview).filter(isRenderablePreview),
+    [curationRefs.fallbackListingRefs, resolvePreview]
+  );
+
+  const activeListingPreviews = useMemo(
+    () => (curatedListingPreviews.length > 0 ? curatedListingPreviews : fallbackListingPreviews),
+    [curatedListingPreviews, fallbackListingPreviews]
+  );
+
+  const sellersByPeerID = useMemo(() => {
+    const lookup = new Map<string, PublicMarketplaceSeller>();
+    for (const seller of sellers) {
+      lookup.set(seller.peerID, seller);
+    }
+    return lookup;
+  }, [sellers]);
+
+  const curatedSellers = useMemo<PublicMarketplaceSeller[]>(
+    () => curationRefs.curatedSellerPeerIDs.flatMap(peerID => sellersByPeerID.get(peerID) ?? []),
+    [curationRefs.curatedSellerPeerIDs, sellersByPeerID]
+  );
+
+  const activeSellers = useMemo(
+    () => (curatedSellers.length > 0 ? curatedSellers : sellers),
+    [curatedSellers, sellers]
   );
 
   const isCollectibleMarketplace = isCollectibleMarketplaceVertical(marketplace?.vertical);
@@ -102,7 +182,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
   );
 
   const filteredPreviews = useMemo(() => {
-    let result = listingPreviews;
+    let result = activeListingPreviews;
 
     if (isCollectibleMarketplace && collectibleCategory !== 'all') {
       result = filterCollectibleListingPreviews(result, collectibleCategory);
@@ -116,7 +196,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
         preview.slug.toLowerCase().includes(q) ||
         (preview.vendorName || '').toLowerCase().includes(q)
     );
-  }, [listingPreviews, searchQuery, isCollectibleMarketplace, collectibleCategory]);
+  }, [activeListingPreviews, searchQuery, isCollectibleMarketplace, collectibleCategory]);
 
   const hasCollectibleCategoryFilter = isCollectibleMarketplace && collectibleCategory !== 'all';
   const showCollectibleCategoryEmpty =
@@ -342,6 +422,30 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
               tabIndex={-1}
               className="scroll-mt-24 outline-none"
             >
+              {bannerPreviews.length > 0 ? (
+                <div className="mb-6">
+                  <h2 className="mb-3 text-lg font-semibold text-foreground">
+                    {t('marketplace.detail.featuredBannersTitle', { defaultValue: 'Featured' })}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {bannerPreviews.map(preview => {
+                      const baseHref = communityProductHref(preview.slug, preview.peerID);
+                      const productHref = isCollectibleMarketplace
+                        ? appendCollectibleAttributionToHref(baseHref, collectibleAttribution)
+                        : undefined;
+                      return (
+                        <CommunityListingCard
+                          key={`banner-${preview.key}`}
+                          preview={preview}
+                          productHref={productHref}
+                          onClick={() => handleListingPreviewClick(preview)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mb-5">
                 <Input
                   value={searchQuery}
@@ -422,8 +526,8 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
 
           {activeTab === 'sellers' && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {sellers.length > 0 ? (
-                sellers.map(seller => (
+              {activeSellers.length > 0 ? (
+                activeSellers.map(seller => (
                   <CommunitySellerCard
                     key={seller.peerID}
                     seller={seller}

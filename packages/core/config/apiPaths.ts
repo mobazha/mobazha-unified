@@ -559,6 +559,14 @@ export const HOSTING_API = {
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
   MARKETPLACE_ATTRIBUTION_SUMMARY: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/attribution-summary`,
+  MARKETPLACE_CURATION: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation`,
+  MARKETPLACE_CURATION_CANDIDATES: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/candidates`,
+  MARKETPLACE_CURATION_REORDER: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/reorder`,
+  MARKETPLACE_CURATION_ITEM: (id: string, itemID: number | string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/${encodeURIComponent(String(itemID))}`,
   COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
   COMMUNITY_MARKETPLACES_VERIFY_MEMBER: (platform: string, instanceId: string) =>

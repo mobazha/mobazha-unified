@@ -12,6 +12,12 @@ vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMarketplaceSellers: vi.fn(),
   getMarketplaceSellerReviewEvents: vi.fn(),
   getMarketplaceAttributionSummary: vi.fn(),
+  getMarketplaceCuration: vi.fn(),
+  getMarketplaceCurationCandidates: vi.fn(),
+  createMarketplaceCurationItem: vi.fn(),
+  reorderMarketplaceCuration: vi.fn(),
+  updateMarketplaceCurationItem: vi.fn(),
+  deleteMarketplaceCurationItem: vi.fn(),
   createMarketplace: vi.fn(),
   getMyMarketplaces: vi.fn(),
   getMyMarketplaceMemberships: vi.fn(),
@@ -28,6 +34,8 @@ import {
   getMarketplace,
   getMarketplaceSellerReviewEvents,
   getMarketplaceAttributionSummary,
+  getMarketplaceCuration,
+  getMarketplaceCurationCandidates,
   getMarketplaceSellers,
   inviteMarketplaceSeller,
   verifyMarketplaceCustomDomain,
@@ -41,6 +49,10 @@ const mockGetMarketplaceSellerReviewEvents = getMarketplaceSellerReviewEvents as
   typeof vi.fn
 >;
 const mockGetMarketplaceAttributionSummary = getMarketplaceAttributionSummary as ReturnType<
+  typeof vi.fn
+>;
+const mockGetMarketplaceCuration = getMarketplaceCuration as ReturnType<typeof vi.fn>;
+const mockGetMarketplaceCurationCandidates = getMarketplaceCurationCandidates as ReturnType<
   typeof vi.fn
 >;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
@@ -109,6 +121,8 @@ describe('useOperatorMarketplace', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetMarketplaceAttributionSummary.mockResolvedValue(noDataSummary);
+    mockGetMarketplaceCuration.mockResolvedValue([]);
+    mockGetMarketplaceCurationCandidates.mockResolvedValue({ sellers: [], listings: [] });
   });
 
   it('keeps marketplace usable while attribution summary is still loading', async () => {
