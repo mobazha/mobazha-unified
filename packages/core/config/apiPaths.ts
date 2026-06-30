@@ -530,6 +530,8 @@ export const HOSTING_API = {
   MARKETPLACE_CONFIG: (id: string) => `/platform/v1/marketplaces/${id}/config`,
   MARKETPLACE_CONFIG_CURRENT: '/platform/v1/marketplaces/current/config',
   MARKETPLACE_LINK: (id: string) => `/platform/v1/marketplaces/${id}/link`,
+  MARKETPLACE_CUSTOM_DOMAIN_VERIFY: (id: string) =>
+    `/platform/v1/marketplaces/${id}/domains/custom/verify`,
   MARKETPLACE_SELLERS: (id: string) => `/platform/v1/marketplaces/${id}/sellers`,
   MARKETPLACE_SELLER_INVITE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/invite`,
   MARKETPLACE_SELLER: (marketplaceId: string, peerID: string) =>

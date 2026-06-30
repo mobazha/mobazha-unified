@@ -3360,8 +3360,29 @@ export const en: TranslationResource = {
       platformSubdomainLabel: 'Platform subdomain',
       platformSubdomainReadOnlyHint: 'Assigned by the platform and cannot be changed here.',
       customDomainStatusValue: '{{host}} ({{status}})',
-      customDomainPendingNote:
-        'Pending domains are not live yet. Complete DNS verification in a later step.',
+      customDomainPendingNote: 'Add the DNS record below to verify this domain.',
+      customDomainSaveFirstHint:
+        'Save your domain change first. A new DNS verification record will be generated after saving.',
+      customDomainVerifiedAt: 'Verified at: {{date}}',
+      customDomainDnsRecordTypeLabel: 'Record type',
+      customDomainDnsRecordTypeValue: 'TXT',
+      customDomainDnsNameLabel: 'Host / Name',
+      customDomainDnsValueLabel: 'Value',
+      customDomainAutoRetryHint:
+        'After DNS propagates, the platform retries verification automatically every 10 minutes.',
+      customDomainVerifyNow: 'Verify now',
+      customDomainVerifySuccessTitle: 'Domain verified',
+      customDomainVerifySuccessDesc: 'The custom domain is now active for this marketplace.',
+      customDomainVerifyPendingTitle: 'Verification still pending',
+      customDomainVerifyPendingDesc:
+        'DNS record not seen yet. Please wait for propagation or try again shortly.',
+      customDomainVerifyFailedTitle: 'Could not verify domain yet',
+      customDomainVerifyRecordNotFound:
+        'TXT record not found. Check that host/name and value exactly match.',
+      customDomainVerifyLookupFailed:
+        'DNS lookup failed. Please check your DNS provider status and retry.',
+      customDomainVerifyChallengeUnavailable:
+        'Verification challenge is not available yet. Save settings again and retry in a moment.',
       customDomainRemoveHint: 'Clear the field and save to remove the custom domain.',
       verticalLabel: 'Vertical',
       sellerEntryMode: 'Seller entry',
