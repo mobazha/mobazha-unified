@@ -26,6 +26,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: unknown;
   timeout?: number;
+  keepalive?: boolean;
   /** If true, return the raw JSON without unwrapping the data envelope. */
   raw?: boolean;
   /** @internal Prevent infinite 401 retry loops. */
@@ -97,6 +98,7 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     headers = {},
     body,
     timeout = 30000,
+    keepalive = false,
     raw = false,
     _retried = false,
     _networkRetried = false,
@@ -123,6 +125,7 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
       method,
       headers: mergedHeaders,
       signal: controller.signal,
+      keepalive,
     };
 
     if (body && method !== 'GET') {
