@@ -6,7 +6,13 @@ import type { MarketplaceStoreMembership, NativeMarketplace } from '@mobazha/cor
 const mockToast = vi.fn();
 const mockReviewSeller = vi.fn();
 const mockPush = vi.fn();
+const mockUpdateMarketplace = vi.fn();
+const mockArchiveMarketplace = vi.fn();
 let mockReviewEventsError: string | null = null;
+let latestSettingsCardProps: {
+  onSave: (data: Record<string, unknown>) => Promise<unknown>;
+  onArchive: () => Promise<unknown>;
+} | null = null;
 
 const marketplace: NativeMarketplace = {
   id: 'mp-1',
@@ -151,8 +157,8 @@ vi.mock('@mobazha/core', async importOriginal => {
       working: null,
       refresh: vi.fn(),
       publish: vi.fn(),
-      update: vi.fn(),
-      archive: vi.fn(),
+      update: mockUpdateMarketplace,
+      archive: mockArchiveMarketplace,
       invite: vi.fn(),
       reviewSeller: mockReviewSeller,
     }),
@@ -169,7 +175,13 @@ vi.mock('@/components/ui/use-toast', () => ({
 }));
 
 vi.mock('@/components/Operator/OperatorMarketplaceSettingsCard', () => ({
-  OperatorMarketplaceSettingsCard: () => <div data-testid="settings-card" />,
+  OperatorMarketplaceSettingsCard: (props: {
+    onSave: (data: Record<string, unknown>) => Promise<unknown>;
+    onArchive: () => Promise<unknown>;
+  }) => {
+    latestSettingsCardProps = props;
+    return <div data-testid="settings-card" />;
+  },
 }));
 
 import MarketplaceOperatorDetailPage from '@/app/operator/marketplaces/[id]/page';
@@ -178,6 +190,51 @@ describe('MarketplaceOperatorDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockReviewEventsError = null;
+    latestSettingsCardProps = null;
+    mockUpdateMarketplace.mockResolvedValue(marketplace);
+    mockArchiveMarketplace.mockResolvedValue({ archived: true, id: marketplace.id });
+  });
+
+  it('wires settings save to useOperatorMarketplace.update and shows success toast', async () => {
+    render(<MarketplaceOperatorDetailPage />);
+    expect(latestSettingsCardProps).not.toBeNull();
+
+    await act(async () => {
+      await latestSettingsCardProps?.onSave({ name: 'Updated Name', domain: '' });
+    });
+
+    expect(mockUpdateMarketplace).toHaveBeenCalledWith({ name: 'Updated Name', domain: '' });
+    expect(mockToast).toHaveBeenCalledWith({ title: 'marketplace.operator.saveSuccess' });
+  });
+
+  it('shows destructive toast when settings save fails', async () => {
+    mockUpdateMarketplace.mockRejectedValueOnce(new Error('update failed'));
+    render(<MarketplaceOperatorDetailPage />);
+    expect(latestSettingsCardProps).not.toBeNull();
+
+    await act(async () => {
+      await latestSettingsCardProps?.onSave({ name: 'Updated Name' });
+    });
+
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variant: 'destructive',
+        title: 'marketplace.operator.saveFailedTitle',
+        description: 'update failed',
+      })
+    );
+  });
+
+  it('wires archive action and navigates back to console on success', async () => {
+    render(<MarketplaceOperatorDetailPage />);
+    expect(latestSettingsCardProps).not.toBeNull();
+
+    await act(async () => {
+      await latestSettingsCardProps?.onArchive();
+    });
+
+    expect(mockArchiveMarketplace).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith('/operator/marketplaces');
   });
 
   it('shows pending count/filter without invited stores', async () => {
