@@ -569,6 +569,46 @@ export interface PublicNativeMarketplaceDetail {
   listings: PublicMarketplaceListings;
 }
 
+export type MarketplaceCurationKind = 'seller' | 'listing' | 'banner';
+
+export interface PublicNativeMarketplaceListing {
+  slug: string;
+  title?: string;
+  peerID?: string;
+  vendorName?: string;
+}
+
+export interface MarketplaceCurationItem {
+  id: number;
+  kind: MarketplaceCurationKind;
+  peerID?: string;
+  listingSlug?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MarketplaceCurationCandidates {
+  sellers: Array<{ peerID: string }>;
+  listings: PublicNativeMarketplaceListing[];
+}
+
+export interface CreateMarketplaceCurationItemRequest {
+  kind: MarketplaceCurationKind;
+  peerID?: string;
+  listingSlug?: string;
+}
+
+export interface ReorderMarketplaceCurationRequest {
+  kind: MarketplaceCurationKind;
+  itemIDs: number[];
+}
+
+export interface UpdateMarketplaceCurationItemRequest {
+  isActive: boolean;
+}
+
 /** Current store's native MaaS seller application (GET/POST seller-applications). */
 export interface NativeMarketplaceSellerApplication {
   hasApplication: boolean;

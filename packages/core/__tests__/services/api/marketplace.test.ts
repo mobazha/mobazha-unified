@@ -30,6 +30,7 @@ vi.mock('../../../services/api/helpers', () => ({
 import { hostingDel, hostingGet, hostingPost, hostingPut } from '../../../services/api/helpers';
 import { apiClient } from '../../../services/api/client';
 import { getHostingUrl } from '../../../services/api/config';
+import { HOSTING_API } from '../../../config/apiPaths';
 import * as marketplaceApi from '../../../services/api/marketplace';
 
 const mockHostingGet = hostingGet as ReturnType<typeof vi.fn>;
@@ -434,6 +435,84 @@ describe('Marketplace API', () => {
         undefined
       );
     });
+  });
+
+  describe('native marketplace curation', () => {
+    it('serializes GET/POST/PUT/DELETE calls to native curation endpoints', async () => {
+      const curationItem = {
+        id: 101,
+        kind: 'listing',
+        listingSlug: 'topps-2026',
+        sortOrder: 1,
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const candidates = {
+        sellers: [{ peerID: 'QmSeller1' }],
+        listings: [{ slug: 'topps-2026', peerID: 'QmSeller1', title: 'Topps 2026' }],
+      };
+
+      mockHostingGet.mockResolvedValueOnce([curationItem]);
+      await marketplaceApi.getMarketplaceCuration('mp1');
+      expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/curation');
+
+      mockHostingGet.mockResolvedValueOnce(candidates);
+      await marketplaceApi.getMarketplaceCurationCandidates('mp1');
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/curation/candidates'
+      );
+
+      mockHostingPost.mockResolvedValueOnce(curationItem);
+      await marketplaceApi.createMarketplaceCurationItem('mp1', {
+        kind: 'listing',
+        listingSlug: 'topps-2026',
+      });
+      expect(mockHostingPost).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/curation', {
+        kind: 'listing',
+        listingSlug: 'topps-2026',
+      });
+
+      mockHostingPut.mockResolvedValueOnce([curationItem]);
+      await marketplaceApi.reorderMarketplaceCuration('mp1', {
+        kind: 'listing',
+        itemIDs: [101],
+      });
+      expect(mockHostingPut).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/curation/reorder',
+        {
+          kind: 'listing',
+          itemIDs: [101],
+        }
+      );
+
+      mockHostingPut.mockResolvedValueOnce({ ...curationItem, isActive: false });
+      await marketplaceApi.updateMarketplaceCurationItem('mp1', 101, { isActive: false });
+      expect(mockHostingPut).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/curation/101', {
+        isActive: false,
+      });
+
+      mockHostingDel.mockResolvedValueOnce({ deleted: true, id: 101 });
+      await marketplaceApi.deleteMarketplaceCurationItem('mp1', 101);
+      expect(mockHostingDel).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/curation/101');
+    });
+  });
+});
+
+describe('Marketplace curation api path helpers', () => {
+  it('builds native marketplace curation paths with encoding', () => {
+    expect(HOSTING_API.MARKETPLACE_CURATION('mp 1')).toBe(
+      '/platform/v1/marketplaces/mp%201/curation'
+    );
+    expect(HOSTING_API.MARKETPLACE_CURATION_CANDIDATES('mp/1')).toBe(
+      '/platform/v1/marketplaces/mp%2F1/curation/candidates'
+    );
+    expect(HOSTING_API.MARKETPLACE_CURATION_REORDER('mp:1')).toBe(
+      '/platform/v1/marketplaces/mp%3A1/curation/reorder'
+    );
+    expect(HOSTING_API.MARKETPLACE_CURATION_ITEM('mp1', 'item/42')).toBe(
+      '/platform/v1/marketplaces/mp1/curation/item%2F42'
+    );
   });
 });
 
