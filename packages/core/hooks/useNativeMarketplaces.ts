@@ -5,6 +5,7 @@ import type {
   CreateNativeMarketplaceRequest,
   MarketplaceAttributionSummary,
   MarketplaceCurationCandidates,
+  MarketplaceCurationCandidatesParams,
   MarketplaceCurationItem,
   MarketplaceCurationKind,
   MarketplaceSellerReviewEvent,
@@ -91,6 +92,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   const [curationCandidates, setCurationCandidates] =
     useState<MarketplaceCurationCandidates | null>(null);
   const [curationLoading, setCurationLoading] = useState(false);
+  const [curationCandidatesLoading, setCurationCandidatesLoading] = useState(false);
   const [curationError, setCurationError] = useState<string | null>(null);
   const [attributionSummary, setAttributionSummary] =
     useState<MarketplaceAttributionSummary | null>(null);
@@ -102,6 +104,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   const [attributionSummaryLoading, setAttributionSummaryLoading] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const requestSeqRef = useRef(0);
+  const curationCandidatesRequestSeqRef = useRef(0);
   const marketplaceIdRef = useRef(marketplaceId);
   marketplaceIdRef.current = marketplaceId;
 
@@ -147,6 +150,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     }
 
     const requestSeq = ++requestSeqRef.current;
+    const candidatesRequestSeq = ++curationCandidatesRequestSeqRef.current;
 
     if (!requestMarketplaceId) {
       setMarketplace(null);
@@ -155,6 +159,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       setCurationItems([]);
       setCurationCandidates(null);
       setCurationLoading(false);
+      setCurationCandidatesLoading(false);
       setCurationError(null);
       setAttributionSummary(null);
       setLoading(false);
@@ -174,6 +179,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     setCurationCandidates(null);
     setCurationError(null);
     setCurationLoading(true);
+    setCurationCandidatesLoading(false);
     setAttributionSummary(null);
     setAttributionSummaryError(null);
     setAttributionSummaryLoading(false);
@@ -214,17 +220,30 @@ export function useOperatorMarketplace(marketplaceId?: string) {
           toErrorMessage(reviewEventsResult.reason, 'Failed to load review events')
         );
       }
-      if (curationResult.status === 'fulfilled' && candidatesResult.status === 'fulfilled') {
+      if (curationResult.status === 'fulfilled') {
         setCurationItems(curationResult.value);
-        setCurationCandidates(candidatesResult.value);
-        setCurationError(null);
       } else {
         setCurationItems([]);
-        setCurationCandidates(null);
+      }
+      const candidatesRequestIsCurrent =
+        curationCandidatesRequestSeqRef.current === candidatesRequestSeq;
+      if (candidatesRequestIsCurrent) {
+        if (candidatesResult.status === 'fulfilled') {
+          setCurationCandidates(candidatesResult.value);
+        } else {
+          setCurationCandidates(null);
+        }
+      }
+      if (
+        curationResult.status === 'fulfilled' &&
+        (!candidatesRequestIsCurrent || candidatesResult.status === 'fulfilled')
+      ) {
+        setCurationError(null);
+      } else {
         const source =
           curationResult.status === 'rejected'
             ? curationResult.reason
-            : candidatesResult.status === 'rejected'
+            : candidatesRequestIsCurrent && candidatesResult.status === 'rejected'
               ? candidatesResult.reason
               : new Error('Failed to load curation');
         setCurationError(toErrorMessage(source, 'Failed to load curation'));
@@ -245,6 +264,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       setCurationItems([]);
       setCurationCandidates(null);
       setCurationLoading(false);
+      setCurationCandidatesLoading(false);
       setCurationError(null);
       setAttributionSummary(null);
       setReviewEventsError(null);
@@ -275,6 +295,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     setCurationItems([]);
     setCurationCandidates(null);
     setCurationLoading(false);
+    setCurationCandidatesLoading(false);
     setCurationError(null);
     setAttributionSummary(null);
     setAttributionSummaryError(null);
@@ -496,6 +517,42 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     [marketplaceId, refresh]
   );
 
+  const loadCurationCandidates = useCallback(
+    async (params: MarketplaceCurationCandidatesParams = {}) => {
+      if (!marketplaceId) return null;
+      const actionMarketplaceId = marketplaceId;
+      const requestSeq = ++curationCandidatesRequestSeqRef.current;
+      setCurationCandidatesLoading(true);
+      try {
+        const result = await getMarketplaceCurationCandidates(actionMarketplaceId, params);
+        if (
+          marketplaceIdRef.current !== actionMarketplaceId ||
+          curationCandidatesRequestSeqRef.current !== requestSeq
+        ) {
+          return null;
+        }
+        setCurationCandidates(result);
+        return result;
+      } catch (err) {
+        if (
+          marketplaceIdRef.current !== actionMarketplaceId ||
+          curationCandidatesRequestSeqRef.current !== requestSeq
+        ) {
+          return null;
+        }
+        throw err;
+      } finally {
+        if (
+          marketplaceIdRef.current === actionMarketplaceId &&
+          curationCandidatesRequestSeqRef.current === requestSeq
+        ) {
+          setCurationCandidatesLoading(false);
+        }
+      }
+    },
+    [marketplaceId]
+  );
+
   return {
     marketplace,
     stores,
@@ -503,6 +560,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     curationItems,
     curationCandidates,
     curationLoading,
+    curationCandidatesLoading,
     curationError,
     attributionSummary,
     counts,
@@ -524,6 +582,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     reorderCurationByKind,
     toggleCurationItem,
     removeCurationItem,
+    loadCurationCandidates,
   };
 }
 

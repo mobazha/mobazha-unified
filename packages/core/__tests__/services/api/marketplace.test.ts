@@ -451,6 +451,10 @@ describe('Marketplace API', () => {
       const candidates = {
         sellers: [{ peerID: 'QmSeller1' }],
         listings: [{ slug: 'topps-2026', peerID: 'QmSeller1', title: 'Topps 2026' }],
+        page: 1,
+        pageSize: 20,
+        total: 1,
+        totalPage: 1,
       };
 
       mockHostingGet.mockResolvedValueOnce([curationItem]);
@@ -461,6 +465,16 @@ describe('Marketplace API', () => {
       await marketplaceApi.getMarketplaceCurationCandidates('mp1');
       expect(mockHostingGet).toHaveBeenCalledWith(
         '/platform/v1/marketplaces/mp1/curation/candidates'
+      );
+
+      mockHostingGet.mockResolvedValueOnce(candidates);
+      await marketplaceApi.getMarketplaceCurationCandidates('mp1', {
+        q: 'topps cards',
+        page: 2,
+        pageSize: 25,
+      });
+      expect(mockHostingGet).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/curation/candidates?q=topps+cards&page=2&pageSize=25'
       );
 
       mockHostingPost.mockResolvedValueOnce(curationItem);

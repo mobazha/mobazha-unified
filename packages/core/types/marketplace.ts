@@ -592,6 +592,17 @@ export interface MarketplaceCurationItem {
 export interface MarketplaceCurationCandidates {
   sellers: Array<{ peerID: string }>;
   listings: PublicNativeMarketplaceListing[];
+  query?: string;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPage: number;
+}
+
+export interface MarketplaceCurationCandidatesParams {
+  q?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface CreateMarketplaceCurationItemRequest {

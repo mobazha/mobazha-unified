@@ -477,6 +477,7 @@ export type {
   MarketplaceCurationKind,
   MarketplaceCurationItem,
   MarketplaceCurationCandidates,
+  MarketplaceCurationCandidatesParams,
   CreateMarketplaceCurationItemRequest,
   ReorderMarketplaceCurationRequest,
   UpdateMarketplaceCurationItemRequest,

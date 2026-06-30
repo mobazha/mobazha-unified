@@ -6,6 +6,12 @@ vi.mock('@mobazha/core', () => ({
   buildProductHref: (slug: string, peerID: string) => `/product/${slug}?peerID=${peerID}`,
   formatListingSlugTitle: (slug: string) => slug.replace(/[-_]+/g, ' '),
   formatUserName: ({ peerID }: { peerID?: string }) => `Store ${peerID ?? ''}`,
+  useCommunityMarketplaceEnrichment: () => ({
+    listingPreviews: [],
+    sellerProfiles: {
+      QmSellerA: { peerID: 'QmSellerA', displayName: 'Alice Cards' },
+    },
+  }),
   useI18n: () => ({
     t: (key: string, params?: Record<string, number>) =>
       key === 'marketplace.operator.curation.candidateCount'
@@ -21,6 +27,7 @@ const onAdd = vi.fn();
 const onReorder = vi.fn();
 const onToggle = vi.fn();
 const onRemove = vi.fn();
+const onLoadCandidates = vi.fn();
 
 function buildItem(overrides: Partial<MarketplaceCurationItem>): MarketplaceCurationItem {
   return {
@@ -42,6 +49,10 @@ const candidates: MarketplaceCurationCandidates = {
     { peerID: 'QmPeer', slug: 'alpha', title: 'Alpha Title' },
     { peerID: 'QmPeer', slug: 'beta', title: 'Beta Title' },
   ],
+  page: 1,
+  pageSize: 20,
+  total: 2,
+  totalPage: 2,
 };
 
 describe('OperatorMarketplaceCurationPanel', () => {
@@ -141,6 +152,10 @@ describe('OperatorMarketplaceCurationPanel', () => {
         candidates={{
           sellers: [],
           listings: [{ peerID: 'QmPeer', slug: 'rare-card-2024', title: '   ' }],
+          page: 1,
+          pageSize: 20,
+          total: 1,
+          totalPage: 1,
         }}
         loading={false}
         error={null}
@@ -156,6 +171,40 @@ describe('OperatorMarketplaceCurationPanel', () => {
 
     expect(screen.getAllByText(/rare card 2024/i).length).toBeGreaterThan(0);
     expect(screen.queryByText('marketplace.operator.curation.listingFallbackTitle')).toBeNull();
+  });
+
+  it('searches and pages listing candidates while showing readable seller names', async () => {
+    render(
+      <OperatorMarketplaceCurationPanel
+        items={[]}
+        candidates={candidates}
+        loading={false}
+        candidatesLoading={false}
+        error={null}
+        working={null}
+        isReadOnly={false}
+        onRetry={onRetry}
+        onAdd={onAdd}
+        onReorder={onReorder}
+        onToggle={onToggle}
+        onRemove={onRemove}
+        onLoadCandidates={onLoadCandidates}
+      />
+    );
+
+    expect(screen.getByRole('option', { name: /Alice Cards.*QmSellerA/i })).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('operator-curation-candidate-search'), {
+      target: { value: 'rare card' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('operator-curation-candidate-search-submit'));
+    });
+    expect(onLoadCandidates).toHaveBeenCalledWith({ q: 'rare card', page: 1, pageSize: 20 });
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('marketplace.operator.curation.nextPage'));
+    });
+    expect(onLoadCandidates).toHaveBeenCalledWith({ q: undefined, page: 2, pageSize: 20 });
   });
 
   it('reorders by submitting the full ordered IDs for kind', () => {
