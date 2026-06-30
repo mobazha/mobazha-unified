@@ -4,12 +4,14 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   MARKETPLACE_CATALOG_MODE_KEYS,
   MARKETPLACE_DISCOVERABILITY_KEYS,
+  MARKETPLACE_JOIN_MODE_KEYS,
   MARKETPLACE_SELLER_ENTRY_MODE_KEYS,
   useI18n,
 } from '@mobazha/core';
 import type {
   MarketplaceCatalogMode,
   MarketplaceDiscoverability,
+  MarketplaceJoinMode,
   MarketplaceSellerEntryMode,
   NativeMarketplace,
   UpdateNativeMarketplaceRequest,
@@ -42,40 +44,79 @@ import { Loader2 } from 'lucide-react';
 interface MarketplaceSettingsFormState {
   name: string;
   description: string;
+  logoURL: string;
+  bannerURL: string;
   vertical: string;
+  joinMode: MarketplaceJoinMode;
   discoverability: MarketplaceDiscoverability;
   catalogMode: MarketplaceCatalogMode;
   sellerEntryMode: MarketplaceSellerEntryMode;
-  subdomain: string;
   customDomain: string;
+  catalogQuery: string;
 }
 
 function domainHost(marketplace: NativeMarketplace, kind: 'subdomain' | 'custom'): string {
   return marketplace.domains.find(domain => domain.kind === kind)?.host ?? '';
 }
 
-function subdomainTokenFromHost(host: string): string {
-  const trimmed = host.trim();
-  if (!trimmed) return '';
-  const dotIndex = trimmed.indexOf('.');
-  return dotIndex === -1 ? trimmed : trimmed.slice(0, dotIndex);
+function normalizeOptionalString(value: string): string {
+  return value.trim();
 }
 
-function subdomainToken(marketplace: NativeMarketplace): string {
-  const host = domainHost(marketplace, 'subdomain');
-  return host ? subdomainTokenFromHost(host) : '';
+function isValidHostname(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (trimmed.length > 253) return false;
+  if (trimmed.includes('://') || trimmed.includes('/')) return false;
+
+  const labels = trimmed.split('.');
+  if (labels.length < 2) return false;
+  return labels.every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label));
+}
+
+function isValidMediaUrl(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  if (trimmed.startsWith('/')) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+interface MarketplaceSettingsValidation {
+  name: boolean;
+  vertical: boolean;
+  customDomain: boolean;
+  logoURL: boolean;
+  bannerURL: boolean;
+}
+
+function validateForm(form: MarketplaceSettingsFormState): MarketplaceSettingsValidation {
+  return {
+    name: form.name.trim().length > 0,
+    vertical: form.vertical.trim().length > 0,
+    customDomain: !form.customDomain.trim() || isValidHostname(form.customDomain),
+    logoURL: isValidMediaUrl(form.logoURL),
+    bannerURL: isValidMediaUrl(form.bannerURL),
+  };
 }
 
 function buildFormState(marketplace: NativeMarketplace): MarketplaceSettingsFormState {
   return {
     name: marketplace.name,
     description: marketplace.description ?? '',
+    logoURL: marketplace.logoURL ?? '',
+    bannerURL: marketplace.bannerURL ?? '',
     vertical: marketplace.vertical,
+    joinMode: marketplace.joinMode,
     discoverability: marketplace.discoverability,
     catalogMode: marketplace.catalogMode,
     sellerEntryMode: marketplace.sellerEntryMode,
-    subdomain: subdomainToken(marketplace),
     customDomain: domainHost(marketplace, 'custom'),
+    catalogQuery: marketplace.catalogQuery ?? '',
   };
 }
 
@@ -84,22 +125,36 @@ function buildPartialUpdate(
   marketplace: NativeMarketplace
 ): UpdateNativeMarketplaceRequest {
   const payload: UpdateNativeMarketplaceRequest = {};
-  const trimmedName = form.name.trim();
-  const trimmedDescription = form.description.trim();
-  const trimmedVertical = form.vertical.trim();
-  const trimmedSubdomain = form.subdomain.trim();
-  const trimmedCustomDomain = form.customDomain.trim();
-  const serverSubdomainToken = subdomainToken(marketplace);
+  const normalizedName = form.name.trim();
+  const normalizedDescription = normalizeOptionalString(form.description);
+  const normalizedLogoURL = normalizeOptionalString(form.logoURL);
+  const normalizedBannerURL = normalizeOptionalString(form.bannerURL);
+  const normalizedCustomDomain = normalizeOptionalString(form.customDomain);
+  const normalizedCatalogQuery = normalizeOptionalString(form.catalogQuery);
+  const normalizedVertical = form.vertical.trim();
+  const normalizedServerDescription = marketplace.description ?? '';
+  const normalizedServerLogoURL = marketplace.logoURL ?? '';
+  const normalizedServerBannerURL = marketplace.bannerURL ?? '';
   const serverCustomDomain = domainHost(marketplace, 'custom');
+  const serverCatalogQuery = marketplace.catalogQuery ?? '';
 
-  if (trimmedName && trimmedName !== marketplace.name) {
-    payload.name = trimmedName;
+  if (normalizedName !== marketplace.name) {
+    payload.name = normalizedName;
   }
-  if (trimmedDescription !== (marketplace.description ?? '')) {
-    payload.description = trimmedDescription;
+  if (normalizedDescription !== normalizedServerDescription) {
+    payload.description = normalizedDescription;
   }
-  if (trimmedVertical && trimmedVertical !== marketplace.vertical) {
-    payload.vertical = trimmedVertical;
+  if (normalizedLogoURL !== normalizedServerLogoURL) {
+    payload.logoURL = normalizedLogoURL;
+  }
+  if (normalizedBannerURL !== normalizedServerBannerURL) {
+    payload.bannerURL = normalizedBannerURL;
+  }
+  if (form.joinMode !== marketplace.joinMode) {
+    payload.joinMode = form.joinMode;
+  }
+  if (normalizedVertical !== marketplace.vertical) {
+    payload.vertical = normalizedVertical;
   }
   if (form.discoverability !== marketplace.discoverability) {
     payload.discoverability = form.discoverability;
@@ -110,29 +165,15 @@ function buildPartialUpdate(
   if (form.sellerEntryMode !== marketplace.sellerEntryMode) {
     payload.sellerEntryMode = form.sellerEntryMode;
   }
-  if (trimmedSubdomain && trimmedSubdomain !== serverSubdomainToken) {
-    payload.subdomain = trimmedSubdomain;
+  if (normalizedCatalogQuery !== serverCatalogQuery) {
+    payload.catalogQuery = normalizedCatalogQuery;
   }
-  if (trimmedCustomDomain && trimmedCustomDomain !== serverCustomDomain) {
-    payload.domain = trimmedCustomDomain;
+  if (normalizedCustomDomain !== serverCustomDomain) {
+    // Hosting semantics: empty string removes custom domain.
+    payload.domain = normalizedCustomDomain;
   }
 
   return payload;
-}
-
-function domainClearBlocked(
-  form: MarketplaceSettingsFormState,
-  marketplace: NativeMarketplace
-): { subdomain: boolean; customDomain: boolean } {
-  const serverSubdomainToken = subdomainToken(marketplace);
-  const serverCustomDomain = domainHost(marketplace, 'custom');
-  const trimmedSubdomain = form.subdomain.trim();
-  const trimmedCustomDomain = form.customDomain.trim();
-
-  return {
-    subdomain: Boolean(serverSubdomainToken) && !trimmedSubdomain,
-    customDomain: Boolean(serverCustomDomain) && !trimmedCustomDomain,
-  };
 }
 
 interface OperatorMarketplaceSettingsCardProps {
@@ -151,6 +192,8 @@ export function OperatorMarketplaceSettingsCard({
   const { t } = useI18n();
   const isArchived = marketplace.status === 'archived';
   const isBusy = Boolean(working);
+  const platformSubdomain = domainHost(marketplace, 'subdomain');
+  const customDomainRecord = marketplace.domains.find(domain => domain.kind === 'custom');
   const [form, setForm] = useState<MarketplaceSettingsFormState>(() => buildFormState(marketplace));
 
   const setField = useCallback(
@@ -163,16 +206,25 @@ export function OperatorMarketplaceSettingsCard({
     []
   );
 
-  const blockedDomainClear = useMemo(
-    () => domainClearBlocked(form, marketplace),
+  const validation = useMemo(() => validateForm(form), [form]);
+  const isDirty = useMemo(
+    () => Object.keys(buildPartialUpdate(form, marketplace)).length > 0,
     [form, marketplace]
   );
 
   const canSave = useMemo(() => {
-    if (isArchived || !form.name.trim()) return false;
-    if (blockedDomainClear.subdomain || blockedDomainClear.customDomain) return false;
-    return Object.keys(buildPartialUpdate(form, marketplace)).length > 0;
-  }, [blockedDomainClear, form, isArchived, marketplace]);
+    if (isArchived) return false;
+    if (
+      !validation.name ||
+      !validation.vertical ||
+      !validation.customDomain ||
+      !validation.logoURL ||
+      !validation.bannerURL
+    ) {
+      return false;
+    }
+    return isDirty;
+  }, [isArchived, isDirty, validation]);
 
   async function handleSave() {
     const payload = buildPartialUpdate(form, marketplace);
@@ -181,6 +233,10 @@ export function OperatorMarketplaceSettingsCard({
     if (updated) {
       setForm(buildFormState(updated));
     }
+  }
+
+  function handleDiscardChanges() {
+    setForm(buildFormState(marketplace));
   }
 
   return (
@@ -198,9 +254,12 @@ export function OperatorMarketplaceSettingsCard({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="operator-marketplace-name">
-              {t('marketplace.operator.namePlaceholder')}
-            </Label>
+            <h3 className="text-sm font-semibold text-foreground">
+              {t('marketplace.operator.brandSectionTitle')}
+            </h3>
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="operator-marketplace-name">{t('marketplace.operator.nameLabel')}</Label>
             <Input
               id="operator-marketplace-name"
               data-testid="operator-marketplace-name"
@@ -208,6 +267,11 @@ export function OperatorMarketplaceSettingsCard({
               disabled={isArchived || isBusy}
               onChange={event => setField('name', event.target.value)}
             />
+            {!validation.name ? (
+              <p className="text-sm text-destructive" data-testid="operator-marketplace-name-error">
+                {t('marketplace.operator.validationNameRequired')}
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-2 md:col-span-2">
@@ -226,17 +290,71 @@ export function OperatorMarketplaceSettingsCard({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="operator-marketplace-vertical">
-              {t('marketplace.operator.verticalLabel')}
+            <Label htmlFor="operator-marketplace-logo">{t('marketplace.operator.logoLabel')}</Label>
+            <Input
+              id="operator-marketplace-logo"
+              data-testid="operator-marketplace-logo-url"
+              value={form.logoURL}
+              disabled={isArchived || isBusy}
+              placeholder={t('marketplace.operator.logoPlaceholder')}
+              onChange={event => setField('logoURL', event.target.value)}
+            />
+            {!validation.logoURL ? (
+              <p
+                className="text-sm text-destructive"
+                data-testid="operator-marketplace-logo-url-error"
+              >
+                {t('marketplace.operator.validationInvalidMediaUrl')}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="operator-marketplace-banner">
+              {t('marketplace.operator.bannerLabel')}
             </Label>
             <Input
-              id="operator-marketplace-vertical"
-              data-testid="operator-marketplace-vertical"
-              value={form.vertical}
+              id="operator-marketplace-banner"
+              data-testid="operator-marketplace-banner-url"
+              value={form.bannerURL}
               disabled={isArchived || isBusy}
-              placeholder={t('marketplace.operator.verticalPlaceholder')}
-              onChange={event => setField('vertical', event.target.value)}
+              placeholder={t('marketplace.operator.bannerPlaceholder')}
+              onChange={event => setField('bannerURL', event.target.value)}
             />
+            {!validation.bannerURL ? (
+              <p
+                className="text-sm text-destructive"
+                data-testid="operator-marketplace-banner-url-error"
+              >
+                {t('marketplace.operator.validationInvalidMediaUrl')}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t('marketplace.operator.accessSectionTitle')}
+            </h3>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t('marketplace.operator.joinMode')}</Label>
+            <Select
+              value={form.joinMode}
+              disabled={isArchived || isBusy}
+              onValueChange={value => setField('joinMode', value as MarketplaceJoinMode)}
+            >
+              <SelectTrigger data-testid="operator-marketplace-join-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(MARKETPLACE_JOIN_MODE_KEYS) as MarketplaceJoinMode[]).map(option => (
+                  <SelectItem key={option} value={option}>
+                    {t(MARKETPLACE_JOIN_MODE_KEYS[option])}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -263,6 +381,19 @@ export function OperatorMarketplaceSettingsCard({
             </Select>
           </div>
 
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="operator-marketplace-catalog-query">
+              {t('marketplace.operator.catalogQueryLabel')}
+            </Label>
+            <Input
+              id="operator-marketplace-catalog-query"
+              data-testid="operator-marketplace-catalog-query"
+              value={form.catalogQuery}
+              disabled={isArchived || isBusy}
+              placeholder={t('marketplace.operator.catalogQueryPlaceholder')}
+              onChange={event => setField('catalogQuery', event.target.value)}
+            />
+          </div>
           <div className="space-y-2">
             <Label>{t('marketplace.operator.catalogMode')}</Label>
             <Select
@@ -284,7 +415,6 @@ export function OperatorMarketplaceSettingsCard({
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
             <Label>{t('marketplace.operator.sellerEntryMode')}</Label>
             <Select
@@ -308,27 +438,48 @@ export function OperatorMarketplaceSettingsCard({
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="operator-marketplace-vertical">
+              {t('marketplace.operator.verticalLabel')}
+            </Label>
+            <Input
+              id="operator-marketplace-vertical"
+              data-testid="operator-marketplace-vertical"
+              value={form.vertical}
+              disabled={isArchived || isBusy}
+              placeholder={t('marketplace.operator.verticalPlaceholder')}
+              onChange={event => setField('vertical', event.target.value)}
+            />
+            {!validation.vertical ? (
+              <p
+                className="text-sm text-destructive"
+                data-testid="operator-marketplace-vertical-error"
+              >
+                {t('marketplace.operator.validationVerticalRequired')}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t('marketplace.operator.domainsSectionTitle')}
+            </h3>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="operator-marketplace-subdomain">
-              {t('marketplace.operator.subdomainLabel')}
+              {t('marketplace.operator.platformSubdomainLabel')}
             </Label>
             <Input
               id="operator-marketplace-subdomain"
-              data-testid="operator-marketplace-subdomain"
-              value={form.subdomain}
-              disabled={isArchived || isBusy}
+              data-testid="operator-marketplace-platform-subdomain"
+              value={platformSubdomain}
+              disabled
               placeholder={t('marketplace.operator.subdomainPlaceholder')}
-              onChange={event => setField('subdomain', event.target.value)}
             />
-            {blockedDomainClear.subdomain ? (
-              <p
-                className="text-sm text-destructive"
-                data-testid="operator-marketplace-subdomain-clear-blocked"
-              >
-                {t('marketplace.operator.domainRemovalUnavailable')}
-              </p>
-            ) : null}
+            <p className="text-sm text-muted-foreground">
+              {t('marketplace.operator.platformSubdomainReadOnlyHint')}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -343,27 +494,62 @@ export function OperatorMarketplaceSettingsCard({
               placeholder={t('marketplace.operator.customDomainPlaceholder')}
               onChange={event => setField('customDomain', event.target.value)}
             />
-            {blockedDomainClear.customDomain ? (
+            {customDomainRecord ? (
               <p
-                className="text-sm text-destructive"
-                data-testid="operator-marketplace-custom-domain-clear-blocked"
+                className="text-sm text-muted-foreground"
+                data-testid="operator-marketplace-custom-domain-status"
               >
-                {t('marketplace.operator.domainRemovalUnavailable')}
+                {t('marketplace.operator.customDomainStatusValue', {
+                  host: customDomainRecord.host,
+                  status:
+                    customDomainRecord.verificationStatus === 'verified'
+                      ? t('marketplace.enums.domainVerification.verified')
+                      : t('marketplace.enums.domainVerification.pending'),
+                })}
               </p>
             ) : null}
+            {!validation.customDomain ? (
+              <p
+                className="text-sm text-destructive"
+                data-testid="operator-marketplace-custom-domain-error"
+              >
+                {t('marketplace.operator.validationInvalidHostname')}
+              </p>
+            ) : null}
+            {customDomainRecord?.verificationStatus === 'pending' ? (
+              <p className="text-sm text-muted-foreground">
+                {t('marketplace.operator.customDomainPendingNote')}
+              </p>
+            ) : null}
+            <p className="text-sm text-muted-foreground">
+              {t('marketplace.operator.customDomainRemoveHint')}
+            </p>
           </div>
         </div>
 
         {!isArchived ? (
           <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              data-testid="operator-marketplace-save"
-              disabled={!canSave || isBusy}
-              onClick={() => void handleSave()}
-            >
-              {working === 'update' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {t('marketplace.operator.saveSettings')}
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {isDirty ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  data-testid="operator-marketplace-discard"
+                  disabled={isBusy}
+                  onClick={handleDiscardChanges}
+                >
+                  {t('marketplace.operator.discardChanges')}
+                </Button>
+              ) : null}
+              <Button
+                data-testid="operator-marketplace-save"
+                disabled={!canSave || isBusy}
+                onClick={() => void handleSave()}
+              >
+                {working === 'update' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {t('marketplace.operator.saveSettings')}
+              </Button>
+            </div>
 
             <AlertDialog>
               <AlertDialogTrigger asChild>

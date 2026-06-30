@@ -2,6 +2,7 @@ import type {
   MarketplaceCatalogMode,
   MarketplaceDiscoverability,
   MarketplaceDomain,
+  MarketplaceJoinMode,
   MarketplaceLifecycleStatus,
   MarketplaceSellerEntryMode,
   MarketplaceStoreStatus,
@@ -20,6 +21,11 @@ export type MarketplaceDiscoverabilityKey =
 export type MarketplaceCatalogModeKey =
   | 'marketplace.enums.catalogMode.open'
   | 'marketplace.enums.catalogMode.curated';
+
+export type MarketplaceJoinModeKey =
+  | 'marketplace.enums.joinMode.open'
+  | 'marketplace.enums.joinMode.approval'
+  | 'marketplace.enums.joinMode.invite';
 
 export type MarketplaceSellerEntryModeKey =
   | 'marketplace.enums.sellerEntryMode.operatorInvited'
@@ -66,6 +72,12 @@ export const MARKETPLACE_CATALOG_MODE_KEYS: Record<
 > = {
   open: 'marketplace.enums.catalogMode.open',
   curated: 'marketplace.enums.catalogMode.curated',
+};
+
+export const MARKETPLACE_JOIN_MODE_KEYS: Record<MarketplaceJoinMode, MarketplaceJoinModeKey> = {
+  open: 'marketplace.enums.joinMode.open',
+  approval: 'marketplace.enums.joinMode.approval',
+  invite: 'marketplace.enums.joinMode.invite',
 };
 
 export const MARKETPLACE_SELLER_ENTRY_MODE_KEYS: Record<
