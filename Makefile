@@ -24,15 +24,15 @@ openapi-dump: openapi-dump-hosting openapi-dump-node openapi-dump-search
 
 openapi-dump-hosting:
 	@echo "=== Dumping hosting spec ==="
-	cd $(SPEC_HOSTING_PATH) && bash -c '$(GVM_ACTIVATE) && go run -tags goolm ./cmd/gen-openapi/main.go'
+	cd $(SPEC_HOSTING_PATH) && bash -c '$(GVM_ACTIVATE) && go run -tags goolm ./cmd/gen-openapi'
 
 openapi-dump-node:
 	@echo "=== Dumping node spec ==="
-	cd $(SPEC_NODE_PATH) && bash -c '$(GVM_ACTIVATE) && go run -tags goolm ./cmd/gen-openapi/main.go'
+	cd $(SPEC_NODE_PATH) && bash -c '$(GVM_ACTIVATE) && go run -tags goolm ./cmd/gen-openapi'
 
 openapi-dump-search:
 	@echo "=== Dumping search spec ==="
-	cd $(SPEC_SEARCH_PATH)/backend && bash -c '$(GVM_ACTIVATE) && go run ./cmd/gen-openapi/main.go'
+	cd $(SPEC_SEARCH_PATH)/backend && bash -c '$(GVM_ACTIVATE) && go run ./cmd/gen-openapi'
 
 ## Merge individual specs into unified openapi.json
 openapi-merge:
