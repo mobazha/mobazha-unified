@@ -304,6 +304,14 @@ export const TOKENS: TokenConfig[] = [
     decimals: 18,
   },
   {
+    id: 'LINETH',
+    assetId: 'crypto:eip155:59144:native',
+    token: 'ETH',
+    chain: 'LINEA',
+    isNative: true,
+    decimals: 18,
+  },
+  {
     id: 'SOL',
     assetId: 'crypto:solana:mainnet:native',
     token: 'SOL',
