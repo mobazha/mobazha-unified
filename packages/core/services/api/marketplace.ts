@@ -20,6 +20,7 @@ import type {
   PublicNativeMarketplaceListParams,
   PublicNativeMarketplaceListResponse,
   NativeMarketplaceSellerApplication,
+  VerifyMarketplaceCustomDomainResponse,
   UpdateMarketplaceSellerRequest,
   UpdateNativeMarketplaceRequest,
 } from '../../types/marketplace';
@@ -281,4 +282,13 @@ export async function getCurrentMarketplaceConfig(
 
 export async function getMarketplaceLink(marketplaceId: string): Promise<MarketplaceShareLink> {
   return hostingGet<MarketplaceShareLink>(HOSTING_API.MARKETPLACE_LINK(marketplaceId));
+}
+
+export async function verifyMarketplaceCustomDomain(
+  marketplaceId: string
+): Promise<VerifyMarketplaceCustomDomainResponse> {
+  return hostingPost<VerifyMarketplaceCustomDomainResponse>(
+    HOSTING_API.MARKETPLACE_CUSTOM_DOMAIN_VERIFY(marketplaceId),
+    undefined
+  );
 }

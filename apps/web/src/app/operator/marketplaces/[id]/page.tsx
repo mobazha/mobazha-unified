@@ -89,6 +89,7 @@ export default function MarketplaceOperatorDetailPage() {
     archive,
     invite,
     reviewSeller,
+    verifyCustomDomain,
   } = useOperatorMarketplace(id);
   const [peerID, setPeerID] = useState('');
   const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>('all');
@@ -266,6 +267,49 @@ export default function MarketplaceOperatorDetailPage() {
     }
   }
 
+  async function handleVerifyCustomDomain() {
+    try {
+      const response = await verifyCustomDomain();
+      if (!response) return;
+
+      if (response.result === 'verified') {
+        toast({
+          title: t('marketplace.operator.customDomainVerifySuccessTitle'),
+          description: t('marketplace.operator.customDomainVerifySuccessDesc'),
+        });
+        return;
+      }
+
+      if (response.result === 'pending' || response.result === 'record_not_found') {
+        toast({
+          title: t('marketplace.operator.customDomainVerifyPendingTitle'),
+          description: t(
+            response.result === 'record_not_found'
+              ? 'marketplace.operator.customDomainVerifyRecordNotFound'
+              : 'marketplace.operator.customDomainVerifyPendingDesc'
+          ),
+        });
+        return;
+      }
+
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.customDomainVerifyFailedTitle'),
+        description: t(
+          response.result === 'challenge_unavailable'
+            ? 'marketplace.operator.customDomainVerifyChallengeUnavailable'
+            : 'marketplace.operator.customDomainVerifyLookupFailed'
+        ),
+      });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.customDomainVerifyFailedTitle'),
+        description: t('marketplace.operator.customDomainVerifyLookupFailed'),
+      });
+    }
+  }
+
   async function handleArchive() {
     try {
       await archive();
@@ -355,6 +399,7 @@ export default function MarketplaceOperatorDetailPage() {
               marketplace={marketplace}
               working={working}
               onSave={handleSaveSettings}
+              onVerifyCustomDomain={handleVerifyCustomDomain}
               onArchive={handleArchive}
             />
           </div>
@@ -380,6 +425,13 @@ export default function MarketplaceOperatorDetailPage() {
                       {t(MARKETPLACE_DOMAIN_KIND_KEYS[domain.kind])} ·{' '}
                       {t(MARKETPLACE_DOMAIN_VERIFICATION_KEYS[domain.verificationStatus])}
                     </div>
+                    {domain.verificationStatus === 'verified' && domain.verifiedAt ? (
+                      <div className="mt-1 text-muted-foreground">
+                        {t('marketplace.operator.customDomainVerifiedAt', {
+                          date: formatDate(domain.verifiedAt),
+                        })}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </CardContent>

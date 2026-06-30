@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { NativeMarketplace } from '@mobazha/core';
 
 const mockOnSave = vi.fn();
 const mockOnArchive = vi.fn();
+const mockOnVerifyCustomDomain = vi.fn();
+const mockCopyToClipboard = vi.fn();
 
 vi.mock('@mobazha/core', () => ({
   MARKETPLACE_CATALOG_MODE_KEYS: {
@@ -31,9 +33,17 @@ vi.mock('@mobazha/core', () => ({
       if (key === 'marketplace.operator.customDomainStatusValue') {
         return `${params?.host ?? ''} (${params?.status ?? ''})`;
       }
+      if (key === 'marketplace.operator.customDomainVerifiedAt') {
+        return `Verified at ${params?.date ?? ''}`;
+      }
       return key;
     },
+    formatDate: (value: string) => value,
   }),
+}));
+
+vi.mock('@/lib/clipboard', () => ({
+  copyToClipboard: (...args: unknown[]) => mockCopyToClipboard(...args),
 }));
 
 import { OperatorMarketplaceSettingsCard } from '@/components/Operator/OperatorMarketplaceSettingsCard';
@@ -67,6 +77,8 @@ describe('OperatorMarketplaceSettingsCard', () => {
     vi.clearAllMocks();
     mockOnSave.mockResolvedValue(null);
     mockOnArchive.mockResolvedValue(undefined);
+    mockOnVerifyCustomDomain.mockResolvedValue(null);
+    mockCopyToClipboard.mockResolvedValue(true);
   });
 
   it('shows platform subdomain as read-only and interpolated custom domain verification state', () => {
@@ -92,6 +104,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={marketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -122,6 +135,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={marketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -160,6 +174,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={buildMarketplace()}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -199,6 +214,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={marketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -225,6 +241,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={buildMarketplace()}
         working="update"
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -243,6 +260,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={marketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -256,6 +274,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={{ ...marketplace, name: 'Server Refreshed Name' }}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -273,6 +292,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={marketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -296,6 +316,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={firstMarketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -310,6 +331,7 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={secondMarketplace}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
@@ -323,11 +345,221 @@ describe('OperatorMarketplaceSettingsCard', () => {
         marketplace={buildMarketplace({ status: 'archived' })}
         working={null}
         onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
         onArchive={mockOnArchive}
       />
     );
 
     expect(screen.getByText('marketplace.operator.readOnlyArchived')).toBeInTheDocument();
     expect(screen.queryByTestId('operator-marketplace-save')).not.toBeInTheDocument();
+  });
+
+  it('shows pending DNS instructions with copy controls and verify action', async () => {
+    const marketplace = buildMarketplace({
+      domains: [
+        {
+          host: 'market.example.com',
+          kind: 'custom',
+          verificationStatus: 'pending',
+          verificationName: '_mobazha-marketplace.market.example.com',
+          verificationValue: 'mobazha-verification=token-123',
+          isPrimary: false,
+        },
+      ],
+    });
+
+    render(
+      <OperatorMarketplaceSettingsCard
+        marketplace={marketplace}
+        working={null}
+        onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
+        onArchive={mockOnArchive}
+      />
+    );
+
+    expect(
+      screen.getByTestId('operator-marketplace-custom-domain-dns-instructions')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('marketplace.operator.customDomainDnsRecordTypeValue')
+    ).toBeInTheDocument();
+    expect(screen.getByText('_mobazha-marketplace.market.example.com')).toBeInTheDocument();
+    expect(screen.getByText('mobazha-verification=token-123')).toBeInTheDocument();
+
+    const copyButtons = screen.getAllByRole('button', { name: 'common.copy' });
+    await act(async () => {
+      fireEvent.click(copyButtons[0]);
+    });
+    expect(mockCopyToClipboard).toHaveBeenCalledWith('_mobazha-marketplace.market.example.com');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('operator-marketplace-custom-domain-verify'));
+    });
+    expect(mockOnVerifyCustomDomain).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows verified timestamp when verifiedAt is available', () => {
+    const marketplace = buildMarketplace({
+      domains: [
+        {
+          host: 'market.example.com',
+          kind: 'custom',
+          verificationStatus: 'verified',
+          verifiedAt: '2026-06-01T00:00:00Z',
+          isPrimary: true,
+        },
+      ],
+    });
+
+    render(
+      <OperatorMarketplaceSettingsCard
+        marketplace={marketplace}
+        working={null}
+        onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
+        onArchive={mockOnArchive}
+      />
+    );
+
+    expect(screen.getByTestId('operator-marketplace-custom-domain-verified-at')).toHaveTextContent(
+      'Verified at 2026-06-01T00:00:00Z'
+    );
+  });
+
+  it('hides old DNS challenge and verify action when domain input changes before save', () => {
+    const marketplace = buildMarketplace({
+      domains: [
+        {
+          host: 'market.example.com',
+          kind: 'custom',
+          verificationStatus: 'pending',
+          verificationName: '_mobazha-marketplace.market.example.com',
+          verificationValue: 'mobazha-verification=token-123',
+          isPrimary: false,
+        },
+      ],
+    });
+
+    render(
+      <OperatorMarketplaceSettingsCard
+        marketplace={marketplace}
+        working={null}
+        onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
+        onArchive={mockOnArchive}
+      />
+    );
+
+    fireEvent.change(screen.getByTestId('operator-marketplace-custom-domain'), {
+      target: { value: 'new.market.example.com' },
+    });
+
+    expect(
+      screen.getByTestId('operator-marketplace-custom-domain-save-first-hint')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-dns-instructions')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-verify')
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides old DNS challenge and verify action when pending domain is cleared before save', () => {
+    const marketplace = buildMarketplace({
+      domains: [
+        {
+          host: 'market.example.com',
+          kind: 'custom',
+          verificationStatus: 'pending',
+          verificationName: '_mobazha-marketplace.market.example.com',
+          verificationValue: 'mobazha-verification=token-123',
+          isPrimary: false,
+        },
+      ],
+    });
+
+    render(
+      <OperatorMarketplaceSettingsCard
+        marketplace={marketplace}
+        working={null}
+        onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
+        onArchive={mockOnArchive}
+      />
+    );
+
+    fireEvent.change(screen.getByTestId('operator-marketplace-custom-domain'), {
+      target: { value: '' },
+    });
+
+    expect(
+      screen.getByTestId('operator-marketplace-custom-domain-save-first-hint')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-dns-instructions')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-verify')
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not show verify button for archived marketplace', () => {
+    const marketplace = buildMarketplace({
+      status: 'archived',
+      domains: [
+        {
+          host: 'market.example.com',
+          kind: 'custom',
+          verificationStatus: 'pending',
+          verificationName: '_mobazha-marketplace.market.example.com',
+          verificationValue: 'mobazha-verification=token-123',
+          isPrimary: false,
+        },
+      ],
+    });
+
+    render(
+      <OperatorMarketplaceSettingsCard
+        marketplace={marketplace}
+        working={null}
+        onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
+        onArchive={mockOnArchive}
+      />
+    );
+
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-verify')
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows save-first hint for first custom domain before initial save', () => {
+    const marketplace = buildMarketplace({ domains: [] });
+
+    render(
+      <OperatorMarketplaceSettingsCard
+        marketplace={marketplace}
+        working={null}
+        onSave={mockOnSave}
+        onVerifyCustomDomain={mockOnVerifyCustomDomain}
+        onArchive={mockOnArchive}
+      />
+    );
+
+    fireEvent.change(screen.getByTestId('operator-marketplace-custom-domain'), {
+      target: { value: 'first.market.example.com' },
+    });
+
+    expect(
+      screen.getByTestId('operator-marketplace-custom-domain-save-first-hint')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-dns-instructions')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('operator-marketplace-custom-domain-verify')
+    ).not.toBeInTheDocument();
   });
 });

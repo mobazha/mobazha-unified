@@ -39,7 +39,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Loader2 } from 'lucide-react';
+import { Check, Copy, Loader2 } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface MarketplaceSettingsFormState {
   name: string;
@@ -61,6 +62,10 @@ function domainHost(marketplace: NativeMarketplace, kind: 'subdomain' | 'custom'
 
 function normalizeOptionalString(value: string): string {
   return value.trim();
+}
+
+function normalizeHostForCompare(value: string): string {
+  return value.trim().replace(/\.+$/, '').toLowerCase();
 }
 
 function isValidHostname(value: string): boolean {
@@ -180,6 +185,7 @@ interface OperatorMarketplaceSettingsCardProps {
   marketplace: NativeMarketplace;
   working: string | null;
   onSave: (data: UpdateNativeMarketplaceRequest) => Promise<NativeMarketplace | null>;
+  onVerifyCustomDomain: () => Promise<void>;
   onArchive: () => Promise<unknown>;
 }
 
@@ -187,14 +193,17 @@ export function OperatorMarketplaceSettingsCard({
   marketplace,
   working,
   onSave,
+  onVerifyCustomDomain,
   onArchive,
 }: OperatorMarketplaceSettingsCardProps) {
-  const { t } = useI18n();
+  const { t, formatDate } = useI18n();
   const isArchived = marketplace.status === 'archived';
   const isBusy = Boolean(working);
+  const isVerifyingDomain = working === 'verifyCustomDomain';
   const platformSubdomain = domainHost(marketplace, 'subdomain');
   const customDomainRecord = marketplace.domains.find(domain => domain.kind === 'custom');
   const [form, setForm] = useState<MarketplaceSettingsFormState>(() => buildFormState(marketplace));
+  const [copiedField, setCopiedField] = useState<'name' | 'value' | null>(null);
 
   const setField = useCallback(
     <K extends keyof MarketplaceSettingsFormState>(
@@ -211,6 +220,20 @@ export function OperatorMarketplaceSettingsCard({
     () => Object.keys(buildPartialUpdate(form, marketplace)).length > 0,
     [form, marketplace]
   );
+  const formCustomDomainNormalized = useMemo(
+    () => normalizeHostForCompare(form.customDomain),
+    [form.customDomain]
+  );
+  const serverCustomDomainNormalized = useMemo(
+    () => normalizeHostForCompare(customDomainRecord?.host ?? ''),
+    [customDomainRecord?.host]
+  );
+  const hasCustomDomainChanged = formCustomDomainNormalized !== serverCustomDomainNormalized;
+  const customDomainMatchesServer =
+    Boolean(customDomainRecord) &&
+    formCustomDomainNormalized.length > 0 &&
+    formCustomDomainNormalized === serverCustomDomainNormalized;
+  const shouldShowSavedDomainMismatchHint = hasCustomDomainChanged && validation.customDomain;
 
   const canSave = useMemo(() => {
     if (isArchived) return false;
@@ -238,6 +261,16 @@ export function OperatorMarketplaceSettingsCard({
   function handleDiscardChanges() {
     setForm(buildFormState(marketplace));
   }
+
+  const handleCopyDnsValue = useCallback(async (field: 'name' | 'value', value?: string) => {
+    if (!value) return;
+    const copied = await copyToClipboard(value);
+    if (!copied) return;
+    setCopiedField(field);
+    window.setTimeout(() => {
+      setCopiedField(prev => (prev === field ? null : prev));
+    }, 2000);
+  }, []);
 
   return (
     <Card data-testid="operator-marketplace-settings-card">
@@ -495,18 +528,29 @@ export function OperatorMarketplaceSettingsCard({
               onChange={event => setField('customDomain', event.target.value)}
             />
             {customDomainRecord ? (
-              <p
-                className="text-sm text-muted-foreground"
+              <div
+                className="space-y-1 text-sm text-muted-foreground"
                 data-testid="operator-marketplace-custom-domain-status"
               >
-                {t('marketplace.operator.customDomainStatusValue', {
-                  host: customDomainRecord.host,
-                  status:
-                    customDomainRecord.verificationStatus === 'verified'
-                      ? t('marketplace.enums.domainVerification.verified')
-                      : t('marketplace.enums.domainVerification.pending'),
-                })}
-              </p>
+                <p>
+                  {t('marketplace.operator.customDomainStatusValue', {
+                    host: customDomainRecord.host,
+                    status:
+                      customDomainRecord.verificationStatus === 'verified'
+                        ? t('marketplace.enums.domainVerification.verified')
+                        : t('marketplace.enums.domainVerification.pending'),
+                  })}
+                </p>
+                {customDomainMatchesServer &&
+                customDomainRecord.verificationStatus === 'verified' &&
+                customDomainRecord.verifiedAt ? (
+                  <p data-testid="operator-marketplace-custom-domain-verified-at">
+                    {t('marketplace.operator.customDomainVerifiedAt', {
+                      date: formatDate(customDomainRecord.verifiedAt),
+                    })}
+                  </p>
+                ) : null}
+              </div>
             ) : null}
             {!validation.customDomain ? (
               <p
@@ -516,10 +560,62 @@ export function OperatorMarketplaceSettingsCard({
                 {t('marketplace.operator.validationInvalidHostname')}
               </p>
             ) : null}
-            {customDomainRecord?.verificationStatus === 'pending' ? (
-              <p className="text-sm text-muted-foreground">
-                {t('marketplace.operator.customDomainPendingNote')}
+            {shouldShowSavedDomainMismatchHint ? (
+              <p
+                className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground"
+                data-testid="operator-marketplace-custom-domain-save-first-hint"
+              >
+                {t('marketplace.operator.customDomainSaveFirstHint')}
               </p>
+            ) : null}
+            {customDomainMatchesServer && customDomainRecord?.verificationStatus === 'pending' ? (
+              <div
+                className="space-y-3 rounded-md border border-border bg-muted/30 p-3"
+                data-testid="operator-marketplace-custom-domain-dns-instructions"
+              >
+                <p className="text-sm text-foreground">
+                  {t('marketplace.operator.customDomainPendingNote')}
+                </p>
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <p>
+                    {t('marketplace.operator.customDomainDnsRecordTypeLabel')}:{' '}
+                    <span className="font-medium text-foreground">
+                      {t('marketplace.operator.customDomainDnsRecordTypeValue')}
+                    </span>
+                  </p>
+                  <DnsRecordRow
+                    label={t('marketplace.operator.customDomainDnsNameLabel')}
+                    value={customDomainRecord.verificationName}
+                    copied={copiedField === 'name'}
+                    onCopy={() =>
+                      void handleCopyDnsValue('name', customDomainRecord.verificationName)
+                    }
+                  />
+                  <DnsRecordRow
+                    label={t('marketplace.operator.customDomainDnsValueLabel')}
+                    value={customDomainRecord.verificationValue}
+                    copied={copiedField === 'value'}
+                    onCopy={() =>
+                      void handleCopyDnsValue('value', customDomainRecord.verificationValue)
+                    }
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('marketplace.operator.customDomainAutoRetryHint')}
+                </p>
+                {!isArchived ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    data-testid="operator-marketplace-custom-domain-verify"
+                    disabled={isBusy}
+                    onClick={() => void onVerifyCustomDomain()}
+                  >
+                    {isVerifyingDomain ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {t('marketplace.operator.customDomainVerifyNow')}
+                  </Button>
+                ) : null}
+              </div>
             ) : null}
             <p className="text-sm text-muted-foreground">
               {t('marketplace.operator.customDomainRemoveHint')}
@@ -591,5 +687,44 @@ export function OperatorMarketplaceSettingsCard({
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+interface DnsRecordRowProps {
+  label: string;
+  value?: string;
+  copied: boolean;
+  onCopy: () => void;
+}
+
+function DnsRecordRow({ label, value, copied, onCopy }: DnsRecordRowProps) {
+  const { t } = useI18n();
+
+  return (
+    <div className="space-y-1">
+      <p>{label}</p>
+      <div className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-2">
+        <code className="flex-1 break-all text-foreground">{value || '--'}</code>
+        <button
+          type="button"
+          className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          disabled={!value}
+          onClick={onCopy}
+          aria-label={copied ? t('common.copied') : t('common.copy')}
+        >
+          {copied ? (
+            <>
+              <Check className="h-3 w-3 text-primary" />
+              <span className="text-primary">{t('common.copied')}</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-3 w-3" />
+              <span>{t('common.copy')}</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }

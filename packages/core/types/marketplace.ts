@@ -54,7 +54,23 @@ export interface MarketplaceDomain {
   host: string;
   kind: 'subdomain' | 'custom';
   verificationStatus: 'pending' | 'verified';
+  verificationName?: string;
+  verificationValue?: string;
+  verifiedAt?: string;
   isPrimary: boolean;
+}
+
+export type MarketplaceCustomDomainVerifyResult =
+  | 'verified'
+  | 'pending'
+  | 'record_not_found'
+  | 'lookup_failed'
+  | 'challenge_unavailable';
+
+export interface VerifyMarketplaceCustomDomainResponse {
+  domain: MarketplaceDomain;
+  verified: boolean;
+  result: MarketplaceCustomDomainVerifyResult;
 }
 
 export interface NativeMarketplace {

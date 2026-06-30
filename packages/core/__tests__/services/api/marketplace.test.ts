@@ -293,6 +293,42 @@ describe('Marketplace API', () => {
     });
   });
 
+  describe('verifyMarketplaceCustomDomain', () => {
+    it('calls custom-domain verify endpoint and returns result payload', async () => {
+      mockHostingPost.mockResolvedValueOnce({
+        domain: {
+          host: 'shop.example.com',
+          kind: 'custom',
+          verificationStatus: 'pending',
+          verificationName: '_mobazha-marketplace.shop.example.com',
+          verificationValue: 'mobazha-verification=token-123',
+          isPrimary: false,
+        },
+        verified: false,
+        result: 'record_not_found',
+      });
+
+      const result = await marketplaceApi.verifyMarketplaceCustomDomain('mp1');
+
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/domains/custom/verify',
+        undefined
+      );
+      expect(result).toEqual({
+        domain: {
+          host: 'shop.example.com',
+          kind: 'custom',
+          verificationStatus: 'pending',
+          verificationName: '_mobazha-marketplace.shop.example.com',
+          verificationValue: 'mobazha-verification=token-123',
+          isPrimary: false,
+        },
+        verified: false,
+        result: 'record_not_found',
+      });
+    });
+  });
+
   describe('marketplace seller review events', () => {
     it('loads operator review events with peer and limit query params', async () => {
       mockHostingGet.mockResolvedValueOnce([]);
