@@ -28,6 +28,7 @@ import type {
   UpdateNativeMarketplaceRequest,
 } from '../../types/marketplace';
 import { HOSTING_API } from '../../config/apiPaths';
+import { getHostingUrl } from './config';
 
 // ============ 集市基础 API ============
 
@@ -138,9 +139,13 @@ export async function submitPublicMarketplaceAttributionEvent(
   identifier: string,
   data: SubmitMarketplaceAttributionEventRequest
 ): Promise<SubmitMarketplaceAttributionEventResponse> {
-  return hostingPost<SubmitMarketplaceAttributionEventResponse>(
-    HOSTING_API.PUBLIC_MARKETPLACE_ATTRIBUTION_EVENTS(identifier),
-    data
+  return apiClient.request<SubmitMarketplaceAttributionEventResponse>(
+    `${getHostingUrl()}${HOSTING_API.PUBLIC_MARKETPLACE_ATTRIBUTION_EVENTS(identifier)}`,
+    {
+      method: 'POST',
+      body: data,
+      keepalive: true,
+    }
   );
 }
 

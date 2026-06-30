@@ -8,11 +8,16 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 // Mock the apiClient
 vi.mock('../../../services/api/client', () => ({
   apiClient: {
+    request: vi.fn(),
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
     delete: vi.fn(),
   },
+}));
+
+vi.mock('../../../services/api/config', () => ({
+  getHostingUrl: vi.fn(() => 'https://hosting.test'),
 }));
 
 vi.mock('../../../services/api/helpers', () => ({
@@ -23,12 +28,16 @@ vi.mock('../../../services/api/helpers', () => ({
 }));
 
 import { hostingDel, hostingGet, hostingPost, hostingPut } from '../../../services/api/helpers';
+import { apiClient } from '../../../services/api/client';
+import { getHostingUrl } from '../../../services/api/config';
 import * as marketplaceApi from '../../../services/api/marketplace';
 
 const mockHostingGet = hostingGet as ReturnType<typeof vi.fn>;
 const mockHostingPost = hostingPost as ReturnType<typeof vi.fn>;
 const mockHostingPut = hostingPut as ReturnType<typeof vi.fn>;
 const mockHostingDel = hostingDel as ReturnType<typeof vi.fn>;
+const mockApiRequest = apiClient.request as ReturnType<typeof vi.fn>;
+const mockGetHostingUrl = getHostingUrl as ReturnType<typeof vi.fn>;
 
 // Import types after mock setup
 import type { Marketplace } from '../../../types/marketplace';
@@ -53,6 +62,7 @@ describe('Marketplace API', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetHostingUrl.mockReturnValue('https://hosting.test');
   });
 
   afterEach(() => {
@@ -265,7 +275,7 @@ describe('Marketplace API', () => {
 
   describe('native marketplace attribution', () => {
     it('submits public marketplace attribution events', async () => {
-      mockHostingPost.mockResolvedValueOnce({ accepted: true, duplicate: false });
+      mockApiRequest.mockResolvedValueOnce({ accepted: true, duplicate: false });
 
       await marketplaceApi.submitPublicMarketplaceAttributionEvent('collectibles', {
         eventID: 'evt-1',
@@ -276,17 +286,22 @@ describe('Marketplace API', () => {
         source: 'newsletter',
       });
 
-      expect(mockHostingPost).toHaveBeenCalledWith(
-        '/platform/v1/public-marketplaces/collectibles/attribution-events',
+      expect(mockApiRequest).toHaveBeenCalledWith(
+        'https://hosting.test/platform/v1/public-marketplaces/collectibles/attribution-events',
         expect.objectContaining({
-          eventID: 'evt-1',
-          journeyID: 'journey-1',
-          eventType: 'listing_click',
-          listingSlug: 'topps-2026',
-          peerID: 'QmSeller1',
-          source: 'newsletter',
+          method: 'POST',
+          keepalive: true,
+          body: expect.objectContaining({
+            eventID: 'evt-1',
+            journeyID: 'journey-1',
+            eventType: 'listing_click',
+            listingSlug: 'topps-2026',
+            peerID: 'QmSeller1',
+            source: 'newsletter',
+          }),
         })
       );
+      expect(mockHostingPost).not.toHaveBeenCalled();
     });
 
     it('loads marketplace attribution summary with optional range query', async () => {

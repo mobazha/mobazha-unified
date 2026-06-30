@@ -148,4 +148,17 @@ describe('client.request — multipart body', () => {
     expect(headers['Content-Type']).toBeUndefined();
     expect(headers.Authorization).toBe('Bearer tok');
   });
+
+  it('forwards keepalive option to fetch init', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(jsonResponse(200, { data: { ok: true } }));
+
+    await request<{ ok: boolean }>('http://api/test', {
+      method: 'POST',
+      body: { ping: true },
+      keepalive: true,
+    });
+
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit];
+    expect(init.keepalive).toBe(true);
+  });
 });
