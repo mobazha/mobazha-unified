@@ -34,7 +34,7 @@ import {
   marketplaceSellerReviewModeKey,
   marketplaceVerticalKey,
   MARKETPLACE_CATALOG_MODE_KEYS,
-  resolveCurationMarketBackHref,
+  resolveMarketplaceBackHref,
   resolveNativeMarketplaceSellPolicy,
   getNativeMarketplaceMembershipStatus,
   isCollectibleMarketplaceVertical,
@@ -165,7 +165,7 @@ export default function MarketplaceSellPage() {
   const marketHref = marketplace
     ? marketplaceHref(marketplace.slug, marketplace.id)
     : `/marketplace/${identifier}`;
-  const marketBackHref = resolveCurationMarketBackHref(marketHref);
+  const marketBackHref = resolveMarketplaceBackHref(marketHref);
 
   const casdoorUserId = getCasdoorUserId();
   const productGroupUserID = casdoorUserId || '';

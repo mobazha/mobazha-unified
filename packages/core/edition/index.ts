@@ -2,7 +2,6 @@ export {
   COMMUNITY_EDITION_MANIFEST,
   COMMUNITY_PAYMENT_CHAINS,
   COMMUNITY_PAYMENT_CHAIN_SET,
-  isCommunityEdition,
   type CommunityEditionManifest,
 } from './manifest';
 

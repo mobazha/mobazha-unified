@@ -21,15 +21,6 @@ interface ChainEcosystemEntry {
   name: string;
 }
 
-const LEGACY_CHAIN_ECOSYSTEM: ChainEcosystemEntry[] = [
-  { id: 'BTC', name: 'Bitcoin' },
-  { id: 'ETH', name: 'Ethereum' },
-  { id: 'BNB', name: 'BNB Chain' },
-  { id: 'SOL', name: 'Solana' },
-  { id: 'BASE', name: 'Base' },
-  { id: 'LTC', name: 'Litecoin' },
-];
-
 const CHAIN_ECOSYSTEM_BY_CAPABILITY: Record<string, ChainEcosystemEntry> = {
   BTC: { id: 'BTC', name: 'Bitcoin' },
   BCH: { id: 'BCH', name: 'Bitcoin Cash' },
@@ -97,13 +88,10 @@ export const PlatformStatsSection: React.FC<PlatformStatsSectionProps> = React.m
     const fiatVisible = useFiatPaymentVisible();
     const hasRealData = storeCount > 0 || listingCount > 0;
     const chainsSupported = getVisibleSupportedChainCount();
-    const chainEcosystem =
-      runtimeConfig.schemaVersion >= 2
-        ? runtimeConfig.capabilities.payments.methods
-            .filter(method => method.kind === 'crypto')
-            .map(method => CHAIN_ECOSYSTEM_BY_CAPABILITY[method.id.toUpperCase()])
-            .filter((chain): chain is ChainEcosystemEntry => Boolean(chain))
-        : LEGACY_CHAIN_ECOSYSTEM;
+    const chainEcosystem = runtimeConfig.capabilities.payments.methods
+      .filter(method => method.kind === 'crypto')
+      .map(method => CHAIN_ECOSYSTEM_BY_CAPABILITY[method.id.toUpperCase()])
+      .filter((chain): chain is ChainEcosystemEntry => Boolean(chain));
 
     if (isLoading) {
       return (

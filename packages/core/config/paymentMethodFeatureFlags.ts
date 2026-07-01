@@ -1,13 +1,13 @@
 /**
  * Payment method capability projection shared by checkout policy and UI filters.
  *
- * Runtime capabilities are authoritative. The legacy visibility object remains
- * exported for consumers that only need the conservative pre-bootstrap defaults.
+ * Runtime capabilities are authoritative. The visibility constants document
+ * the fail-closed defaults used by non-reactive consumers.
  */
 import {
-  hasRuntimePaymentCapabilities,
   supportsRuntimePaymentKind,
   supportsRuntimePaymentMethod,
+  type RuntimeConfig,
 } from './runtimeConfig';
 
 export const PAYMENT_METHOD_VISIBILITY = {
@@ -15,11 +15,10 @@ export const PAYMENT_METHOD_VISIBILITY = {
   fiat: false,
 } as const;
 
-export function isTronPaymentVisible(): boolean {
-  if (!hasRuntimePaymentCapabilities()) return PAYMENT_METHOD_VISIBILITY.tron;
-  return supportsRuntimePaymentMethod('TRX', 'crypto');
+export function isTronPaymentVisible(config?: RuntimeConfig): boolean {
+  return supportsRuntimePaymentMethod('TRX', 'crypto', config);
 }
 
-export function isFiatPaymentVisible(): boolean {
-  return supportsRuntimePaymentKind('fiat', PAYMENT_METHOD_VISIBILITY.fiat);
+export function isFiatPaymentVisible(config?: RuntimeConfig): boolean {
+  return supportsRuntimePaymentKind('fiat', config);
 }

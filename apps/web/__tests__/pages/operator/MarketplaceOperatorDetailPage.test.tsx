@@ -173,6 +173,7 @@ vi.mock('@mobazha/core', async importOriginal => {
       t: (key: string) => key,
       formatDate: (value: string) => `formatted:${value}`,
     }),
+    useRuntimeCapability: () => true,
     useOperatorMarketplace: () => ({
       marketplace: currentMarketplace,
       stores: currentStores,

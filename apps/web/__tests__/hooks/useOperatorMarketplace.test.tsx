@@ -1015,4 +1015,40 @@ describe('useOperatorMarketplace', () => {
     expect(result.current.reviewEvents).toEqual([]);
     expect(result.current.reviewEventsError).toBe('id-b-events-failed');
   });
+
+  it('does not fetch or mutate disabled fine-grained marketplace capabilities', async () => {
+    const marketplace = buildMarketplace('mp1', 'Main Marketplace');
+    const store = buildStore('peer-main', 'mp1');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([store]);
+
+    const { result } = renderHook(() =>
+      useOperatorMarketplace('mp1', {
+        curation: false,
+        sellerReview: false,
+        customDomains: false,
+        releasePublishing: false,
+        attribution: false,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(mockGetMarketplaceSellerReviewEvents).not.toHaveBeenCalled();
+    expect(mockGetMarketplaceCuration).not.toHaveBeenCalled();
+    expect(mockGetMarketplaceCurationCandidates).not.toHaveBeenCalled();
+    expect(mockGetMarketplaceAttributionSummary).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await result.current.publish();
+      await result.current.verifyCustomDomain();
+      await result.current.reviewSeller(store, 'approved');
+    });
+
+    expect(mockPublishMarketplace).not.toHaveBeenCalled();
+    expect(mockVerifyMarketplaceCustomDomain).not.toHaveBeenCalled();
+    expect(mockUpdateMarketplaceSeller).not.toHaveBeenCalled();
+  });
 });

@@ -41,7 +41,3 @@ export const COMMUNITY_PAYMENT_CHAINS = COMMUNITY_EDITION_MANIFEST.payment.chain
 export const COMMUNITY_PAYMENT_CHAIN_SET = new Set<string>(
   COMMUNITY_PAYMENT_CHAINS.map(chain => chain.toUpperCase())
 );
-
-export function isCommunityEdition(): boolean {
-  return true;
-}
