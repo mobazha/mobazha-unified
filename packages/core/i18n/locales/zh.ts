@@ -7887,6 +7887,9 @@ export const zh: PartialTranslationResource = {
     networkMismatchTitle: '检测到网络不匹配地址',
     networkMismatchDesc:
       '有 {{count}} 个地址与当前环境网络（{{network}}）不一致，请尽快修正以避免收款异常。',
+    saveFailed: '保存收款地址失败，请重试。',
+    nameInUse: '该名称已在当前网络上使用，请为这条收款地址换一个名称。',
+    addressInUse: '该地址已绑定到其他收款账户。',
   },
   fiat: {
     creditDebitCard: '信用卡 / 借记卡',
