@@ -7621,6 +7621,50 @@
         ]
       }
     },
+    "/platform/v1/marketplaces/{id}/publish": {
+      "post": {
+        "operationId": "marketplaces-publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Validate and publish the current marketplace draft as an immutable release",
+        "tags": ["marketplaces"]
+      }
+    },
     "/platform/v1/marketplaces/{id}/seller-review-events": {
       "get": {
         "operationId": "marketplaces-seller-review-events-list",
@@ -7910,6 +7954,50 @@
         "tags": [
           "marketplaces"
         ]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/suspend": {
+      "post": {
+        "operationId": "marketplaces-suspend",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Suspend a published marketplace while retaining its active release",
+        "tags": ["marketplaces"]
       }
     },
     "/platform/v1/matrix/config": {
@@ -34995,9 +35083,6 @@
             "type": "string"
           },
           "slug": {
-            "type": "string"
-          },
-          "status": {
             "type": "string"
           },
           "subdomain": {

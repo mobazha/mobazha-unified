@@ -2502,6 +2502,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplaces/{id}/suspend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Suspend a published marketplace while retaining its active release */
+    post: operations['marketplaces-suspend'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/matrix/config': {
     parameters: {
       query?: never;
@@ -9939,7 +9956,6 @@ export interface components {
       sellerEntryMode?: string;
       sellerReviewMode?: string;
       slug?: string;
-      status?: string;
       subdomain?: string;
       theme?: unknown;
       vertical?: string;
@@ -16216,6 +16232,37 @@ export interface operations {
       path: {
         id: string;
         peerID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-suspend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
       };
       cookie?: never;
     };

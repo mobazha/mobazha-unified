@@ -22,8 +22,9 @@ vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMyMarketplaces: vi.fn(),
   getMyMarketplaceMemberships: vi.fn(),
   inviteMarketplaceSeller: vi.fn(),
-  verifyMarketplaceCustomDomain: vi.fn(),
   publishMarketplace: vi.fn(),
+  suspendMarketplace: vi.fn(),
+  verifyMarketplaceCustomDomain: vi.fn(),
   updateMarketplace: vi.fn(),
   deleteMarketplace: vi.fn(),
   updateMarketplaceSeller: vi.fn(),
@@ -40,6 +41,7 @@ import {
   getMarketplaceSellers,
   inviteMarketplaceSeller,
   publishMarketplace,
+  suspendMarketplace,
   verifyMarketplaceCustomDomain,
   updateMarketplace,
   updateMarketplaceSeller,
@@ -59,6 +61,7 @@ const mockGetMarketplaceCurationCandidates = getMarketplaceCurationCandidates as
 >;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
 const mockPublishMarketplace = publishMarketplace as ReturnType<typeof vi.fn>;
+const mockSuspendMarketplace = suspendMarketplace as ReturnType<typeof vi.fn>;
 const mockVerifyMarketplaceCustomDomain = verifyMarketplaceCustomDomain as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplace = updateMarketplace as ReturnType<typeof vi.fn>;
 const mockDeleteMarketplace = deleteMarketplace as ReturnType<typeof vi.fn>;
@@ -384,6 +387,33 @@ describe('useOperatorMarketplace', () => {
 
     expect(result.current.marketplace).toEqual({ ...marketplaceB, status: 'published' });
     expect(result.current.working).toBeNull();
+  });
+
+  it('routes suspend and resume through dedicated lifecycle APIs', async () => {
+    const marketplace = buildMarketplace('mp1', 'Lifecycle Marketplace');
+    mockGetMarketplace.mockResolvedValue(marketplace);
+    mockGetMarketplaceSellers.mockResolvedValue([]);
+    mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
+    mockSuspendMarketplace.mockResolvedValue({ ...marketplace, status: 'suspended' });
+    mockPublishMarketplace.mockResolvedValue({ ...marketplace, status: 'published' });
+
+    const { result } = renderHook(() => useOperatorMarketplace('mp1'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.suspend();
+    });
+    expect(mockSuspendMarketplace).toHaveBeenCalledWith('mp1');
+    expect(result.current.marketplace?.status).toBe('suspended');
+
+    await act(async () => {
+      await result.current.resume();
+    });
+    expect(mockPublishMarketplace).toHaveBeenCalledWith('mp1');
+    expect(result.current.marketplace?.status).toBe('published');
   });
 
   it('does not let a stale invite refresh or clear working after marketplaceId changes', async () => {

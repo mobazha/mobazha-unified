@@ -35,6 +35,7 @@ import {
   inviteMarketplaceSeller,
   publishMarketplace,
   reorderMarketplaceCuration,
+  suspendMarketplace,
   updateMarketplaceCurationItem,
   verifyMarketplaceCustomDomain,
   updateMarketplace,
@@ -362,7 +363,7 @@ export function useOperatorMarketplace(
     const actionMarketplaceId = marketplaceId;
     setWorking('suspend');
     try {
-      const updated = await updateMarketplace(actionMarketplaceId, { status: 'suspended' });
+      const updated = await suspendMarketplace(actionMarketplaceId);
       if (marketplaceIdRef.current === actionMarketplaceId) {
         setMarketplace(updated);
       }
@@ -379,7 +380,7 @@ export function useOperatorMarketplace(
     const actionMarketplaceId = marketplaceId;
     setWorking('resume');
     try {
-      const updated = await updateMarketplace(actionMarketplaceId, { status: 'published' });
+      const updated = await publishMarketplace(actionMarketplaceId);
       if (marketplaceIdRef.current === actionMarketplaceId) {
         setMarketplace(updated);
       }

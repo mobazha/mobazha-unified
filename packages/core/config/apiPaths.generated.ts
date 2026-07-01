@@ -229,6 +229,8 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/${encodeURIComponent(peerID)}`,
   MARKETPLACES_SELLERS_INVITE: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/invite`,
+  MARKETPLACES_SUSPEND: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/suspend`,
   MATRIX_CONFIG: '/platform/v1/matrix/config',
   MATRIX_PEER_ID: '/platform/v1/matrix/peer-id',
   MATRIX_STORE_INVITE: '/platform/v1/matrix/store/invite',
