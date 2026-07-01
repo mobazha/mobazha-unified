@@ -30,12 +30,11 @@ payment kinds fail closed until the versioned capability response is available.
 
 The Community Edition backend currently advertises these payment rails:
 
-| Chain | Rail                                          |
-| ----- | --------------------------------------------- |
-| BTC   | UTXO transparent                              |
-| BCH   | UTXO transparent                              |
-| LTC   | UTXO transparent                              |
-| ZEC   | UTXO transparent (transparent addresses only) |
+| Chain | Rail             |
+| ----- | ---------------- |
+| BTC   | UTXO transparent |
+| BCH   | UTXO transparent |
+| LTC   | UTXO transparent |
 
 Other backends can advertise additional methods without requiring a separate
 frontend branch. Historical edition manifests remain as packaging and regression

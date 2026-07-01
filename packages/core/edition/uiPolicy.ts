@@ -23,7 +23,7 @@ export const EDITION_I18N_KEYS = {
 
 /** Plain-text default for store FAQ templates (English seed content). */
 export function getEditionDefaultPaymentMethodsAnswer(): string {
-  return 'Bitcoin, Bitcoin Cash, Litecoin, and transparent Zcash.';
+  return 'Bitcoin, Bitcoin Cash, and Litecoin.';
 }
 
 /** Tokens/chains advertised on marketing surfaces (footer, homepage stats). */

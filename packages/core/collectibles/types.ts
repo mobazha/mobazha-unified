@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 /** Hub slot lifecycle — mirrors hosting/db/collectibles.go */
 export type CollectibleHubSlotStatus =
   | 'submitted'

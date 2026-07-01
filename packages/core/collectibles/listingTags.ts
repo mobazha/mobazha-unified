@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 /** OpenBazaar listing tag length limit. */
 export const COLLECTIBLE_LISTING_TAG_MAX_LEN = 40;
 

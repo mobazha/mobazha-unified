@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 /**
  * Collectible marketplace detail smoke test
  *
@@ -35,18 +38,33 @@ const mockCollectiblesList = {
 };
 
 const mockListingCatalog = [
-  { slug: 'psa-pikachu-vmax', peerID: SELLER_PEER_ID, title: 'PSA 10 Pikachu VMAX', tags: ['pokemon'] },
-  { slug: 'topps-trout-chrome', peerID: SELLER_PEER_ID, title: '2020 Topps Chrome Mike Trout', tags: ['baseball', 'sports'] },
-  { slug: 'black-lotus-proxy', peerID: SELLER_PEER_ID, title: 'Magic: The Gathering Lotus', tags: ['mtg'] },
-  { slug: 'yugioh-dark-magician', peerID: SELLER_PEER_ID, title: 'Yu-Gi-Oh Dark Magician', tags: ['tcg'] },
+  {
+    slug: 'psa-pikachu-vmax',
+    peerID: SELLER_PEER_ID,
+    title: 'PSA 10 Pikachu VMAX',
+    tags: ['pokemon'],
+  },
+  {
+    slug: 'topps-trout-chrome',
+    peerID: SELLER_PEER_ID,
+    title: '2020 Topps Chrome Mike Trout',
+    tags: ['baseball', 'sports'],
+  },
+  {
+    slug: 'black-lotus-proxy',
+    peerID: SELLER_PEER_ID,
+    title: 'Magic: The Gathering Lotus',
+    tags: ['mtg'],
+  },
+  {
+    slug: 'yugioh-dark-magician',
+    peerID: SELLER_PEER_ID,
+    title: 'Yu-Gi-Oh Dark Magician',
+    tags: ['tcg'],
+  },
 ] as const;
 
-function mockListingResponse(
-  slug: string,
-  title: string,
-  tags: string[],
-  productType?: string
-) {
+function mockListingResponse(slug: string, title: string, tags: string[], productType?: string) {
   return {
     listing: {
       slug,
@@ -192,9 +210,10 @@ test.describe('Collectible marketplace detail', () => {
     await expect(
       signal.getByRole('button', { name: /Browse listed cards|浏览在售卡片/i })
     ).toBeVisible();
-    await expect(
-      signal.getByRole('link', { name: /Apply to sell|申请成为卖家/i })
-    ).toHaveAttribute('href', /\/sell$/);
+    await expect(signal.getByRole('link', { name: /Apply to sell|申请成为卖家/i })).toHaveAttribute(
+      'href',
+      /\/sell$/
+    );
     await expect(signal.getByTestId('collectible-catalog-link')).toHaveAttribute(
       'href',
       '/collectibles'

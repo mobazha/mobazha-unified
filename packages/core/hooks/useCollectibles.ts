@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { collectiblesApi } from '../services/api/collectibles';
 import * as collectibleRequests from '../services/api/collectibles';
