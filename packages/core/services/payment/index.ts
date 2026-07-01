@@ -4,8 +4,8 @@
  */
 
 export * from './types';
+export * from './chainCategory';
 export * from './chains';
 export * from './explorers';
 export * from './wallet';
 export * from './escrow';
-export * from './solana';
