@@ -18,3 +18,6 @@ Individual dependencies, vendored code, generated artifacts, and assets may be
 governed by their own licenses. Their copyright and license notices remain the
 property of their respective owners. Binary redistributors must review and
 satisfy those terms independently.
+
+Material third-party runtime notices and binary redistribution instructions are
+recorded in THIRD_PARTY_NOTICES.md.

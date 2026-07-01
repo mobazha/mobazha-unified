@@ -1,6 +1,6 @@
 # Supply-Chain Audit
 
-Audit date: 2026-06-29
+Audit date: 2026-07-01
 
 This audit covers the exact production dependency graph resolved from
 `pnpm-lock.yaml` with pnpm 9.15.4. It is a source-release gate; distributors of
@@ -40,8 +40,12 @@ MPL core dependency or production bundle.
 
 - `@img/sharp-libvips-darwin-arm64` declares LGPL-3.0-or-later. Binary
   distributors must retain its notices and comply with the applicable LGPL terms.
+- `openpgp@6.3.0` declares LGPL-3.0-or-later and is dynamically loaded for
+  end-to-end encrypted address payloads.
 - `rpc-websockets@9.3.2` declares LGPL-3.0-only and is retained through Solana
   compatibility dependencies.
+- Release archives and container images include `THIRD_PARTY_NOTICES.md` plus
+  the resolved dependency license texts under `third-party-licenses/`.
 - Packages declaring a permissive alternative are consumed under the applicable
   permissive alternative.
 - MPL-2.0 dependencies remain under their own file-level terms and are compatible
