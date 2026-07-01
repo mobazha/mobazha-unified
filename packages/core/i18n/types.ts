@@ -5111,6 +5111,9 @@ export interface TranslationResource {
     networkMismatchNeedTestnet?: string;
     networkMismatchTitle?: string;
     networkMismatchDesc?: string;
+    saveFailed?: string;
+    nameInUse?: string;
+    addressInUse?: string;
   };
 
   saasHome?: {
