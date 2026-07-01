@@ -121,9 +121,7 @@ export interface CreateNativeMarketplaceRequest {
   sellerEntryMode?: MarketplaceSellerEntryMode;
 }
 
-export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest> & {
-  status?: MarketplaceLifecycleStatus;
-};
+export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest>;
 
 export interface MarketplaceStoreMembership {
   id: number;

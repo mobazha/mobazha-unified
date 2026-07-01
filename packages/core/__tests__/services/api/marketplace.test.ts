@@ -157,14 +157,29 @@ describe('Marketplace API', () => {
     });
   });
 
-  describe('publishMarketplace', () => {
-    it('should publish the current marketplace draft', async () => {
-      mockHostingPost.mockResolvedValueOnce(mockNativeMarketplace);
+  describe('marketplace lifecycle actions', () => {
+    it('should publish a marketplace without request body', async () => {
+      mockHostingPost.mockResolvedValueOnce({ ...mockNativeMarketplace, status: 'published' });
 
       const result = await marketplaceApi.publishMarketplace('mp1');
 
-      expect(mockHostingPost).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/publish', {});
-      expect(result.id).toBe('mp1');
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/publish',
+        undefined
+      );
+      expect(result.status).toBe('published');
+    });
+
+    it('should suspend a marketplace without request body', async () => {
+      mockHostingPost.mockResolvedValueOnce({ ...mockNativeMarketplace, status: 'suspended' });
+
+      const result = await marketplaceApi.suspendMarketplace('mp1');
+
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplaces/mp1/suspend',
+        undefined
+      );
+      expect(result.status).toBe('suspended');
     });
   });
 
@@ -591,6 +606,8 @@ describe('Marketplace curation api path helpers', () => {
     expect(HOSTING_API.MARKETPLACE_CURATION_ITEM('mp1', 'item/42')).toBe(
       '/platform/v1/marketplaces/mp1/curation/item%2F42'
     );
+    expect(HOSTING_API.MARKETPLACE_PUBLISH('mp 1')).toBe('/platform/v1/marketplaces/mp 1/publish');
+    expect(HOSTING_API.MARKETPLACE_SUSPEND('mp/1')).toBe('/platform/v1/marketplaces/mp/1/suspend');
   });
 });
 
