@@ -73,7 +73,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body: ${{ steps.changelog.outputs.content }}
           draft: false
@@ -120,7 +120,7 @@ jobs:
           tar -czvf ../../${{ matrix.artifact_name }}-${{ github.ref_name }}.tar.gz .next public package.json
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.artifact_name }}-${{ github.ref_name }}.tar.gz
         env:
