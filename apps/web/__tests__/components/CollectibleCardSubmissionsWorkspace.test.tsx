@@ -51,14 +51,16 @@ vi.mock('@/components/layouts', () => ({
 
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
+  const actualActions = actual.useCollectibleActions();
+  const collectibleActions = {
+    ...actualActions,
+    listMyCollectibleSourceDeposits: (...args: unknown[]) => mockListDeposits(...args),
+    submitMyCollectibleSourceDeposit: (...args: unknown[]) => mockSubmitDeposit(...args),
+    shipMyCollectibleSourceDeposit: (...args: unknown[]) => mockShipMyDeposit(...args),
+  };
   return {
     ...actual,
-    collectiblesApi: {
-      ...actual.collectiblesApi,
-      listMyCollectibleSourceDeposits: (...args: unknown[]) => mockListDeposits(...args),
-      submitMyCollectibleSourceDeposit: (...args: unknown[]) => mockSubmitDeposit(...args),
-      shipMyCollectibleSourceDeposit: (...args: unknown[]) => mockShipMyDeposit(...args),
-    },
+    useCollectibleActions: () => collectibleActions,
     useI18n: () => ({
       t: (key: string) => key,
       locale: 'en' as const,
@@ -91,15 +93,24 @@ describe('CollectibleCardSubmissionsWorkspace', () => {
     fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.grade'), {
       target: { value: '10' },
     });
-    fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.holderWallet'), {
-      target: { value: 'wallet-abc' },
-    });
-    fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.photoFrontUrl'), {
-      target: { value: 'https://example.com/front.jpg' },
-    });
-    fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.photoBackUrl'), {
-      target: { value: 'https://example.com/back.jpg' },
-    });
+    fireEvent.change(
+      screen.getByLabelText('marketplace.sell.collectibles.workspace.holderWallet'),
+      {
+        target: { value: 'wallet-abc' },
+      }
+    );
+    fireEvent.change(
+      screen.getByLabelText('marketplace.sell.collectibles.workspace.photoFrontUrl'),
+      {
+        target: { value: 'https://example.com/front.jpg' },
+      }
+    );
+    fireEvent.change(
+      screen.getByLabelText('marketplace.sell.collectibles.workspace.photoBackUrl'),
+      {
+        target: { value: 'https://example.com/back.jpg' },
+      }
+    );
 
     await waitFor(() => {
       expect(submitButton).not.toBeDisabled();
@@ -115,15 +126,24 @@ describe('CollectibleCardSubmissionsWorkspace', () => {
     fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.grade'), {
       target: { value: '10' },
     });
-    fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.holderWallet'), {
-      target: { value: 'wallet-abc' },
-    });
-    fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.photoFrontUrl'), {
-      target: { value: 'https://example.com/front.jpg' },
-    });
-    fireEvent.change(screen.getByLabelText('marketplace.sell.collectibles.workspace.photoBackUrl'), {
-      target: { value: 'https://example.com/back.jpg' },
-    });
+    fireEvent.change(
+      screen.getByLabelText('marketplace.sell.collectibles.workspace.holderWallet'),
+      {
+        target: { value: 'wallet-abc' },
+      }
+    );
+    fireEvent.change(
+      screen.getByLabelText('marketplace.sell.collectibles.workspace.photoFrontUrl'),
+      {
+        target: { value: 'https://example.com/front.jpg' },
+      }
+    );
+    fireEvent.change(
+      screen.getByLabelText('marketplace.sell.collectibles.workspace.photoBackUrl'),
+      {
+        target: { value: 'https://example.com/back.jpg' },
+      }
+    );
 
     fireEvent.click(
       screen.getByRole('button', { name: 'marketplace.sell.collectibles.workspace.submitCard' })
@@ -139,8 +159,12 @@ describe('CollectibleCardSubmissionsWorkspace', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText('marketplace.sell.collectibles.workspace.certNumber')).toHaveValue('');
-      expect(screen.getByLabelText('marketplace.sell.collectibles.workspace.holderWallet')).toHaveValue('');
+      expect(
+        screen.getByLabelText('marketplace.sell.collectibles.workspace.certNumber')
+      ).toHaveValue('');
+      expect(
+        screen.getByLabelText('marketplace.sell.collectibles.workspace.holderWallet')
+      ).toHaveValue('');
     });
   });
 

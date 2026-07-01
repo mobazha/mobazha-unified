@@ -61,6 +61,65 @@ export const HOSTING_API_PATHS = {
   AUTH_TOKENS: '/platform/v1/auth/tokens',
   AUTH_TOKENS_BY_TOKEN_ID: (tokenID: string) =>
     `/platform/v1/auth/tokens/${encodeURIComponent(tokenID)}`,
+  COLLECTIBLES_HUB_INTAKE: '/platform/v1/collectibles/hub/intake',
+  COLLECTIBLES_HUB_REDEMPTIONS: '/platform/v1/collectibles/hub/redemptions',
+  COLLECTIBLES_HUB_SLOTS: '/platform/v1/collectibles/hub/slots',
+  COLLECTIBLES_HUB_SLOTS_BY_ID: (id: string) =>
+    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}`,
+  COLLECTIBLES_HUB_SLOTS_MINT: (id: string) =>
+    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}/mint`,
+  COLLECTIBLES_HUB_SLOTS_REJECT: (id: string) =>
+    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}/reject`,
+  COLLECTIBLES_MY_SOURCE_DEPOSITS: '/platform/v1/collectibles/my/source-deposits',
+  COLLECTIBLES_MY_SOURCE_DEPOSITS_SHIP: (id: string) =>
+    `/platform/v1/collectibles/my/source-deposits/${encodeURIComponent(id)}/ship`,
+  COLLECTIBLES_NFTS: '/platform/v1/collectibles/nfts',
+  COLLECTIBLES_NFTS_BURN_TX: (mint: string) =>
+    `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}/burn-tx`,
+  COLLECTIBLES_NFTS_BY_MINT: (mint: string) =>
+    `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}`,
+  COLLECTIBLES_PRIMARY_SALES: '/platform/v1/collectibles/primary-sales',
+  COLLECTIBLES_PRIMARY_SALES_BY_ID: (id: string) =>
+    `/platform/v1/collectibles/primary-sales/${encodeURIComponent(id)}`,
+  COLLECTIBLES_PRIMARY_SALES_BY_ORDER: (orderID: string) =>
+    `/platform/v1/collectibles/primary-sales/by-order/${encodeURIComponent(orderID)}`,
+  COLLECTIBLES_PRIMARY_SALES_NFT: (id: string) =>
+    `/platform/v1/collectibles/primary-sales/${encodeURIComponent(id)}/nft`,
+  COLLECTIBLES_PRIMARY_SALES_PAID: (id: string) =>
+    `/platform/v1/collectibles/primary-sales/${encodeURIComponent(id)}/paid`,
+  COLLECTIBLES_PRIMARY_SALES_RELEASE_QUEUE: '/platform/v1/collectibles/primary-sales/release-queue',
+  COLLECTIBLES_PRIMARY_SALES_RELEASE_REQUEST: (id: string) =>
+    `/platform/v1/collectibles/primary-sales/${encodeURIComponent(id)}/release-request`,
+  COLLECTIBLES_PRIMARY_SALES_RELEASE_RESULT: (id: string) =>
+    `/platform/v1/collectibles/primary-sales/${encodeURIComponent(id)}/release-result`,
+  COLLECTIBLES_PRIMARY_SALES_RELEASE_RETRY: '/platform/v1/collectibles/primary-sales/release-retry',
+  COLLECTIBLES_RECONCILE: '/platform/v1/collectibles/reconcile',
+  COLLECTIBLES_RECONCILE_RECOVER_MINTS: '/platform/v1/collectibles/reconcile/recover-mints',
+  COLLECTIBLES_REDEMPTIONS: '/platform/v1/collectibles/redemptions',
+  COLLECTIBLES_REDEMPTIONS_BY_ID: (id: string) =>
+    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}`,
+  COLLECTIBLES_REDEMPTIONS_SETTLE: (id: string) =>
+    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/settle`,
+  COLLECTIBLES_REDEMPTIONS_SHIP: (id: string) =>
+    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/ship`,
+  COLLECTIBLES_SOURCE_DEPOSITS: '/platform/v1/collectibles/source-deposits',
+  COLLECTIBLES_SOURCE_DEPOSITS_APPROVE: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/approve`,
+  COLLECTIBLES_SOURCE_DEPOSITS_BY_ID: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}`,
+  COLLECTIBLES_SOURCE_DEPOSITS_DEFAULT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/default`,
+  COLLECTIBLES_SOURCE_DEPOSITS_FIRST_SALE: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/first-sale`,
+  COLLECTIBLES_SOURCE_DEPOSITS_MINT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/mint`,
+  COLLECTIBLES_SOURCE_DEPOSITS_REJECT: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/reject`,
+  COLLECTIBLES_SOURCE_DEPOSITS_SETTLE: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/settle`,
+  COLLECTIBLES_SOURCE_DEPOSITS_SHIP: (id: string) =>
+    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/ship`,
+  COLLECTIBLES_WALLETS: '/platform/v1/collectibles/wallets',
   COMMUNITY_MARKETPLACES_ADMIN_BANNERS: (platform: string, instanceID: string) =>
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/admin/banners`,
   COMMUNITY_MARKETPLACES_ADMIN_FEATURED: (platform: string, instanceID: string) =>

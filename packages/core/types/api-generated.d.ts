@@ -841,6 +841,621 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/collectibles/hub/intake': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Intake a collectible card into the Hub */
+    post: operations['collectibles-hub-intake'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/hub/redemptions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List tenant collectible redemptions for Hub operations */
+    get: operations['collectibles-hub-redemptions-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/hub/slots': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List collectible Hub slots */
+    get: operations['collectibles-hub-slots-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/hub/slots/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get collectible Hub slot */
+    get: operations['collectibles-hub-slots-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/hub/slots/{id}/mint': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mint NFT for received Hub slot */
+    post: operations['collectibles-hub-slots-mint'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/hub/slots/{id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reject collectible Hub slot */
+    post: operations['collectibles-hub-slots-reject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/my/source-deposits': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List the current seller's source-custody submissions */
+    get: operations['collectibles-my-source-deposits-list'];
+    put?: never;
+    /** Submit a source-custody collectible for operator review */
+    post: operations['collectibles-my-source-deposits-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/my/source-deposits/{id}/ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Record shipment for the current seller's redeemed source-custody collectible */
+    put: operations['collectibles-my-source-deposits-ship'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/nfts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List collectible NFTs in circulation */
+    get: operations['collectibles-nfts-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/nfts/{mint}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get collectible NFT projection */
+    get: operations['collectibles-nfts-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/nfts/{mint}/burn-tx': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Build unsigned burn transaction */
+    post: operations['collectibles-nfts-burn-tx'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Record a collectible primary sale */
+    post: operations['collectibles-primary-sales-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/by-order/{orderID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a collectible primary sale by order ID */
+    get: operations['collectibles-primary-sales-get-by-order'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/release-queue': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List collectible primary sales awaiting escrow release */
+    get: operations['collectibles-primary-sales-release-queue'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/release-retry': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Retry collectible primary sale escrow releases */
+    post: operations['collectibles-primary-sales-release-retry'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a collectible primary sale */
+    get: operations['collectibles-primary-sales-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/{id}/nft': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Link a minted NFT to a collectible primary sale */
+    put: operations['collectibles-primary-sales-link-nft'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/{id}/paid': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Mark a collectible primary sale as paid */
+    put: operations['collectibles-primary-sales-mark-paid'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/{id}/release-request': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Request escrow release for a collectible primary sale */
+    put: operations['collectibles-primary-sales-request-release'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/primary-sales/{id}/release-result': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Record escrow release result for a collectible primary sale */
+    put: operations['collectibles-primary-sales-release-result'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Run collectible ledger reconciliation */
+    get: operations['collectibles-reconcile'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/reconcile/recover-mints': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Recover pending collectible mints */
+    post: operations['collectibles-reconcile-recover-mints'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/redemptions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List collectible redemptions for the current user */
+    get: operations['collectibles-redemptions-list'];
+    put?: never;
+    /** Create collectible redemption */
+    post: operations['collectibles-redemptions-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/redemptions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get collectible redemption */
+    get: operations['collectibles-redemptions-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/redemptions/{id}/settle': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Settle collectible redemption */
+    put: operations['collectibles-redemptions-settle'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/redemptions/{id}/ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Mark collectible redemption as shipped */
+    put: operations['collectibles-redemptions-ship'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Wilson source-custody collectible deposits */
+    get: operations['collectibles-source-deposits-list'];
+    put?: never;
+    /** Create Wilson source-custody collectible deposit */
+    post: operations['collectibles-source-deposits-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Wilson source-custody collectible deposit */
+    get: operations['collectibles-source-deposits-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Approve a seller source-custody submission */
+    put: operations['collectibles-source-deposits-approve'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/default': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Mark Wilson source-custody seller default */
+    put: operations['collectibles-source-deposits-default'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/first-sale': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Record locked first-sale funds for a Wilson source-custody deposit */
+    post: operations['collectibles-source-deposits-first-sale'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/mint': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mint NFT for a Wilson source-custody deposit */
+    post: operations['collectibles-source-deposits-mint'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Reject a seller source-custody submission */
+    put: operations['collectibles-source-deposits-reject'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/settle': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Settle Wilson source-custody redemption and request first-sale release */
+    put: operations['collectibles-source-deposits-settle'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/source-deposits/{id}/ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Mark Wilson source-custody redemption as shipped */
+    put: operations['collectibles-source-deposits-ship'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/collectibles/wallets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Bind a Solana wallet to the current user for redemption */
+    post: operations['collectibles-wallets-bind'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/community-marketplaces/discord/{instanceID}/verify-member': {
     parameters: {
       query?: never;
@@ -3235,7 +3850,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get hot (trending) listings */
+    /** Get hot (trending) listings ranked by rating across all time */
     get: operations['get-listings-hot'];
     put?: never;
     post?: never;
@@ -8944,9 +9559,199 @@ export interface components {
       botToken: string;
       peerID: string;
     };
+    Platform_BurnTxInputBody: {
+      holder: string;
+    };
     Platform_CertificateOutputBody: {
       /** @description PEM-encoded Casdoor JWT verification public key. */
       certificate: string;
+    };
+    Platform_CollectibleHubSlot: {
+      certNumber: string;
+      /** Format: date-time */
+      createdAt: string;
+      currentHolder?: string;
+      grade?: string;
+      hubLocation?: string;
+      hubSlotID: string;
+      /** Format: date-time */
+      intakeAt?: string;
+      issuerPeerID?: string;
+      lastMintError?: string;
+      photosJSON?: string;
+      serial?: string;
+      status: string;
+      tenantID: string;
+      tokenStandard: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_CollectibleNFT: {
+      /** Format: date-time */
+      burnAt?: string;
+      chain: string;
+      hubSlotID: string;
+      /** Format: date-time */
+      invalidatedAt?: string;
+      invalidationReason?: string;
+      metadataURI?: string;
+      /** Format: date-time */
+      mintAt?: string;
+      /** Format: int64 */
+      mintConfirmedSlot?: number;
+      mintTxSignature?: string;
+      network?: string;
+      nftMint: string;
+      /** Format: int64 */
+      royaltyBps: number;
+      tenantID: string;
+      tokenStandard: string;
+      validityStatus: string;
+    };
+    Platform_CollectibleNFTsOutputBody: {
+      items: components['schemas']['Platform_NFTProjection'][] | null;
+      meta: components['schemas']['Platform_CollectiblesMeta'];
+    };
+    Platform_CollectiblePrimarySale: {
+      buyerPeerID?: string;
+      /** Format: date-time */
+      createdAt: string;
+      currencyCode?: string;
+      /** Format: int64 */
+      divisibility: number;
+      escrowID?: string;
+      hubSlotID: string;
+      hubSlotStatus?: string;
+      idempotencyKey?: string;
+      lastMintError?: string;
+      nftMint?: string;
+      orderID?: string;
+      /** Format: date-time */
+      paidAt?: string;
+      priceAmount?: string;
+      releaseActionID?: string;
+      releaseError?: string;
+      /** Format: date-time */
+      releaseRequestedAt?: string;
+      releaseStatus: string;
+      releaseTxHash?: string;
+      /** Format: date-time */
+      releasedAt?: string;
+      saleID: string;
+      sellerPeerID?: string;
+      tenantID: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_CollectiblePrimarySalesOutputBody: {
+      items: components['schemas']['Platform_CollectiblePrimarySale'][] | null;
+      meta: components['schemas']['Platform_CollectiblesMeta'];
+    };
+    Platform_CollectibleRedemption: {
+      /** Format: date-time */
+      burnAt?: string;
+      /** Format: int64 */
+      burnConfirmedSlot: number;
+      burnSigner: string;
+      burnTxSignature: string;
+      /** Format: date-time */
+      createdAt: string;
+      nftMint: string;
+      redemptionID: string;
+      requesterUserID: string;
+      requesterWallet: string;
+      shipToEncrypted?: string;
+      /** Format: date-time */
+      slaDueAt?: string;
+      status: string;
+      tenantID: string;
+      trackingNo?: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_CollectibleRedemptionsOutputBody: {
+      items: components['schemas']['Platform_CollectibleRedemption'][] | null;
+      meta: components['schemas']['Platform_CollectiblesMeta'];
+    };
+    Platform_CollectibleReleaseRetryOutputBody: {
+      /** Format: int64 */
+      limit: number;
+      /** Format: int64 */
+      released: number;
+      tenantID?: string;
+    };
+    Platform_CollectibleSlotsOutputBody: {
+      items: components['schemas']['Platform_CollectibleHubSlot'][] | null;
+      meta: components['schemas']['Platform_CollectiblesMeta'];
+    };
+    Platform_CollectibleSourceDeposit: {
+      buyerPeerID?: string;
+      certNumber: string;
+      /** Format: date-time */
+      createdAt: string;
+      currencyCode?: string;
+      defaultReason?: string;
+      defaultRefundActionID?: string;
+      defaultRefundError?: string;
+      /** Format: date-time */
+      defaultRefundRequestedAt?: string;
+      defaultRefundStatus?: string;
+      defaultRefundTxHash?: string;
+      /** Format: date-time */
+      defaultRefundedAt?: string;
+      /** Format: int64 */
+      divisibility: number;
+      firstSaleEscrowID?: string;
+      firstSaleOrderID?: string;
+      grade?: string;
+      guaranteeAmount?: string;
+      guaranteeCurrency?: string;
+      holderWallet: string;
+      hubSlotID: string;
+      /** Format: date-time */
+      hubTitleInvalidatedAt?: string;
+      hubTitleInvalidationReason?: string;
+      hubTitleValidityStatus?: string;
+      nftMint?: string;
+      photosJSON?: string;
+      priceAmount?: string;
+      /** Format: date-time */
+      releaseRequestedAt?: string;
+      releaseStatus: string;
+      /** Format: date-time */
+      releasedAt?: string;
+      /** Format: date-time */
+      reservationExpiresAt?: string;
+      reservationOrderID?: string;
+      reservationStatus?: string;
+      sellerPeerID: string;
+      serial?: string;
+      sourceDepositID: string;
+      status: string;
+      tenantID: string;
+      trackingNo?: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_CollectibleSourceDepositsOutputBody: {
+      items: components['schemas']['Platform_CollectibleSourceDeposit'][] | null;
+      meta: components['schemas']['Platform_CollectiblesMeta'];
+    };
+    Platform_CollectibleWalletBinding: {
+      chain: string;
+      /** Format: date-time */
+      createdAt: string;
+      tenantID: string;
+      userID: string;
+      wallet: string;
+    };
+    Platform_CollectiblesMeta: {
+      /** Format: int64 */
+      page: number;
+      /** Format: int64 */
+      pageSize: number;
+      /** Format: int64 */
+      total: number;
     };
     Platform_CreateTokenInputBody: {
       /**
@@ -9055,6 +9860,16 @@ export interface components {
       /** @description Casdoor user ID. */
       user_id: string;
     };
+    Platform_IntakeInputBody: {
+      certNumber: string;
+      currentHolder?: string;
+      grade?: string;
+      hubLocation?: string;
+      issuerPeerID?: string;
+      photos?: string[] | null;
+      serial?: string;
+      tokenStandard?: string;
+    };
     Platform_IpnsPostInputBody: {
       ipnsRecord: string;
     };
@@ -9135,6 +9950,54 @@ export interface components {
     Platform_MergeRequest: {
       confirm_account_name: string;
     };
+    Platform_MintSlotInputBody: {
+      holder?: string;
+      /** Format: int64 */
+      royaltyBps?: number;
+    };
+    Platform_MySourceDepositCreateInputBody: {
+      certNumber: string;
+      grade?: string;
+      guaranteeAmount?: string;
+      guaranteeCurrency?: string;
+      holderWallet: string;
+      photos?: string[] | null;
+      serial?: string;
+    };
+    Platform_NFTProjection: {
+      mintExplorerURL?: string;
+      mintTxExplorerURL?: string;
+      nft: components['schemas']['Platform_CollectibleNFT'];
+      slot: components['schemas']['Platform_CollectibleHubSlot'];
+    };
+    Platform_PendingMintAlert: {
+      currentHolder?: string;
+      hubSlotID: string;
+      lastMintError?: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_PendingMintRecoveryReport: {
+      /** Format: int64 */
+      attempted: number;
+      /** Format: int64 */
+      failed: number;
+      /** Format: date-time */
+      generatedAt: string;
+      items?: components['schemas']['Platform_PendingMintRecoveryResult'][] | null;
+      /** Format: int64 */
+      recovered: number;
+      /** Format: int64 */
+      skipped: number;
+      tenantID: string;
+    };
+    Platform_PendingMintRecoveryResult: {
+      hubSlotID: string;
+      message?: string;
+      nftMint?: string;
+      status: string;
+      txSignature?: string;
+    };
     Platform_PlatformFeaturePatchRequest: {
       enabled: boolean | null;
       reason?: string;
@@ -9143,6 +10006,49 @@ export interface components {
       comment?: string;
       peerID: string;
       type?: string;
+    };
+    Platform_PrimarySaleNFTInputBody: {
+      nftMint: string;
+    };
+    Platform_PrimarySalePaidInputBody: {
+      escrowID?: string;
+    };
+    Platform_PrimarySaleRecordInputBody: {
+      buyerPeerID?: string;
+      currencyCode?: string;
+      /** Format: int64 */
+      divisibility?: number;
+      escrowID?: string;
+      hubSlotID: string;
+      nftMint?: string;
+      orderID: string;
+      priceAmount?: string;
+      sellerPeerID?: string;
+    };
+    Platform_PrimarySaleReleaseAlert: {
+      hubSlotID: string;
+      orderID?: string;
+      releaseError?: string;
+      /** Format: date-time */
+      releaseRequestedAt?: string;
+      releaseStatus: string;
+      saleID: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    Platform_PrimarySaleReleaseInputBody: {
+      idempotencyKey?: string;
+    };
+    Platform_PrimarySaleReleaseResultInputBody: {
+      releaseError?: boolean;
+    };
+    Platform_PrimarySaleReleaseRetryInputBody: {
+      /**
+       * Format: int64
+       * @default 25
+       */
+      limit: number;
+      tenantID?: string;
     };
     Platform_ProductGroupAuthorizationsCreateBodyBody: {
       authType: string;
@@ -9166,6 +10072,51 @@ export interface components {
       name: string;
       /** Format: int64 */
       sortOrder: number;
+    };
+    Platform_ReconcileReport: {
+      /** Format: int64 */
+      activeNFTCount: number;
+      /** Format: int64 */
+      circulatingSlotCount: number;
+      /** Format: date-time */
+      generatedAt: string;
+      issues?: components['schemas']['Platform_ReconciliationIssue'][] | null;
+      overdueRedemptions?: components['schemas']['Platform_RedemptionSLAAlert'][] | null;
+      pendingMints?: components['schemas']['Platform_PendingMintAlert'][] | null;
+      primarySaleReleases?: components['schemas']['Platform_PrimarySaleReleaseAlert'][] | null;
+      tenantID: string;
+    };
+    Platform_ReconciliationIssue: {
+      code: string;
+      message: string;
+      severity: string;
+    };
+    Platform_RecoverMintsInputBody: {
+      /**
+       * Format: int64
+       * @default 25
+       */
+      limit: number;
+      /** Format: int64 */
+      royaltyBps?: number;
+      tenantID?: string;
+    };
+    Platform_RedemptionCreateInputBody: {
+      burnTxSignature: string;
+      nftMint: string;
+      requesterWallet: string;
+      shipToEncrypted: string;
+    };
+    Platform_RedemptionSLAAlert: {
+      nftMint: string;
+      overdueBy: string;
+      redemptionID: string;
+      /** Format: date-time */
+      slaDueAt: string;
+      status: string;
+    };
+    Platform_RedemptionShipInputBody: {
+      trackingNo: string;
     };
     Platform_RelayExecuteRequest: {
       chainType: string;
@@ -9191,6 +10142,40 @@ export interface components {
     };
     Platform_SetHandleRequest: {
       handle: string;
+    };
+    Platform_SourceDepositCreateInputBody: {
+      certNumber: string;
+      grade?: string;
+      guaranteeAmount?: string;
+      guaranteeCurrency?: string;
+      holderWallet: string;
+      photos?: string[] | null;
+      sellerPeerID: string;
+      serial?: string;
+    };
+    Platform_SourceDepositDefaultInputBody: {
+      defaultReason?: string;
+      reason?: string;
+    };
+    Platform_SourceDepositFirstSaleInputBody: {
+      buyerPeerID: string;
+      currencyCode?: string;
+      /** Format: int64 */
+      divisibility?: number;
+      escrowID?: string;
+      orderID: string;
+      priceAmount?: string;
+    };
+    Platform_SourceDepositMintInputBody: {
+      holder?: string;
+      /** Format: int64 */
+      royaltyBps?: number;
+    };
+    Platform_SourceDepositReviewInputBody: {
+      reason?: string;
+    };
+    Platform_SourceDepositShipInputBody: {
+      trackingNo: string;
     };
     Platform_StoreAccessListPostBodyBody: {
       requestorPeerID: string;
@@ -9368,6 +10353,12 @@ export interface components {
       /** @description Granted scopes. Always populated; empty array if the token has none. */
       scopes: string[] | null;
     };
+    Platform_UnsignedTx: {
+      holder: string;
+      message: string;
+      nftMint: string;
+      transaction: string;
+    };
     Platform_UpdateVisibilityRequest: {
       peerID: string;
       visibility: string;
@@ -9386,6 +10377,10 @@ export interface components {
     Platform_UserGroupsUpdateBodyBody: {
       description: string;
       name: string;
+    };
+    Platform_WalletBindInputBody: {
+      nftMint?: string;
+      wallet: string;
     };
     Node_AgentProductImportAdvanceCounts: {
       /** Format: int64 */
@@ -9916,8 +10911,14 @@ export interface components {
       meta?: components['schemas']['Search_ListMeta'];
     };
     Search_ListMeta: {
+      browseMode?: string;
+      /** Format: int64 */
+      catalogTotal?: number;
+      hasMore?: boolean;
       /** Format: int64 */
       total: number;
+      /** Format: int64 */
+      vendorCount?: number;
     };
     Search_ListingIndexRequest: {
       PeerID: string;
@@ -11726,6 +12727,1302 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-hub-intake': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_IntakeInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleHubSlot'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-hub-redemptions-list': {
+    parameters: {
+      query?: {
+        status?: string;
+        nftMint?: string;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleRedemptionsOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-hub-slots-list': {
+    parameters: {
+      query?: {
+        status?: string;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSlotsOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-hub-slots-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleHubSlot'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-hub-slots-mint': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MintSlotInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_NFTProjection'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-hub-slots-reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleHubSlot'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-my-source-deposits-list': {
+    parameters: {
+      query?: {
+        status?: string;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDepositsOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-my-source-deposits-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MySourceDepositCreateInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-my-source-deposits-ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositShipInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-nfts-list': {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleNFTsOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-nfts-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mint: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_NFTProjection'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-nfts-burn-tx': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mint: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_BurnTxInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_UnsignedTx'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PrimarySaleRecordInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-get-by-order': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-release-queue': {
+    parameters: {
+      query?: {
+        tenantID?: string;
+        limit?: number;
+        retryFailed?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySalesOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-release-retry': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PrimarySaleReleaseRetryInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleReleaseRetryOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-link-nft': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PrimarySaleNFTInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-mark-paid': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PrimarySalePaidInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-request-release': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PrimarySaleReleaseInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-primary-sales-release-result': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_PrimarySaleReleaseResultInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectiblePrimarySale'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-reconcile': {
+    parameters: {
+      query?: {
+        tenantID?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_ReconcileReport'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-reconcile-recover-mints': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_RecoverMintsInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_PendingMintRecoveryReport'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-redemptions-list': {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        nftMint?: string;
+        status?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleRedemptionsOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-redemptions-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_RedemptionCreateInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleRedemption'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-redemptions-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleRedemption'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-redemptions-settle': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleRedemption'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-redemptions-ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_RedemptionShipInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleRedemption'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-list': {
+    parameters: {
+      query?: {
+        status?: string;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDepositsOutputBody'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositCreateInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositReviewInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-default': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositDefaultInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-first-sale': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositFirstSaleInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-mint': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositMintInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_NFTProjection'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositReviewInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-settle': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-source-deposits-ship': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_SourceDepositShipInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleSourceDeposit'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'collectibles-wallets-bind': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_WalletBindInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_CollectibleWalletBinding'];
+        };
       };
       /** @description Error */
       default: {
@@ -16840,8 +19137,48 @@ export interface operations {
   'search-listings': {
     parameters: {
       query?: {
+        /** @description Search query string. */
+        q?: string;
+        /** @description Results per page (max 100). */
+        pageSize?: number;
+        /** @description Sort field (price, added, online, rating). */
+        s?: string;
+        /** @description Sort order (asc, desc). */
+        o?: string;
+        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
+        sortBy?: string;
+        /** @description Moderated filter (true/false). */
+        m?: string;
+        /** @description Vendor filter (true/false). */
+        vendor?: string;
+        /** @description Tor filter (true/false). */
+        tor?: string;
+        /** @description Location filter (pipe-separated country codes). */
+        lf?: string;
+        /** @description Peer ID filter (pipe-separated). */
+        id?: string;
+        /** @description Listing type filter (pipe-separated). */
+        lt?: string;
+        /** @description Listing type filter alias. */
+        type?: string;
+        /** @description Product type filter (pipe-separated). */
+        productType?: string;
+        /** @description Listing condition filter (pipe-separated). */
+        lc?: string;
+        /** @description Rating filter (pipe-separated integers). */
+        pr?: string;
+        /** @description Status filter (pipe-separated). */
+        ps?: string;
+        /** @description Minimum price filter (minimal units integer). */
+        minPrice?: string;
+        /** @description Maximum price filter (minimal units integer). */
+        maxPrice?: string;
+        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
+        currency?: string;
         /** @description Page number (1-based). */
         p?: number;
+        /** @description Browse mode for q=* : discover (default) or all. */
+        browse?: string;
       };
       header?: never;
       path?: never;
@@ -16906,8 +19243,6 @@ export interface operations {
       query?: {
         /** @description Maximum number of results. */
         limit?: number;
-        /** @description Time window in hours. */
-        hours?: number;
       };
       header?: never;
       path?: never;
@@ -17598,8 +19933,48 @@ export interface operations {
   'search-profiles': {
     parameters: {
       query?: {
+        /** @description Search query string. */
+        q?: string;
+        /** @description Results per page (max 100). */
+        pageSize?: number;
+        /** @description Sort field (price, added, online, rating). */
+        s?: string;
+        /** @description Sort order (asc, desc). */
+        o?: string;
+        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
+        sortBy?: string;
+        /** @description Moderated filter (true/false). */
+        m?: string;
+        /** @description Vendor filter (true/false). */
+        vendor?: string;
+        /** @description Tor filter (true/false). */
+        tor?: string;
+        /** @description Location filter (pipe-separated country codes). */
+        lf?: string;
+        /** @description Peer ID filter (pipe-separated). */
+        id?: string;
+        /** @description Listing type filter (pipe-separated). */
+        lt?: string;
+        /** @description Listing type filter alias. */
+        type?: string;
+        /** @description Product type filter (pipe-separated). */
+        productType?: string;
+        /** @description Listing condition filter (pipe-separated). */
+        lc?: string;
+        /** @description Rating filter (pipe-separated integers). */
+        pr?: string;
+        /** @description Status filter (pipe-separated). */
+        ps?: string;
+        /** @description Minimum price filter (minimal units integer). */
+        minPrice?: string;
+        /** @description Maximum price filter (minimal units integer). */
+        maxPrice?: string;
+        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
+        currency?: string;
         /** @description Page number (1-based). */
         p?: number;
+        /** @description Browse mode for q=* : discover (default) or all. */
+        browse?: string;
       };
       header?: never;
       path?: never;
@@ -17828,6 +20203,44 @@ export interface operations {
   'root-search': {
     parameters: {
       query?: {
+        /** @description Search query string. */
+        q?: string;
+        /** @description Results per page (max 100). */
+        pageSize?: number;
+        /** @description Sort field (price, added, online, rating). */
+        s?: string;
+        /** @description Sort order (asc, desc). */
+        o?: string;
+        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
+        sortBy?: string;
+        /** @description Moderated filter (true/false). */
+        m?: string;
+        /** @description Vendor filter (true/false). */
+        vendor?: string;
+        /** @description Tor filter (true/false). */
+        tor?: string;
+        /** @description Location filter (pipe-separated country codes). */
+        lf?: string;
+        /** @description Peer ID filter (pipe-separated). */
+        id?: string;
+        /** @description Listing type filter (pipe-separated). */
+        lt?: string;
+        /** @description Listing type filter alias. */
+        type?: string;
+        /** @description Product type filter (pipe-separated). */
+        productType?: string;
+        /** @description Listing condition filter (pipe-separated). */
+        lc?: string;
+        /** @description Rating filter (pipe-separated integers). */
+        pr?: string;
+        /** @description Status filter (pipe-separated). */
+        ps?: string;
+        /** @description Minimum price filter (minimal units integer). */
+        minPrice?: string;
+        /** @description Maximum price filter (minimal units integer). */
+        maxPrice?: string;
+        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
+        currency?: string;
         /** @description Page number (0-based). */
         p?: number;
       };
