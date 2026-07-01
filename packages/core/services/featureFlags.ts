@@ -95,19 +95,9 @@ function mergeWithFrontendDefaults(snapshot: FeatureSnapshot): FeatureSnapshot {
 }
 
 function readFromRuntimeConfig(rc: RuntimeConfig): FeatureSnapshot {
-  if (rc.features != null) {
-    const normalized = normalizeSnapshot(rc.features);
-    if (Object.keys(normalized).length > 0) {
-      return mergeWithFrontendDefaults(normalized);
-    }
-  }
-  // Legacy fallback: synthesize a minimal snapshot from the flat field.
-  if (typeof rc.guestCheckoutEnabled === 'boolean') {
-    return mergeWithFrontendDefaults(
-      normalizeSnapshot({
-        guestCheckout: { effective: rc.guestCheckoutEnabled, overridable: [] },
-      })
-    );
+  const normalized = normalizeSnapshot(rc.features);
+  if (Object.keys(normalized).length > 0) {
+    return mergeWithFrontendDefaults(normalized);
   }
   return mergeWithFrontendDefaults({});
 }

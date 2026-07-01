@@ -7,26 +7,47 @@ import {
   resetExecutorRegistry,
 } from '../../../services/transaction/executorRegistry';
 
+function runtimeMethods(methods: Array<Record<string, unknown>>) {
+  return {
+    schemaVersion: 3,
+    authMode: 'standalone',
+    deployment: { mode: 'standalone', allowExternalResources: true },
+    experience: { kind: 'store' },
+    capabilitiesReady: true,
+    features: {},
+    capabilities: {
+      commerce: { storefront: true, storeAdmin: true, checkout: true },
+      marketplace: {
+        discovery: false,
+        operator: false,
+        selling: false,
+        curation: false,
+        sellerReview: false,
+        customDomains: false,
+        releasePublishing: false,
+        attribution: false,
+      },
+      outpost: { isolatedRuntime: false, managedFleet: false },
+      payments: { methods },
+    },
+  };
+}
+
 describe('runtime-gated executor registry', () => {
   beforeEach(() => {
-    initializeRuntimeConfig({
-      schemaVersion: 2,
-      capabilities: {
-        payments: {
-          methods: [
-            { id: 'BITCOIN', kind: 'crypto', flow: 'address-transfer' },
-            { id: 'BITCOINCASH', kind: 'crypto', flow: 'address-transfer' },
-            { id: 'LITECOIN', kind: 'crypto', flow: 'address-transfer' },
-            {
-              id: 'ZCASH',
-              kind: 'crypto',
-              flow: 'address-transfer',
-              addressMode: 'transparent',
-            },
-          ],
+    initializeRuntimeConfig(
+      runtimeMethods([
+        { id: 'BITCOIN', kind: 'crypto', flow: 'address-transfer' },
+        { id: 'BITCOINCASH', kind: 'crypto', flow: 'address-transfer' },
+        { id: 'LITECOIN', kind: 'crypto', flow: 'address-transfer' },
+        {
+          id: 'ZCASH',
+          kind: 'crypto',
+          flow: 'address-transfer',
+          addressMode: 'transparent',
         },
-      },
-    });
+      ])
+    );
   });
 
   afterEach(() => {
@@ -45,14 +66,9 @@ describe('runtime-gated executor registry', () => {
   });
 
   it('returns an executor when the backend advertises the payment method', () => {
-    initializeRuntimeConfig({
-      schemaVersion: 2,
-      capabilities: {
-        payments: {
-          methods: [{ id: 'ETHEREUM', kind: 'crypto', flow: 'external-wallet' }],
-        },
-      },
-    });
+    initializeRuntimeConfig(
+      runtimeMethods([{ id: 'ETHEREUM', kind: 'crypto', flow: 'external-wallet' }])
+    );
     expect(getPaymentExecutor('ETHEREUM', 'ETH')?.category).toBe('evm');
   });
 

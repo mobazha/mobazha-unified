@@ -87,7 +87,25 @@ export function useMyOperatorMarketplaces(options: { autoLoad?: boolean } = {}) 
   };
 }
 
-export function useOperatorMarketplace(marketplaceId?: string) {
+export interface OperatorMarketplaceCapabilityOptions {
+  curation?: boolean;
+  sellerReview?: boolean;
+  customDomains?: boolean;
+  releasePublishing?: boolean;
+  attribution?: boolean;
+}
+
+export function useOperatorMarketplace(
+  marketplaceId?: string,
+  capabilities: OperatorMarketplaceCapabilityOptions = {}
+) {
+  const {
+    curation = true,
+    sellerReview = true,
+    customDomains = true,
+    releasePublishing = true,
+    attribution = true,
+  } = capabilities;
   const [marketplace, setMarketplace] = useState<NativeMarketplace | null>(null);
   const [stores, setStores] = useState<MarketplaceStoreMembership[]>([]);
   const [reviewEvents, setReviewEvents] = useState<MarketplaceSellerReviewEvent[]>([]);
@@ -181,7 +199,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     setCurationItems([]);
     setCurationCandidates(null);
     setCurationError(null);
-    setCurationLoading(true);
+    setCurationLoading(curation);
     setCurationCandidatesLoading(false);
     setAttributionSummary(null);
     setAttributionSummaryError(null);
@@ -196,9 +214,9 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       ] = await Promise.allSettled([
         getMarketplace(requestMarketplaceId),
         getMarketplaceSellers(requestMarketplaceId),
-        getMarketplaceSellerReviewEvents(requestMarketplaceId),
-        getMarketplaceCuration(requestMarketplaceId),
-        getMarketplaceCurationCandidates(requestMarketplaceId),
+        sellerReview ? getMarketplaceSellerReviewEvents(requestMarketplaceId) : Promise.resolve([]),
+        curation ? getMarketplaceCuration(requestMarketplaceId) : Promise.resolve([]),
+        curation ? getMarketplaceCurationCandidates(requestMarketplaceId) : Promise.resolve(null),
       ]);
       if (
         requestSeq !== requestSeqRef.current ||
@@ -251,7 +269,9 @@ export function useOperatorMarketplace(marketplaceId?: string) {
               : new Error('Failed to load curation');
         setCurationError(toErrorMessage(source, 'Failed to load curation'));
       }
-      void loadAttributionSummary(requestMarketplaceId, requestSeq);
+      if (attribution) {
+        void loadAttributionSummary(requestMarketplaceId, requestSeq);
+      }
     } catch (err) {
       if (
         requestSeq !== requestSeqRef.current ||
@@ -282,7 +302,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         setCurationLoading(false);
       }
     }
-  }, [loadAttributionSummary, marketplaceId]);
+  }, [attribution, curation, loadAttributionSummary, marketplaceId, sellerReview]);
 
   useEffect(() => {
     void refresh();
@@ -321,7 +341,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
   );
 
   const publish = useCallback(async () => {
-    if (!marketplaceId) return null;
+    if (!marketplaceId || !releasePublishing) return null;
     const actionMarketplaceId = marketplaceId;
     setWorking('publish');
     try {
@@ -335,10 +355,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         setWorking(null);
       }
     }
-  }, [marketplaceId]);
+  }, [marketplaceId, releasePublishing]);
 
   const suspend = useCallback(async () => {
-    if (!marketplaceId) return null;
+    if (!marketplaceId || !releasePublishing) return null;
     const actionMarketplaceId = marketplaceId;
     setWorking('suspend');
     try {
@@ -352,10 +372,10 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         setWorking(null);
       }
     }
-  }, [marketplaceId]);
+  }, [marketplaceId, releasePublishing]);
 
   const resume = useCallback(async () => {
-    if (!marketplaceId) return null;
+    if (!marketplaceId || !releasePublishing) return null;
     const actionMarketplaceId = marketplaceId;
     setWorking('resume');
     try {
@@ -369,7 +389,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         setWorking(null);
       }
     }
-  }, [marketplaceId]);
+  }, [marketplaceId, releasePublishing]);
 
   const update = useCallback(
     async (data: UpdateNativeMarketplaceRequest) => {
@@ -433,7 +453,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
       status: Extract<MarketplaceStoreStatus, 'approved' | 'rejected' | 'suspended'>,
       reason?: string
     ) => {
-      if (!marketplaceId) return;
+      if (!marketplaceId || !sellerReview) return;
       const actionMarketplaceId = marketplaceId;
       setWorking(`${status}:${store.peerID}`);
       try {
@@ -447,12 +467,12 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         }
       }
     },
-    [marketplaceId, refresh]
+    [marketplaceId, refresh, sellerReview]
   );
 
   const verifyCustomDomain =
     useCallback(async (): Promise<VerifyMarketplaceCustomDomainResponse | null> => {
-      if (!marketplaceId) return null;
+      if (!marketplaceId || !customDomains) return null;
       const actionMarketplaceId = marketplaceId;
       setWorking('verifyCustomDomain');
       try {
@@ -466,11 +486,11 @@ export function useOperatorMarketplace(marketplaceId?: string) {
           setWorking(null);
         }
       }
-    }, [marketplaceId, refresh]);
+    }, [customDomains, marketplaceId, refresh]);
 
   const addCurationItem = useCallback(
     async (kind: MarketplaceCurationKind, payload: { peerID?: string; listingSlug?: string }) => {
-      if (!marketplaceId) return null;
+      if (!marketplaceId || !curation) return null;
       const actionMarketplaceId = marketplaceId;
       setWorking(`curation:add:${kind}`);
       try {
@@ -489,12 +509,12 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         }
       }
     },
-    [marketplaceId, refresh]
+    [curation, marketplaceId, refresh]
   );
 
   const reorderCurationByKind = useCallback(
     async (kind: MarketplaceCurationKind, itemIDs: number[]) => {
-      if (!marketplaceId) return null;
+      if (!marketplaceId || !curation) return null;
       const actionMarketplaceId = marketplaceId;
       setWorking(`curation:reorder:${kind}`);
       try {
@@ -509,12 +529,12 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         }
       }
     },
-    [marketplaceId, refresh]
+    [curation, marketplaceId, refresh]
   );
 
   const toggleCurationItem = useCallback(
     async (itemID: number, isActive: boolean) => {
-      if (!marketplaceId) return null;
+      if (!marketplaceId || !curation) return null;
       const actionMarketplaceId = marketplaceId;
       setWorking(`curation:toggle:${itemID}`);
       try {
@@ -531,12 +551,12 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         }
       }
     },
-    [marketplaceId, refresh]
+    [curation, marketplaceId, refresh]
   );
 
   const removeCurationItem = useCallback(
     async (itemID: number) => {
-      if (!marketplaceId) return null;
+      if (!marketplaceId || !curation) return null;
       const actionMarketplaceId = marketplaceId;
       setWorking(`curation:remove:${itemID}`);
       try {
@@ -551,12 +571,12 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         }
       }
     },
-    [marketplaceId, refresh]
+    [curation, marketplaceId, refresh]
   );
 
   const loadCurationCandidates = useCallback(
     async (params: MarketplaceCurationCandidatesParams = {}) => {
-      if (!marketplaceId) return null;
+      if (!marketplaceId || !curation) return null;
       const actionMarketplaceId = marketplaceId;
       const requestSeq = ++curationCandidatesRequestSeqRef.current;
       setCurationCandidatesLoading(true);
@@ -587,7 +607,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
         }
       }
     },
-    [marketplaceId]
+    [curation, marketplaceId]
   );
 
   return {

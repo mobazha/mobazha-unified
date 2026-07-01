@@ -44,7 +44,7 @@ vi.mock('@mobazha/core', async importOriginal => {
     useI18n: () => ({ t: (key: string) => key, formatDate: (value: string) => `date:${value}` }),
     isHosted: () => false,
     startCasdoorLogin: vi.fn(),
-    resolveCurationMarketBackHref: (href: string) => href,
+    resolveMarketplaceBackHref: (href: string) => href,
     marketplaceHref: () => '/marketplace/test-market',
     marketplaceBuyerAccessModeKey: () => 'marketplace.enums.buyerAccessMode.open',
     marketplaceSellerReviewModeKey: () => 'marketplace.enums.sellerReviewMode.manual',

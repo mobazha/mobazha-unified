@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import type { Plugin, ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 /**
@@ -45,11 +46,27 @@ function readBody(req: IncomingMessage): Promise<string> {
  */
 function outpostHtmlStripPlugin(): Plugin {
   const inlineRuntimeConfig = JSON.stringify({
+    schemaVersion: 3,
     authMode: 'standalone',
-    outpostMode: true,
-    disableExternalResources: true,
-    guestCheckoutEnabled: true,
-    features: {},
+    deployment: { mode: 'outpost', allowExternalResources: false },
+    experience: { kind: 'store' },
+    capabilitiesReady: false,
+    features: { guestCheckout: { effective: true, overridable: [] } },
+    capabilities: {
+      commerce: { storefront: true, storeAdmin: true, checkout: true },
+      marketplace: {
+        discovery: false,
+        operator: false,
+        selling: false,
+        curation: false,
+        sellerReview: false,
+        customDomains: false,
+        releasePublishing: false,
+        attribution: false,
+      },
+      outpost: { isolatedRuntime: true, managedFleet: false },
+      payments: { methods: [] },
+    },
   });
 
   return {
@@ -190,18 +207,97 @@ function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
           return;
         }
         const saasUrl = env.NEXT_PUBLIC_SAAS_URL || '';
+        const outpost = isOutpost;
         const payload: Record<string, unknown> = {
+          schemaVersion: 3,
           authMode: 'standalone',
+          deployment: {
+            mode: outpost ? 'outpost' : 'standalone',
+            allowExternalResources: !outpost,
+          },
+          experience: { kind: 'store' },
+          capabilitiesReady: false,
+          features: outpost ? { guestCheckout: { effective: true, overridable: [] } } : {},
+          capabilities: {
+            commerce: { storefront: true, storeAdmin: true, checkout: true },
+            marketplace: {
+              discovery: false,
+              operator: false,
+              selling: false,
+              curation: false,
+              sellerReview: false,
+              customDomains: false,
+              releasePublishing: false,
+              attribution: false,
+            },
+            outpost: { isolatedRuntime: outpost, managedFleet: false },
+            payments: { methods: [] },
+          },
         };
         if (saasUrl) payload.saasUrl = saasUrl;
-        if (isOutpost) {
-          payload.outpostMode = true;
-          payload.disableExternalResources = true;
-        }
         res.setHeader('Content-Type', 'application/javascript');
         res.setHeader('Cache-Control', 'no-cache');
         res.end(`window.__RUNTIME_CONFIG__=${JSON.stringify(payload)};`);
       });
+    },
+  };
+}
+
+/** Writes the shell-owned Hosted experience into static Vite releases. */
+function hostedRuntimeConfigAssetPlugin(env: Record<string, string>): Plugin {
+  const experienceKind = env.NEXT_PUBLIC_EXPERIENCE_KIND || 'platform';
+  if (
+    experienceKind !== 'platform' &&
+    experienceKind !== 'store' &&
+    experienceKind !== 'marketplace'
+  ) {
+    throw new Error(`Unsupported NEXT_PUBLIC_EXPERIENCE_KIND: ${experienceKind}`);
+  }
+  const marketplaceIdentifier = env.NEXT_PUBLIC_MARKETPLACE_IDENTIFIER?.trim();
+  if (experienceKind === 'marketplace' && !marketplaceIdentifier) {
+    throw new Error(
+      'NEXT_PUBLIC_MARKETPLACE_IDENTIFIER is required for a marketplace experience build'
+    );
+  }
+
+  const payload = {
+    schemaVersion: 3,
+    authMode: 'hosted',
+    deployment: { mode: 'hosted', allowExternalResources: true },
+    experience:
+      experienceKind === 'marketplace'
+        ? { kind: experienceKind, marketplaceIdentifier }
+        : { kind: experienceKind },
+    capabilitiesReady: false,
+    features: {},
+    capabilities: {
+      commerce: { storefront: false, storeAdmin: false, checkout: false },
+      marketplace: {
+        discovery: false,
+        operator: false,
+        selling: false,
+        curation: false,
+        sellerReview: false,
+        customDomains: false,
+        releasePublishing: false,
+        attribution: false,
+      },
+      outpost: { isolatedRuntime: false, managedFleet: false },
+      payments: { methods: [] },
+    },
+  };
+
+  return {
+    name: 'hosted-runtime-config-asset',
+    writeBundle(outputOptions) {
+      const outputDir = outputOptions.dir
+        ? path.resolve(process.cwd(), outputOptions.dir)
+        : path.resolve(__dirname, 'dist');
+      writeFileSync(
+        path.join(outputDir, 'runtime-config.js'),
+        `window.__RUNTIME_CONFIG__=${JSON.stringify(payload)};\n`,
+        'utf8'
+      );
     },
   };
 }
@@ -275,6 +371,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       standaloneRuntimeConfigPlugin(env),
+      ...(!isOutpost && env.NEXT_PUBLIC_ENV_MODE !== 'standalone'
+        ? [hostedRuntimeConfigAssetPlugin(env)]
+        : []),
       ...(!isOutpost ? [aiProxyPlugin()] : []),
       ...(isOutpost ? [outpostHtmlStripPlugin(), outpostResolvePlugin()] : []),
     ],

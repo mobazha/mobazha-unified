@@ -23,6 +23,7 @@ import {
   useUserContext,
   useFeatureFlags,
   useFeature,
+  useRuntimeCapability,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
@@ -218,7 +219,14 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const standaloneMode = useStorefrontMode();
   const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
-  const showMaasMenu = authenticated && isHosted() && !standaloneMode && !isOutpost;
+  const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
+  const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
+  const showMaasMenu =
+    authenticated &&
+    isHosted() &&
+    !standaloneMode &&
+    !isOutpost &&
+    (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);
 
@@ -254,18 +262,22 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
             />
             {showMaasMenu && (
               <>
-                <FeatureItem
-                  icon={<Building2 className="w-5 h-5" />}
-                  title={t('userMenu.operatorMarketplaces')}
-                  href="/operator/marketplaces"
-                  testId="me-operator-marketplaces"
-                />
-                <FeatureItem
-                  icon={<Mail className="w-5 h-5" />}
-                  title={t('userMenu.marketplaceInvitations')}
-                  href="/settings/marketplace-memberships"
-                  testId="me-marketplace-invitations"
-                />
+                {hasMarketplaceOperator ? (
+                  <FeatureItem
+                    icon={<Building2 className="w-5 h-5" />}
+                    title={t('userMenu.operatorMarketplaces')}
+                    href="/operator/marketplaces"
+                    testId="me-operator-marketplaces"
+                  />
+                ) : null}
+                {hasMarketplaceSellerReview ? (
+                  <FeatureItem
+                    icon={<Mail className="w-5 h-5" />}
+                    title={t('userMenu.marketplaceInvitations')}
+                    href="/settings/marketplace-memberships"
+                    testId="me-marketplace-invitations"
+                  />
+                ) : null}
               </>
             )}
           </div>

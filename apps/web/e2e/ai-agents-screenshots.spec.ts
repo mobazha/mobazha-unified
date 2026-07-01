@@ -10,6 +10,7 @@
  */
 
 import { test, type Page } from '@playwright/test';
+import { runtimeConfigFixture } from './fixtures/runtime-config';
 
 const MOCK_PROFILE = {
   peerID: 'QmMockPeerForScreenshot',
@@ -47,12 +48,8 @@ interface SetupOptions {
 async function setupPage(page: Page, opts: SetupOptions): Promise<void> {
   // 1) Inject runtime config + auth state BEFORE any app JS runs
   await page.addInitScript(
-    ({ outpost, showHighRisk, userStorage, saas }) => {
-      (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ = {
-        authMode: saas ? 'hosted' : 'standalone',
-        outpostMode: outpost,
-        disableExternalResources: outpost,
-      };
+    ({ runtimeConfig, showHighRisk, userStorage }) => {
+      (window as unknown as Record<string, unknown>).__RUNTIME_CONFIG__ = runtimeConfig;
       // Mock authenticated session.
       // - `mobazha_auth_token`: read by getStoredToken() during restoreSession.
       //   Use a `basic:` prefix so isTokenExpired() short-circuits to false and
@@ -71,10 +68,11 @@ async function setupPage(page: Page, opts: SetupOptions): Promise<void> {
       }
     },
     {
-      outpost: opts.outpost,
+      runtimeConfig: runtimeConfigFixture({
+        deployment: opts.saas ? 'hosted' : opts.outpost ? 'outpost' : 'standalone',
+      }),
       showHighRisk: !!opts.showHighRisk,
       userStorage: USER_STORAGE,
-      saas: !!opts.saas,
     }
   );
 
@@ -137,7 +135,7 @@ async function setupPage(page: Page, opts: SetupOptions): Promise<void> {
 test.describe('AI Agents Page Screenshots', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  // Non-outpost baseline: outpostMode=false. We deliberately keep authMode
+  // Non-outpost baseline. We deliberately keep deployment=standalone
   // as 'standalone' (not 'hosted') because the AI Agents page reads
   // `isOutpostMode()` for the privacy banner + client filtering, which is what
   // this test verifies. Switching to 'hosted' would trigger the onboarding

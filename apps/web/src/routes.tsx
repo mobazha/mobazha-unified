@@ -10,6 +10,8 @@ import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Suspense, type ComponentType } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { lazyWithRetry } from './lib/lazyWithRetry';
+import { RuntimeCapabilityBoundary } from './components/RuntimeCapabilityBoundary';
+import type { RuntimeCapabilityKey } from '@mobazha/core';
 
 // 加载中的占位组件
 function PageLoading() {
@@ -42,6 +44,18 @@ function protectedPage(importFn: () => Promise<{ default: ComponentType<unknown>
   );
 }
 
+function capabilityPage(
+  capability: RuntimeCapabilityKey,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
+  protectedRoute = false
+) {
+  const page = lazyPage(importFn);
+  const guarded = (
+    <RuntimeCapabilityBoundary capability={capability}>{page}</RuntimeCapabilityBoundary>
+  );
+  return protectedRoute ? <ProtectedRoute>{guarded}</ProtectedRoute> : guarded;
+}
+
 // Full route table — guarded by compile-time constant so Rollup eliminates all
 // dynamic imports in Outpost builds.
 let routes: RouteObject[] = [];
@@ -66,23 +80,38 @@ if (!__OUTPOST__) {
     { path: '/search', element: lazyPage(() => import('./app/search/page')) },
 
     // 店铺（公开浏览）
-    { path: '/store/:peerId', element: lazyPage(() => import('./app/store/[peerId]/page')) },
+    {
+      path: '/store/:peerId',
+      element: capabilityPage('commerce.storefront', () => import('./app/store/[peerId]/page')),
+    },
     {
       path: '/store/:peerId/collection/:collectionId',
-      element: lazyPage(() => import('./app/store/[peerId]/collection/[collectionId]/page')),
+      element: capabilityPage(
+        'commerce.storefront',
+        () => import('./app/store/[peerId]/collection/[collectionId]/page')
+      ),
     },
 
     // 产品详情（公开浏览）
     {
       path: '/product/:slug',
-      element: lazyPage(() => import('./app/product/[slug]/ProductPageClient')),
+      element: capabilityPage(
+        'commerce.storefront',
+        () => import('./app/product/[slug]/ProductPageClient')
+      ),
     },
 
     // 市场列表和详情（公开浏览）
-    { path: '/marketplace', element: lazyPage(() => import('./app/marketplace/page')) },
+    {
+      path: '/marketplace',
+      element: capabilityPage('marketplace.discovery', () => import('./app/marketplace/page')),
+    },
     {
       path: '/marketplace/:slug',
-      element: lazyPage(() => import('./app/marketplace/[slug]/page')),
+      element: capabilityPage(
+        'marketplace.discovery',
+        () => import('./app/marketplace/[slug]/page')
+      ),
     },
 
     // 仲裁员列表（公开浏览）
@@ -136,25 +165,43 @@ if (!__OUTPOST__) {
     { path: '/cart', element: lazyPage(() => import('./app/cart/page')) },
 
     // Guest Checkout（公开 — 匿名买家直接加密货币支付）
-    { path: '/guest-checkout', element: lazyPage(() => import('./app/guest-checkout/page')) },
+    {
+      path: '/guest-checkout',
+      element: capabilityPage('commerce.checkout', () => import('./app/guest-checkout/page')),
+    },
     {
       path: '/guest-order/:orderToken',
       element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
     },
 
     // 结账流程
-    { path: '/checkout', element: protectedPage(() => import('./app/checkout/page')) },
+    {
+      path: '/checkout',
+      element: capabilityPage('commerce.checkout', () => import('./app/checkout/page'), true),
+    },
     {
       path: '/checkout/moderator',
-      element: protectedPage(() => import('./app/checkout/moderator/page')),
+      element: capabilityPage(
+        'commerce.checkout',
+        () => import('./app/checkout/moderator/page'),
+        true
+      ),
     },
     {
       path: '/checkout/payment-method',
-      element: protectedPage(() => import('./app/checkout/payment-method/page')),
+      element: capabilityPage(
+        'commerce.checkout',
+        () => import('./app/checkout/payment-method/page'),
+        true
+      ),
     },
     {
       path: '/checkout/confirmation',
-      element: protectedPage(() => import('./app/checkout/confirmation/page')),
+      element: capabilityPage(
+        'commerce.checkout',
+        () => import('./app/checkout/confirmation/page'),
+        true
+      ),
     },
 
     // 商品管理
@@ -169,19 +216,35 @@ if (!__OUTPOST__) {
     // Marketplace 运营台与买家市场分离，避免把店铺后台和市场治理混在一起。
     {
       path: '/operator/marketplaces',
-      element: protectedPage(() => import('./app/operator/marketplaces/page')),
+      element: capabilityPage(
+        'marketplace.operator',
+        () => import('./app/operator/marketplaces/page'),
+        true
+      ),
     },
     {
       path: '/operator/marketplaces/:id',
-      element: protectedPage(() => import('./app/operator/marketplaces/[id]/page')),
+      element: capabilityPage(
+        'marketplace.operator',
+        () => import('./app/operator/marketplaces/[id]/page'),
+        true
+      ),
     },
     {
       path: '/operator/marketplaces/:id/preview',
-      element: protectedPage(() => import('./app/operator/marketplaces/[id]/preview/page')),
+      element: capabilityPage(
+        'marketplace.operator',
+        () => import('./app/operator/marketplaces/[id]/preview/page'),
+        true
+      ),
     },
     {
       path: '/marketplace/:slug/sell',
-      element: protectedPage(() => import('./app/marketplace/[slug]/sell/page')),
+      element: capabilityPage(
+        'marketplace.selling',
+        () => import('./app/marketplace/[slug]/sell/page'),
+        true
+      ),
     },
 
     // 收藏/愿望单
@@ -289,7 +352,10 @@ if (!__OUTPOST__) {
         { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
         {
           path: 'marketplace-memberships',
-          element: lazyPage(() => import('./app/settings/marketplace-memberships/page')),
+          element: capabilityPage(
+            'marketplace.sellerReview',
+            () => import('./app/settings/marketplace-memberships/page')
+          ),
         },
       ],
     },
@@ -297,7 +363,7 @@ if (!__OUTPOST__) {
     // Admin — 卖家管理后台（使用独立布局 + AuthGuard）
     {
       path: '/admin',
-      element: lazyPage(() => import('./app/admin/AdminLayoutVite')),
+      element: capabilityPage('commerce.storeAdmin', () => import('./app/admin/AdminLayoutVite')),
       children: [
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
@@ -428,7 +494,10 @@ if (!__OUTPOST__) {
         },
         {
           path: 'settings/marketplace-memberships',
-          element: lazyPage(() => import('./app/admin/settings/marketplace-memberships/page')),
+          element: capabilityPage(
+            'marketplace.sellerReview',
+            () => import('./app/admin/settings/marketplace-memberships/page')
+          ),
         },
         {
           path: 'settings/access-control',
@@ -546,13 +615,22 @@ if (__OUTPOST__) {
     { path: '/', element: lazyPage(() => import('./app/page')) },
 
     // Store — clean URL without peerId for single-store Outpost
-    { path: '/store', element: lazyPage(() => import('./app/store/page')) },
-    { path: '/store/:peerId', element: lazyPage(() => import('./app/store/[peerId]/page')) },
+    {
+      path: '/store',
+      element: capabilityPage('commerce.storefront', () => import('./app/store/page')),
+    },
+    {
+      path: '/store/:peerId',
+      element: capabilityPage('commerce.storefront', () => import('./app/store/[peerId]/page')),
+    },
 
     // Product detail
     {
       path: '/product/:slug',
-      element: lazyPage(() => import('./app/product/[slug]/ProductPageClient')),
+      element: capabilityPage(
+        'commerce.storefront',
+        () => import('./app/product/[slug]/ProductPageClient')
+      ),
     },
 
     // Collections
@@ -563,7 +641,10 @@ if (__OUTPOST__) {
     { path: '/cart', element: lazyPage(() => import('./app/cart/page')) },
 
     // Guest Checkout (anonymous crypto payment)
-    { path: '/guest-checkout', element: lazyPage(() => import('./app/guest-checkout/page')) },
+    {
+      path: '/guest-checkout',
+      element: capabilityPage('commerce.checkout', () => import('./app/guest-checkout/page')),
+    },
     {
       path: '/guest-order/:orderToken',
       element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
@@ -606,7 +687,7 @@ if (__OUTPOST__) {
     // Admin — reduced to essentials
     {
       path: '/admin',
-      element: lazyPage(() => import('./app/admin/AdminLayoutVite')),
+      element: capabilityPage('commerce.storeAdmin', () => import('./app/admin/AdminLayoutVite')),
       children: [
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
