@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import { initializeRuntimeConfig } from '@mobazha/core/config/runtimeConfig';
 
 let mockHosted = true;
 let mockStandalone = false;
@@ -84,6 +85,29 @@ describe('MePage MaaS navigation', () => {
     mockStandalone = false;
     mockAuthenticated = true;
     vi.stubGlobal('__SOVEREIGN__', false);
+    initializeRuntimeConfig({
+      schemaVersion: 3,
+      authMode: 'hosted',
+      deployment: { mode: 'hosted', allowExternalResources: true },
+      experience: { kind: 'platform' },
+      capabilitiesReady: true,
+      features: {},
+      capabilities: {
+        commerce: { storefront: true, storeAdmin: true, checkout: true },
+        marketplace: {
+          discovery: true,
+          operator: true,
+          selling: true,
+          curation: true,
+          sellerReview: true,
+          customDomains: true,
+          releasePublishing: true,
+          attribution: true,
+        },
+        sovereign: { isolatedRuntime: false, managedFleet: false },
+        payments: { methods: [] },
+      },
+    });
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,
       value: 375,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { initializeRuntimeConfig } from '@mobazha/core/config/runtimeConfig';
 
 import { PaymentCryptoSelector } from '@/components/Payment/PaymentCryptoSelector';
 
@@ -30,6 +31,37 @@ vi.mock('@mobazha/core', async () => {
 });
 
 describe('PaymentCryptoSelector', () => {
+  beforeEach(() => {
+    initializeRuntimeConfig({
+      schemaVersion: 3,
+      authMode: 'hosted',
+      deployment: { mode: 'hosted', allowExternalResources: true },
+      experience: { kind: 'platform' },
+      capabilitiesReady: true,
+      features: {},
+      capabilities: {
+        commerce: { storefront: true, storeAdmin: true, checkout: true },
+        marketplace: {
+          discovery: true,
+          operator: true,
+          selling: true,
+          curation: true,
+          sellerReview: true,
+          customDomains: true,
+          releasePublishing: true,
+          attribution: true,
+        },
+        sovereign: { isolatedRuntime: false, managedFleet: false },
+        payments: {
+          methods: [
+            { id: 'BSC', kind: 'crypto', flow: 'external-wallet' },
+            { id: 'BASE', kind: 'crypto', flow: 'external-wallet' },
+          ],
+        },
+      },
+    });
+  });
+
   it('shows native BNB when accepted payment methods contain the BSC chain id', () => {
     render(
       <PaymentCryptoSelector
