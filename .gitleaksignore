@@ -1,9 +1,9 @@
-# Reviewed historical examples and public identifiers retained for compatibility.
-f449759c8ba413f91406d79f1685943b85edb6a2:packages/core/services/api/orders.ts:generic-api-key:925
-f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
-f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
-ea34403dcb9453a1afae6a613dd8c0ba8bc05935:packages/core/config/appkit.ts:generic-api-key:69
-42b69d50fd229b02c8c52161267d82a14aca8c36:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
-cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:108
-cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:115
-44853351f91352c79a642a78837ecfbe7a52c6f4:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
+# Reviewed public contract addresses and non-secret browser storage identifiers.
+ff7d6c6dec9107c304165ccea8e616c60749fab1:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
+0682212d168bd0bf554fe12a7fe836d8e0e1998a:packages/core/services/api/orders.ts:generic-api-key:925
+a435944011b9cecdc1f72178c1e69a010b9ba868:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
+a435944011b9cecdc1f72178c1e69a010b9ba868:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
+06e7eb397ec17d0a8d2b87cb7cfa9eadc8519f50:packages/core/config/appkit.ts:generic-api-key:69
+3bdfe6fc221b35f9b866a9a4879705e5ce98936a:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
+cc9f7fa2754e984002183cc760562c377a3d899b:packages/core/hooks/usePayment.ts:generic-api-key:108
+cc9f7fa2754e984002183cc760562c377a3d899b:packages/core/hooks/usePayment.ts:generic-api-key:115
