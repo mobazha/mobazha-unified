@@ -66,6 +66,11 @@ function MyComponent() {
 | `NEXT_PUBLIC_USE_MOCK_DATA`     | Use mock data instead of real API | `true`                  |
 | `NEXT_PUBLIC_API_URL`           | Backend API URL                   | `http://localhost:5000` |
 | `NEXT_PUBLIC_MATRIX_HOMESERVER` | Matrix server for chat            | `https://matrix.org`    |
+| `NEXT_PUBLIC_ETHERSCAN_API_KEY` | Optional public Etherscan key     | unset                   |
+
+`NEXT_PUBLIC_ETHERSCAN_API_KEY` is embedded in browser assets. Treat it as a
+rate-limited public identifier, not as a secret credential. Prefer a backend
+proxy for deployments that require a private explorer credential.
 
 ## Using the Unified Data Service
 

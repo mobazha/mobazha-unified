@@ -10,6 +10,7 @@ import {
   filterByTimeRange,
 } from '../../data/rwaPriceMockData';
 import { SEPOLIA_CONFIG } from '../../types/rwa';
+import { getEtherscanApiKey } from '../../config/rpc';
 
 // ==================== 配置 ====================
 
@@ -24,7 +25,6 @@ export const USE_MOCK_PRICE_DATA = true;
  */
 const ETHERSCAN_API_URL = 'https://api.etherscan.io/v2/api';
 const CHAIN_ID = 11155111; // Sepolia
-const ETHERSCAN_API_KEY = '';
 
 /**
  * SwapExecuted 事件签名
@@ -88,7 +88,10 @@ function buildApiUrl(params: Record<string, string>): string {
       url.searchParams.set(key, value);
     }
   });
-  url.searchParams.set('apikey', ETHERSCAN_API_KEY);
+  const apiKey = getEtherscanApiKey();
+  if (apiKey) {
+    url.searchParams.set('apikey', apiKey);
+  }
   return url.toString();
 }
 
