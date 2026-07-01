@@ -4,13 +4,12 @@
  */
 
 import type { TokenTransfer, ValueSource } from '../../types/rwa';
+import { getEtherscanApiKey } from '../../config/rpc';
 import { getERC3525Slot, getERC3525Value } from './rwaBalanceService';
 
 // Etherscan V2 API 配置 (统一端点，通过 chainid 区分网络)
 const ETHERSCAN_API_URL = 'https://api.etherscan.io/v2/api';
 const CHAIN_ID = 11155111; // Sepolia
-// Etherscan API Key (V2 API 必需)
-const ETHERSCAN_API_KEY = '';
 
 // 缓存配置
 const CACHE_TTL = 180 * 1000; // 180秒（3分钟）缓存，减少重复 API 调用
@@ -65,7 +64,7 @@ export function clearTransferCache(): void {
 /**
  * 构建 Etherscan V2 API URL
  */
-function buildApiUrl(params: Record<string, string>): string {
+function buildApiUrl(params: Record<string, string>, explicitApiKey?: string): string {
   const url = new URL(ETHERSCAN_API_URL);
   // V2 API 必须指定 chainid
   url.searchParams.set('chainid', CHAIN_ID.toString());
@@ -74,8 +73,10 @@ function buildApiUrl(params: Record<string, string>): string {
       url.searchParams.set(key, value);
     }
   });
-  // V2 API 必须有 API Key
-  url.searchParams.set('apikey', ETHERSCAN_API_KEY);
+  const apiKey = explicitApiKey?.trim() || getEtherscanApiKey();
+  if (apiKey) {
+    url.searchParams.set('apikey', apiKey);
+  }
   return url.toString();
 }
 
@@ -121,7 +122,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, baseDelay = 10
 export async function getERC20TokenTransfers(
   contractAddress: string,
   address: string,
-  _apiKey?: string
+  apiKey?: string
 ): Promise<TokenTransfer[]> {
   const cacheKey = getCacheKey('erc20', contractAddress, address);
   const cached = getCachedTransfers(cacheKey);
@@ -130,13 +131,16 @@ export async function getERC20TokenTransfers(
   }
 
   try {
-    const url = buildApiUrl({
-      module: 'account',
-      action: 'tokentx',
-      contractaddress: contractAddress,
-      address: address,
-      sort: 'desc',
-    });
+    const url = buildApiUrl(
+      {
+        module: 'account',
+        action: 'tokentx',
+        contractaddress: contractAddress,
+        address: address,
+        sort: 'desc',
+      },
+      apiKey
+    );
 
     const response = await fetch(url);
     const data = await response.json();
@@ -178,7 +182,7 @@ export async function getERC20TokenTransfers(
 export async function getERC1155TokenTransfers(
   contractAddress: string,
   address: string,
-  _apiKey?: string
+  apiKey?: string
 ): Promise<TokenTransfer[]> {
   const cacheKey = getCacheKey('erc1155', contractAddress, address);
   const cached = getCachedTransfers(cacheKey);
@@ -187,13 +191,16 @@ export async function getERC1155TokenTransfers(
   }
 
   try {
-    const url = buildApiUrl({
-      module: 'account',
-      action: 'token1155tx',
-      contractaddress: contractAddress,
-      address: address,
-      sort: 'desc',
-    });
+    const url = buildApiUrl(
+      {
+        module: 'account',
+        action: 'token1155tx',
+        contractaddress: contractAddress,
+        address: address,
+        sort: 'desc',
+      },
+      apiKey
+    );
 
     const response = await fetch(url);
     const data = await response.json();
@@ -278,7 +285,7 @@ export async function getERC3525TokenTransfers(
   contractAddress: string,
   address: string,
   tokenId?: string,
-  _apiKey?: string
+  apiKey?: string
 ): Promise<TokenTransfer[]> {
   const cacheKey = getCacheKey('erc3525', contractAddress, `${address}_${tokenId || 'all'}`);
   const cached = getCachedTransfers(cacheKey);
@@ -287,13 +294,16 @@ export async function getERC3525TokenTransfers(
   }
 
   try {
-    const url = buildApiUrl({
-      module: 'account',
-      action: 'tokennfttx',
-      contractaddress: contractAddress,
-      address: address,
-      sort: 'desc',
-    });
+    const url = buildApiUrl(
+      {
+        module: 'account',
+        action: 'tokennfttx',
+        contractaddress: contractAddress,
+        address: address,
+        sort: 'desc',
+      },
+      apiKey
+    );
 
     const response = await fetch(url);
     const data = await response.json();

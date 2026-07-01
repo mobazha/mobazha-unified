@@ -10,6 +10,7 @@
  *   NEXT_PUBLIC_BSC_RPC_URL         — BNB Smart Chain
  *   NEXT_PUBLIC_SOL_RPC_URL         — Solana mainnet-beta
  *   NEXT_PUBLIC_SOL_DEVNET_RPC_URL  — Solana devnet
+ *   NEXT_PUBLIC_ETHERSCAN_API_KEY   — optional public Etherscan client key
  */
 
 import { ChainId } from '../services/payment/types';
@@ -87,6 +88,19 @@ export function getSolanaRpcUrl(isDevnet?: boolean): string {
     return readEnv('NEXT_PUBLIC_SOL_DEVNET_RPC_URL') || 'https://api.devnet.solana.com';
   }
   return readEnv('NEXT_PUBLIC_SOL_RPC_URL') || 'https://api.mainnet-beta.solana.com';
+}
+
+/**
+ * Return the optional Etherscan browser-client key.
+ *
+ * The `NEXT_PUBLIC_` prefix is intentional: any value used by browser code is
+ * visible to users and must be treated as a rate-limited public identifier,
+ * never as a secret credential.
+ */
+export function getEtherscanApiKey(): string | undefined {
+  const value =
+    typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY : undefined;
+  return value?.trim() || undefined;
 }
 
 // ── Convenience re-exports ──────────────────────────
