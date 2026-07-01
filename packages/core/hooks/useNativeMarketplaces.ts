@@ -33,6 +33,7 @@ import {
   getMyMarketplaceMemberships,
   getMyMarketplaces,
   inviteMarketplaceSeller,
+  publishMarketplace,
   reorderMarketplaceCuration,
   updateMarketplaceCurationItem,
   verifyMarketplaceCustomDomain,
@@ -324,7 +325,7 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     const actionMarketplaceId = marketplaceId;
     setWorking('publish');
     try {
-      const updated = await updateMarketplace(actionMarketplaceId, { status: 'published' });
+      const updated = await publishMarketplace(actionMarketplaceId);
       if (marketplaceIdRef.current === actionMarketplaceId) {
         setMarketplace(updated);
       }

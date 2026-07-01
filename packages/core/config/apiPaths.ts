@@ -527,6 +527,7 @@ export const HOSTING_API = {
   MARKETPLACES: '/platform/v1/marketplaces',
   MARKETPLACE: (id: string) => `/platform/v1/marketplaces/${id}`,
   MARKETPLACE_PREVIEW: (id: string) => `/platform/v1/marketplaces/${id}/preview`,
+  MARKETPLACE_PUBLISH: (id: string) => `/platform/v1/marketplaces/${id}/publish`,
   MARKETPLACES_MINE: '/platform/v1/marketplaces/mine',
   MARKETPLACE_CONFIG: (id: string) => `/platform/v1/marketplaces/${id}/config`,
   MARKETPLACE_CONFIG_CURRENT: '/platform/v1/marketplaces/current/config',
