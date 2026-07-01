@@ -5195,6 +5195,50 @@
         "tags": ["marketplaces"]
       }
     },
+    "/platform/v1/marketplaces/{id}/preview": {
+      "get": {
+        "operationId": "marketplaces-preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Preview the operator working draft using the public marketplace projection",
+        "tags": ["marketplaces"]
+      }
+    },
     "/platform/v1/marketplaces/{id}/seller-review-events": {
       "get": {
         "operationId": "marketplaces-seller-review-events-list",

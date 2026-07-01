@@ -163,6 +163,15 @@ export async function getMarketplace(marketplaceId: string): Promise<NativeMarke
 }
 
 /**
+ * 获取运营侧市场草稿预览详情
+ */
+export async function getMarketplacePreview(
+  marketplaceId: string
+): Promise<PublicNativeMarketplaceDetail> {
+  return hostingGet<PublicNativeMarketplaceDetail>(HOSTING_API.MARKETPLACE_PREVIEW(marketplaceId));
+}
+
+/**
  * 创建集市
  */
 export async function createMarketplace(
