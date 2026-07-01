@@ -8,10 +8,40 @@ import {
   sanitizeCheckoutPaymentPolicySession,
 } from '../../config/checkoutPaymentPolicy';
 import { syncCheckoutPaymentSessionStorage } from '../../config/paymentMethodVisibility';
+import { initializeRuntimeConfig } from '../../config/runtimeConfig';
+
+function runtimeConfigWithEthPayment() {
+  return {
+    schemaVersion: 3,
+    authMode: 'standalone',
+    deployment: { mode: 'standalone', allowExternalResources: false },
+    experience: { kind: 'store' },
+    capabilitiesReady: true,
+    features: {},
+    capabilities: {
+      commerce: { storefront: true, storeAdmin: true, checkout: true },
+      marketplace: {
+        discovery: false,
+        operator: false,
+        selling: false,
+        curation: false,
+        sellerReview: false,
+        customDomains: false,
+        releasePublishing: false,
+        attribution: false,
+      },
+      outpost: { isolatedRuntime: false, managedFleet: false },
+      payments: {
+        methods: [{ id: 'ETH', kind: 'crypto', flow: 'external-wallet' }],
+      },
+    },
+  };
+}
 
 describe('checkoutPaymentPolicy', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    initializeRuntimeConfig(runtimeConfigWithEthPayment());
   });
 
   it('requires escrow crypto only for source-custody authoritative titles', () => {
