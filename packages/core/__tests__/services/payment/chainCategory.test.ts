@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveChainCategory } from '../../../services/transaction/executorRegistry';
+import { resolveChainCategory } from '../../../services/payment/chainCategory';
 
-describe('resolveChainCategory (canonical payment coin)', () => {
+describe('resolveChainCategory', () => {
   it('resolves canonical EVM and UTXO coins', () => {
     expect(resolveChainCategory('crypto:eip155:56:native')).toBe('evm');
     expect(resolveChainCategory('crypto:bip122:000000000019d6689c085ae165831e93:native')).toBe(
@@ -19,7 +19,7 @@ describe('resolveChainCategory (canonical payment coin)', () => {
     expect(resolveChainCategory('crypto:tron:mainnet:native')).toBe('tron');
   });
 
-  it('keeps fiat out of chain executors', () => {
+  it('keeps fiat out of chain presentation categories', () => {
     expect(resolveChainCategory('fiat:stripe:USD')).toBeNull();
   });
 });
