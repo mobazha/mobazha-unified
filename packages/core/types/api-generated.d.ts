@@ -1768,6 +1768,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplaces/{id}/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Preview the operator working draft using the public marketplace projection */
+    get: operations['marketplaces-preview'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/marketplaces/{id}/seller-review-events': {
     parameters: {
       query?: never;
@@ -13648,6 +13665,37 @@ export interface operations {
     };
   };
   'marketplaces-link': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-preview': {
     parameters: {
       query?: never;
       header?: never;

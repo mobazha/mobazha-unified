@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   MARKETPLACE_BUYER_ACCESS_MODE_KEYS,
   MARKETPLACE_CATALOG_MODE_KEYS,
@@ -68,6 +68,15 @@ type MembershipFilter =
 
 type OperatorTab = 'overview' | 'curation' | 'sellers' | 'settings';
 
+const VALID_OPERATOR_TABS = ['overview', 'curation', 'sellers', 'settings'] as const;
+
+function resolveOperatorTab(tabParam: string | null): OperatorTab {
+  if (tabParam && (VALID_OPERATOR_TABS as readonly string[]).includes(tabParam)) {
+    return tabParam as OperatorTab;
+  }
+  return 'overview';
+}
+
 const PENDING_STATUSES: ReadonlySet<MarketplaceStoreMembership['status']> = new Set([
   'applied',
   'accepted',
@@ -86,10 +95,41 @@ const STORE_STATUS_PRIORITY: Record<MarketplaceStoreMembership['status'], number
 export default function MarketplaceOperatorDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const id = String(params.id ?? '');
   const { t, formatDate } = useI18n();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<OperatorTab>('overview');
+  const derivedTab = useMemo(() => resolveOperatorTab(searchParams.get('tab')), [searchParams]);
+  const [activeTab, setActiveTab] = useState<OperatorTab>(derivedTab);
+  useEffect(() => {
+    setActiveTab(derivedTab);
+  }, [derivedTab]);
+
+  const syncTabToUrl = useCallback(
+    (tab: OperatorTab) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === 'overview') {
+        params.delete('tab');
+      } else {
+        params.set('tab', tab);
+      }
+      const nextQuery = params.toString();
+      if (nextQuery === searchParams.toString()) return;
+      const href = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      router.replace(href, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const tab = value as OperatorTab;
+      setActiveTab(tab);
+      syncTabToUrl(tab);
+    },
+    [syncTabToUrl]
+  );
   const {
     marketplace,
     stores,
@@ -513,6 +553,8 @@ export default function MarketplaceOperatorDetailPage() {
   const launchChecklistReady = hasVerifiedDomain && sellerLaunchRequirementMet;
   const isDraft = marketplace.status === 'draft';
   const isSuspended = marketplace.status === 'suspended';
+  const hasPublishedDraftChanges =
+    marketplace.status === 'published' && marketplace.hasUnpublishedChanges;
   const canPublish = isDraft && launchChecklistReady && !isArchived;
   const canResumeMarketplace = isSuspended && launchChecklistReady && !isArchived;
   const showLaunchChecklist = isDraft || isSuspended;
@@ -539,56 +581,63 @@ export default function MarketplaceOperatorDetailPage() {
                 {marketplace.description || t('marketplace.operator.noDescription')}
               </p>
             </div>
-            {marketplace.status === 'draft' && !isArchived ? (
-              <Button
-                onClick={() => void handlePublish()}
-                disabled={Boolean(working) || !canPublish}
-                data-testid="operator-marketplace-publish"
-              >
-                {working === 'publish' ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                )}
-                {t('marketplace.operator.publish')}
-              </Button>
-            ) : null}
-            {marketplace.status === 'published' && !isArchived ? (
-              <Button
-                variant="outline"
-                onClick={() => void handleSuspend()}
-                disabled={Boolean(working)}
-                data-testid="operator-marketplace-suspend"
-              >
-                {working === 'suspend' ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <PauseCircle className="mr-2 h-4 w-4" />
-                )}
-                {t('marketplace.operator.suspendMarketplace')}
-              </Button>
-            ) : null}
-            {marketplace.status === 'suspended' && !isArchived ? (
-              <Button
-                onClick={() => void handleResume()}
-                disabled={Boolean(working) || !canResumeMarketplace}
-                data-testid="operator-marketplace-resume"
-              >
-                {working === 'resume' ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <PlayCircle className="mr-2 h-4 w-4" />
-                )}
-                {t('marketplace.operator.resumeMarketplace')}
-              </Button>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {!isArchived ? (
+                <Button asChild variant="outline" data-testid="operator-marketplace-preview-link">
+                  <Link href={`/operator/marketplaces/${marketplace.id}/preview`}>
+                    {t('marketplace.operator.previewDraft')}
+                  </Link>
+                </Button>
+              ) : null}
+              {(marketplace.status === 'draft' || hasPublishedDraftChanges) && !isArchived ? (
+                <Button
+                  onClick={() => void handlePublish()}
+                  disabled={Boolean(working) || (isDraft && !canPublish)}
+                  data-testid="operator-marketplace-publish"
+                >
+                  {working === 'publish' ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                  )}
+                  {hasPublishedDraftChanges
+                    ? t('marketplace.operator.publishChanges')
+                    : t('marketplace.operator.publish')}
+                </Button>
+              ) : null}
+              {marketplace.status === 'published' && !isArchived ? (
+                <Button
+                  variant="outline"
+                  onClick={() => void handleSuspend()}
+                  disabled={Boolean(working)}
+                  data-testid="operator-marketplace-suspend"
+                >
+                  {working === 'suspend' ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <PauseCircle className="mr-2 h-4 w-4" />
+                  )}
+                  {t('marketplace.operator.suspendMarketplace')}
+                </Button>
+              ) : null}
+              {marketplace.status === 'suspended' && !isArchived ? (
+                <Button
+                  onClick={() => void handleResume()}
+                  disabled={Boolean(working) || !canResumeMarketplace}
+                  data-testid="operator-marketplace-resume"
+                >
+                  {working === 'resume' ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <PlayCircle className="mr-2 h-4 w-4" />
+                  )}
+                  {t('marketplace.operator.resumeMarketplace')}
+                </Button>
+              ) : null}
+            </div>
           </div>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={value => setActiveTab(value as OperatorTab)}
-            className="mt-8"
-          >
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-8">
             <TabsList
               className="flex h-auto w-full flex-wrap justify-start gap-1 p-1"
               aria-label={t('marketplace.operator.tabs.ariaLabel')}

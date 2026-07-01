@@ -49,6 +49,10 @@ describe('Marketplace API', () => {
     name: 'Crypto Collectibles',
     slug: 'crypto-collectibles',
     status: 'published',
+    draftRevision: 3,
+    publishedRevision: 2,
+    hasUnpublishedChanges: true,
+    publishedAt: '2026-01-01T00:00:00Z',
     ownerUserID: 'owner-1',
     buyerAccessMode: 'open',
     sellerReviewMode: 'manual',
@@ -80,6 +84,44 @@ describe('Marketplace API', () => {
       expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1');
       expect(result.id).toBe('mp1');
       expect(result.name).toBe('Crypto Collectibles');
+    });
+  });
+
+  describe('getMarketplacePreview', () => {
+    it('should fetch operator draft preview details', async () => {
+      const preview = {
+        marketplace: {
+          id: 'mp1',
+          name: 'Crypto Collectibles',
+          slug: 'crypto-collectibles',
+          description: 'Curated cards and collectibles',
+          publicURL: 'https://collectibles.example.test',
+          buyerAccessMode: 'open',
+          sellerReviewMode: 'manual',
+          catalogMode: 'curated',
+          discoverability: 'public',
+          sellerEntryMode: 'operator_invited',
+          vertical: 'collectibles',
+          sellerCount: 2,
+          productCount: 8,
+        },
+        sellers: [],
+        featured: [],
+        banners: [],
+        listings: {
+          listings: [],
+          total: 0,
+          page: 1,
+          pageSize: 24,
+          totalPage: 0,
+        },
+      };
+      mockHostingGet.mockResolvedValueOnce(preview);
+
+      const result = await marketplaceApi.getMarketplacePreview('mp1');
+
+      expect(mockHostingGet).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/preview');
+      expect(result.marketplace.id).toBe('mp1');
     });
   });
 

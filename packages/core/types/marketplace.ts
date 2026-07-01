@@ -79,6 +79,10 @@ export interface NativeMarketplace {
   name: string;
   slug: string;
   status: MarketplaceLifecycleStatus;
+  draftRevision: number;
+  publishedRevision: number;
+  hasUnpublishedChanges: boolean;
+  publishedAt?: string;
   description?: string;
   logoURL?: string;
   bannerURL?: string;
