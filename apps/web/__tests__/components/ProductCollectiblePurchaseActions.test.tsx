@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
@@ -62,12 +65,7 @@ describe('ProductCollectiblePurchaseActions', () => {
 
   it('shows a single purchase-title CTA for authoritative collectible listings', async () => {
     render(
-      <ProductBottomBar
-        product={authoritativeProduct}
-        quantity={3}
-        stock={5}
-        paymentAvailable
-      />
+      <ProductBottomBar product={authoritativeProduct} quantity={3} stock={5} paymentAvailable />
     );
 
     expect(screen.getByTestId('product-detail-purchase-title')).toBeInTheDocument();
@@ -82,9 +80,7 @@ describe('ProductCollectiblePurchaseActions', () => {
   });
 
   it('keeps add-to-cart and buy-now for ordinary physical goods', () => {
-    render(
-      <ProductBottomBar product={physicalProduct} quantity={2} stock={5} paymentAvailable />
-    );
+    render(<ProductBottomBar product={physicalProduct} quantity={2} stock={5} paymentAvailable />);
 
     expect(screen.getByTestId('product-detail-add-to-cart')).toBeInTheDocument();
     expect(screen.getByTestId('product-detail-buy-now')).toBeInTheDocument();

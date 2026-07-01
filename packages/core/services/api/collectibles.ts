@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { HOSTING_API } from '../../config/apiPaths';
 import { ApiError } from './client';
 import { hostingGet, hostingPost, hostingPut } from './helpers';

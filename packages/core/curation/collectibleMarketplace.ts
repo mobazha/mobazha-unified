@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 export type CollectibleMarketplaceCategoryFilter = 'all' | 'sports' | 'pokemon' | 'mtg' | 'tcg';
 
 export const COLLECTIBLE_MARKETPLACE_CATEGORY_FILTERS: CollectibleMarketplaceCategoryFilter[] = [

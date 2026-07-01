@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -33,11 +36,7 @@ vi.mock('@/components/layouts', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({
-    children,
-    onClick,
-    ...props
-  }: React.PropsWithChildren<{ onClick?: () => void }>) => (
+  Button: ({ children, onClick, ...props }: React.PropsWithChildren<{ onClick?: () => void }>) => (
     <button type="button" onClick={onClick} {...props}>
       {children}
     </button>

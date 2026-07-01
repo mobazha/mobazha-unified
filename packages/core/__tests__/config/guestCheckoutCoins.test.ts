@@ -47,7 +47,7 @@ describe('guest checkout runtime capabilities', () => {
     expect(getAvailableGuestCoins()).toEqual([]);
   });
 
-  it('projects the Community backend payment set including transparent ZEC', () => {
+  it('projects every payment rail advertised by a richer compatible backend', () => {
     initializeRuntimeConfig(runtimeMethods(['BTC', 'BCH', 'LTC', 'ZEC']));
     expect(getRuntimeGuestCheckoutCoins().map(coin => coin.paymentCoin)).toEqual([
       'BTC',

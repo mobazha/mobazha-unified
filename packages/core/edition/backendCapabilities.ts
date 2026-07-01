@@ -6,14 +6,13 @@
 
 import { refreshRuntimeConfig } from '../services/api/runtimeConfig';
 import type { RuntimeConfig } from '../config/runtimeConfig';
-import { COMMUNITY_EDITION_MANIFEST, COMMUNITY_PAYMENT_CHAINS } from './manifest';
+import { COMMUNITY_PAYMENT_CHAINS } from './manifest';
 import { intersectPaymentChains } from './capabilities';
 
 export interface BackendEditionCapabilities {
   edition: 'community';
   paymentChains: string[];
   supportsFiat: boolean;
-  zcashTransparentOnly: boolean;
   source: 'backend' | 'fallback';
 }
 
@@ -23,7 +22,6 @@ export function getCommunityEditionFallbackCapabilities(): BackendEditionCapabil
     edition: 'community',
     paymentChains: [...COMMUNITY_PAYMENT_CHAINS],
     supportsFiat: false,
-    zcashTransparentOnly: COMMUNITY_EDITION_MANIFEST.zcash.transparentOnly,
     source: 'fallback',
   };
 }
@@ -38,10 +36,6 @@ function parseBackendCapabilities(payload: RuntimeConfig): BackendEditionCapabil
     edition: 'community',
     paymentChains: narrowed,
     supportsFiat: false,
-    // Frontend edition policy may narrow backend capability, never widen it.
-    // Community Edition remains transparent-only even if a newer/private node
-    // reports shielded Zcash capability.
-    zcashTransparentOnly: COMMUNITY_EDITION_MANIFEST.zcash.transparentOnly,
     source: 'backend',
   };
 }

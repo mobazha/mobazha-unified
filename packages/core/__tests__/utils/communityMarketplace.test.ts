@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { describe, expect, it } from 'vitest';
 import { derivePublicMarketplaceCurationRefs } from '../../utils/communityMarketplace';
 import type { PublicNativeMarketplaceDetail } from '../../types/marketplace';

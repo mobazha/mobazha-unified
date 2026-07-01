@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { normalizeCheckoutPaymentPolicy, type CheckoutPaymentPolicy } from '@mobazha/core';
 
 /** True when an in-flight fetch still matches the payment page's active order ID. */

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 /**
  * Collectible order metadata keys — aligned with mobazha3.0/pkg/models/collectibles_metadata.go
  */

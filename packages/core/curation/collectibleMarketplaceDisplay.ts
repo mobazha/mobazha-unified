@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import type { Locale } from '../i18n/types';
 
 export const COLLECTIBLE_MARKETPLACE_LISTINGS_SECTION_ID = 'collectible-marketplace-listings';

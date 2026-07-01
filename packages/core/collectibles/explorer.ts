@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { getEnvConfig } from '../config/env';
 
 const SOLANA_EXPLORER = 'https://explorer.solana.com';

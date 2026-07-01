@@ -10,7 +10,6 @@ import {
   intersectCryptoPaymentMethods,
   intersectPaymentChains,
   supportsFiatPayments,
-  isTransparentZcashAddress,
   resolvePaymentSelectorTokenIds,
   isFiatSelectionEnabled,
 } from '../../edition';
@@ -25,12 +24,12 @@ describe('Community Edition manifest', () => {
     expect(onDisk).toEqual(COMMUNITY_EDITION_MANIFEST);
   });
 
-  it('allows exactly BTC, BCH, LTC, and ZEC transparent payments', () => {
-    expect([...COMMUNITY_PAYMENT_CHAINS].sort()).toEqual(['BCH', 'BTC', 'LTC', 'ZEC']);
+  it('allows exactly BTC, BCH, and LTC payments', () => {
+    expect([...COMMUNITY_PAYMENT_CHAINS].sort()).toEqual(['BCH', 'BTC', 'LTC']);
     expect(allowsPaymentChain('BTC')).toBe(true);
     expect(allowsPaymentChain('BCH')).toBe(true);
     expect(allowsPaymentChain('LTC')).toBe(true);
-    expect(allowsPaymentChain('ZEC')).toBe(true);
+    expect(allowsPaymentChain('ZEC')).toBe(false);
     expect(allowsPaymentChain('ETH')).toBe(false);
     expect(allowsPaymentChain('SOL')).toBe(false);
     expect(allowsPaymentChain('TRON')).toBe(false);
@@ -45,16 +44,6 @@ describe('Community Edition manifest', () => {
 
   it('does not support fiat in Community Edition', () => {
     expect(supportsFiatPayments()).toBe(false);
-  });
-
-  it('accepts only transparent Zcash address families', () => {
-    expect(isTransparentZcashAddress('t1ExampleTransparentAddress', 'prod')).toBe(true);
-    expect(isTransparentZcashAddress('t3ExampleTransparentAddress', 'prod')).toBe(true);
-    expect(isTransparentZcashAddress('tmExampleTransparentAddress', 'testnet')).toBe(true);
-    expect(isTransparentZcashAddress('t2ExampleTransparentAddress', 'testnet')).toBe(true);
-    expect(isTransparentZcashAddress('zs1shieldedaddress', 'prod')).toBe(false);
-    expect(isTransparentZcashAddress('u1unifiedaddress', 'prod')).toBe(false);
-    expect(isTransparentZcashAddress('t1MainnetOnWrongNetwork', 'testnet')).toBe(false);
   });
 });
 
@@ -73,7 +62,7 @@ describe('Community Edition capability intersection', () => {
       'SOL',
       'TRON',
     ]);
-    expect(widened.sort()).toEqual(['BCH', 'BTC', 'LTC', 'ZEC']);
+    expect(widened.sort()).toEqual(['BCH', 'BTC', 'LTC']);
     expect(widened).not.toContain('ETH');
     expect(widened).not.toContain('SOL');
   });

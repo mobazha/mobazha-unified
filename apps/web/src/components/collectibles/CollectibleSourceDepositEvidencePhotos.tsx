@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -55,7 +58,6 @@ export function CollectibleSourceDepositEvidencePhotos({
               className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={`${t(evidenceSideLabelKey(photo.side))}: ${t('collectibles.sourceOps.evidenceOpenLink')}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- external seller URLs; avoid Next image domain allowlist */}
               <img
                 src={photo.url}
                 alt={t(evidenceAltKey(photo.side))}
