@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import type { CollectibleNFT, CollectibleNFTValidityStatus } from './types';
 
 /** Known backend values — unknown strings pass through for forward compatibility. */

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { featureFlags } from '../../services/featureFlags';

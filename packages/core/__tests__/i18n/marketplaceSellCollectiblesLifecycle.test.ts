@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { describe, expect, it, beforeEach } from 'vitest';
 import { getTranslation, setLocale } from '../../i18n/i18n';
 import type { SourceDepositLifecycleStep } from '../../collectibles/sourceDeposit';

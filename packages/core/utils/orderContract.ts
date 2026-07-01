@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import type { ContractListing } from '../types/order';
 
 function isRecord(value: unknown): value is Record<string, unknown> {

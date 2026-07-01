@@ -12,8 +12,6 @@ export {
   allowsTokenId,
   allowsPaymentCoin,
   supportsFiatPayments,
-  zcashTransparentOnly,
-  isTransparentZcashAddress,
   intersectPaymentChains,
   intersectCryptoPaymentMethods,
   getEditionSelectableTokens,

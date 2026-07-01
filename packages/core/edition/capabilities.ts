@@ -4,11 +4,7 @@
  */
 
 import { TOKENS, getTokenById, type TokenConfig } from '../data/tokens';
-import {
-  COMMUNITY_PAYMENT_CHAIN_SET,
-  COMMUNITY_PAYMENT_CHAINS,
-  COMMUNITY_EDITION_MANIFEST,
-} from './manifest';
+import { COMMUNITY_PAYMENT_CHAIN_SET, COMMUNITY_PAYMENT_CHAINS } from './manifest';
 
 export class EditionCapabilityError extends Error {
   constructor(message: string) {
@@ -17,7 +13,7 @@ export class EditionCapabilityError extends Error {
   }
 }
 
-/** Normalize chain identifiers to uppercase chain codes (BTC, BCH, LTC, ZEC). */
+/** Normalize chain identifiers to uppercase chain codes (BTC, BCH, LTC). */
 export function normalizePaymentChain(chain: string): string {
   return (chain || '').trim().toUpperCase();
 }
@@ -46,25 +42,6 @@ export function allowsPaymentCoin(coin: string): boolean {
 
 export function supportsFiatPayments(): boolean {
   return false;
-}
-
-export function zcashTransparentOnly(): boolean {
-  return COMMUNITY_EDITION_MANIFEST.zcash.transparentOnly;
-}
-
-/**
- * Accept only legacy transparent Zcash address families.
- *
- * Mainnet transparent addresses start with t1/t3. Testnet transparent
- * addresses start with tm/t2. Shielded (z/zc/zs) and unified (u/uview/...)
- * address families fail closed before the generic address validator runs.
- */
-export function isTransparentZcashAddress(address: string, network: 'prod' | 'testnet'): boolean {
-  const normalized = (address || '').trim();
-  if (!normalized) return false;
-
-  const transparentPrefix = network === 'testnet' ? /^(?:tm|t2)/ : /^(?:t1|t3)/;
-  return transparentPrefix.test(normalized);
 }
 
 /**

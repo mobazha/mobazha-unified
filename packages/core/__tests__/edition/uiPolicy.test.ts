@@ -10,10 +10,10 @@ import {
 } from '../../edition/uiPolicy';
 
 describe('Community Edition UI policy', () => {
-  it('advertises only BTC, BCH, LTC, and ZEC on marketing surfaces', () => {
+  it('advertises only BTC, BCH, and LTC on marketing surfaces', () => {
     const tokens = getEditionAdvertisedPaymentTokens();
-    expect(tokens.map(token => token.id).sort()).toEqual(['BCH', 'BTC', 'LTC', 'ZEC']);
-    expect(getEditionSupportedChainCount()).toBe(4);
+    expect(tokens.map(token => token.id).sort()).toEqual(['BCH', 'BTC', 'LTC']);
+    expect(getEditionSupportedChainCount()).toBe(3);
   });
 
   it('filters receiving-account chain pickers to the edition allowlist', () => {
@@ -27,12 +27,12 @@ describe('Community Edition UI policy', () => {
       filterEditionReceivingAccountChains(allChains)
         .map(c => c.id)
         .sort()
-    ).toEqual(['BTC', 'ZEC']);
+    ).toEqual(['BTC']);
   });
 
   it('limits listing payment coin options to native UTXO rails', () => {
     const options = getEditionListingPaymentCoinOptions();
-    expect(options).toHaveLength(4);
+    expect(options).toHaveLength(3);
     expect(options.map(option => option.code).every(code => code.startsWith('crypto:'))).toBe(true);
     expect(options.some(option => option.code.includes('eip155'))).toBe(false);
   });

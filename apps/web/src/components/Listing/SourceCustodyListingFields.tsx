@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
@@ -72,7 +75,8 @@ export function SourceCustodyListingFields({
 
   const handleAddCurrency = useCallback(() => {
     if (acceptedCurrencies.length < 5) {
-      const defaultCurrency = SOURCE_CUSTODY_PAYMENT_CURRENCIES[0]?.code || mustAssetIdFromTokenId('ETH');
+      const defaultCurrency =
+        SOURCE_CUSTODY_PAYMENT_CURRENCIES[0]?.code || mustAssetIdFromTokenId('ETH');
       onAcceptedCurrenciesChange([...acceptedCurrencies, defaultCurrency]);
     }
   }, [acceptedCurrencies, onAcceptedCurrenciesChange]);

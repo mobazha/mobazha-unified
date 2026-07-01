@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 /** Server-side PII envelope prefix (hosting `internal/collectibles/pii.go`). */
 export const COLLECTIBLE_PII_ENVELOPE_PREFIX = 'pii:v1:';
 

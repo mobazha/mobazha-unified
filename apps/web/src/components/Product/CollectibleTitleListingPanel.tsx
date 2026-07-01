@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 'use client';
 
 import React from 'react';
@@ -95,10 +98,7 @@ export function CollectibleTitleListingPanel({
 
       <div>
         <h3
-          className={cn(
-            'font-medium text-foreground',
-            compact ? 'text-xs mb-2' : 'text-sm mb-2.5'
-          )}
+          className={cn('font-medium text-foreground', compact ? 'text-xs mb-2' : 'text-sm mb-2.5')}
         >
           {t('product.collectibleTitle.lifecycleTitle')}
         </h3>
@@ -121,7 +121,9 @@ export function CollectibleTitleListingPanel({
       </div>
 
       {identityRows.length > 0 ? (
-        <dl className={cn('grid grid-cols-1 gap-2 sm:grid-cols-3', compact ? 'text-xs' : 'text-sm')}>
+        <dl
+          className={cn('grid grid-cols-1 gap-2 sm:grid-cols-3', compact ? 'text-xs' : 'text-sm')}
+        >
           {identityRows.map(row => (
             <div key={row.label}>
               <dt className="text-muted-foreground">{row.label}</dt>
