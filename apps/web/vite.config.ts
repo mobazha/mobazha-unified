@@ -72,7 +72,7 @@ function sovereignHtmlStripPlugin(): Plugin {
   return {
     name: 'sovereign-html-strip',
     transformIndexHtml(html) {
-      let result = html
+      const result = html
         // Remove Google Fonts links
         .replace(/\s*<link[^>]*fonts\.googleapis\.com[^>]*\/?\s*>/g, '')
         .replace(/\s*<link[^>]*fonts\.gstatic\.com[^>]*\/?\s*>/g, '')
@@ -84,11 +84,6 @@ function sovereignHtmlStripPlugin(): Plugin {
           `    <script>window.__RUNTIME_CONFIG__=${inlineRuntimeConfig};</script>\n    <script defer src="/runtime-config.js"></script>`
         );
 
-      // Inject self-hosted Inter font CSS (replaces Google Fonts CDN)
-      result = result.replace(
-        '</head>',
-        '    <link rel="stylesheet" href="/fonts/inter-local.css" />\n  </head>'
-      );
       return result;
     },
   };
@@ -121,7 +116,10 @@ function sovereignResolvePlugin(): Plugin {
     },
     {
       test: /\/src\/components\/DiscordActivityProvider\/DiscordActivityProvider\.tsx$/,
-      replacement: path.resolve(__dirname, './src/components/DiscordActivityProvider_sovereign.tsx'),
+      replacement: path.resolve(
+        __dirname,
+        './src/components/DiscordActivityProvider_sovereign.tsx'
+      ),
     },
     {
       test: /\/src\/components\/Payment\/StripePaymentForm\.tsx$/,
@@ -159,11 +157,17 @@ function sovereignResolvePlugin(): Plugin {
     // MatrixClientService from being bundled even when imported via barrel exports.
     {
       test: /\/packages\/core\/services\/matrix\/client\.ts$/,
-      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/client_sovereign.ts'),
+      replacement: path.resolve(
+        __dirname,
+        '../../packages/core/services/matrix/client_sovereign.ts'
+      ),
     },
     {
       test: /\/packages\/core\/services\/matrix\/index\.ts$/,
-      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/index_sovereign.ts'),
+      replacement: path.resolve(
+        __dirname,
+        '../../packages/core/services/matrix/index_sovereign.ts'
+      ),
     },
     // Redirect chat page to a no-op stub
     {
@@ -431,7 +435,10 @@ export default defineConfig(({ mode }) => {
           ? [
               {
                 find: /^@\/components\/OuterProviders$/,
-                replacement: path.resolve(__dirname, './src/components/OuterProviders_sovereign.tsx'),
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/OuterProviders_sovereign.tsx'
+                ),
               },
               {
                 find: /^@\/components\/ChatSystem$/,
@@ -446,7 +453,10 @@ export default defineConfig(({ mode }) => {
               },
               {
                 find: /^@\/components\/AppKitProvider$/,
-                replacement: path.resolve(__dirname, './src/components/AppKitProvider_sovereign.tsx'),
+                replacement: path.resolve(
+                  __dirname,
+                  './src/components/AppKitProvider_sovereign.tsx'
+                ),
               },
               // Intercept packages/core internal relative imports to AppKitProvider
               {
@@ -585,6 +595,10 @@ export default defineConfig(({ mode }) => {
         {
           find: 'next/font/google',
           replacement: path.resolve(__dirname, './src/compat/font-google.ts'),
+        },
+        {
+          find: 'next/font/local',
+          replacement: path.resolve(__dirname, './src/compat/font-local.ts'),
         },
       ],
     },
