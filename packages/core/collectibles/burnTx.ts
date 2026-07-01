@@ -79,6 +79,18 @@ export interface CollectibleBurnWalletProvider {
   ): Promise<Transaction | VersionedTransaction>;
 }
 
+/** Narrow a generic injected wallet to the Solana signing capability required for redemption. */
+export function isCollectibleBurnWalletProvider(
+  provider: unknown
+): provider is CollectibleBurnWalletProvider {
+  if (!provider || typeof provider !== 'object') return false;
+  const candidate = provider as Record<string, unknown>;
+  return (
+    typeof candidate.signAndSendTransaction === 'function' ||
+    typeof candidate.signTransaction === 'function'
+  );
+}
+
 export interface SignCollectibleBurnTxParams {
   burnTx: CollectibleBurnTx;
   walletProvider: CollectibleBurnWalletProvider | null | undefined;

@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   collectiblesApi,
   getEnvConfig,
+  isCollectibleBurnWalletProvider,
   isCollectiblesPublicCatalogUnavailableError,
   prepareCollectibleShipToPayload,
   resolveCollectibleCatalogDisplay,
@@ -70,10 +71,7 @@ export default function CollectibleDetailPage() {
     (chain?.chainNamespace === 'solana' || chain?.chainNamespace === undefined);
   const isExpectedHolder = !expectedHolderWallet || holderWallet.trim() === expectedHolderWallet;
 
-  const display = useMemo(
-    () => (nft ? resolveCollectibleCatalogDisplay(nft, t) : null),
-    [nft, t]
-  );
+  const display = useMemo(() => (nft ? resolveCollectibleCatalogDisplay(nft, t) : null), [nft, t]);
 
   const canRedeem = useMemo(
     () =>
@@ -84,10 +82,18 @@ export default function CollectibleDetailPage() {
       isSolanaWallet &&
       isExpectedHolder &&
       shipTo.trim().length > 8,
-    [nft, display?.redeemable, display?.credentialActionsBlocked, isSolanaWallet, isExpectedHolder, shipTo]
+    [
+      nft,
+      display?.redeemable,
+      display?.credentialActionsBlocked,
+      isSolanaWallet,
+      isExpectedHolder,
+      shipTo,
+    ]
   );
 
-  const isVoidedCredential = display?.credentialActionsBlocked && display.validityStatus === 'voided';
+  const isVoidedCredential =
+    display?.credentialActionsBlocked && display.validityStatus === 'voided';
   const isBurnedCredential = Boolean(nft?.burnAt) || display?.validityStatus === 'burned';
 
   const walletStepDone = isSolanaWallet && isExpectedHolder;
@@ -104,9 +110,12 @@ export default function CollectibleDetailPage() {
 
       setRedeemStep('burning');
       const burnTx = await collectiblesApi.buildCollectibleBurnTx(nft.nftMint, holderWallet);
+      const walletProvider = getWalletProvider();
       const burnSignature = await signCollectibleBurnTransaction({
         burnTx,
-        walletProvider: getWalletProvider() ?? undefined,
+        walletProvider: isCollectibleBurnWalletProvider(walletProvider)
+          ? walletProvider
+          : undefined,
         walletAddress: holderWallet,
         isDevnet: isDevnetNetwork,
       });
@@ -136,16 +145,7 @@ export default function CollectibleDetailPage() {
     } finally {
       setRedeemStep('idle');
     }
-  }, [
-    getWalletProvider,
-    holderWallet,
-    isDevnetNetwork,
-    nft,
-    refresh,
-    shipTo,
-    t,
-    toast,
-  ]);
+  }, [getWalletProvider, holderWallet, isDevnetNetwork, nft, refresh, shipTo, t, toast]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -214,7 +214,9 @@ export default function CollectibleDetailPage() {
                       </div>
                     ) : null}
                     <div className="p-5">
-                      <h1 className="text-xl font-semibold text-foreground">{display.displayName}</h1>
+                      <h1 className="text-xl font-semibold text-foreground">
+                        {display.displayName}
+                      </h1>
                       {display.grade ? (
                         <p className="mt-1 text-sm text-muted-foreground">{display.grade}</p>
                       ) : null}
@@ -267,7 +269,11 @@ export default function CollectibleDetailPage() {
                     </div>
                   </Card>
 
-                  <Accordion type="single" collapsible className="rounded-lg border border-border px-4">
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="rounded-lg border border-border px-4"
+                  >
                     <AccordionItem value="on-chain-proof" className="border-0">
                       <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
                         {t('collectibles.catalog.onChainProofTitle')}
@@ -275,7 +281,9 @@ export default function CollectibleDetailPage() {
                       <AccordionContent>
                         <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                           <div>
-                            <dt className="text-muted-foreground">{t('collectibles.redeem.mint')}</dt>
+                            <dt className="text-muted-foreground">
+                              {t('collectibles.redeem.mint')}
+                            </dt>
                             <dd className="break-all font-mono text-foreground">{nft.nftMint}</dd>
                           </div>
                           <div>
@@ -290,7 +298,9 @@ export default function CollectibleDetailPage() {
                           </div>
                           {nft.metadataURI ? (
                             <div className="sm:col-span-2">
-                              <dt className="text-muted-foreground">{t('collectibles.metadata')}</dt>
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.metadata')}
+                              </dt>
                               <dd className="break-all font-medium text-foreground">
                                 {nft.metadataURI}
                               </dd>
@@ -349,7 +359,10 @@ export default function CollectibleDetailPage() {
                               aria-hidden
                             />
                           ) : (
-                            <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                            <Circle
+                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-foreground">
@@ -415,7 +428,10 @@ export default function CollectibleDetailPage() {
                               aria-hidden
                             />
                           ) : (
-                            <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                            <Circle
+                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-foreground">
@@ -434,7 +450,10 @@ export default function CollectibleDetailPage() {
                               aria-hidden
                             />
                           ) : (
-                            <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                            <Circle
+                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
                           )}
                           <div className="min-w-0 flex-1">
                             <label
@@ -458,7 +477,10 @@ export default function CollectibleDetailPage() {
                         </li>
 
                         <li className="flex gap-3">
-                          <Circle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+                          <Circle
+                            className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                            aria-hidden
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-foreground">
                               {t('collectibles.redeem.stepSubmit')}
