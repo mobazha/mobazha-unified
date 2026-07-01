@@ -7,7 +7,7 @@
  * StoreConfig.theme. Children (Section components) read these vars
  * instead of using Tailwind theme colors or hardcoded values.
  *
- * The default font (Inter) is pre-loaded via next/font/google; other
+ * The default font (Inter) is bundled locally; other
  * store fonts are loaded on demand via loadStoreFont() when the theme
  * specifies a non-default font family.
  */

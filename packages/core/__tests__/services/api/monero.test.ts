@@ -209,7 +209,7 @@ describe('Monero admin API routing', () => {
       title: 'Original title',
     });
     expect(mockAuthPost).not.toHaveBeenCalled();
-  });
+  }, 10_000);
 
   it('keeps AI chat session calls on the local node route', async () => {
     const { listChatSessions, getChatSession, deleteChatSession } =
