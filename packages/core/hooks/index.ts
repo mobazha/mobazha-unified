@@ -40,9 +40,6 @@ export * from './useMonitoring';
 // 钱包相关
 export * from './useWallet';
 
-// Solana 钱包相关
-export * from './useSolanaWallet';
-
 // TRON 钱包相关
 export * from './useTronWallet';
 
