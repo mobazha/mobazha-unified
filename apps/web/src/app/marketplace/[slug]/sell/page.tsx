@@ -30,7 +30,8 @@ import {
   MARKETPLACE_MEMBERSHIP_STATUS_KEYS,
   getCasdoorUserId,
   marketplaceHref,
-  marketplaceJoinModeKey,
+  marketplaceBuyerAccessModeKey,
+  marketplaceSellerReviewModeKey,
   marketplaceVerticalKey,
   MARKETPLACE_CATALOG_MODE_KEYS,
   resolveCurationMarketBackHref,
@@ -215,7 +216,12 @@ export default function MarketplaceSellPage() {
   const isCollectibleMarketplace = isCollectibleMarketplaceVertical(marketplace?.vertical);
 
   const verticalLabel = marketplace ? t(marketplaceVerticalKey(marketplace.vertical)) : '';
-  const joinLabel = marketplace ? t(marketplaceJoinModeKey(marketplace.joinMode)) : '';
+  const buyerAccessLabel = marketplace
+    ? t(marketplaceBuyerAccessModeKey(marketplace.buyerAccessMode))
+    : '';
+  const sellerReviewLabel = marketplace
+    ? t(marketplaceSellerReviewModeKey(marketplace.sellerReviewMode))
+    : '';
   const catalogLabel = marketplace ? t(MARKETPLACE_CATALOG_MODE_KEYS[marketplace.catalogMode]) : '';
 
   const productGroupsDesc = policy?.requiresProductGroups
@@ -288,14 +294,11 @@ export default function MarketplaceSellPage() {
   const admissionPolicyMessage = marketplace
     ? marketplace.sellerEntryMode === 'operator_invited'
       ? t('marketplace.sell.operatorInvitedPolicy')
-      : marketplace.joinMode === 'invite'
-        ? t('marketplace.sell.inviteOnlyPolicy')
-        : t('marketplace.sell.selfServeNotAvailable')
+      : t('marketplace.sell.selfServeNotAvailable')
     : '';
 
   const decisionReason = application?.membership?.decisionReason?.trim();
-  const sellerCanSelfServe =
-    marketplace?.sellerEntryMode === 'seller_self_serve' && marketplace?.joinMode !== 'invite';
+  const sellerCanSelfServe = marketplace?.sellerEntryMode === 'seller_self_serve';
 
   const pageTitleKey = (() => {
     if (!hasApplication && sellerCanSelfServe) return 'marketplace.sell.title';
@@ -320,9 +323,7 @@ export default function MarketplaceSellPage() {
   })();
   const pageSubtitle = t(pageSubtitleKey);
   const isInviteControlledRejected =
-    isRejected &&
-    marketplace &&
-    (marketplace.sellerEntryMode === 'operator_invited' || marketplace.joinMode === 'invite');
+    isRejected && marketplace && marketplace.sellerEntryMode === 'operator_invited';
   const statusResultTitle = (() => {
     if (isApproved) return t('marketplace.sell.resultTitleApproved');
     if (isApplied) return t('marketplace.sell.resultTitleApplied');
@@ -454,9 +455,27 @@ export default function MarketplaceSellPage() {
                       </div>
                       <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
                         <dt className="text-xs text-muted-foreground">
-                          {t('marketplace.sell.marketAdmissionLabel')}
+                          {t('marketplace.sell.marketBuyerAccessLabel')}
                         </dt>
-                        <dd className="mt-1 text-sm text-foreground">{joinLabel}</dd>
+                        <dd className="mt-1 text-sm text-foreground">{buyerAccessLabel}</dd>
+                      </div>
+                      <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('marketplace.sell.marketSellerEntryLabel')}
+                        </dt>
+                        <dd className="mt-1 text-sm text-foreground">
+                          {t(
+                            marketplace.sellerEntryMode === 'seller_self_serve'
+                              ? 'marketplace.enums.sellerEntryMode.sellerSelfServe'
+                              : 'marketplace.enums.sellerEntryMode.operatorInvited'
+                          )}
+                        </dd>
+                      </div>
+                      <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
+                        <dt className="text-xs text-muted-foreground">
+                          {t('marketplace.sell.marketSellerReviewLabel')}
+                        </dt>
+                        <dd className="mt-1 text-sm text-foreground">{sellerReviewLabel}</dd>
                       </div>
                       <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
                         <dt className="text-xs text-muted-foreground">

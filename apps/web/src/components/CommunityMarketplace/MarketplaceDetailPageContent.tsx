@@ -25,7 +25,8 @@ import {
   useI18n,
   isCollectibleMarketplaceVertical,
   isNativeMarketplaceSelfServeEligible,
-  marketplaceJoinModeKey,
+  marketplaceBuyerAccessModeKey,
+  marketplaceSellerReviewModeKey,
   marketplaceVerticalKey,
   MARKETPLACE_CATALOG_MODE_KEYS,
   MARKETPLACE_DISCOVERABILITY_KEYS,
@@ -94,13 +95,18 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     return ordered;
   }, [curationRefs]);
 
-  const sellerPeerIDs = useMemo(
-    () =>
-      Array.from(
-        new Set([...curationRefs.curatedSellerPeerIDs, ...curationRefs.fallbackSellerPeerIDs])
-      ),
-    [curationRefs.curatedSellerPeerIDs, curationRefs.fallbackSellerPeerIDs]
-  );
+  const sellerPeerIDs = useMemo(() => {
+    const peerIDs = new Set<string>([
+      ...curationRefs.curatedSellerPeerIDs,
+      ...curationRefs.fallbackSellerPeerIDs,
+    ]);
+    for (const ref of listingRefs) {
+      if (ref.peerID?.trim()) {
+        peerIDs.add(ref.peerID.trim());
+      }
+    }
+    return Array.from(peerIDs);
+  }, [curationRefs.curatedSellerPeerIDs, curationRefs.fallbackSellerPeerIDs, listingRefs]);
 
   const { listingPreviews, sellerProfiles } = useCommunityMarketplaceEnrichment(
     listingRefs,
@@ -208,9 +214,9 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
     ? `/marketplace/${marketplace.slug || marketplace.id}/sell`
     : '/marketplace';
   const sellerAdmissionBlockedMessage =
-    marketplace?.joinMode === 'invite'
-      ? t('marketplace.detail.sellerAdmissionInviteOnly')
-      : t('marketplace.detail.sellerAdmissionOperatorInvited');
+    marketplace?.sellerEntryMode === 'operator_invited'
+      ? t('marketplace.detail.sellerAdmissionOperatorInvited')
+      : t('marketplace.detail.sellerAdmissionSelfServeDisabled');
 
   if (loading) {
     return (
@@ -269,7 +275,8 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
   }
 
   const verticalLabel = t(marketplaceVerticalKey(marketplace.vertical));
-  const joinLabel = t(marketplaceJoinModeKey(marketplace.joinMode));
+  const buyerAccessLabel = t(marketplaceBuyerAccessModeKey(marketplace.buyerAccessMode));
+  const sellerReviewLabel = t(marketplaceSellerReviewModeKey(marketplace.sellerReviewMode));
   const catalogLabel = t(MARKETPLACE_CATALOG_MODE_KEYS[marketplace.catalogMode]);
   const discoverabilityLabel = t(MARKETPLACE_DISCOVERABILITY_KEYS[marketplace.discoverability]);
   const sellerEntryLabel = t(MARKETPLACE_SELLER_ENTRY_MODE_KEYS[marketplace.sellerEntryMode]);
@@ -389,7 +396,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
           {isCollectibleMarketplace ? (
             <CollectibleMarketplaceSignal
               listingsSectionId={COLLECTIBLE_MARKETPLACE_LISTINGS_SECTION_ID}
-              sellerAdmissionLabel={joinLabel}
+              sellerAdmissionLabel={sellerReviewLabel}
             />
           ) : (
             <MarketplaceTrustStrip />
@@ -437,6 +444,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         <CommunityListingCard
                           key={`banner-${preview.key}`}
                           preview={preview}
+                          sellerProfile={sellerProfiles[preview.peerID]}
                           productHref={productHref}
                           onClick={() => handleListingPreviewClick(preview)}
                         />
@@ -461,6 +469,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         <CommunityListingCard
                           key={`curated-${preview.key}`}
                           preview={preview}
+                          sellerProfile={sellerProfiles[preview.peerID]}
                           productHref={productHref}
                           onClick={() => handleListingPreviewClick(preview)}
                         />
@@ -524,6 +533,7 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                         <CommunityListingCard
                           key={preview.key}
                           preview={preview}
+                          sellerProfile={sellerProfiles[preview.peerID]}
                           productHref={productHref}
                           onClick={() => handleListingPreviewClick(preview)}
                         />
@@ -634,16 +644,19 @@ export function MarketplaceDetailPageContent({ identifier }: MarketplaceDetailPa
                   </HStack>
                   <VStack gap="sm" className="text-sm text-muted-foreground">
                     <span>
-                      {t('marketplace.detail.sellerAdmissionPolicy')}: {joinLabel}
+                      {t('marketplace.detail.buyerAccessPolicy')}: {buyerAccessLabel}
+                    </span>
+                    <span>
+                      {t('marketplace.detail.sellerEntryMode')}: {sellerEntryLabel}
+                    </span>
+                    <span>
+                      {t('marketplace.detail.sellerReviewMode')}: {sellerReviewLabel}
                     </span>
                     <span>
                       {t('marketplace.detail.catalogMode')}: {catalogLabel}
                     </span>
                     <span>
                       {t('marketplace.detail.discoverability')}: {discoverabilityLabel}
-                    </span>
-                    <span>
-                      {t('marketplace.detail.sellerEntryMode')}: {sellerEntryLabel}
                     </span>
                   </VStack>
                 </Card>

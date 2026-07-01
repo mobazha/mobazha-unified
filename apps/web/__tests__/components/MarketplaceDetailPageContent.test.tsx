@@ -26,13 +26,15 @@ const mockUseCommunityMarketplaceEnrichment = vi.fn();
 vi.mock('@/components/CommunityMarketplace', () => ({
   CommunityListingCard: ({
     preview,
+    sellerProfile,
     onClick,
   }: {
-    preview: { slug: string };
+    preview: { slug: string; vendorName?: string };
+    sellerProfile?: { displayName?: string };
     onClick?: React.MouseEventHandler<HTMLAnchorElement>;
   }) => (
     <a href={`/product/${preview.slug}`} data-testid={`listing-${preview.slug}`} onClick={onClick}>
-      {preview.slug}
+      {sellerProfile?.displayName ?? preview.slug}
     </a>
   ),
   CommunitySellerCard: ({ seller }: { seller: { peerID: string } }) => (
@@ -64,7 +66,8 @@ vi.mock('@mobazha/core', async importOriginal => {
       locale: 'en',
     }),
     isCollectibleMarketplaceVertical: () => false,
-    marketplaceJoinModeKey: () => 'marketplace.joinModeApproval',
+    marketplaceBuyerAccessModeKey: () => 'marketplace.enums.buyerAccessMode.open',
+    marketplaceSellerReviewModeKey: () => 'marketplace.enums.sellerReviewMode.manual',
     marketplaceVerticalKey: () => 'marketplace.vertical.general',
     MARKETPLACE_CATALOG_MODE_KEYS: {
       open: 'marketplace.enums.catalogMode.open',
@@ -77,6 +80,13 @@ vi.mock('@mobazha/core', async importOriginal => {
     MARKETPLACE_SELLER_ENTRY_MODE_KEYS: {
       operator_invited: 'marketplace.enums.sellerEntryMode.operator_invited',
       seller_self_serve: 'marketplace.enums.sellerEntryMode.seller_self_serve',
+    },
+    MARKETPLACE_BUYER_ACCESS_MODE_KEYS: {
+      open: 'marketplace.enums.buyerAccessMode.open',
+    },
+    MARKETPLACE_SELLER_REVIEW_MODE_KEYS: {
+      auto: 'marketplace.enums.sellerReviewMode.auto',
+      manual: 'marketplace.enums.sellerReviewMode.manual',
     },
     filterCollectibleListingPreviews: (items: unknown[]) => items,
     resolveCollectibleMarketplaceDisplayCopy: () => null,
@@ -95,7 +105,8 @@ const baseMarketplace = {
   slug: 'test-market',
   description: 'A native marketplace',
   publicURL: 'https://test.example',
-  joinMode: 'approval',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
   catalogMode: 'curated',
   discoverability: 'public',
   sellerEntryMode: 'seller_self_serve',
@@ -148,10 +159,10 @@ describe('MarketplaceDetailPageContent', () => {
     expect(cta).toHaveTextContent('marketplace.detail.applyToSell');
   });
 
-  it('shows admission policy without CTA for invite-only markets', () => {
+  it('shows admission policy without CTA for operator-invited markets', () => {
     mockUsePublicMarketplaceDetail.mockReturnValue({
       detail: {
-        marketplace: { ...baseMarketplace, joinMode: 'invite' },
+        marketplace: { ...baseMarketplace, sellerEntryMode: 'operator_invited' },
         sellers: [],
         featured: [],
         banners: [],
@@ -171,7 +182,9 @@ describe('MarketplaceDetailPageContent', () => {
     render(<MarketplaceDetailPageContent identifier="test-market" />);
 
     expect(screen.queryByTestId('marketplace-apply-to-sell')).toBeNull();
-    expect(screen.getByText('marketplace.detail.sellerAdmissionInviteOnly')).toBeInTheDocument();
+    expect(
+      screen.getByText('marketplace.detail.sellerAdmissionOperatorInvited')
+    ).toBeInTheDocument();
   });
 
   it('tracks impression only after a marketplace detail successfully resolves', async () => {
@@ -313,6 +326,53 @@ describe('MarketplaceDetailPageContent', () => {
     expect(screen.queryByTestId('seller-QmMissingSeller')).toBeNull();
     expect(screen.getByTestId('seller-QmSellerA')).toBeInTheDocument();
     expect(screen.getByTestId('seller-QmSellerB')).toBeInTheDocument();
+  });
+
+  it('requests seller profiles for listing-only sellers and passes profile name to listing cards', () => {
+    mockUseCommunityMarketplaceEnrichment.mockReturnValue({
+      listingPreviews: [
+        {
+          key: 'listing-1',
+          slug: 'psa-charizard',
+          peerID: 'QmSeller',
+          title: 'PSA Charizard',
+          vendorName: 'QmSe…ller',
+          loading: false,
+        },
+      ],
+      sellerProfiles: {
+        QmSeller: {
+          peerID: 'QmSeller',
+          displayName: 'Charizard Vault',
+        },
+      },
+    });
+    mockUsePublicMarketplaceDetail.mockReturnValue({
+      detail: {
+        marketplace: baseMarketplace,
+        sellers: [],
+        featured: [],
+        banners: [],
+        listings: {
+          listings: [{ peerID: 'QmSeller', slug: 'psa-charizard' }],
+          total: 1,
+          page: 1,
+          pageSize: 24,
+          totalPage: 1,
+        },
+      },
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+
+    render(<MarketplaceDetailPageContent identifier="test-market" />);
+
+    expect(mockUseCommunityMarketplaceEnrichment).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.arrayContaining(['QmSeller'])
+    );
+    expect(screen.getByTestId('listing-psa-charizard')).toHaveTextContent('Charizard Vault');
   });
 
   it('renders featured sellers and keeps other approved sellers in all sellers section', () => {

@@ -6,13 +6,23 @@ import { ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './skeleton';
 
-interface ProductImageProps {
+/** How product media fills its frame. Prefer `contain` so the full image stays visible. */
+export type ProductImageFit = 'contain' | 'cover';
+
+const fitClassName: Record<ProductImageFit, string> = {
+  contain: 'object-contain',
+  cover: 'object-cover',
+};
+
+export interface ProductImageProps {
   src?: string | null;
   alt: string;
   fill?: boolean;
   width?: number;
   height?: number;
   sizes?: string;
+  /** Defaults to `contain` so cards letterbox on a muted canvas instead of cropping. */
+  fit?: ProductImageFit;
   className?: string;
   containerClassName?: string;
   iconSize?: 'sm' | 'md' | 'lg';
@@ -32,11 +42,13 @@ export function ProductImage({
   width,
   height,
   sizes,
+  fit = 'contain',
   className,
   containerClassName,
   iconSize = 'md',
   priority = false,
 }: ProductImageProps) {
+  const objectFitClass = fitClassName[fit];
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(src ? 'loading' : 'error');
 
   const handleLoad = useCallback(() => setStatus('loaded'), []);
@@ -77,7 +89,7 @@ export function ProductImage({
           sizes={sizes}
           priority={priority}
           unoptimized={shouldBypassOptimization}
-          className={cn('object-cover', status === 'loading' && 'opacity-0', className)}
+          className={cn(objectFitClass, status === 'loading' && 'opacity-0', className)}
           onLoad={handleLoad}
           onError={handleError}
         />
@@ -88,7 +100,8 @@ export function ProductImage({
           width={width}
           height={height}
           className={cn(
-            'w-full h-full object-cover',
+            'w-full h-full',
+            objectFitClass,
             status === 'loading' && 'opacity-0',
             className
           )}

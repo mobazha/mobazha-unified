@@ -127,11 +127,39 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/integrations/telegram/webhook/${encodeURIComponent(botID)}`,
   IPNS: '/platform/v1/ipns',
   IPNS_BY_PEER_ID: (peerID: string) => `/platform/v1/ipns/${encodeURIComponent(peerID)}`,
+  MARKETPLACE_MEMBERSHIPS_DECLINE: (marketplaceID: string) =>
+    `/platform/v1/marketplace-memberships/${encodeURIComponent(marketplaceID)}/decline`,
+  MARKETPLACE_MEMBERSHIPS_LEAVE: (marketplaceID: string) =>
+    `/platform/v1/marketplace-memberships/${encodeURIComponent(marketplaceID)}/leave`,
+  MARKETPLACE_MEMBERSHIPS_MINE: '/platform/v1/marketplace-memberships/mine',
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS: '/platform/v1/marketplace-memberships/review-events',
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_BY_MARKETPLACE_ID: (marketplaceID: string) =>
+    `/platform/v1/marketplace-memberships/${encodeURIComponent(marketplaceID)}/review-events`,
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ: (marketplaceID: string, eventID: string) =>
+    `/platform/v1/marketplace-memberships/${encodeURIComponent(marketplaceID)}/review-events/${encodeURIComponent(eventID)}/read`,
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL:
+    '/platform/v1/marketplace-memberships/review-events/read-all',
   MARKETPLACES: '/platform/v1/marketplaces',
+  MARKETPLACES_ATTRIBUTION_SUMMARY: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/attribution-summary`,
   MARKETPLACES_BY_ID: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}`,
   MARKETPLACES_CONFIG: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}/config`,
+  MARKETPLACES_CURATION_BY_ID: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation`,
+  MARKETPLACES_CURATION_BY_ID_ITEM_ID: (id: string, itemID: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/${encodeURIComponent(itemID)}`,
+  MARKETPLACES_CURATION_CANDIDATES: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/candidates`,
+  MARKETPLACES_CURATION_REORDER: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/reorder`,
+  MARKETPLACES_DOMAINS_CUSTOM_VERIFY: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/domains/custom/verify`,
   MARKETPLACES_LINK: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}/link`,
   MARKETPLACES_MINE: '/platform/v1/marketplaces/mine',
+  MARKETPLACES_SELLER_REVIEW_EVENTS: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/seller-review-events`,
+  MARKETPLACES_SELLERS_ACCEPT: (id: string, peerID: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers/${encodeURIComponent(peerID)}/accept`,
   MARKETPLACES_SELLERS_BY_ID: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/sellers`,
   MARKETPLACES_SELLERS_BY_ID_PEER_ID: (id: string, peerID: string) =>
@@ -158,6 +186,15 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/product-groups/${encodeURIComponent(groupID)}/items`,
   PRODUCT_GROUPS_ITEMS_BY_GROUP_ID_SLUG: (groupID: string, slug: string) =>
     `/platform/v1/product-groups/${encodeURIComponent(groupID)}/items/${encodeURIComponent(slug)}`,
+  PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
+  PUBLIC_MARKETPLACES_ATTRIBUTION_EVENTS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
+  PUBLIC_MARKETPLACES_BY_IDENTIFIER: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}`,
+  PUBLIC_MARKETPLACES_SELLER_APPLICATIONS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications`,
+  PUBLIC_MARKETPLACES_SELLER_APPLICATIONS_MINE: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
   RELAY_EXECUTE: '/platform/v1/relay/execute',
   RELAY_GAS_WALLET: '/platform/v1/relay/gas-wallet',
   RELAY_GAS_WALLET_STATUS: '/platform/v1/relay/gas-wallet/status',

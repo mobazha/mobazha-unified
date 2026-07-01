@@ -407,7 +407,8 @@ const mockOperatorMarketplace = {
   status: 'published',
   description: 'Curated collectibles marketplace',
   ownerUserID: 'owner-1',
-  joinMode: 'approval',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
   catalogMode: 'curated',
   discoverability: 'public',
   sellerEntryMode: 'operator_invited',
@@ -432,7 +433,10 @@ const mockMarketplaceSellerMembership = {
   userID: 'user-visual',
   peerID: MOCK_PEER_ID,
   status: 'invited',
+  unreadReviewCount: 0,
   isVisible: false,
+  productGroupIDs: [],
+  productGroups: [],
   invitedAt: DAY_AGO,
 };
 

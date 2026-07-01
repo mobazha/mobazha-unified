@@ -1458,6 +1458,125 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplace-memberships/mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Marketplace invitations and memberships for the current store */
+    get: operations['marketplace-memberships-mine'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplace-memberships/review-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List seller review notifications across marketplaces */
+    get: operations['marketplace-membership-review-events-feed'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplace-memberships/review-events/read-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark all seller review notifications as read */
+    post: operations['marketplace-membership-review-events-read-all'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplace-memberships/{marketplaceID}/decline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Decline a marketplace invitation as the invited store */
+    post: operations['marketplace-memberships-decline'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplace-memberships/{marketplaceID}/leave': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Leave a marketplace as the current store */
+    post: operations['marketplace-memberships-leave'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplace-memberships/{marketplaceID}/review-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List seller review notifications for the current store */
+    get: operations['marketplace-membership-review-events-mine'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplace-memberships/{marketplaceID}/review-events/{eventID}/read': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark a seller review notification as read */
+    post: operations['marketplace-membership-review-events-read'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/marketplaces': {
     parameters: {
       query?: never;
@@ -1511,6 +1630,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplaces/{id}/attribution-summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get the Marketplace buyer-journey funnel summary */
+    get: operations['marketplaces-attribution-summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/marketplaces/{id}/config': {
     parameters: {
       query?: never;
@@ -1522,6 +1658,93 @@ export interface paths {
     get: operations['marketplaces-config'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/curation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List operator-owned marketplace curation items */
+    get: operations['marketplaces-curation-list'];
+    put?: never;
+    /** Add a seller, listing, or banner to marketplace curation */
+    post: operations['marketplaces-curation-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/curation/candidates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List sellers and listings available for marketplace curation */
+    get: operations['marketplaces-curation-candidates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/curation/reorder': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Atomically reorder a marketplace curation section */
+    put: operations['marketplaces-curation-reorder'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/curation/{itemID}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Enable or disable a marketplace curation item */
+    put: operations['marketplaces-curation-update'];
+    post?: never;
+    /** Remove a marketplace curation item */
+    delete: operations['marketplaces-curation-delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/domains/custom/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Verify the marketplace custom-domain DNS challenge */
+    post: operations['marketplaces-custom-domain-verify'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1545,6 +1768,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplaces/{id}/seller-review-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List marketplace seller decision audit history */
+    get: operations['marketplaces-seller-review-events-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/marketplaces/{id}/sellers': {
     parameters: {
       query?: never;
@@ -1552,7 +1792,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List marketplace seller whitelist */
+    /** List marketplace store memberships */
     get: operations['marketplaces-sellers-list'];
     put?: never;
     post?: never;
@@ -1590,8 +1830,24 @@ export interface paths {
     /** Update marketplace seller status */
     put: operations['marketplaces-sellers-update'];
     post?: never;
-    /** Remove marketplace seller */
-    delete: operations['marketplaces-sellers-delete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/marketplaces/{id}/sellers/{peerID}/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Accept a marketplace invitation as the invited store */
+    post: operations['marketplaces-sellers-accept'];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1805,6 +2061,92 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/public-marketplaces': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Discover published native marketplaces */
+    get: operations['public-marketplaces-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public-marketplaces/{identifier}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a published native marketplace storefront */
+    get: operations['public-marketplaces-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public-marketplaces/{identifier}/attribution-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Record an anonymous Marketplace buyer-journey event */
+    post: operations['public-marketplace-attribution-events-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public-marketplaces/{identifier}/seller-applications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply the current store to a marketplace */
+    post: operations['public-marketplace-seller-applications-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public-marketplaces/{identifier}/seller-applications/mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get the current store's marketplace application */
+    get: operations['public-marketplace-seller-applications-mine'];
+    put?: never;
+    post?: never;
+    /** Withdraw the current store's pending marketplace application */
+    delete: operations['public-marketplace-seller-applications-withdraw'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/relay/execute': {
     parameters: {
       query?: never;
@@ -2003,7 +2345,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Check whitelist vs group-marketplace vs none access */
+    /** Check whitelist vs marketplace vs none access */
     get: operations['store-access-check'];
     put?: never;
     post?: never;
@@ -2859,7 +3201,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get hot (trending) listings ranked by rating across all time */
+    /** Get hot (trending) listings */
     get: operations['get-listings-hot'];
     put?: never;
     post?: never;
@@ -8682,36 +9024,76 @@ export interface components {
     Platform_IpnsPostInputBody: {
       ipnsRecord: string;
     };
-    Platform_MarketplaceOwnerRequest: {
-      attribution: string;
-      bannerURL: string;
-      catalogMode: string;
-      catalogQuery: string;
-      chatTitle: string;
-      discoverability: string;
-      domain: string;
-      joinMode: string;
-      logoURL: string;
+    Platform_MarketplaceAttributionEventRequest: {
+      campaign?: string;
+      eventID: string;
+      eventType: string;
+      journeyID: string;
+      listingSlug?: string;
+      medium?: string;
+      peerID?: string;
+      referrerHost?: string;
+      source?: string;
+    };
+    Platform_MarketplaceCreateBody: {
+      attribution?: string;
+      bannerURL?: string;
+      buyerAccessMode?: string;
+      catalogMode?: string;
+      catalogQuery?: string;
+      description?: string;
+      discoverability?: string;
+      domain?: string;
+      logoURL?: string;
       name: string;
-      publicDescription: string;
-      sellerEntryMode: string;
-      slug: string;
-      subdomain: string;
-      theme: unknown;
-      themeJSON: string;
-      vertical: string;
-      visibility: string;
+      sellerEntryMode?: string;
+      sellerReviewMode?: string;
+      slug?: string;
+      subdomain?: string;
+      theme?: unknown;
+      vertical?: string;
+    };
+    Platform_MarketplaceCurationCreateRequest: {
+      kind: string;
+      listingSlug?: string;
+      peerID?: string;
+    };
+    Platform_MarketplaceCurationReorderRequest: {
+      itemIDs: number[] | null;
+      kind: string;
+    };
+    Platform_MarketplaceCurationUpdateRequest: {
+      isActive: boolean | null;
+    };
+    Platform_MarketplaceSellerApplicationRequest: {
+      productGroupIDs: number[] | null;
     };
     Platform_MarketplaceSellerInviteRequest: {
       peerID: string;
-      status: string;
-      tenantID: string;
-      userID: string;
-      visible: boolean | null;
     };
     Platform_MarketplaceSellerUpdateRequest: {
-      status: string;
-      visible: boolean | null;
+      reason?: string;
+      status?: string;
+      visible?: boolean;
+    };
+    Platform_MarketplaceUpdateRequest: {
+      attribution?: string;
+      bannerURL?: string;
+      buyerAccessMode?: string;
+      catalogMode?: string;
+      catalogQuery?: string;
+      description?: string;
+      discoverability?: string;
+      domain?: string;
+      logoURL?: string;
+      name?: string;
+      sellerEntryMode?: string;
+      sellerReviewMode?: string;
+      slug?: string;
+      status?: string;
+      subdomain?: string;
+      theme?: unknown;
+      vertical?: string;
     };
     Platform_MatrixProvisionRequest: {
       password_hash: string;
@@ -8730,8 +9112,7 @@ export interface components {
     };
     Platform_ProductGroupAuthorizationsCreateBodyBody: {
       authType: string;
-      groupChatID?: string;
-      groupPlatform?: string;
+      marketplaceID?: string;
       /** Format: int64 */
       userGroupID?: number;
     };
@@ -9501,14 +9882,8 @@ export interface components {
       meta?: components['schemas']['Search_ListMeta'];
     };
     Search_ListMeta: {
-      browseMode?: string;
-      /** Format: int64 */
-      catalogTotal?: number;
-      hasMore?: boolean;
       /** Format: int64 */
       total: number;
-      /** Format: int64 */
-      vendorCount?: number;
     };
     Search_ListingIndexRequest: {
       PeerID: string;
@@ -12593,6 +12968,223 @@ export interface operations {
       };
     };
   };
+  'marketplace-memberships-mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplace-membership-review-events-feed': {
+    parameters: {
+      query?: {
+        limit?: number;
+        beforeID?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplace-membership-review-events-read-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplace-memberships-decline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        marketplaceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplace-memberships-leave': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        marketplaceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplace-membership-review-events-mine': {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        marketplaceID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplace-membership-review-events-read': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        marketplaceID: string;
+        eventID: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'marketplaces-create': {
     parameters: {
       query?: never;
@@ -12602,7 +13194,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['Platform_MarketplaceOwnerRequest'];
+        'application/json': components['schemas']['Platform_MarketplaceCreateBody'];
       };
     };
     responses: {
@@ -12697,7 +13289,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['Platform_MarketplaceOwnerRequest'];
+        'application/json': components['schemas']['Platform_MarketplaceUpdateRequest'];
       };
     };
     responses: {
@@ -12724,6 +13316,40 @@ export interface operations {
   'marketplaces-delete': {
     parameters: {
       query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-attribution-summary': {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+      };
       header?: never;
       path: {
         id: string;
@@ -12786,9 +13412,278 @@ export interface operations {
       };
     };
   };
+  'marketplaces-curation-list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-curation-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceCurationCreateRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-curation-candidates': {
+    parameters: {
+      query?: {
+        q?: string;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-curation-reorder': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceCurationReorderRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-curation-update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        itemID: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceCurationUpdateRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-curation-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        itemID: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-custom-domain-verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'marketplaces-link': {
     parameters: {
       query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-seller-review-events-list': {
+    parameters: {
+      query?: {
+        peerID?: string;
+        limit?: number;
+      };
       header?: never;
       path: {
         id: string;
@@ -12921,7 +13816,7 @@ export interface operations {
       };
     };
   };
-  'marketplaces-sellers-delete': {
+  'marketplaces-sellers-accept': {
     parameters: {
       query?: never;
       header?: never;
@@ -13465,6 +14360,206 @@ export interface operations {
       };
     };
   };
+  'public-marketplaces-list': {
+    parameters: {
+      query?: {
+        q?: string;
+        vertical?: string;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-marketplaces-get': {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-marketplace-attribution-events-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceAttributionEventRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-marketplace-seller-applications-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_MarketplaceSellerApplicationRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-marketplace-seller-applications-mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-marketplace-seller-applications-withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'relay-execute': {
     parameters: {
       query?: never;
@@ -13944,8 +15039,7 @@ export interface operations {
       query?: {
         storePeerID?: string;
         requestorPeerID?: string;
-        groupPlatform?: string;
-        groupChatID?: string;
+        marketplaceID?: string;
       };
       header?: never;
       path?: never;
@@ -15650,48 +16744,8 @@ export interface operations {
   'search-listings': {
     parameters: {
       query?: {
-        /** @description Search query string. */
-        q?: string;
-        /** @description Results per page (max 100). */
-        pageSize?: number;
-        /** @description Sort field (price, added, online, rating). */
-        s?: string;
-        /** @description Sort order (asc, desc). */
-        o?: string;
-        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
-        sortBy?: string;
-        /** @description Moderated filter (true/false). */
-        m?: string;
-        /** @description Vendor filter (true/false). */
-        vendor?: string;
-        /** @description Tor filter (true/false). */
-        tor?: string;
-        /** @description Location filter (pipe-separated country codes). */
-        lf?: string;
-        /** @description Peer ID filter (pipe-separated). */
-        id?: string;
-        /** @description Listing type filter (pipe-separated). */
-        lt?: string;
-        /** @description Listing type filter alias. */
-        type?: string;
-        /** @description Product type filter (pipe-separated). */
-        productType?: string;
-        /** @description Listing condition filter (pipe-separated). */
-        lc?: string;
-        /** @description Rating filter (pipe-separated integers). */
-        pr?: string;
-        /** @description Status filter (pipe-separated). */
-        ps?: string;
-        /** @description Minimum price filter (minimal units integer). */
-        minPrice?: string;
-        /** @description Maximum price filter (minimal units integer). */
-        maxPrice?: string;
-        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
-        currency?: string;
         /** @description Page number (1-based). */
         p?: number;
-        /** @description Browse mode for q=* : discover (default) or all. */
-        browse?: string;
       };
       header?: never;
       path?: never;
@@ -15756,6 +16810,8 @@ export interface operations {
       query?: {
         /** @description Maximum number of results. */
         limit?: number;
+        /** @description Time window in hours. */
+        hours?: number;
       };
       header?: never;
       path?: never;
@@ -16446,48 +17502,8 @@ export interface operations {
   'search-profiles': {
     parameters: {
       query?: {
-        /** @description Search query string. */
-        q?: string;
-        /** @description Results per page (max 100). */
-        pageSize?: number;
-        /** @description Sort field (price, added, online, rating). */
-        s?: string;
-        /** @description Sort order (asc, desc). */
-        o?: string;
-        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
-        sortBy?: string;
-        /** @description Moderated filter (true/false). */
-        m?: string;
-        /** @description Vendor filter (true/false). */
-        vendor?: string;
-        /** @description Tor filter (true/false). */
-        tor?: string;
-        /** @description Location filter (pipe-separated country codes). */
-        lf?: string;
-        /** @description Peer ID filter (pipe-separated). */
-        id?: string;
-        /** @description Listing type filter (pipe-separated). */
-        lt?: string;
-        /** @description Listing type filter alias. */
-        type?: string;
-        /** @description Product type filter (pipe-separated). */
-        productType?: string;
-        /** @description Listing condition filter (pipe-separated). */
-        lc?: string;
-        /** @description Rating filter (pipe-separated integers). */
-        pr?: string;
-        /** @description Status filter (pipe-separated). */
-        ps?: string;
-        /** @description Minimum price filter (minimal units integer). */
-        minPrice?: string;
-        /** @description Maximum price filter (minimal units integer). */
-        maxPrice?: string;
-        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
-        currency?: string;
         /** @description Page number (1-based). */
         p?: number;
-        /** @description Browse mode for q=* : discover (default) or all. */
-        browse?: string;
       };
       header?: never;
       path?: never;
@@ -16716,44 +17732,6 @@ export interface operations {
   'root-search': {
     parameters: {
       query?: {
-        /** @description Search query string. */
-        q?: string;
-        /** @description Results per page (max 100). */
-        pageSize?: number;
-        /** @description Sort field (price, added, online, rating). */
-        s?: string;
-        /** @description Sort order (asc, desc). */
-        o?: string;
-        /** @description Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance). */
-        sortBy?: string;
-        /** @description Moderated filter (true/false). */
-        m?: string;
-        /** @description Vendor filter (true/false). */
-        vendor?: string;
-        /** @description Tor filter (true/false). */
-        tor?: string;
-        /** @description Location filter (pipe-separated country codes). */
-        lf?: string;
-        /** @description Peer ID filter (pipe-separated). */
-        id?: string;
-        /** @description Listing type filter (pipe-separated). */
-        lt?: string;
-        /** @description Listing type filter alias. */
-        type?: string;
-        /** @description Product type filter (pipe-separated). */
-        productType?: string;
-        /** @description Listing condition filter (pipe-separated). */
-        lc?: string;
-        /** @description Rating filter (pipe-separated integers). */
-        pr?: string;
-        /** @description Status filter (pipe-separated). */
-        ps?: string;
-        /** @description Minimum price filter (minimal units integer). */
-        minPrice?: string;
-        /** @description Maximum price filter (minimal units integer). */
-        maxPrice?: string;
-        /** @description Price currency code (e.g. USD). Recommended with min/max price. */
-        currency?: string;
         /** @description Page number (0-based). */
         p?: number;
       };

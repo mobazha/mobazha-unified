@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductImage } from '@/components/ui/product-image';
-import { useCurrencyFormat, useI18n } from '@mobazha/core';
+import { useCurrencyFormat, useI18n, identityNameProps } from '@mobazha/core';
 
 // HTML 实体解码
 function decodeHtmlEntities(text: string): string {
@@ -263,8 +263,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           src={imageUrl}
           alt={title}
           fill
+          fit="contain"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="transition-transform duration-300 group-hover:scale-105"
           iconSize="lg"
         />
 
@@ -504,10 +504,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   />
                 )}
                 <span
-                  className={cn(
-                    'text-muted-foreground truncate text-xs',
-                    storeAttribution && 'text-foreground/80',
-                    compact && 'text-xs'
+                  {...identityNameProps(
+                    cn(
+                      'text-muted-foreground truncate text-xs',
+                      storeAttribution && 'text-foreground/80',
+                      compact && 'text-xs'
+                    )
                   )}
                 >
                   {storeAttribution || vendorName}

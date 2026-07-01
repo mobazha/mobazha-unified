@@ -13,6 +13,7 @@ import {
   getImageUrl,
   productCardPriceFieldsFromListItem,
   productDataService,
+  resolveProductCardSellerDisplay,
   taxonomyForVertical,
   useCommunityMarketplaceEnrichment,
   useCuration,
@@ -70,6 +71,11 @@ function filterByCatalogMode<T extends { vendorPeerID?: string }>(
 
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
   const priceFields = productCardPriceFieldsFromListItem(item);
+  const seller = resolveProductCardSellerDisplay({
+    peerID: item.vendorPeerID,
+    name: item.vendorName,
+    avatarUrl: getImageUrl(item.vendorAvatarHashes?.small),
+  });
   return {
     id: item.slug,
     slug: item.slug,
@@ -81,27 +87,34 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     price: priceFields.price,
     currency: priceFields.currencyCode,
     divisibility: priceFields.divisibility,
-    vendorName: formatUserName(
-      { name: item.vendorName, peerID: item.vendorPeerID },
-      { fallback: 'Seller' }
-    ),
-    vendorAvatar: getImageUrl(item.vendorAvatarHashes?.small),
+    vendorName: seller.name,
+    vendorAvatar: seller.avatarUrl,
     vendorPeerID: item.vendorPeerID,
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,
   };
 }
 
-function convertCuratedPreviewToDisplayProduct(preview: {
-  slug: string;
-  title: string;
-  peerID: string;
-  imageUrl?: string;
-  price?: number;
-  currency?: string;
-  divisibility?: number;
-  vendorName?: string;
-}): DisplayProduct {
+function convertCuratedPreviewToDisplayProduct(
+  preview: {
+    slug: string;
+    title: string;
+    peerID: string;
+    imageUrl?: string;
+    price?: number;
+    currency?: string;
+    divisibility?: number;
+    vendorName?: string;
+  },
+  sellerProfile?: { displayName?: string; avatarUrl?: string }
+): DisplayProduct {
+  const seller = resolveProductCardSellerDisplay({
+    peerID: preview.peerID,
+    name: preview.vendorName,
+    profileName: sellerProfile?.displayName,
+    profileAvatarUrl: sellerProfile?.avatarUrl,
+  });
+
   return {
     id: `${preview.peerID}:${preview.slug}`,
     slug: preview.slug,
@@ -112,10 +125,8 @@ function convertCuratedPreviewToDisplayProduct(preview: {
     price: preview.price ?? '',
     currency: preview.currency,
     divisibility: preview.divisibility,
-    vendorName: formatUserName(
-      { name: preview.vendorName, peerID: preview.peerID },
-      { fallback: 'Seller' }
-    ),
+    vendorName: seller.name,
+    vendorAvatar: seller.avatarUrl,
     vendorPeerID: preview.peerID,
     rating: 0,
     reviewCount: 0,
@@ -156,7 +167,12 @@ export function MarketplaceHomePage() {
   const { t } = useI18n();
   const { config, loading, error, retry } = useCuration();
   const marketplaceID = config?.attribution?.marketplaceId || config?.id;
-  const { detail: publicDetail } = usePublicMarketplaceDetail(config?.id);
+  const {
+    detail: publicDetail,
+    loading: publicDetailLoading,
+    error: publicDetailError,
+    refresh: refreshPublicDetail,
+  } = usePublicMarketplaceDetail(config?.id);
   const { trackImpression, trackListingClick } = useNativeMarketplaceAttribution(marketplaceID);
   const [latestProducts, setLatestProducts] = useState<DisplayProduct[]>([]);
   const [popularProducts, setPopularProducts] = useState<DisplayProduct[]>([]);
@@ -192,13 +208,22 @@ export function MarketplaceHomePage() {
         new Set([
           ...publicCurationRefs.curatedSellerPeerIDs,
           ...publicCurationRefs.fallbackSellerPeerIDs,
+          ...curationListingRefs.map(ref => ref.peerID),
         ])
       ),
-    [publicCurationRefs.curatedSellerPeerIDs, publicCurationRefs.fallbackSellerPeerIDs]
+    [
+      publicCurationRefs.curatedSellerPeerIDs,
+      publicCurationRefs.fallbackSellerPeerIDs,
+      curationListingRefs,
+    ]
   );
 
-  const { listingPreviews: curationPreviews, sellerProfiles: curationSellerProfiles } =
-    useCommunityMarketplaceEnrichment(curationListingRefs, curationSellerPeerIDs);
+  const {
+    listingPreviews: curationPreviews,
+    sellerProfiles: curationSellerProfiles,
+    listingsLoading: curationListingsLoading,
+    profilesLoading: curationProfilesLoading,
+  } = useCommunityMarketplaceEnrichment(curationListingRefs, curationSellerPeerIDs);
 
   const curationPreviewLookup = useMemo(() => {
     const lookup = new Map<string, (typeof curationPreviews)[number]>();
@@ -218,8 +243,10 @@ export function MarketplaceHomePage() {
       publicCurationRefs.bannerListingRefs
         .map(resolveCurationPreview)
         .filter(isRenderablePreview)
-        .map(convertCuratedPreviewToDisplayProduct),
-    [publicCurationRefs.bannerListingRefs, resolveCurationPreview]
+        .map(preview =>
+          convertCuratedPreviewToDisplayProduct(preview, curationSellerProfiles[preview.peerID])
+        ),
+    [publicCurationRefs.bannerListingRefs, resolveCurationPreview, curationSellerProfiles]
   );
 
   const curatedListingProducts = useMemo(
@@ -227,8 +254,45 @@ export function MarketplaceHomePage() {
       publicCurationRefs.curatedListingRefs
         .map(resolveCurationPreview)
         .filter(isRenderablePreview)
-        .map(convertCuratedPreviewToDisplayProduct),
-    [publicCurationRefs.curatedListingRefs, resolveCurationPreview]
+        .map(preview =>
+          convertCuratedPreviewToDisplayProduct(preview, curationSellerProfiles[preview.peerID])
+        ),
+    [publicCurationRefs.curatedListingRefs, resolveCurationPreview, curationSellerProfiles]
+  );
+
+  const featuredListingKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const product of bannerProducts) {
+      keys.add(`${product.vendorPeerID}:${product.slug}`);
+    }
+    for (const product of curatedListingProducts) {
+      keys.add(`${product.vendorPeerID}:${product.slug}`);
+    }
+    return keys;
+  }, [bannerProducts, curatedListingProducts]);
+
+  const additionalListingProducts = useMemo(
+    () =>
+      publicCurationRefs.fallbackListingRefs
+        .map(resolveCurationPreview)
+        .filter(isRenderablePreview)
+        .filter(preview => !featuredListingKeys.has(`${preview.peerID}:${preview.slug}`))
+        .map(preview =>
+          convertCuratedPreviewToDisplayProduct(preview, curationSellerProfiles[preview.peerID])
+        ),
+    [
+      publicCurationRefs.fallbackListingRefs,
+      resolveCurationPreview,
+      featuredListingKeys,
+      curationSellerProfiles,
+    ]
+  );
+
+  const isCuratedCatalog = config?.catalogMode === 'curated';
+  const useAuthorizedCurationFeeds = Boolean(isCuratedCatalog);
+  const suppressGlobalDiscoveryAffordances = Boolean(isCuratedCatalog);
+  const curatedFeedsLoading = Boolean(
+    isCuratedCatalog && (publicDetailLoading || curationListingsLoading || curationProfilesLoading)
   );
 
   const publicSellersByPeerID = useMemo(() => {
@@ -303,44 +367,32 @@ export function MarketplaceHomePage() {
         const catalogQuery = activeConfig.catalogQuery?.trim() || '*';
         const isCurated = activeConfig.catalogMode === 'curated';
 
-        if (isCurated && allowedPeers.length === 0) {
+        if (isCurated) {
           setLatestProducts([]);
           setPopularProducts([]);
           setFeaturedStores([]);
           return;
         }
 
-        const useSearchFeed = isCurated || catalogQuery !== '*';
-
-        if (useSearchFeed) {
-          const peerFilter = isCurated ? { peerIDs: allowedPeers } : {};
+        if (catalogQuery !== '*') {
           const [latestResult, popularResult, storesResult] = await Promise.all([
             searchListings({
               query: catalogQuery,
               pageSize: 12,
               sortBy: 'added-desc',
               browse: 'all',
-              ...peerFilter,
             }),
             searchListings({
               query: catalogQuery,
               pageSize: 8,
               sortBy: 'online-desc',
               browse: 'all',
-              ...peerFilter,
             }),
-            isCurated
-              ? searchProfiles({
-                  query: '*',
-                  pageSize: Math.max(allowedPeers.length, 6),
-                  vendor: true,
-                  ...peerFilter,
-                })
-              : searchProfiles({
-                  query: catalogQuery,
-                  pageSize: 6,
-                  vendor: true,
-                }),
+            searchProfiles({
+              query: catalogQuery,
+              pageSize: 6,
+              vendor: true,
+            }),
           ]);
 
           if (cancelled) return;
@@ -430,9 +482,35 @@ export function MarketplaceHomePage() {
     );
   }
 
+  if (config.catalogMode === 'curated' && publicDetailError) {
+    return (
+      <MarketplaceShellState
+        title={t('marketplaceStarter.errorTitle', { defaultValue: 'Marketplace unavailable' })}
+        description={t('marketplaceStarter.errorDescription', {
+          defaultValue: 'We could not load this marketplace right now. Please try again.',
+        })}
+        actionLabel={t('common.retry', { defaultValue: 'Retry' })}
+        onAction={refreshPublicDetail}
+      />
+    );
+  }
+
   const brandName =
     config.brand.name || t('marketplaceStarter.defaultName', { defaultValue: 'Marketplace' });
   const searchHref = `/search?q=${encodeURIComponent(searchQuery.trim() || config.catalogQuery || '*')}`;
+  const showDiscoverySearch = !suppressGlobalDiscoveryAffordances;
+  const showDiscoveryTaxonomy = !suppressGlobalDiscoveryAffordances && taxonomy.length > 0;
+  const discoveryPopularProducts = useAuthorizedCurationFeeds ? [] : popularProducts;
+  const discoveryLatestProducts = useAuthorizedCurationFeeds
+    ? additionalListingProducts
+    : latestProducts;
+  const discoveryPopularLoading = useAuthorizedCurationFeeds ? false : isLoadingPopular;
+  const discoveryLatestLoading = useAuthorizedCurationFeeds
+    ? curatedFeedsLoading
+    : isLoadingProducts;
+  const showPopularSection =
+    !useAuthorizedCurationFeeds && (isLoadingPopular || discoveryPopularProducts.length > 0);
+  const showLatestSection = discoveryLatestLoading || discoveryLatestProducts.length > 0;
 
   return (
     <div className="min-h-dvh flex flex-col bg-background">
@@ -453,26 +531,28 @@ export function MarketplaceHomePage() {
                 {config.brand.tagline ? (
                   <p className="text-lg text-muted-foreground max-w-2xl">{config.brand.tagline}</p>
                 ) : null}
-                <form
-                  className="flex gap-2 max-w-xl"
-                  onSubmit={event => {
-                    event.preventDefault();
-                    window.location.href = searchHref;
-                  }}
-                >
-                  <Input
-                    value={searchQuery}
-                    onChange={event => setSearchQuery(event.target.value)}
-                    placeholder={t('marketplaceStarter.searchPlaceholder', {
-                      defaultValue: 'Search this marketplace',
-                    })}
-                    className="flex-1"
-                  />
-                  <Button type="submit" className="shrink-0">
-                    <Search className="h-4 w-4 mr-2" />
-                    {t('common.search', { defaultValue: 'Search' })}
-                  </Button>
-                </form>
+                {showDiscoverySearch ? (
+                  <form
+                    className="flex gap-2 max-w-xl"
+                    onSubmit={event => {
+                      event.preventDefault();
+                      window.location.href = searchHref;
+                    }}
+                  >
+                    <Input
+                      value={searchQuery}
+                      onChange={event => setSearchQuery(event.target.value)}
+                      placeholder={t('marketplaceStarter.searchPlaceholder', {
+                        defaultValue: 'Search this marketplace',
+                      })}
+                      className="flex-1"
+                    />
+                    <Button type="submit" className="shrink-0">
+                      <Search className="h-4 w-4 mr-2" />
+                      {t('common.search', { defaultValue: 'Search' })}
+                    </Button>
+                  </form>
+                ) : null}
               </div>
               {config.brand.banner ? (
                 <img
@@ -485,7 +565,7 @@ export function MarketplaceHomePage() {
           </Container>
         </section>
 
-        {taxonomy.length > 0 ? (
+        {showDiscoveryTaxonomy ? (
           <section className="py-4 border-b border-border">
             <Container size="xl">
               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -510,7 +590,7 @@ export function MarketplaceHomePage() {
               defaultValue: 'Operator spotlight listings',
             })}
             products={bannerProducts}
-            isLoading={false}
+            isLoading={useAuthorizedCurationFeeds && curatedFeedsLoading}
             showViewAll={false}
             onProductClick={handleProductCardClick}
           />
@@ -523,42 +603,44 @@ export function MarketplaceHomePage() {
               defaultValue: 'Operator-selected highlights',
             })}
             products={curatedListingProducts}
-            isLoading={false}
+            isLoading={useAuthorizedCurationFeeds && curatedFeedsLoading}
             showViewAll={false}
             onProductClick={handleProductCardClick}
           />
         )}
 
-        {(isLoadingPopular || popularProducts.length > 0) && (
+        {showPopularSection ? (
           <ProductSection
             title={t('marketplaceStarter.popularTitle', { defaultValue: 'Popular picks' })}
             subtitle={t('marketplaceStarter.popularSubtitle', {
               defaultValue: 'Trending in this marketplace',
             })}
-            products={popularProducts}
-            isLoading={isLoadingPopular}
+            products={discoveryPopularProducts}
+            isLoading={discoveryPopularLoading}
             showViewAll
             viewAllHref={searchHref}
             onProductClick={handleProductCardClick}
           />
-        )}
+        ) : null}
 
-        {(isLoadingProducts || latestProducts.length > 0) && (
+        {showLatestSection ? (
           <ProductSection
             title={t('marketplaceStarter.latestTitle', { defaultValue: 'Latest listings' })}
             subtitle={t('marketplaceStarter.latestSubtitle', {
               defaultValue: 'Fresh from approved sellers',
             })}
-            products={latestProducts}
-            isLoading={isLoadingProducts}
-            showViewAll
+            products={discoveryLatestProducts}
+            isLoading={discoveryLatestLoading}
+            showViewAll={!suppressGlobalDiscoveryAffordances}
             viewAllHref={`/search?q=${encodeURIComponent(config.catalogQuery || '*')}&sortBy=newest`}
             showStoreAttribution
             onProductClick={handleProductCardClick}
           />
-        )}
+        ) : null}
 
-        {(isLoadingStores || activeCuratedStores.length > 0 || featuredStores.length > 0) && (
+        {(useAuthorizedCurationFeeds
+          ? curatedFeedsLoading || activeCuratedStores.length > 0
+          : isLoadingStores || activeCuratedStores.length > 0 || featuredStores.length > 0) && (
           <section className="py-8 sm:py-10">
             <Container size="xl">
               <div className="mb-6">
@@ -571,7 +653,7 @@ export function MarketplaceHomePage() {
                   })}
                 </p>
               </div>
-              {isLoadingStores ? (
+              {(useAuthorizedCurationFeeds ? curatedFeedsLoading : isLoadingStores) ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 3 }).map((_, index) => (
                     <div key={index} className="h-28 rounded-xl bg-muted animate-pulse" />

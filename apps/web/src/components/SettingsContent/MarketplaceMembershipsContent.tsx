@@ -12,6 +12,17 @@ import { SettingsPageHeader } from '@/components/SettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ChevronDown, Loader2 } from 'lucide-react';
 
@@ -22,21 +33,36 @@ interface MarketplaceMembershipsContentProps {
 function MembershipCard({
   entry,
   acceptingId,
+  decliningId,
+  leavingId,
   onAccept,
+  onDecline,
+  onLeave,
 }: {
   entry: MyMarketplaceMembershipEntry;
   acceptingId: string | null;
+  decliningId: string | null;
+  leavingId: string | null;
   onAccept: (entry: MyMarketplaceMembershipEntry) => void;
+  onDecline: (entry: MyMarketplaceMembershipEntry) => void;
+  onLeave: (entry: MyMarketplaceMembershipEntry) => void;
 }) {
   const { t, formatDate } = useI18n();
   const { marketplace, membership } = entry;
   const isInvited = membership.status === 'invited';
+  const isArchivedMarketplace = marketplace.status === 'archived';
   const canAcceptInvitation = isInvited && marketplace.status !== 'archived';
+  const canDeclineInvitation = isInvited && marketplace.status !== 'archived';
+  const canLeaveMembership =
+    !isArchivedMarketplace &&
+    (membership.status === 'accepted' ||
+      membership.status === 'approved' ||
+      membership.status === 'suspended');
+  const isMutatingMembership = Boolean(acceptingId || decliningId || leavingId);
   const invitedDate = membership.invitedAt ? formatDate(new Date(membership.invitedAt)) : null;
   const canViewPublicMarketplace = marketplace.status === 'published';
   const reviewUpdatesHref = `/marketplace/${encodeURIComponent(marketplace.slug)}/sell`;
   const showUnreadReviewUpdates = membership.unreadReviewCount > 0;
-  const isArchivedMarketplace = marketplace.status === 'archived';
 
   return (
     <Card
@@ -68,7 +94,7 @@ function MembershipCard({
           {canAcceptInvitation ? (
             <Button
               data-testid={`accept-marketplace-invite-${marketplace.id}`}
-              disabled={acceptingId === marketplace.id}
+              disabled={isMutatingMembership}
               onClick={() => onAccept(entry)}
             >
               {acceptingId === marketplace.id ? (
@@ -80,6 +106,78 @@ function MembershipCard({
                 t('marketplace.memberships.accept')
               )}
             </Button>
+          ) : null}
+          {canDeclineInvitation ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  data-testid={`decline-marketplace-invite-${marketplace.id}`}
+                  disabled={isMutatingMembership}
+                >
+                  {decliningId === marketplace.id ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('marketplace.memberships.declining')}
+                    </>
+                  ) : (
+                    t('marketplace.memberships.decline')
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t('marketplace.memberships.declineConfirmTitle')}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('marketplace.memberships.declineConfirmDesc')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDecline(entry)}>
+                    {t('marketplace.memberships.decline')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
+          {canLeaveMembership ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  data-testid={`leave-marketplace-${marketplace.id}`}
+                  disabled={isMutatingMembership}
+                >
+                  {leavingId === marketplace.id ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('marketplace.memberships.leaving')}
+                    </>
+                  ) : (
+                    t('marketplace.memberships.leave')
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t('marketplace.memberships.leaveConfirmTitle')}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('marketplace.memberships.leaveConfirmDesc')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onLeave(entry)}>
+                    {t('marketplace.memberships.leave')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           ) : null}
           {isArchivedMarketplace ? (
             <div
@@ -141,11 +239,19 @@ function MembershipCard({
 function ArchivedMembershipsSection({
   memberships,
   acceptingId,
+  decliningId,
+  leavingId,
   onAccept,
+  onDecline,
+  onLeave,
 }: {
   memberships: MyMarketplaceMembershipEntry[];
   acceptingId: string | null;
+  decliningId: string | null;
+  leavingId: string | null;
   onAccept: (entry: MyMarketplaceMembershipEntry) => void;
+  onDecline: (entry: MyMarketplaceMembershipEntry) => void;
+  onLeave: (entry: MyMarketplaceMembershipEntry) => void;
 }) {
   const { t } = useI18n();
 
@@ -169,7 +275,11 @@ function ArchivedMembershipsSection({
             key={`${entry.marketplace.id}-${entry.membership.id}`}
             entry={entry}
             acceptingId={acceptingId}
+            decliningId={decliningId}
+            leavingId={leavingId}
             onAccept={onAccept}
+            onDecline={onDecline}
+            onLeave={onLeave}
           />
         ))}
       </div>
@@ -180,8 +290,18 @@ function ArchivedMembershipsSection({
 export function MarketplaceMembershipsContent({ backHref }: MarketplaceMembershipsContentProps) {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { memberships, loading, loadFailed, acceptingId, refresh, acceptInvitation } =
-    useMyMarketplaceMemberships();
+  const {
+    memberships,
+    loading,
+    loadFailed,
+    acceptingId,
+    decliningId,
+    leavingId,
+    refresh,
+    acceptInvitation,
+    declineInvitation,
+    leaveMembership,
+  } = useMyMarketplaceMemberships();
 
   const activeMemberships = memberships.filter(entry => entry.marketplace.status !== 'archived');
   const archivedMemberships = memberships.filter(entry => entry.marketplace.status === 'archived');
@@ -197,6 +317,38 @@ export function MarketplaceMembershipsContent({ backHref }: MarketplaceMembershi
       toast({
         variant: 'destructive',
         title: t('marketplace.memberships.acceptFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleDecline(entry: MyMarketplaceMembershipEntry) {
+    try {
+      await declineInvitation(entry);
+      toast({
+        title: t('marketplace.memberships.declineSuccess'),
+        description: t('marketplace.memberships.declineSuccessDesc'),
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.memberships.declineFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleLeave(entry: MyMarketplaceMembershipEntry) {
+    try {
+      await leaveMembership(entry);
+      toast({
+        title: t('marketplace.memberships.leaveSuccess'),
+        description: t('marketplace.memberships.leaveSuccessDesc'),
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.memberships.leaveFailedTitle'),
         description: error instanceof Error ? error.message : t('common.retry'),
       });
     }
@@ -249,7 +401,11 @@ export function MarketplaceMembershipsContent({ backHref }: MarketplaceMembershi
                   key={`${entry.marketplace.id}-${entry.membership.id}`}
                   entry={entry}
                   acceptingId={acceptingId}
+                  decliningId={decliningId}
+                  leavingId={leavingId}
                   onAccept={handleAccept}
+                  onDecline={handleDecline}
+                  onLeave={handleLeave}
                 />
               ))}
             </div>
@@ -258,7 +414,11 @@ export function MarketplaceMembershipsContent({ backHref }: MarketplaceMembershi
           <ArchivedMembershipsSection
             memberships={archivedMemberships}
             acceptingId={acceptingId}
+            decliningId={decliningId}
+            leavingId={leavingId}
             onAccept={handleAccept}
+            onDecline={handleDecline}
+            onLeave={handleLeave}
           />
         </div>
       )}

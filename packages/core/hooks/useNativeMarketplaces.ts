@@ -22,12 +22,14 @@ import {
   createMarketplaceCurationItem,
   deleteMarketplaceCurationItem,
   deleteMarketplace,
+  declineMarketplaceSellerInvitation,
   getMarketplace,
   getMarketplaceAttributionSummary,
   getMarketplaceCuration,
   getMarketplaceCurationCandidates,
   getMarketplaceSellerReviewEvents,
   getMarketplaceSellers,
+  leaveMarketplaceMembership,
   getMyMarketplaceMemberships,
   getMyMarketplaces,
   inviteMarketplaceSeller,
@@ -334,6 +336,40 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     }
   }, [marketplaceId]);
 
+  const suspend = useCallback(async () => {
+    if (!marketplaceId) return null;
+    const actionMarketplaceId = marketplaceId;
+    setWorking('suspend');
+    try {
+      const updated = await updateMarketplace(actionMarketplaceId, { status: 'suspended' });
+      if (marketplaceIdRef.current === actionMarketplaceId) {
+        setMarketplace(updated);
+      }
+      return updated;
+    } finally {
+      if (marketplaceIdRef.current === actionMarketplaceId) {
+        setWorking(null);
+      }
+    }
+  }, [marketplaceId]);
+
+  const resume = useCallback(async () => {
+    if (!marketplaceId) return null;
+    const actionMarketplaceId = marketplaceId;
+    setWorking('resume');
+    try {
+      const updated = await updateMarketplace(actionMarketplaceId, { status: 'published' });
+      if (marketplaceIdRef.current === actionMarketplaceId) {
+        setMarketplace(updated);
+      }
+      return updated;
+    } finally {
+      if (marketplaceIdRef.current === actionMarketplaceId) {
+        setWorking(null);
+      }
+    }
+  }, [marketplaceId]);
+
   const update = useCallback(
     async (data: UpdateNativeMarketplaceRequest) => {
       if (!marketplaceId) return null;
@@ -573,6 +609,8 @@ export function useOperatorMarketplace(marketplaceId?: string) {
     working,
     refresh,
     publish,
+    suspend,
+    resume,
     update,
     archive,
     invite,
@@ -593,6 +631,9 @@ export function useMyMarketplaceMemberships(options: { autoLoad?: boolean } = {}
   const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [leavingId, setLeavingId] = useState<string | null>(null);
+  const activeMutationRef = useRef<object | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -620,18 +661,60 @@ export function useMyMarketplaceMemberships(options: { autoLoad?: boolean } = {}
     [memberships]
   );
 
-  const acceptInvitation = useCallback(
-    async (entry: MyMarketplaceMembershipEntry) => {
-      const { marketplace, membership } = entry;
-      setAcceptingId(marketplace.id);
+  const runMembershipMutation = useCallback(
+    async (
+      marketplaceId: string,
+      setActiveId: (id: string | null) => void,
+      mutate: () => Promise<unknown>
+    ) => {
+      if (activeMutationRef.current) {
+        throw new Error('A marketplace membership action is already in progress');
+      }
+
+      const mutationToken = {};
+      activeMutationRef.current = mutationToken;
+      setActiveId(marketplaceId);
       try {
-        await acceptMarketplaceSellerInvitation(marketplace.id, membership.peerID);
+        await mutate();
         await refresh();
       } finally {
-        setAcceptingId(null);
+        if (activeMutationRef.current === mutationToken) {
+          activeMutationRef.current = null;
+          setActiveId(null);
+        }
       }
     },
     [refresh]
+  );
+
+  const acceptInvitation = useCallback(
+    async (entry: MyMarketplaceMembershipEntry) => {
+      const { marketplace, membership } = entry;
+      await runMembershipMutation(marketplace.id, setAcceptingId, () =>
+        acceptMarketplaceSellerInvitation(marketplace.id, membership.peerID)
+      );
+    },
+    [runMembershipMutation]
+  );
+
+  const declineInvitation = useCallback(
+    async (entry: MyMarketplaceMembershipEntry) => {
+      const { marketplace } = entry;
+      await runMembershipMutation(marketplace.id, setDecliningId, () =>
+        declineMarketplaceSellerInvitation(marketplace.id)
+      );
+    },
+    [runMembershipMutation]
+  );
+
+  const leaveMembership = useCallback(
+    async (entry: MyMarketplaceMembershipEntry) => {
+      const { marketplace } = entry;
+      await runMembershipMutation(marketplace.id, setLeavingId, () =>
+        leaveMarketplaceMembership(marketplace.id)
+      );
+    },
+    [runMembershipMutation]
   );
 
   return {
@@ -641,7 +724,11 @@ export function useMyMarketplaceMemberships(options: { autoLoad?: boolean } = {}
     loadFailed,
     error,
     acceptingId,
+    decliningId,
+    leavingId,
     refresh,
     acceptInvitation,
+    declineInvitation,
+    leaveMembership,
   };
 }
