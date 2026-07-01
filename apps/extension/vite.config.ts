@@ -51,6 +51,7 @@ export default defineConfig({
       { find: 'next/navigation', replacement: path.resolve(webSrc, 'compat/navigation.tsx') },
       { find: 'next/image', replacement: path.resolve(webSrc, 'compat/image.tsx') },
       { find: 'next/font/google', replacement: path.resolve(webSrc, 'compat/font-google.ts') },
+      { find: 'next/font/local', replacement: path.resolve(webSrc, 'compat/font-local.ts') },
     ],
   },
   define: {
