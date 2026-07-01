@@ -157,6 +157,17 @@ describe('Marketplace API', () => {
     });
   });
 
+  describe('publishMarketplace', () => {
+    it('should publish the current marketplace draft', async () => {
+      mockHostingPost.mockResolvedValueOnce(mockNativeMarketplace);
+
+      const result = await marketplaceApi.publishMarketplace('mp1');
+
+      expect(mockHostingPost).toHaveBeenCalledWith('/platform/v1/marketplaces/mp1/publish', {});
+      expect(result.id).toBe('mp1');
+    });
+  });
+
   describe('deleteMarketplace', () => {
     it('should archive a marketplace', async () => {
       mockHostingDel.mockResolvedValueOnce({ archived: true, id: 'mp1' });

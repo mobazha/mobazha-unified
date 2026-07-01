@@ -1785,6 +1785,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/marketplaces/{id}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Validate and publish the current marketplace draft as an immutable release */
+    post: operations['marketplaces-publish'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/marketplaces/{id}/seller-review-events': {
     parameters: {
       query?: never;
@@ -13696,6 +13713,37 @@ export interface operations {
     };
   };
   'marketplaces-preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'marketplaces-publish': {
     parameters: {
       query?: never;
       header?: never;
