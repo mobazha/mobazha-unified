@@ -22,7 +22,8 @@
       "next/link": ["../web/src/compat/link.tsx"],
       "next/navigation": ["../web/src/compat/navigation.tsx"],
       "next/image": ["../web/src/compat/image.tsx"],
-      "next/font/google": ["../web/src/compat/font-google.ts"]
+      "next/font/google": ["../web/src/compat/font-google.ts"],
+      "next/font/local": ["../web/src/compat/font-local.ts"]
     }
   },
   "include": [
