@@ -166,7 +166,7 @@ jobs:
 
       - name: Detect breaking changes
         if: steps.label-check.outputs.skip != 'true'
-        uses: oasdiff/oasdiff-action/breaking@v0.0.44
+        uses: oasdiff/oasdiff-action/breaking@v0.1.4
         with:
           base: 'origin/${{ github.base_ref }}:packages/core/api-spec/openapi.json'
           revision: 'HEAD:packages/core/api-spec/openapi.json'
