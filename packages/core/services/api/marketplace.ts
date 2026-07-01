@@ -192,7 +192,12 @@ export async function updateMarketplace(
 
 /** Validate the current draft and publish an immutable marketplace release. */
 export async function publishMarketplace(marketplaceId: string): Promise<NativeMarketplace> {
-  return hostingPost<NativeMarketplace>(HOSTING_API.MARKETPLACE_PUBLISH(marketplaceId), {});
+  return hostingPost<NativeMarketplace>(HOSTING_API.MARKETPLACE_PUBLISH(marketplaceId), undefined);
+}
+
+/** Suspend the published marketplace without mutating its draft. */
+export async function suspendMarketplace(marketplaceId: string): Promise<NativeMarketplace> {
+  return hostingPost<NativeMarketplace>(HOSTING_API.MARKETPLACE_SUSPEND(marketplaceId), undefined);
 }
 
 /**
