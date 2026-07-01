@@ -144,7 +144,7 @@ export interface TokenIconProps {
  * 使用 cryptocurrency-icons CDN (jsdelivr)
  */
 const CDN_BASE =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
     ? ''
     : 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color';
 
@@ -284,7 +284,7 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
 }) => {
   const symbol = getSymbol(token);
   const isFiat = FIAT_CURRENCIES.has(token?.toUpperCase() || '');
-  const skipCdn = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const skipCdn = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
   const initialState: IconLoadState = isFiat
     ? 'default'
     : skipCdn || CDN_MISSING.has(symbol)

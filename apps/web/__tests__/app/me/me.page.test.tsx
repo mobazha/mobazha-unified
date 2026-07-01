@@ -83,7 +83,7 @@ describe('MePage MaaS navigation', () => {
     mockHosted = true;
     mockStandalone = false;
     mockAuthenticated = true;
-    vi.stubGlobal('__OUTPOST__', false);
+    vi.stubGlobal('__SOVEREIGN__', false);
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,
       value: 375,
@@ -119,8 +119,8 @@ describe('MePage MaaS navigation', () => {
     expect(screen.queryByTestId('me-marketplace-invitations')).not.toBeInTheDocument();
   });
 
-  it('hides marketplace entries in outpost mode', () => {
-    vi.stubGlobal('__OUTPOST__', true);
+  it('hides marketplace entries in sovereign mode', () => {
+    vi.stubGlobal('__SOVEREIGN__', true);
     render(<MePage />);
 
     expect(screen.queryByTestId('me-operator-marketplaces')).not.toBeInTheDocument();

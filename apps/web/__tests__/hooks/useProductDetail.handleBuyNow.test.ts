@@ -6,7 +6,7 @@ import { useProductDetail } from '@/hooks/useProductDetail';
 const mockPush = vi.fn();
 const mockGetPublicProduct = vi.fn();
 const mockTrackCheckoutHandoff = vi.fn();
-const mockIsOutpostMode = vi.fn(() => false);
+const mockIsSovereignMode = vi.fn(() => false);
 let mockMarketplaceContext = {
   isSubMarket: true,
   subdomain: 'collectibles',
@@ -41,7 +41,7 @@ vi.mock('@mobazha/core/config/env', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core/config/env')>();
   return {
     ...actual,
-    isOutpostMode: () => mockIsOutpostMode(),
+    isSovereignMode: () => mockIsSovereignMode(),
   };
 });
 
@@ -131,8 +131,8 @@ describe('useProductDetail handleBuyNow RWA gating', () => {
     mockPush.mockReset();
     mockGetPublicProduct.mockReset();
     mockTrackCheckoutHandoff.mockReset();
-    mockIsOutpostMode.mockReset();
-    mockIsOutpostMode.mockReturnValue(false);
+    mockIsSovereignMode.mockReset();
+    mockIsSovereignMode.mockReturnValue(false);
     mockMarketplaceContext = {
       isSubMarket: true,
       subdomain: 'collectibles',
@@ -222,8 +222,8 @@ describe('useProductDetail handleBuyNow RWA gating', () => {
     );
   });
 
-  it('tracks checkout handoff before guest checkout navigation in outpost mode', async () => {
-    mockIsOutpostMode.mockReturnValue(true);
+  it('tracks checkout handoff before guest checkout navigation in sovereign mode', async () => {
+    mockIsSovereignMode.mockReturnValue(true);
     mockGetPublicProduct.mockResolvedValue({
       product: authoritativeRwaProduct,
       isOffline: false,

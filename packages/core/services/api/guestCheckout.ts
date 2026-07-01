@@ -331,7 +331,7 @@ export function getAdminGuestOrderDetail(token: string): Promise<GuestOrderAdmin
   }));
 }
 
-// PM-3a: PGP key management APIs (Outpost/seller-side).
+// PM-3a: PGP key management APIs (Sovereign/seller-side).
 
 /**
  * Fetches the vendor's PGP public key.

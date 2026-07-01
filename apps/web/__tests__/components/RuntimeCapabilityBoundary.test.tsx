@@ -28,7 +28,7 @@ function runtimeConfig(capabilitiesReady: boolean, discovery: boolean) {
         releasePublishing: true,
         attribution: true,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: { methods: [] },
     },
   };

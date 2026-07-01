@@ -13,7 +13,7 @@ import {
   useStorefrontProfile,
   stripHtmlTags,
   getBrandConfig,
-  isOutpostMode,
+  isSovereignMode,
   projectRuntimeCryptoPaymentMethods,
   useFiatPaymentVisible,
   useRuntimeConfig,
@@ -164,7 +164,7 @@ export const Footer: React.FC = () => {
       { label: t('policies.termsOfService'), href: '/policies/terms' },
       { label: t('policies.shipping'), href: '/policies/shipping' },
       { label: t('policies.returns'), href: '/policies/returns' },
-      ...(!isOutpostMode()
+      ...(!isSovereignMode()
         ? [{ label: t('policies.buyerProtectionPolicy'), href: '/policies/buyer-protection' }]
         : []),
       { label: t('policies.refundTitle'), href: '/policies/refund' },

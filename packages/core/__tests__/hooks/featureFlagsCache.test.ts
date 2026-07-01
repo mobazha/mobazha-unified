@@ -58,7 +58,7 @@ describe('featureFlagsCache', () => {
           releasePublishing: false,
           attribution: false,
         },
-        outpost: { isolatedRuntime: false, managedFleet: false },
+        sovereign: { isolatedRuntime: false, managedFleet: false },
         payments: { methods: [] },
       },
     };

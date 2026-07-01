@@ -5137,15 +5137,15 @@ export const ko: PartialTranslationResource = {
       statusRestricted: '제한됨',
       statusPending: '대기 중',
       tabFulfillment: '이행',
-      aiOutpostGuideTitle: '지역 LLM 필수',
-      aiOutpostGuideDesc:
-        'Outpost 모드에는 개인 정보 보호를 위해 로컬 AI 모델이 필요합니다. 시작하려면 Ollama를 설치하세요.',
-      aiOutpostGuideStep1: 'ollama.com에서 Ollama를 설치하세요.',
-      aiOutpostGuideStep2: '실행: ollama pull llama3.2',
-      aiOutpostGuideStep3: 'Ollama는 기본적으로 포트 11434에서 실행됩니다.',
-      aiOutpostEndpoint: '로컬 LLM 끝점',
-      aiOutpostEndpointHint: '개인 정보 보호를 위해 로컬 호스트 주소만 허용됩니다.',
-      aiOutpostApiKeyOptional: '대부분의 로컬 LLM에는 API 키가 필요하지 않습니다.',
+      aiSovereignGuideTitle: '지역 LLM 필수',
+      aiSovereignGuideDesc:
+        'Sovereign 모드에는 개인 정보 보호를 위해 로컬 AI 모델이 필요합니다. 시작하려면 Ollama를 설치하세요.',
+      aiSovereignGuideStep1: 'ollama.com에서 Ollama를 설치하세요.',
+      aiSovereignGuideStep2: '실행: ollama pull llama3.2',
+      aiSovereignGuideStep3: 'Ollama는 기본적으로 포트 11434에서 실행됩니다.',
+      aiSovereignEndpoint: '로컬 LLM 끝점',
+      aiSovereignEndpointHint: '개인 정보 보호를 위해 로컬 호스트 주소만 허용됩니다.',
+      aiSovereignApiKeyOptional: '대부분의 로컬 LLM에는 API 키가 필요하지 않습니다.',
       aiPlatformActive: '플랫폼 AI',
       aiPlatformTitle: 'AI를 사용할 준비가 되었습니다.',
       aiPlatformDesc:
@@ -6214,10 +6214,10 @@ export const ko: PartialTranslationResource = {
       empty: 'API Token이 아직 없습니다',
       createFailed: 'Token 생성 실패',
     },
-    outpost: {
+    sovereign: {
       banner: {
         title: '개인정보 보호 모드: 클라우드 AI 클라이언트 숨김',
-        body: 'ChatGPT Desktop, Claude Desktop 및 Codex는 공급업체의 클라우드에서만 추론을 실행합니다. Outpost는 기본적으로 AI를 로컬에 유지하고 매장 데이터가 장치를 떠나지 않도록 이를 숨깁니다.',
+        body: 'ChatGPT Desktop, Claude Desktop 및 Codex는 공급업체의 클라우드에서만 추론을 실행합니다. Sovereign는 기본적으로 AI를 로컬에 유지하고 매장 데이터가 장치를 떠나지 않도록 이를 숨깁니다.',
       },
       showHighRisk: {
         label: '고위험 AI 클라이언트 표시',
@@ -6232,11 +6232,11 @@ export const ko: PartialTranslationResource = {
         mixedTooltip:
           '이 클라이언트는 로컬 LLM을 사용하도록 구성할 수 있지만 기본값은 클라우드입니다. 연결하기 전에 설정을 확인하세요.',
         cloudTooltip:
-          '이 클라이언트는 추론을 위해 매장 데이터를 공급업체 클라우드로 보냅니다. 연결은 Outpost의 "AI가 로컬에서 실행됩니다"라는 약속을 위반합니다.',
+          '이 클라이언트는 추론을 위해 매장 데이터를 공급업체 클라우드로 보냅니다. 연결은 Sovereign의 "AI가 로컬에서 실행됩니다"라는 약속을 위반합니다.',
       },
       localLlm: {
         title: '로컬 LLM 엔진',
-        body: 'Outpost에는 온디바이스 AI를 지원하기 위해 로컬 LLM이 필요합니다. 아래 엔진 중 하나를 설치하세요. 매장 데이터가 이 컴퓨터를 떠나지 않습니다.',
+        body: 'Sovereign에는 온디바이스 AI를 지원하기 위해 로컬 LLM이 필요합니다. 아래 엔진 중 하나를 설치하세요. 매장 데이터가 이 컴퓨터를 떠나지 않습니다.',
         alreadyInstalled: '이미 설치되었나요?',
         configureEndpoint: 'AI 모델에서 엔드포인트 구성',
         engines: {

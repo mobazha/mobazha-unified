@@ -155,7 +155,7 @@ export default function AdminSettingsPage() {
   const { t } = useI18n();
   const { isEmbeddedApp } = usePlatform();
   const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
-  const isOutpost = __OUTPOST__;
+  const isSovereign = __SOVEREIGN__;
 
   return (
     <div data-testid="admin-settings">
@@ -182,7 +182,7 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.profileDesc')}
             href="/admin/settings/profile"
           />
-          {!isOutpost && (
+          {!isSovereign && (
             <SettingsCard
               icon={Shield}
               title={t('admin.settings.accessControl')}
@@ -191,10 +191,10 @@ export default function AdminSettingsPage() {
             />
           )}
           {/* DG-1.14: operator responsibilities — surfaces the platform/seller
-              compliance contract. Hidden in Outpost mode because the content
+              compliance contract. Hidden in Sovereign mode because the content
               describes a SaaS platform relationship (CDN, Stripe, DMCA) that
               does not apply to self-hosted I2P nodes. */}
-          {!isOutpost && (
+          {!isSovereign && (
             <SettingsCard
               icon={ShieldCheck}
               title={t('settingsExtended.operatorResponsibilities')}
@@ -203,9 +203,9 @@ export default function AdminSettingsPage() {
             />
           )}
           {/* DG-1.10: data export — "Your store, your data, your customers".
-              Hidden in Outpost mode because the /v1/exports/* backend handlers
-              are !outpost-tagged (full OrderService dependency). */}
-          {!isOutpost && (
+              Hidden in Sovereign mode because the /v1/exports/* backend handlers
+              require the full OrderService and are excluded by restricted distributions. */}
+          {!isSovereign && (
             <SettingsCard
               icon={Download}
               title={t('dataExport.cardTitle')}
@@ -229,7 +229,7 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.shippingDesc')}
             href="/admin/settings/shipping"
           />
-          {!isOutpost && (
+          {!isSovereign && (
             <SettingsCard
               icon={Scale}
               title={t('admin.settings.moderators')}
@@ -239,7 +239,7 @@ export default function AdminSettingsPage() {
           )}
         </SettingsSection>
 
-        {!isOutpost && (
+        {!isSovereign && (
           <SettingsSection title={t('admin.settings.sectionGrowth')}>
             <SettingsCard
               icon={Megaphone}
@@ -257,11 +257,11 @@ export default function AdminSettingsPage() {
         )}
 
         {/* Extensions — AI config / webhooks / fulfillment.
-            Hidden in Outpost mode: the only sub-page that survives there is
+            Hidden in Sovereign mode: the only sub-page that survives there is
             the AI tab, which has been hoisted to /admin/ai/connect (a sidebar
             entry of its own). Showing the card would re-create the duplicate
             "two AI configuration entry points" UX we just consolidated. */}
-        {!isOutpost && (
+        {!isSovereign && (
           <SettingsSection title={t('admin.settings.sectionExtensions')}>
             {aiWorkspaceEnabled && (
               <SettingsCard

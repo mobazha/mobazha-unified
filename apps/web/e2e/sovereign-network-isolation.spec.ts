@@ -1,10 +1,10 @@
 /**
- * Outpost Network Isolation E2E
+ * Sovereign Network Isolation E2E
  *
- * Validates that the Outpost build makes zero third-party network requests.
+ * Validates that the Sovereign build makes zero third-party network requests.
  * All requests must go to the same origin (self) or be blocked.
  *
- * This test is designed to run against an Outpost-built frontend served locally.
+ * This test is designed to run against an Sovereign-built frontend served locally.
  * It intercepts all network requests and asserts none go to external domains.
  */
 import { test, expect } from '@playwright/test';
@@ -62,7 +62,7 @@ function resolveOrigin(page: { url: () => string }, baseURL?: string): string {
   return 'http://localhost:3000';
 }
 
-test.describe('Outpost Network Isolation', () => {
+test.describe('Sovereign Network Isolation', () => {
   test('homepage makes zero third-party requests', async ({ page, baseURL }) => {
     const thirdPartyRequests: string[] = [];
 

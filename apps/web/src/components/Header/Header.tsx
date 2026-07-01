@@ -63,8 +63,8 @@ export const Header: React.FC = () => {
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
   const isModerator = profile?.moderator === true;
-  const hideModeration = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
-  const isOutpost = hideModeration;
+  const hideModeration = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
+  const isSovereign = hideModeration;
   const { isEmbeddedApp, shouldUseMobileView } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const [peerIdCopied, setPeerIdCopied] = useState(false);
@@ -93,7 +93,7 @@ export const Header: React.FC = () => {
     isAuthenticated &&
     isHosted() &&
     !standaloneMode &&
-    !isOutpost &&
+    !isSovereign &&
     (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const storefrontProfile = useStorefrontProfile();
   const {
@@ -201,11 +201,11 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 匿名用户：开店入口 (SaaS only, hidden in Outpost) */}
+            {/* 匿名用户：开店入口 (SaaS only, hidden in Sovereign) */}
             {!isAuthenticated &&
               !isLoading &&
               !standaloneMode &&
-              !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+              !(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
                 <Link href="/login?redirect=%2Fadmin" data-testid="header-start-selling-link">
                   <Button
                     variant="ghost"
@@ -245,12 +245,12 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 已登录用户：通知、消息 (Outpost 隐藏 chat) */}
+            {/* 已登录用户：通知、消息 (Sovereign 隐藏 chat) */}
             {isAuthenticated && (
               <>
                 <NotificationDropdown />
 
-                {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+                {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -301,7 +301,7 @@ export const Header: React.FC = () => {
             {/* Connected backends may expose flows that require an injected wallet. */}
             {isAuthenticated &&
               hasExternalWalletPayments &&
-              !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && <WalletButton />}
+              !(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && <WalletButton />}
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
@@ -476,7 +476,7 @@ export const Header: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              !(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+              !(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
                 <Button
                   variant="default"
                   size="sm"

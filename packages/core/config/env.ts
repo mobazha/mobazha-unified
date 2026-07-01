@@ -16,7 +16,7 @@ import { getRuntimeConfig, type RuntimeConfig } from './runtimeConfig';
  * 域名迁移（如 app.mobazha.org → app.mobazha.org）只需改这一处。
  */
 export const DEFAULT_SITE_URL: string =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://app.mobazha.org';
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '' : 'https://app.mobazha.org';
 
 /**
  * Store subdomain base domain (e.g. "mymbz.org" → {handle}.mymbz.org).
@@ -111,7 +111,7 @@ export interface PublicEnvConfig {
  * - search: 搜索 API URL，用于 /info/* 接口
  */
 export const TEST_ENV: EnvConfig =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
     ? ({
         isDevelopment: true,
         isTestEnv: true,
@@ -151,7 +151,7 @@ export const TEST_ENV: EnvConfig =
  * 生产环境配置
  */
 export const PROD_ENV: EnvConfig =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
     ? ({
         isDevelopment: false,
         isTestEnv: false,
@@ -237,7 +237,7 @@ export const STANDALONE_ENV: EnvConfig = {
  * White-label network UI gating, mirrors `repo.NetworkFields` /
  * `frontend.NetworkSnapshot` from the backend. All flags default to
  * `false` (locked-down baseline) when omitted — partners must opt in
- * explicitly. See `docs/privacy/OUTPOST_MONEROD_NETWORK_DESIGN.md` § OP-MP-4.
+ * explicitly. Product-specific network policy is supplied by the private distribution.
  */
 export interface BrandNetworkConfig {
   /** Show a "paste your own monerod RPC" form on the NodePool admin page. */
@@ -246,7 +246,7 @@ export interface BrandNetworkConfig {
   showAdvancedDiagnostics?: boolean;
   /** Expose Settings → Monero Nodes (and the dashboard pool banner). */
   showNodePoolUI?: boolean;
-  /** Let the user toggle Tier-3 P2P discovery (UI lives in OP-MP-7). */
+  /** Let the user toggle Tier-3 P2P discovery. */
   allowDiscoverToggle?: boolean;
 }
 
@@ -288,20 +288,20 @@ export function getBrandNetworkConfig(): Required<BrandNetworkConfig> {
   };
 }
 
-export function isOutpostMode(): boolean {
-  if (getRuntimeConfig().deployment.mode === 'outpost') return true;
-  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return true;
+export function isSovereignMode(): boolean {
+  if (getRuntimeConfig().deployment.mode === 'sovereign') return true;
+  if (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) return true;
   return false;
 }
 
 /**
  * Returns true when external resource loading (Google Fonts, third-party CDNs)
- * should be suppressed. True for all outpost builds and whenever the runtime
+ * should be suppressed. True for all sovereign builds and whenever the runtime
  * deployment denies external resources.
  */
 export function isExternalResourcesDisabled(): boolean {
   if (!getRuntimeConfig().deployment.allowExternalResources) return true;
-  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return true;
+  if (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) return true;
   return false;
 }
 

@@ -35,20 +35,20 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
-const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
 
 export interface AIConfigSectionProps {
   /**
    * When true, suppress the inline "Install Ollama" guide block that ships in
-   * Outpost mode. The dedicated `LocalLlmEnginePanel` (rendered above this
+   * Sovereign mode. The dedicated `LocalLlmEnginePanel` (rendered above this
    * component on `/admin/ai/connect`) already covers runtime installation and
    * provides three engine options instead of just Ollama, so showing both
    * would duplicate the same call to action.
    */
-  hideOutpostInstallGuide?: boolean;
+  hideSovereignInstallGuide?: boolean;
   /**
    * When true, hide the feature showcase cards (image generation, text polish,
-   * store AI). Used in Outpost mode where the page should be compact.
+   * store AI). Used in Sovereign mode where the page should be compact.
    */
   hideFeatureShowcase?: boolean;
   /**
@@ -64,7 +64,7 @@ export interface AIConfigSectionProps {
 }
 
 export function AIConfigSection({
-  hideOutpostInstallGuide = false,
+  hideSovereignInstallGuide = false,
   hideFeatureShowcase = false,
   startCollapsedWhenConfigured = false,
   settingsPageLayout = false,
@@ -171,7 +171,7 @@ export function AIConfigSection({
         applyProviderToForm(initialProvider, cfg, providerList);
         if (startCollapsedWhenConfigured && cfg.active_provider && cfg.enabled) {
           const providerState = cfg.providers?.[cfg.active_provider];
-          if (providerState?.has_api_key || isOutpost) {
+          if (providerState?.has_api_key || isSovereign) {
             setFormCollapsed(true);
           }
         } else if (settingsPageLayout && status?.source === 'platform') {
@@ -210,7 +210,7 @@ export function AIConfigSection({
       const effectiveBaseUrl = baseUrl || selectedProviderInfo?.default_base_url || '';
       const result = await aiSettingsApi.testAIConnection({
         provider: selectedProvider,
-        api_key: apiKey || (isOutpost ? 'ollama' : undefined),
+        api_key: apiKey || (isSovereign ? 'ollama' : undefined),
         model: model || selectedProviderInfo?.default_model || '',
         base_url: effectiveBaseUrl,
       });
@@ -226,7 +226,7 @@ export function AIConfigSection({
     setSaving(true);
     try {
       const effectiveBaseUrl =
-        baseUrl || (isOutpost ? selectedProviderInfo?.default_base_url || '' : '');
+        baseUrl || (isSovereign ? selectedProviderInfo?.default_base_url || '' : '');
       const effectiveModel = model || selectedProviderInfo?.default_model || '';
       const input: AIConfigInput = {
         provider: selectedProvider,
@@ -236,7 +236,7 @@ export function AIConfigSection({
       };
       if (apiKey) {
         input.api_key = apiKey;
-      } else if (isOutpost) {
+      } else if (isSovereign) {
         input.api_key = 'ollama';
       }
       const result = await aiSettingsApi.saveAIConfig(input);
@@ -298,7 +298,7 @@ export function AIConfigSection({
     );
   }
 
-  const canTest = !!selectedProvider && (isOutpost || !!apiKey || hasExistingKey);
+  const canTest = !!selectedProvider && (isSovereign || !!apiKey || hasExistingKey);
 
   const isPlatformAI = aiStatus?.source === 'platform';
   const isByokAI = aiStatus?.source === 'byok';
@@ -308,7 +308,7 @@ export function AIConfigSection({
   const formCollapseLabel =
     settingsPageLayout && isPlatformAI
       ? t('admin.integrations.aiByokExpand')
-      : t('aiAgents.outpost.localLlm.editConfig', {
+      : t('aiAgents.sovereign.localLlm.editConfig', {
           defaultValue: 'Edit AI endpoint configuration',
         });
 
@@ -346,12 +346,12 @@ export function AIConfigSection({
           </div>
         </div>
       )}
-      {/* Outpost: Local LLM setup guide.
+      {/* Sovereign: Local LLM setup guide.
           Hidden when rendered alongside `LocalLlmEnginePanel` (e.g. on
           `/admin/ai/connect`), which already covers runtime installation with
           a richer 3-engine picker. Kept for the legacy Settings →
           Integrations page so it still works as a standalone surface. */}
-      {isOutpost && !hideOutpostInstallGuide && (
+      {isSovereign && !hideSovereignInstallGuide && (
         <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
           <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
             <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -359,10 +359,10 @@ export function AIConfigSection({
           <div className="flex-1 min-w-0 space-y-2">
             <div>
               <p className="text-sm font-medium text-foreground">
-                {t('admin.integrations.aiOutpostGuideTitle')}
+                {t('admin.integrations.aiSovereignGuideTitle')}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {t('admin.integrations.aiOutpostGuideDesc')}
+                {t('admin.integrations.aiSovereignGuideDesc')}
               </p>
             </div>
             <div className="space-y-1.5">
@@ -370,21 +370,21 @@ export function AIConfigSection({
                 <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
                   1
                 </span>
-                <span>{t('admin.integrations.aiOutpostGuideStep1')}</span>
+                <span>{t('admin.integrations.aiSovereignGuideStep1')}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-foreground">
                 <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
                   2
                 </span>
                 <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">
-                  {t('admin.integrations.aiOutpostGuideStep2')}
+                  {t('admin.integrations.aiSovereignGuideStep2')}
                 </code>
               </div>
               <div className="flex items-center gap-2 text-xs text-foreground">
                 <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
                   3
                 </span>
-                <span>{t('admin.integrations.aiOutpostGuideStep3')}</span>
+                <span>{t('admin.integrations.aiSovereignGuideStep3')}</span>
               </div>
             </div>
             <a
@@ -402,7 +402,7 @@ export function AIConfigSection({
       )}
 
       {/* Platform AI status banner */}
-      {!isOutpost && isPlatformAI && aiStatus && (
+      {!isSovereign && isPlatformAI && aiStatus && (
         <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
           <div className="p-2 rounded-lg bg-primary/10 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
@@ -469,7 +469,7 @@ export function AIConfigSection({
         </div>
       )}
 
-      {/* Feature showcase — hidden in compact Outpost / dedicated settings page */}
+      {/* Feature showcase — hidden in compact Sovereign / dedicated settings page */}
       {!hideFeatureShowcase && !settingsPageLayout && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
@@ -488,7 +488,7 @@ export function AIConfigSection({
         </div>
       )}
 
-      {/* Config form card — collapsible in Outpost compact mode */}
+      {/* Config form card — collapsible in Sovereign compact mode */}
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         {showFormCollapseToggle && (
           <button
@@ -516,8 +516,8 @@ export function AIConfigSection({
               showFormCollapseToggle ? 'p-5 pt-4 border-t border-border' : 'p-5'
             )}
           >
-            {/* Provider pills — hidden in Outpost (only one provider) */}
-            {!isOutpost && providers.length > 1 && (
+            {/* Provider pills — hidden in Sovereign (only one provider) */}
+            {!isSovereign && providers.length > 1 && (
               <div className="space-y-1.5">
                 <Label>
                   {t('admin.integrations.aiProvider')} <span className="text-destructive">*</span>
@@ -560,11 +560,11 @@ export function AIConfigSection({
               </div>
             )}
 
-            {/* Outpost: Base URL as primary field */}
-            {isOutpost && (
+            {/* Sovereign: Base URL as primary field */}
+            {isSovereign && (
               <div className="space-y-1.5">
                 <Label>
-                  {t('admin.integrations.aiOutpostEndpoint')}{' '}
+                  {t('admin.integrations.aiSovereignEndpoint')}{' '}
                   <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -576,7 +576,7 @@ export function AIConfigSection({
                 />
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  {t('admin.integrations.aiOutpostEndpointHint')}
+                  {t('admin.integrations.aiSovereignEndpointHint')}
                 </p>
               </div>
             )}
@@ -586,7 +586,7 @@ export function AIConfigSection({
               <div className="flex items-center justify-between">
                 <Label>
                   {t('admin.integrations.aiApiKey')}{' '}
-                  {isOutpost ? (
+                  {isSovereign ? (
                     <span className="text-xs font-normal text-muted-foreground">
                       {t('common.optional')}
                     </span>
@@ -594,7 +594,7 @@ export function AIConfigSection({
                     <span className="text-destructive">*</span>
                   )}
                 </Label>
-                {!isOutpost && selectedProviderInfo?.help_url && (
+                {!isSovereign && selectedProviderInfo?.help_url && (
                   <a
                     href={selectedProviderInfo.help_url}
                     target="_blank"
@@ -619,9 +619,9 @@ export function AIConfigSection({
                     : t('admin.integrations.aiApiKeyPlaceholder')
                 }
               />
-              {isOutpost && !hasExistingKey && !apiKey && (
+              {isSovereign && !hasExistingKey && !apiKey && (
                 <p className="text-xs text-muted-foreground">
-                  {t('admin.integrations.aiOutpostApiKeyOptional')}
+                  {t('admin.integrations.aiSovereignApiKeyOptional')}
                 </p>
               )}
               {hasExistingKey && !apiKey && (
@@ -771,7 +771,7 @@ export function AIConfigSection({
             )}
 
             {/* Validation hint */}
-            {!isOutpost && enabled && !hasExistingKey && !apiKey && (
+            {!isSovereign && enabled && !hasExistingKey && !apiKey && (
               <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-md text-sm">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{t('admin.integrations.aiApiKeyRequired')}</span>
@@ -790,7 +790,7 @@ export function AIConfigSection({
                 disabled={
                   saving ||
                   !selectedProvider ||
-                  (!isOutpost && enabled && !hasExistingKey && !apiKey)
+                  (!isSovereign && enabled && !hasExistingKey && !apiKey)
                 }
               >
                 {saving

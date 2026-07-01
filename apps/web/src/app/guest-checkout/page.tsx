@@ -22,7 +22,7 @@ import {
 } from '@mobazha/core/services/api/guestCheckout';
 import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
 import { useGuestSupplyQuote } from '@mobazha/core/hooks/useGuestSupplyQuote';
-import { isOutpostMode } from '@mobazha/core/config/env';
+import { isSovereignMode } from '@mobazha/core/config/env';
 import { getGatewayUrl } from '@mobazha/core/services/api/config';
 import { useAddressEncryption } from '@mobazha/core/hooks/useAddressEncryption';
 import type { Address } from '@mobazha/core';
@@ -155,7 +155,7 @@ export default function GuestCheckoutPage() {
   // Only needed for physical goods that require a shipping address.
   const hasPhysicalItems = items.some(i => i.contractType === 'PHYSICAL_GOOD');
   const { encryptionAvailable, encryptAddress } = useAddressEncryption(
-    isOutpostMode() && hasPhysicalItems ? getGatewayUrl() : ''
+    isSovereignMode() && hasPhysicalItems ? getGatewayUrl() : ''
   );
 
   useEffect(() => {
@@ -482,7 +482,7 @@ export default function GuestCheckoutPage() {
               </Card>
 
               {/* PM-3a: encryption status indicator */}
-              {isOutpostMode() && (
+              {isSovereignMode() && (
                 <div
                   className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
                     encryptionAvailable

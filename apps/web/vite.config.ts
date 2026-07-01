@@ -39,16 +39,16 @@ function readBody(req: IncomingMessage): Promise<string> {
  * SaaS homepage even when the shell passes standalone env vars.
  */
 /**
- * Strips external resources from index.html for Outpost privacy builds:
+ * Strips external resources from index.html for Sovereign privacy builds:
  * - Google Fonts preconnect + stylesheet links
  * - Telegram SDK conditional loader script
  * - Blocking /runtime-config.js → inline bootstrap + defer dynamic merge (saves one Tor RTT)
  */
-function outpostHtmlStripPlugin(): Plugin {
+function sovereignHtmlStripPlugin(): Plugin {
   const inlineRuntimeConfig = JSON.stringify({
     schemaVersion: 3,
     authMode: 'standalone',
-    deployment: { mode: 'outpost', allowExternalResources: false },
+    deployment: { mode: 'sovereign', allowExternalResources: false },
     experience: { kind: 'store' },
     capabilitiesReady: false,
     features: { guestCheckout: { effective: true, overridable: [] } },
@@ -64,13 +64,13 @@ function outpostHtmlStripPlugin(): Plugin {
         releasePublishing: false,
         attribution: false,
       },
-      outpost: { isolatedRuntime: true, managedFleet: false },
+      sovereign: { isolatedRuntime: true, managedFleet: false },
       payments: { methods: [] },
     },
   });
 
   return {
-    name: 'outpost-html-strip',
+    name: 'sovereign-html-strip',
     transformIndexHtml(html) {
       let result = html
         // Remove Google Fonts links
@@ -95,16 +95,16 @@ function outpostHtmlStripPlugin(): Plugin {
 }
 
 /**
- * Outpost resolveId plugin — intercepts relative imports inside monorepo
+ * Sovereign resolveId plugin — intercepts relative imports inside monorepo
  * packages that bypass Vite alias (aliases only match raw specifiers).
- * Maps resolved absolute paths to their _outpost stub counterparts.
+ * Maps resolved absolute paths to their _sovereign stub counterparts.
  */
-function outpostResolvePlugin(): Plugin {
+function sovereignResolvePlugin(): Plugin {
   const chatStub = path.resolve(__dirname, './src/stubs/chat-components.ts');
-  const chatSystemStub = path.resolve(__dirname, './src/components/ChatSystem_outpost.tsx');
+  const chatSystemStub = path.resolve(__dirname, './src/components/ChatSystem_sovereign.tsx');
   const matrixInitStub = path.resolve(
     __dirname,
-    '../../packages/core/hooks/useMatrixInit_outpost.ts'
+    '../../packages/core/hooks/useMatrixInit_sovereign.ts'
   );
 
   const rewrites: Array<{ test: RegExp; replacement: string }> = [
@@ -112,25 +112,25 @@ function outpostResolvePlugin(): Plugin {
       test: /\/packages\/core\/providers\/AppKitProvider\.tsx$/,
       replacement: path.resolve(
         __dirname,
-        '../../packages/core/providers/AppKitProvider_outpost.tsx'
+        '../../packages/core/providers/AppKitProvider_sovereign.tsx'
       ),
     },
     {
       test: /\/packages\/core\/config\/appkit\.ts$/,
-      replacement: path.resolve(__dirname, '../../packages/core/config/appkit_outpost.ts'),
+      replacement: path.resolve(__dirname, '../../packages/core/config/appkit_sovereign.ts'),
     },
     {
       test: /\/src\/components\/DiscordActivityProvider\/DiscordActivityProvider\.tsx$/,
-      replacement: path.resolve(__dirname, './src/components/DiscordActivityProvider_outpost.tsx'),
+      replacement: path.resolve(__dirname, './src/components/DiscordActivityProvider_sovereign.tsx'),
     },
     {
       test: /\/src\/components\/Payment\/StripePaymentForm\.tsx$/,
       replacement: path.resolve(
         __dirname,
-        './src/components/Payment/StripePaymentForm_outpost.tsx'
+        './src/components/Payment/StripePaymentForm_sovereign.tsx'
       ),
     },
-    // --- Matrix / Chat isolation for Outpost ---
+    // --- Matrix / Chat isolation for Sovereign ---
     {
       test: /\/packages\/core\/hooks\/useMatrixInit\.ts$/,
       replacement: matrixInitStub,
@@ -159,21 +159,21 @@ function outpostResolvePlugin(): Plugin {
     // MatrixClientService from being bundled even when imported via barrel exports.
     {
       test: /\/packages\/core\/services\/matrix\/client\.ts$/,
-      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/client_outpost.ts'),
+      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/client_sovereign.ts'),
     },
     {
       test: /\/packages\/core\/services\/matrix\/index\.ts$/,
-      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/index_outpost.ts'),
+      replacement: path.resolve(__dirname, '../../packages/core/services/matrix/index_sovereign.ts'),
     },
     // Redirect chat page to a no-op stub
     {
       test: /\/src\/app\/chat\/page\.tsx$/,
-      replacement: path.resolve(__dirname, './src/app/chat/page_outpost.tsx'),
+      replacement: path.resolve(__dirname, './src/app/chat/page_sovereign.tsx'),
     },
   ];
 
   return {
-    name: 'outpost-resolve',
+    name: 'sovereign-resolve',
     enforce: 'pre',
     async resolveId(source, importer, options) {
       if (!importer) return null;
@@ -191,7 +191,7 @@ function outpostResolvePlugin(): Plugin {
 
 function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
   const buildTarget = env.VITE_BUILD_TARGET || 'default';
-  const isOutpost = buildTarget === 'outpost';
+  const isSovereign = buildTarget === 'sovereign';
 
   return {
     name: 'standalone-runtime-config',
@@ -202,22 +202,22 @@ function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
           next();
           return;
         }
-        if (env.NEXT_PUBLIC_ENV_MODE !== 'standalone' && !isOutpost) {
+        if (env.NEXT_PUBLIC_ENV_MODE !== 'standalone' && !isSovereign) {
           next();
           return;
         }
         const saasUrl = env.NEXT_PUBLIC_SAAS_URL || '';
-        const outpost = isOutpost;
+        const sovereign = isSovereign;
         const payload: Record<string, unknown> = {
           schemaVersion: 3,
           authMode: 'standalone',
           deployment: {
-            mode: outpost ? 'outpost' : 'standalone',
-            allowExternalResources: !outpost,
+            mode: sovereign ? 'sovereign' : 'standalone',
+            allowExternalResources: !sovereign,
           },
           experience: { kind: 'store' },
           capabilitiesReady: false,
-          features: outpost ? { guestCheckout: { effective: true, overridable: [] } } : {},
+          features: sovereign ? { guestCheckout: { effective: true, overridable: [] } } : {},
           capabilities: {
             commerce: { storefront: true, storeAdmin: true, checkout: true },
             marketplace: {
@@ -230,7 +230,7 @@ function standaloneRuntimeConfigPlugin(env: Record<string, string>): Plugin {
               releasePublishing: false,
               attribution: false,
             },
-            outpost: { isolatedRuntime: outpost, managedFleet: false },
+            sovereign: { isolatedRuntime: sovereign, managedFleet: false },
             payments: { methods: [] },
           },
         };
@@ -282,7 +282,7 @@ function hostedRuntimeConfigAssetPlugin(env: Record<string, string>): Plugin {
         releasePublishing: false,
         attribution: false,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: { methods: [] },
     },
   };
@@ -360,7 +360,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ['NEXT_PUBLIC_', 'OPENAI_', 'VITE_']);
   const apiBase = env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
   const buildTarget = env.VITE_BUILD_TARGET || 'default';
-  const isOutpost = buildTarget === 'outpost';
+  const isSovereign = buildTarget === 'sovereign';
 
   // 注入 AI 相关环境变量到 process.env（供 aiHandler 使用）
   if (env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = env.OPENAI_API_KEY;
@@ -371,27 +371,27 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       standaloneRuntimeConfigPlugin(env),
-      ...(!isOutpost && env.NEXT_PUBLIC_ENV_MODE !== 'standalone'
+      ...(!isSovereign && env.NEXT_PUBLIC_ENV_MODE !== 'standalone'
         ? [hostedRuntimeConfigAssetPlugin(env)]
         : []),
-      ...(!isOutpost ? [aiProxyPlugin()] : []),
-      ...(isOutpost ? [outpostHtmlStripPlugin(), outpostResolvePlugin()] : []),
+      ...(!isSovereign ? [aiProxyPlugin()] : []),
+      ...(isSovereign ? [sovereignHtmlStripPlugin(), sovereignResolvePlugin()] : []),
     ],
     // 定义全局变量，兼容 Next.js 环境变量
     // 注意：必须单独定义每个 process.env.XXX，而不是替换整个 process.env 对象
     // 否则 process.env.NODE_ENV 会变成 '{"NODE_ENV":...}'.NODE_ENV，返回 undefined
     define: {
-      __OUTPOST__: JSON.stringify(isOutpost),
+      __SOVEREIGN__: JSON.stringify(isSovereign),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
       'process.env.NEXT_PUBLIC_ENV_MODE': JSON.stringify(
-        isOutpost ? 'standalone' : env.NEXT_PUBLIC_ENV_MODE || 'test'
+        isSovereign ? 'standalone' : env.NEXT_PUBLIC_ENV_MODE || 'test'
       ),
       'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(env.NEXT_PUBLIC_API_URL || ''),
       'process.env.NEXT_PUBLIC_MATRIX_HOMESERVER': JSON.stringify(
-        isOutpost ? '' : env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org'
+        isSovereign ? '' : env.NEXT_PUBLIC_MATRIX_HOMESERVER || 'https://matrix.org'
       ),
       'process.env.NEXT_PUBLIC_MATRIX_ENABLED': JSON.stringify(
-        isOutpost ? 'false' : env.NEXT_PUBLIC_MATRIX_ENABLED || 'true'
+        isSovereign ? 'false' : env.NEXT_PUBLIC_MATRIX_ENABLED || 'true'
       ),
       'process.env.NEXT_PUBLIC_USE_MOCK_DATA': JSON.stringify(
         env.NEXT_PUBLIC_USE_MOCK_DATA || 'false'
@@ -402,13 +402,13 @@ export default defineConfig(({ mode }) => {
       ),
       'process.env.NEXT_PUBLIC_AUTH_MODE': JSON.stringify(env.NEXT_PUBLIC_AUTH_MODE || ''),
       'process.env.NEXT_PUBLIC_CASDOOR_URL': JSON.stringify(
-        isOutpost ? '' : env.NEXT_PUBLIC_CASDOOR_URL || ''
+        isSovereign ? '' : env.NEXT_PUBLIC_CASDOOR_URL || ''
       ),
       'process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID': JSON.stringify(
-        isOutpost ? '' : env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || ''
+        isSovereign ? '' : env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || ''
       ),
       'process.env.NEXT_PUBLIC_SAAS_URL': JSON.stringify(
-        isOutpost ? '' : env.NEXT_PUBLIC_SAAS_URL || ''
+        isSovereign ? '' : env.NEXT_PUBLIC_SAAS_URL || ''
       ),
       'process.env.NEXT_PUBLIC_SITE_URL': JSON.stringify(env.NEXT_PUBLIC_SITE_URL || ''),
       'process.env.NEXT_PUBLIC_STORE_SUBDOMAIN_BASE': JSON.stringify(
@@ -418,35 +418,35 @@ export default defineConfig(({ mode }) => {
         env.NEXT_PUBLIC_BASIC_AUTH_USERNAME || ''
       ),
       'process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID': JSON.stringify(
-        isOutpost ? '' : env.NEXT_PUBLIC_DISCORD_CLIENT_ID || ''
+        isSovereign ? '' : env.NEXT_PUBLIC_DISCORD_CLIENT_ID || ''
       ),
       'process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY': JSON.stringify(
-        isOutpost ? '' : env.NEXT_PUBLIC_ETHERSCAN_API_KEY || ''
+        isSovereign ? '' : env.NEXT_PUBLIC_ETHERSCAN_API_KEY || ''
       ),
     },
     resolve: {
       alias: [
-        // Outpost build-time module replacements — physically remove forbidden code
-        ...(isOutpost
+        // Sovereign build-time module replacements — physically remove forbidden code
+        ...(isSovereign
           ? [
               {
                 find: /^@\/components\/OuterProviders$/,
-                replacement: path.resolve(__dirname, './src/components/OuterProviders_outpost.tsx'),
+                replacement: path.resolve(__dirname, './src/components/OuterProviders_sovereign.tsx'),
               },
               {
                 find: /^@\/components\/ChatSystem$/,
-                replacement: path.resolve(__dirname, './src/components/ChatSystem_outpost.tsx'),
+                replacement: path.resolve(__dirname, './src/components/ChatSystem_sovereign.tsx'),
               },
               {
                 find: /^@\/components\/admin\/AdminLoginForm$/,
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/admin/AdminLoginForm_outpost.tsx'
+                  './src/components/admin/AdminLoginForm_sovereign.tsx'
                 ),
               },
               {
                 find: /^@\/components\/AppKitProvider$/,
-                replacement: path.resolve(__dirname, './src/components/AppKitProvider_outpost.tsx'),
+                replacement: path.resolve(__dirname, './src/components/AppKitProvider_sovereign.tsx'),
               },
               // Intercept packages/core internal relative imports to AppKitProvider
               {
@@ -457,7 +457,7 @@ export default defineConfig(({ mode }) => {
                 ),
                 replacement: path.resolve(
                   __dirname,
-                  '../../packages/core/providers/AppKitProvider_outpost.tsx'
+                  '../../packages/core/providers/AppKitProvider_sovereign.tsx'
                 ),
               },
               // Intercept packages/core/config/appkit (contains APPKIT_PROJECT_ID with reown cloud URL)
@@ -469,14 +469,14 @@ export default defineConfig(({ mode }) => {
                 ),
                 replacement: path.resolve(
                   __dirname,
-                  '../../packages/core/config/appkit_outpost.ts'
+                  '../../packages/core/config/appkit_sovereign.ts'
                 ),
               },
               {
                 find: /^@\/components\/DiscordActivityProvider$/,
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/DiscordActivityProvider_outpost.tsx'
+                  './src/components/DiscordActivityProvider_sovereign.tsx'
                 ),
               },
               // Intercept packages/core internal imports to DiscordActivityProvider
@@ -488,7 +488,7 @@ export default defineConfig(({ mode }) => {
                 ),
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/DiscordActivityProvider_outpost.tsx'
+                  './src/components/DiscordActivityProvider_sovereign.tsx'
                 ),
               },
               // Intercept the barrel re-export inside DiscordActivityProvider/index.ts
@@ -503,7 +503,7 @@ export default defineConfig(({ mode }) => {
                 ),
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/DiscordActivityProvider_outpost.tsx'
+                  './src/components/DiscordActivityProvider_sovereign.tsx'
                 ),
               },
               // Stripe SDK — replace StripePaymentForm with noop stub
@@ -511,21 +511,21 @@ export default defineConfig(({ mode }) => {
                 find: /^@\/components\/Payment\/StripePaymentForm$/,
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/Payment/StripePaymentForm_outpost.tsx'
+                  './src/components/Payment/StripePaymentForm_sovereign.tsx'
                 ),
               },
               {
                 find: /^\.\/StripePaymentForm$/,
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/Payment/StripePaymentForm_outpost.tsx'
+                  './src/components/Payment/StripePaymentForm_sovereign.tsx'
                 ),
               },
               {
                 find: /^@\/components\/TGMiniAppProvider$/,
                 replacement: path.resolve(
                   __dirname,
-                  './src/components/TGMiniAppProvider_outpost.tsx'
+                  './src/components/TGMiniAppProvider_sovereign.tsx'
                 ),
               },
               // NPM-level package stubs — prevent any transitive import from pulling in forbidden SDKs.
@@ -634,7 +634,7 @@ export default defineConfig(({ mode }) => {
     css: {
       postcss: './postcss.config.js',
     },
-    ...(isOutpost
+    ...(isSovereign
       ? {
           build: {
             rollupOptions: {

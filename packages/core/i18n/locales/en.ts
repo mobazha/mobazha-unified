@@ -7625,7 +7625,7 @@ export const en: TranslationResource = {
     finance: {
       title: 'Store payments',
       subtitle: 'Monero (XMR) wallet balance and payouts for this store.',
-      notApplicable: 'This page is only available on Outpost builds.',
+      notApplicable: 'This page is only available on Sovereign builds.',
       fetchError: 'Failed to load wallet data',
       availableBalance: 'Available',
       pendingConfirmation: 'Temporarily locked',
@@ -7639,7 +7639,7 @@ export const en: TranslationResource = {
       transactionsDesc: 'View all incoming and outgoing transfers.',
       walletManagementTitle: 'Wallet management',
       setupWalletTitle: 'Create or restore wallet',
-      setupWalletDesc: 'Set up the Monero wallet used by this outpost.',
+      setupWalletDesc: 'Set up the Monero wallet used by this sovereign.',
       exportSecretsTitle: 'Export seed or view-only keys',
       exportSecretsDesc: 'Back up your recovery seed or share view-only access with a bookkeeper.',
       manageNodesTitle: 'Monero nodes',
@@ -7873,15 +7873,15 @@ export const en: TranslationResource = {
       aiSaveActivate: 'Save & Activate',
       aiProviderActive: 'Active',
       aiApiKeySaved: 'API key saved',
-      aiOutpostGuideTitle: 'Local LLM Required',
-      aiOutpostGuideDesc:
-        'Outpost mode requires a local AI model for privacy. Install Ollama to get started:',
-      aiOutpostGuideStep1: 'Install Ollama from ollama.com',
-      aiOutpostGuideStep2: 'Run: ollama pull llama3.2',
-      aiOutpostGuideStep3: 'Ollama runs on port 11434 by default',
-      aiOutpostEndpoint: 'Local LLM Endpoint',
-      aiOutpostEndpointHint: 'Only localhost addresses are allowed for privacy',
-      aiOutpostApiKeyOptional: 'Most local LLMs do not require an API key',
+      aiSovereignGuideTitle: 'Local LLM Required',
+      aiSovereignGuideDesc:
+        'Sovereign mode requires a local AI model for privacy. Install Ollama to get started:',
+      aiSovereignGuideStep1: 'Install Ollama from ollama.com',
+      aiSovereignGuideStep2: 'Run: ollama pull llama3.2',
+      aiSovereignGuideStep3: 'Ollama runs on port 11434 by default',
+      aiSovereignEndpoint: 'Local LLM Endpoint',
+      aiSovereignEndpointHint: 'Only localhost addresses are allowed for privacy',
+      aiSovereignApiKeyOptional: 'Most local LLMs do not require an API key',
       aiPlatformActive: 'Platform AI',
       aiPlatformTitle: 'AI is ready to use',
       aiPlatformDesc: 'Your store has AI features enabled through the platform. No setup needed.',
@@ -9044,10 +9044,10 @@ export const en: TranslationResource = {
     other: 'Other',
     otherDesc: 'Generic MCP URL + Token for any MCP client',
     onboarding: 'Connect your first AI agent in 30 seconds',
-    outpost: {
+    sovereign: {
       banner: {
         title: 'Privacy mode: cloud AI clients hidden',
-        body: "ChatGPT Desktop, Claude Desktop, and Codex only run inference in the vendor's cloud. Outpost hides them by default so AI stays local and your store data never leaves your device.",
+        body: "ChatGPT Desktop, Claude Desktop, and Codex only run inference in the vendor's cloud. Sovereign hides them by default so AI stays local and your store data never leaves your device.",
       },
       showHighRisk: {
         label: 'Show high-risk AI clients',
@@ -9062,12 +9062,12 @@ export const en: TranslationResource = {
         mixedTooltip:
           'This client can be configured to use a local LLM, but defaults to cloud. Verify your setup before connecting.',
         cloudTooltip:
-          'This client sends your store data to a vendor cloud for inference. Connecting violates the Outpost "AI runs locally" promise.',
+          'This client sends your store data to a vendor cloud for inference. Connecting violates the Sovereign "AI runs locally" promise.',
       },
       developerOptions: 'Developer Options',
       localLlm: {
         title: 'Local LLM engine',
-        body: 'Outpost needs a local LLM to power on-device AI. Install one of the engines below — your store data never leaves this machine.',
+        body: 'Sovereign needs a local LLM to power on-device AI. Install one of the engines below — your store data never leaves this machine.',
         bodySimple:
           'Install Ollama to power on-device AI. Your store data never leaves this machine.',
         edit: 'Edit',
@@ -9540,12 +9540,12 @@ export const en: TranslationResource = {
   },
 
   // Digital downloads — shared asset type labels (Supply Chain Phase 1.0)
-  outpost: {
+  sovereign: {
     rpcConnected: 'Connected',
     rpcDisconnected: 'Not configured',
     xmrWithdraw: {
       title: 'Withdraw Monero',
-      notApplicable: 'This page is only available on Outpost builds.',
+      notApplicable: 'This page is only available on Sovereign builds.',
       balanceTitle: 'Wallet balance',
       refresh: 'Refresh',
       unlockedBalance: 'Available now',
@@ -9573,7 +9573,7 @@ export const en: TranslationResource = {
       feeNote:
         'Network fee is paid in XMR on top of this amount. To empty the wallet use "Send all" (switches to Sweep mode).',
       description:
-        'Send XMR from this outpost to another wallet. Monero transfers are irreversible — double-check the recipient.',
+        'Send XMR from this sovereign to another wallet. Monero transfers are irreversible — double-check the recipient.',
       formTitle: 'Transfer details',
       modeSend: 'Send amount',
       modeSweep: 'Sweep all',

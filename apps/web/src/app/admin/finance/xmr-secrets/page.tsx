@@ -27,7 +27,7 @@ import {
 } from '@mobazha/core/services/api/monero';
 
 /**
- * XMR Secrets export (Outpost only) — OP-MP-6
+ * XMR Secrets export (Sovereign only)
  *
  * Two independent panels on one page so the operator can self-serve both
  * "back up the wallet" and "hand a view-only copy to a bookkeeper" flows
@@ -52,18 +52,18 @@ import {
 
 const SEED_WORD_COUNT = 25;
 
-function NotOutpostPlaceholder() {
+function NotSovereignPlaceholder() {
   const { t } = useI18n();
   return (
     <div>
       <SettingsPageHeader
-        title={t('outpost.xmrSecrets.title', { defaultValue: 'Monero Wallet Secrets' })}
+        title={t('sovereign.xmrSecrets.title', { defaultValue: 'Monero Wallet Secrets' })}
         backHref={getAdminFinancePath()}
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          {t('outpost.xmrSecrets.notApplicable', {
-            defaultValue: 'This page is only available on Outpost builds.',
+          {t('sovereign.xmrSecrets.notApplicable', {
+            defaultValue: 'This page is only available on Sovereign builds.',
           })}
         </CardContent>
       </Card>
@@ -74,15 +74,15 @@ function NotOutpostPlaceholder() {
 export default function XMRSecretsPage() {
   const { t } = useI18n();
 
-  if (!__OUTPOST__) {
-    return <NotOutpostPlaceholder />;
+  if (!__SOVEREIGN__) {
+    return <NotSovereignPlaceholder />;
   }
 
   return (
     <div data-testid="admin-xmr-secrets" className="space-y-6">
       <SettingsPageHeader
-        title={t('outpost.xmrSecrets.title', { defaultValue: 'Monero Wallet Secrets' })}
-        description={t('outpost.xmrSecrets.description', {
+        title={t('sovereign.xmrSecrets.title', { defaultValue: 'Monero Wallet Secrets' })}
+        description={t('sovereign.xmrSecrets.description', {
           defaultValue:
             'Export your seed for offline backup, or share view-only keys with a trusted bookkeeper. Both panels reveal data on demand and never persist anything in your browser.',
         })}
@@ -97,7 +97,7 @@ export default function XMRSecretsPage() {
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        {t('outpost.xmrSecrets.backToPayments', { defaultValue: 'Back to Funds' })}
+        {t('sovereign.xmrSecrets.backToPayments', { defaultValue: 'Back to Funds' })}
       </Link>
     </div>
   );
@@ -123,7 +123,7 @@ function MnemonicPanel() {
       setError(
         err instanceof Error
           ? err.message
-          : t('outpost.xmrSecrets.mnemonicFetchError', {
+          : t('sovereign.xmrSecrets.mnemonicFetchError', {
               defaultValue: 'Failed to fetch mnemonic',
             })
       );
@@ -149,12 +149,12 @@ function MnemonicPanel() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <KeyRound className="w-5 h-5" />
-              {t('outpost.xmrSecrets.mnemonicTitle', {
+              {t('sovereign.xmrSecrets.mnemonicTitle', {
                 defaultValue: '25-word recovery seed',
               })}
             </CardTitle>
             <CardDescription className="mt-1">
-              {t('outpost.xmrSecrets.mnemonicDesc', {
+              {t('sovereign.xmrSecrets.mnemonicDesc', {
                 defaultValue:
                   'The full deterministic seed for this wallet. Anyone with these 25 words can spend every coin in it, now or in the future.',
               })}
@@ -166,24 +166,24 @@ function MnemonicPanel() {
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
           <p className="flex items-center gap-2 font-medium text-destructive">
             <AlertTriangle className="w-4 h-4" />
-            {t('outpost.xmrSecrets.mnemonicWarningTitle', {
+            {t('sovereign.xmrSecrets.mnemonicWarningTitle', {
               defaultValue: 'Spend authority — keep offline',
             })}
           </p>
           <ul className="mt-2 space-y-1 text-xs text-destructive/90 list-disc pl-5">
             <li>
-              {t('outpost.xmrSecrets.mnemonicWarning1', {
+              {t('sovereign.xmrSecrets.mnemonicWarning1', {
                 defaultValue: 'Write it down on paper. Do not paste it into any digital tool.',
               })}
             </li>
             <li>
-              {t('outpost.xmrSecrets.mnemonicWarning2', {
+              {t('sovereign.xmrSecrets.mnemonicWarning2', {
                 defaultValue:
                   'No copy button on purpose — clipboard sync, browser extensions, and screen-share apps can capture it.',
               })}
             </li>
             <li>
-              {t('outpost.xmrSecrets.mnemonicWarning3', {
+              {t('sovereign.xmrSecrets.mnemonicWarning3', {
                 defaultValue: 'Check that nobody is shoulder-surfing before revealing.',
               })}
             </li>
@@ -199,7 +199,7 @@ function MnemonicPanel() {
         {!revealed ? (
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              {t('outpost.xmrSecrets.mnemonicHiddenHint', {
+              {t('sovereign.xmrSecrets.mnemonicHiddenHint', {
                 defaultValue:
                   'The seed is hidden by default. It is fetched fresh from your wallet when you reveal it.',
               })}
@@ -216,7 +216,7 @@ function MnemonicPanel() {
               ) : (
                 <Eye className="w-4 h-4 mr-1" />
               )}
-              {t('outpost.xmrSecrets.revealSeed', { defaultValue: 'Reveal seed' })}
+              {t('sovereign.xmrSecrets.revealSeed', { defaultValue: 'Reveal seed' })}
             </Button>
           </div>
         ) : (
@@ -236,7 +236,7 @@ function RevealedMnemonic({ data, onHide }: { data: MoneroMnemonicResult; onHide
     <div className="space-y-3" data-testid="xmr-mnemonic-revealed">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">
-          {t('outpost.xmrSecrets.seedShown', { defaultValue: 'Seed shown — copy it offline' })}
+          {t('sovereign.xmrSecrets.seedShown', { defaultValue: 'Seed shown — copy it offline' })}
         </span>
         <Button
           type="button"
@@ -246,7 +246,7 @@ function RevealedMnemonic({ data, onHide }: { data: MoneroMnemonicResult; onHide
           data-testid="xmr-mnemonic-hide"
         >
           <EyeOff className="w-3.5 h-3.5 mr-1" />
-          {t('outpost.xmrSecrets.hide', { defaultValue: 'Hide' })}
+          {t('sovereign.xmrSecrets.hide', { defaultValue: 'Hide' })}
         </Button>
       </div>
 
@@ -261,7 +261,7 @@ function RevealedMnemonic({ data, onHide }: { data: MoneroMnemonicResult; onHide
 
       {wordCountMismatch && (
         <p className="text-xs text-amber-700 dark:text-amber-400">
-          {t('outpost.xmrSecrets.mnemonicCountWarning', {
+          {t('sovereign.xmrSecrets.mnemonicCountWarning', {
             defaultValue:
               'Wallet returned {{got}} words instead of the expected {{n}}. Verify your wallet integrity.',
             got: words.length,
@@ -274,7 +274,7 @@ function RevealedMnemonic({ data, onHide }: { data: MoneroMnemonicResult; onHide
         <div className="space-y-1 p-3 rounded-lg bg-muted/50">
           <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <Wallet className="w-3.5 h-3.5" />
-            {t('outpost.xmrSecrets.primaryAddressLabel', { defaultValue: 'Primary address' })}
+            {t('sovereign.xmrSecrets.primaryAddressLabel', { defaultValue: 'Primary address' })}
           </p>
           <p className="text-xs font-mono break-all">{data.address}</p>
         </div>
@@ -282,7 +282,7 @@ function RevealedMnemonic({ data, onHide }: { data: MoneroMnemonicResult; onHide
 
       {data.createdAt ? (
         <p className="text-xs text-muted-foreground">
-          {t('outpost.xmrSecrets.createdAt', {
+          {t('sovereign.xmrSecrets.createdAt', {
             defaultValue: 'Wallet created on {{date}}',
             date: new Date(data.createdAt * 1000).toLocaleString(),
           })}
@@ -312,7 +312,7 @@ function ViewOnlyPanel() {
       setError(
         err instanceof Error
           ? err.message
-          : t('outpost.xmrSecrets.viewOnlyFetchError', {
+          : t('sovereign.xmrSecrets.viewOnlyFetchError', {
               defaultValue: 'Failed to fetch view-only keys',
             })
       );
@@ -340,10 +340,10 @@ function ViewOnlyPanel() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShieldAlert className="w-5 h-5" />
-          {t('outpost.xmrSecrets.viewOnlyTitle', { defaultValue: 'View-only keys' })}
+          {t('sovereign.xmrSecrets.viewOnlyTitle', { defaultValue: 'View-only keys' })}
         </CardTitle>
         <CardDescription className="mt-1">
-          {t('outpost.xmrSecrets.viewOnlyDesc', {
+          {t('sovereign.xmrSecrets.viewOnlyDesc', {
             defaultValue:
               'Hand these three values to a trusted bookkeeper to give them read-only access to every payment. They will not be able to spend any funds.',
           })}
@@ -353,19 +353,19 @@ function ViewOnlyPanel() {
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
           <p className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200">
             <AlertTriangle className="w-4 h-4" />
-            {t('outpost.xmrSecrets.viewOnlyWarningTitle', {
+            {t('sovereign.xmrSecrets.viewOnlyWarningTitle', {
               defaultValue: 'Half-private — share only with trusted parties',
             })}
           </p>
           <ul className="mt-2 space-y-1 text-xs text-amber-900 dark:text-amber-300 list-disc pl-5">
             <li>
-              {t('outpost.xmrSecrets.viewOnlyWarning1', {
+              {t('sovereign.xmrSecrets.viewOnlyWarning1', {
                 defaultValue:
                   'A leaked view key permanently de-anonymises every past and future incoming payment.',
               })}
             </li>
             <li>
-              {t('outpost.xmrSecrets.viewOnlyWarning2', {
+              {t('sovereign.xmrSecrets.viewOnlyWarning2', {
                 defaultValue:
                   'Funds remain safe — view keys cannot sign transactions, only see them.',
               })}
@@ -382,7 +382,7 @@ function ViewOnlyPanel() {
         {!revealed ? (
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              {t('outpost.xmrSecrets.viewOnlyHiddenHint', {
+              {t('sovereign.xmrSecrets.viewOnlyHiddenHint', {
                 defaultValue: 'Keys are fetched fresh from your wallet when you reveal them.',
               })}
             </p>
@@ -397,7 +397,7 @@ function ViewOnlyPanel() {
               ) : (
                 <Eye className="w-4 h-4 mr-1" />
               )}
-              {t('outpost.xmrSecrets.revealKeys', { defaultValue: 'Reveal keys' })}
+              {t('sovereign.xmrSecrets.revealKeys', { defaultValue: 'Reveal keys' })}
             </Button>
           </div>
         ) : (
@@ -426,7 +426,7 @@ function RevealedViewOnly({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-green-700 dark:text-green-400 flex items-center gap-1.5">
           <CheckCircle2 className="w-4 h-4" />
-          {t('outpost.xmrSecrets.viewOnlyShown', {
+          {t('sovereign.xmrSecrets.viewOnlyShown', {
             defaultValue: 'Keys shown — copy each value into your bookkeeper wallet',
           })}
         </span>
@@ -444,7 +444,7 @@ function RevealedViewOnly({
             ) : (
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
             )}
-            {t('outpost.xmrSecrets.refreshHeight', { defaultValue: 'Refresh height' })}
+            {t('sovereign.xmrSecrets.refreshHeight', { defaultValue: 'Refresh height' })}
           </Button>
           <Button
             type="button"
@@ -454,18 +454,18 @@ function RevealedViewOnly({
             data-testid="xmr-view-only-hide"
           >
             <EyeOff className="w-3.5 h-3.5 mr-1" />
-            {t('outpost.xmrSecrets.hide', { defaultValue: 'Hide' })}
+            {t('sovereign.xmrSecrets.hide', { defaultValue: 'Hide' })}
           </Button>
         </div>
       </div>
 
       <KeyRow
-        label={t('outpost.xmrSecrets.primaryAddressLabel', { defaultValue: 'Primary address' })}
+        label={t('sovereign.xmrSecrets.primaryAddressLabel', { defaultValue: 'Primary address' })}
         value={data.primaryAddress}
         testId="xmr-view-only-address"
       />
       <KeyRow
-        label={t('outpost.xmrSecrets.privateViewKeyLabel', {
+        label={t('sovereign.xmrSecrets.privateViewKeyLabel', {
           defaultValue: 'Private view key',
         })}
         value={data.privateViewKey}
@@ -473,11 +473,11 @@ function RevealedViewOnly({
         secret
       />
       <KeyRow
-        label={t('outpost.xmrSecrets.restoreHeightLabel', { defaultValue: 'Restore height' })}
+        label={t('sovereign.xmrSecrets.restoreHeightLabel', { defaultValue: 'Restore height' })}
         value={String(data.restoreHeight)}
         hint={
           data.restoreHeight === 0
-            ? t('outpost.xmrSecrets.restoreHeightZeroHint', {
+            ? t('sovereign.xmrSecrets.restoreHeightZeroHint', {
                 defaultValue: '0 = full rescan (slow). Recipient may take hours to catch up.',
               })
             : undefined
@@ -486,7 +486,7 @@ function RevealedViewOnly({
       />
 
       <div className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/30">
-        {t('outpost.xmrSecrets.currentHeightFooter', {
+        {t('sovereign.xmrSecrets.currentHeightFooter', {
           defaultValue:
             'Your wallet is currently scanned to block {{h}}. The bookkeeper will see every confirmed payment up to this height.',
           h: data.currentHeight.toLocaleString(),
@@ -540,15 +540,15 @@ function KeyRow({
           size="sm"
           onClick={handleCopy}
           className="h-6 px-2"
-          aria-label={t('outpost.xmrSecrets.copyValue', {
+          aria-label={t('sovereign.xmrSecrets.copyValue', {
             defaultValue: 'Copy {{label}}',
             label,
           })}
         >
           <Copy className="w-3 h-3 mr-1" />
           {copied
-            ? t('outpost.xmrSecrets.copied', { defaultValue: 'Copied' })
-            : t('outpost.xmrSecrets.copy', { defaultValue: 'Copy' })}
+            ? t('sovereign.xmrSecrets.copied', { defaultValue: 'Copied' })
+            : t('sovereign.xmrSecrets.copy', { defaultValue: 'Copy' })}
         </Button>
       </div>
       <p className="text-xs font-mono break-all">{value}</p>

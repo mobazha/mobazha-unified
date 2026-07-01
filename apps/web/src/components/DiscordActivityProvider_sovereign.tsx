@@ -1,5 +1,5 @@
 /**
- * Outpost stub — Discord Activity provider is stripped at build time.
+ * Sovereign stub — Discord Activity provider is stripped at build time.
  */
 export function DiscordActivityProvider({ children }: { children: import('react').ReactNode }) {
   return <>{children}</>;

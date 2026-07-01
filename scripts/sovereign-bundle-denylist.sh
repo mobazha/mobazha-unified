@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# outpost-bundle-denylist.sh — Two-tier post-build validation for Outpost bundles.
+# sovereign-bundle-denylist.sh — Two-tier post-build validation for Sovereign bundles.
 #
-# Run after `VITE_BUILD_TARGET=outpost vite build` to verify that no
+# Run after `VITE_BUILD_TARGET=sovereign vite build` to verify that no
 # forbidden external domains, SDK identifiers, or suspicious business
 # terms leaked into the production bundle.
 #
@@ -11,7 +11,7 @@
 #   1 — Level 1 hard failure (external domains / SDK identifiers found)
 #
 # Usage:
-#   ./scripts/outpost-bundle-denylist.sh [dist-dir]
+#   ./scripts/sovereign-bundle-denylist.sh [dist-dir]
 #   Default dist-dir: apps/web/dist
 
 set -euo pipefail
@@ -20,7 +20,7 @@ DIST_DIR="${1:-apps/web/dist}"
 
 if [ ! -d "$DIST_DIR" ]; then
   echo "ERROR: dist directory not found: $DIST_DIR"
-  echo "Run 'VITE_BUILD_TARGET=outpost pnpm build --filter @mobazha/web' first."
+  echo "Run 'VITE_BUILD_TARGET=sovereign pnpm build --filter @mobazha/web' first."
   exit 1
 fi
 
@@ -124,6 +124,6 @@ elif [ "$L2_WARN" -ne 0 ]; then
   echo "(Level 2 is informational and does not block the build.)"
   exit 0
 else
-  echo -e "${GREEN}CLEAN${NC}: Outpost bundle passes all checks."
+  echo -e "${GREEN}CLEAN${NC}: Sovereign bundle passes all checks."
   exit 0
 fi

@@ -1,5 +1,5 @@
 /**
- * Outpost Store Seeder — API-based seeding for real backend tests.
+ * Sovereign Store Seeder — API-based seeding for real backend tests.
  *
  * Creates a profile, a listing, and enables guest checkout via Basic Auth API calls.
  * Also completes the setup wizard (POST /v1/system/setup) so the admin UI works.
@@ -28,7 +28,7 @@ export async function waitForHealthy(baseUrl: string, timeoutMs = 120_000): Prom
     }
     await new Promise(r => setTimeout(r, 2000));
   }
-  throw new Error(`Outpost at ${baseUrl} not healthy after ${timeoutMs}ms`);
+  throw new Error(`Sovereign at ${baseUrl} not healthy after ${timeoutMs}ms`);
 }
 
 /**
@@ -122,7 +122,7 @@ export interface SeedResult {
   receivingAccountOk: boolean;
 }
 
-export async function seedOutpostStore(
+export async function seedSovereignStore(
   request: APIRequestContext,
   baseUrl: string,
   password: string,
@@ -144,9 +144,9 @@ export async function seedOutpostStore(
     const resp = await request.post(`${baseUrl}/v1/profiles`, {
       headers,
       data: {
-        name: 'Outpost E2E Store',
+        name: 'Sovereign E2E Store',
         shortDescription: 'Privacy-first store for automated testing',
-        about: 'Seeded by seed-outpost-store.ts',
+        about: 'Seeded by seed-sovereign-store.ts',
       },
     });
     profileOk = resp.ok() || resp.status() === 409;

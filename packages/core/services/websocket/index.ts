@@ -5,7 +5,7 @@
 
 /// <reference lib="dom" />
 
-import { getEnvConfig, isOutpostMode, isStandaloneMode } from '../../config/env';
+import { getEnvConfig, isSovereignMode, isStandaloneMode } from '../../config/env';
 import { getStoredToken } from '../auth/token';
 
 // WebSocket 类型（兼容浏览器和 Node.js）
@@ -54,7 +54,7 @@ function encodeWebSocketTokenProtocol(token: string): string {
 }
 
 /**
- * Direct mobazha3.0 node connections (standalone/outpost seller, local dev)
+ * Direct mobazha3.0 node connections (standalone/sovereign seller, local dev)
  * authenticate via ?token= because Basic Auth uses ?token=basic:... and the
  * node historically did not read Sec-WebSocket-Protocol. SaaS hosting resolves
  * auth from the protocol header instead.
@@ -64,7 +64,7 @@ export function shouldUseQueryTokenWebSocketAuth(wsUrl: string, token: string): 
     return true;
   }
 
-  if (isStandaloneMode() || isOutpostMode()) {
+  if (isStandaloneMode() || isSovereignMode()) {
     try {
       const url = new URL(wsUrl, window.location.origin);
       // /buyer-api/ws proxies to SaaS hosting — protocol auth is preferred there.

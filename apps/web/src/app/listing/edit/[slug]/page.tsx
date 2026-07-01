@@ -84,10 +84,10 @@ import { ListingFulfillmentPricingPanel } from '@/components/Listing/ListingFulf
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
-// Outpost is single-store: /store (no peerID) is the clean storefront URL.
+// Sovereign is single-store: /store (no peerID) is the clean storefront URL.
 // SaaS /profile redirects to /store/:peerID — same intent, different path.
 const AFTER_LISTING_PATH =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '/store' : '/profile';
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '/store' : '/profile';
 
 // 左侧导航标签
 type TabKey =

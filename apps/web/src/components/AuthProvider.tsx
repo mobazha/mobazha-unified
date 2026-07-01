@@ -109,10 +109,10 @@ export function AuthProvider({
     }
   }, [isAuthenticated, hasHashToken]);
 
-  // 初始化 Matrix（在用户登录后自动连接；Outpost 模式下完全禁用）
+  // 初始化 Matrix（在用户登录后自动连接；Sovereign 模式下完全禁用）
   useMatrixInit({
-    enabled: !__OUTPOST__,
-    autoConnect: !__OUTPOST__,
+    enabled: !__SOVEREIGN__,
+    autoConnect: !__SOVEREIGN__,
   });
 
   // SaaS: hydrate platform feature flags for all routes (not only /admin).
@@ -361,14 +361,14 @@ export function AuthProvider({
   useEffect(() => {
     if (!isInitialized || isProcessingOAuth) return;
 
-    // Standalone / Outpost: admin setup lives inside /admin (StandaloneSetupWizard).
+    // Standalone / Sovereign: admin setup lives inside /admin (StandaloneSetupWizard).
     // Never redirect to /onboarding — that route only exists for SaaS Casdoor flows.
-    const standaloneOrOutpost =
-      typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? true : isStandalone();
+    const standaloneOrSovereign =
+      typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? true : isStandalone();
 
     // 如果已认证且在登录页（且没有 OAuth 参数），重定向到目标页面
     if (isAuthenticated && pathname === '/login' && !hasOAuthCallback()) {
-      if (needsOnboarding && !standaloneOrOutpost) {
+      if (needsOnboarding && !standaloneOrSovereign) {
         router.push('/onboarding');
       } else {
         const redirectPath = getRedirectPath(searchParams);
@@ -380,7 +380,7 @@ export function AuthProvider({
     if (
       isAuthenticated &&
       needsOnboarding &&
-      !standaloneOrOutpost &&
+      !standaloneOrSovereign &&
       pathname !== '/onboarding' &&
       pathname !== '/login'
     ) {

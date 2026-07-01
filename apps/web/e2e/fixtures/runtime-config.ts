@@ -1,5 +1,5 @@
 export interface RuntimeConfigFixtureOptions {
-  deployment?: 'hosted' | 'standalone' | 'outpost';
+  deployment?: 'hosted' | 'standalone' | 'sovereign';
   experience?:
     | { kind: 'platform' | 'store' }
     | { kind: 'marketplace'; marketplaceIdentifier: string };
@@ -14,11 +14,11 @@ export interface RuntimeConfigFixtureOptions {
 export function runtimeConfigFixture(options: RuntimeConfigFixtureOptions = {}) {
   const deployment = options.deployment ?? 'hosted';
   const hosted = deployment === 'hosted';
-  const outpost = deployment === 'outpost';
+  const sovereign = deployment === 'sovereign';
   return {
     schemaVersion: 3,
     authMode: hosted ? 'hosted' : 'standalone',
-    deployment: { mode: deployment, allowExternalResources: !outpost },
+    deployment: { mode: deployment, allowExternalResources: !sovereign },
     experience: options.experience ?? { kind: hosted ? 'platform' : 'store' },
     capabilitiesReady: true,
     features: options.guestCheckout ? { guestCheckout: { effective: true, overridable: [] } } : {},
@@ -34,7 +34,7 @@ export function runtimeConfigFixture(options: RuntimeConfigFixtureOptions = {}) 
         releasePublishing: hosted,
         attribution: hosted,
       },
-      outpost: { isolatedRuntime: outpost, managedFleet: false },
+      sovereign: { isolatedRuntime: sovereign, managedFleet: false },
       payments: { methods: options.paymentMethods ?? [] },
     },
   };

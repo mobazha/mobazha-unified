@@ -4344,14 +4344,14 @@ export interface TranslationResource {
       aiSaveActivate?: string;
       aiProviderActive?: string;
       aiApiKeySaved?: string;
-      aiOutpostGuideTitle?: string;
-      aiOutpostGuideDesc?: string;
-      aiOutpostGuideStep1?: string;
-      aiOutpostGuideStep2?: string;
-      aiOutpostGuideStep3?: string;
-      aiOutpostEndpoint?: string;
-      aiOutpostEndpointHint?: string;
-      aiOutpostApiKeyOptional?: string;
+      aiSovereignGuideTitle?: string;
+      aiSovereignGuideDesc?: string;
+      aiSovereignGuideStep1?: string;
+      aiSovereignGuideStep2?: string;
+      aiSovereignGuideStep3?: string;
+      aiSovereignEndpoint?: string;
+      aiSovereignEndpointHint?: string;
+      aiSovereignApiKeyOptional?: string;
       aiPlatformActive?: string;
       aiPlatformTitle?: string;
       aiPlatformDesc?: string;
@@ -5560,7 +5560,7 @@ export interface TranslationResource {
     other?: string;
     otherDesc?: string;
     onboarding?: string;
-    outpost?: {
+    sovereign?: {
       banner?: {
         title?: string;
         body?: string;
@@ -5684,8 +5684,8 @@ export interface TranslationResource {
     searchFallback?: string;
   };
 
-  // Outpost-specific shared labels.
-  outpost?: TranslationSection;
+  // Sovereign-specific shared labels.
+  sovereign?: TranslationSection;
 
   // Digital asset shared labels (Supply Chain Phase 1.0)
   digital?: TranslationSection;

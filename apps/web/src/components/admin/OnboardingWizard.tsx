@@ -13,7 +13,7 @@ import {
   getAdminXmrWalletPath,
   useFiatPaymentVisible,
 } from '@mobazha/core';
-import { isOutpostMode } from '@mobazha/core/config/env';
+import { isSovereignMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
 import { createProfile as apiCreateProfile } from '@mobazha/core/services/api/profile';
@@ -163,13 +163,13 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const fiatVisible = useFiatPaymentVisible();
 
   const standaloneMode = useMemo(() => isStandalone(), []);
-  const isOutpost = useMemo(() => isOutpostMode(), []);
+  const isSovereign = useMemo(() => isSovereignMode(), []);
 
   const { data: receivingAccounts } = useReceivingAccounts();
   const [xmrWalletStatus, setXmrWalletStatus] = useState<MoneroWalletSetupStatus | null>(null);
 
   useEffect(() => {
-    if (!isOutpost) return;
+    if (!isSovereign) return;
     let cancelled = false;
     getXMRWalletSetupStatus()
       .then(status => {
@@ -181,16 +181,16 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
     return () => {
       cancelled = true;
     };
-  }, [isOutpost]);
+  }, [isSovereign]);
 
   const hasPayment = useMemo(() => {
-    if (isOutpost) {
+    if (isSovereign) {
       return Boolean(xmrWalletStatus?.exists);
     }
     return Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false);
-  }, [isOutpost, receivingAccounts, xmrWalletStatus]);
+  }, [isSovereign, receivingAccounts, xmrWalletStatus]);
 
-  const paymentsSetupPath = isOutpost ? getAdminXmrWalletPath() : getAdminStorePaymentsPath();
+  const paymentsSetupPath = isSovereign ? getAdminXmrWalletPath() : getAdminStorePaymentsPath();
 
   const TOTAL_STEPS = 4;
   const profileAlreadyComplete = useMemo(() => isProfileComplete(profile), [profile]);
@@ -220,7 +220,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>(
-    isOutpost ? 'unlisted' : 'public'
+    isSovereign ? 'unlisted' : 'public'
   );
 
   const stepLabels = [
@@ -507,12 +507,12 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               onCountryChange={setCountry}
               onCurrencyChange={setCurrency}
               disabled={saving}
-              hideCurrency={isOutpost}
+              hideCurrency={isSovereign}
             />
           </div>
 
-          {/* Store Visibility — hidden for Outpost (always unlisted) */}
-          {!isOutpost && (
+          {/* Store Visibility — hidden for Sovereign (always unlisted) */}
+          {!isSovereign && (
             <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
               <h3 className="text-xs sm:text-sm font-medium text-foreground">
                 {t('admin.onboarding.storeVisibility')}
@@ -641,7 +641,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               },
               {
                 icon: <Coins className="w-5 h-5 text-primary" />,
-                text: isOutpostMode()
+                text: isSovereignMode()
                   ? t('admin.onboarding.featureCryptoPricing') || 'Crypto pricing'
                   : t('admin.onboarding.featurePricing') || 'Crypto & fiat pricing',
               },
@@ -717,7 +717,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
           )}
 
-          {!hasPayment && isOutpost && (
+          {!hasPayment && isSovereign && (
             <div
               role="alert"
               className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4"
@@ -748,14 +748,14 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">
-                {isOutpost
+                {isSovereign
                   ? t('admin.onboarding.setupXmrWallet', {
                       defaultValue: 'Set up Monero wallet',
                     })
                   : t('admin.onboarding.setupPayments') || 'Set up payment methods'}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {isOutpost
+                {isSovereign
                   ? t('admin.onboarding.setupXmrWalletDesc', {
                       defaultValue:
                         'Create or restore the wallet that receives buyer payments on this store.',

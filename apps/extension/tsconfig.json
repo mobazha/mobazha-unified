@@ -28,7 +28,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "../web/src/types/outpost.d.ts",
+    "../web/src/types/sovereign.d.ts",
     "../../packages/core/types/window.d.ts"
   ],
   "exclude": ["node_modules", "dist"]

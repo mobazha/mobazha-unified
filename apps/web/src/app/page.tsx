@@ -459,7 +459,7 @@ function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null
             isLoading={isLoading}
             showViewAll
             viewAllHref={
-              __OUTPOST__ ? '/store' : effectivePeerID ? `/store/${effectivePeerID}` : '/'
+              __SOVEREIGN__ ? '/store' : effectivePeerID ? `/store/${effectivePeerID}` : '/'
             }
           />
         </div>

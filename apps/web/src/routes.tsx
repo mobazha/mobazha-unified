@@ -57,9 +57,9 @@ function capabilityPage(
 }
 
 // Full route table — guarded by compile-time constant so Rollup eliminates all
-// dynamic imports in Outpost builds.
+// dynamic imports in Sovereign builds.
 let routes: RouteObject[] = [];
-if (!__OUTPOST__) {
+if (!__SOVEREIGN__) {
   routes = [
     // ============================================
     // 公开路由（无需登录）
@@ -368,15 +368,15 @@ if (!__OUTPOST__) {
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
         {
-          // DG-1.9 — Gumroad migration wizard. Full build only; outpostRoutes
-          // intentionally omits this entry because the Outpost Go binary doesn't
-          // ship the /v1/listings/import/gumroad handler (build-tagged !outpost).
+          // DG-1.9 — Gumroad migration wizard. Full build only; sovereignRoutes
+          // intentionally omits this entry because the Sovereign Go binary doesn't
+          // ship the /v1/listings/import/gumroad handler (excluded by the private distribution route policy).
           path: 'products/import-gumroad',
           element: lazyPage(() => import('./app/admin/products/import-gumroad/page')),
         },
         {
           // Agent product import — smart CSV/XLSX/ZIP ingest + workbench.
-          // Full build only; Outpost omits /v1/agent/product-import/* handlers.
+          // Full build only; Sovereign omits /v1/agent/product-import/* handlers.
           path: 'products/import',
           element: lazyPage(() => import('./app/admin/products/import/page')),
         },
@@ -452,7 +452,7 @@ if (!__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
         },
         {
-          // Outpost-only: Monero NodePool admin (linked from payments page)
+          // Sovereign-only: Monero NodePool admin (linked from payments page)
           path: 'settings/monero-nodes',
           element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
@@ -602,19 +602,19 @@ if (!__OUTPOST__) {
         ]
       : []),
   ];
-} // end if (!__OUTPOST__)
+} // end if (!__SOVEREIGN__)
 
 /**
- * Outpost route subset — single-store, anonymous guest checkout,
+ * Sovereign route subset — single-store, anonymous guest checkout,
  * no marketplace/search/wallet/chat/moderation/social features.
  */
-let outpostRoutes: RouteObject[] = [];
-if (__OUTPOST__) {
-  outpostRoutes = [
+let sovereignRoutes: RouteObject[] = [];
+if (__SOVEREIGN__) {
+  sovereignRoutes = [
     // Storefront (single-store home)
     { path: '/', element: lazyPage(() => import('./app/page')) },
 
-    // Store — clean URL without peerId for single-store Outpost
+    // Store — clean URL without peerId for single-store Sovereign
     {
       path: '/store',
       element: capabilityPage('commerce.storefront', () => import('./app/store/page')),
@@ -694,7 +694,7 @@ if (__OUTPOST__) {
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
         {
-          // Canonical Monero wallet ops under Funds (sidebar); keep registered here for Outpost builds.
+          // Canonical Monero wallet ops under Funds (sidebar); keep registered here for Sovereign builds.
           path: 'finance/xmr-wallet',
           element: lazyPage(() => import('./app/admin/finance/xmr-wallet/page')),
         },
@@ -732,7 +732,7 @@ if (__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
         },
         {
-          // Outpost-only: Monero NodePool admin (linked from /admin/finance)
+          // Sovereign-only: Monero NodePool admin (linked from /admin/finance)
           path: 'settings/monero-nodes',
           element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
@@ -741,15 +741,15 @@ if (__OUTPOST__) {
           element: lazyPage(() => import('./app/admin/settings/policies/page')),
         },
         {
-          // DG-1.14: operator responsibilities — Outpost build also
+          // DG-1.14: operator responsibilities — Sovereign build also
           // surfaces the responsibility card from /admin/settings.
           path: 'settings/responsibilities',
           element: lazyPage(() => import('./app/admin/settings/responsibilities/page')),
         },
         // NOTE: settings/data-export is intentionally omitted from the
-        // Outpost build — the /v1/exports/* backend handlers carry a
-        // !outpost build tag because they depend on the full OrderService.
-        // A guest-order-aware export is on the Outpost roadmap.
+        // Sovereign build — the /v1/exports/* backend handlers carry a
+        // private distribution route policy because they depend on the full OrderService.
+        // A guest-order-aware export is on the Sovereign roadmap.
         {
           path: 'settings/integrations',
           element: lazyPage(() => import('./app/admin/settings/integrations/page')),
@@ -800,9 +800,9 @@ if (__OUTPOST__) {
     // Notifications (local WebSocket only)
     { path: '/notifications', element: protectedPage(() => import('./app/notifications/page')) },
   ];
-} // end if (!__OUTPOST__)
+} // end if (!__SOVEREIGN__)
 
-const activeRoutes = __OUTPOST__ ? outpostRoutes : routes;
+const activeRoutes = __SOVEREIGN__ ? sovereignRoutes : routes;
 
 // 导出路由配置数组（供 main.tsx 使用）
 export { activeRoutes as routes };

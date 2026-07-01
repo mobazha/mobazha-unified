@@ -4,10 +4,10 @@ import { headers } from 'next/headers';
 import './globals.css';
 import '@/lib/initPublicEnv';
 
-// __OUTPOST__ 是 Vite (apps/web/vite.config.ts) 的编译时 define。
+// __SOVEREIGN__ 是 Vite (apps/web/vite.config.ts) 的编译时 define。
 // Next.js 构建不替换此变量，导致裸引用在运行时抛 ReferenceError。
 // 在最早期挂载到 globalThis（覆盖 SSR）— 客户端再通过 inline script 兜底（见 <head>）。
-(globalThis as { __OUTPOST__?: boolean }).__OUTPOST__ = false;
+(globalThis as { __SOVEREIGN__?: boolean }).__SOVEREIGN__ = false;
 import {
   AuthProvider,
   MainContent,
@@ -47,7 +47,7 @@ function AuthProviderLoading() {
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://app.mobazha.org');
+  (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '' : 'https://app.mobazha.org');
 
 const defaultMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -162,12 +162,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
-        {/* __OUTPOST__ — Vite 编译时 define，Next.js 不替换。
+        {/* __SOVEREIGN__ — Vite 编译时 define，Next.js 不替换。
             必须在所有其他 script 之前定义，避免裸引用抛 ReferenceError。
             Next.js 永远走 SaaS / Standalone，恒为 false。 */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.__OUTPOST__=false;`,
+            __html: `window.__SOVEREIGN__=false;`,
           }}
         />
         {/* Sync <html lang> before hydration — reduces browser auto-translate misfires */}

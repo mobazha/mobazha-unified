@@ -5,14 +5,14 @@
  *      PLAYWRIGHT_WEBSERVER_TIMEOUT_MS.
  *
  * Project scoping:
- *   - chromium:           desktop-visual + general E2E (excludes mobile-visual, standalone & outpost)
- *   - Mobile Chrome:      mobile-visual  + general E2E (excludes desktop-visual, standalone & outpost)
+ *   - chromium:           desktop-visual + general E2E (excludes mobile-visual, standalone & sovereign)
+ *   - Mobile Chrome:      mobile-visual  + general E2E (excludes desktop-visual, standalone & sovereign)
  *   - standalone*:        standalone tests only
  *   - firefox/webkit/etc: opt-in via CLI --project flag
  *
- * Outpost testing uses dedicated configs (not started by default):
- *   - pnpm test:e2e:outpost:dev   → playwright.outpost-dev.config.ts (dev server)
- *   - pnpm test:e2e:outpost       → playwright.outpost-prod.config.ts (production build)
+ * Sovereign testing uses dedicated configs (not started by default):
+ *   - pnpm test:e2e:sovereign:dev   → playwright.sovereign-dev.config.ts (dev server)
+ *   - pnpm test:e2e:sovereign       → playwright.sovereign-prod.config.ts (production build)
  */
 
 import { defineConfig, devices } from '@playwright/test';
@@ -55,12 +55,12 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: [/standalone/, /mobile-visual/, /outpost/],
+      testIgnore: [/standalone/, /mobile-visual/, /sovereign/],
     },
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
-      testIgnore: [/standalone/, /desktop-visual/, /outpost/],
+      testIgnore: [/standalone/, /desktop-visual/, /sovereign/],
     },
     // Standalone store (port 3002, or 3000 for demo capture) — only standalone tests
     {

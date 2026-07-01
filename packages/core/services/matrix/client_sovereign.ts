@@ -1,5 +1,5 @@
 /**
- * Outpost stub — Matrix client stripped at build time.
+ * Sovereign stub — Matrix client stripped at build time.
  * Provides a no-op MatrixClientService matching the public API.
  */
 
@@ -26,7 +26,7 @@ class MatrixClientServiceStub {
     return false;
   }
   getVerificationUnavailableReason(): string | null {
-    return 'Outpost mode';
+    return 'Sovereign mode';
   }
   async getStatus(): Promise<ChatStatusResponse | null> {
     return null;

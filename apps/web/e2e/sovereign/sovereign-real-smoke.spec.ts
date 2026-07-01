@@ -1,22 +1,22 @@
 /**
- * Layer B: Outpost Real Backend Smoke Tests
+ * Layer B: Sovereign Real Backend Smoke Tests
  *
- * Requires a running Outpost binary at OUTPOST_URL (default http://127.0.0.1:5102).
+ * Requires a running Sovereign binary at SOVEREIGN_URL (default http://127.0.0.1:5102).
  * Tests Admin dashboard, profile/listing CRUD, buyer browsing, and guest checkout settings.
  *
- * NOTE: Outpost mode has NO /login route. Authentication is via Basic Auth token
- * injected into localStorage. The admin password is read from the Outpost data dir.
+ * NOTE: Sovereign mode has NO /login route. Authentication is via Basic Auth token
+ * injected into localStorage. The admin password is read from the Sovereign data dir.
  *
  * Usage:
- *   OUTPOST_URL=http://127.0.0.1:5102 OUTPOST_PASSWORD=<admin_password> pnpm test:e2e:outpost:real
+ *   SOVEREIGN_URL=http://127.0.0.1:5102 SOVEREIGN_PASSWORD=<admin_password> pnpm test:e2e:sovereign:real
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { seedOutpostStore, waitForHealthy } from './fixtures/seed-outpost-store';
+import { seedSovereignStore, waitForHealthy } from './fixtures/seed-sovereign-store';
 
-const OUTPOST_URL = process.env.OUTPOST_URL || 'http://127.0.0.1:5102';
-const ADMIN_PASS = process.env.OUTPOST_PASSWORD || '';
-const OUT = 'screenshots/outpost-real';
+const SOVEREIGN_URL = process.env.SOVEREIGN_URL || 'http://127.0.0.1:5102';
+const ADMIN_PASS = process.env.SOVEREIGN_PASSWORD || '';
+const OUT = 'screenshots/sovereign-real';
 
 function basicAuth(): string {
   return 'Basic ' + Buffer.from(`admin:${ADMIN_PASS}`).toString('base64');
@@ -37,8 +37,8 @@ async function injectAuth(page: Page): Promise<void> {
     state.token = t;
     state.isAuthenticated = true;
     state.user = {
-      name: 'Outpost Admin',
-      peerID: 'outpost-e2e-admin',
+      name: 'Sovereign Admin',
+      peerID: 'sovereign-e2e-admin',
       role: 'admin',
     };
     parsed.state = state;
@@ -51,13 +51,13 @@ test.describe.configure({ mode: 'serial' });
 let seedOk = false;
 
 test.beforeAll(async ({ request }) => {
-  test.skip(!ADMIN_PASS, 'OUTPOST_PASSWORD not set — skip real backend tests');
-  await waitForHealthy(OUTPOST_URL);
-  const result = await seedOutpostStore(request, OUTPOST_URL, ADMIN_PASS);
+  test.skip(!ADMIN_PASS, 'SOVEREIGN_PASSWORD not set — skip real backend tests');
+  await waitForHealthy(SOVEREIGN_URL);
+  const result = await seedSovereignStore(request, SOVEREIGN_URL, ADMIN_PASS);
   console.log('Seed result:', result);
   seedOk = result.setupOk && result.profileOk;
 
-  const setupResp = await request.get(`${OUTPOST_URL}/v1/system/setup`);
+  const setupResp = await request.get(`${SOVEREIGN_URL}/v1/system/setup`);
   if (setupResp.ok()) {
     const body = await setupResp.json();
     const data = body.data ?? body;
@@ -65,10 +65,10 @@ test.beforeAll(async ({ request }) => {
   }
 });
 
-test.describe('Outpost Real Smoke — API Checks', () => {
+test.describe('Sovereign Real Smoke — API Checks', () => {
   test('01 — Profile exists via API', async ({ request }) => {
     test.skip(!ADMIN_PASS, 'No password');
-    const resp = await request.get(`${OUTPOST_URL}/v1/profiles`, {
+    const resp = await request.get(`${SOVEREIGN_URL}/v1/profiles`, {
       headers: { Authorization: basicAuth() },
     });
     expect(resp.ok()).toBeTruthy();
@@ -79,7 +79,7 @@ test.describe('Outpost Real Smoke — API Checks', () => {
 
   test('02 — Guest checkout enabled via API', async ({ request }) => {
     test.skip(!ADMIN_PASS, 'No password');
-    const resp = await request.get(`${OUTPOST_URL}/v1/settings/guest-checkout`, {
+    const resp = await request.get(`${SOVEREIGN_URL}/v1/settings/guest-checkout`, {
       headers: { Authorization: basicAuth() },
     });
     expect(resp.ok()).toBeTruthy();
@@ -89,7 +89,7 @@ test.describe('Outpost Real Smoke — API Checks', () => {
   });
 });
 
-test.describe('Outpost Real Smoke — Admin UI', () => {
+test.describe('Sovereign Real Smoke — Admin UI', () => {
   test('03 — Admin dashboard', async ({ page }) => {
     test.skip(!ADMIN_PASS, 'No password');
     await injectAuth(page);
@@ -118,7 +118,7 @@ test.describe('Outpost Real Smoke — Admin UI', () => {
   });
 });
 
-test.describe('Outpost Real Smoke — Buyer Browsing', () => {
+test.describe('Sovereign Real Smoke — Buyer Browsing', () => {
   test('06 — Store homepage (buyer view)', async ({ page }) => {
     test.skip(!ADMIN_PASS, 'No password');
     await page.goto('/');
@@ -144,7 +144,7 @@ test.describe('Outpost Real Smoke — Buyer Browsing', () => {
   });
 });
 
-test.describe('Outpost Real Smoke — Settings', () => {
+test.describe('Sovereign Real Smoke — Settings', () => {
   test('09 — General settings', async ({ page }) => {
     test.skip(!ADMIN_PASS, 'No password');
     await page.goto('/settings');

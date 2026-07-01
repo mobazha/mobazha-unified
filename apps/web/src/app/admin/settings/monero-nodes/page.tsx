@@ -27,15 +27,15 @@ import {
 } from '@mobazha/core/services/api/monero';
 
 /**
- * Monero NodePool admin page (Outpost only)
+ * Monero NodePool admin page (Sovereign only)
  *
  * Exposes the four NodePool admin endpoints:
  *   list / add / remove / switch
  *
  * Three operational states distinguished:
- *   1) Non-outpost build       → page renders a friendly "not available"
- *   2) Outpost + NodePool off  → snapshot.available === false (legacy single-daemon)
- *   3) Outpost + NodePool on   → normal list + add/remove/switch
+ *   1) Non-sovereign build       → page renders a friendly "not available"
+ *   2) Sovereign + NodePool off  → snapshot.available === false (legacy single-daemon)
+ *   3) Sovereign + NodePool on   → normal list + add/remove/switch
  */
 
 function StatusPill({
@@ -90,7 +90,7 @@ function HealthCell({ node }: { node: MoneroNodeInfo }) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-destructive">
         <XCircle className="w-3.5 h-3.5" />
-        {t('outpost.nodes.suspicious', { defaultValue: 'Suspicious' })}
+        {t('sovereign.nodes.suspicious', { defaultValue: 'Suspicious' })}
       </span>
     );
   }
@@ -98,7 +98,7 @@ function HealthCell({ node }: { node: MoneroNodeInfo }) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
         <AlertCircle className="w-3.5 h-3.5" />
-        {t('outpost.nodes.failStreak', {
+        {t('sovereign.nodes.failStreak', {
           defaultValue: 'Fail streak: {{n}}',
           n: node.failStreak,
         })}
@@ -109,7 +109,7 @@ function HealthCell({ node }: { node: MoneroNodeInfo }) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
         <CheckCircle2 className="w-3.5 h-3.5" />
-        {t('outpost.nodes.successStreak', {
+        {t('sovereign.nodes.successStreak', {
           defaultValue: 'Healthy ({{n}})',
           n: node.successStreak,
         })}
@@ -118,7 +118,7 @@ function HealthCell({ node }: { node: MoneroNodeInfo }) {
   }
   return (
     <span className="text-xs text-muted-foreground">
-      {t('outpost.nodes.notProbed', { defaultValue: 'Not yet probed' })}
+      {t('sovereign.nodes.notProbed', { defaultValue: 'Not yet probed' })}
     </span>
   );
 }
@@ -141,7 +141,7 @@ export default function MoneroNodesPage() {
   // custom-node form (The Market Place pattern). Diagnostics columns are
   // gated separately so partners can show the active node + pool size
   // without leaking latency/fail-streak data that suggests "go fix it".
-  // See docs/privacy/OUTPOST_MONEROD_NETWORK_DESIGN.md § OP-MP-4.
+  // Product-specific network policy is supplied by the private distribution.
   const networkBrand = getBrandNetworkConfig();
   const showNodePoolUI = networkBrand.showNodePoolUI;
   const allowUserCustomNode = networkBrand.allowUserCustomNode;
@@ -168,7 +168,7 @@ export default function MoneroNodesPage() {
         setError(
           err instanceof Error
             ? err.message
-            : t('outpost.nodes.loadError', { defaultValue: 'Failed to load Monero nodes' })
+            : t('sovereign.nodes.loadError', { defaultValue: 'Failed to load Monero nodes' })
         );
       } finally {
         if (showLoading) setLoading(false);
@@ -182,7 +182,7 @@ export default function MoneroNodesPage() {
     // — even if the user navigates here directly we shouldn't probe
     // /v1/system/monero/nodes when the partner has chosen to keep the
     // pool out of the UI.
-    if (!__OUTPOST__ || !showNodePoolUI) {
+    if (!__SOVEREIGN__ || !showNodePoolUI) {
       setLoading(false);
       return;
     }
@@ -207,12 +207,12 @@ export default function MoneroNodesPage() {
         setNewAddress('');
         setNewOperator('');
         await refresh();
-        showToast(t('outpost.nodes.addSuccess', { defaultValue: 'Node added' }));
+        showToast(t('sovereign.nodes.addSuccess', { defaultValue: 'Node added' }));
       } catch (err) {
         setError(
           err instanceof Error
             ? err.message
-            : t('outpost.nodes.addError', { defaultValue: 'Failed to add node' })
+            : t('sovereign.nodes.addError', { defaultValue: 'Failed to add node' })
         );
       } finally {
         setBusy(null);
@@ -228,12 +228,12 @@ export default function MoneroNodesPage() {
       try {
         const updated = await switchMoneroNode(address);
         setSnapshot(updated);
-        showToast(t('outpost.nodes.switchSuccess', { defaultValue: 'Wallet-rpc rebound' }));
+        showToast(t('sovereign.nodes.switchSuccess', { defaultValue: 'Wallet-rpc rebound' }));
       } catch (err) {
         setError(
           err instanceof Error
             ? err.message
-            : t('outpost.nodes.switchError', { defaultValue: 'Failed to switch node' })
+            : t('sovereign.nodes.switchError', { defaultValue: 'Failed to switch node' })
         );
       } finally {
         setBusy(null);
@@ -249,7 +249,7 @@ export default function MoneroNodesPage() {
       // nodes only) and an extra confirm step adds friction.
       if (
         !window.confirm(
-          t('outpost.nodes.removeConfirm', {
+          t('sovereign.nodes.removeConfirm', {
             defaultValue: 'Remove this node from the pool? You can re-add it later.',
           })
         )
@@ -261,12 +261,12 @@ export default function MoneroNodesPage() {
       try {
         await removeMoneroNode(address);
         await refresh();
-        showToast(t('outpost.nodes.removeSuccess', { defaultValue: 'Node removed' }));
+        showToast(t('sovereign.nodes.removeSuccess', { defaultValue: 'Node removed' }));
       } catch (err) {
         setError(
           err instanceof Error
             ? err.message
-            : t('outpost.nodes.removeError', { defaultValue: 'Failed to remove node' })
+            : t('sovereign.nodes.removeError', { defaultValue: 'Failed to remove node' })
         );
       } finally {
         setBusy(null);
@@ -279,27 +279,27 @@ export default function MoneroNodesPage() {
   const activeAddress = snapshot?.active?.address;
   const paymentsBackHref = getAdminStorePaymentsPath();
 
-  // Non-outpost build OR brand has hidden the NodePool surface: render an
+  // Non-sovereign build OR brand has hidden the NodePool surface: render an
   // explanatory placeholder. We don't 404 because the page may still be
   // linked from elsewhere (older docs, bookmarks) and the message is
   // more useful than a blank screen.
-  if (!__OUTPOST__ || !showNodePoolUI) {
+  if (!__SOVEREIGN__ || !showNodePoolUI) {
     return (
       <div>
         <SettingsPageHeader
-          title={t('outpost.nodes.title', { defaultValue: 'Monero Nodes' })}
-          description={t('outpost.nodes.description', {
+          title={t('sovereign.nodes.title', { defaultValue: 'Monero Nodes' })}
+          description={t('sovereign.nodes.description', {
             defaultValue: 'Manage the Monero daemon NodePool that backs your wallet.',
           })}
           backHref={paymentsBackHref}
         />
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            {!__OUTPOST__
-              ? t('outpost.nodes.notApplicable', {
-                  defaultValue: 'This page is only available on Outpost builds.',
+            {!__SOVEREIGN__
+              ? t('sovereign.nodes.notApplicable', {
+                  defaultValue: 'This page is only available on Sovereign builds.',
                 })
-              : t('outpost.nodes.brandHidden', {
+              : t('sovereign.nodes.brandHidden', {
                   defaultValue:
                     'Node pool management is not exposed in this build. Your administrator manages Monero daemons silently.',
                 })}
@@ -312,8 +312,8 @@ export default function MoneroNodesPage() {
   return (
     <div data-testid="admin-monero-nodes">
       <SettingsPageHeader
-        title={t('outpost.nodes.title', { defaultValue: 'Monero Nodes' })}
-        description={t('outpost.nodes.description', {
+        title={t('sovereign.nodes.title', { defaultValue: 'Monero Nodes' })}
+        description={t('sovereign.nodes.description', {
           defaultValue: 'Manage the Monero daemon NodePool that backs your wallet.',
         })}
         backHref={paymentsBackHref}
@@ -337,14 +337,14 @@ export default function MoneroNodesPage() {
             <div className="flex items-center justify-between gap-4">
               <CardTitle className="flex items-center gap-2">
                 <Server className="w-5 h-5" />
-                {t('outpost.nodes.statusTitle', { defaultValue: 'Pool status' })}
+                {t('sovereign.nodes.statusTitle', { defaultValue: 'Pool status' })}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => refresh(true)}
                 disabled={loading}
-                aria-label={t('outpost.nodes.refresh', { defaultValue: 'Refresh' })}
+                aria-label={t('sovereign.nodes.refresh', { defaultValue: 'Refresh' })}
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
@@ -355,7 +355,7 @@ export default function MoneroNodesPage() {
               <div className="h-16 bg-muted animate-pulse rounded" />
             ) : !snapshot?.available ? (
               <div className="text-sm text-muted-foreground">
-                {t('outpost.nodes.unavailable', {
+                {t('sovereign.nodes.unavailable', {
                   defaultValue:
                     'NodePool is not configured. Wallet-rpc is bound to its static --daemon-address (legacy single-node mode).',
                 })}
@@ -365,19 +365,19 @@ export default function MoneroNodesPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill
                     ok={snapshot.available}
-                    label={t('outpost.nodes.statusAvailable', { defaultValue: 'NodePool on' })}
+                    label={t('sovereign.nodes.statusAvailable', { defaultValue: 'NodePool on' })}
                     state={snapshot.available ? 'ok' : 'empty'}
                   />
                   <StatusPill
                     ok={snapshot.healthy}
-                    label={t('outpost.nodes.statusHealthy', { defaultValue: 'Healthy' })}
-                    warnLabel={t('outpost.nodes.statusUnhealthy', { defaultValue: 'Unhealthy' })}
+                    label={t('sovereign.nodes.statusHealthy', { defaultValue: 'Healthy' })}
+                    warnLabel={t('sovereign.nodes.statusUnhealthy', { defaultValue: 'Unhealthy' })}
                     state={snapshot.healthy ? 'ok' : 'warn'}
                   />
                   <StatusPill
                     ok={snapshot.monitorOn}
-                    label={t('outpost.nodes.statusMonitorOn', { defaultValue: 'Monitor running' })}
-                    warnLabel={t('outpost.nodes.statusMonitorOff', {
+                    label={t('sovereign.nodes.statusMonitorOn', { defaultValue: 'Monitor running' })}
+                    warnLabel={t('sovereign.nodes.statusMonitorOff', {
                       defaultValue: 'Monitor stopped',
                     })}
                     state={snapshot.monitorOn ? 'ok' : 'warn'}
@@ -386,7 +386,7 @@ export default function MoneroNodesPage() {
                 {snapshot.active ? (
                   <div className="rounded-lg bg-muted/40 p-3">
                     <p className="text-xs text-muted-foreground mb-1">
-                      {t('outpost.nodes.activeNode', { defaultValue: 'Active daemon' })}
+                      {t('sovereign.nodes.activeNode', { defaultValue: 'Active daemon' })}
                     </p>
                     <p className="text-sm font-mono break-all">{snapshot.active.address}</p>
                     {snapshot.active.operator && (
@@ -397,7 +397,7 @@ export default function MoneroNodesPage() {
                   </div>
                 ) : (
                   <div className="text-xs text-amber-700 dark:text-amber-400">
-                    {t('outpost.nodes.noActive', {
+                    {t('sovereign.nodes.noActive', {
                       defaultValue: 'No daemon is currently bound. Pick one below.',
                     })}
                   </div>
@@ -412,7 +412,7 @@ export default function MoneroNodesPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {t('outpost.nodes.candidatesTitle', { defaultValue: 'Pool candidates' })}{' '}
+                {t('sovereign.nodes.candidatesTitle', { defaultValue: 'Pool candidates' })}{' '}
                 <span className="text-muted-foreground text-sm font-normal">
                   ({candidates.length})
                 </span>
@@ -421,7 +421,7 @@ export default function MoneroNodesPage() {
             <CardContent className="overflow-x-auto p-0">
               {candidates.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8 px-4">
-                  {t('outpost.nodes.empty', {
+                  {t('sovereign.nodes.empty', {
                     defaultValue: 'No nodes in the pool. Add one below.',
                   })}
                 </p>
@@ -430,23 +430,23 @@ export default function MoneroNodesPage() {
                   <thead className="bg-muted/30 text-xs text-muted-foreground">
                     <tr>
                       <th className="text-left px-4 py-2 font-medium">
-                        {t('outpost.nodes.colAddress', { defaultValue: 'Address' })}
+                        {t('sovereign.nodes.colAddress', { defaultValue: 'Address' })}
                       </th>
                       {showAdvancedDiagnostics && (
                         <>
                           <th className="text-left px-4 py-2 font-medium">
-                            {t('outpost.nodes.colSource', { defaultValue: 'Source' })}
+                            {t('sovereign.nodes.colSource', { defaultValue: 'Source' })}
                           </th>
                           <th className="text-left px-4 py-2 font-medium">
-                            {t('outpost.nodes.colHealth', { defaultValue: 'Health' })}
+                            {t('sovereign.nodes.colHealth', { defaultValue: 'Health' })}
                           </th>
                           <th className="text-left px-4 py-2 font-medium">
-                            {t('outpost.nodes.colLastChecked', { defaultValue: 'Last checked' })}
+                            {t('sovereign.nodes.colLastChecked', { defaultValue: 'Last checked' })}
                           </th>
                         </>
                       )}
                       <th className="text-right px-4 py-2 font-medium">
-                        {t('outpost.nodes.colActions', { defaultValue: 'Actions' })}
+                        {t('sovereign.nodes.colActions', { defaultValue: 'Actions' })}
                       </th>
                     </tr>
                   </thead>
@@ -495,10 +495,10 @@ export default function MoneroNodesPage() {
                                 onClick={() => handleSwitch(node.address)}
                                 title={
                                   isActive
-                                    ? t('outpost.nodes.alreadyActive', {
+                                    ? t('sovereign.nodes.alreadyActive', {
                                         defaultValue: 'Already active',
                                       })
-                                    : t('outpost.nodes.switchTo', {
+                                    : t('sovereign.nodes.switchTo', {
                                         defaultValue: 'Bind wallet-rpc to this node',
                                       })
                                 }
@@ -506,7 +506,7 @@ export default function MoneroNodesPage() {
                                 {rowBusy ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                 ) : (
-                                  t('outpost.nodes.switch', { defaultValue: 'Switch' })
+                                  t('sovereign.nodes.switch', { defaultValue: 'Switch' })
                                 )}
                               </Button>
                               {isUserAdded && (
@@ -517,11 +517,11 @@ export default function MoneroNodesPage() {
                                   onClick={() => handleRemove(node.address)}
                                   title={
                                     isActive
-                                      ? t('outpost.nodes.cannotRemoveActive', {
+                                      ? t('sovereign.nodes.cannotRemoveActive', {
                                           defaultValue:
                                             'Cannot remove the active node — switch first',
                                         })
-                                      : t('outpost.nodes.remove', { defaultValue: 'Remove' })
+                                      : t('sovereign.nodes.remove', { defaultValue: 'Remove' })
                                   }
                                 >
                                   <Trash2 className="w-3.5 h-3.5 text-destructive" />
@@ -546,13 +546,13 @@ export default function MoneroNodesPage() {
         {snapshot?.available && allowUserCustomNode && (
           <Card>
             <CardHeader>
-              <CardTitle>{t('outpost.nodes.addTitle', { defaultValue: 'Add a node' })}</CardTitle>
+              <CardTitle>{t('sovereign.nodes.addTitle', { defaultValue: 'Add a node' })}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAdd} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="monero-node-address" className="text-sm font-medium">
-                    {t('outpost.nodes.fieldAddress', { defaultValue: 'Address' })}
+                    {t('sovereign.nodes.fieldAddress', { defaultValue: 'Address' })}
                   </label>
                   <input
                     id="monero-node-address"
@@ -565,7 +565,7 @@ export default function MoneroNodesPage() {
                     className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <p className="text-xs text-muted-foreground">
-                    {t('outpost.nodes.fieldAddressHint', {
+                    {t('sovereign.nodes.fieldAddressHint', {
                       defaultValue:
                         'I2P / Tor / clearnet host:port of a monerod RPC endpoint (port 18081 or 18089).',
                     })}
@@ -573,7 +573,7 @@ export default function MoneroNodesPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor="monero-node-operator" className="text-sm font-medium">
-                    {t('outpost.nodes.fieldOperator', { defaultValue: 'Operator (optional)' })}
+                    {t('sovereign.nodes.fieldOperator', { defaultValue: 'Operator (optional)' })}
                   </label>
                   <input
                     id="monero-node-operator"
@@ -591,7 +591,7 @@ export default function MoneroNodesPage() {
                   ) : (
                     <Plus className="w-4 h-4 mr-2" />
                   )}
-                  {t('outpost.nodes.addButton', { defaultValue: 'Add node' })}
+                  {t('sovereign.nodes.addButton', { defaultValue: 'Add node' })}
                 </Button>
               </form>
             </CardContent>

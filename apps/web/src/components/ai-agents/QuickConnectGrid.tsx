@@ -60,12 +60,12 @@ interface QuickConnectGridProps {
   onTokenCreated?: () => void;
   /**
    * Pre-filtered client list. When omitted, defaults to all MCP_CLIENTS.
-   * In Outpost mode, callers should pass `filterMcpClients(true, showHighRisk)`.
+   * In Sovereign mode, callers should pass `filterMcpClients(true, showHighRisk)`.
    */
   clients?: McpClient[];
   /**
-   * When true, renders privacy risk badges on each ClientCard (used in Outpost mode).
-   * Always false outside Outpost (avoids visual noise on SaaS/Standalone).
+   * When true, renders privacy risk badges on each ClientCard (used in Sovereign mode).
+   * Always false outside Sovereign (avoids visual noise on SaaS/Standalone).
    */
   showRiskBadges?: boolean;
 }
@@ -225,15 +225,15 @@ function ClientCard({ client, loading, onConnect, showRiskBadge = false }: Clien
   const RiskIcon = riskBadge.Icon;
   const riskLabelKey =
     client.risk === 'local-capable'
-      ? 'aiAgents.outpost.risk.local'
+      ? 'aiAgents.sovereign.risk.local'
       : client.risk === 'mixed'
-        ? 'aiAgents.outpost.risk.mixed'
-        : 'aiAgents.outpost.risk.cloud';
+        ? 'aiAgents.sovereign.risk.mixed'
+        : 'aiAgents.sovereign.risk.cloud';
   const riskTitleKey =
     client.risk === 'mixed'
-      ? 'aiAgents.outpost.risk.mixedTooltip'
+      ? 'aiAgents.sovereign.risk.mixedTooltip'
       : client.risk === 'cloud-only'
-        ? 'aiAgents.outpost.risk.cloudTooltip'
+        ? 'aiAgents.sovereign.risk.cloudTooltip'
         : null;
   // Merge the short label and the long explanation into aria-label so keyboard /
   // touch / screen-reader users get the full risk context (the `title` attribute

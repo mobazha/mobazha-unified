@@ -5175,15 +5175,15 @@ export const ja: PartialTranslationResource = {
       statusRestricted: '制限中',
       statusPending: '保留中',
       tabFulfillment: '充実',
-      aiOutpostGuideTitle: 'ローカル LLM が必要です',
-      aiOutpostGuideDesc:
-        'Outpost モードでは、プライバシーを確​​保するためにローカル AI モデルが必要です。 Ollama をインストールして開始します。',
-      aiOutpostGuideStep1: 'ollam.com から Ollama をインストールする',
-      aiOutpostGuideStep2: '実行: ollam プル llama3.2',
-      aiOutpostGuideStep3: 'Ollama はデフォルトでポート 11434 で実行されます',
-      aiOutpostEndpoint: 'ローカル LLM エンドポイント',
-      aiOutpostEndpointHint: 'プライバシー保護のため、ローカルホスト アドレスのみが許可されます',
-      aiOutpostApiKeyOptional: 'ほとんどのローカル LLM は API キーを必要としません',
+      aiSovereignGuideTitle: 'ローカル LLM が必要です',
+      aiSovereignGuideDesc:
+        'Sovereign モードでは、プライバシーを確​​保するためにローカル AI モデルが必要です。 Ollama をインストールして開始します。',
+      aiSovereignGuideStep1: 'ollam.com から Ollama をインストールする',
+      aiSovereignGuideStep2: '実行: ollam プル llama3.2',
+      aiSovereignGuideStep3: 'Ollama はデフォルトでポート 11434 で実行されます',
+      aiSovereignEndpoint: 'ローカル LLM エンドポイント',
+      aiSovereignEndpointHint: 'プライバシー保護のため、ローカルホスト アドレスのみが許可されます',
+      aiSovereignApiKeyOptional: 'ほとんどのローカル LLM は API キーを必要としません',
       aiPlatformActive: 'プラットフォームAI',
       aiPlatformTitle: 'AI をすぐに使用できるようになりました',
       aiPlatformDesc:
@@ -6263,10 +6263,10 @@ export const ja: PartialTranslationResource = {
       empty: 'API Token はまだありません',
       createFailed: 'Token の作成に失敗しました',
     },
-    outpost: {
+    sovereign: {
       banner: {
         title: 'プライバシー モード: クラウド AI クライアントは非表示になります',
-        body: 'ChatGPT Desktop、Claude Desktop、および Codex は、ベンダーのクラウドでのみ推論を実行します。 Outpost はデフォルトでそれらを非表示にするため、AI はローカルに留まり、ストアデータがデバイスから流出することはありません。',
+        body: 'ChatGPT Desktop、Claude Desktop、および Codex は、ベンダーのクラウドでのみ推論を実行します。 Sovereign はデフォルトでそれらを非表示にするため、AI はローカルに留まり、ストアデータがデバイスから流出することはありません。',
       },
       showHighRisk: {
         label: 'リスクの高い AI クライアントを表示する',
@@ -6281,11 +6281,11 @@ export const ja: PartialTranslationResource = {
         mixedTooltip:
           'このクライアントはローカル LLM を使用するように構成できますが、デフォルトではクラウドになります。接続する前に設定を確認してください。',
         cloudTooltip:
-          'このクライアントは、推論のためにストア データをベンダー クラウドに送信します。接続すると、Outpost の「AI はローカルで実行される」という約束に違反します。',
+          'このクライアントは、推論のためにストア データをベンダー クラウドに送信します。接続すると、Sovereign の「AI はローカルで実行される」という約束に違反します。',
       },
       localLlm: {
         title: 'ローカル LLM エンジン',
-        body: 'Outpost には、オンデバイス AI を動作させるためにローカル LLM が必要です。以下のエンジンのいずれかをインストールしてください。ストア データがこのマシンから離れることはありません。',
+        body: 'Sovereign には、オンデバイス AI を動作させるためにローカル LLM が必要です。以下のエンジンのいずれかをインストールしてください。ストア データがこのマシンから離れることはありません。',
         alreadyInstalled: 'すでにインストールされていますか?',
         configureEndpoint: 'AI モデルでエンドポイントを構成する',
         engines: {

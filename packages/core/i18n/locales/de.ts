@@ -5304,15 +5304,15 @@ export const de: PartialTranslationResource = {
       statusRestricted: 'Eingeschränkt',
       statusPending: 'Ausstehend',
       tabFulfillment: 'Erfüllung',
-      aiOutpostGuideTitle: 'Lokales LLM erforderlich',
-      aiOutpostGuideDesc:
+      aiSovereignGuideTitle: 'Lokales LLM erforderlich',
+      aiSovereignGuideDesc:
         'Der Außenpostenmodus erfordert aus Datenschutzgründen ein lokales KI-Modell. Installieren Sie Ollama, um loszulegen:',
-      aiOutpostGuideStep1: 'Installieren Sie Ollama von ollama.com',
-      aiOutpostGuideStep2: 'Führen Sie aus: olama pull llama3.2',
-      aiOutpostGuideStep3: 'Ollama läuft standardmäßig auf Port 11434',
-      aiOutpostEndpoint: 'Lokaler LLM-Endpunkt',
-      aiOutpostEndpointHint: 'Aus Datenschutzgründen sind nur Localhost-Adressen zulässig',
-      aiOutpostApiKeyOptional: 'Die meisten lokalen LLMs erfordern keinen API-Schlüssel',
+      aiSovereignGuideStep1: 'Installieren Sie Ollama von ollama.com',
+      aiSovereignGuideStep2: 'Führen Sie aus: olama pull llama3.2',
+      aiSovereignGuideStep3: 'Ollama läuft standardmäßig auf Port 11434',
+      aiSovereignEndpoint: 'Lokaler LLM-Endpunkt',
+      aiSovereignEndpointHint: 'Aus Datenschutzgründen sind nur Localhost-Adressen zulässig',
+      aiSovereignApiKeyOptional: 'Die meisten lokalen LLMs erfordern keinen API-Schlüssel',
       aiPlatformActive: 'Plattform-KI',
       aiPlatformTitle: 'KI ist einsatzbereit',
       aiPlatformDesc:
@@ -6423,10 +6423,10 @@ export const de: PartialTranslationResource = {
       empty: 'Noch keine API-Tokens',
       createFailed: 'Token-Erstellung fehlgeschlagen',
     },
-    outpost: {
+    sovereign: {
       banner: {
         title: 'Datenschutzmodus: Cloud-KI-Clients ausgeblendet',
-        body: 'ChatGPT Desktop, Claude Desktop und Codex führen Inferenz nur in der Cloud des Anbieters aus. Outpost verbirgt sie standardmäßig, sodass die KI lokal bleibt und Ihre Geschäftsdaten Ihr Gerät nie verlassen.',
+        body: 'ChatGPT Desktop, Claude Desktop und Codex führen Inferenz nur in der Cloud des Anbieters aus. Sovereign verbirgt sie standardmäßig, sodass die KI lokal bleibt und Ihre Geschäftsdaten Ihr Gerät nie verlassen.',
       },
       showHighRisk: {
         label: 'Zeigen Sie KI-Clients mit hohem Risiko an',
@@ -6441,11 +6441,11 @@ export const de: PartialTranslationResource = {
         mixedTooltip:
           'Dieser Client kann für die Verwendung eines lokalen LLM konfiguriert werden, verwendet jedoch standardmäßig die Cloud. Überprüfen Sie Ihre Einrichtung, bevor Sie eine Verbindung herstellen.',
         cloudTooltip:
-          'Dieser Client sendet Ihre Geschäftsdaten zur Rückleitung an eine Anbieter-Cloud. Das Herstellen einer Verbindung verstößt gegen das Outpost-Versprechen „KI läuft lokal“.',
+          'Dieser Client sendet Ihre Geschäftsdaten zur Rückleitung an eine Anbieter-Cloud. Das Herstellen einer Verbindung verstößt gegen das Sovereign-Versprechen „KI läuft lokal“.',
       },
       localLlm: {
         title: 'Lokale LLM-Engine',
-        body: 'Outpost benötigt ein lokales LLM, um die KI auf dem Gerät zu betreiben. Installieren Sie eine der unten aufgeführten Engines – Ihre Geschäftsdaten verlassen niemals diesen Computer.',
+        body: 'Sovereign benötigt ein lokales LLM, um die KI auf dem Gerät zu betreiben. Installieren Sie eine der unten aufgeführten Engines – Ihre Geschäftsdaten verlassen niemals diesen Computer.',
         alreadyInstalled: 'Bereits installiert?',
         configureEndpoint: 'Endpunkt in AI-Modellen konfigurieren',
         engines: {

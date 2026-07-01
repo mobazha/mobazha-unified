@@ -18,7 +18,7 @@ window.__RUNTIME_CONFIG__ = {
       releasePublishing: false,
       attribution: false,
     },
-    outpost: { isolatedRuntime: false, managedFleet: false },
+    sovereign: { isolatedRuntime: false, managedFleet: false },
     payments: { methods: [] },
   },
 };

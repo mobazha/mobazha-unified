@@ -202,7 +202,7 @@ export function ProductDetailDesktop({
   }
 
   const purchaseDisabled =
-    isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable) || isRwaToken;
+    isOffline || stock === 0 || (!__SOVEREIGN__ && !paymentAvailable) || isRwaToken;
   const showBuyNow = !purchaseDisabled;
 
   return (
@@ -271,7 +271,7 @@ export function ProductDetailDesktop({
                 </span>
               </div>
             </Link>
-            {!__OUTPOST__ && (
+            {!__SOVEREIGN__ && (
               <HStack gap="xs" className="flex-shrink-0">
                 <Button
                   variant="outline"
@@ -482,7 +482,7 @@ export function ProductDetailDesktop({
               />
             ) : null}
 
-            {!__OUTPOST__ && !isCollectibleTitleListing && (
+            {!__SOVEREIGN__ && !isCollectibleTitleListing && (
               <BuyerProtectionBadge variant="inline" className="mt-1" />
             )}
 
@@ -675,10 +675,10 @@ export function ProductDetailDesktop({
             )}
 
             {/* Verified Moderator Badge */}
-            {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
+            {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
             {/* Buyer Protection */}
-            {!isOwnProduct && !__OUTPOST__ && !isCollectibleTitleListing && (
+            {!isOwnProduct && !__SOVEREIGN__ && !isCollectibleTitleListing && (
               <BuyerProtectionBanner />
             )}
 

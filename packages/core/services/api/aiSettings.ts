@@ -50,9 +50,9 @@ export interface AIStatus {
   byok_configured: boolean;
   /** Platform AI: text route (generate/chat) configured. */
   text_available?: boolean;
-  /** Platform AI: vision route configured. Outpost BYOK: use supports_vision instead. */
+  /** Platform AI: vision route configured. Sovereign BYOK: use supports_vision instead. */
   vision_available?: boolean;
-  /** Outpost local LLM: whether the runtime supports image input. */
+  /** Sovereign local LLM: whether the runtime supports image input. */
   supports_vision?: boolean;
 }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
-import { isBasicAuthMode, isStandaloneMode, isOutpostMode } from '@mobazha/core/config/env';
+import { isBasicAuthMode, isStandaloneMode, isSovereignMode } from '@mobazha/core/config/env';
 import {
   getSystemHealth,
   getPaymentRPCStatus,
@@ -71,8 +71,8 @@ function formatMB(mb: number): string {
 
 export default function SystemPage() {
   const { t } = useI18n();
-  const isOutpost = isOutpostMode();
-  const supportsAdvancedSystemConfig = isStandaloneMode() && !isOutpost;
+  const isSovereign = isSovereignMode();
+  const supportsAdvancedSystemConfig = isStandaloneMode() && !isSovereign;
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,13 +142,13 @@ export default function SystemPage() {
   }, []);
 
   const fetchRpcStatus = useCallback(async () => {
-    if (!isOutpost) return;
+    if (!isSovereign) return;
     try {
       setRpcStatus(await getPaymentRPCStatus());
     } catch {
       setRpcStatus(null);
     }
-  }, [isOutpost]);
+  }, [isSovereign]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -158,7 +158,7 @@ export default function SystemPage() {
         fetchDomainConfig();
         fetchUpdateConfig();
       }
-      if (isOutpost) {
+      if (isSovereign) {
         fetchRpcStatus();
       }
       const interval = setInterval(fetchHealth, 30000);
@@ -167,7 +167,7 @@ export default function SystemPage() {
   }, [
     isAdmin,
     supportsAdvancedSystemConfig,
-    isOutpost,
+    isSovereign,
     fetchHealth,
     fetchNetworkConfig,
     fetchDomainConfig,
@@ -617,8 +617,8 @@ export default function SystemPage() {
         </div>
       )}
 
-      {/* RPC Connection Status (Outpost only) */}
-      {isOutpost && rpcStatus && (
+      {/* RPC Connection Status (Sovereign only) */}
+      {isSovereign && rpcStatus && (
         <div className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
             {t('system.rpc.title', { defaultValue: 'Payment RPC Status' })}
@@ -661,7 +661,7 @@ export default function SystemPage() {
         </div>
       )}
 
-      {/* Domain Settings (standalone only, hidden in Outpost) */}
+      {/* Domain Settings (standalone only, hidden in Sovereign) */}
       {supportsAdvancedSystemConfig && (
         <div id="domain" className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">

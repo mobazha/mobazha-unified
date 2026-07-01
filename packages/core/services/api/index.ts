@@ -246,7 +246,7 @@ export type {
   GumroadImportError,
 } from './gumroadImport';
 
-// Monero (XMR) admin API — Outpost only
+// Monero (XMR) admin API — Sovereign only
 export * as moneroApi from './monero';
 export type {
   MoneroNodeInfo,

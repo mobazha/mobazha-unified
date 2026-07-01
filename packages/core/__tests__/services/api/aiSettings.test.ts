@@ -20,7 +20,7 @@ describe('aiStatusSupportsVision', () => {
     );
   });
 
-  it('falls back to outpost supports_vision when vision_available is absent', () => {
+  it('falls back to sovereign supports_vision when vision_available is absent', () => {
     expect(aiStatusSupportsVision(status({ source: 'byok', supports_vision: false }))).toBe(false);
     expect(aiStatusSupportsVision(status({ source: 'byok' }))).toBe(true);
   });

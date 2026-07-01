@@ -5259,16 +5259,16 @@ export const es: PartialTranslationResource = {
       statusRestricted: 'Restringido',
       statusPending: 'Pendiente',
       tabFulfillment: 'Cumplimiento',
-      aiOutpostGuideTitle: 'Se requiere un LLM local',
-      aiOutpostGuideDesc:
+      aiSovereignGuideTitle: 'Se requiere un LLM local',
+      aiSovereignGuideDesc:
         'El modo Puesto avanzado requiere un modelo de IA local para garantizar la privacidad. Instale Ollama para comenzar:',
-      aiOutpostGuideStep1: 'Instalar Ollama desde ollama.com',
-      aiOutpostGuideStep2: 'Ejecutar: ollama tirar llama3.2',
-      aiOutpostGuideStep3: 'Ollama se ejecuta en el puerto 11434 de forma predeterminada',
-      aiOutpostEndpoint: 'Punto final local de LLM',
-      aiOutpostEndpointHint:
+      aiSovereignGuideStep1: 'Instalar Ollama desde ollama.com',
+      aiSovereignGuideStep2: 'Ejecutar: ollama tirar llama3.2',
+      aiSovereignGuideStep3: 'Ollama se ejecuta en el puerto 11434 de forma predeterminada',
+      aiSovereignEndpoint: 'Punto final local de LLM',
+      aiSovereignEndpointHint:
         'Solo se permiten direcciones de host local por motivos de privacidad.',
-      aiOutpostApiKeyOptional: 'La mayoría de los LLM locales no requieren una clave API',
+      aiSovereignApiKeyOptional: 'La mayoría de los LLM locales no requieren una clave API',
       aiPlatformActive: 'Plataforma IA',
       aiPlatformTitle: 'La IA está lista para usar',
       aiPlatformDesc:
@@ -6362,10 +6362,10 @@ export const es: PartialTranslationResource = {
       empty: 'Sin tokens API aún',
       createFailed: 'Error al crear el token',
     },
-    outpost: {
+    sovereign: {
       banner: {
         title: 'Modo de privacidad: clientes de IA en la nube ocultos',
-        body: 'ChatGPT Desktop, Claude Desktop y Codex solo ejecutan inferencia en la nube del proveedor. Outpost los oculta de forma predeterminada para que la IA permanezca local y los datos de su tienda nunca abandonen su dispositivo.',
+        body: 'ChatGPT Desktop, Claude Desktop y Codex solo ejecutan inferencia en la nube del proveedor. Sovereign los oculta de forma predeterminada para que la IA permanezca local y los datos de su tienda nunca abandonen su dispositivo.',
       },
       showHighRisk: {
         label: 'Mostrar clientes de IA de alto riesgo',
@@ -6380,11 +6380,11 @@ export const es: PartialTranslationResource = {
         mixedTooltip:
           'Este cliente se puede configurar para utilizar un LLM local, pero de forma predeterminada está en la nube. Verifique su configuración antes de conectarse.',
         cloudTooltip:
-          'Este cliente envía los datos de su tienda a la nube de un proveedor para realizar inferencias. La conexión viola la promesa de Outpost de que "la IA se ejecuta localmente".',
+          'Este cliente envía los datos de su tienda a la nube de un proveedor para realizar inferencias. La conexión viola la promesa de Sovereign de que "la IA se ejecuta localmente".',
       },
       localLlm: {
         title: 'Motor LLM local',
-        body: 'Outpost necesita un LLM local para alimentar la IA en el dispositivo. Instale uno de los motores a continuación: los datos de su tienda nunca salen de esta máquina.',
+        body: 'Sovereign necesita un LLM local para alimentar la IA en el dispositivo. Instale uno de los motores a continuación: los datos de su tienda nunca salen de esta máquina.',
         alreadyInstalled: '¿Ya instalado?',
         configureEndpoint: 'Configurar punto final en modelos AI',
         engines: {

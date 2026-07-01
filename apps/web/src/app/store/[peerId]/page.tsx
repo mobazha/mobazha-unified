@@ -1011,7 +1011,7 @@ export default function StorePage() {
                       <span className="font-medium">{visibleProductCount}</span>
                       <span className="opacity-70">{t('profile.listings')}</span>
                     </span>
-                    {!__OUTPOST__ && (
+                    {!__SOVEREIGN__ && (
                       <>
                         <button
                           onClick={() => setActiveTab('followers')}
@@ -1118,7 +1118,7 @@ export default function StorePage() {
                       </DropdownMenu>
                     </div>
                   </>
-                ) : !__OUTPOST__ ? (
+                ) : !__SOVEREIGN__ ? (
                   <>
                     <Button
                       variant={isFollowing ? 'secondary' : 'default'}
@@ -1259,8 +1259,8 @@ export default function StorePage() {
                       )}
                     </button>
 
-                    {/* RWA 数字资产 Tab — hidden in Outpost (no RWA support) */}
-                    {!__OUTPOST__ && (
+                    {/* RWA 数字资产 Tab — hidden in Sovereign (no RWA support) */}
+                    {!__SOVEREIGN__ && (
                       <button
                         onClick={() => setActiveTab('rwa')}
                         className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${

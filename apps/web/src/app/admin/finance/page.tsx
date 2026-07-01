@@ -71,7 +71,7 @@ function WalletStatusBadge({
     >
       {connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
       {connected
-        ? t('outpost.rpcConnected', { defaultValue: 'Connected' })
+        ? t('sovereign.rpcConnected', { defaultValue: 'Connected' })
         : t('admin.finance.walletDisconnected', { defaultValue: 'Not connected' })}
     </span>
   );
@@ -162,7 +162,7 @@ function CollapsibleSection({
   );
 }
 
-function NotOutpostPlaceholder() {
+function NotSovereignPlaceholder() {
   const { t } = useI18n();
   return (
     <div className="space-y-4" data-testid="admin-funds-placeholder">
@@ -267,12 +267,12 @@ export default function AdminFinancePage() {
   }, [sanitizeOptions, t]);
 
   useEffect(() => {
-    if (!__OUTPOST__) return;
+    if (!__SOVEREIGN__) return;
     refresh();
   }, [refresh]);
 
-  if (!__OUTPOST__) {
-    return <NotOutpostPlaceholder />;
+  if (!__SOVEREIGN__) {
+    return <NotSovereignPlaceholder />;
   }
 
   const walletStatusPending = setupFetchState === 'pending' && loading;
@@ -374,7 +374,7 @@ export default function AdminFinancePage() {
                     </p>
                     {balance.blocksToUnlock != null && balance.blocksToUnlock > 0 && (
                       <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                        {t('outpost.xmrWithdraw.blocksToUnlock', { n: balance.blocksToUnlock })}
+                        {t('sovereign.xmrWithdraw.blocksToUnlock', { n: balance.blocksToUnlock })}
                       </p>
                     )}
                   </div>
@@ -464,7 +464,7 @@ export default function AdminFinancePage() {
                         {t('admin.finance.rpcEndpointLabel')}
                       </p>
                       <p className="text-sm text-muted-foreground font-mono truncate">
-                        {status.endpoint || t('outpost.rpcDisconnected')}
+                        {status.endpoint || t('sovereign.rpcDisconnected')}
                       </p>
                     </div>
                   </div>

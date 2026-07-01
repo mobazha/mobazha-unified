@@ -57,7 +57,7 @@ function setExperience(kind: 'platform' | 'marketplace') {
         releasePublishing: true,
         attribution: true,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: { methods: [] },
     },
   });

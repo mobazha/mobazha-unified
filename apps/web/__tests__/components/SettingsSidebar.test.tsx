@@ -27,7 +27,7 @@ describe('SettingsSidebar', () => {
   beforeEach(() => {
     mockPathname = '/settings/general';
     mockStandalone = false;
-    vi.stubGlobal('__OUTPOST__', false);
+    vi.stubGlobal('__SOVEREIGN__', false);
   });
 
   it('shows marketplace memberships nav in hosted SaaS mode', () => {
@@ -47,8 +47,8 @@ describe('SettingsSidebar', () => {
     expect(screen.queryByTestId('settings-nav-marketplace-memberships')).not.toBeInTheDocument();
   });
 
-  it('hides marketplace memberships nav in outpost mode', () => {
-    vi.stubGlobal('__OUTPOST__', true);
+  it('hides marketplace memberships nav in sovereign mode', () => {
+    vi.stubGlobal('__SOVEREIGN__', true);
     render(<SettingsSidebar />);
 
     expect(screen.queryByTestId('settings-nav-marketplace-memberships')).not.toBeInTheDocument();

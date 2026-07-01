@@ -22,7 +22,7 @@ import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { GUEST_CHECKOUT_COINS, type GuestCoinInfo } from '@mobazha/core/config/guestCheckoutCoins';
 import { sanitizeAcceptedPaymentCoins, isVisibleAcceptedCurrency } from '@mobazha/core';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
-import { isOutpostMode } from '@mobazha/core/config/env';
+import { isSovereignMode } from '@mobazha/core/config/env';
 import { Textarea } from '@/components/ui/textarea';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 
@@ -51,7 +51,7 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
   const [pgpSaving, setPgpSaving] = useState(false);
   const [pgpError, setPgpError] = useState<string | null>(null);
   const [pgpSuccess, setPgpSuccess] = useState(false);
-  const showPGPSection = isOutpostMode();
+  const showPGPSection = isSovereignMode();
   /** Hidden GA-gated coins kept on server until explicit save + visibility launch. */
   const preservedHiddenCoinsRef = useRef<string[]>([]);
   const visibleGuestCoins = useMemo(
@@ -81,7 +81,7 @@ export function GuestCheckoutPolicySection({ embedded = false }: GuestCheckoutPo
         if (!cancelled) setError(t('admin.guestCheckout.loadError'));
       });
 
-    if (isOutpostMode()) {
+    if (isSovereignMode()) {
       getPGPPublicKey()
         .then(key => {
           setPgpKey(key);

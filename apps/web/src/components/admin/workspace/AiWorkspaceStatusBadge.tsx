@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bot, Cloud, Server } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
 
 /** Neutral status chip — not CTA orange (secondary) or error red (destructive). */
 const statusBadgeClass = 'text-xs font-normal gap-1 bg-muted text-muted-foreground border-border';
@@ -44,7 +44,7 @@ export function AiWorkspaceStatusBadge({
     );
   }
 
-  if (isOutpost) {
+  if (isSovereign) {
     return (
       <Badge variant="outline" className={cn(statusBadgeClass, className)}>
         <Server className="w-3 h-3" />

@@ -30,7 +30,7 @@ function runtimeConfigWithEthPayment() {
         releasePublishing: false,
         attribution: false,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: {
         methods: [{ id: 'ETH', kind: 'crypto', flow: 'external-wallet' }],
       },

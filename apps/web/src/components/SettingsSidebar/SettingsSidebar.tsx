@@ -24,7 +24,7 @@ interface SidebarItem {
   href: string;
   icon: React.ReactNode;
   saasOnly?: boolean;
-  hideOutpost?: boolean;
+  hideSovereign?: boolean;
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -33,7 +33,7 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.profile',
     href: '/settings/page-profile',
     icon: <User className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'general',
@@ -46,42 +46,42 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.account',
     href: '/settings/account',
     icon: <Link2 className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'addresses',
     labelKey: 'settings.sidebar.addresses',
     href: '/settings/addresses',
     icon: <MapPin className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'refunds',
     labelKey: 'settings.sidebar.refunds',
     href: '/settings/refunds',
     icon: <Wallet className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'blocked',
     labelKey: 'settings.sidebar.blocked',
     href: '/settings/blocked',
     icon: <Ban className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'chat-encryption',
     labelKey: 'settings.sidebar.chatEncryption',
     href: '/settings/chat-encryption',
     icon: <Key className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'moderation',
     labelKey: 'settings.sidebar.moderation',
     href: '/settings/moderation',
     icon: <Scale className="w-4 h-4" />,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'marketplace-memberships',
@@ -89,7 +89,7 @@ const sidebarItems: SidebarItem[] = [
     href: '/settings/marketplace-memberships',
     icon: <Store className="w-4 h-4" />,
     saasOnly: true,
-    hideOutpost: true,
+    hideSovereign: true,
   },
   {
     id: 'advanced',
@@ -103,15 +103,15 @@ export const SettingsSidebar: React.FC = () => {
   const { t } = useI18n();
   const pathname = usePathname();
   const standaloneMode = useMemo(() => isStandalone(), []);
-  const isOutpost = __OUTPOST__;
+  const isSovereign = __SOVEREIGN__;
   const visibleItems = useMemo(
     () =>
       sidebarItems.filter(item => {
-        if (isOutpost && item.hideOutpost) return false;
+        if (isSovereign && item.hideSovereign) return false;
         if (standaloneMode && item.saasOnly) return false;
         return true;
       }),
-    [standaloneMode, isOutpost]
+    [standaloneMode, isSovereign]
   );
 
   return (

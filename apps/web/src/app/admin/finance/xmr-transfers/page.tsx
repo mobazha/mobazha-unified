@@ -27,7 +27,7 @@ import {
 } from '@mobazha/core/services/api/monero';
 
 /**
- * XMR transaction history (Outpost only) — OP-MP-6
+ * XMR transaction history (Sovereign only)
  *
  * Server-side gated by adminOnlyAuthSecurity (no API tokens). Each
  * request hits monero-wallet-rpc; nothing is cached server-side.
@@ -52,11 +52,11 @@ interface BucketDef {
 }
 
 const ALL_BUCKETS: BucketDef[] = [
-  { key: 'in', labelKey: 'outpost.xmrTransfers.bucketIn', defaultLabel: 'Incoming' },
-  { key: 'out', labelKey: 'outpost.xmrTransfers.bucketOut', defaultLabel: 'Outgoing' },
-  { key: 'pool', labelKey: 'outpost.xmrTransfers.bucketPool', defaultLabel: 'Mempool' },
-  { key: 'pending', labelKey: 'outpost.xmrTransfers.bucketPending', defaultLabel: 'Pending' },
-  { key: 'failed', labelKey: 'outpost.xmrTransfers.bucketFailed', defaultLabel: 'Failed' },
+  { key: 'in', labelKey: 'sovereign.xmrTransfers.bucketIn', defaultLabel: 'Incoming' },
+  { key: 'out', labelKey: 'sovereign.xmrTransfers.bucketOut', defaultLabel: 'Outgoing' },
+  { key: 'pool', labelKey: 'sovereign.xmrTransfers.bucketPool', defaultLabel: 'Mempool' },
+  { key: 'pending', labelKey: 'sovereign.xmrTransfers.bucketPending', defaultLabel: 'Pending' },
+  { key: 'failed', labelKey: 'sovereign.xmrTransfers.bucketFailed', defaultLabel: 'Failed' },
 ];
 
 // Default view: confirmed traffic in both directions. Mempool / pending /
@@ -70,18 +70,18 @@ const DEFAULT_BUCKETS: Record<BucketKey, boolean> = {
   failed: false,
 };
 
-function NotOutpostPlaceholder() {
+function NotSovereignPlaceholder() {
   const { t } = useI18n();
   return (
     <div>
       <SettingsPageHeader
-        title={t('outpost.xmrTransfers.title', { defaultValue: 'Monero Transactions' })}
+        title={t('sovereign.xmrTransfers.title', { defaultValue: 'Monero Transactions' })}
         backHref={getAdminFinancePath()}
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          {t('outpost.xmrTransfers.notApplicable', {
-            defaultValue: 'This page is only available on Outpost builds.',
+          {t('sovereign.xmrTransfers.notApplicable', {
+            defaultValue: 'This page is only available on Sovereign builds.',
           })}
         </CardContent>
       </Card>
@@ -120,7 +120,7 @@ export default function XMRTransfersPage() {
       setError(
         err instanceof Error
           ? err.message
-          : t('outpost.xmrTransfers.fetchError', {
+          : t('sovereign.xmrTransfers.fetchError', {
               defaultValue: 'Failed to fetch transactions',
             })
       );
@@ -130,12 +130,12 @@ export default function XMRTransfersPage() {
   }, [requestOpts, t]);
 
   useEffect(() => {
-    if (!__OUTPOST__) return;
+    if (!__SOVEREIGN__) return;
     refresh();
   }, [refresh]);
 
-  if (!__OUTPOST__) {
-    return <NotOutpostPlaceholder />;
+  if (!__SOVEREIGN__) {
+    return <NotSovereignPlaceholder />;
   }
 
   const noneSelected = ALL_BUCKETS.every(b => !buckets[b.key]);
@@ -143,8 +143,8 @@ export default function XMRTransfersPage() {
   return (
     <div data-testid="admin-xmr-transfers" className="space-y-6">
       <SettingsPageHeader
-        title={t('outpost.xmrTransfers.title', { defaultValue: 'Monero Transactions' })}
-        description={t('outpost.xmrTransfers.description', {
+        title={t('sovereign.xmrTransfers.title', { defaultValue: 'Monero Transactions' })}
+        description={t('sovereign.xmrTransfers.description', {
           defaultValue:
             'All payments seen by your Monero wallet. Live data — fetched from monero-wallet-rpc on every refresh.',
         })}
@@ -162,7 +162,7 @@ export default function XMRTransfersPage() {
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           {data
-            ? t('outpost.xmrTransfers.countAndAccount', {
+            ? t('sovereign.xmrTransfers.countAndAccount', {
                 defaultValue: '{{n}} transaction(s) — account #{{idx}}',
                 n: data.transfers.length,
                 idx: data.accountIndex,
@@ -182,7 +182,7 @@ export default function XMRTransfersPage() {
           ) : (
             <RefreshCw className="w-3.5 h-3.5 mr-1" />
           )}
-          {t('outpost.xmrTransfers.refresh', { defaultValue: 'Refresh' })}
+          {t('sovereign.xmrTransfers.refresh', { defaultValue: 'Refresh' })}
         </Button>
       </div>
 
@@ -195,10 +195,10 @@ export default function XMRTransfersPage() {
       {noneSelected ? (
         <EmptyHint
           icon={<History className="w-8 h-8 text-muted-foreground" />}
-          title={t('outpost.xmrTransfers.noBucketTitle', {
+          title={t('sovereign.xmrTransfers.noBucketTitle', {
             defaultValue: 'No filters selected',
           })}
-          description={t('outpost.xmrTransfers.noBucketDesc', {
+          description={t('sovereign.xmrTransfers.noBucketDesc', {
             defaultValue: 'Pick at least one filter to load transactions.',
           })}
         />
@@ -206,16 +206,16 @@ export default function XMRTransfersPage() {
         <Card>
           <CardContent className="py-12 flex items-center justify-center text-sm text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            {t('outpost.xmrTransfers.loading', { defaultValue: 'Loading transactions…' })}
+            {t('sovereign.xmrTransfers.loading', { defaultValue: 'Loading transactions…' })}
           </CardContent>
         </Card>
       ) : data && data.transfers.length === 0 ? (
         <EmptyHint
           icon={<History className="w-8 h-8 text-muted-foreground" />}
-          title={t('outpost.xmrTransfers.emptyTitle', {
+          title={t('sovereign.xmrTransfers.emptyTitle', {
             defaultValue: 'No transactions yet',
           })}
-          description={t('outpost.xmrTransfers.emptyDesc', {
+          description={t('sovereign.xmrTransfers.emptyDesc', {
             defaultValue: 'Payments will appear here once they hit the wallet.',
           })}
         />
@@ -228,7 +228,7 @@ export default function XMRTransfersPage() {
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        {t('outpost.xmrTransfers.backToPayments', { defaultValue: 'Back to Funds' })}
+        {t('sovereign.xmrTransfers.backToPayments', { defaultValue: 'Back to Funds' })}
       </Link>
     </div>
   );
@@ -276,7 +276,7 @@ function BucketFilters({
           onClick={onReset}
           className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
         >
-          {t('outpost.xmrTransfers.resetFilters', { defaultValue: 'Reset' })}
+          {t('sovereign.xmrTransfers.resetFilters', { defaultValue: 'Reset' })}
         </button>
       )}
     </div>
@@ -297,22 +297,22 @@ function TransferTable({ transfers }: { transfers: MoneroTransferEntry[] }) {
             <thead>
               <tr className="border-b border-border text-xs text-muted-foreground">
                 <th className="text-left font-medium px-4 py-2">
-                  {t('outpost.xmrTransfers.colDirection', { defaultValue: 'Direction' })}
+                  {t('sovereign.xmrTransfers.colDirection', { defaultValue: 'Direction' })}
                 </th>
                 <th className="text-right font-medium px-4 py-2">
-                  {t('outpost.xmrTransfers.colAmount', { defaultValue: 'Amount (XMR)' })}
+                  {t('sovereign.xmrTransfers.colAmount', { defaultValue: 'Amount (XMR)' })}
                 </th>
                 <th className="text-right font-medium px-4 py-2">
-                  {t('outpost.xmrTransfers.colFee', { defaultValue: 'Fee' })}
+                  {t('sovereign.xmrTransfers.colFee', { defaultValue: 'Fee' })}
                 </th>
                 <th className="text-left font-medium px-4 py-2">
-                  {t('outpost.xmrTransfers.colTxHash', { defaultValue: 'Tx Hash' })}
+                  {t('sovereign.xmrTransfers.colTxHash', { defaultValue: 'Tx Hash' })}
                 </th>
                 <th className="text-left font-medium px-4 py-2">
-                  {t('outpost.xmrTransfers.colHeight', { defaultValue: 'Height' })}
+                  {t('sovereign.xmrTransfers.colHeight', { defaultValue: 'Height' })}
                 </th>
                 <th className="text-left font-medium px-4 py-2">
-                  {t('outpost.xmrTransfers.colWhen', { defaultValue: 'When' })}
+                  {t('sovereign.xmrTransfers.colWhen', { defaultValue: 'When' })}
                 </th>
               </tr>
             </thead>
@@ -370,8 +370,8 @@ function TransferRow({ transfer: tr }: { transfer: MoneroTransferEntry }) {
             <span className="font-mono tabular-nums">{tr.height.toLocaleString()}</span>
             <span className="text-muted-foreground">
               {tr.confirmations >= 10
-                ? t('outpost.xmrTransfers.confirmedDeep', { defaultValue: '10+ confirmations' })
-                : t('outpost.xmrTransfers.confirmations', {
+                ? t('sovereign.xmrTransfers.confirmedDeep', { defaultValue: '10+ confirmations' })
+                : t('sovereign.xmrTransfers.confirmations', {
                     defaultValue: '{{n}} confirmation(s)',
                     n: tr.confirmations,
                   })}
@@ -381,7 +381,7 @@ function TransferRow({ transfer: tr }: { transfer: MoneroTransferEntry }) {
           <div className="flex flex-col">
             <span className="font-mono tabular-nums">0</span>
             <span className="text-muted-foreground">
-              {t('outpost.xmrTransfers.awaitingFirstConfirmation', {
+              {t('sovereign.xmrTransfers.awaitingFirstConfirmation', {
                 defaultValue: 'Waiting for first confirmation',
               })}
             </span>
@@ -390,7 +390,7 @@ function TransferRow({ transfer: tr }: { transfer: MoneroTransferEntry }) {
           <div className="flex flex-col">
             <span className="font-mono tabular-nums">0</span>
             <span className="text-muted-foreground">
-              {t('outpost.xmrTransfers.seenInMempool', {
+              {t('sovereign.xmrTransfers.seenInMempool', {
                 defaultValue: 'Seen in mempool',
               })}
             </span>
@@ -430,7 +430,7 @@ function TxHashCell({ hash }: { hash: string }) {
       onClick={handleCopy}
       className="inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground"
       title={hash}
-      aria-label={t('outpost.xmrTransfers.copyTxHash', {
+      aria-label={t('sovereign.xmrTransfers.copyTxHash', {
         defaultValue: 'Copy transaction hash',
       })}
     >
@@ -438,7 +438,7 @@ function TxHashCell({ hash }: { hash: string }) {
       <Copy className="w-3 h-3" />
       {copied && (
         <span className="text-green-600 dark:text-green-400 ml-1">
-          {t('outpost.xmrTransfers.copied', { defaultValue: 'Copied' })}
+          {t('sovereign.xmrTransfers.copied', { defaultValue: 'Copied' })}
         </span>
       )}
     </button>
@@ -462,35 +462,35 @@ function directionMeta(d: MoneroTransferEntry['direction']): DirectionMeta {
       return {
         icon: <ArrowDownLeft className="w-3 h-3" />,
         classes: 'bg-green-500/10 text-green-700 dark:text-green-400',
-        labelKey: 'outpost.xmrTransfers.bucketIn',
+        labelKey: 'sovereign.xmrTransfers.bucketIn',
         defaultLabel: 'Incoming',
       };
     case 'out':
       return {
         icon: <ArrowUpRight className="w-3 h-3" />,
         classes: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-        labelKey: 'outpost.xmrTransfers.bucketOut',
+        labelKey: 'sovereign.xmrTransfers.bucketOut',
         defaultLabel: 'Outgoing',
       };
     case 'pool':
       return {
         icon: <Clock className="w-3 h-3" />,
         classes: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-        labelKey: 'outpost.xmrTransfers.bucketPool',
+        labelKey: 'sovereign.xmrTransfers.bucketPool',
         defaultLabel: 'Mempool',
       };
     case 'pending':
       return {
         icon: <Clock className="w-3 h-3" />,
         classes: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-        labelKey: 'outpost.xmrTransfers.bucketPending',
+        labelKey: 'sovereign.xmrTransfers.bucketPending',
         defaultLabel: 'Pending',
       };
     case 'failed':
       return {
         icon: <XCircle className="w-3 h-3" />,
         classes: 'bg-red-500/10 text-red-700 dark:text-red-400',
-        labelKey: 'outpost.xmrTransfers.bucketFailed',
+        labelKey: 'sovereign.xmrTransfers.bucketFailed',
         defaultLabel: 'Failed',
       };
     default: {
@@ -501,7 +501,7 @@ function directionMeta(d: MoneroTransferEntry['direction']): DirectionMeta {
       return {
         icon: <AlertTriangle className="w-3 h-3" />,
         classes: 'bg-muted text-muted-foreground',
-        labelKey: 'outpost.xmrTransfers.bucketUnknown',
+        labelKey: 'sovereign.xmrTransfers.bucketUnknown',
         defaultLabel: 'Unknown',
       };
     }

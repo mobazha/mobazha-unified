@@ -2,9 +2,9 @@
  * AI Agents Page — Visual Screenshots
  *
  * 通过 mock auth + API 拦截，截取三种模式下 AI Connect 页面的视觉状态：
- *   1. Non-outpost — 默认显示全部客户端，无隐私 banner（代表 SaaS / Standalone）
- *   2. Outpost (默认) — 隐藏 cloud-only 客户端，显示隐私 banner，开关关闭
- *   3. Outpost (开关开启) — 显示全部客户端 + 风险 badge
+ *   1. Non-sovereign — 默认显示全部客户端，无隐私 banner（代表 SaaS / Standalone）
+ *   2. Sovereign (默认) — 隐藏 cloud-only 客户端，显示隐私 banner，开关关闭
+ *   3. Sovereign (开关开启) — 显示全部客户端 + 风险 badge
  *
  * 输出目录：apps/web/e2e-screenshots/ai-agents-*.png
  */
@@ -39,7 +39,7 @@ const USER_STORAGE = {
 };
 
 interface SetupOptions {
-  outpost: boolean;
+  sovereign: boolean;
   showHighRisk?: boolean;
   /** When true, simulate SaaS deployment (authMode: 'hosted' — no Auto Connect panel). */
   saas?: boolean;
@@ -60,7 +60,7 @@ async function setupPage(page: Page, opts: SetupOptions): Promise<void> {
         window.localStorage.setItem('mobazha_auth_token', 'basic:mock-screenshot-token');
         window.localStorage.setItem('mobazha-user-storage', JSON.stringify(userStorage));
         window.localStorage.setItem(
-          'mobazha:outpost:showHighRiskAiClients',
+          'mobazha:sovereign:showHighRiskAiClients',
           showHighRisk ? '1' : '0'
         );
       } catch {
@@ -69,7 +69,7 @@ async function setupPage(page: Page, opts: SetupOptions): Promise<void> {
     },
     {
       runtimeConfig: runtimeConfigFixture({
-        deployment: opts.saas ? 'hosted' : opts.outpost ? 'outpost' : 'standalone',
+        deployment: opts.saas ? 'hosted' : opts.sovereign ? 'sovereign' : 'standalone',
       }),
       showHighRisk: !!opts.showHighRisk,
       userStorage: USER_STORAGE,
@@ -135,15 +135,15 @@ async function setupPage(page: Page, opts: SetupOptions): Promise<void> {
 test.describe('AI Agents Page Screenshots', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  // Non-outpost baseline. We deliberately keep deployment=standalone
+  // Non-sovereign baseline. We deliberately keep deployment=standalone
   // as 'standalone' (not 'hosted') because the AI Agents page reads
-  // `isOutpostMode()` for the privacy banner + client filtering, which is what
+  // `isSovereignMode()` for the privacy banner + client filtering, which is what
   // this test verifies. Switching to 'hosted' would trigger the onboarding
   // redirect (needsOnboarding === true) and fail to capture the AI Agents UI.
   // The screenshot file name is kept as `ai-agents-saas.png` for backward
   // compatibility with downstream review tooling.
-  test('Non-outpost — full client list, no banner', async ({ page }) => {
-    await setupPage(page, { outpost: false });
+  test('Non-sovereign — full client list, no banner', async ({ page }) => {
+    await setupPage(page, { sovereign: false });
 
     await page.goto('/admin/ai/connect');
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
@@ -156,30 +156,30 @@ test.describe('AI Agents Page Screenshots', () => {
     });
   });
 
-  test('Outpost — banner + toggle off + filtered clients', async ({ page }) => {
-    await setupPage(page, { outpost: true, showHighRisk: false });
+  test('Sovereign — banner + toggle off + filtered clients', async ({ page }) => {
+    await setupPage(page, { sovereign: true, showHighRisk: false });
 
     await page.goto('/admin/ai/connect');
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-    await page.waitForSelector('[data-testid="outpost-privacy-banner"]', { timeout: 15000 });
+    await page.waitForSelector('[data-testid="sovereign-privacy-banner"]', { timeout: 15000 });
     await page.waitForTimeout(800);
 
     await page.screenshot({
-      path: 'e2e-screenshots/ai-agents-outpost-default.png',
+      path: 'e2e-screenshots/ai-agents-sovereign-default.png',
       fullPage: true,
     });
   });
 
-  test('Outpost — banner + toggle on + all clients with risk badges', async ({ page }) => {
-    await setupPage(page, { outpost: true, showHighRisk: true });
+  test('Sovereign — banner + toggle on + all clients with risk badges', async ({ page }) => {
+    await setupPage(page, { sovereign: true, showHighRisk: true });
 
     await page.goto('/admin/ai/connect');
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-    await page.waitForSelector('[data-testid="outpost-privacy-banner"]', { timeout: 15000 });
+    await page.waitForSelector('[data-testid="sovereign-privacy-banner"]', { timeout: 15000 });
     await page.waitForTimeout(800);
 
     await page.screenshot({
-      path: 'e2e-screenshots/ai-agents-outpost-revealed.png',
+      path: 'e2e-screenshots/ai-agents-sovereign-revealed.png',
       fullPage: true,
     });
   });

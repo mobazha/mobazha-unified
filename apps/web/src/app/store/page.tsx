@@ -6,7 +6,7 @@ import { useStorefrontPeerID, useUserStore } from '@mobazha/core';
 
 /**
  * /store (no peerId) — resolves the local store's peerId and redirects.
- * Used in Outpost / Standalone mode where there is only one store,
+ * Used in Sovereign / Standalone mode where there is only one store,
  * so the URL stays clean without exposing the raw peerId.
  */
 export default function StoreIndexRedirect() {

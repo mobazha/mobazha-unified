@@ -1,23 +1,23 @@
 /**
- * Outpost Auth Fixtures
+ * Sovereign Auth Fixtures
  *
- * Outpost uses password-based Basic Auth (no Casdoor OAuth).
+ * Sovereign uses password-based Basic Auth (no Casdoor OAuth).
  * Provides mock auth injection for Layer A (mock-first) tests and
  * real login helpers for Layer B/C (real backend) tests.
  */
 
 import type { Page } from '@playwright/test';
 
-const OUTPOST_PASSWORD = 'test123';
-const FAKE_TOKEN = `basic:${Buffer.from(`admin:${OUTPOST_PASSWORD}`).toString('base64')}`;
-const FAKE_PEER_ID = 'QmOutpostPeer1234567890abcdefghijklmnop';
+const SOVEREIGN_PASSWORD = 'test123';
+const FAKE_TOKEN = `basic:${Buffer.from(`admin:${SOVEREIGN_PASSWORD}`).toString('base64')}`;
+const FAKE_PEER_ID = 'QmSovereignPeer1234567890abcdefghijklmnop';
 
-const OUTPOST_PROFILE = {
+const SOVEREIGN_PROFILE = {
   peerID: FAKE_PEER_ID,
   handle: '',
   name: 'Privacy Store',
   location: '',
-  about: 'Anonymous marketplace powered by Mobazha Outpost.',
+  about: 'Anonymous marketplace powered by Mobazha Sovereign.',
   shortDescription: 'Privacy-first store',
   avatarHashes: { medium: '', small: '', tiny: '', large: '', original: '' },
   headerHashes: { medium: '', small: '', tiny: '', large: '', original: '' },
@@ -42,7 +42,7 @@ const OUTPOST_PROFILE = {
   },
 };
 
-const OUTPOST_SETTINGS = {
+const SOVEREIGN_SETTINGS = {
   paymentDataInQR: true,
   showNotifications: true,
   showNsfw: false,
@@ -58,20 +58,20 @@ const OUTPOST_SETTINGS = {
   preferredCurrencies: ['LTC', 'XMR'],
 };
 
-const OUTPOST_EXCHANGE_RATES = {
+const SOVEREIGN_EXCHANGE_RATES = {
   LTC: { last: 80 },
   XMR: { last: 170 },
   BTC: { last: 65000 },
 };
 
 /**
- * Inject mock Outpost auth state into localStorage.
+ * Inject mock Sovereign auth state into localStorage.
  * Must be called BEFORE page.goto().
  */
-export async function injectOutpostAuth(page: Page): Promise<void> {
+export async function injectSovereignAuth(page: Page): Promise<void> {
   const zustandUserState = JSON.stringify({
     state: {
-      profile: OUTPOST_PROFILE,
+      profile: SOVEREIGN_PROFILE,
       isAuthenticated: true,
       authMode: 'basic',
       token: FAKE_TOKEN,
@@ -102,15 +102,15 @@ export async function injectOutpostAuth(page: Page): Promise<void> {
 }
 
 /**
- * Mock the APIs that Outpost authenticated pages call.
+ * Mock the APIs that Sovereign authenticated pages call.
  * Must be called BEFORE page.goto().
  */
-export async function mockOutpostSessionAPIs(page: Page): Promise<void> {
+export async function mockSovereignSessionAPIs(page: Page): Promise<void> {
   await page.route('**/v1/profiles/me', route =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ data: OUTPOST_PROFILE }),
+      body: JSON.stringify({ data: SOVEREIGN_PROFILE }),
     })
   );
 
@@ -118,7 +118,7 @@ export async function mockOutpostSessionAPIs(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ data: OUTPOST_PROFILE }),
+      body: JSON.stringify({ data: SOVEREIGN_PROFILE }),
     })
   );
 
@@ -126,7 +126,7 @@ export async function mockOutpostSessionAPIs(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ data: OUTPOST_SETTINGS }),
+      body: JSON.stringify({ data: SOVEREIGN_SETTINGS }),
     })
   );
 
@@ -134,7 +134,7 @@ export async function mockOutpostSessionAPIs(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ data: OUTPOST_EXCHANGE_RATES }),
+      body: JSON.stringify({ data: SOVEREIGN_EXCHANGE_RATES }),
     })
   );
 
@@ -206,11 +206,11 @@ export async function mockOutpostSessionAPIs(page: Page): Promise<void> {
 }
 
 /**
- * Combined: inject auth + mock session APIs for Outpost admin pages.
+ * Combined: inject auth + mock session APIs for Sovereign admin pages.
  */
-export async function setupOutpostMockAuth(page: Page): Promise<void> {
-  await injectOutpostAuth(page);
-  await mockOutpostSessionAPIs(page);
+export async function setupSovereignMockAuth(page: Page): Promise<void> {
+  await injectSovereignAuth(page);
+  await mockSovereignSessionAPIs(page);
 }
 
-export { OUTPOST_PROFILE, OUTPOST_SETTINGS, OUTPOST_EXCHANGE_RATES, FAKE_PEER_ID };
+export { SOVEREIGN_PROFILE, SOVEREIGN_SETTINGS, SOVEREIGN_EXCHANGE_RATES, FAKE_PEER_ID };

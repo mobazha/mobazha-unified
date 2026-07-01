@@ -18,7 +18,7 @@ import {
   isFiatPaymentCoin,
 } from '../data/tokens';
 import { getExchangeRates as fetchExchangeRatesApi } from './api/wallet';
-import { isOutpostMode } from '../config/env';
+import { isSovereignMode } from '../config/env';
 
 // BigNumber 配置
 BigNumber.config({
@@ -71,12 +71,12 @@ export function getLastFetchTime(): number | null {
 export async function fetchExchangeRates(forceRefresh = false): Promise<ExchangeRates> {
   const now = Date.now();
 
-  // Outpost mode is fully crypto-native — listings are priced natively in
+  // Sovereign mode is fully crypto-native — listings are priced natively in
   // XMR with no fiat conversion layer. Skip the external exchange
   // rate fetch entirely to preserve the zero-outbound guarantee. Returning
   // an empty rate map signals to callers that no fiat ≈ display should
   // be rendered.
-  if (isOutpostMode()) {
+  if (isSovereignMode()) {
     cachedRates = {};
     lastFetchTime = now;
     return cachedRates;

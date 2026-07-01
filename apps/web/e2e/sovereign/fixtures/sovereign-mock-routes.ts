@@ -1,8 +1,8 @@
 /**
- * Outpost Mock API Routes
+ * Sovereign Mock API Routes
  *
- * Mock data and route handlers for Outpost-specific E2E tests.
- * Outpost only supports LTC + XMR (no BTC/ETH/EVM chains).
+ * Mock data and route handlers for Sovereign-specific E2E tests.
+ * Sovereign only supports LTC + XMR (no BTC/ETH/EVM chains).
  *
  * All JSON responses use the Phase G envelope: { data: T } or { error: {...} }
  */
@@ -14,8 +14,8 @@ function wrapData<T>(data: T): string {
   return JSON.stringify({ data });
 }
 
-const MOCK_ORDER_TOKEN = 'gst_outpost_test_token_abc123def456';
-const MOCK_PEER_ID = 'QmOutpostPeer1234567890abcdefghijklmnop';
+const MOCK_ORDER_TOKEN = 'gst_sovereign_test_token_abc123def456';
+const MOCK_PEER_ID = 'QmSovereignPeer1234567890abcdefghijklmnop';
 
 function mockThumbnail(id: number, size = 300) {
   const url = `https://picsum.photos/id/${id}/${size}/${size}`;
@@ -39,10 +39,10 @@ const MOCK_GUEST_ORDER_LTC = {
   expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
   items: [
     {
-      listingHash: 'QmOutpostHash001',
+      listingHash: 'QmSovereignHash001',
       listingTitle: 'Privacy VPN Subscription (1 Year)',
       listingSlug: 'privacy-vpn-subscription-1-year',
-      sellerPeerID: '12D3KooWOutpostPeerID',
+      sellerPeerID: '12D3KooWSovereignPeerID',
       quantity: 1,
       unitPrice: '2800',
     },
@@ -62,7 +62,7 @@ const MOCK_GUEST_ORDER_STATUS_LTC = {
 // ── Guest Checkout mock data (XMR) ──────────────────────────────────────────
 
 const MOCK_GUEST_ORDER_XMR = {
-  orderToken: 'gst_outpost_xmr_token_xyz789',
+  orderToken: 'gst_sovereign_xmr_token_xyz789',
   paymentAddress: '4A2BtPyx2aHGY7kR1Pqx8MQXN2E9a4NXhM5cmJmSPpbLFbzaaWLQiPmS8LqX6qFNyuaKTZrHcX1',
   paymentAmount: '165000000000',
   paymentCoin: 'XMR',
@@ -71,10 +71,10 @@ const MOCK_GUEST_ORDER_XMR = {
   expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   items: [
     {
-      listingHash: 'QmOutpostHash002',
+      listingHash: 'QmSovereignHash002',
       listingTitle: 'Encrypted USB Drive (64GB)',
       listingSlug: 'encrypted-usb-drive-64gb',
-      sellerPeerID: '12D3KooWOutpostPeerID',
+      sellerPeerID: '12D3KooWSovereignPeerID',
       quantity: 1,
       unitPrice: '2800',
     },
@@ -98,9 +98,9 @@ const MOCK_GUEST_CHECKOUT_SETTINGS = {
   paymentTimeoutMinutes: 30,
 };
 
-// ── Outpost store product data ──────────────────────────────────────────────
+// ── Sovereign store product data ──────────────────────────────────────────────
 
-const OUTPOST_LISTINGS = [
+const SOVEREIGN_LISTINGS = [
   {
     slug: 'privacy-vpn-1yr',
     title: 'Privacy VPN Subscription (1 Year)',
@@ -133,7 +133,7 @@ const OUTPOST_LISTINGS = [
   },
 ];
 
-const OUTPOST_PRODUCT_DETAIL = {
+const SOVEREIGN_PRODUCT_DETAIL = {
   slug: 'encrypted-usb-64gb',
   metadata: {
     version: 1,
@@ -190,10 +190,10 @@ const OUTPOST_PRODUCT_DETAIL = {
 
 // ── Cart seed data ──────────────────────────────────────────────────────────
 
-const OUTPOST_CART_ITEM = {
+const SOVEREIGN_CART_ITEM = {
   slug: 'encrypted-usb-64gb',
   title: 'Encrypted USB Drive (64GB)',
-  listingHash: 'QmOutpostHash002',
+  listingHash: 'QmSovereignHash002',
   price: { amount: 4500, currency: 'USD', divisibility: 2 },
   thumbnail: 'https://picsum.photos/id/60/300/300',
   quantity: 1,
@@ -207,9 +207,9 @@ function isV1Api(url: URL, suffix: string): boolean {
 }
 
 /**
- * Mock Outpost app shell routes (runtime config, exchange rates, WS).
+ * Mock Sovereign app shell routes (runtime config, exchange rates, WS).
  */
-async function mockOutpostAppShell(page: Page): Promise<void> {
+async function mockSovereignAppShell(page: Page): Promise<void> {
   await page.route(
     url => url.pathname.startsWith('/v1/'),
     route =>
@@ -226,7 +226,7 @@ async function mockOutpostAppShell(page: Page): Promise<void> {
         status: 200,
         contentType: 'application/javascript',
         body: runtimeConfigScript({
-          deployment: 'outpost',
+          deployment: 'sovereign',
           guestCheckout: true,
           paymentMethods: [{ id: 'XMR', kind: 'crypto', flow: 'address-transfer' }],
         }),
@@ -252,7 +252,7 @@ async function mockOutpostAppShell(page: Page): Promise<void> {
 /**
  * Mock Guest Checkout APIs for a given coin (LTC or XMR).
  */
-async function mockOutpostGuestAPIs(
+async function mockSovereignGuestAPIs(
   page: Page,
   coin: 'LTC' | 'XMR' = 'LTC',
   statusState = 'AWAITING_PAYMENT',
@@ -303,15 +303,15 @@ async function mockOutpostGuestAPIs(
 }
 
 /**
- * Mock Outpost product listing APIs.
+ * Mock Sovereign product listing APIs.
  */
-async function mockOutpostListingsAPI(page: Page): Promise<void> {
+async function mockSovereignListingsAPI(page: Page): Promise<void> {
   await page.route('**/v1/listings/index**', route => {
     if (route.request().method() !== 'GET') return route.continue();
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: wrapData(OUTPOST_LISTINGS),
+      body: wrapData(SOVEREIGN_LISTINGS),
     });
   });
 
@@ -320,7 +320,7 @@ async function mockOutpostListingsAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: wrapData(OUTPOST_LISTINGS),
+      body: wrapData(SOVEREIGN_LISTINGS),
     });
   });
 
@@ -329,33 +329,33 @@ async function mockOutpostListingsAPI(page: Page): Promise<void> {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: wrapData(OUTPOST_PRODUCT_DETAIL),
+      body: wrapData(SOVEREIGN_PRODUCT_DETAIL),
     });
   });
 }
 
 /**
- * Inject Outpost cart data into localStorage.
+ * Inject Sovereign cart data into localStorage.
  * Must be called via page.addInitScript BEFORE page.goto().
  */
-async function injectOutpostCart(page: Page, items = [OUTPOST_CART_ITEM]): Promise<void> {
+async function injectSovereignCart(page: Page, items = [SOVEREIGN_CART_ITEM]): Promise<void> {
   const data = JSON.stringify({ state: { items }, version: 0 });
   await page.addInitScript(`localStorage.setItem('guest-cart-storage', ${JSON.stringify(data)});`);
 }
 
 export {
-  mockOutpostAppShell,
-  mockOutpostGuestAPIs,
-  mockOutpostListingsAPI,
-  injectOutpostCart,
+  mockSovereignAppShell,
+  mockSovereignGuestAPIs,
+  mockSovereignListingsAPI,
+  injectSovereignCart,
   MOCK_ORDER_TOKEN,
   MOCK_GUEST_ORDER_LTC,
   MOCK_GUEST_ORDER_XMR,
   MOCK_GUEST_ORDER_STATUS_LTC,
   MOCK_GUEST_ORDER_STATUS_XMR,
   MOCK_GUEST_CHECKOUT_SETTINGS,
-  OUTPOST_LISTINGS,
-  OUTPOST_PRODUCT_DETAIL,
-  OUTPOST_CART_ITEM,
+  SOVEREIGN_LISTINGS,
+  SOVEREIGN_PRODUCT_DETAIL,
+  SOVEREIGN_CART_ITEM,
   MOCK_PEER_ID,
 };
