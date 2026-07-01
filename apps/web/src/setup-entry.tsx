@@ -1,6 +1,6 @@
 /**
- * Outpost first-run setup shell — minimal entry (no full router / admin dashboard).
- * Built only when VITE_BUILD_TARGET=outpost; served by the node for /admin/* until setup completes.
+ * Sovereign first-run setup shell — minimal entry (no full router / admin dashboard).
+ * Built only when VITE_BUILD_TARGET=sovereign; served by the node for /admin/* until setup completes.
  */
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';

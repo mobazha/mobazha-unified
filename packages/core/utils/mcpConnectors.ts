@@ -10,7 +10,7 @@ export type ConnectMode = 'deeplink' | 'cli' | 'remote-url' | 'json-config';
 export type ClientAudience = 'owner' | 'developer';
 
 /**
- * Privacy risk classification — used by Outpost mode to filter cloud-only clients.
+ * Privacy risk classification — used by Sovereign mode to filter cloud-only clients.
  *
  * - `local-capable`: Inference can run locally with zero or trivial configuration.
  *   Example: OpenClaw (BYO model).
@@ -20,7 +20,7 @@ export type ClientAudience = 'owner' | 'developer';
  * - `cloud-only`: Inference happens in the vendor's cloud and the end user cannot
  *   redirect it to a local LLM. Examples: ChatGPT Desktop, Claude Desktop, Codex.
  *
- * Outpost mode default behavior:
+ * Sovereign mode default behavior:
  * - `local-capable`: shown by default
  * - `mixed`: shown with a yellow risk badge
  * - `cloud-only`: hidden by default, revealed only when user opts in via
@@ -33,7 +33,7 @@ export interface McpClient {
   name: string;
   mode: ConnectMode;
   audience: ClientAudience;
-  /** Privacy risk classification — controls Outpost mode visibility (see ClientRisk). */
+  /** Privacy risk classification — controls Sovereign mode visibility (see ClientRisk). */
   risk: ClientRisk;
   tagline?: string;
 }
@@ -81,11 +81,11 @@ export const MCP_CLIENTS: McpClient[] = [
 /**
  * Filter MCP_CLIENTS based on privacy mode.
  *
- * @param outpost When true, applies Outpost privacy filtering rules
- * @param showHighRisk When true (and outpost), reveals cloud-only clients (user opted in)
+ * @param sovereign When true, applies Sovereign privacy filtering rules
+ * @param showHighRisk When true (and sovereign), reveals cloud-only clients (user opted in)
  */
-export function filterMcpClients(outpost: boolean, showHighRisk: boolean): McpClient[] {
-  if (!outpost) return MCP_CLIENTS;
+export function filterMcpClients(sovereign: boolean, showHighRisk: boolean): McpClient[] {
+  if (!sovereign) return MCP_CLIENTS;
   if (showHighRisk) return MCP_CLIENTS;
   return MCP_CLIENTS.filter(c => c.risk !== 'cloud-only');
 }

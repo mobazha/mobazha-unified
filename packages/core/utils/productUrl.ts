@@ -1,4 +1,4 @@
-import { isOutpostMode, isStandaloneMode } from '../config/env';
+import { isSovereignMode, isStandaloneMode } from '../config/env';
 import { hasPeerIDPrefix } from './identity';
 
 export interface ProductHrefOptions {
@@ -15,7 +15,7 @@ function buildProductPath(
 ): string {
   const href = `/product/${encodeURIComponent(slug)}${subPath}`;
   const searchParams = new URLSearchParams();
-  const includePeerID = options.includePeerID ?? !(isStandaloneMode() || isOutpostMode());
+  const includePeerID = options.includePeerID ?? !(isStandaloneMode() || isSovereignMode());
 
   if (includePeerID && peerID) {
     searchParams.set('peerID', peerID);
@@ -83,7 +83,7 @@ export function resolveProductPagePeerID(
   const request = requestPeerID?.trim();
   if (request) return request;
 
-  if (isStandaloneMode() || isOutpostMode()) {
+  if (isStandaloneMode() || isSovereignMode()) {
     return undefined;
   }
 

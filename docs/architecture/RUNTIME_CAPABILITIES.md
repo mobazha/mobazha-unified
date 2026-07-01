@@ -3,11 +3,11 @@
 ## Decision
 
 Mobazha Unified has one public repository, one `main` branch, and one shared web
-application. Community Store, Hosted Store, Marketplace and Outpost are composed
+application. Community Store, Hosted Store, Marketplace and Sovereign are composed
 from four orthogonal runtime axes instead of frontend forks:
 
 - `authMode`: authentication transport only;
-- `deployment`: `hosted`, `standalone`, or `outpost`;
+- `deployment`: `hosted`, `standalone`, or `sovereign`;
 - `experience`: root product shell (`platform`, `store`, or `marketplace`);
 - `capabilities`: backend-implemented product behavior.
 
@@ -47,7 +47,7 @@ interface RuntimeConfig {
   schemaVersion: 3;
   authMode: 'hosted' | 'basic' | 'standalone';
   deployment: {
-    mode: 'hosted' | 'standalone' | 'outpost';
+    mode: 'hosted' | 'standalone' | 'sovereign';
     allowExternalResources: boolean;
   };
   experience:
@@ -67,7 +67,7 @@ interface RuntimeConfig {
       releasePublishing: boolean;
       attribution: boolean;
     };
-    outpost: { isolatedRuntime: boolean; managedFleet: boolean };
+    sovereign: { isolatedRuntime: boolean; managedFleet: boolean };
     payments: { methods: RuntimePaymentCapability[] };
   };
 }
@@ -80,7 +80,7 @@ interface RuntimeConfig {
 | Community Store       | standalone | store       | commerce + allowlisted payments              |
 | Hosted Platform       | hosted     | platform    | commerce + marketplace + commercial payments |
 | Dedicated Marketplace | hosted     | marketplace | commerce + marketplace                       |
-| Outpost               | outpost    | store       | commerce + isolated runtime + local payments |
+| Sovereign               | sovereign    | store       | commerce + isolated runtime + local payments |
 
 The Community manifest is release metadata and a payment fallback profile. It is
 not a global frontend identity and business UI must not branch on an
@@ -96,7 +96,7 @@ not a global frontend identity and business UI must not branch on an
 - Navigation uses the same capability keys as route boundaries.
 - Auth mode may choose OAuth, Basic or popup behavior, but must not infer product
   availability.
-- Outpost build-time aliases remain only where dependencies must be physically
+- Sovereign build-time aliases remain only where dependencies must be physically
   removed from the bundle; ordinary UI variation uses runtime capabilities.
 - Unknown or malformed runtime config does not override compile-time shell-owned
   authentication or endpoint settings. Its in-memory fallback denies capabilities

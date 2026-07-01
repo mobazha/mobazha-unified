@@ -1,5 +1,5 @@
 /**
- * Outpost stub — Matrix is stripped at build time.
+ * Sovereign stub — Matrix is stripped at build time.
  */
 import { useCallback } from 'react';
 

@@ -10,10 +10,10 @@ import {
 } from '@mobazha/core/services/api/monero';
 
 /**
- * XmrWalletSetupBanner — outpost-only dashboard prompt.
+ * XmrWalletSetupBanner — sovereign-only dashboard prompt.
  *
  * Visibility:
- *   - Non-outpost build:          renders nothing
+ *   - Non-sovereign build:          renders nothing
  *   - Fetch failed:               swallow silently (don't pollute dashboard
  *                                 just because the setup endpoint is
  *                                 momentarily unhappy — the payment status
@@ -39,7 +39,7 @@ export function XmrWalletSetupBanner() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (!__OUTPOST__) return;
+    if (!__SOVEREIGN__) return;
     let cancelled = false;
     getXMRWalletSetupStatus()
       .then(s => {
@@ -53,7 +53,7 @@ export function XmrWalletSetupBanner() {
     };
   }, []);
 
-  if (!__OUTPOST__) return null;
+  if (!__SOVEREIGN__) return null;
   if (failed) return null;
   if (!status) return null;
 

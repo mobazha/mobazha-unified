@@ -23,7 +23,7 @@ vi.mock('@mobazha/core/config/env', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core/config/env')>();
   return {
     ...actual,
-    isOutpostMode: () => false,
+    isSovereignMode: () => false,
   };
 });
 

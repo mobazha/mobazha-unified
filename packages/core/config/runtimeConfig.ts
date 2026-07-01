@@ -6,7 +6,7 @@
 export const RUNTIME_CONFIG_SCHEMA_VERSION = 3 as const;
 
 export type RuntimeAuthMode = 'hosted' | 'basic' | 'standalone';
-export type RuntimeDeploymentMode = 'hosted' | 'standalone' | 'outpost';
+export type RuntimeDeploymentMode = 'hosted' | 'standalone' | 'sovereign';
 export type RuntimeExperienceKind = 'platform' | 'store' | 'marketplace';
 export type RuntimeConfigStatus = 'invalid' | 'pending' | 'refreshing' | 'ready' | 'error';
 export type RuntimePaymentKind = 'crypto' | 'fiat';
@@ -45,7 +45,7 @@ export interface RuntimeCapabilities {
     releasePublishing: boolean;
     attribution: boolean;
   };
-  outpost: {
+  sovereign: {
     isolatedRuntime: boolean;
     managedFleet: boolean;
   };
@@ -66,8 +66,8 @@ export type RuntimeCapabilityKey =
   | 'marketplace.customDomains'
   | 'marketplace.releasePublishing'
   | 'marketplace.attribution'
-  | 'outpost.isolatedRuntime'
-  | 'outpost.managedFleet';
+  | 'sovereign.isolatedRuntime'
+  | 'sovereign.managedFleet';
 
 export interface RuntimeConfig {
   schemaVersion: typeof RUNTIME_CONFIG_SCHEMA_VERSION;
@@ -98,7 +98,7 @@ function emptyCapabilities(): RuntimeCapabilities {
       releasePublishing: false,
       attribution: false,
     },
-    outpost: { isolatedRuntime: false, managedFleet: false },
+    sovereign: { isolatedRuntime: false, managedFleet: false },
     payments: { methods: [] },
   };
 }
@@ -159,7 +159,7 @@ function parseRuntimeConfig(raw: unknown): RuntimeConfig | null {
   if (
     deploymentMode !== 'hosted' &&
     deploymentMode !== 'standalone' &&
-    deploymentMode !== 'outpost'
+    deploymentMode !== 'sovereign'
   ) {
     return null;
   }
@@ -189,7 +189,7 @@ function parseRuntimeConfig(raw: unknown): RuntimeConfig | null {
   const rawCapabilities = asRecord(input.capabilities);
   const rawCommerce = asRecord(rawCapabilities.commerce);
   const rawMarketplace = asRecord(rawCapabilities.marketplace);
-  const rawOutpost = asRecord(rawCapabilities.outpost);
+  const rawSovereign = asRecord(rawCapabilities.sovereign);
   const rawPayments = asRecord(rawCapabilities.payments);
   const methods = Array.isArray(rawPayments.methods)
     ? rawPayments.methods
@@ -235,9 +235,9 @@ function parseRuntimeConfig(raw: unknown): RuntimeConfig | null {
         releasePublishing: bool(rawMarketplace.releasePublishing),
         attribution: bool(rawMarketplace.attribution),
       },
-      outpost: {
-        isolatedRuntime: bool(rawOutpost.isolatedRuntime),
-        managedFleet: bool(rawOutpost.managedFleet),
+      sovereign: {
+        isolatedRuntime: bool(rawSovereign.isolatedRuntime),
+        managedFleet: bool(rawSovereign.managedFleet),
       },
       payments: { methods },
     },
@@ -398,9 +398,9 @@ export function supportsRuntimeCapability(
       return config.capabilities.marketplace.releasePublishing;
     case 'marketplace.attribution':
       return config.capabilities.marketplace.attribution;
-    case 'outpost.isolatedRuntime':
-      return config.capabilities.outpost.isolatedRuntime;
-    case 'outpost.managedFleet':
-      return config.capabilities.outpost.managedFleet;
+    case 'sovereign.isolatedRuntime':
+      return config.capabilities.sovereign.isolatedRuntime;
+    case 'sovereign.managedFleet':
+      return config.capabilities.sovereign.managedFleet;
   }
 }

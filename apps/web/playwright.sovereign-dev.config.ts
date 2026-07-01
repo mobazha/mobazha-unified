@@ -1,17 +1,17 @@
 /**
- * Playwright config for outpost production build testing.
+ * Playwright config for sovereign dev server testing.
  *
- * Builds outpost bundle, serves via vite preview, and runs
- * outpost E2E tests against the production output.
+ * Starts a VITE_BUILD_TARGET=sovereign dev server and runs sovereign
+ * E2E tests for fast iteration during development.
  *
- * Usage: pnpm test:e2e:outpost
+ * Usage: pnpm test:e2e:sovereign:dev
  */
 
 import { defineConfig, devices } from '@playwright/test';
 
 const baseHost = process.env.PLAYWRIGHT_HOST || '127.0.0.1';
-const port = process.env.PLAYWRIGHT_OUTPOST_PROD_PORT || '3004';
-const timeoutMs = Number(process.env.PLAYWRIGHT_WEBSERVER_TIMEOUT_MS || 240000);
+const port = process.env.PLAYWRIGHT_SOVEREIGN_PORT || '3003';
+const timeoutMs = Number(process.env.PLAYWRIGHT_WEBSERVER_TIMEOUT_MS || 120000);
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,7 +19,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: [['html', { outputFolder: 'playwright-report-outpost-prod' }], ['list']],
+  reporter: [['html', { outputFolder: 'playwright-report-sovereign-dev' }], ['list']],
 
   timeout: 120 * 1000,
   expect: { timeout: 15 * 1000 },
@@ -35,16 +35,16 @@ export default defineConfig({
 
   projects: [
     {
-      name: 'outpost-prod',
+      name: 'sovereign',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /outpost/,
+      testMatch: /sovereign/,
     },
   ],
 
   webServer: {
-    command: `pnpm build:outpost && pnpm start --host ${baseHost} --port ${port} --strictPort`,
+    command: `VITE_BUILD_TARGET=sovereign pnpm dev --host ${baseHost} --port ${port} --strictPort`,
     url: `http://${baseHost}:${port}`,
-    env: { ...process.env, PORT: port },
+    env: { ...process.env, VITE_BUILD_TARGET: 'sovereign', PORT: port },
     reuseExistingServer: true,
     timeout: timeoutMs,
   },

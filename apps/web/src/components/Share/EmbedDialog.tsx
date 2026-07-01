@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (typeof window !== 'undefined') return window.location.origin;
-  return typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '' : 'https://app.mobazha.org';
+  return typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '' : 'https://app.mobazha.org';
 }
 
 type EmbedType = 'product' | 'store';

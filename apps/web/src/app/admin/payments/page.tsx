@@ -6,13 +6,13 @@ import { useI18n, getAdminFinancePath, useFiatPaymentVisible } from '@mobazha/co
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
-const CryptoReceivingSection = __OUTPOST__
+const CryptoReceivingSection = __SOVEREIGN__
   ? () => null
   : lazy(() =>
       import('./CryptoReceivingSection').then(m => ({ default: m.CryptoReceivingSection }))
     );
 
-const PaymentProvidersSection = __OUTPOST__
+const PaymentProvidersSection = __SOVEREIGN__
   ? () => null
   : lazy(() =>
       import('./PaymentProvidersSection').then(m => ({ default: m.PaymentProvidersSection }))
@@ -105,11 +105,11 @@ export default function AdminPaymentsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!__OUTPOST__) return;
+    if (!__SOVEREIGN__) return;
     router.replace(getAdminFinancePath());
   }, [router]);
 
-  if (__OUTPOST__) {
+  if (__SOVEREIGN__) {
     return <div data-testid="admin-payments" className="min-h-[120px]" aria-busy="true" />;
   }
 

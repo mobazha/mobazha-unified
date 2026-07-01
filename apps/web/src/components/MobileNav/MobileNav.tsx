@@ -26,7 +26,7 @@ interface NavItem {
   isCart?: boolean; // 标记是否是购物车项，用于动态获取商品数量
 }
 
-const outpostNavItems: NavItem[] = [
+const sovereignNavItems: NavItem[] = [
   {
     labelKey: 'nav.home',
     href: '/',
@@ -220,7 +220,7 @@ export const MobileNav: React.FC = () => {
 
   const userAvatarUrl = getImageUrl(profile?.avatarHashes?.small);
 
-  const baseItems = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? outpostNavItems : navItems;
+  const baseItems = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? sovereignNavItems : navItems;
   const filteredNavItems = baseItems.filter(item => {
     if (!isAuthenticated) {
       return !AUTH_REQUIRED_LABEL_KEYS.includes(item.labelKey);

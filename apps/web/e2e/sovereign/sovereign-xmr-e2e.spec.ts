@@ -1,11 +1,11 @@
 /**
- * Layer C-XMR: Outpost Guest Checkout E2E — Full XMR regtest payment loop.
+ * Layer C-XMR: Sovereign Guest Checkout E2E — Full XMR regtest payment loop.
  *
  * Runs against a Docker Compose environment:
  *   - monerod regtest (--fixed-difficulty 1)
- *   - wallet-rpc-seller (Outpost connects to this)
+ *   - wallet-rpc-seller (Sovereign connects to this)
  *   - wallet-rpc-buyer (E2E test sends payments from this)
- *   - Outpost binary (embedded frontend + XMR guest checkout)
+ *   - Sovereign binary (embedded frontend + XMR guest checkout)
  *
  * Full lifecycle:
  *   1. Seed store (profile + XMR listing + guest checkout config)
@@ -17,20 +17,20 @@
  *
  * Usage:
  *   cd ~/dev/mobazha/tests/e2e/docker
- *   docker compose -f docker-compose.outpost-xmr-e2e.yml up -d
- *   bash scripts/wait-outpost-xmr.sh
- *   export OUTPOST_PASSWORD=$(docker exec outpost-xmr-outpost cat /data/admin_password)
+ *   docker compose -f docker-compose.sovereign-xmr-e2e.yml up -d
+ *   bash scripts/wait-sovereign-xmr.sh
+ *   export SOVEREIGN_PASSWORD=$(docker exec sovereign-xmr-sovereign cat /data/admin_password)
  *   cd ~/dev/openbazaar/mobazha-unified/apps/web
- *   OUTPOST_URL=http://127.0.0.1:5103 pnpm test:e2e:outpost:real -- e2e/outpost/outpost-xmr-e2e.spec.ts
+ *   SOVEREIGN_URL=http://127.0.0.1:5103 pnpm test:e2e:sovereign:real -- e2e/sovereign/sovereign-xmr-e2e.spec.ts
  */
 
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { execSync } from 'child_process';
-import { seedOutpostStore, waitForHealthy, XMR_ASSET_ID } from './fixtures/seed-outpost-store';
+import { seedSovereignStore, waitForHealthy, XMR_ASSET_ID } from './fixtures/seed-sovereign-store';
 
-const OUTPOST_URL = process.env.OUTPOST_URL || 'http://127.0.0.1:5103';
-const ADMIN_PASS = process.env.OUTPOST_PASSWORD || '';
-const OUT = 'screenshots/outpost-xmr-e2e';
+const SOVEREIGN_URL = process.env.SOVEREIGN_URL || 'http://127.0.0.1:5103';
+const ADMIN_PASS = process.env.SOVEREIGN_PASSWORD || '';
+const OUT = 'screenshots/sovereign-xmr-e2e';
 
 const BUYER_RPC_URL = 'http://127.0.0.1:18084/json_rpc';
 const MONEROD_RPC_URL = 'http://127.0.0.1:18081/json_rpc';
@@ -87,7 +87,7 @@ async function pollOrderStatus(
 ): Promise<Record<string, unknown>> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const resp = await request.get(`${OUTPOST_URL}/v1/guest/orders/${orderToken}`);
+    const resp = await request.get(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}`);
     if (resp.ok()) {
       const body = await resp.json();
       const order = body.data ?? body;
@@ -109,7 +109,7 @@ async function pollPoolDetected(
 ): Promise<Record<string, unknown>> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const resp = await request.get(`${OUTPOST_URL}/v1/guest/orders/${orderToken}`);
+    const resp = await request.get(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}`);
     if (resp.ok()) {
       const body = await resp.json();
       const order = body.data ?? body;
@@ -132,10 +132,10 @@ let listingSlug: string | null = null;
 const XMR_PRICE_PICONERO = '1000000000';
 
 test.beforeAll(async ({ request }) => {
-  test.skip(!ADMIN_PASS, 'OUTPOST_PASSWORD not set — skip XMR E2E payment tests');
-  await waitForHealthy(OUTPOST_URL);
+  test.skip(!ADMIN_PASS, 'SOVEREIGN_PASSWORD not set — skip XMR E2E payment tests');
+  await waitForHealthy(SOVEREIGN_URL);
 
-  const result = await seedOutpostStore(request, OUTPOST_URL, ADMIN_PASS, {
+  const result = await seedSovereignStore(request, SOVEREIGN_URL, ADMIN_PASS, {
     acceptedCoins: XMR_ASSET_ID,
     listingCoinCode: 'XMR',
     listingCoinDivisibility: 12,
@@ -158,7 +158,7 @@ test.beforeAll(async ({ request }) => {
   }
 });
 
-test.describe('Outpost Guest Checkout E2E — XMR Payment Loop', () => {
+test.describe('Sovereign Guest Checkout E2E — XMR Payment Loop', () => {
   let orderToken: string;
   let paymentAddress: string;
   let paymentAmountPiconero: number;
@@ -170,7 +170,7 @@ test.describe('Outpost Guest Checkout E2E — XMR Payment Loop', () => {
     const slug = listingSlug;
     console.log(`Using seeded listing slug: ${slug}`);
 
-    const orderResp = await request.post(`${OUTPOST_URL}/v1/guest/orders`, {
+    const orderResp = await request.post(`${SOVEREIGN_URL}/v1/guest/orders`, {
       data: {
         items: [{ listingSlug: slug, quantity: 1 }],
         paymentCoin: XMR_ASSET_ID,
@@ -203,7 +203,7 @@ test.describe('Outpost Guest Checkout E2E — XMR Payment Loop', () => {
     console.log(`XMR Payment address (subaddress): ${paymentAddress}`);
     console.log(`XMR Payment amount (piconero): ${paymentAmountPiconero}`);
 
-    await request.fetch(`${OUTPOST_URL}/v1/guest/orders/${orderToken}`).then(async r => {
+    await request.fetch(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}`).then(async r => {
       if (r.ok()) {
         const b = await r.json();
         console.log('Initial order state:', JSON.stringify(b.data ?? b, null, 2));
@@ -310,7 +310,7 @@ test.describe('Outpost Guest Checkout E2E — XMR Payment Loop', () => {
   test('06 — Seller ships order', async ({ request, page }) => {
     test.skip(!ADMIN_PASS || !orderToken, 'No order');
 
-    const resp = await request.put(`${OUTPOST_URL}/v1/guest/orders/${orderToken}/ship`, {
+    const resp = await request.put(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}/ship`, {
       headers: headers(),
       data: { trackingNumber: 'XMR-E2E-001', carrier: 'TestCarrier' },
     });
@@ -329,7 +329,7 @@ test.describe('Outpost Guest Checkout E2E — XMR Payment Loop', () => {
   test('07 — Complete order', async ({ request, page }) => {
     test.skip(!ADMIN_PASS || !orderToken, 'No order');
 
-    const resp = await request.put(`${OUTPOST_URL}/v1/guest/orders/${orderToken}/complete`, {
+    const resp = await request.put(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}/complete`, {
       headers: headers(),
     });
     console.log('Complete response:', resp.status());

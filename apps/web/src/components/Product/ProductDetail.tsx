@@ -150,9 +150,9 @@ export function ProductDetail({
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(peerID || product?.vendorID?.peerID);
 
-  // Outpost: guest checkout via XMR is always available; skip fiat/crypto method check.
+  // Sovereign: guest checkout via XMR is always available; skip fiat/crypto method check.
   const paymentAvailable =
-    __OUTPOST__ || paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+    __SOVEREIGN__ || paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
   const displayAcceptedCurrencies = useMemo(
     () =>
@@ -868,7 +868,7 @@ export function ProductDetail({
               />
             )}
 
-            {!__OUTPOST__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
+            {!__SOVEREIGN__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (
@@ -1047,11 +1047,11 @@ export function ProductDetail({
               </div>
             )}
 
-            {/* Verified Moderator Badge — hidden in Outpost (no moderator/arbitration system) */}
-            {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
+            {/* Verified Moderator Badge — hidden in Sovereign (no moderator/arbitration system) */}
+            {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
-            {/* Buyer Protection — hidden in Outpost (XMR direct pay, no escrow/arbitration) */}
-            {!isOwnProduct && !__OUTPOST__ && <BuyerProtectionBanner />}
+            {/* Buyer Protection — hidden in Sovereign (XMR direct pay, no escrow/arbitration) */}
+            {!isOwnProduct && !__SOVEREIGN__ && <BuyerProtectionBanner />}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (

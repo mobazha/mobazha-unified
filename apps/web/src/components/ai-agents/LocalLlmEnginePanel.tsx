@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * LocalLlmEnginePanel — Outpost-only.
+ * LocalLlmEnginePanel — Sovereign-only.
  *
  * Two states:
  * - Detected: compact status line (engine + model + endpoint).
@@ -121,7 +121,7 @@ export function LocalLlmEnginePanel() {
       >
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />
-          {t('aiAgents.outpost.localLlm.checking', { defaultValue: 'Checking local AI engine…' })}
+          {t('aiAgents.sovereign.localLlm.checking', { defaultValue: 'Checking local AI engine…' })}
         </div>
       </div>
     );
@@ -145,7 +145,7 @@ export function LocalLlmEnginePanel() {
             <p className="text-xs text-muted-foreground mt-0.5">{detected.baseURL}</p>
           </div>
           <a href="#ai-endpoint-config" className="text-xs text-primary hover:underline shrink-0">
-            {t('aiAgents.outpost.localLlm.edit', { defaultValue: 'Edit' })}
+            {t('aiAgents.sovereign.localLlm.edit', { defaultValue: 'Edit' })}
           </a>
         </div>
       </div>
@@ -163,10 +163,10 @@ export function LocalLlmEnginePanel() {
         </div>
         <div className="flex-1">
           <h2 className="text-base font-medium text-foreground">
-            {t('aiAgents.outpost.localLlm.title')}
+            {t('aiAgents.sovereign.localLlm.title')}
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t('aiAgents.outpost.localLlm.bodySimple', {
+            {t('aiAgents.sovereign.localLlm.bodySimple', {
               defaultValue:
                 'Install Ollama to power on-device AI. Your store data never leaves this machine.',
             })}
@@ -215,7 +215,7 @@ export function LocalLlmEnginePanel() {
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        {t('aiAgents.outpost.localLlm.afterInstall', {
+        {t('aiAgents.sovereign.localLlm.afterInstall', {
           defaultValue:
             'After installing, refresh this page — the engine will be detected automatically.',
         })}
@@ -230,7 +230,7 @@ export function LocalLlmEnginePanel() {
           <ChevronDown
             className={cn('w-3.5 h-3.5 transition-transform', showAltEngines && 'rotate-180')}
           />
-          {t('aiAgents.outpost.localLlm.otherEngines', {
+          {t('aiAgents.sovereign.localLlm.otherEngines', {
             defaultValue: 'Other engines (llama.cpp, LM Studio)',
           })}
         </button>
@@ -244,7 +244,7 @@ export function LocalLlmEnginePanel() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-primary hover:underline"
               >
-                {t(`aiAgents.outpost.localLlm.engines.${eng.id}.name` as const)}
+                {t(`aiAgents.sovereign.localLlm.engines.${eng.id}.name` as const)}
                 <ExternalLink className="w-3 h-3" />
               </a>
             ))}

@@ -182,7 +182,7 @@ export function ProductDetailMobile({
   }
 
   const purchaseDisabled =
-    isOffline || stock === 0 || (!__OUTPOST__ && !paymentAvailable) || isRwaToken;
+    isOffline || stock === 0 || (!__SOVEREIGN__ && !paymentAvailable) || isRwaToken;
 
   return (
     <div data-testid="product-detail-mobile">
@@ -304,7 +304,7 @@ export function ProductDetailMobile({
               {renderPairedPrice(compareAtPrice, priceInfo.currency)}
             </span>
           )}
-          {!__OUTPOST__ && !isCollectibleTitleListing && <BuyerProtectionBadge variant="inline" />}
+          {!__SOVEREIGN__ && !isCollectibleTitleListing && <BuyerProtectionBadge variant="inline" />}
         </div>
 
         {isCollectibleTitleListing && collectibleListingMeta ? (
@@ -477,8 +477,8 @@ export function ProductDetailMobile({
           </div>
         )}
 
-        {!__OUTPOST__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
-        {!isOwnProduct && !__OUTPOST__ && !isCollectibleTitleListing && <BuyerProtectionBanner />}
+        {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
+        {!isOwnProduct && !__SOVEREIGN__ && !isCollectibleTitleListing && <BuyerProtectionBanner />}
 
         {/* Payment unavailable warning */}
         {!isOwnProduct && !paymentAvailable && stock > 0 && (
@@ -708,7 +708,7 @@ export function ProductDetailMobile({
           <div className="flex items-center gap-1">
             {/* Left icon group */}
             <div className="flex flex-shrink-0">
-              {!__OUTPOST__ && (
+              {!__SOVEREIGN__ && (
                 <button
                   onClick={openChatWithVendor}
                   className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"

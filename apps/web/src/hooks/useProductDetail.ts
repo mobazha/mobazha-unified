@@ -37,7 +37,7 @@ import {
   resolveCollectibleListingImageUrl,
 } from '@mobazha/core/curation/collectibleMarketplace';
 import { useGuestCartStore } from '@mobazha/core/stores';
-import { isOutpostMode } from '@mobazha/core/config/env';
+import { isSovereignMode } from '@mobazha/core/config/env';
 import { useHaptic } from '@/lib/platform';
 import type {
   Product,
@@ -409,10 +409,10 @@ export function useProductDetail({
   const freeShipping = product ? hasFreeShipping(product) : false;
   const estimatedDelivery = product ? getEstimatedDelivery(product) : null;
   const vendorPeerID = product?.vendorID?.peerID;
-  // In Outpost mode, the listing's acceptedCurrencies may contain stale defaults
+  // In Sovereign mode, the listing's acceptedCurrencies may contain stale defaults
   // (BTC/ETH) set during listing creation. Display only the pricing currency,
-  // since Outpost is XMR-only and payment coin is resolved at guest checkout.
-  const acceptedCurrencies = isOutpostMode()
+  // since Sovereign is XMR-only and payment coin is resolved at guest checkout.
+  const acceptedCurrencies = isSovereignMode()
     ? product?.metadata?.pricingCurrency?.code
       ? [product.metadata.pricingCurrency.code]
       : []
@@ -464,7 +464,7 @@ export function useProductDetail({
     }
   }, [isCollectibleTitleListing, product?.slug]);
   const paymentAvailable =
-    isOutpostMode() ||
+    isSovereignMode() ||
     paymentMethodsLoading ||
     vendorCrypto.length > 0 ||
     vendorActiveFiat.length > 0;
@@ -666,8 +666,8 @@ export function useProductDetail({
       });
     }
 
-    // Outpost mode: add to guest cart and navigate to guest checkout
-    if (isOutpostMode()) {
+    // Sovereign mode: add to guest cart and navigate to guest checkout
+    if (isSovereignMode()) {
       const rawProduct = product as unknown as Record<string, unknown>;
       const thumbnail = selectedSku?.images?.[0] ??
         product.item?.images?.[0] ?? {

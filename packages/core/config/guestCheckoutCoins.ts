@@ -88,7 +88,7 @@ let cachedAcceptedCoins: string[] | null = null;
 /**
  * Called after fetching `GET /v1/payment-methods/{peerID}` to cache the
  * seller's accepted crypto tickers. This is the single source of truth
- * across all modes (SaaS, standalone, outpost).
+ * across all modes (SaaS, standalone, sovereign).
  */
 export function setAcceptedCoins(coins: string[]): void {
   cachedAcceptedCoins = sanitizeAcceptedPaymentCoins(coins);

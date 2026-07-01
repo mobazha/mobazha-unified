@@ -26,7 +26,7 @@ function marketplaceConfig(identifier = 'm2-wilson'): RuntimeConfig {
         releasePublishing: true,
         attribution: true,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: { methods: [] },
     },
   };

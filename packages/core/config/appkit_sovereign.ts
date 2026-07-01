@@ -1,5 +1,5 @@
 /**
- * Outpost stub — wallet features are disabled; all exports are
+ * Sovereign stub — wallet features are disabled; all exports are
  * type-compatible with the real appkit.ts but contain no external URLs.
  */
 

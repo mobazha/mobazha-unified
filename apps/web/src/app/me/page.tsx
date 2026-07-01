@@ -63,7 +63,7 @@ import {
 function MeCasesEntry() {
   const { t } = useI18n();
   const { isAuthenticated, profile } = useUserStore();
-  const hideModeration = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const hideModeration = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
 
   if (!isAuthenticated || !profile?.moderator || hideModeration) {
     return null;
@@ -218,14 +218,14 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
   const { isEmbeddedApp: isEmbedded } = usePlatform();
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const standaloneMode = useStorefrontMode();
-  const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+  const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
   const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
   const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
   const showMaasMenu =
     authenticated &&
     isHosted() &&
     !standaloneMode &&
-    !isOutpost &&
+    !isSovereign &&
     (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);

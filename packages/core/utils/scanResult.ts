@@ -187,7 +187,7 @@ function safeDecode(value: string): string {
 }
 
 const MOBAZHA_DOMAINS: string[] =
-  typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
     ? []
     : ['app.mobazha.org', 'mobazha.org', 'test-new.mobazha.org'];
 

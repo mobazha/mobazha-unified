@@ -8,15 +8,15 @@ import { Lock, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 /**
- * Outpost admin login form — password-only Basic Auth.
+ * Sovereign admin login form — password-only Basic Auth.
  *
- * This is the Outpost build replacement for AdminLoginForm.tsx.
+ * This is the Sovereign build replacement for AdminLoginForm.tsx.
  * It intentionally does NOT import acquireSaaSToken or any Casdoor
  * module, ensuring the entire Casdoor code chain is tree-shaken
- * from the Outpost bundle.
+ * from the Sovereign bundle.
  *
  * The `casdoorAvailable` prop is accepted for interface compatibility
- * but always ignored — Outpost never shows social login.
+ * but always ignored — Sovereign never shows social login.
  */
 interface AdminLoginFormProps {
   casdoorAvailable?: boolean;

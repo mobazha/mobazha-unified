@@ -28,7 +28,7 @@ function runtimeMethods(ids: string[]) {
         releasePublishing: false,
         attribution: false,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: {
         methods: ids.map(id => ({ id, kind: 'crypto', flow: 'address-transfer' })),
       },

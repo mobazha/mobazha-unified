@@ -1,11 +1,11 @@
 /**
- * Monero (XMR) admin API — Outpost only
+ * Monero (XMR) admin API — Sovereign only
  *
  * Backend:
  *   - mobazha3.0/internal/api/monero_node_pool_handler.go
  *   - mobazha3.0/internal/api/monero_wallet_handler.go
- *   - mobazha3.0/internal/api/huma_system_handlers_outpost.go
- *   - mobazha3.0/internal/api/huma_wallet_xmr_outpost.go
+ *   - mobazha3.0/internal/api/huma_system_handlers_sovereign.go
+ *   - mobazha3.0/internal/api/huma_wallet_xmr_sovereign.go
  *
  * Two endpoint families:
  *
@@ -22,7 +22,7 @@
  *
  * Amount is a decimal piconero string (1 XMR = 10^12 piconero). String not
  * number because JS Number's safe-integer limit (2^53 ≈ 9007 XMR) is below
- * realistic outpost balances. The backend ParseAmount accepts the same
+ * realistic sovereign balances. The backend ParseAmount accepts the same
  * format and rejects empty/zero/non-numeric/overflow.
  */
 
@@ -172,11 +172,11 @@ export async function sweepAllXMR(req: MoneroSweepAllRequest): Promise<MoneroSwe
 }
 
 // =====================================================================
-// Setup wizard (OP-MP-2.5)
+// Setup wizard
 // =====================================================================
 // First-run XMR wallet provisioning. The backend persists xmr-wallet.json
 // locally and auto-opens the wallet on subsequent boots, so the wizard
-// should appear at most once per outpost lifetime (unless the operator
+// should appear at most once per sovereign lifetime (unless the operator
 // resets state on disk).
 
 export interface MoneroWalletSetupStatus {
@@ -251,7 +251,7 @@ export async function confirmXMRWalletBackup(): Promise<void> {
 }
 
 // =====================================================================
-// User sovereignty surface (OP-MP-6) — Outpost only, admin-only
+// User sovereignty surface — Sovereign only, admin-only
 // =====================================================================
 // Three read endpoints so the operator can back up the wallet, hand a
 // view-only copy to a trusted bookkeeper, and audit incoming + outgoing

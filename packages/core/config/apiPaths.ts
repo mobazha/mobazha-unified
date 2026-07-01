@@ -75,7 +75,7 @@ export const NODE_API = {
 
   // --- Vendor migration (DG-1.9 — "Storefront creators can leave with") ---
   // Single endpoint handles both dry-run preview and actual import via the
-  // request body's `dryRun` flag. SaaS / Standalone only — Outpost build
+  // request body's `dryRun` flag. SaaS / Standalone only — Sovereign build
   // omits the handler entirely.
   LISTINGS_IMPORT_GUMROAD: '/listings/import/gumroad',
   ORDER: (orderId: string) => `/orders/${orderId}`,
@@ -140,7 +140,7 @@ export const NODE_API = {
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',
   AGENT_CHAT_SESSION: NODE_API_PATHS.AGENT_CHAT_BY_SESSION_ID,
-  /** Smart product import — multipart ingest (full build only; !outpost). */
+  /** Smart product import — multipart ingest (full-service distributions only). */
   AGENT_PRODUCT_IMPORT_INGEST: '/agent/product-import/ingest',
   AGENT_PRODUCT_IMPORT_RUNS_ADVANCE: (runId: string) =>
     `/agent/product-import/runs/${encodeURIComponent(runId)}/advance`,
@@ -305,7 +305,7 @@ export const NODE_API = {
   SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
-  // --- Monero NodePool admin (Outpost only) ---
+  // --- Monero NodePool admin (Sovereign only) ---
   // host:port addresses are URL-encoded on the client (encodeURIComponent)
   // and decoded by chi's {address} path parameter on the server.
   SYSTEM_MONERO_NODES: '/system/monero-nodes',
@@ -313,19 +313,19 @@ export const NODE_API = {
   SYSTEM_MONERO_NODE_SWITCH: (address: string) =>
     `/system/monero-nodes/${encodeURIComponent(address)}/switch`,
 
-  // --- XMR wallet admin (Outpost only) ---
+  // --- XMR wallet admin (Sovereign only) ---
   WALLET_XMR_BALANCE: '/wallet/xmr/balance',
   WALLET_XMR_WITHDRAW: '/wallet/xmr/withdraw',
   WALLET_XMR_SWEEP_ALL: '/wallet/xmr/sweep-all',
 
-  // --- XMR user-sovereignty surface (OP-MP-6, Outpost only, admin-only) ---
+  // --- XMR user-sovereignty surface (restricted distributions, admin-only) ---
   // adminOnlyAuthSecurity on the backend: no API tokens. Each request
   // round-trips to monero-wallet-rpc; nothing is cached server-side.
   WALLET_XMR_SECRETS_MNEMONIC: '/wallet/xmr/secrets/mnemonic',
   WALLET_XMR_SECRETS_VIEW_ONLY: '/wallet/xmr/secrets/view-only',
   WALLET_XMR_TRANSFERS: '/wallet/xmr/transfers',
 
-  // --- XMR wallet setup wizard (Outpost only) ---
+  // --- XMR wallet setup wizard (Sovereign only) ---
   // Single POST endpoint multiplexed on { action: "create" | "restore" |
   // "confirm-backup" }; GET reports whether xmr-wallet.json exists.
   SYSTEM_SETUP_WIZARD_XMR_WALLET: '/system/setup-wizard/xmr-wallet',

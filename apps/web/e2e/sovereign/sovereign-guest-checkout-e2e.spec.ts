@@ -1,8 +1,8 @@
 /**
- * Layer C: Outpost Guest Checkout E2E — Full BTC regtest payment loop.
+ * Layer C: Sovereign Guest Checkout E2E — Full BTC regtest payment loop.
  *
  * Runs against a Docker Compose environment:
- *   - Outpost binary (embedded frontend + guest checkout)
+ *   - Sovereign binary (embedded frontend + guest checkout)
  *   - bitcoind regtest + electrs
  *
  * Full lifecycle:
@@ -16,22 +16,22 @@
  *
  * Usage:
  *   cd tests/e2e/docker
- *   docker compose -f docker-compose.outpost-e2e.yml up -d
- *   bash scripts/wait-outpost.sh
- *   export OUTPOST_PASSWORD=$(docker exec outpost-e2e-outpost cat /data/admin_password)
+ *   docker compose -f docker-compose.sovereign-e2e.yml up -d
+ *   bash scripts/wait-sovereign.sh
+ *   export SOVEREIGN_PASSWORD=$(docker exec sovereign-e2e-sovereign cat /data/admin_password)
  *   cd ~/dev/openbazaar/mobazha-unified/apps/web
- *   OUTPOST_URL=http://127.0.0.1:5102 pnpm test:e2e:outpost:real -- e2e/outpost/outpost-guest-checkout-e2e.spec.ts
+ *   SOVEREIGN_URL=http://127.0.0.1:5102 pnpm test:e2e:sovereign:real -- e2e/sovereign/sovereign-guest-checkout-e2e.spec.ts
  */
 
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { execSync } from 'child_process';
-import { seedOutpostStore, waitForHealthy } from './fixtures/seed-outpost-store';
+import { seedSovereignStore, waitForHealthy } from './fixtures/seed-sovereign-store';
 
-const OUTPOST_URL = process.env.OUTPOST_URL || 'http://127.0.0.1:5102';
-const ADMIN_PASS = process.env.OUTPOST_PASSWORD || '';
-const OUT = 'screenshots/outpost-e2e';
+const SOVEREIGN_URL = process.env.SOVEREIGN_URL || 'http://127.0.0.1:5102';
+const ADMIN_PASS = process.env.SOVEREIGN_PASSWORD || '';
+const OUT = 'screenshots/sovereign-e2e';
 const BTC_CLI =
-  'docker exec outpost-e2e-bitcoind bitcoin-cli -regtest -rpcuser=test -rpcpassword=test -rpcwallet=e2e';
+  'docker exec sovereign-e2e-bitcoind bitcoin-cli -regtest -rpcuser=test -rpcpassword=test -rpcwallet=e2e';
 const BTC_ASSET_ID = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
 
 function exec(cmd: string): string {
@@ -40,7 +40,7 @@ function exec(cmd: string): string {
 
 function hasBtcRegtest(): boolean {
   try {
-    return exec(`docker inspect -f '{{.State.Running}}' outpost-e2e-bitcoind`) === 'true';
+    return exec(`docker inspect -f '{{.State.Running}}' sovereign-e2e-bitcoind`) === 'true';
   } catch {
     return false;
   }
@@ -62,7 +62,7 @@ async function pollOrderStatus(
 ): Promise<Record<string, unknown>> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const resp = await request.get(`${OUTPOST_URL}/v1/guest/orders/${orderToken}`);
+    const resp = await request.get(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}`);
     if (resp.ok()) {
       const body = await resp.json();
       const order = body.data ?? body;
@@ -79,12 +79,12 @@ test.describe.configure({ mode: 'serial' });
 let listingSlug: string | null = null;
 
 test.beforeAll(async ({ request }) => {
-  test.skip(!ADMIN_PASS, 'OUTPOST_PASSWORD not set — skip E2E payment tests');
+  test.skip(!ADMIN_PASS, 'SOVEREIGN_PASSWORD not set — skip E2E payment tests');
   test.skip(
     !hasBtcRegtest(),
-    'outpost-e2e-bitcoind is not running — skip legacy BTC payment tests'
+    'sovereign-e2e-bitcoind is not running — skip legacy BTC payment tests'
   );
-  await waitForHealthy(OUTPOST_URL);
+  await waitForHealthy(SOVEREIGN_URL);
 
   let btcSweepAddress: string | undefined;
   try {
@@ -93,7 +93,7 @@ test.beforeAll(async ({ request }) => {
     console.warn('Could not get BTC sweep address from regtest');
   }
 
-  const result = await seedOutpostStore(request, OUTPOST_URL, ADMIN_PASS, {
+  const result = await seedSovereignStore(request, SOVEREIGN_URL, ADMIN_PASS, {
     acceptedCoins: BTC_ASSET_ID,
     btcSweepAddress,
   });
@@ -105,7 +105,7 @@ test.beforeAll(async ({ request }) => {
   expect(parseFloat(btcBalance)).toBeGreaterThan(0);
 });
 
-test.describe('Outpost Guest Checkout E2E — BTC Payment Loop', () => {
+test.describe('Sovereign Guest Checkout E2E — BTC Payment Loop', () => {
   let orderToken: string;
   let paymentAddress: string;
   let paymentAmountSatoshi: number;
@@ -113,7 +113,7 @@ test.describe('Outpost Guest Checkout E2E — BTC Payment Loop', () => {
   test('01 — Create guest order via API', async ({ request }) => {
     test.skip(!ADMIN_PASS, 'No password');
 
-    const listingsResp = await request.get(`${OUTPOST_URL}/v1/listings/index`, {
+    const listingsResp = await request.get(`${SOVEREIGN_URL}/v1/listings/index`, {
       headers: { Authorization: basicAuth() },
     });
     expect(listingsResp.ok()).toBeTruthy();
@@ -124,7 +124,7 @@ test.describe('Outpost Guest Checkout E2E — BTC Payment Loop', () => {
     const firstListing = listings[0];
     const slug = firstListing.slug || firstListing.hash;
 
-    const orderResp = await request.post(`${OUTPOST_URL}/v1/guest/orders`, {
+    const orderResp = await request.post(`${SOVEREIGN_URL}/v1/guest/orders`, {
       data: {
         items: [{ listingSlug: slug, quantity: 1 }],
         paymentCoin: BTC_ASSET_ID,
@@ -210,9 +210,9 @@ test.describe('Outpost Guest Checkout E2E — BTC Payment Loop', () => {
   test('05 — Seller ships order', async ({ request, page }) => {
     test.skip(!ADMIN_PASS || !orderToken, 'No order');
 
-    const resp = await request.put(`${OUTPOST_URL}/v1/guest/orders/${orderToken}/ship`, {
+    const resp = await request.put(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}/ship`, {
       headers: headers(),
-      data: { trackingNumber: 'OUTPOST-E2E-001', carrier: 'TestCarrier' },
+      data: { trackingNumber: 'SOVEREIGN-E2E-001', carrier: 'TestCarrier' },
     });
     console.log('Ship response:', resp.status());
 
@@ -229,7 +229,7 @@ test.describe('Outpost Guest Checkout E2E — BTC Payment Loop', () => {
   test('06 — Complete order', async ({ request, page }) => {
     test.skip(!ADMIN_PASS || !orderToken, 'No order');
 
-    const resp = await request.put(`${OUTPOST_URL}/v1/guest/orders/${orderToken}/complete`, {
+    const resp = await request.put(`${SOVEREIGN_URL}/v1/guest/orders/${orderToken}/complete`, {
       headers: headers(),
     });
     console.log('Complete response:', resp.status());

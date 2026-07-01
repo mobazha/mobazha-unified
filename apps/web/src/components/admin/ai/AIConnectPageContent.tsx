@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { useI18n, useUserStore, isStandalone, isOutpostMode } from '@mobazha/core';
+import { useI18n, useUserStore, isStandalone, isSovereignMode } from '@mobazha/core';
 import { filterMcpClients } from '@mobazha/core/utils/mcpConnectors';
 import { Bot, ChevronDown, Code2, ShieldCheck } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -12,7 +12,7 @@ import { LocalLlmEnginePanel } from '@/components/ai-agents/LocalLlmEnginePanel'
 import { AIConfigSection } from '@/app/admin/settings/integrations/AIConfigSection';
 import { cn } from '@/lib/utils';
 
-const OUTPOST_HIGH_RISK_KEY = 'mobazha:outpost:showHighRiskAiClients';
+const SOVEREIGN_HIGH_RISK_KEY = 'mobazha:sovereign:showHighRiskAiClients';
 
 interface AIConnectPageContentProps {
   /** Hide page title when rendered inside the AI section tab layout. */
@@ -24,11 +24,11 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
   const { profile } = useUserStore();
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0);
   const standalone = isStandalone();
-  const outpost = isOutpostMode();
+  const sovereign = isSovereignMode();
   const [showHighRisk, setShowHighRisk] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     try {
-      return window.localStorage.getItem(OUTPOST_HIGH_RISK_KEY) === '1';
+      return window.localStorage.getItem(SOVEREIGN_HIGH_RISK_KEY) === '1';
     } catch {
       return false;
     }
@@ -39,7 +39,7 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
     setShowHighRisk(next);
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(OUTPOST_HIGH_RISK_KEY, next ? '1' : '0');
+      window.localStorage.setItem(SOVEREIGN_HIGH_RISK_KEY, next ? '1' : '0');
     } catch {
       // ignore
     }
@@ -60,8 +60,8 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
   }, []);
 
   const visibleClients = useMemo(
-    () => filterMcpClients(outpost, showHighRisk),
-    [outpost, showHighRisk]
+    () => filterMcpClients(sovereign, showHighRisk),
+    [sovereign, showHighRisk]
   );
 
   return (
@@ -76,15 +76,15 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
         </div>
       )}
 
-      {outpost && <LocalLlmEnginePanel />}
+      {sovereign && <LocalLlmEnginePanel />}
 
-      {outpost && (
-        <AIConfigSection hideOutpostInstallGuide hideFeatureShowcase startCollapsedWhenConfigured />
+      {sovereign && (
+        <AIConfigSection hideSovereignInstallGuide hideFeatureShowcase startCollapsedWhenConfigured />
       )}
 
       {standalone && <AutoConnectPanel onTokenCreated={() => setTokenRefreshKey(k => k + 1)} />}
 
-      {!outpost && (
+      {!sovereign && (
         <div className="bg-card border border-border rounded-lg p-4 md:p-6">
           <h2 className="text-base font-medium text-foreground mb-4">
             {t('aiAgents.quickConnect')}
@@ -99,9 +99,9 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
         </div>
       )}
 
-      {!outpost && <ApiTokenPanel refreshKey={tokenRefreshKey} />}
+      {!sovereign && <ApiTokenPanel refreshKey={tokenRefreshKey} />}
 
-      {outpost && (
+      {sovereign && (
         <div className="border border-border rounded-lg">
           <button
             type="button"
@@ -111,7 +111,7 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
             <div className="flex items-center gap-2">
               <Code2 className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">
-                {t('aiAgents.outpost.developerOptions', {
+                {t('aiAgents.sovereign.developerOptions', {
                   defaultValue: 'Developer Options',
                 })}
               </span>
@@ -128,7 +128,7 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
             <div className="border-t border-border p-4 md:p-6 space-y-6">
               <div
                 className="bg-muted/50 border border-border rounded-lg p-4"
-                data-testid="outpost-privacy-banner"
+                data-testid="sovereign-privacy-banner"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1 flex-1">
@@ -138,11 +138,11 @@ export function AIConnectPageContent({ hidePageHeader = false }: AIConnectPageCo
                         htmlFor="show-high-risk-clients"
                         className="text-sm font-medium text-foreground cursor-pointer"
                       >
-                        {t('aiAgents.outpost.showHighRisk.label')}
+                        {t('aiAgents.sovereign.showHighRisk.label')}
                       </label>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {t('aiAgents.outpost.showHighRisk.description')}
+                      {t('aiAgents.sovereign.showHighRisk.description')}
                     </p>
                   </div>
                   <Switch

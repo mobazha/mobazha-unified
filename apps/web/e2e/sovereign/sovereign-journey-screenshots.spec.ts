@@ -1,7 +1,7 @@
 /**
- * Outpost Journey Screenshots — Mock-First (Layer A)
+ * Sovereign Journey Screenshots — Mock-First (Layer A)
  *
- * Captures screenshots of the full Outpost buyer + seller journey
+ * Captures screenshots of the full Sovereign buyer + seller journey
  * using mocked API routes. No backend dependency.
  *
  * Covers:
@@ -13,30 +13,30 @@
  *  6. Buyer product browsing
  *  7. Settings → Guest Checkout config
  *
- * Output: test-results/screenshots/outpost/
+ * Output: test-results/screenshots/sovereign/
  *
  * Run:
- *   pnpm test:e2e:outpost:dev   # fast iteration
- *   pnpm test:e2e:outpost        # prod build
+ *   pnpm test:e2e:sovereign:dev   # fast iteration
+ *   pnpm test:e2e:sovereign        # prod build
  */
 
 import { test, expect } from '@playwright/test';
-import { setupOutpostMockAuth } from './fixtures/outpost-auth';
+import { setupSovereignMockAuth } from './fixtures/sovereign-auth';
 import {
-  mockOutpostAppShell,
-  mockOutpostGuestAPIs,
-  mockOutpostListingsAPI,
-  injectOutpostCart,
+  mockSovereignAppShell,
+  mockSovereignGuestAPIs,
+  mockSovereignListingsAPI,
+  injectSovereignCart,
   MOCK_ORDER_TOKEN,
-} from './fixtures/outpost-mock-routes';
+} from './fixtures/sovereign-mock-routes';
 
-const OUT = 'test-results/screenshots/outpost';
+const OUT = 'test-results/screenshots/sovereign';
 
 // ── 1. Admin Login Page ─────────────────────────────────────────────────────
 
-test.describe('Outpost Screenshots — Admin Login', () => {
+test.describe('Sovereign Screenshots — Admin Login', () => {
   test('01 — Password login page', async ({ page }) => {
-    await mockOutpostAppShell(page);
+    await mockSovereignAppShell(page);
 
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
@@ -48,9 +48,9 @@ test.describe('Outpost Screenshots — Admin Login', () => {
 
 // ── 2. Dashboard ────────────────────────────────────────────────────────────
 
-test.describe('Outpost Screenshots — Dashboard', () => {
+test.describe('Sovereign Screenshots — Dashboard', () => {
   test('02 — Dashboard empty store', async ({ page }) => {
-    await setupOutpostMockAuth(page);
+    await setupSovereignMockAuth(page);
 
     await page.goto('/admin');
     await page.waitForLoadState('domcontentloaded');
@@ -60,8 +60,8 @@ test.describe('Outpost Screenshots — Dashboard', () => {
   });
 
   test('03 — Dashboard with products', async ({ page }) => {
-    await setupOutpostMockAuth(page);
-    await mockOutpostListingsAPI(page);
+    await setupSovereignMockAuth(page);
+    await mockSovereignListingsAPI(page);
 
     await page.goto('/admin');
     await page.waitForLoadState('domcontentloaded');
@@ -73,13 +73,13 @@ test.describe('Outpost Screenshots — Dashboard', () => {
 
 // ── 3. Guest Checkout Buyer Journey (LTC) ───────────────────────────────────
 
-test.describe('Outpost Screenshots — Guest Checkout LTC Journey', () => {
+test.describe('Sovereign Screenshots — Guest Checkout LTC Journey', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('04 — Cart review', async ({ page }) => {
-    await injectOutpostCart(page);
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC');
+    await injectSovereignCart(page);
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC');
 
     await page.goto('/guest-checkout');
     await expect(page.getByText('Encrypted USB Drive').first()).toBeVisible({ timeout: 15000 });
@@ -89,9 +89,9 @@ test.describe('Outpost Screenshots — Guest Checkout LTC Journey', () => {
   });
 
   test('05 — Shipping form', async ({ page }) => {
-    await injectOutpostCart(page);
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC');
+    await injectSovereignCart(page);
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC');
 
     await page.goto('/guest-checkout');
     await expect(page.getByText('Encrypted USB Drive').first()).toBeVisible({ timeout: 15000 });
@@ -122,9 +122,9 @@ test.describe('Outpost Screenshots — Guest Checkout LTC Journey', () => {
   });
 
   test('06 — Coin selection (LTC/XMR only)', async ({ page }) => {
-    await injectOutpostCart(page);
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC');
+    await injectSovereignCart(page);
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC');
 
     await page.goto('/guest-checkout');
     await expect(page.getByText('Encrypted USB Drive').first()).toBeVisible({ timeout: 15000 });
@@ -157,8 +157,8 @@ test.describe('Outpost Screenshots — Guest Checkout LTC Journey', () => {
   });
 
   test('07 — LTC payment instructions (via order page)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'AWAITING_PAYMENT');
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'AWAITING_PAYMENT');
 
     await page.goto(`/guest-order/${MOCK_ORDER_TOKEN}`);
     await page.waitForTimeout(2500);
@@ -169,10 +169,10 @@ test.describe('Outpost Screenshots — Guest Checkout LTC Journey', () => {
 
 // ── 4. LTC Order Status Pages ───────────────────────────────────────────────
 
-test.describe('Outpost Screenshots — LTC Order Status', () => {
+test.describe('Sovereign Screenshots — LTC Order Status', () => {
   test('08 — Awaiting payment (LTC)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'AWAITING_PAYMENT');
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'AWAITING_PAYMENT');
 
     await page.goto(`/guest-order/${MOCK_ORDER_TOKEN}`);
     await page.waitForTimeout(2500);
@@ -181,8 +181,8 @@ test.describe('Outpost Screenshots — LTC Order Status', () => {
   });
 
   test('09 — Payment detected (LTC)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'PAYMENT_DETECTED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'PAYMENT_DETECTED', {
       confirmations: 2,
       requiredConfs: 6,
       chainBlockTimeSec: 150,
@@ -195,8 +195,8 @@ test.describe('Outpost Screenshots — LTC Order Status', () => {
   });
 
   test('10 — Funded (LTC)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'FUNDED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'FUNDED', {
       confirmations: 6,
       requiredConfs: 6,
       chainBlockTimeSec: 150,
@@ -209,8 +209,8 @@ test.describe('Outpost Screenshots — LTC Order Status', () => {
   });
 
   test('11 — Shipped (LTC)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'SHIPPED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'SHIPPED', {
       confirmations: 6,
       requiredConfs: 6,
       trackingNumber: 'PRIVSHIP123456',
@@ -223,8 +223,8 @@ test.describe('Outpost Screenshots — LTC Order Status', () => {
   });
 
   test('12 — Completed (LTC)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'COMPLETED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'COMPLETED', {
       confirmations: 6,
       requiredConfs: 6,
     });
@@ -236,8 +236,8 @@ test.describe('Outpost Screenshots — LTC Order Status', () => {
   });
 
   test('13 — Expired (LTC)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'LTC', 'EXPIRED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'LTC', 'EXPIRED', {
       expiresAt: new Date(Date.now() - 60000).toISOString(),
     });
 
@@ -250,13 +250,13 @@ test.describe('Outpost Screenshots — LTC Order Status', () => {
 
 // ── 5. XMR Order Status Pages (Pool Detection + 10-conf) ────────────────────
 
-test.describe('Outpost Screenshots — XMR Order Status', () => {
-  const xmrToken = 'gst_outpost_xmr_token_xyz789';
+test.describe('Sovereign Screenshots — XMR Order Status', () => {
+  const xmrToken = 'gst_sovereign_xmr_token_xyz789';
 
   test('14 — XMR payment instructions (via order page)', async ({ page }) => {
-    const xmrToken = 'gst_outpost_xmr_token_xyz789';
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'XMR', 'AWAITING_PAYMENT');
+    const xmrToken = 'gst_sovereign_xmr_token_xyz789';
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'XMR', 'AWAITING_PAYMENT');
 
     await page.goto(`/guest-order/${xmrToken}`);
     await page.waitForTimeout(2500);
@@ -265,8 +265,8 @@ test.describe('Outpost Screenshots — XMR Order Status', () => {
   });
 
   test('15 — XMR pool detected (mempool)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'XMR', 'AWAITING_PAYMENT', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'XMR', 'AWAITING_PAYMENT', {
       poolDetected: true,
       confirmations: 0,
       requiredConfs: 10,
@@ -280,8 +280,8 @@ test.describe('Outpost Screenshots — XMR Order Status', () => {
   });
 
   test('16 — XMR confirming (3/10)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'XMR', 'PAYMENT_DETECTED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'XMR', 'PAYMENT_DETECTED', {
       confirmations: 3,
       requiredConfs: 10,
       chainBlockTimeSec: 120,
@@ -294,8 +294,8 @@ test.describe('Outpost Screenshots — XMR Order Status', () => {
   });
 
   test('17 — XMR confirming (8/10)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'XMR', 'PAYMENT_DETECTED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'XMR', 'PAYMENT_DETECTED', {
       confirmations: 8,
       requiredConfs: 10,
       chainBlockTimeSec: 120,
@@ -308,8 +308,8 @@ test.describe('Outpost Screenshots — XMR Order Status', () => {
   });
 
   test('18 — XMR funded', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostGuestAPIs(page, 'XMR', 'FUNDED', {
+    await mockSovereignAppShell(page);
+    await mockSovereignGuestAPIs(page, 'XMR', 'FUNDED', {
       confirmations: 10,
       requiredConfs: 10,
       chainBlockTimeSec: 120,
@@ -324,10 +324,10 @@ test.describe('Outpost Screenshots — XMR Order Status', () => {
 
 // ── 6. Buyer Product Browsing ───────────────────────────────────────────────
 
-test.describe('Outpost Screenshots — Buyer Browsing', () => {
+test.describe('Sovereign Screenshots — Buyer Browsing', () => {
   test('19 — Store homepage (buyer view)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostListingsAPI(page);
+    await mockSovereignAppShell(page);
+    await mockSovereignListingsAPI(page);
 
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
@@ -337,8 +337,8 @@ test.describe('Outpost Screenshots — Buyer Browsing', () => {
   });
 
   test('20 — Product detail (buyer view)', async ({ page }) => {
-    await mockOutpostAppShell(page);
-    await mockOutpostListingsAPI(page);
+    await mockSovereignAppShell(page);
+    await mockSovereignListingsAPI(page);
 
     await page.goto(`/store/${MOCK_ORDER_TOKEN}/encrypted-usb-64gb`);
     await page.waitForLoadState('domcontentloaded');
@@ -350,10 +350,10 @@ test.describe('Outpost Screenshots — Buyer Browsing', () => {
 
 // ── 7. Settings — Guest Checkout ────────────────────────────────────────────
 
-test.describe('Outpost Screenshots — Settings', () => {
+test.describe('Sovereign Screenshots — Settings', () => {
   test('21 — Guest Checkout settings (enabled)', async ({ page }) => {
-    await setupOutpostMockAuth(page);
-    await mockOutpostGuestAPIs(page, 'LTC');
+    await setupSovereignMockAuth(page);
+    await mockSovereignGuestAPIs(page, 'LTC');
 
     await page.goto('/admin/settings/policies');
     await page.waitForLoadState('domcontentloaded');
@@ -363,7 +363,7 @@ test.describe('Outpost Screenshots — Settings', () => {
   });
 
   test('22 — General settings', async ({ page }) => {
-    await setupOutpostMockAuth(page);
+    await setupSovereignMockAuth(page);
 
     await page.goto('/admin/settings');
     await page.waitForLoadState('domcontentloaded');

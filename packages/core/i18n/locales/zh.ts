@@ -7126,7 +7126,7 @@ export const zh: PartialTranslationResource = {
     finance: {
       title: '资金',
       subtitle: 'Monero (XMR) 钱包余额与管理。',
-      notApplicable: '此页面仅在 Outpost 构建中可用。',
+      notApplicable: '此页面仅在 Sovereign 构建中可用。',
       fetchError: '加载钱包数据失败',
       availableBalance: '可用余额',
       pendingConfirmation: '暂时锁定',
@@ -7139,7 +7139,7 @@ export const zh: PartialTranslationResource = {
       transactionsDesc: '查看所有收入和转出记录。',
       walletManagementTitle: '钱包管理',
       setupWalletTitle: '创建或恢复钱包',
-      setupWalletDesc: '设置此 outpost 使用的 Monero 钱包。',
+      setupWalletDesc: '设置此 sovereign 使用的 Monero 钱包。',
       exportSecretsTitle: '导出种子或只读密钥',
       exportSecretsDesc: '备份恢复种子，或分享只读密钥给记账人。',
       manageNodesTitle: 'Monero 节点',
@@ -7345,14 +7345,14 @@ export const zh: PartialTranslationResource = {
       aiSaveActivate: '保存并启用',
       aiProviderActive: '使用中',
       aiApiKeySaved: '密钥已保存',
-      aiOutpostGuideTitle: '需要本地 LLM',
-      aiOutpostGuideDesc: 'Outpost 模式需要本地 AI 模型以保护隐私。请安装 Ollama 开始使用：',
-      aiOutpostGuideStep1: '从 ollama.com 安装 Ollama',
-      aiOutpostGuideStep2: '运行：ollama pull llama3.2',
-      aiOutpostGuideStep3: 'Ollama 默认在端口 11434 运行',
-      aiOutpostEndpoint: '本地 LLM 端点',
-      aiOutpostEndpointHint: '出于隐私考虑，仅允许 localhost 地址',
-      aiOutpostApiKeyOptional: '大多数本地 LLM 不需要 API 密钥',
+      aiSovereignGuideTitle: '需要本地 LLM',
+      aiSovereignGuideDesc: 'Sovereign 模式需要本地 AI 模型以保护隐私。请安装 Ollama 开始使用：',
+      aiSovereignGuideStep1: '从 ollama.com 安装 Ollama',
+      aiSovereignGuideStep2: '运行：ollama pull llama3.2',
+      aiSovereignGuideStep3: 'Ollama 默认在端口 11434 运行',
+      aiSovereignEndpoint: '本地 LLM 端点',
+      aiSovereignEndpointHint: '出于隐私考虑，仅允许 localhost 地址',
+      aiSovereignApiKeyOptional: '大多数本地 LLM 不需要 API 密钥',
       aiPlatformActive: '平台 AI',
       aiPlatformTitle: 'AI 已就绪',
       aiPlatformDesc: '你的店铺已通过平台启用 AI 功能，无需额外配置。',
@@ -8144,10 +8144,10 @@ export const zh: PartialTranslationResource = {
     other: '其他',
     otherDesc: '通用 MCP URL + Token，适用于任何 MCP 客户端',
     onboarding: '30 秒连接你的第一个 AI 助手',
-    outpost: {
+    sovereign: {
       banner: {
         title: '隐私模式：已隐藏云端 AI 客户端',
-        body: 'ChatGPT Desktop、Claude Desktop、Codex 只能在厂商云端推理。Outpost 默认隐藏它们，让 AI 留在本机、店铺数据不离开你的设备。',
+        body: 'ChatGPT Desktop、Claude Desktop、Codex 只能在厂商云端推理。Sovereign 默认隐藏它们，让 AI 留在本机、店铺数据不离开你的设备。',
       },
       showHighRisk: {
         label: '显示高风险 AI 客户端',
@@ -8160,12 +8160,12 @@ export const zh: PartialTranslationResource = {
         cloud: '云端推理',
         mixedTooltip: '该客户端可配置为本地 LLM，但默认走云端。连接前请确认你的配置。',
         cloudTooltip:
-          '该客户端会把店铺数据发往厂商云端推理。连接会违反 Outpost「AI 仅在本机运行」的承诺。',
+          '该客户端会把店铺数据发往厂商云端推理。连接会违反 Sovereign「AI 仅在本机运行」的承诺。',
       },
       developerOptions: '开发者选项',
       localLlm: {
         title: '本地 LLM 引擎',
-        body: 'Outpost 需要本地 LLM 来驱动设备端 AI。安装下面任意一个引擎即可——店铺数据永远不会离开本机。',
+        body: 'Sovereign 需要本地 LLM 来驱动设备端 AI。安装下面任意一个引擎即可——店铺数据永远不会离开本机。',
         bodySimple: '安装 Ollama 来驱动设备端 AI。店铺数据永远不会离开本机。',
         edit: '编辑',
         editConfig: '编辑 AI 端点配置',
@@ -8444,12 +8444,12 @@ export const zh: PartialTranslationResource = {
     searchFallback: '正在搜索扫码内容...',
   },
 
-  outpost: {
+  sovereign: {
     rpcConnected: '已连接',
     rpcDisconnected: '未配置',
     xmrWithdraw: {
       title: '提现 Monero',
-      notApplicable: '此页面仅在 Outpost 构建中可用。',
+      notApplicable: '此页面仅在 Sovereign 构建中可用。',
       balanceTitle: '钱包余额',
       refresh: '刷新',
       unlockedBalance: '当前可用',
@@ -8474,7 +8474,7 @@ export const zh: PartialTranslationResource = {
       errSubmit: '转账失败',
       feeNote:
         '网络手续费另计（从钱包额外扣除）。若要清空钱包请使用「全部发送」（会切换到归集模式）。',
-      description: '从此 Outpost 向其他钱包发送 XMR。Monero 转账不可撤销，请再次核对收款地址。',
+      description: '从此 Sovereign 向其他钱包发送 XMR。Monero 转账不可撤销，请再次核对收款地址。',
       formTitle: '转账详情',
       modeSend: '指定金额',
       modeSweep: '全部归集',

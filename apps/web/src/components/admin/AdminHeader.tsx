@@ -71,7 +71,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   };
 
   const handleViewStore = () => {
-    if (standaloneMode || (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__)) {
+    if (standaloneMode || (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__)) {
       router.push('/');
     } else if (profile?.peerID) {
       router.push(`/store/${profile.peerID}`);

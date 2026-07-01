@@ -27,7 +27,7 @@ import {
 } from '@mobazha/core/services/api/monero';
 
 /**
- * XMR Wallet Setup Wizard (Outpost only) — OP-MP-2.5
+ * XMR Wallet Setup Wizard (Sovereign only)
  *
  * Flow:
  *   Step 0  Loading — fetch /v1/system/setup-wizard/xmr-wallet
@@ -85,18 +85,18 @@ function chooseChallenges(): VerifyChallenge[] {
     .map(index => ({ index }));
 }
 
-function NotOutpostPlaceholder() {
+function NotSovereignPlaceholder() {
   const { t } = useI18n();
   return (
     <div>
       <SettingsPageHeader
-        title={t('outpost.xmrWallet.title', { defaultValue: 'Monero Wallet Setup' })}
+        title={t('sovereign.xmrWallet.title', { defaultValue: 'Monero Wallet Setup' })}
         backHref={getAdminFinancePath()}
       />
       <Card>
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          {t('outpost.xmrWallet.notApplicable', {
-            defaultValue: 'This page is only available on Outpost builds.',
+          {t('sovereign.xmrWallet.notApplicable', {
+            defaultValue: 'This page is only available on Sovereign builds.',
           })}
         </CardContent>
       </Card>
@@ -127,7 +127,7 @@ export default function XMRWalletSetupPage() {
   }, []);
 
   useEffect(() => {
-    if (!__OUTPOST__) return;
+    if (!__SOVEREIGN__) return;
     refresh();
   }, [refresh]);
 
@@ -146,7 +146,7 @@ export default function XMRWalletSetupPage() {
       setError(
         err instanceof Error
           ? err.message
-          : t('outpost.xmrWallet.createError', { defaultValue: 'Failed to create wallet' })
+          : t('sovereign.xmrWallet.createError', { defaultValue: 'Failed to create wallet' })
       );
     } finally {
       setBusy(false);
@@ -160,7 +160,7 @@ export default function XMRWalletSetupPage() {
       const wordCount = trimmedSeed.split(' ').filter(Boolean).length;
       if (wordCount !== SEED_WORD_COUNT) {
         setError(
-          t('outpost.xmrWallet.seedWordCountError', {
+          t('sovereign.xmrWallet.seedWordCountError', {
             defaultValue: 'Seed must be exactly {{n}} words (got {{got}})',
             n: SEED_WORD_COUNT,
             got: wordCount,
@@ -171,7 +171,7 @@ export default function XMRWalletSetupPage() {
       const heightNum = restoreHeight.trim() === '' ? 0 : Number(restoreHeight);
       if (!Number.isFinite(heightNum) || heightNum < 0 || !Number.isInteger(heightNum)) {
         setError(
-          t('outpost.xmrWallet.restoreHeightError', {
+          t('sovereign.xmrWallet.restoreHeightError', {
             defaultValue: 'Restore height must be a non-negative integer (0 = full rescan)',
           })
         );
@@ -189,7 +189,7 @@ export default function XMRWalletSetupPage() {
         setError(
           err instanceof Error
             ? err.message
-            : t('outpost.xmrWallet.restoreError', { defaultValue: 'Failed to restore wallet' })
+            : t('sovereign.xmrWallet.restoreError', { defaultValue: 'Failed to restore wallet' })
         );
       } finally {
         setBusy(false);
@@ -227,7 +227,7 @@ export default function XMRWalletSetupPage() {
       setError(
         err instanceof Error
           ? err.message
-          : t('outpost.xmrWallet.confirmError', {
+          : t('sovereign.xmrWallet.confirmError', {
               defaultValue: 'Failed to confirm backup',
             })
       );
@@ -248,7 +248,7 @@ export default function XMRWalletSetupPage() {
       });
       if (!correct) {
         setError(
-          t('outpost.xmrWallet.verifyMismatch', {
+          t('sovereign.xmrWallet.verifyMismatch', {
             defaultValue: "One or more words don't match. Please double-check your backup.",
           })
         );
@@ -263,7 +263,7 @@ export default function XMRWalletSetupPage() {
         setError(
           err instanceof Error
             ? err.message
-            : t('outpost.xmrWallet.confirmError', {
+            : t('sovereign.xmrWallet.confirmError', {
                 defaultValue: 'Failed to confirm backup',
               })
         );
@@ -274,18 +274,18 @@ export default function XMRWalletSetupPage() {
     [step, t]
   );
 
-  // Non-outpost build: render placeholder (no fetch).
-  if (!__OUTPOST__) {
-    return <NotOutpostPlaceholder />;
+  // Non-sovereign build: render placeholder (no fetch).
+  if (!__SOVEREIGN__) {
+    return <NotSovereignPlaceholder />;
   }
 
   return (
     <div data-testid="admin-xmr-wallet-setup">
       <SettingsPageHeader
-        title={t('outpost.xmrWallet.title', { defaultValue: 'Monero Wallet Setup' })}
-        description={t('outpost.xmrWallet.description', {
+        title={t('sovereign.xmrWallet.title', { defaultValue: 'Monero Wallet Setup' })}
+        description={t('sovereign.xmrWallet.description', {
           defaultValue:
-            'Provision the Monero wallet that backs incoming XMR payments. You only run this once per outpost.',
+            'Provision the Monero wallet that backs incoming XMR payments. You only run this once per sovereign.',
         })}
         backHref={getAdminFinancePath()}
       />
@@ -301,7 +301,7 @@ export default function XMRWalletSetupPage() {
           <Card>
             <CardContent className="flex items-center gap-3 py-8 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              {t('outpost.xmrWallet.loading', { defaultValue: 'Checking wallet status…' })}
+              {t('sovereign.xmrWallet.loading', { defaultValue: 'Checking wallet status…' })}
             </CardContent>
           </Card>
         )}
@@ -311,14 +311,14 @@ export default function XMRWalletSetupPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                 <AlertTriangle className="w-5 h-5" />
-                {t('outpost.xmrWallet.unavailableTitle', {
+                {t('sovereign.xmrWallet.unavailableTitle', {
                   defaultValue: 'Wallet RPC not available',
                 })}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                {t('outpost.xmrWallet.unavailableDesc', {
+                {t('sovereign.xmrWallet.unavailableDesc', {
                   defaultValue:
                     'monero-wallet-rpc is not configured or not reachable. Start the node with --xmrwalletrpc=http://127.0.0.1:18082/json_rpc and try again.',
                 })}
@@ -327,7 +327,7 @@ export default function XMRWalletSetupPage() {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={refresh}>
                   <RefreshCw className="w-4 h-4 mr-1" />
-                  {t('outpost.xmrWallet.retry', { defaultValue: 'Retry' })}
+                  {t('sovereign.xmrWallet.retry', { defaultValue: 'Retry' })}
                 </Button>
               </div>
             </CardContent>
@@ -415,14 +415,14 @@ function AlreadyProvisionedCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
           <CheckCircle2 className="w-5 h-5" />
-          {t('outpost.xmrWallet.alreadyProvisionedTitle', {
+          {t('sovereign.xmrWallet.alreadyProvisionedTitle', {
             defaultValue: 'Wallet already provisioned',
           })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">
-          {t('outpost.xmrWallet.alreadyProvisionedDesc', {
+          {t('sovereign.xmrWallet.alreadyProvisionedDesc', {
             defaultValue:
               'Your Monero wallet is already set up. The setup wizard cannot be re-run from the UI to prevent accidental overwrite.',
           })}
@@ -432,7 +432,7 @@ function AlreadyProvisionedCard({
             <Wallet className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-muted-foreground">
-                {t('outpost.xmrWallet.primaryAddress', { defaultValue: 'Primary address' })}
+                {t('sovereign.xmrWallet.primaryAddress', { defaultValue: 'Primary address' })}
               </p>
               <p className="text-xs font-mono break-all">{status.address}</p>
             </div>
@@ -440,7 +440,7 @@ function AlreadyProvisionedCard({
         )}
         {!status.walletOpen && (
           <p className="text-xs text-amber-700 dark:text-amber-400">
-            {t('outpost.xmrWallet.walletNotOpen', {
+            {t('sovereign.xmrWallet.walletNotOpen', {
               defaultValue:
                 'Wallet metadata exists on disk but wallet-rpc is not currently serving it. Restart the node to auto-open the wallet.',
             })}
@@ -449,7 +449,7 @@ function AlreadyProvisionedCard({
         {!status.backupConfirmed && (
           <div className="space-y-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10">
             <p className="text-xs text-amber-700 dark:text-amber-400">
-              {t('outpost.xmrWallet.backupNotConfirmed', {
+              {t('sovereign.xmrWallet.backupNotConfirmed', {
                 defaultValue:
                   "Seed backup has not been verified yet. If you've recorded your 25-word seed somewhere safe, mark the backup as verified to clear this reminder.",
               })}
@@ -462,7 +462,7 @@ function AlreadyProvisionedCard({
               disabled={busy}
             >
               {busy && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              {t('outpost.xmrWallet.markVerified', {
+              {t('sovereign.xmrWallet.markVerified', {
                 defaultValue: 'I have my backup — mark as verified',
               })}
             </Button>
@@ -473,7 +473,7 @@ function AlreadyProvisionedCard({
           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          {t('outpost.xmrWallet.backToPayments', { defaultValue: 'Back to Funds' })}
+          {t('sovereign.xmrWallet.backToPayments', { defaultValue: 'Back to Funds' })}
         </Link>
       </CardContent>
     </Card>
@@ -495,12 +495,12 @@ function ModeSelectCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wallet className="w-5 h-5" />
-          {t('outpost.xmrWallet.modeSelectTitle', { defaultValue: 'Set up your Monero wallet' })}
+          {t('sovereign.xmrWallet.modeSelectTitle', { defaultValue: 'Set up your Monero wallet' })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          {t('outpost.xmrWallet.modeSelectDesc', {
+          {t('sovereign.xmrWallet.modeSelectDesc', {
             defaultValue:
               'Choose whether to create a brand-new wallet or restore an existing one from a 25-word seed.',
           })}
@@ -519,11 +519,11 @@ function ModeSelectCard({
                 <KeyRound className="w-4 h-4 text-primary" />
               )}
               <span className="font-medium">
-                {t('outpost.xmrWallet.modeCreate', { defaultValue: 'Create new wallet' })}
+                {t('sovereign.xmrWallet.modeCreate', { defaultValue: 'Create new wallet' })}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWallet.modeCreateDesc', {
+              {t('sovereign.xmrWallet.modeCreateDesc', {
                 defaultValue:
                   "Generates a fresh 25-word seed. You'll be shown the seed once for backup.",
               })}
@@ -538,11 +538,11 @@ function ModeSelectCard({
             <div className="flex items-center gap-2 mb-1">
               <RefreshCw className="w-4 h-4 text-primary" />
               <span className="font-medium">
-                {t('outpost.xmrWallet.modeRestore', { defaultValue: 'Restore from seed' })}
+                {t('sovereign.xmrWallet.modeRestore', { defaultValue: 'Restore from seed' })}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWallet.modeRestoreDesc', {
+              {t('sovereign.xmrWallet.modeRestoreDesc', {
                 defaultValue:
                   'Enter your existing 25-word seed. Optionally specify a restore height to skip earlier blocks.',
               })}
@@ -583,29 +583,29 @@ function DisplaySeedCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
           <AlertTriangle className="w-5 h-5" />
-          {t('outpost.xmrWallet.seedTitle', { defaultValue: 'Back up your seed now' })}
+          {t('sovereign.xmrWallet.seedTitle', { defaultValue: 'Back up your seed now' })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
           <p className="font-medium text-amber-900 dark:text-amber-200">
-            {t('outpost.xmrWallet.seedWarningTitle', {
+            {t('sovereign.xmrWallet.seedWarningTitle', {
               defaultValue: 'This seed will be shown only once',
             })}
           </p>
           <ul className="mt-2 space-y-1 text-xs text-amber-900 dark:text-amber-300 list-disc pl-5">
             <li>
-              {t('outpost.xmrWallet.seedWarning1', {
+              {t('sovereign.xmrWallet.seedWarning1', {
                 defaultValue: 'Write it down on paper — do not store it digitally.',
               })}
             </li>
             <li>
-              {t('outpost.xmrWallet.seedWarning2', {
+              {t('sovereign.xmrWallet.seedWarning2', {
                 defaultValue: 'Anyone with this seed can spend your funds.',
               })}
             </li>
             <li>
-              {t('outpost.xmrWallet.seedWarning3', {
+              {t('sovereign.xmrWallet.seedWarning3', {
                 defaultValue: 'Losing this seed means losing access to your funds.',
               })}
             </li>
@@ -615,7 +615,7 @@ function DisplaySeedCard({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">
-              {t('outpost.xmrWallet.seedLabel', { defaultValue: '25-word recovery seed' })}
+              {t('sovereign.xmrWallet.seedLabel', { defaultValue: '25-word recovery seed' })}
             </label>
             <Button variant="ghost" size="sm" onClick={onToggleReveal} type="button">
               {revealed ? (
@@ -624,8 +624,8 @@ function DisplaySeedCard({
                 <Eye className="w-3.5 h-3.5 mr-1" />
               )}
               {revealed
-                ? t('outpost.xmrWallet.hide', { defaultValue: 'Hide' })
-                : t('outpost.xmrWallet.reveal', { defaultValue: 'Reveal' })}
+                ? t('sovereign.xmrWallet.hide', { defaultValue: 'Hide' })
+                : t('sovereign.xmrWallet.reveal', { defaultValue: 'Reveal' })}
             </Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-3 rounded-lg bg-muted/50 font-mono text-sm">
@@ -642,14 +642,14 @@ function DisplaySeedCard({
 
         <div className="space-y-1 p-3 rounded-lg bg-muted/50">
           <p className="text-xs font-medium text-muted-foreground">
-            {t('outpost.xmrWallet.primaryAddress', { defaultValue: 'Primary address' })}
+            {t('sovereign.xmrWallet.primaryAddress', { defaultValue: 'Primary address' })}
           </p>
           <p className="text-xs font-mono break-all">{address}</p>
         </div>
 
         <div className="flex justify-end">
           <Button onClick={onContinue} disabled={busy || !revealed} type="button">
-            {t('outpost.xmrWallet.iveSavedIt', { defaultValue: "I've saved my seed" })}
+            {t('sovereign.xmrWallet.iveSavedIt', { defaultValue: "I've saved my seed" })}
           </Button>
         </div>
       </CardContent>
@@ -676,13 +676,13 @@ function VerifyBackupCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5" />
-          {t('outpost.xmrWallet.verifyTitle', { defaultValue: 'Verify your backup' })}
+          {t('sovereign.xmrWallet.verifyTitle', { defaultValue: 'Verify your backup' })}
         </CardTitle>
       </CardHeader>
       <form onSubmit={onSubmit}>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {t('outpost.xmrWallet.verifyDesc', {
+            {t('sovereign.xmrWallet.verifyDesc', {
               defaultValue:
                 "To confirm you've recorded the seed correctly, enter the following words from your backup.",
             })}
@@ -691,7 +691,7 @@ function VerifyBackupCard({
             {challenges.map((ch, i) => (
               <div key={ch.index} className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">
-                  {t('outpost.xmrWallet.wordN', {
+                  {t('sovereign.xmrWallet.wordN', {
                     defaultValue: 'Word #{{n}}',
                     n: ch.index,
                   })}
@@ -710,7 +710,7 @@ function VerifyBackupCard({
           <div className="flex justify-end">
             <Button type="submit" disabled={busy || answers.some(a => a.trim() === '')}>
               {busy && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              {t('outpost.xmrWallet.verifyConfirm', { defaultValue: 'Confirm backup' })}
+              {t('sovereign.xmrWallet.verifyConfirm', { defaultValue: 'Confirm backup' })}
             </Button>
           </div>
         </CardContent>
@@ -742,7 +742,7 @@ function RestoreFormCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <RefreshCw className="w-5 h-5" />
-          {t('outpost.xmrWallet.restoreTitle', {
+          {t('sovereign.xmrWallet.restoreTitle', {
             defaultValue: 'Restore wallet from seed',
           })}
         </CardTitle>
@@ -751,7 +751,7 @@ function RestoreFormCard({
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <label className="text-sm font-medium">
-              {t('outpost.xmrWallet.seedInputLabel', {
+              {t('sovereign.xmrWallet.seedInputLabel', {
                 defaultValue: '25-word recovery seed (English)',
               })}
             </label>
@@ -761,13 +761,13 @@ function RestoreFormCard({
               rows={4}
               autoComplete="off"
               spellCheck={false}
-              placeholder={t('outpost.xmrWallet.seedInputPlaceholder', {
+              placeholder={t('sovereign.xmrWallet.seedInputPlaceholder', {
                 defaultValue: 'Paste or type the 25 words, separated by spaces',
               })}
               className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background font-mono"
             />
             <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWallet.seedInputHelp', {
+              {t('sovereign.xmrWallet.seedInputHelp', {
                 defaultValue:
                   'Whitespace is normalised. Only English (default Monero) wordlist is supported.',
               })}
@@ -775,7 +775,7 @@ function RestoreFormCard({
           </div>
           <div className="space-y-1">
             <label className="text-sm font-medium">
-              {t('outpost.xmrWallet.restoreHeightLabel', {
+              {t('sovereign.xmrWallet.restoreHeightLabel', {
                 defaultValue: 'Restore height (optional)',
               })}
             </label>
@@ -788,7 +788,7 @@ function RestoreFormCard({
               className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background font-mono"
             />
             <p className="text-xs text-muted-foreground">
-              {t('outpost.xmrWallet.restoreHeightHelp', {
+              {t('sovereign.xmrWallet.restoreHeightHelp', {
                 defaultValue:
                   "Block height to start scanning from. 0 = full rescan (slow). Use the height of your wallet's first transaction to speed up restore.",
               })}
@@ -797,11 +797,11 @@ function RestoreFormCard({
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" type="button" onClick={onBack} disabled={busy}>
               <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-              {t('outpost.xmrWallet.back', { defaultValue: 'Back' })}
+              {t('sovereign.xmrWallet.back', { defaultValue: 'Back' })}
             </Button>
             <Button type="submit" disabled={busy || !seed.trim()}>
               {busy && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              {t('outpost.xmrWallet.restoreSubmit', { defaultValue: 'Restore wallet' })}
+              {t('sovereign.xmrWallet.restoreSubmit', { defaultValue: 'Restore wallet' })}
             </Button>
           </div>
         </CardContent>
@@ -818,18 +818,18 @@ function DoneCard({ address, via }: { address: string; via: 'create' | 'restore'
         <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
           <CheckCircle2 className="w-5 h-5" />
           {via === 'create'
-            ? t('outpost.xmrWallet.doneCreateTitle', { defaultValue: 'Wallet created' })
-            : t('outpost.xmrWallet.doneRestoreTitle', { defaultValue: 'Wallet restored' })}
+            ? t('sovereign.xmrWallet.doneCreateTitle', { defaultValue: 'Wallet created' })
+            : t('sovereign.xmrWallet.doneRestoreTitle', { defaultValue: 'Wallet restored' })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">
           {via === 'create'
-            ? t('outpost.xmrWallet.doneCreateDesc', {
+            ? t('sovereign.xmrWallet.doneCreateDesc', {
                 defaultValue:
                   'Your Monero wallet is ready to accept payments. The wallet will auto-open on every node restart.',
               })
-            : t('outpost.xmrWallet.doneRestoreDesc', {
+            : t('sovereign.xmrWallet.doneRestoreDesc', {
                 defaultValue:
                   'Your existing wallet has been restored. Scanning may take a while depending on the restore height.',
               })}
@@ -838,7 +838,7 @@ function DoneCard({ address, via }: { address: string; via: 'create' | 'restore'
           <Wallet className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
           <div className="min-w-0">
             <p className="text-xs font-medium text-muted-foreground">
-              {t('outpost.xmrWallet.primaryAddress', { defaultValue: 'Primary address' })}
+              {t('sovereign.xmrWallet.primaryAddress', { defaultValue: 'Primary address' })}
             </p>
             <p className="text-xs font-mono break-all">{address}</p>
           </div>
@@ -848,7 +848,7 @@ function DoneCard({ address, via }: { address: string; via: 'create' | 'restore'
           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          {t('outpost.xmrWallet.backToPayments', { defaultValue: 'Back to Funds' })}
+          {t('sovereign.xmrWallet.backToPayments', { defaultValue: 'Back to Funds' })}
         </Link>
       </CardContent>
     </Card>

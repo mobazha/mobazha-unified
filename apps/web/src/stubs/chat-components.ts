@@ -1,5 +1,5 @@
 /**
- * Outpost stub — Chat UI components are stripped at build time.
+ * Sovereign stub — Chat UI components are stripped at build time.
  * Exports named stubs matching the public API of Chat, ChatDrawer,
  * ChatFloatingButton barrel exports plus individual file imports.
  */
@@ -67,7 +67,7 @@ export function useChatViewLogic(..._args: unknown[]) {
 
 export function useChatEffects() {}
 
-/** Stub for useOrderChat — outpost has no Matrix chat UI. */
+/** Stub for useOrderChat — sovereign has no Matrix chat UI. */
 export function toDisplayMessage(_msg: MatrixMessage, _sender?: unknown): Message {
   return {} as Message;
 }

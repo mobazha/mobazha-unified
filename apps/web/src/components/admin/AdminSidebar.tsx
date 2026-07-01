@@ -110,7 +110,7 @@ const standaloneNavItems: NavItem[] = [
   { id: 'system', labelKey: 'admin.nav.system', href: '/admin/system', icon: Server },
 ];
 
-const outpostNavItems: NavItem[] = [
+const sovereignNavItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/admin', icon: LayoutDashboard },
   { id: 'products', labelKey: 'admin.nav.products', href: '/admin/products', icon: Package },
   { id: 'orders', labelKey: 'admin.nav.orders', href: '/admin/orders', icon: ShoppingCart },
@@ -133,7 +133,7 @@ const outpostNavItems: NavItem[] = [
 ];
 
 function getNavItems(storefrontsEnabled: boolean, supplyChainEnabled: boolean): NavItem[] {
-  if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return [...outpostNavItems];
+  if (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) return [...sovereignNavItems];
   const items = isStandalone() ? [...standaloneNavItems] : [...baseNavItems];
 
   if (supplyChainEnabled) {

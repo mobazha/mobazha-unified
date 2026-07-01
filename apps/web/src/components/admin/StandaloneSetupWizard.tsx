@@ -37,7 +37,7 @@ import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import CountryCurrencySelector from './CountryCurrencySelector';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
-import { isOutpostMode } from '@mobazha/core/config/env';
+import { isSovereignMode } from '@mobazha/core/config/env';
 
 const TOTAL_STEPS = 4;
 
@@ -175,7 +175,7 @@ export default function StandaloneSetupWizard({
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>(
-    isOutpostMode() ? 'unlisted' : 'public'
+    isSovereignMode() ? 'unlisted' : 'public'
   );
 
   // Step 3: Location & Currency
@@ -603,8 +603,8 @@ export default function StandaloneSetupWizard({
             </div>
           </div>
 
-          {/* Store Visibility — hidden for Outpost (always unlisted) */}
-          {!isOutpostMode() && (
+          {/* Store Visibility — hidden for Sovereign (always unlisted) */}
+          {!isSovereignMode() && (
             <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
               <h3 className="text-xs sm:text-sm font-medium text-foreground">
                 {t('admin.onboarding.storeVisibility')}
@@ -707,13 +707,13 @@ export default function StandaloneSetupWizard({
             </div>
             <div>
               <h2 className="text-lg font-semibold">
-                {isOutpostMode()
-                  ? t('outpost.setup.regionTitle', { defaultValue: 'Location' })
+                {isSovereignMode()
+                  ? t('sovereign.setup.regionTitle', { defaultValue: 'Location' })
                   : t('standalone.setup.regionTitle') || 'Location & Currency'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {isOutpostMode()
-                  ? t('outpost.setup.regionDesc', {
+                {isSovereignMode()
+                  ? t('sovereign.setup.regionDesc', {
                       defaultValue: 'Set your country for shipping calculations',
                     })
                   : t('standalone.setup.regionDesc') ||
@@ -727,7 +727,7 @@ export default function StandaloneSetupWizard({
             currency={currency}
             onCountryChange={setCountry}
             onCurrencyChange={setCurrency}
-            hideCurrency={isOutpostMode()}
+            hideCurrency={isSovereignMode()}
           />
 
           <div className="flex items-center justify-between pt-2">
@@ -786,8 +786,8 @@ export default function StandaloneSetupWizard({
                   {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {isOutpostMode()
-                    ? t('outpost.setupPaymentsDesc', {
+                  {isSovereignMode()
+                    ? t('sovereign.setupPaymentsDesc', {
                         defaultValue: 'Configure XMR wallet-rpc endpoint',
                       })
                     : fiatVisible
@@ -800,7 +800,7 @@ export default function StandaloneSetupWizard({
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
             </button>
 
-            {!isOutpostMode() && (
+            {!isSovereignMode() && (
               <button
                 onClick={() => handleFinish('/admin/storefront')}
                 className="w-full flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left hover:bg-primary/10 transition-colors group"
@@ -821,13 +821,13 @@ export default function StandaloneSetupWizard({
               </button>
             )}
 
-            {isOutpostMode() && (
+            {isSovereignMode() && (
               <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 text-left">
                 <p className="text-sm font-medium text-foreground">
-                  {t('outpost.privacyHint', { defaultValue: 'Privacy Notice' })}
+                  {t('sovereign.privacyHint', { defaultValue: 'Privacy Notice' })}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {t('outpost.privacyHintDesc', {
+                  {t('sovereign.privacyHintDesc', {
                     defaultValue:
                       'Your store makes zero external network requests. For maximum privacy, access it via a Tor .onion address or I2P eepsite. Configure payment endpoints in Settings → Payments.',
                   })}

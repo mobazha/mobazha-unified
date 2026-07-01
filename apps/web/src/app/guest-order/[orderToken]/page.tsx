@@ -365,7 +365,7 @@ export default function GuestOrderPage() {
             <p className="text-sm font-medium mb-2">{t('guestOrder.items')}</p>
             <div className="space-y-2">
               {order.items.map((item, idx) => {
-                // In Outpost mode the sellerPeerID is the internal sentinel
+                // In Sovereign mode the sellerPeerID is the internal sentinel
                 // "default" (StandaloneTenantID), not a real P2P peer ID.
                 // Omit peerID so the product page fetches from the local node.
                 const effectivePeerID = isFullPeerID(item.sellerPeerID)

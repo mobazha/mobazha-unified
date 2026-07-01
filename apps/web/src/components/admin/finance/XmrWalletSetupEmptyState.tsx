@@ -6,7 +6,7 @@ import { useI18n, getAdminXmrWalletPath } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 
 /**
- * Primary empty state when an Outpost has no Monero wallet yet.
+ * Primary empty state when an Sovereign has no Monero wallet yet.
  * Used on /admin/finance and surfaced from onboarding step 3.
  */
 export function XmrWalletSetupEmptyState() {

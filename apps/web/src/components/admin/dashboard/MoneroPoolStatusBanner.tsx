@@ -8,12 +8,12 @@ import { getBrandNetworkConfig } from '@mobazha/core/config/env';
 import { getMoneroNodes, type MoneroNodePoolSnapshot } from '@mobazha/core/services/api/monero';
 
 /**
- * MoneroPoolStatusBanner — outpost-only dashboard indicator.
+ * MoneroPoolStatusBanner — sovereign-only dashboard indicator.
  *
  * Visibility rules (designed to keep the dashboard quiet when everything
  * is fine, and loud when intervention is needed):
  *
- *   - Non-outpost build:        renders nothing
+ *   - Non-sovereign build:        renders nothing
  *   - NodePool not configured:  renders nothing (legacy single-daemon, no
  *                               actionable state — Monero status on
  *                               /admin/finance covers it)
@@ -37,7 +37,7 @@ export function MoneroPoolStatusBanner() {
   const showNodePoolUI = getBrandNetworkConfig().showNodePoolUI;
 
   useEffect(() => {
-    if (!__OUTPOST__ || !showNodePoolUI) return;
+    if (!__SOVEREIGN__ || !showNodePoolUI) return;
     let cancelled = false;
     getMoneroNodes()
       .then(snap => {
@@ -51,7 +51,7 @@ export function MoneroPoolStatusBanner() {
     };
   }, [showNodePoolUI]);
 
-  if (!__OUTPOST__ || !showNodePoolUI) return null;
+  if (!__SOVEREIGN__ || !showNodePoolUI) return null;
   if (failed) return null;
   if (!snapshot) return null;
   if (!snapshot.available) return null;

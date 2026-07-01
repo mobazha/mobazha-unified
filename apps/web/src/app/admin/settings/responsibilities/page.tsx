@@ -9,7 +9,7 @@ import { Navigate } from 'react-router-dom';
 export default function AdminResponsibilitiesSettingsPage() {
   const { t } = useI18n();
 
-  if (__OUTPOST__) {
+  if (__SOVEREIGN__) {
     return <Navigate to="/admin/settings" replace />;
   }
 

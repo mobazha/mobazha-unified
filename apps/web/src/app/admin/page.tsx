@@ -306,7 +306,7 @@ export default function AdminDashboardPage() {
           color="success"
           loading={salesLoading}
           href={
-            typeof __OUTPOST__ !== 'undefined' && __OUTPOST__ ? '/admin/orders' : '/admin/analytics'
+            typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '/admin/orders' : '/admin/analytics'
           }
         />
         <StatCard
@@ -321,7 +321,7 @@ export default function AdminDashboardPage() {
           color="warning"
           loading={productsLoading && ratingAvg === null}
           href={
-            typeof __OUTPOST__ !== 'undefined' && __OUTPOST__
+            typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
               ? '/admin/products'
               : '/admin/analytics'
           }
@@ -374,7 +374,7 @@ export default function AdminDashboardPage() {
           </Link>
         )}
 
-        {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+        {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
           <Link
             href="/admin/storefront"
             className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
@@ -406,7 +406,7 @@ export default function AdminDashboardPage() {
                 <p className="text-xs font-medium text-foreground">{t('admin.nav.collections')}</p>
               </div>
             </Link>
-            {!(typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) && (
+            {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
               <Link
                 href="/admin/discounts"
                 className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"

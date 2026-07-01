@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../config/env', () => ({
-  isOutpostMode: vi.fn(() => false),
+  isSovereignMode: vi.fn(() => false),
 }));
 
-import { isOutpostMode } from '../../config/env';
+import { isSovereignMode } from '../../config/env';
 import {
   getAdminStorePaymentsPath,
   getAdminFinancePath,
@@ -16,18 +16,18 @@ import {
 
 describe('getAdminStorePaymentsPath', () => {
   it('returns SaaS payments path by default', () => {
-    vi.mocked(isOutpostMode).mockReturnValue(false);
+    vi.mocked(isSovereignMode).mockReturnValue(false);
     expect(getAdminStorePaymentsPath()).toBe('/admin/payments');
   });
 
-  it('returns finance path in outpost mode', () => {
-    vi.mocked(isOutpostMode).mockReturnValue(true);
+  it('returns finance path in sovereign mode', () => {
+    vi.mocked(isSovereignMode).mockReturnValue(true);
     expect(getAdminStorePaymentsPath()).toBe('/admin/finance');
   });
 });
 
 describe('getAdminFinancePath', () => {
-  it('returns outpost funds hub path', () => {
+  it('returns sovereign funds hub path', () => {
     expect(getAdminFinancePath()).toBe('/admin/finance');
   });
 });

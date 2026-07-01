@@ -1,6 +1,6 @@
 /**
- * Outpost stub — ChatSystem is stripped at build time.
- * Matrix/chat functionality is not available in Outpost mode.
+ * Sovereign stub — ChatSystem is stripped at build time.
+ * Matrix/chat functionality is not available in Sovereign mode.
  */
 export function ChatSystem() {
   return null;

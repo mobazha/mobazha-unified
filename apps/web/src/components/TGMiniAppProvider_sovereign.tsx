@@ -1,5 +1,5 @@
 /**
- * Outpost stub — Telegram Mini App provider is stripped at build time.
+ * Sovereign stub — Telegram Mini App provider is stripped at build time.
  */
 export function TGMiniAppProvider({ children }: { children: import('react').ReactNode }) {
   return <>{children}</>;

@@ -1,6 +1,6 @@
 /**
  * Brand network config tests — locks in the safety-critical default-deny
- * behavior for OP-MP-4 white-label gating. An unbranded Mobazha build
+ * behavior for white-label network gating. An unbranded Mobazha build
  * MUST report all network UI flags as `false` so a misconfigured partner
  * brand cannot accidentally expose node-pool / diagnostics surface area.
  */

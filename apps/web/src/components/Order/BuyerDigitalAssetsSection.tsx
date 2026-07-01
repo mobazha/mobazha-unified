@@ -108,7 +108,7 @@ function formatBytes(bytes?: number): string {
  * - 401/403 without a buyerPortalToken: authenticated node-admin fallback is
  *   not available for this order → safe to hide the section
  * - 404/410: order known but no entitlements / revoked
- * - 501:    digital assets subsystem disabled on this node (Outpost build,
+ * - 501:    digital assets subsystem disabled on this node (Sovereign build,
  *           feature flag off)
  *
  * 5xx other than 501 still surfaces because it indicates a real failure.

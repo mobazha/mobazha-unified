@@ -6,7 +6,7 @@ import {
   useI18n,
   calculateDiscountPercent,
   STANDARD_PRODUCT_TYPES,
-  isOutpostMode,
+  isSovereignMode,
 } from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
 import {
@@ -74,10 +74,10 @@ interface BasicInfoSectionProps {
   aiLoadingAction?: string | null;
 }
 
-// Outpost is crypto-native: listings are priced natively in XMR (the only
+// Sovereign is crypto-native: listings are priced natively in XMR (the only
 // payment coin supported), with no fiat conversion layer.
 // SaaS/full-node mode retains the full fiat+crypto picker.
-const OUTPOST_CURRENCIES = [{ value: 'XMR', label: 'XMR (ɱ)' }];
+const SOVEREIGN_CURRENCIES = [{ value: 'XMR', label: 'XMR (ɱ)' }];
 
 const SAAS_CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
@@ -90,7 +90,7 @@ const SAAS_CURRENCIES = [
   { value: 'USDT', label: 'USDT' },
 ];
 
-const currencies = isOutpostMode() ? OUTPOST_CURRENCIES : SAAS_CURRENCIES;
+const currencies = isSovereignMode() ? SOVEREIGN_CURRENCIES : SAAS_CURRENCIES;
 
 const conditions: { value: ProductCondition; labelKey: string }[] = [
   { value: 'NEW', labelKey: 'listing.conditions.new' },

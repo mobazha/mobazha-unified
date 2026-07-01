@@ -37,7 +37,7 @@ function runtimeConfig(overrides: Record<string, unknown> = {}) {
         releasePublishing: true,
         attribution: true,
       },
-      outpost: { isolatedRuntime: false, managedFleet: false },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: { methods: [] },
     },
     ...overrides,
@@ -79,7 +79,7 @@ describe('runtimeConfig', () => {
   });
 
   it('fails closed for obsolete or malformed contracts', () => {
-    initializeRuntimeConfig({ schemaVersion: 2, outpostMode: true });
+    initializeRuntimeConfig({ schemaVersion: 2, sovereignMode: true });
 
     expect(getRuntimeConfig().authMode).toBe('standalone');
     expect(getRuntimeConfig().deployment).toEqual({
@@ -129,7 +129,7 @@ describe('runtimeConfig', () => {
 
     expect(supportsRuntimeCapability('marketplace.discovery')).toBe(true);
     expect(supportsRuntimeCapability('marketplace.operator')).toBe(true);
-    expect(supportsRuntimeCapability('outpost.isolatedRuntime')).toBe(false);
+    expect(supportsRuntimeCapability('sovereign.isolatedRuntime')).toBe(false);
     expect(getRuntimeConfig().experience.marketplaceIdentifier).toBe('m2-wilson');
   });
 

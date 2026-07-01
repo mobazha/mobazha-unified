@@ -15,7 +15,7 @@ import { FulfillmentProvidersSection } from './FulfillmentProvidersSection';
 const VALID_TABS = ['notifications', 'ai', 'fulfillment', 'webhooks'] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
-const isOutpost = typeof __OUTPOST__ !== 'undefined' && __OUTPOST__;
+const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
 
 function resolveTab(
   param: string | null,
@@ -24,12 +24,12 @@ function resolveTab(
 ): TabValue {
   if (param && (VALID_TABS as readonly string[]).includes(param)) {
     if (param === 'ai' && aiWorkspaceEnabled) return 'notifications';
-    if (param === 'notifications' && isOutpost) return 'ai';
-    if (param === 'fulfillment' && !supplyChainEnabled) return isOutpost ? 'ai' : 'notifications';
-    if (param === 'webhooks' && isOutpost) return 'ai';
+    if (param === 'notifications' && isSovereign) return 'ai';
+    if (param === 'fulfillment' && !supplyChainEnabled) return isSovereign ? 'ai' : 'notifications';
+    if (param === 'webhooks' && isSovereign) return 'ai';
     return param as TabValue;
   }
-  return isOutpost ? 'ai' : 'notifications';
+  return isSovereign ? 'ai' : 'notifications';
 }
 
 export default function AdminIntegrationsPage() {
@@ -49,10 +49,10 @@ export default function AdminIntegrationsPage() {
     setActiveTab(derivedTab);
   }
 
-  // Outpost: integrations is not a supported surface — AI Connect lives at
+  // Sovereign: integrations is not a supported surface — AI Connect lives at
   // `/admin/ai/connect`. Redirect stale bookmarks from the old Settings → AI tab.
   useEffect(() => {
-    if (isOutpost) {
+    if (isSovereign) {
       router.replace('/admin/ai/connect');
       return;
     }
@@ -61,7 +61,7 @@ export default function AdminIntegrationsPage() {
     }
   }, [router, aiWorkspaceEnabled, searchParams]);
 
-  if (isOutpost) {
+  if (isSovereign) {
     return null;
   }
 
@@ -94,7 +94,7 @@ export default function AdminIntegrationsPage() {
 
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as TabValue)}>
         <TabsList>
-          {!isOutpost && (
+          {!isSovereign && (
             <TabsTrigger value="notifications" className="gap-1.5">
               <Bell className="w-4 h-4" />
               {t('admin.integrations.tabNotifications')}
@@ -106,13 +106,13 @@ export default function AdminIntegrationsPage() {
               {t('admin.integrations.tabAI')}
             </TabsTrigger>
           )}
-          {!isOutpost && supplyChainEnabled && (
+          {!isSovereign && supplyChainEnabled && (
             <TabsTrigger value="fulfillment" className="gap-1.5">
               <Package className="w-4 h-4" />
               {t('admin.integrations.tabFulfillment')}
             </TabsTrigger>
           )}
-          {!isOutpost && (
+          {!isSovereign && (
             <TabsTrigger value="webhooks" className="gap-1.5">
               <Webhook className="w-4 h-4" />
               {t('admin.integrations.tabWebhooks')}
@@ -120,7 +120,7 @@ export default function AdminIntegrationsPage() {
           )}
         </TabsList>
 
-        {!isOutpost && (
+        {!isSovereign && (
           <TabsContent value="notifications" className="mt-6">
             <NotificationChannelsSection />
           </TabsContent>
@@ -132,13 +132,13 @@ export default function AdminIntegrationsPage() {
           </TabsContent>
         )}
 
-        {!isOutpost && supplyChainEnabled && (
+        {!isSovereign && supplyChainEnabled && (
           <TabsContent value="fulfillment" className="mt-6">
             <FulfillmentProvidersSection />
           </TabsContent>
         )}
 
-        {!isOutpost && (
+        {!isSovereign && (
           <TabsContent value="webhooks" className="mt-6">
             <WebhookSection />
           </TabsContent>
