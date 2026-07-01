@@ -30,6 +30,7 @@ import {
   getCurationHomePath,
   resolveCurationMarketplaceIdentifier,
   shouldRenderCurationMarketplaceAtRoot,
+  resolveProductCardSellerDisplay,
 } from '@mobazha/core';
 import { MarketplaceDetailPageContent } from '@/components/CommunityMarketplace/MarketplaceDetailPageContent';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
@@ -62,12 +63,11 @@ interface DisplayProduct {
 }
 
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
-  const vendorName =
-    item.vendorName ||
-    (item.vendorPeerID
-      ? `${item.vendorPeerID.substring(0, 6)}…${item.vendorPeerID.slice(-4)}`
-      : '');
-  const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
+  const seller = resolveProductCardSellerDisplay({
+    peerID: item.vendorPeerID,
+    name: item.vendorName,
+    avatarUrl: getImageUrl(item.vendorAvatarHashes?.small),
+  });
 
   const priceFields = productCardPriceFieldsFromListItem(item);
 
@@ -83,8 +83,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     currency: priceFields.currencyCode,
     divisibility: priceFields.divisibility,
     priceFrom: priceFields.priceFrom,
-    vendorName,
-    vendorAvatar,
+    vendorName: seller.name,
+    vendorAvatar: seller.avatarUrl,
     vendorPeerID: item.vendorPeerID,
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,

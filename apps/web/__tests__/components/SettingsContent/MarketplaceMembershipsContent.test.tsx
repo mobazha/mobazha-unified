@@ -3,6 +3,19 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { MyMarketplaceMembershipEntry } from '@mobazha/core';
 
+const mockAcceptInvitation = vi.fn();
+const mockDeclineInvitation = vi.fn();
+const mockLeaveMembership = vi.fn();
+const mockMutationState: {
+  acceptingId: string | null;
+  decliningId: string | null;
+  leavingId: string | null;
+} = {
+  acceptingId: null,
+  decliningId: null,
+  leavingId: null,
+};
+
 const mockMemberships: MyMarketplaceMembershipEntry[] = [
   {
     marketplace: {
@@ -92,9 +105,11 @@ vi.mock('@mobazha/core', () => ({
     memberships: mockMemberships,
     loading: false,
     loadFailed: false,
-    acceptingId: null,
+    ...mockMutationState,
     refresh: vi.fn(),
-    acceptInvitation: vi.fn(),
+    acceptInvitation: mockAcceptInvitation,
+    declineInvitation: mockDeclineInvitation,
+    leaveMembership: mockLeaveMembership,
   }),
 }));
 
@@ -111,6 +126,9 @@ import { MarketplaceMembershipsContent } from '@/components/SettingsContent/Mark
 describe('MarketplaceMembershipsContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMutationState.acceptingId = null;
+    mockMutationState.decliningId = null;
+    mockMutationState.leavingId = null;
   });
 
   it('renders public marketplace link only for published marketplaces', () => {
@@ -138,6 +156,26 @@ describe('MarketplaceMembershipsContent', () => {
 
     expect(screen.getByTestId('accept-marketplace-invite-mp-draft')).toBeInTheDocument();
     expect(screen.queryByTestId('accept-marketplace-invite-mp-archived')).not.toBeInTheDocument();
+    expect(screen.getByTestId('decline-marketplace-invite-mp-draft')).toBeInTheDocument();
+    expect(screen.queryByTestId('decline-marketplace-invite-mp-archived')).not.toBeInTheDocument();
+  });
+
+  it('offers leave only for active seller memberships', () => {
+    render(<MarketplaceMembershipsContent backHref="/settings" />);
+
+    expect(screen.getByTestId('leave-marketplace-mp-published')).toBeInTheDocument();
+    expect(screen.queryByTestId('leave-marketplace-mp-draft')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('leave-marketplace-mp-archived')).not.toBeInTheDocument();
+  });
+
+  it('disables actions on every card while any membership mutation is pending', () => {
+    mockMutationState.acceptingId = 'mp-draft';
+
+    render(<MarketplaceMembershipsContent backHref="/settings" />);
+
+    expect(screen.getByTestId('accept-marketplace-invite-mp-draft')).toBeDisabled();
+    expect(screen.getByTestId('decline-marketplace-invite-mp-draft')).toBeDisabled();
+    expect(screen.getByTestId('leave-marketplace-mp-published')).toBeDisabled();
   });
 
   it('shows unread review-updates badge for memberships with unread events', () => {

@@ -2,16 +2,18 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import {
+  MARKETPLACE_BUYER_ACCESS_MODE_KEYS,
   MARKETPLACE_CATALOG_MODE_KEYS,
   MARKETPLACE_DISCOVERABILITY_KEYS,
-  MARKETPLACE_JOIN_MODE_KEYS,
+  MARKETPLACE_SELLER_REVIEW_MODE_KEYS,
   MARKETPLACE_SELLER_ENTRY_MODE_KEYS,
   useI18n,
 } from '@mobazha/core';
 import type {
+  MarketplaceBuyerAccessMode,
   MarketplaceCatalogMode,
   MarketplaceDiscoverability,
-  MarketplaceJoinMode,
+  MarketplaceSellerReviewMode,
   MarketplaceSellerEntryMode,
   NativeMarketplace,
   UpdateNativeMarketplaceRequest,
@@ -48,7 +50,8 @@ interface MarketplaceSettingsFormState {
   logoURL: string;
   bannerURL: string;
   vertical: string;
-  joinMode: MarketplaceJoinMode;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
   discoverability: MarketplaceDiscoverability;
   catalogMode: MarketplaceCatalogMode;
   sellerEntryMode: MarketplaceSellerEntryMode;
@@ -116,7 +119,8 @@ function buildFormState(marketplace: NativeMarketplace): MarketplaceSettingsForm
     logoURL: marketplace.logoURL ?? '',
     bannerURL: marketplace.bannerURL ?? '',
     vertical: marketplace.vertical,
-    joinMode: marketplace.joinMode,
+    buyerAccessMode: marketplace.buyerAccessMode,
+    sellerReviewMode: marketplace.sellerReviewMode,
     discoverability: marketplace.discoverability,
     catalogMode: marketplace.catalogMode,
     sellerEntryMode: marketplace.sellerEntryMode,
@@ -155,8 +159,8 @@ function buildPartialUpdate(
   if (normalizedBannerURL !== normalizedServerBannerURL) {
     payload.bannerURL = normalizedBannerURL;
   }
-  if (form.joinMode !== marketplace.joinMode) {
-    payload.joinMode = form.joinMode;
+  if (form.sellerReviewMode !== marketplace.sellerReviewMode) {
+    payload.sellerReviewMode = form.sellerReviewMode;
   }
   if (normalizedVertical !== marketplace.vertical) {
     payload.vertical = normalizedVertical;
@@ -371,23 +375,15 @@ export function OperatorMarketplaceSettingsCard({
           </div>
 
           <div className="space-y-2">
-            <Label>{t('marketplace.operator.joinMode')}</Label>
-            <Select
-              value={form.joinMode}
-              disabled={isArchived || isBusy}
-              onValueChange={value => setField('joinMode', value as MarketplaceJoinMode)}
-            >
-              <SelectTrigger data-testid="operator-marketplace-join-mode">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(MARKETPLACE_JOIN_MODE_KEYS) as MarketplaceJoinMode[]).map(option => (
-                  <SelectItem key={option} value={option}>
-                    {t(MARKETPLACE_JOIN_MODE_KEYS[option])}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t('marketplace.operator.buyerAccessMode')}</Label>
+            <Input
+              data-testid="operator-marketplace-buyer-access-mode"
+              value={t(MARKETPLACE_BUYER_ACCESS_MODE_KEYS[form.buyerAccessMode])}
+              disabled
+            />
+            <p className="text-sm text-muted-foreground">
+              {t('marketplace.operator.buyerAccessModeReadOnlyHint')}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -470,6 +466,32 @@ export function OperatorMarketplaceSettingsCard({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('marketplace.operator.sellerReviewMode')}</Label>
+            <Select
+              value={form.sellerReviewMode}
+              disabled={isArchived || isBusy}
+              onValueChange={value =>
+                setField('sellerReviewMode', value as MarketplaceSellerReviewMode)
+              }
+            >
+              <SelectTrigger data-testid="operator-marketplace-seller-review-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(
+                  Object.keys(MARKETPLACE_SELLER_REVIEW_MODE_KEYS) as MarketplaceSellerReviewMode[]
+                ).map(option => (
+                  <SelectItem key={option} value={option}>
+                    {t(MARKETPLACE_SELLER_REVIEW_MODE_KEYS[option])}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              {t('marketplace.operator.sellerReviewModeHint')}
+            </p>
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="operator-marketplace-vertical">

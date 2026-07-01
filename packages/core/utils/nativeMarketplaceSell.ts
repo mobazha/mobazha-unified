@@ -24,11 +24,9 @@ export interface NativeMarketplaceSellPolicy {
 }
 
 export function isNativeMarketplaceSelfServeEligible(
-  marketplace: Pick<PublicNativeMarketplace, 'sellerEntryMode' | 'joinMode'>
+  marketplace: Pick<PublicNativeMarketplace, 'sellerEntryMode'>
 ): boolean {
-  if (marketplace.sellerEntryMode !== 'seller_self_serve') return false;
-  if (marketplace.joinMode === 'invite') return false;
-  return true;
+  return marketplace.sellerEntryMode === 'seller_self_serve';
 }
 
 export function getNativeMarketplaceMembershipStatus(
@@ -38,14 +36,17 @@ export function getNativeMarketplaceMembershipStatus(
 }
 
 export function resolveNativeMarketplaceSellPolicy(
-  marketplace: Pick<PublicNativeMarketplace, 'sellerEntryMode' | 'joinMode' | 'catalogMode'>,
+  marketplace: Pick<
+    PublicNativeMarketplace,
+    'sellerEntryMode' | 'sellerReviewMode' | 'catalogMode'
+  >,
   application: NativeMarketplaceSellerApplication | null,
   selectedGroupCount: number,
   options: { isSubmitting?: boolean; isWithdrawing?: boolean } = {}
 ): NativeMarketplaceSellPolicy {
   const allowsSelfServe = isNativeMarketplaceSelfServeEligible(marketplace);
   const requiresProductGroups = marketplace.catalogMode === 'curated';
-  const isAutoApproval = marketplace.joinMode === 'open';
+  const isAutoApproval = marketplace.sellerReviewMode === 'auto';
   const membershipStatus = getNativeMarketplaceMembershipStatus(application);
 
   const isApproved = membershipStatus === 'approved';

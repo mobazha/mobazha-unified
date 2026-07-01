@@ -17,7 +17,8 @@ function buildMarketplace(
     name: 'Test Market',
     slug: 'test-market',
     publicURL: 'https://test.example',
-    joinMode: 'approval',
+    buyerAccessMode: 'open',
+    sellerReviewMode: 'manual',
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'seller_self_serve',
@@ -53,23 +54,18 @@ function buildApplication(
 }
 
 describe('isNativeMarketplaceSelfServeEligible', () => {
-  it('allows seller_self_serve when join mode is not invite', () => {
+  it('allows seller_self_serve mode', () => {
     expect(
       isNativeMarketplaceSelfServeEligible(
-        buildMarketplace({ sellerEntryMode: 'seller_self_serve', joinMode: 'open' })
+        buildMarketplace({ sellerEntryMode: 'seller_self_serve' })
       )
     ).toBe(true);
   });
 
-  it('blocks invite-only and operator-invited markets', () => {
+  it('blocks operator-invited markets', () => {
     expect(
       isNativeMarketplaceSelfServeEligible(
-        buildMarketplace({ sellerEntryMode: 'seller_self_serve', joinMode: 'invite' })
-      )
-    ).toBe(false);
-    expect(
-      isNativeMarketplaceSelfServeEligible(
-        buildMarketplace({ sellerEntryMode: 'operator_invited', joinMode: 'open' })
+        buildMarketplace({ sellerEntryMode: 'operator_invited' })
       )
     ).toBe(false);
   });
@@ -78,7 +74,7 @@ describe('isNativeMarketplaceSelfServeEligible', () => {
 describe('resolveNativeMarketplaceSellPolicy', () => {
   it('requires product groups for curated catalogs', () => {
     const policy = resolveNativeMarketplaceSellPolicy(
-      buildMarketplace({ catalogMode: 'curated', joinMode: 'open' }),
+      buildMarketplace({ catalogMode: 'curated' }),
       null,
       0
     );
@@ -91,7 +87,7 @@ describe('resolveNativeMarketplaceSellPolicy', () => {
 
   it('allows zero groups for open catalogs', () => {
     const policy = resolveNativeMarketplaceSellPolicy(
-      buildMarketplace({ catalogMode: 'open', joinMode: 'open' }),
+      buildMarketplace({ catalogMode: 'open', sellerReviewMode: 'auto' }),
       null,
       0
     );
@@ -104,7 +100,7 @@ describe('resolveNativeMarketplaceSellPolicy', () => {
 
   it('allows curated submission with a zero-item owned group selected', () => {
     const policy = resolveNativeMarketplaceSellPolicy(
-      buildMarketplace({ catalogMode: 'curated', joinMode: 'approval' }),
+      buildMarketplace({ catalogMode: 'curated' }),
       null,
       1
     );
@@ -131,7 +127,7 @@ describe('resolveNativeMarketplaceSellPolicy', () => {
 
   it('keeps submit visible but disabled while submitting', () => {
     const policy = resolveNativeMarketplaceSellPolicy(
-      buildMarketplace({ catalogMode: 'open', joinMode: 'open' }),
+      buildMarketplace({ catalogMode: 'open', sellerReviewMode: 'auto' }),
       null,
       0,
       { isSubmitting: true }

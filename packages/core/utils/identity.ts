@@ -157,3 +157,137 @@ export function formatNotificationName(data?: IdentityData | null): string {
 
   return '';
 }
+
+/** Input for {@link resolveProductCardSellerDisplay}. */
+export interface ProductCardSellerDisplayInput {
+  /** Seller peer ID — used to reject ID-shaped seller labels on product cards. */
+  peerID?: string;
+  /** Listing or search-index vendor name. */
+  name?: string;
+  /** Seller handle from listing, search, or profile. */
+  handle?: string;
+  /** Current profile display name (highest name priority). */
+  profileName?: string;
+  /** Listing-index or search avatar URL. */
+  avatarUrl?: string;
+  /** Current profile avatar URL (highest avatar priority). */
+  profileAvatarUrl?: string;
+}
+
+/** Resolved seller presentation for shared product cards. */
+export interface ProductCardSellerDisplay {
+  /** Human-readable seller name; empty when no safe label exists (hide seller row). */
+  name: string;
+  avatarUrl?: string;
+}
+
+/** Base58 body segment used in peer ID prefix/suffix around a display ellipsis. */
+const PEER_ID_TRUNCATED_BODY = /^[1-9A-HJ-NP-Za-km-z]+$/;
+
+/**
+ * Whether a label looks like a truncated peer ID for product-card display
+ * (Unicode … or three-dot …), not an ordinary merchant name.
+ */
+function looksLikeTruncatedPeerIdDisplay(candidate: string): boolean {
+  const trimmed = candidate.trim();
+  if (!trimmed || isFullPeerID(trimmed)) return false;
+
+  const ellipsisIndex = trimmed.indexOf('…');
+  const threeDotIndex = trimmed.indexOf('...');
+  let separator: string;
+  let sepIndex: number;
+  if (ellipsisIndex >= 0) {
+    separator = '…';
+    sepIndex = ellipsisIndex;
+  } else if (threeDotIndex >= 0) {
+    separator = '...';
+    sepIndex = threeDotIndex;
+  } else {
+    return false;
+  }
+
+  const prefix = trimmed.slice(0, sepIndex);
+  const suffix = trimmed.slice(sepIndex + separator.length);
+  if (!prefix || !suffix) return false;
+
+  const ipfsPrefixBody = prefix.startsWith(PEER_ID_PREFIX_IPFS) ? prefix.slice(2) : '';
+  const libp2pPrefixBody = prefix.startsWith('12D3') ? prefix.slice(4) : '';
+
+  const isIpfsTruncated =
+    prefix.startsWith(PEER_ID_PREFIX_IPFS) &&
+    prefix.length >= 2 &&
+    prefix.length <= 12 &&
+    suffix.length >= 2 &&
+    suffix.length <= 12 &&
+    (ipfsPrefixBody.length === 0 || PEER_ID_TRUNCATED_BODY.test(ipfsPrefixBody)) &&
+    PEER_ID_TRUNCATED_BODY.test(suffix);
+
+  const isLibp2pTruncated =
+    prefix.startsWith('12D3') &&
+    prefix.length >= 4 &&
+    prefix.length <= 12 &&
+    suffix.length >= 2 &&
+    suffix.length <= 12 &&
+    (libp2pPrefixBody.length === 0 || PEER_ID_TRUNCATED_BODY.test(libp2pPrefixBody)) &&
+    PEER_ID_TRUNCATED_BODY.test(suffix);
+
+  return isIpfsTruncated || isLibp2pTruncated;
+}
+
+function isKnownTruncationOfPeerID(candidate: string, peerID: string): boolean {
+  const trimmed = candidate.trim();
+  const fullPeerID = peerID.trim();
+  if (!trimmed || !fullPeerID) return false;
+
+  for (const chars of [4, 6] as const) {
+    if (trimmed === truncatePeerId(fullPeerID, chars)) return true;
+  }
+  return false;
+}
+
+function isReadableProductCardSellerName(candidate: string, peerID?: string): boolean {
+  const trimmed = candidate.trim();
+  if (!trimmed) return false;
+  if (peerID?.trim() && trimmed === peerID.trim()) return false;
+  if (isFullPeerID(trimmed)) return false;
+  if (looksLikeTruncatedPeerIdDisplay(trimmed)) return false;
+  if (peerID?.trim() && isKnownTruncationOfPeerID(trimmed, peerID)) return false;
+  return true;
+}
+
+/**
+ * Resolve seller name and avatar for product cards.
+ *
+ * Product cards must never show a raw or truncated peer ID as the seller name.
+ * Adapters pass listing/search fields plus optional freshly fetched profile fields;
+ * this helper unifies the post-fetch presentation contract in Core.
+ *
+ * Name priority: profileName → listing/search name → handle (trimmed).
+ * Rejects candidates equal to peerID, matching a full peer ID, or matching a
+ * truncated peer ID display (Unicode … or three-dot …).
+ * When no readable name remains, returns `{ name: '' }` so UI hides the seller line.
+ *
+ * Avatar priority: profileAvatarUrl → listing/search avatarUrl.
+ */
+export function resolveProductCardSellerDisplay(
+  input: ProductCardSellerDisplayInput
+): ProductCardSellerDisplay {
+  const peerID = input.peerID?.trim();
+
+  const nameCandidates = [input.profileName, input.name, input.handle];
+  let name = '';
+  for (const candidate of nameCandidates) {
+    if (!candidate) continue;
+    const trimmed = candidate.trim();
+    if (isReadableProductCardSellerName(trimmed, peerID)) {
+      name = trimmed;
+      break;
+    }
+  }
+
+  const profileAvatar = input.profileAvatarUrl?.trim();
+  const listingAvatar = input.avatarUrl?.trim();
+  const avatarUrl = profileAvatar || listingAvatar || undefined;
+
+  return { name, avatarUrl };
+}

@@ -37,7 +37,8 @@ export enum MarketplaceRole {
 }
 
 export type MarketplaceLifecycleStatus = 'draft' | 'published' | 'suspended' | 'archived';
-export type MarketplaceJoinMode = 'open' | 'approval' | 'invite';
+export type MarketplaceBuyerAccessMode = 'open';
+export type MarketplaceSellerReviewMode = 'auto' | 'manual';
 export type MarketplaceCatalogMode = 'open' | 'curated';
 export type MarketplaceDiscoverability = 'public' | 'unlisted';
 export type MarketplaceSellerEntryMode = 'operator_invited' | 'seller_self_serve';
@@ -82,7 +83,8 @@ export interface NativeMarketplace {
   logoURL?: string;
   bannerURL?: string;
   ownerUserID: string;
-  joinMode: MarketplaceJoinMode;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;
@@ -103,7 +105,8 @@ export interface CreateNativeMarketplaceRequest {
   description?: string;
   logoURL?: string;
   bannerURL?: string;
-  joinMode?: MarketplaceJoinMode;
+  buyerAccessMode?: MarketplaceBuyerAccessMode;
+  sellerReviewMode?: MarketplaceSellerReviewMode;
   catalogMode?: MarketplaceCatalogMode;
   discoverability?: MarketplaceDiscoverability;
   domain?: string;
@@ -202,7 +205,8 @@ export interface MarketplaceCurationBrand {
 export interface MarketplaceCurationConfig {
   id: string;
   vertical: string;
-  joinMode: MarketplaceJoinMode;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;
@@ -529,7 +533,8 @@ export interface PublicNativeMarketplace {
   logoURL?: string;
   bannerURL?: string;
   publicURL: string;
-  joinMode: MarketplaceJoinMode;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;

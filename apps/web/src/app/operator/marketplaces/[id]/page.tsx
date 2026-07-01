@@ -4,12 +4,15 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
+  MARKETPLACE_BUYER_ACCESS_MODE_KEYS,
   MARKETPLACE_CATALOG_MODE_KEYS,
   MARKETPLACE_DISCOVERABILITY_KEYS,
   MARKETPLACE_DOMAIN_KIND_KEYS,
   MARKETPLACE_DOMAIN_VERIFICATION_KEYS,
   MARKETPLACE_LIFECYCLE_STATUS_KEYS,
   MARKETPLACE_MEMBERSHIP_STATUS_KEYS,
+  MARKETPLACE_SELLER_ENTRY_MODE_KEYS,
+  MARKETPLACE_SELLER_REVIEW_MODE_KEYS,
   formatUserName,
   useI18n,
   useOperatorMarketplace,
@@ -41,8 +44,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Check, Loader2, Send, ShieldCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  Loader2,
+  PauseCircle,
+  PlayCircle,
+  Send,
+  ShieldCheck,
+} from 'lucide-react';
 
 type MembershipFilter =
   | 'all'
@@ -53,6 +65,8 @@ type MembershipFilter =
   | 'approved'
   | 'rejected'
   | 'suspended';
+
+type OperatorTab = 'overview' | 'curation' | 'sellers' | 'settings';
 
 const PENDING_STATUSES: ReadonlySet<MarketplaceStoreMembership['status']> = new Set([
   'applied',
@@ -75,6 +89,7 @@ export default function MarketplaceOperatorDetailPage() {
   const id = String(params.id ?? '');
   const { t, formatDate } = useI18n();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<OperatorTab>('overview');
   const {
     marketplace,
     stores,
@@ -94,6 +109,8 @@ export default function MarketplaceOperatorDetailPage() {
     working,
     refresh,
     publish,
+    suspend,
+    resume,
     update,
     archive,
     invite,
@@ -198,6 +215,32 @@ export default function MarketplaceOperatorDetailPage() {
       toast({
         variant: 'destructive',
         title: t('marketplace.operator.publishFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleSuspend() {
+    try {
+      await suspend();
+      toast({ title: t('marketplace.operator.suspendMarketplaceSuccess') });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.suspendMarketplaceFailedTitle'),
+        description: error instanceof Error ? error.message : t('common.retry'),
+      });
+    }
+  }
+
+  async function handleResume() {
+    try {
+      await resume();
+      toast({ title: t('marketplace.operator.resumeMarketplaceSuccess') });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('marketplace.operator.resumeMarketplaceFailedTitle'),
         description: error instanceof Error ? error.message : t('common.retry'),
       });
     }
@@ -459,6 +502,21 @@ export default function MarketplaceOperatorDetailPage() {
     );
   }
 
+  const hasVerifiedDomain = marketplace.domains.some(
+    domain => domain.verificationStatus === 'verified'
+  );
+  const hasApprovedVisibleSeller = stores.some(
+    store => store.status === 'approved' && store.isVisible
+  );
+  const requiresApprovedVisibleSeller = marketplace.sellerEntryMode === 'operator_invited';
+  const sellerLaunchRequirementMet = !requiresApprovedVisibleSeller || hasApprovedVisibleSeller;
+  const launchChecklistReady = hasVerifiedDomain && sellerLaunchRequirementMet;
+  const isDraft = marketplace.status === 'draft';
+  const isSuspended = marketplace.status === 'suspended';
+  const canPublish = isDraft && launchChecklistReady && !isArchived;
+  const canResumeMarketplace = isSuspended && launchChecklistReady && !isArchived;
+  const showLaunchChecklist = isDraft || isSuspended;
+
   return (
     <div className="min-h-screen bg-background" data-testid="operator-marketplace-detail">
       <Header />
@@ -481,8 +539,12 @@ export default function MarketplaceOperatorDetailPage() {
                 {marketplace.description || t('marketplace.operator.noDescription')}
               </p>
             </div>
-            {marketplace.status === 'draft' && !isArchived && (
-              <Button onClick={() => void handlePublish()} disabled={Boolean(working)}>
+            {marketplace.status === 'draft' && !isArchived ? (
+              <Button
+                onClick={() => void handlePublish()}
+                disabled={Boolean(working) || !canPublish}
+                data-testid="operator-marketplace-publish"
+              >
                 {working === 'publish' ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -490,454 +552,631 @@ export default function MarketplaceOperatorDetailPage() {
                 )}
                 {t('marketplace.operator.publish')}
               </Button>
-            )}
+            ) : null}
+            {marketplace.status === 'published' && !isArchived ? (
+              <Button
+                variant="outline"
+                onClick={() => void handleSuspend()}
+                disabled={Boolean(working)}
+                data-testid="operator-marketplace-suspend"
+              >
+                {working === 'suspend' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <PauseCircle className="mr-2 h-4 w-4" />
+                )}
+                {t('marketplace.operator.suspendMarketplace')}
+              </Button>
+            ) : null}
+            {marketplace.status === 'suspended' && !isArchived ? (
+              <Button
+                onClick={() => void handleResume()}
+                disabled={Boolean(working) || !canResumeMarketplace}
+                data-testid="operator-marketplace-resume"
+              >
+                {working === 'resume' ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                )}
+                {t('marketplace.operator.resumeMarketplace')}
+              </Button>
+            ) : null}
           </div>
 
-          <div className="mt-8">
-            <OperatorMarketplaceSettingsCard
-              key={marketplace.id}
-              marketplace={marketplace}
-              working={working}
-              onSave={handleSaveSettings}
-              onVerifyCustomDomain={handleVerifyCustomDomain}
-              onArchive={handleArchive}
-            />
-          </div>
+          <Tabs
+            value={activeTab}
+            onValueChange={value => setActiveTab(value as OperatorTab)}
+            className="mt-8"
+          >
+            <TabsList
+              className="flex h-auto w-full flex-wrap justify-start gap-1 p-1"
+              aria-label={t('marketplace.operator.tabs.ariaLabel')}
+            >
+              <TabsTrigger value="overview" data-testid="operator-tab-overview">
+                {t('marketplace.operator.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="curation" data-testid="operator-tab-curation">
+                {t('marketplace.operator.tabs.curation')}
+              </TabsTrigger>
+              <TabsTrigger value="sellers" data-testid="operator-tab-sellers">
+                {t('marketplace.operator.tabs.sellers')}
+              </TabsTrigger>
+              <TabsTrigger value="settings" data-testid="operator-tab-settings">
+                {t('marketplace.operator.tabs.settings')}
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('marketplace.operator.publishAndDomains')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <p>
-                  {t('marketplace.operator.discoverability')}:{' '}
-                  {t(MARKETPLACE_DISCOVERABILITY_KEYS[marketplace.discoverability])}
-                </p>
-                <p>
-                  {t('marketplace.operator.catalogMode')}:{' '}
-                  {t(MARKETPLACE_CATALOG_MODE_KEYS[marketplace.catalogMode])}
-                </p>
-                {marketplace.domains.map(domain => (
-                  <div key={domain.host} className="rounded-md border p-3">
-                    <div className="font-medium">{domain.host}</div>
-                    <div className="mt-1 text-muted-foreground">
-                      {t(MARKETPLACE_DOMAIN_KIND_KEYS[domain.kind])} ·{' '}
-                      {t(MARKETPLACE_DOMAIN_VERIFICATION_KEYS[domain.verificationStatus])}
-                    </div>
-                    {domain.verificationStatus === 'verified' && domain.verifiedAt ? (
-                      <div className="mt-1 text-muted-foreground">
-                        {t('marketplace.operator.customDomainVerifiedAt', {
-                          date: formatDate(domain.verifiedAt),
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('marketplace.operator.storeAdmission')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p>{t('marketplace.operator.waitingCount', { count: counts.waiting })}</p>
-                <p>{t('marketplace.operator.approvedCount', { count: counts.approved })}</p>
-                <p className="text-muted-foreground">
-                  {t('marketplace.operator.inviteNotApproval')}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('marketplace.operator.responsibilityBoundary')}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                {t('marketplace.operator.responsibilityDesc')}
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="mt-6" data-testid="operator-attribution-funnel-card">
-            <CardHeader>
-              <CardTitle>{t('marketplace.operator.attributionFunnelTitle')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {attributionSummaryLoading ? (
-                <p
-                  className="text-muted-foreground"
-                  data-testid="operator-attribution-summary-loading"
-                >
-                  {t('marketplace.operator.attributionSummaryLoading')}
-                </p>
-              ) : attributionSummaryError ? (
-                <div
-                  className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
-                  data-testid="operator-attribution-summary-error"
-                >
-                  <p className="text-xs text-destructive">
-                    {t('marketplace.operator.attributionSummaryLoadFailed')}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => void refresh()}
-                    disabled={Boolean(working)}
-                    data-testid="operator-attribution-summary-retry"
-                  >
-                    {t('common.retry')}
-                  </Button>
-                </div>
-              ) : attributionSummary?.hasData ? (
-                <div className="space-y-2" data-testid="operator-attribution-has-data">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.operator.attributionImpressions')}
-                    </span>
-                    <span>{attributionSummary.impressions}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.operator.attributionListingClicks')}
-                    </span>
-                    <span>{attributionSummary.listingClicks}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.operator.attributionCheckoutHandoffs')}
-                    </span>
-                    <span>{attributionSummary.checkoutHandoffs}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.operator.attributionListingClickRate')}
-                    </span>
-                    <span>
-                      {attributionSummary.listingClickRate == null
-                        ? t('marketplace.operator.attributionRateUnavailable')
-                        : `${(attributionSummary.listingClickRate * 100).toFixed(1)}%`}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {t('marketplace.operator.attributionCheckoutRate')}
-                    </span>
-                    <span>
-                      {attributionSummary.checkoutHandoffRate == null
-                        ? t('marketplace.operator.attributionRateUnavailable')
-                        : `${(attributionSummary.checkoutHandoffRate * 100).toFixed(1)}%`}
-                    </span>
-                  </div>
-                </div>
-              ) : attributionSummary?.hasData === false ? (
-                <p className="text-muted-foreground" data-testid="operator-attribution-no-data">
-                  {t('marketplace.operator.attributionNoData')}
-                </p>
-              ) : null}
-              <p className="text-xs text-muted-foreground" data-testid="operator-attribution-note">
-                {t('marketplace.operator.attributionCheckoutMeaning')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <OperatorMarketplaceCurationPanel
-            items={curationItems}
-            candidates={curationCandidates}
-            loading={curationLoading}
-            candidatesLoading={curationCandidatesLoading}
-            error={curationError}
-            working={working}
-            isReadOnly={Boolean(curationReadOnly)}
-            onRetry={refresh}
-            onAdd={handleAddCurationItem}
-            onReorder={handleReorderCurationByKind}
-            onToggle={handleToggleCurationItem}
-            onRemove={handleRemoveCurationItem}
-            onLoadCandidates={handleLoadCurationCandidates}
-          />
-
-          {!isArchived ? (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>{t('marketplace.operator.inviteStore')}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3 sm:flex-row">
-                <Input
-                  value={peerID}
-                  onChange={event => setPeerID(event.target.value)}
-                  placeholder={t('marketplace.operator.peerIdPlaceholder')}
-                />
-                <Button
-                  onClick={() => void handleInvite()}
-                  disabled={!peerID.trim() || Boolean(working)}
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  {t('marketplace.operator.sendInvite')}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : null}
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>{t('marketplace.operator.applicationReviewWorkspace')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isArchived ? (
-                <p className="text-sm text-muted-foreground">
-                  {t('marketplace.operator.readOnlyArchived')}
-                </p>
-              ) : null}
-              <div className="flex flex-wrap gap-2" data-testid="operator-membership-filters">
-                {filterMeta.map(filter => {
-                  const active = membershipFilter === filter.key;
-                  return (
-                    <Button
-                      key={filter.key}
-                      size="sm"
-                      variant={active ? 'default' : 'outline'}
-                      aria-pressed={active}
-                      onClick={() => setMembershipFilter(filter.key)}
-                      data-testid={`operator-filter-${filter.key}`}
-                    >
-                      <span>{t(filter.labelKey)}</span>
-                      <span
-                        className="ml-2 text-xs opacity-80"
-                        data-testid={`operator-filter-count-${filter.key}`}
-                      >
-                        {filterCounts[filter.key]}
+            <TabsContent
+              value="overview"
+              className="mt-6"
+              data-testid="operator-tab-content-overview"
+            >
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card data-testid="operator-overview-readiness">
+                  <CardHeader>
+                    <CardTitle>{t('marketplace.operator.overviewReadinessTitle')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <p>
+                      {t('marketplace.operator.overviewStatusLabel')}:{' '}
+                      <span className="font-medium text-foreground">
+                        {t(MARKETPLACE_LIFECYCLE_STATUS_KEYS[marketplace.status])}
                       </span>
-                    </Button>
-                  );
-                })}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {hasVerifiedDomain
+                        ? t('marketplace.operator.launchChecklistDomainReady')
+                        : t('marketplace.operator.launchChecklistDomainMissing')}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {requiresApprovedVisibleSeller
+                        ? hasApprovedVisibleSeller
+                          ? t('marketplace.operator.launchChecklistSellerReady')
+                          : t('marketplace.operator.launchChecklistSellerMissing')
+                        : hasApprovedVisibleSeller
+                          ? t('marketplace.operator.launchChecklistSellerReady')
+                          : t('marketplace.operator.launchChecklistSellerSelfServe')}
+                    </p>
+                    {showLaunchChecklist && isDraft && !canPublish ? (
+                      <p
+                        className="text-xs text-muted-foreground"
+                        data-testid="operator-publish-disabled-hint"
+                      >
+                        {t('marketplace.operator.publishBlockedHint')}
+                      </p>
+                    ) : null}
+                    {showLaunchChecklist && isSuspended && !canResumeMarketplace ? (
+                      <p
+                        className="text-xs text-muted-foreground"
+                        data-testid="operator-resume-disabled-hint"
+                      >
+                        {t('marketplace.operator.resumeBlockedHint')}
+                      </p>
+                    ) : null}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t('marketplace.operator.responsibilityBoundary')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-muted-foreground">
+                    {t('marketplace.operator.responsibilityDesc')}
+                  </CardContent>
+                </Card>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t('marketplace.operator.pendingFirstHint')}
-              </p>
-              {reviewEventsError ? (
-                <div
-                  className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
-                  data-testid="operator-review-events-error"
-                >
-                  <p className="text-xs text-destructive">
-                    {t('marketplace.operator.reviewHistoryLoadFailed')}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => void refresh()}
-                    disabled={Boolean(working)}
-                    data-testid="operator-review-events-retry"
-                  >
-                    {t('common.retry')}
-                  </Button>
-                </div>
-              ) : null}
-              {stores.length === 0 ? (
-                <p className="py-8 text-center text-muted-foreground">
-                  {t('marketplace.operator.noStoresYet')}
-                </p>
-              ) : visibleStores.length === 0 ? (
-                <p className="py-8 text-center text-muted-foreground">
-                  {t('marketplace.operator.noStoresMatchFilter')}
-                </p>
-              ) : (
-                visibleStores.map(store => {
-                  const storeReviewEvents = reviewEventsByPeerID.get(store.peerID) ?? [];
-                  const canApprove =
-                    !isArchived && (store.status === 'accepted' || store.status === 'applied');
-                  const canReject =
-                    !isArchived && (store.status === 'accepted' || store.status === 'applied');
-                  const canSuspend = !isArchived && store.status === 'approved';
-                  const appliedAt = store.appliedAt;
-                  const groupedItems = store.productGroups.reduce(
-                    (sum, group) => sum + (group.itemCount ?? 0),
-                    0
-                  );
-                  return (
-                    <div
-                      key={store.id}
-                      data-testid="operator-membership-row"
-                      data-peerid={store.peerID}
-                      className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+
+              <Card className="mt-6" data-testid="operator-attribution-funnel-card">
+                <CardHeader>
+                  <CardTitle>{t('marketplace.operator.attributionFunnelTitle')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  {attributionSummaryLoading ? (
+                    <p
+                      className="text-muted-foreground"
+                      data-testid="operator-attribution-summary-loading"
                     >
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium">
-                          {formatUserName(
-                            { peerID: store.peerID },
-                            { prefix: t('marketplace.operator.storeNamePrefix') }
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Badge variant="outline">
-                            {t(MARKETPLACE_MEMBERSHIP_STATUS_KEYS[store.status])}
-                          </Badge>
-                          {store.isVisible && (
-                            <span className="text-xs text-muted-foreground">
-                              {t('marketplace.operator.catalogVisible')}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {appliedAt ? (
-                            <p>
-                              {t('marketplace.operator.appliedAt', { date: formatDate(appliedAt) })}
-                            </p>
-                          ) : null}
-                          {store.reviewedAt ? (
-                            <p>
-                              {t('marketplace.operator.reviewedAt', {
-                                date: formatDate(store.reviewedAt),
-                              })}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          <p>
-                            {store.productGroups.length > 0
-                              ? t('marketplace.operator.productGroupsCount', {
-                                  count: store.productGroups.length,
-                                  items: groupedItems,
-                                })
-                              : store.productGroupIDs.length > 0
-                                ? t('marketplace.operator.productGroupsSummary', {
-                                    count: store.productGroupIDs.length,
-                                  })
-                                : marketplace.catalogMode === 'open'
-                                  ? t('marketplace.operator.productGroupsFullCatalog')
-                                  : t('marketplace.operator.productGroupsNoneSelectedCurated')}
-                          </p>
-                          {store.productGroups.length > 0 ? (
-                            <ul className="mt-2 space-y-1">
-                              {store.productGroups.map(group => (
-                                <li key={group.id} className="rounded-md border px-2 py-1">
-                                  <p className="text-foreground">
-                                    {t('marketplace.operator.productGroupWithCount', {
-                                      name: group.name,
-                                      count: group.itemCount,
-                                    })}
-                                  </p>
-                                  {group.description ? (
-                                    <p className="text-muted-foreground">{group.description}</p>
-                                  ) : null}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : null}
-                        </div>
-                        {store.decisionReason ? (
-                          <p className="text-xs text-muted-foreground">
-                            {t('marketplace.operator.decisionReasonLabel', {
-                              reason: store.decisionReason,
-                            })}
-                          </p>
-                        ) : null}
-                        <details
-                          className="rounded-md border border-border/70 p-2 text-xs"
-                          data-testid={`operator-review-history-${store.peerID}`}
-                        >
-                          <summary className="cursor-pointer list-none font-medium text-foreground">
-                            {t('marketplace.operator.reviewHistoryTitle', {
-                              count: storeReviewEvents.length,
-                            })}
-                          </summary>
-                          <div className="mt-2 space-y-2">
-                            {storeReviewEvents.length === 0 ? (
-                              <p className="text-muted-foreground">
-                                {t('marketplace.operator.reviewHistoryEmpty')}
-                              </p>
-                            ) : (
-                              storeReviewEvents.map(event => (
-                                <div
-                                  key={event.id}
-                                  className="rounded-md border border-border/60 p-2"
-                                >
-                                  <p className="text-foreground">
-                                    {t('marketplace.operator.reviewHistoryTransition', {
-                                      previous: t(
-                                        MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.previousStatus]
-                                      ),
-                                      current: t(MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.status]),
-                                    })}
-                                  </p>
-                                  <p className="mt-1 text-muted-foreground">
-                                    {t('marketplace.operator.reviewHistoryBy', {
-                                      actor: formatUserName(
-                                        { peerID: event.actorID },
-                                        {
-                                          fallback: t('marketplace.operator.reviewActorFallback'),
-                                          prefix: t('marketplace.operator.reviewActorPrefix'),
-                                        }
-                                      ),
-                                      date: formatDate(event.createdAt),
-                                    })}
-                                  </p>
-                                  {event.reason ? (
-                                    <p className="mt-1 text-muted-foreground">
-                                      {t('marketplace.operator.reviewHistoryReason', {
-                                        reason: event.reason,
-                                      })}
-                                    </p>
-                                  ) : null}
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </details>
+                      {t('marketplace.operator.attributionSummaryLoading')}
+                    </p>
+                  ) : attributionSummaryError ? (
+                    <div
+                      className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
+                      data-testid="operator-attribution-summary-error"
+                    >
+                      <p className="text-xs text-destructive">
+                        {t('marketplace.operator.attributionSummaryLoadFailed')}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => void refresh()}
+                        disabled={Boolean(working)}
+                        data-testid="operator-attribution-summary-retry"
+                      >
+                        {t('common.retry')}
+                      </Button>
+                    </div>
+                  ) : attributionSummary?.hasData ? (
+                    <div className="space-y-2" data-testid="operator-attribution-has-data">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {t('marketplace.operator.attributionImpressions')}
+                        </span>
+                        <span>{attributionSummary.impressions}</span>
                       </div>
-                      <div className="flex gap-2">
-                        {canApprove ? (
-                          <Button
-                            size="sm"
-                            onClick={() => setApproveTarget(store)}
-                            disabled={Boolean(working)}
-                            data-testid={`operator-approve-${store.peerID}`}
-                          >
-                            <Check className="mr-1 h-4 w-4" />
-                            {t('marketplace.operator.approve')}
-                          </Button>
-                        ) : null}
-                        {canReject ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setReasonTarget(store);
-                              setReasonAction('rejected');
-                              setReasonInput('');
-                              setReasonTouched(false);
-                            }}
-                            disabled={Boolean(working)}
-                            data-testid={`operator-reject-${store.peerID}`}
-                          >
-                            {t('marketplace.operator.reject')}
-                          </Button>
-                        ) : null}
-                        {canSuspend ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setReasonTarget(store);
-                              setReasonAction('suspended');
-                              setReasonInput('');
-                              setReasonTouched(false);
-                            }}
-                            disabled={Boolean(working)}
-                            data-testid={`operator-suspend-${store.peerID}`}
-                          >
-                            {t('marketplace.operator.suspend')}
-                          </Button>
-                        ) : null}
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {t('marketplace.operator.attributionListingClicks')}
+                        </span>
+                        <span>{attributionSummary.listingClicks}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {t('marketplace.operator.attributionCheckoutHandoffs')}
+                        </span>
+                        <span>{attributionSummary.checkoutHandoffs}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {t('marketplace.operator.attributionListingClickRate')}
+                        </span>
+                        <span>
+                          {attributionSummary.listingClickRate == null
+                            ? t('marketplace.operator.attributionRateUnavailable')
+                            : `${(attributionSummary.listingClickRate * 100).toFixed(1)}%`}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {t('marketplace.operator.attributionCheckoutRate')}
+                        </span>
+                        <span>
+                          {attributionSummary.checkoutHandoffRate == null
+                            ? t('marketplace.operator.attributionRateUnavailable')
+                            : `${(attributionSummary.checkoutHandoffRate * 100).toFixed(1)}%`}
+                        </span>
                       </div>
                     </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
+                  ) : attributionSummary?.hasData === false ? (
+                    <p className="text-muted-foreground" data-testid="operator-attribution-no-data">
+                      {t('marketplace.operator.attributionNoData')}
+                    </p>
+                  ) : null}
+                  <p
+                    className="text-xs text-muted-foreground"
+                    data-testid="operator-attribution-note"
+                  >
+                    {t('marketplace.operator.attributionCheckoutMeaning')}
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent
+              value="curation"
+              className="mt-6"
+              data-testid="operator-tab-content-curation"
+            >
+              <OperatorMarketplaceCurationPanel
+                items={curationItems}
+                candidates={curationCandidates}
+                loading={curationLoading}
+                candidatesLoading={curationCandidatesLoading}
+                error={curationError}
+                working={working}
+                isReadOnly={Boolean(curationReadOnly)}
+                onRetry={refresh}
+                onAdd={handleAddCurationItem}
+                onReorder={handleReorderCurationByKind}
+                onToggle={handleToggleCurationItem}
+                onRemove={handleRemoveCurationItem}
+                onLoadCandidates={handleLoadCurationCandidates}
+              />
+            </TabsContent>
+
+            <TabsContent
+              value="sellers"
+              className="mt-6"
+              data-testid="operator-tab-content-sellers"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('marketplace.operator.storeAdmission')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p>{t('marketplace.operator.waitingCount', { count: counts.waiting })}</p>
+                  <p>{t('marketplace.operator.approvedCount', { count: counts.approved })}</p>
+                  <p className="text-muted-foreground">
+                    {t('marketplace.operator.inviteNotApproval')}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {!isArchived ? (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>{t('marketplace.operator.inviteStore')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3 sm:flex-row">
+                    <Input
+                      value={peerID}
+                      onChange={event => setPeerID(event.target.value)}
+                      placeholder={t('marketplace.operator.peerIdPlaceholder')}
+                    />
+                    <Button
+                      onClick={() => void handleInvite()}
+                      disabled={!peerID.trim() || Boolean(working)}
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      {t('marketplace.operator.sendInvite')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : null}
+
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>{t('marketplace.operator.applicationReviewWorkspace')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {isArchived ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('marketplace.operator.readOnlyArchived')}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2" data-testid="operator-membership-filters">
+                    {filterMeta.map(filter => {
+                      const active = membershipFilter === filter.key;
+                      return (
+                        <Button
+                          key={filter.key}
+                          size="sm"
+                          variant={active ? 'default' : 'outline'}
+                          aria-pressed={active}
+                          onClick={() => setMembershipFilter(filter.key)}
+                          data-testid={`operator-filter-${filter.key}`}
+                        >
+                          <span>{t(filter.labelKey)}</span>
+                          <span
+                            className="ml-2 text-xs opacity-80"
+                            data-testid={`operator-filter-count-${filter.key}`}
+                          >
+                            {filterCounts[filter.key]}
+                          </span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('marketplace.operator.pendingFirstHint')}
+                  </p>
+                  {reviewEventsError ? (
+                    <div
+                      className="rounded-md border border-destructive/30 bg-destructive/5 p-3"
+                      data-testid="operator-review-events-error"
+                    >
+                      <p className="text-xs text-destructive">
+                        {t('marketplace.operator.reviewHistoryLoadFailed')}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => void refresh()}
+                        disabled={Boolean(working)}
+                        data-testid="operator-review-events-retry"
+                      >
+                        {t('common.retry')}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {stores.length === 0 ? (
+                    <p className="py-8 text-center text-muted-foreground">
+                      {t('marketplace.operator.noStoresYet')}
+                    </p>
+                  ) : visibleStores.length === 0 ? (
+                    <p className="py-8 text-center text-muted-foreground">
+                      {t('marketplace.operator.noStoresMatchFilter')}
+                    </p>
+                  ) : (
+                    visibleStores.map(store => {
+                      const storeReviewEvents = reviewEventsByPeerID.get(store.peerID) ?? [];
+                      const canApprove =
+                        !isArchived && (store.status === 'accepted' || store.status === 'applied');
+                      const canReject =
+                        !isArchived && (store.status === 'accepted' || store.status === 'applied');
+                      const canSuspend = !isArchived && store.status === 'approved';
+                      const canResumeSeller = !isArchived && store.status === 'suspended';
+                      const appliedAt = store.appliedAt;
+                      const groupedItems = store.productGroups.reduce(
+                        (sum, group) => sum + (group.itemCount ?? 0),
+                        0
+                      );
+                      return (
+                        <div
+                          key={store.id}
+                          data-testid="operator-membership-row"
+                          data-peerid={store.peerID}
+                          className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="space-y-2">
+                            <div className="text-sm font-medium">
+                              {formatUserName(
+                                { peerID: store.peerID },
+                                { prefix: t('marketplace.operator.storeNamePrefix') }
+                              )}
+                            </div>
+                            <div className="mt-1 flex items-center gap-2">
+                              <Badge variant="outline">
+                                {t(MARKETPLACE_MEMBERSHIP_STATUS_KEYS[store.status])}
+                              </Badge>
+                              {store.isVisible && (
+                                <span className="text-xs text-muted-foreground">
+                                  {t('marketplace.operator.catalogVisible')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {appliedAt ? (
+                                <p>
+                                  {t('marketplace.operator.appliedAt', {
+                                    date: formatDate(appliedAt),
+                                  })}
+                                </p>
+                              ) : null}
+                              {store.reviewedAt ? (
+                                <p>
+                                  {t('marketplace.operator.reviewedAt', {
+                                    date: formatDate(store.reviewedAt),
+                                  })}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              <p>
+                                {store.productGroups.length > 0
+                                  ? t('marketplace.operator.productGroupsCount', {
+                                      count: store.productGroups.length,
+                                      items: groupedItems,
+                                    })
+                                  : store.productGroupIDs.length > 0
+                                    ? t('marketplace.operator.productGroupsSummary', {
+                                        count: store.productGroupIDs.length,
+                                      })
+                                    : marketplace.catalogMode === 'open'
+                                      ? t('marketplace.operator.productGroupsFullCatalog')
+                                      : t('marketplace.operator.productGroupsNoneSelectedCurated')}
+                              </p>
+                              {store.productGroups.length > 0 ? (
+                                <ul className="mt-2 space-y-1">
+                                  {store.productGroups.map(group => (
+                                    <li key={group.id} className="rounded-md border px-2 py-1">
+                                      <p className="text-foreground">
+                                        {t('marketplace.operator.productGroupWithCount', {
+                                          name: group.name,
+                                          count: group.itemCount,
+                                        })}
+                                      </p>
+                                      {group.description ? (
+                                        <p className="text-muted-foreground">{group.description}</p>
+                                      ) : null}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : null}
+                            </div>
+                            {store.decisionReason ? (
+                              <p className="text-xs text-muted-foreground">
+                                {t('marketplace.operator.decisionReasonLabel', {
+                                  reason: store.decisionReason,
+                                })}
+                              </p>
+                            ) : null}
+                            <details
+                              className="rounded-md border border-border/70 p-2 text-xs"
+                              data-testid={`operator-review-history-${store.peerID}`}
+                            >
+                              <summary className="cursor-pointer list-none font-medium text-foreground">
+                                {t('marketplace.operator.reviewHistoryTitle', {
+                                  count: storeReviewEvents.length,
+                                })}
+                              </summary>
+                              <div className="mt-2 space-y-2">
+                                {storeReviewEvents.length === 0 ? (
+                                  <p className="text-muted-foreground">
+                                    {t('marketplace.operator.reviewHistoryEmpty')}
+                                  </p>
+                                ) : (
+                                  storeReviewEvents.map(event => (
+                                    <div
+                                      key={event.id}
+                                      className="rounded-md border border-border/60 p-2"
+                                    >
+                                      <p className="text-foreground">
+                                        {t('marketplace.operator.reviewHistoryTransition', {
+                                          previous: t(
+                                            MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.previousStatus]
+                                          ),
+                                          current: t(
+                                            MARKETPLACE_MEMBERSHIP_STATUS_KEYS[event.status]
+                                          ),
+                                        })}
+                                      </p>
+                                      <p className="mt-1 text-muted-foreground">
+                                        {t('marketplace.operator.reviewHistoryBy', {
+                                          actor: formatUserName(
+                                            { peerID: event.actorID },
+                                            {
+                                              fallback: t(
+                                                'marketplace.operator.reviewActorFallback'
+                                              ),
+                                              prefix: t('marketplace.operator.reviewActorPrefix'),
+                                            }
+                                          ),
+                                          date: formatDate(event.createdAt),
+                                        })}
+                                      </p>
+                                      {event.reason ? (
+                                        <p className="mt-1 text-muted-foreground">
+                                          {t('marketplace.operator.reviewHistoryReason', {
+                                            reason: event.reason,
+                                          })}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </details>
+                          </div>
+                          <div className="flex gap-2">
+                            {canApprove ? (
+                              <Button
+                                size="sm"
+                                onClick={() => setApproveTarget(store)}
+                                disabled={Boolean(working)}
+                                data-testid={`operator-approve-${store.peerID}`}
+                              >
+                                <Check className="mr-1 h-4 w-4" />
+                                {t('marketplace.operator.approve')}
+                              </Button>
+                            ) : null}
+                            {canReject ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setReasonTarget(store);
+                                  setReasonAction('rejected');
+                                  setReasonInput('');
+                                  setReasonTouched(false);
+                                }}
+                                disabled={Boolean(working)}
+                                data-testid={`operator-reject-${store.peerID}`}
+                              >
+                                {t('marketplace.operator.reject')}
+                              </Button>
+                            ) : null}
+                            {canSuspend ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setReasonTarget(store);
+                                  setReasonAction('suspended');
+                                  setReasonInput('');
+                                  setReasonTouched(false);
+                                }}
+                                disabled={Boolean(working)}
+                                data-testid={`operator-suspend-${store.peerID}`}
+                              >
+                                {t('marketplace.operator.suspend')}
+                              </Button>
+                            ) : null}
+                            {canResumeSeller ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void handleReview(store, 'approved')}
+                                disabled={Boolean(working)}
+                                data-testid={`operator-resume-seller-${store.peerID}`}
+                              >
+                                {t('marketplace.operator.resumeSeller')}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent
+              value="settings"
+              className="mt-6"
+              data-testid="operator-tab-content-settings"
+            >
+              <OperatorMarketplaceSettingsCard
+                key={marketplace.id}
+                marketplace={marketplace}
+                working={working}
+                onSave={handleSaveSettings}
+                onVerifyCustomDomain={handleVerifyCustomDomain}
+                onArchive={handleArchive}
+              />
+
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>{t('marketplace.operator.publishAndDomains')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <p>
+                    {t('marketplace.operator.buyerAccessMode')}:{' '}
+                    {t(MARKETPLACE_BUYER_ACCESS_MODE_KEYS[marketplace.buyerAccessMode])}
+                  </p>
+                  <p>
+                    {t('marketplace.operator.discoverability')}:{' '}
+                    {t(MARKETPLACE_DISCOVERABILITY_KEYS[marketplace.discoverability])}
+                  </p>
+                  <p>
+                    {t('marketplace.operator.catalogMode')}:{' '}
+                    {t(MARKETPLACE_CATALOG_MODE_KEYS[marketplace.catalogMode])}
+                  </p>
+                  <p>
+                    {t('marketplace.operator.sellerEntryMode')}:{' '}
+                    {t(MARKETPLACE_SELLER_ENTRY_MODE_KEYS[marketplace.sellerEntryMode])}
+                  </p>
+                  <p>
+                    {t('marketplace.operator.sellerReviewMode')}:{' '}
+                    {t(MARKETPLACE_SELLER_REVIEW_MODE_KEYS[marketplace.sellerReviewMode])}
+                  </p>
+                  {marketplace.domains.map(domain => (
+                    <div key={domain.host} className="rounded-md border p-3">
+                      <div className="font-medium">{domain.host}</div>
+                      <div className="mt-1 text-muted-foreground">
+                        {t(MARKETPLACE_DOMAIN_KIND_KEYS[domain.kind])} ·{' '}
+                        {t(MARKETPLACE_DOMAIN_VERIFICATION_KEYS[domain.verificationStatus])}
+                      </div>
+                      {domain.verificationStatus === 'verified' && domain.verifiedAt ? (
+                        <div className="mt-1 text-muted-foreground">
+                          {t('marketplace.operator.customDomainVerifiedAt', {
+                            date: formatDate(domain.verifiedAt),
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                  {showLaunchChecklist ? (
+                    <div
+                      className="space-y-2 rounded-md border border-border bg-muted/30 p-3"
+                      data-testid="operator-launch-checklist"
+                    >
+                      <p className="font-medium text-foreground">
+                        {t('marketplace.operator.launchChecklistTitle')}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {hasVerifiedDomain
+                          ? t('marketplace.operator.launchChecklistDomainReady')
+                          : t('marketplace.operator.launchChecklistDomainMissing')}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {requiresApprovedVisibleSeller
+                          ? hasApprovedVisibleSeller
+                            ? t('marketplace.operator.launchChecklistSellerReady')
+                            : t('marketplace.operator.launchChecklistSellerMissing')
+                          : hasApprovedVisibleSeller
+                            ? t('marketplace.operator.launchChecklistSellerReady')
+                            : t('marketplace.operator.launchChecklistSellerSelfServe')}
+                      </p>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </Container>
       </main>
       <AlertDialog

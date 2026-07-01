@@ -17,10 +17,12 @@ vi.mock('@mobazha/core', () => ({
     public: 'marketplace.enums.discoverability.public',
     unlisted: 'marketplace.enums.discoverability.unlisted',
   },
-  MARKETPLACE_JOIN_MODE_KEYS: {
-    open: 'marketplace.enums.joinMode.open',
-    approval: 'marketplace.enums.joinMode.approval',
-    invite: 'marketplace.enums.joinMode.invite',
+  MARKETPLACE_BUYER_ACCESS_MODE_KEYS: {
+    open: 'marketplace.enums.buyerAccessMode.open',
+  },
+  MARKETPLACE_SELLER_REVIEW_MODE_KEYS: {
+    auto: 'marketplace.enums.sellerReviewMode.auto',
+    manual: 'marketplace.enums.sellerReviewMode.manual',
   },
   MARKETPLACE_SELLER_ENTRY_MODE_KEYS: {
     operator_invited: 'marketplace.enums.sellerEntryMode.operatorInvited',
@@ -55,7 +57,8 @@ function buildMarketplace(overrides: Partial<NativeMarketplace> = {}): NativeMar
     slug: 'collectibles-hub',
     status: 'draft',
     ownerUserID: 'owner-1',
-    joinMode: 'approval',
+    buyerAccessMode: 'open',
+    sellerReviewMode: 'manual',
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',

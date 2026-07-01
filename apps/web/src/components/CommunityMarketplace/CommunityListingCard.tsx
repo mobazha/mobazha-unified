@@ -4,15 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import {
   communityProductHref,
-  formatUserName,
+  identityNameProps,
+  resolveProductCardSellerDisplay,
   useCurrency,
-  useI18n,
   type CommunityListingPreview,
+  type CommunitySellerProfile,
 } from '@mobazha/core';
-import {
-  isCollectibleDemoCardImageUrl,
-  resolveCollectibleListingImageUrl,
-} from '@mobazha/core/curation/collectibleMarketplace';
+import { resolveCollectibleListingImageUrl } from '@mobazha/core/curation/collectibleMarketplace';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductImage } from '@/components/ui/product-image';
@@ -20,20 +18,26 @@ import { VStack } from '@/components/layouts';
 
 interface CommunityListingCardProps {
   preview: CommunityListingPreview;
+  sellerProfile?: CommunitySellerProfile;
   productHref?: string;
   onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }
 
-export function CommunityListingCard({ preview, productHref, onClick }: CommunityListingCardProps) {
-  const { t } = useI18n();
+export function CommunityListingCard({
+  preview,
+  sellerProfile,
+  productHref,
+  onClick,
+}: CommunityListingCardProps) {
   const { renderPairedPrice } = useCurrency();
   const href = productHref ?? communityProductHref(preview.slug, preview.peerID);
   const imageUrl = resolveCollectibleListingImageUrl(preview.slug, preview.imageUrl);
-  const usesDemoCardArt = isCollectibleDemoCardImageUrl(imageUrl);
-  const sellerLabel = formatUserName(
-    { name: preview.vendorName, peerID: preview.peerID },
-    { fallback: t('common.seller'), prefix: 'Store' }
-  );
+  const seller = resolveProductCardSellerDisplay({
+    peerID: preview.peerID,
+    name: preview.vendorName,
+    profileName: sellerProfile?.displayName,
+    profileAvatarUrl: sellerProfile?.avatarUrl,
+  });
   const priceLabel =
     preview.price != null && preview.currency
       ? renderPairedPrice(preview.price, preview.currency, {
@@ -58,13 +62,9 @@ export function CommunityListingCard({ preview, productHref, onClick }: Communit
   return (
     <Link href={href} className="block h-full" onClick={onClick}>
       <Card className="h-full overflow-hidden transition-all hover:shadow-lg active:scale-[0.99]">
-        <div className="relative aspect-[4/3] bg-muted">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {imageUrl ? (
-            <ProductImage
-              src={imageUrl}
-              alt={preview.title}
-              className={`h-full w-full ${usesDemoCardArt ? 'object-contain p-2' : 'object-cover'}`}
-            />
+            <ProductImage src={imageUrl} alt={preview.title} fill fit="contain" iconSize="lg" />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-muted text-sm text-muted-foreground">
               {preview.title.slice(0, 1).toUpperCase()}
@@ -73,7 +73,9 @@ export function CommunityListingCard({ preview, productHref, onClick }: Communit
         </div>
         <VStack gap="xs" className="p-4">
           <h3 className="line-clamp-2 text-sm font-semibold text-foreground">{preview.title}</h3>
-          <p className="truncate text-xs text-muted-foreground">{sellerLabel}</p>
+          {seller.name ? (
+            <p {...identityNameProps('truncate text-xs text-muted-foreground')}>{seller.name}</p>
+          ) : null}
           {priceLabel ? (
             <p className="text-sm font-semibold text-primary">{priceLabel}</p>
           ) : (
