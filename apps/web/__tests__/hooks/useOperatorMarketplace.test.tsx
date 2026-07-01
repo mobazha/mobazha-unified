@@ -23,6 +23,7 @@ vi.mock('@mobazha/core/services/api/marketplace', () => ({
   getMyMarketplaceMemberships: vi.fn(),
   inviteMarketplaceSeller: vi.fn(),
   verifyMarketplaceCustomDomain: vi.fn(),
+  publishMarketplace: vi.fn(),
   updateMarketplace: vi.fn(),
   deleteMarketplace: vi.fn(),
   updateMarketplaceSeller: vi.fn(),
@@ -38,6 +39,7 @@ import {
   getMarketplaceCurationCandidates,
   getMarketplaceSellers,
   inviteMarketplaceSeller,
+  publishMarketplace,
   verifyMarketplaceCustomDomain,
   updateMarketplace,
   updateMarketplaceSeller,
@@ -56,6 +58,7 @@ const mockGetMarketplaceCurationCandidates = getMarketplaceCurationCandidates as
   typeof vi.fn
 >;
 const mockInviteMarketplaceSeller = inviteMarketplaceSeller as ReturnType<typeof vi.fn>;
+const mockPublishMarketplace = publishMarketplace as ReturnType<typeof vi.fn>;
 const mockVerifyMarketplaceCustomDomain = verifyMarketplaceCustomDomain as ReturnType<typeof vi.fn>;
 const mockUpdateMarketplace = updateMarketplace as ReturnType<typeof vi.fn>;
 const mockDeleteMarketplace = deleteMarketplace as ReturnType<typeof vi.fn>;
@@ -329,7 +332,7 @@ describe('useOperatorMarketplace', () => {
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));
     });
     mockGetMarketplaceSellerReviewEvents.mockResolvedValue([]);
-    mockUpdateMarketplace.mockImplementation((id: string) => {
+    mockPublishMarketplace.mockImplementation((id: string) => {
       if (id === 'id-a') return publishADeferred.promise;
       if (id === 'id-b') return publishBDeferred.promise;
       return Promise.reject(new Error(`unexpected marketplace id: ${id}`));

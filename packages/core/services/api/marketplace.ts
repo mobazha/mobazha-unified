@@ -190,6 +190,11 @@ export async function updateMarketplace(
   return hostingPut<NativeMarketplace>(HOSTING_API.MARKETPLACE(marketplaceId), data);
 }
 
+/** Validate the current draft and publish an immutable marketplace release. */
+export async function publishMarketplace(marketplaceId: string): Promise<NativeMarketplace> {
+  return hostingPost<NativeMarketplace>(HOSTING_API.MARKETPLACE_PUBLISH(marketplaceId), {});
+}
+
 /**
  * 删除集市
  */
