@@ -1,59 +1,115 @@
-# Runtime Capability Architecture
+# Runtime Product Composition
 
 ## Decision
 
-Mobazha Unified has one frontend product line. Community, hosted and commercial
-deployments use the same repository and `main` branch. Backend runtime
-capabilities, rather than frontend branches or build-time edition flags, control
-which payment methods are visible and executable.
+Mobazha Unified has one public repository, one `main` branch, and one shared web
+application. Community Store, Hosted Store, Marketplace and Outpost are composed
+from four orthogonal runtime axes instead of frontend forks:
 
-## Authority and projection
+- `authMode`: authentication transport only;
+- `deployment`: `hosted`, `standalone`, or `outpost`;
+- `experience`: root product shell (`platform`, `store`, or `marketplace`);
+- `capabilities`: backend-implemented product behavior.
 
-The backend publishes a versioned capability snapshot. The frontend stores that
-snapshot centrally and projects it through payment selectors, checkout, seller
-configuration and order actions.
+Runtime config schema V3 is the only supported bootstrap contract. The product
+has not launched, so V2 flat fields and edition-based frontend branching were
+removed instead of retained as compatibility aliases.
+
+## Authority
 
 ```text
-backend runtime config
+runtime-config.js (shell-owned deployment/experience/auth/brand)
         |
         v
-central capability store
+central RuntimeConfig store
+        ^
         |
-        +--> seller payment settings
-        +--> checkout selector and session validation
-        +--> order settlement actions
-        +--> marketing and setup summaries
+GET /v1/runtime-config (backend-owned features/capabilities)
 ```
 
-UI components must consume the central projection helpers. They must not infer
-availability from a coin name, a dormant source file, an installed dependency or
-a deployment label.
+The bootstrap shell selects deployment, experience, authentication transport and
+branding before React mounts. A later backend refresh replaces only features and
+capabilities, so a dedicated marketplace domain cannot be reset to the platform
+home by a generic SaaS API response.
 
-## Failure behavior
+`capabilitiesReady` distinguishes an intentional denial from a shell placeholder.
+Route boundaries render a loading/error state until an authoritative backend
+snapshot arrives and only then render Not Found for a disabled capability.
 
-- Optional payment kinds fail closed until a versioned snapshot is available.
-- Checkout selections are revalidated when runtime capabilities change.
-- A backend may narrow capabilities at any time; the frontend must not widen them.
-- Unknown settlement types remain opaque backend instructions. Provider-specific
-  routing logic does not belong in public UI components.
+Capabilities control availability, permissions control the current actor, and
+feature flags control experiments or kill switches. None of these substitutes
+for server-side authorization.
 
-## Community profile
+## Schema V3
 
-The Community Edition backend currently publishes BTC, BCH, LTC and transparent
-ZEC payment capabilities. That boundary is owned by the backend distribution.
-The shared frontend contains compatibility manifests and tests for the profile,
-but does not hard-code it as the maximum capability set.
+```typescript
+interface RuntimeConfig {
+  schemaVersion: 3;
+  authMode: 'hosted' | 'basic' | 'standalone';
+  deployment: {
+    mode: 'hosted' | 'standalone' | 'outpost';
+    allowExternalResources: boolean;
+  };
+  experience:
+    | { kind: 'platform' | 'store' }
+    | { kind: 'marketplace'; marketplaceIdentifier: string };
+  capabilitiesReady: boolean;
+  features: Record<string, RuntimeFeatureEntry>;
+  capabilities: {
+    commerce: { storefront: boolean; storeAdmin: boolean; checkout: boolean };
+    marketplace: {
+      discovery: boolean;
+      operator: boolean;
+      selling: boolean;
+      curation: boolean;
+      sellerReview: boolean;
+      customDomains: boolean;
+      releasePublishing: boolean;
+      attribution: boolean;
+    };
+    outpost: { isolatedRuntime: boolean; managedFleet: boolean };
+    payments: { methods: RuntimePaymentCapability[] };
+  };
+}
+```
 
-## Extension direction
+## Supported compositions
 
-Future payment and wallet integrations should use stable adapter contracts:
+| Composition           | Deployment | Experience  | Product capabilities                         |
+| --------------------- | ---------- | ----------- | -------------------------------------------- |
+| Community Store       | standalone | store       | commerce + allowlisted payments              |
+| Hosted Platform       | hosted     | platform    | commerce + marketplace + commercial payments |
+| Dedicated Marketplace | hosted     | marketplace | commerce + marketplace                       |
+| Outpost               | outpost    | store       | commerce + isolated runtime + local payments |
+
+The Community manifest is release metadata and a payment fallback profile. It is
+not a global frontend identity and business UI must not branch on an
+`isCommunityEdition()` helper.
+
+## UI rules
+
+- Components consume `useRuntimeCapability()` or typed projection helpers.
+- Storefront, Checkout, Store Admin, Marketplace and Operator routes fail closed
+  when their capability is absent.
+- Fine-grained Operator requests and controls independently consume curation,
+  seller-review, custom-domain, release-publishing and attribution capabilities.
+- Navigation uses the same capability keys as route boundaries.
+- Auth mode may choose OAuth, Basic or popup behavior, but must not infer product
+  availability.
+- Outpost build-time aliases remain only where dependencies must be physically
+  removed from the bundle; ordinary UI variation uses runtime capabilities.
+- Unknown or malformed runtime config does not override compile-time shell-owned
+  authentication or endpoint settings. Its in-memory fallback denies capabilities
+  and external resources until an authoritative V3 snapshot is available.
+
+## Payment extensions
+
+Payment and wallet integrations continue to use stable adapter contracts:
 
 1. A backend plugin registers a payment method and exposes it in runtime config.
-2. An optional frontend adapter supplies only the UI or signing behavior that the
-   method requires.
-3. Core checkout and order code continue to use provider-neutral identifiers and
-   opaque settlement metadata.
+2. An optional frontend adapter supplies only required UI or signing behavior.
+3. Core checkout and order code use provider-neutral identifiers and opaque
+   settlement metadata.
 
-Connector-specific dependencies require independent license and security review.
-They must remain optional so adding a plugin does not change the license boundary
-of the MPL core.
+Connector-specific dependencies require independent license and security review
+and remain optional so they do not alter the MPL core boundary.
