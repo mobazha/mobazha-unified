@@ -12,5 +12,9 @@ cache/
 # Logs
 *.log
 
+# Daemon runtime state
+daemon.pid
+daemon.sock
+
 # Hook markers
 .dirty
