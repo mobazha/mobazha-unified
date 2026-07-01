@@ -55,6 +55,15 @@ vi.mock('@/app/collectibles/CollectiblesFeatureGuard', () => ({
 
 vi.mock('@mobazha/core', async importOriginal => {
   const actual = await importOriginal<typeof import('@mobazha/core')>();
+  const actualActions = actual.useCollectibleActions();
+  const collectibleActions = {
+    ...actualActions,
+    listCollectibleSourceDeposits: (...args: unknown[]) => mockListSourceDeposits(...args),
+    defaultCollectibleSourceDeposit: (...args: unknown[]) => mockDefaultSourceDeposit(...args),
+    listCollectibleHubSlots: vi.fn().mockResolvedValue({ items: [] }),
+    listCollectibleHubRedemptions: vi.fn().mockResolvedValue({ items: [] }),
+    listCollectiblePrimarySaleReleaseQueue: vi.fn().mockResolvedValue({ items: [] }),
+  };
   return {
     ...actual,
     useI18n: () => ({
@@ -62,14 +71,7 @@ vi.mock('@mobazha/core', async importOriginal => {
       locale: 'en',
     }),
     useFeatureFlags: () => ({ isEnabled: () => true, loading: false }),
-    collectiblesApi: {
-      ...actual.collectiblesApi,
-      listCollectibleSourceDeposits: (...args: unknown[]) => mockListSourceDeposits(...args),
-      defaultCollectibleSourceDeposit: (...args: unknown[]) => mockDefaultSourceDeposit(...args),
-      listCollectibleHubSlots: vi.fn().mockResolvedValue({ items: [] }),
-      listCollectibleHubRedemptions: vi.fn().mockResolvedValue({ items: [] }),
-      listCollectiblePrimarySaleReleaseQueue: vi.fn().mockResolvedValue({ items: [] }),
-    },
+    useCollectibleActions: () => collectibleActions,
   };
 });
 

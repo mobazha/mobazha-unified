@@ -48,6 +48,7 @@ export * from './listingDisplayPrice';
 
 // 身份展示工具
 export * from './identity';
+export * from './orderContract';
 
 // 社区市场展示工具
 export * from './communityMarketplace';

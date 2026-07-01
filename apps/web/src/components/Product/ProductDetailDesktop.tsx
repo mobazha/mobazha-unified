@@ -818,7 +818,7 @@ export function ProductDetailDesktop({
                         <button
                           onClick={() => setQuantity(Math.max(1, quantity - 1))}
                           disabled={stock === 0 || !paymentAvailable}
-                          aria-label="Decrease quantity"
+                          aria-label={t('cart.decreaseQuantity')}
                           data-testid="product-detail-qty-decrease"
                           className={cn(
                             'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
@@ -835,7 +835,7 @@ export function ProductDetailDesktop({
                           max={stock}
                           value={quantity}
                           disabled={stock === 0 || !paymentAvailable}
-                          aria-label="Quantity"
+                          aria-label={t('cart.quantity')}
                           data-testid="product-detail-qty-input"
                           onChange={e => {
                             const val = parseInt(e.target.value, 10);
@@ -861,7 +861,7 @@ export function ProductDetailDesktop({
                         <button
                           onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                           disabled={stock === 0 || !paymentAvailable}
-                          aria-label="Increase quantity"
+                          aria-label={t('cart.increaseQuantity')}
                           data-testid="product-detail-qty-increase"
                           className={cn(
                             'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { VStack } from '@/components/layouts';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  collectiblesApi,
+  useCollectibleActions,
   isSourceDepositListingReady,
   buildSourceDepositListingUrl,
   resolveSourceDepositLifecycleStep,
@@ -47,6 +47,7 @@ export function CollectibleCardSubmissionsWorkspace({
   enabled = true,
 }: CollectibleCardSubmissionsWorkspaceProps) {
   const { t } = useI18n();
+  const collectibleActions = useCollectibleActions();
   const { toast } = useToast();
 
   const [items, setItems] = useState<CollectibleSourceDeposit[]>([]);
@@ -91,7 +92,7 @@ export function CollectibleCardSubmissionsWorkspace({
     setLoading(true);
     setLoadError(null);
     try {
-      const result = await collectiblesApi.listMyCollectibleSourceDeposits({
+      const result = await collectibleActions.listMyCollectibleSourceDeposits({
         page: 1,
         pageSize: 50,
       });
@@ -125,7 +126,7 @@ export function CollectibleCardSubmissionsWorkspace({
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      await collectiblesApi.submitMyCollectibleSourceDeposit({
+      await collectibleActions.submitMyCollectibleSourceDeposit({
         certNumber: certNumber.trim(),
         grade: grade.trim(),
         holderWallet: holderWallet.trim(),
@@ -163,7 +164,7 @@ export function CollectibleCardSubmissionsWorkspace({
 
     setShippingDepositId(depositId);
     try {
-      await collectiblesApi.shipMyCollectibleSourceDeposit(depositId, { trackingNo });
+      await collectibleActions.shipMyCollectibleSourceDeposit(depositId, { trackingNo });
       toast({
         title: t('common.success'),
         description: t('marketplace.sell.collectibles.workspace.shipSuccess'),

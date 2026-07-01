@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/accordion';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  collectiblesApi,
+  useCollectibleActions,
   getEnvConfig,
   isCollectibleBurnWalletProvider,
   isCollectiblesPublicCatalogUnavailableError,
@@ -37,6 +37,7 @@ import { ArrowLeft, CheckCircle2, Circle, Loader2, RefreshCw } from 'lucide-reac
 import { CollectibleOnChainProof } from '@/components/collectibles/CollectibleOnChainProof';
 
 export default function CollectibleDetailPage() {
+  const collectibleActions = useCollectibleActions();
   const params = useParams();
   const mintParam = params?.mint;
   const mint = Array.isArray(mintParam) ? mintParam[0] : mintParam;
@@ -103,13 +104,13 @@ export default function CollectibleDetailPage() {
     if (!nft?.nftMint || !holderWallet) return;
     setRedeemStep('binding');
     try {
-      await collectiblesApi.bindCollectibleWallet({
+      await collectibleActions.bindCollectibleWallet({
         wallet: holderWallet,
         nftMint: nft.nftMint,
       });
 
       setRedeemStep('burning');
-      const burnTx = await collectiblesApi.buildCollectibleBurnTx(nft.nftMint, holderWallet);
+      const burnTx = await collectibleActions.buildCollectibleBurnTx(nft.nftMint, holderWallet);
       const walletProvider = getWalletProvider();
       const burnSignature = await signCollectibleBurnTransaction({
         burnTx,
@@ -121,7 +122,7 @@ export default function CollectibleDetailPage() {
       });
 
       setRedeemStep('submitting');
-      const redemption = await collectiblesApi.createCollectibleRedemption({
+      const redemption = await collectibleActions.createCollectibleRedemption({
         nftMint: nft.nftMint,
         requesterWallet: holderWallet,
         burnTxSignature: burnSignature,

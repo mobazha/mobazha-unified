@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import {
-  collectiblesApi,
+  useCollectibleActions,
   resolveCollectibleRedemptionPhase,
   resolveSourceDepositOperatorNextActionKey,
   resolveSourceDepositDefaultRefundStatusKey,
@@ -35,6 +35,7 @@ import { Loader2, Package } from 'lucide-react';
 export default function CollectiblesHubOpsPage() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const collectibleActions = useCollectibleActions();
 
   const [redemptionId, setRedemptionId] = useState('');
   const [trackingNo, setTrackingNo] = useState('');
@@ -121,7 +122,7 @@ export default function CollectiblesHubOpsPage() {
       setRedemptionId(trimmed);
       setLoading(true);
       try {
-        const result = await collectiblesApi.getCollectibleRedemption(trimmed);
+        const result = await collectibleActions.getCollectibleRedemption(trimmed);
         setRedemption(result);
         setTrackingNo(result.trackingNo?.trim() ?? '');
       } catch (err) {
@@ -145,7 +146,7 @@ export default function CollectiblesHubOpsPage() {
   const loadHubSlots = useCallback(async () => {
     setHubSlotsLoading(true);
     try {
-      const result = await collectiblesApi.listCollectibleHubSlots({
+      const result = await collectibleActions.listCollectibleHubSlots({
         page: 1,
         pageSize: 25,
       });
@@ -165,7 +166,7 @@ export default function CollectiblesHubOpsPage() {
   const loadSourceDeposits = useCallback(async () => {
     setSourceDepositsLoading(true);
     try {
-      const result = await collectiblesApi.listCollectibleSourceDeposits({
+      const result = await collectibleActions.listCollectibleSourceDeposits({
         page: 1,
         pageSize: 25,
       });
@@ -189,7 +190,7 @@ export default function CollectiblesHubOpsPage() {
     if (!certNumber || !sellerPeerID || !holderWallet) return;
     setSourceCreateLoading(true);
     try {
-      await collectiblesApi.createCollectibleSourceDeposit({
+      await collectibleActions.createCollectibleSourceDeposit({
         certNumber,
         grade: sourceGrade.trim() || undefined,
         serial: sourceSerial.trim() || undefined,
@@ -233,7 +234,7 @@ export default function CollectiblesHubOpsPage() {
     async (id: string) => {
       setSourceActingId(id);
       try {
-        await collectiblesApi.approveCollectibleSourceDeposit(id);
+        await collectibleActions.approveCollectibleSourceDeposit(id);
         toast({ title: t('collectibles.sourceOps.approveSuccess'), variant: 'success' });
         await loadSourceDeposits();
       } catch (err) {
@@ -255,7 +256,7 @@ export default function CollectiblesHubOpsPage() {
       if (!reason) return;
       setSourceActingId(id);
       try {
-        await collectiblesApi.rejectCollectibleSourceDeposit(id, { reason });
+        await collectibleActions.rejectCollectibleSourceDeposit(id, { reason });
         toast({ title: t('collectibles.sourceOps.rejectSuccess'), variant: 'success' });
         setSourceRejectReason(prev => ({ ...prev, [id]: '' }));
         await loadSourceDeposits();
@@ -287,7 +288,7 @@ export default function CollectiblesHubOpsPage() {
       const royaltyBps = Number.parseInt(sourceMintRoyaltyBps, 10);
       setSourceActingId(id);
       try {
-        await collectiblesApi.mintCollectibleSourceDeposit(id, {
+        await collectibleActions.mintCollectibleSourceDeposit(id, {
           holder,
           royaltyBps: Number.isFinite(royaltyBps) && royaltyBps >= 0 ? royaltyBps : undefined,
         });
@@ -317,7 +318,7 @@ export default function CollectiblesHubOpsPage() {
       const divisibility = Number.parseInt(firstSaleDivisibility, 10);
       setSourceActingId(id);
       try {
-        await collectiblesApi.recordCollectibleSourceDepositFirstSale(id, {
+        await collectibleActions.recordCollectibleSourceDepositFirstSale(id, {
           orderID,
           escrowID,
           buyerPeerID,
@@ -359,7 +360,7 @@ export default function CollectiblesHubOpsPage() {
       if (!trackingNo) return;
       setSourceActingId(id);
       try {
-        await collectiblesApi.shipCollectibleSourceDeposit(id, { trackingNo });
+        await collectibleActions.shipCollectibleSourceDeposit(id, { trackingNo });
         toast({ title: t('collectibles.sourceOps.shipSuccess'), variant: 'success' });
         await loadSourceDeposits();
       } catch (err) {
@@ -379,7 +380,7 @@ export default function CollectiblesHubOpsPage() {
     async (id: string) => {
       setSourceActingId(id);
       try {
-        await collectiblesApi.settleCollectibleSourceDeposit(id);
+        await collectibleActions.settleCollectibleSourceDeposit(id);
         toast({ title: t('collectibles.sourceOps.settleSuccess'), variant: 'success' });
         await loadSourceDeposits();
       } catch (err) {
@@ -405,7 +406,7 @@ export default function CollectiblesHubOpsPage() {
 
       setSourceActingId(id);
       try {
-        const updated = await collectiblesApi.defaultCollectibleSourceDeposit(id, {
+        const updated = await collectibleActions.defaultCollectibleSourceDeposit(id, {
           defaultReason,
         });
         await loadSourceDeposits();
@@ -446,7 +447,7 @@ export default function CollectiblesHubOpsPage() {
     if (!certNumber) return;
     setIntakeLoading(true);
     try {
-      await collectiblesApi.intakeCollectibleHubSlot({
+      await collectibleActions.intakeCollectibleHubSlot({
         certNumber,
         grade: intakeGrade.trim() || undefined,
         serial: intakeSerial.trim() || undefined,
@@ -482,7 +483,7 @@ export default function CollectiblesHubOpsPage() {
   const loadPendingRedemptions = useCallback(async () => {
     setPendingLoading(true);
     try {
-      const result = await collectiblesApi.listCollectibleHubRedemptions({
+      const result = await collectibleActions.listCollectibleHubRedemptions({
         page: 1,
         pageSize: 25,
         status: 'redeem_requested',
@@ -503,7 +504,7 @@ export default function CollectiblesHubOpsPage() {
   const loadReleaseQueue = useCallback(async () => {
     setReleaseQueueLoading(true);
     try {
-      const result = await collectiblesApi.listCollectiblePrimarySaleReleaseQueue({
+      const result = await collectibleActions.listCollectiblePrimarySaleReleaseQueue({
         limit: 25,
         retryFailed: true,
       });
@@ -524,7 +525,7 @@ export default function CollectiblesHubOpsPage() {
     setReleaseRetryLoading(true);
     setReleaseRetryCount(null);
     try {
-      const result = await collectiblesApi.retryCollectiblePrimarySaleReleases({ limit: 25 });
+      const result = await collectibleActions.retryCollectiblePrimarySaleReleases({ limit: 25 });
       setReleaseRetryCount(result.released);
       toast({ title: t('collectibles.hubOps.releaseRetrySuccess'), variant: 'success' });
       await loadReleaseQueue();
@@ -553,7 +554,7 @@ export default function CollectiblesHubOpsPage() {
       }
       setSlotActingId(slotId);
       try {
-        await collectiblesApi.mintCollectibleHubSlot(slotId, { holder, royaltyBps: 0 });
+        await collectibleActions.mintCollectibleHubSlot(slotId, { holder, royaltyBps: 0 });
         toast({ title: t('collectibles.hubOps.mintSuccess'), variant: 'success' });
         await loadHubSlots();
         await loadReleaseQueue();
@@ -574,7 +575,7 @@ export default function CollectiblesHubOpsPage() {
     async (slotId: string) => {
       setSlotActingId(slotId);
       try {
-        await collectiblesApi.rejectCollectibleHubSlot(slotId);
+        await collectibleActions.rejectCollectibleHubSlot(slotId);
         toast({ title: t('collectibles.hubOps.rejectSuccess'), variant: 'success' });
         await loadHubSlots();
       } catch (err) {
@@ -596,7 +597,9 @@ export default function CollectiblesHubOpsPage() {
     if (!id || !tracking) return;
     setActing('ship');
     try {
-      const updated = await collectiblesApi.shipCollectibleRedemption(id, { trackingNo: tracking });
+      const updated = await collectibleActions.shipCollectibleRedemption(id, {
+        trackingNo: tracking,
+      });
       setRedemption(updated);
       toast({ title: t('collectibles.hubOps.shipSuccess'), variant: 'success' });
       void loadPendingRedemptions();
@@ -616,7 +619,7 @@ export default function CollectiblesHubOpsPage() {
     if (!id) return;
     setActing('settle');
     try {
-      const updated = await collectiblesApi.settleCollectibleRedemption(id);
+      const updated = await collectibleActions.settleCollectibleRedemption(id);
       setRedemption(updated);
       toast({ title: t('collectibles.hubOps.settleSuccess'), variant: 'success' });
       void loadPendingRedemptions();
@@ -636,7 +639,7 @@ export default function CollectiblesHubOpsPage() {
     const royaltyBps = Number.parseInt(recoveryRoyaltyBps, 10);
     setRecoveryLoading(true);
     try {
-      const report = await collectiblesApi.recoverCollectiblePendingMints({
+      const report = await collectibleActions.recoverCollectiblePendingMints({
         limit: Number.isFinite(limit) && limit > 0 ? limit : undefined,
         royaltyBps: Number.isFinite(royaltyBps) && royaltyBps >= 0 ? royaltyBps : undefined,
       });
@@ -1147,8 +1150,8 @@ export default function CollectiblesHubOpsPage() {
 
                       {canRefreshDefaultRefund ? (
                         <div className="space-y-3 border-t pt-3">
-                          <div className="rounded-md border border-amber-300 bg-amber-100 p-3 dark:border-amber-700 dark:bg-amber-900/40">
-                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                          <div className="rounded-md border border-warning/30 bg-warning/10 p-3">
+                            <p className="text-sm font-medium text-warning">
                               {t('collectibles.sourceOps.defaultRefundPendingNotice')}
                             </p>
                           </div>
@@ -1218,8 +1221,8 @@ export default function CollectiblesHubOpsPage() {
 
                       {canMarkDefault ? (
                         <div className="space-y-3 border-t pt-3">
-                          <div className="rounded-md border border-amber-300 bg-amber-100 p-3 dark:border-amber-700 dark:bg-amber-900/40">
-                            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                          <div className="rounded-md border border-warning/30 bg-warning/10 p-3">
+                            <p className="text-sm font-medium text-warning">
                               {t('collectibles.sourceOps.markDefaultVoidNotice')}
                             </p>
                           </div>

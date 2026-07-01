@@ -61,6 +61,7 @@ import {
   resolveCheckoutPaymentPolicyFromCheckoutItems,
   hasAuthoritativeCollectibleTitleMetadata,
   parseCollectibleListingMetadata,
+  normalizeOrderOpenListings,
   type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
@@ -697,7 +698,7 @@ export default function PaymentPage() {
           }
         }
 
-        const contract = order.contract as any;
+        const contract = order.contract;
         // 使用 orderOpen 结构（与桌面端一致）
         const orderOpen = contract?.orderOpen;
 
@@ -706,8 +707,8 @@ export default function PaymentPage() {
         }
 
         // orderOpen 包含 listings（每个元素是 {cid, listing, signature}）和 items
-        const rawListings: any[] = orderOpen.listings || [];
-        const orderItems: any[] = orderOpen.items || [];
+        const rawListings = orderOpen.listings ?? [];
+        const orderItems = orderOpen.items ?? [];
         const orderAmount = Number(orderOpen.amount) || 0;
         const shippingInfo = orderOpen.shipping;
         const memo = orderOpen.alternateContactInfo || '';
@@ -723,9 +724,9 @@ export default function PaymentPage() {
         const vendorInfo = firstListingData?.vendorID;
 
         // 处理 listings（每个元素是 {cid, listing, signature}）
-        const normalizedListings = rawListings.map((item: any) => item.listing || item);
+        const normalizedListings = normalizeOrderOpenListings(rawListings);
 
-        const collectiblePolicyInputs = normalizedListings.map((listing: any) => {
+        const collectiblePolicyInputs = normalizedListings.map(listing => {
           const isAuthoritativeCollectibleTitle = hasAuthoritativeCollectibleTitleMetadata(listing);
           const collectibleMeta = isAuthoritativeCollectibleTitle
             ? parseCollectibleListingMetadata(listing)
@@ -745,7 +746,7 @@ export default function PaymentPage() {
           setCheckoutPaymentPolicy(authoritativePaymentPolicy, requestedOrderID);
         }
 
-        const metadata = normalizedListings[0]?.metadata as any;
+        const metadata = normalizedListings[0]?.metadata;
         const contractType = urlContractType || metadata?.contractType;
         if (contractType === 'RWA_TOKEN' && !hasAuthoritativeCollectibleTitle) {
           setError(t('payment.rwaNotSupported'));
@@ -753,7 +754,7 @@ export default function PaymentPage() {
         }
 
         // 转换为 OrderDetails 格式
-        let items = normalizedListings.map((listing: any, index: number) => {
+        let items = normalizedListings.map((listing, index) => {
           const orderItem = orderItems[index] || {};
           // 价格在最小单位中，需要根据 divisibility 转换
           const rawPrice = Number(listing.item?.price) || 0;
@@ -833,7 +834,7 @@ export default function PaymentPage() {
         }
 
         const orderDetailsData: OrderDetails = {
-          orderID: contract?.OrderID || contract?.orderID || requestedOrderID,
+          orderID: requestedOrderID,
           status: order?.state || 'AWAITING_PAYMENT',
           items,
           vendor: {
@@ -842,8 +843,10 @@ export default function PaymentPage() {
             avatar: vendorAvatar,
           },
           shippingAddress: {
-            name: shippingInfo?.shipTo || shippingInfo?.name || '',
-            street: shippingInfo?.address || shippingInfo?.street || '',
+            name: shippingInfo?.name || '',
+            street: [shippingInfo?.addressLineOne, shippingInfo?.addressLineTwo]
+              .filter(Boolean)
+              .join(', '),
             city: shippingInfo?.city || '',
             state: shippingInfo?.state || '',
             country: shippingInfo?.country || '',
