@@ -1,0 +1,673 @@
+'use client';
+
+import React, { memo, useCallback, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { getBlockExplorerUrl, copyToClipboard } from './utils';
+import { Card } from '@/components/ui/card';
+import {
+  Check,
+  Package,
+  CheckCircle,
+  Copy,
+  ExternalLink,
+  ShieldCheck,
+  CircleDollarSign,
+  RotateCcw,
+  XCircle,
+} from 'lucide-react';
+import {
+  useI18n,
+  getChainFromCoin,
+  getChainByEVMId,
+  getTrackingUrl,
+  resolveTokenIdForDisplay,
+} from '@mobazha/core';
+import { TokenIcon } from '@/components/Payment/TokenIcon';
+import { CrossCurrencyAmountBlock } from './CrossCurrencyAmountBlock';
+
+export interface OrderStageCardProps {
+  /** 阶段标题 */
+  title: string;
+  /** 时间戳 */
+  timestamp?: string;
+  /** 左侧图标 */
+  icon?: React.ReactNode;
+  /** 详细内容 */
+  children: React.ReactNode;
+  /** 右侧操作按钮 */
+  actions?: React.ReactNode;
+  /** 自定义类名 */
+  className?: string;
+  /** 是否显示分隔线 */
+  showDivider?: boolean;
+}
+
+/**
+ * 格式化日期时间（根据 locale 自动选择格式）
+ */
+function formatDateTime(dateString: string, locale: string = 'en'): string {
+  try {
+    const date = new Date(dateString);
+    // 根据语言选择合适的 locale（支持所有 i18n 语言）
+    const localeMap: Record<string, string> = {
+      en: 'en-US',
+      zh: 'zh-CN',
+      de: 'de-DE',
+      es: 'es-ES',
+      fr: 'fr-FR',
+      ja: 'ja-JP',
+      ko: 'ko-KR',
+      pt: 'pt-BR',
+      ru: 'ru-RU',
+    };
+    const dateLocale = localeMap[locale] || localeMap.en;
+    return date.toLocaleDateString(dateLocale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * 订单阶段卡片组件 - 紧凑版
+ *
+ * 移动端规范：
+ * - 标题: text-sm (14px)
+ * - 正文: text-sm (14px)
+ * - 辅助文字: text-xs (12px)
+ * - 内边距: p-2.5 / p-3 (10-12px)
+ */
+export const OrderStageCard = memo(function OrderStageCard({
+  title,
+  timestamp,
+  icon,
+  children,
+  actions,
+  className,
+  showDivider = true,
+}: OrderStageCardProps) {
+  const { locale } = useI18n();
+
+  return (
+    <div className={cn('relative', className)}>
+      {/* 分隔线 */}
+      {showDivider && <div className="border-t border-border mb-2.5" />}
+
+      {/* 标题行 */}
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {icon && <div className="flex-shrink-0 text-muted-foreground">{icon}</div>}
+          <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
+        </div>
+        {timestamp && (
+          <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+            {formatDateTime(timestamp, locale)}
+          </span>
+        )}
+      </div>
+
+      {/* 内容区域 */}
+      <div className="text-sm">{children}</div>
+
+      {/* 操作按钮 - 仅桌面端显示，移动端操作放在底部 footer */}
+      {actions && <div className="mt-2 hidden lg:flex flex-wrap gap-2">{actions}</div>}
+    </div>
+  );
+});
+
+/**
+ * 支付信息卡片 - 紧凑版
+ */
+export interface PaymentCardProps {
+  /** 支付金额（加密货币） */
+  amount: string;
+  /** 支付币种展示标签（如 ETH） */
+  currency: string;
+  /** 原始支付币种（canonical coin / token id），用于图标与 explorer 推断 */
+  paymentCoin?: string;
+  /** 原始定价金额（法币，如 "0.60"） */
+  pricingAmount?: string;
+  /** 原始定价币种（法币，如 "USD"） */
+  pricingCurrency?: string;
+  txHash?: string;
+  confirmations?: number;
+  chainId?: number;
+  timestamp?: string;
+  blockchainUrl?: string;
+  description?: string;
+  /** 卡片标题，默认 "Paid" */
+  title?: string;
+  className?: string;
+}
+
+export const PaymentCard = memo(function PaymentCard({
+  amount,
+  currency,
+  paymentCoin,
+  pricingAmount,
+  pricingCurrency,
+  txHash,
+  confirmations,
+  chainId,
+  blockchainUrl,
+  timestamp,
+  description,
+  title,
+  className,
+  showDivider = true,
+}: PaymentCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+
+  // 格式化交易 hash（显示前后各 6 位）
+  const formatTxHash = (hash: string) => {
+    if (hash.length <= 16) return hash;
+    return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
+  };
+
+  const txUrl =
+    txHash && paymentCoin
+      ? getBlockExplorerUrl(txHash, paymentCoin, chainId) || blockchainUrl || ''
+      : blockchainUrl || '';
+
+  return (
+    <OrderStageCard
+      title={title || t('order.paid')}
+      timestamp={timestamp}
+      className={className}
+      showDivider={showDivider}
+    >
+      <div className="p-2.5">
+        <div className="flex items-center gap-2.5">
+          {/* 币种图标 - 使用项目统一的 TokenIcon，支持显示链徽章 */}
+          {(() => {
+            // 优先使用 EVM chainId 获取链，否则从币种名推断
+            const chainFromEVM = chainId ? getChainByEVMId(chainId)?.id : null;
+            const chainFromCurrency = getChainFromCoin(paymentCoin || currency);
+            const chainSymbol = chainFromEVM || chainFromCurrency || null;
+            // 只有当代币不是原生代币时才显示链徽章（如 ETHUSDT 显示 ETH 徽章，但 ETH 本身不需要）
+            const displayTokenId = resolveTokenIdForDisplay(paymentCoin || currency);
+            const showBadge =
+              !!chainSymbol && displayTokenId.toUpperCase() !== chainSymbol.toUpperCase();
+            return (
+              <TokenIcon
+                token={displayTokenId}
+                size={28}
+                className="flex-shrink-0"
+                showChainBadge={showBadge}
+                chainId={chainSymbol || undefined}
+              />
+            );
+          })()}
+
+          {/* 支付信息 */}
+          <div className="flex-1 min-w-0">
+            <CrossCurrencyAmountBlock
+              amount={amount}
+              currency={currency}
+              paymentCoin={paymentCoin}
+              pricingAmount={pricingAmount}
+              pricingCurrency={pricingCurrency}
+              variant="payment-card"
+              suffix={
+                confirmations !== undefined && confirmations > 0 ? (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({confirmations} confirms)
+                  </span>
+                ) : undefined
+              }
+            />
+            {/* 交易 hash */}
+            {txHash && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {txUrl ? (
+                  <a
+                    href={txUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-mono text-primary hover:underline"
+                    title={txHash}
+                  >
+                    {formatTxHash(txHash)}
+                  </a>
+                ) : (
+                  <span className="text-xs font-mono text-muted-foreground" title={txHash}>
+                    {formatTxHash(txHash)}
+                  </span>
+                )}
+              </div>
+            )}
+            {/* 描述 */}
+            {description && <p className="text-xs text-foreground/60 mt-0.5">{description}</p>}
+          </div>
+        </div>
+      </div>
+    </OrderStageCard>
+  );
+});
+
+/**
+ * 评价展示卡片 - 紧凑版
+ */
+export interface OrderRatingCardProps {
+  vendor?: {
+    name: string;
+    avatar?: string;
+  };
+  overallRating: number;
+  review?: string;
+  timestamp?: string;
+  className?: string;
+}
+
+function StarRating({ rating, maxRating = 5 }: { rating: number; maxRating?: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: maxRating }, (_, i) => (
+        <svg
+          key={i}
+          className={cn(
+            'w-2.5 h-2.5 sm:w-3 sm:h-3',
+            i < rating ? 'text-warning fill-warning' : 'text-muted-foreground/30'
+          )}
+          viewBox="0 0 24 24"
+        >
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+export const OrderRatingCard = memo(function OrderRatingCard({
+  vendor,
+  overallRating,
+  review,
+  timestamp,
+  className,
+}: OrderRatingCardProps) {
+  return (
+    <OrderStageCard title="Order Complete" timestamp={timestamp} className={className}>
+      <Card className="p-2.5">
+        <div className="flex items-center gap-2">
+          {vendor?.avatar ? (
+            <img
+              src={vendor.avatar}
+              alt={vendor.name}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-medium text-muted-foreground">
+                {vendor?.name?.charAt(0)?.toUpperCase() || '?'}
+              </span>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-foreground truncate">
+                {vendor?.name || 'Buyer'}
+              </span>
+              <StarRating rating={overallRating} />
+            </div>
+            {review && (
+              <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{review}</p>
+            )}
+          </div>
+        </div>
+      </Card>
+    </OrderStageCard>
+  );
+});
+
+/**
+ * 发货/交付信息卡片 - 紧凑版
+ * 根据商品类型显示不同内容：
+ * - PHYSICAL_GOOD: 显示物流信息
+ * - SERVICE: 显示服务已交付
+ * - DIGITAL_GOOD: 显示数字商品已交付
+ */
+export interface ShipmentCardProps {
+  timestamp?: string;
+  shipper?: string;
+  trackingNumber?: string;
+  note?: string;
+  /** 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD */
+  contractType?: string;
+  className?: string;
+}
+
+export const ShipmentCard = memo(function ShipmentCard({
+  timestamp,
+  shipper,
+  trackingNumber,
+  note,
+  contractType,
+  className,
+  showDivider = true,
+}: ShipmentCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = React.useState(false);
+
+  const isPhysicalGood = !contractType || contractType === 'PHYSICAL_GOOD';
+  const isService = contractType === 'SERVICE';
+
+  const title = isPhysicalGood ? t('order.stages.fulfilled') : t('order.stages.delivered');
+  const statusText = isPhysicalGood
+    ? t('order.shipment.packageShipped')
+    : isService
+      ? t('order.shipment.serviceDelivered')
+      : t('order.shipment.digitalDelivered');
+
+  const trackingUrl = isPhysicalGood ? getTrackingUrl(shipper, trackingNumber) : undefined;
+
+  const handleCopyTracking = React.useCallback(async () => {
+    if (!trackingNumber) return;
+    const ok = await copyToClipboard(trackingNumber);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [trackingNumber]);
+
+  return (
+    <OrderStageCard
+      title={title}
+      timestamp={timestamp}
+      icon={<Package className="w-4 h-4" />}
+      className={className}
+      showDivider={showDivider}
+    >
+      <Card className="p-2.5 bg-muted/30">
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-info/15 flex items-center justify-center">
+            {isPhysicalGood ? (
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-info" />
+            ) : (
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-info" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">{statusText}</p>
+            {isPhysicalGood && shipper && (
+              <p className="text-xs text-muted-foreground">
+                {t('order.shipment.carrier')}: {shipper}
+              </p>
+            )}
+            {isPhysicalGood && trackingNumber && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-xs text-muted-foreground">
+                  {t('order.shipment.trackingNumber')}:
+                </span>
+                {trackingUrl ? (
+                  <a
+                    href={trackingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
+                  >
+                    {trackingNumber}
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                  </a>
+                ) : (
+                  <span className="font-mono text-xs text-primary">{trackingNumber}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleCopyTracking}
+                  className="p-0.5 rounded hover:bg-muted transition-colors flex-shrink-0"
+                  aria-label={t('common.copy')}
+                >
+                  {copied ? (
+                    <Check className="w-3 h-3 text-success" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
+            )}
+            {note && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{note}</p>}
+          </div>
+        </div>
+      </Card>
+    </OrderStageCard>
+  );
+});
+
+/**
+ * 订单确认卡片 - 紧凑版
+ */
+export interface AcceptedCardProps {
+  timestamp?: string;
+  description?: string;
+  actions?: React.ReactNode;
+  className?: string;
+}
+
+export const AcceptedCard = memo(function AcceptedCard({
+  timestamp,
+  description,
+  actions,
+  className,
+  showDivider = true,
+}: AcceptedCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+
+  return (
+    <OrderStageCard
+      title={t('order.stages.accepted')}
+      timestamp={timestamp}
+      icon={<CheckCircle className="w-4 h-4" />}
+      actions={actions}
+      className={className}
+      showDivider={showDivider}
+    >
+      <Card className="p-2.5 bg-muted/30">
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground">{t('order.orderAccepted')}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+        </div>
+      </Card>
+    </OrderStageCard>
+  );
+});
+
+/** 时间线事件卡标题图标（与 AcceptedCard / ShipmentCard 对齐） */
+export type OrderCompleteStageVariant =
+  | 'escrowed'
+  | 'released'
+  | 'complete'
+  | 'refund'
+  | 'cancelled'
+  | 'declined';
+
+function orderCompleteHeaderIcon(variant?: OrderCompleteStageVariant): React.ReactNode {
+  const className = 'w-4 h-4';
+  switch (variant) {
+    case 'escrowed':
+      return <ShieldCheck className={className} />;
+    case 'released':
+      return <CircleDollarSign className={className} />;
+    case 'refund':
+      return <RotateCcw className={className} />;
+    case 'cancelled':
+    case 'declined':
+      return <XCircle className={className} />;
+    case 'complete':
+    default:
+      return <CheckCircle className={className} />;
+  }
+}
+
+/**
+ * 订单完成卡片 - 紧凑版
+ */
+export interface OrderCompleteCardProps {
+  timestamp?: string;
+  amount?: string;
+  currency?: string;
+  paymentCoin?: string;
+  pricingAmount?: string;
+  pricingCurrency?: string;
+  amountLabel?: string;
+  breakdownLines?: Array<{ label: string; amount: string }>;
+  txHash?: string;
+  txUrl?: string;
+  txLabel?: string;
+  title?: string;
+  description?: string;
+  /** 标题行左侧图标；未传时按 variant 选择，与 ShipmentCard / AcceptedCard 一致 */
+  stageVariant?: OrderCompleteStageVariant;
+  className?: string;
+}
+
+export const OrderCompleteCard = memo(function OrderCompleteCard({
+  timestamp,
+  amount,
+  currency,
+  paymentCoin,
+  pricingAmount,
+  pricingCurrency,
+  amountLabel,
+  breakdownLines,
+  txHash,
+  txUrl,
+  txLabel,
+  title,
+  description,
+  stageVariant,
+  className,
+  showDivider = true,
+}: OrderCompleteCardProps & { showDivider?: boolean }) {
+  const { t } = useI18n();
+  const [copiedTx, setCopiedTx] = useState(false);
+
+  const formatTxHash = (hash: string) => {
+    if (hash.length <= 16) return hash;
+    return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
+  };
+
+  const handleCopyTx = useCallback(async () => {
+    if (!txHash) return;
+    const ok = await copyToClipboard(txHash);
+    if (!ok) return;
+    setCopiedTx(true);
+    window.setTimeout(() => setCopiedTx(false), 1600);
+  }, [txHash]);
+
+  const resolvedVariant =
+    stageVariant ||
+    (title === t('order.stages.escrowed')
+      ? 'escrowed'
+      : title === t('order.stages.released')
+        ? 'released'
+        : title === t('order.timeline.refunded')
+          ? 'refund'
+          : title === t('order.timeline.orderDeclined')
+            ? 'declined'
+            : title === t('order.timeline.orderCancelled')
+              ? 'cancelled'
+              : 'complete');
+
+  return (
+    <OrderStageCard
+      title={title || t('order.stages.complete')}
+      timestamp={timestamp}
+      icon={orderCompleteHeaderIcon(resolvedVariant)}
+      className={className}
+      showDivider={showDivider}
+    >
+      <Card className="p-3 bg-muted/30">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            {amount && currency && (
+              <div className="space-y-0.5">
+                {amountLabel && (
+                  <p className="text-xs font-medium text-muted-foreground">{amountLabel}</p>
+                )}
+                <CrossCurrencyAmountBlock
+                  amount={amount}
+                  currency={currency}
+                  paymentCoin={paymentCoin}
+                  pricingAmount={pricingAmount}
+                  pricingCurrency={pricingCurrency}
+                  variant="timeline"
+                />
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {description || t('order.fundsReleased')}
+            </p>
+            {!!breakdownLines?.length && (
+              <div className="mt-2 pt-2 border-t border-border/40 flex flex-wrap gap-x-4 gap-y-1.5">
+                {breakdownLines.map(line => (
+                  <div
+                    key={`${line.label}-${line.amount}`}
+                    className="inline-flex max-w-full items-baseline gap-2 text-xs text-muted-foreground"
+                  >
+                    <span className="shrink-0">{line.label}</span>
+                    <span className="font-medium text-foreground/80 tabular-nums break-all">
+                      {line.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {txHash && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {txLabel && (
+                  <span className="text-xs font-medium text-muted-foreground">{txLabel}</span>
+                )}
+                <div className="inline-flex items-center gap-1.5 rounded-md bg-background/70 px-2 py-1 ring-1 ring-border/70">
+                  {txUrl ? (
+                    <a
+                      href={txUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-mono text-primary hover:underline"
+                      title={txHash}
+                    >
+                      {formatTxHash(txHash)}
+                    </a>
+                  ) : (
+                    <span className="text-xs font-mono text-muted-foreground" title={txHash}>
+                      {formatTxHash(txHash)}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    onClick={handleCopyTx}
+                    title={copiedTx ? t('common.copied') : t('common.copy')}
+                    aria-label={copiedTx ? t('common.copied') : t('common.copy')}
+                  >
+                    {copiedTx ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    </OrderStageCard>
+  );
+});
+
+export default OrderStageCard;

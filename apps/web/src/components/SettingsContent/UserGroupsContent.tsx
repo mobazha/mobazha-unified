@@ -1,0 +1,394 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input-compat';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useUserGroups, useUserStore, useI18n, GROUP_COLORS, type UserGroup } from '@mobazha/core';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Loader2, Plus, Users, AlertCircle } from 'lucide-react';
+
+interface UserGroupForm {
+  name: string;
+  description: string;
+  color: string;
+}
+
+interface UserGroupsContentProps {
+  /** 是否在 Modal 中使用（会隐藏一些链接跳转） */
+  inModal?: boolean;
+  /** 在 Modal 中使用时显示描述文字（页面中由 SettingsPageHeader 负责） */
+  showDescription?: boolean;
+}
+
+/**
+ * 用户组管理内容组件
+ * 可在独立页面和 Modal 中复用
+ */
+export const UserGroupsContent: React.FC<UserGroupsContentProps> = ({
+  inModal = false,
+  showDescription = false,
+}) => {
+  const { t } = useI18n();
+  const router = useRouter();
+  const { profile, isAuthenticated, isLoading: isLoadingProfile } = useUserStore();
+  const ownerPeerID = profile?.peerID || '';
+
+  // 导航处理函数
+  const handleNavigate = useCallback(
+    (path: string) => {
+      router.push(path);
+    },
+    [router]
+  );
+
+  const { groups, loading, error, loadGroups, createGroup, updateGroup, deleteGroup } =
+    useUserGroups({ ownerPeerID, autoLoad: false });
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
+  const [newGroup, setNewGroup] = useState<UserGroupForm>({
+    name: '',
+    description: '',
+    color: GROUP_COLORS[0],
+  });
+  const [deleteGroupId, setDeleteGroupId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && ownerPeerID) {
+      loadGroups(ownerPeerID);
+    }
+  }, [isAuthenticated, ownerPeerID, loadGroups]);
+
+  const handleCreateGroup = useCallback(async () => {
+    if (!ownerPeerID || !newGroup.name.trim()) return;
+
+    setSaving(true);
+    try {
+      const result = await createGroup({
+        ownerPeerID,
+        name: newGroup.name.trim(),
+        description: newGroup.description.trim() || undefined,
+      });
+
+      if (result) {
+        setShowCreateModal(false);
+        setNewGroup({ name: '', description: '', color: GROUP_COLORS[0] });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [ownerPeerID, newGroup, createGroup]);
+
+  const handleUpdateGroup = useCallback(async () => {
+    if (!editingGroup) return;
+
+    setSaving(true);
+    try {
+      const result = await updateGroup(editingGroup.id, {
+        name: editingGroup.name.trim(),
+        description: editingGroup.description?.trim() || undefined,
+      });
+
+      if (result) {
+        setEditingGroup(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [editingGroup, updateGroup]);
+
+  const handleDeleteGroupConfirm = useCallback(async () => {
+    if (deleteGroupId === null) return;
+
+    setSaving(true);
+    try {
+      const success = await deleteGroup(deleteGroupId);
+      if (success) {
+        setDeleteGroupId(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [deleteGroupId, deleteGroup]);
+
+  const getGroupColor = (id: number) => {
+    return GROUP_COLORS[id % GROUP_COLORS.length];
+  };
+
+  // 无 peerID 时显示提示
+  if (!isLoadingProfile && isAuthenticated && !ownerPeerID) {
+    return (
+      <Card className="p-4 md:p-6">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-warning" />
+          </div>
+          <h3 className="font-semibold text-lg mb-2">{t('settings.accessControl.noPeerID')}</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+            {t('settings.accessControl.noPeerIDDesc')}
+          </p>
+          {!inModal && (
+            <Link href="/settings/page-profile">
+              <Button>{t('settings.accessControl.goToStoreSettings')}</Button>
+            </Link>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      {showDescription && (
+        <p className="text-sm text-muted-foreground mb-4">
+          {t('settings.accessControl.userGroupsDesc')}
+        </p>
+      )}
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-4">{error}</div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {!loading && groups.length > 0 && (
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center justify-end mb-4">
+            <Button
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              disabled={!isAuthenticated || !ownerPeerID}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t('common.create')}
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {groups.map(group => (
+              <div key={group.id} className="p-4 rounded-lg border border-border">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0"
+                      style={{ backgroundColor: getGroupColor(group.id) }}
+                    >
+                      {group.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold truncate">{group.name}</h3>
+                      {group.description && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {group.description}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {group.memberCount || 0} {t('common.members')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-start">
+                    {inModal ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs sm:text-sm px-2 sm:px-3"
+                        onClick={() =>
+                          handleNavigate(`/settings/access-control/user-groups/${group.id}/members`)
+                        }
+                      >
+                        {t('common.members')}
+                      </Button>
+                    ) : (
+                      <Link href={`/settings/access-control/user-groups/${group.id}/members`}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs sm:text-sm px-2 sm:px-3"
+                        >
+                          {t('common.members')}
+                        </Button>
+                      </Link>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs sm:text-sm px-2 sm:px-3"
+                      onClick={() =>
+                        setEditingGroup({
+                          ...group,
+                          description: group.description || '',
+                        })
+                      }
+                    >
+                      {t('common.edit')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive text-xs sm:text-sm px-2 sm:px-3"
+                      onClick={() => setDeleteGroupId(group.id)}
+                    >
+                      {t('common.delete')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {!loading && groups.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title={t('settings.accessControl.noUserGroups')}
+          description={t('settings.accessControl.noUserGroupsDesc')}
+          action={{
+            label: t('settings.accessControl.createFirstUserGroup'),
+            onClick: () => setShowCreateModal(true),
+          }}
+        >
+          <ul className="text-sm text-muted-foreground space-y-1.5 text-left max-w-xs mb-4">
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.userGroupsHelp1')}</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.userGroupsHelp2')}</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span>{t('settings.accessControl.userGroupsHelp3')}</span>
+            </li>
+          </ul>
+        </EmptyState>
+      )}
+
+      {/* Create/Edit Modal */}
+      <Dialog
+        open={showCreateModal || !!editingGroup}
+        onOpenChange={open => {
+          if (!open) {
+            setShowCreateModal(false);
+            setEditingGroup(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingGroup
+                ? t('settings.accessControl.editUserGroup')
+                : t('settings.accessControl.createUserGroup')}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {t('common.name')} <span className="text-destructive">*</span>
+              </label>
+              <Input
+                value={editingGroup?.name || newGroup.name}
+                onChange={e =>
+                  editingGroup
+                    ? setEditingGroup({ ...editingGroup, name: e.target.value })
+                    : setNewGroup(prev => ({ ...prev, name: e.target.value }))
+                }
+                placeholder={t('settings.accessControl.groupNamePlaceholder')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">{t('common.description')}</label>
+              <textarea
+                value={editingGroup?.description || newGroup.description}
+                onChange={e =>
+                  editingGroup
+                    ? setEditingGroup({ ...editingGroup, description: e.target.value })
+                    : setNewGroup(prev => ({ ...prev, description: e.target.value }))
+                }
+                rows={2}
+                className="w-full px-4 py-2 rounded-lg border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder={t('settings.accessControl.groupDescPlaceholder')}
+              />
+            </div>
+
+            {!editingGroup && (
+              <div>
+                <label className="block text-sm font-medium mb-2">{t('common.color')}</label>
+                <div className="flex gap-2">
+                  {GROUP_COLORS.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setNewGroup(prev => ({ ...prev, color }))}
+                      className={`w-8 h-8 rounded-lg transition-transform ${
+                        newGroup.color === color
+                          ? 'ring-2 ring-offset-2 ring-primary scale-110'
+                          : ''
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingGroup(null);
+                }}
+                disabled={saving}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button
+                onClick={editingGroup ? handleUpdateGroup : handleCreateGroup}
+                disabled={!(editingGroup?.name || newGroup.name) || saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {t('common.saving')}
+                  </>
+                ) : editingGroup ? (
+                  t('common.save')
+                ) : (
+                  t('common.create')
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={deleteGroupId !== null}
+        onOpenChange={open => !open && setDeleteGroupId(null)}
+        title={t('settings.accessControl.deleteUserGroup')}
+        description={t('settings.accessControl.deleteUserGroupConfirm')}
+        confirmLabel={saving ? t('common.deleting') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        variant="destructive"
+        isLoading={saving}
+        onConfirm={handleDeleteGroupConfirm}
+      />
+    </>
+  );
+};
+
+export default UserGroupsContent;

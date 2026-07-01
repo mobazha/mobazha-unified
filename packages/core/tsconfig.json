@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./",
+    "baseUrl": ".",
+    "incremental": false,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "services/**/*",
+    "stores/**/*",
+    "hooks/**/*",
+    "types/**/*",
+    "utils/**/*",
+    "providers/**/*",
+    "config/**/*",
+    "edition/**/*",
+    "index.ts"
+  ],
+  "exclude": ["node_modules", "dist", "__tests__", "providers/AppKitProvider.tsx"]
+}

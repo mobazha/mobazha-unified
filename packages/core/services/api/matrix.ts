@@ -1,0 +1,143 @@
+/**
+ * Matrix API 服务层
+ * 与 Hosting 后端交互获取 Matrix 配置和凭据
+ */
+
+import { getHostingUrl, getAuthHeaders } from './config';
+import { HOSTING_API } from '../../config/apiPaths';
+
+// ============= 辅助函数 =============
+
+/**
+ * Unwrap {data: T} envelope from backend JSON responses.
+ */
+function unwrapData<T>(json: unknown): T {
+  if (json !== null && typeof json === 'object' && 'data' in json) {
+    return (json as Record<string, unknown>).data as T;
+  }
+  return json as T;
+}
+
+/**
+ * Extract error message from error response body.
+ * Supports both old format {error: string} and new format {error: {code, message}}.
+ */
+function extractErrorMessage(errBody: unknown): string {
+  if (errBody == null || typeof errBody !== 'object') return 'Request failed';
+  const o = errBody as Record<string, unknown>;
+  const err = o.error;
+  if (typeof err === 'string') return err;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const msg = (err as Record<string, unknown>).message;
+    return typeof msg === 'string' ? msg : 'Request failed';
+  }
+  if (typeof o.message === 'string') return o.message;
+  return 'Request failed';
+}
+
+// ============= 类型定义 =============
+
+export interface MatrixServerConfig {
+  enabled: boolean;
+  homeserverURL: string;
+  serverName: string;
+  presenceEnabled?: boolean;
+}
+
+// ============= API 函数 =============
+
+/**
+ * 通用响应处理：解析 JSON、解包 data 信封、统一错误格式
+ */
+async function handleResponse<T>(response: Response): Promise<T> {
+  let raw: unknown;
+  try {
+    raw = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new Error(response.statusText || 'Request failed');
+    }
+    throw new Error('Invalid JSON response');
+  }
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(raw));
+  }
+  return unwrapData<T>(raw);
+}
+
+/**
+ * 获取 Matrix 服务器配置
+ * @returns Matrix 配置 { enabled, homeserverURL, serverName, presenceEnabled }
+ */
+export async function getMatrixConfig(): Promise<MatrixServerConfig> {
+  const hostingUrl = getHostingUrl();
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_CONFIG}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  return handleResponse<MatrixServerConfig>(response);
+}
+
+// ============= 店铺空间 API =============
+
+export interface StoreSpaceCreateResponse {
+  spaceID: string;
+  communityRoomID: string;
+  storeID: string;
+}
+
+/**
+ * 创建店铺空间
+ */
+export async function createStoreSpace(data: {
+  storePeerID: string;
+  storeName: string;
+  visibility?: 'public' | 'unlisted' | 'private';
+}): Promise<StoreSpaceCreateResponse> {
+  const hostingUrl = getHostingUrl();
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_CREATE_SPACE}`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<StoreSpaceCreateResponse>(response);
+}
+
+/**
+ * 邀请用户到店铺空间
+ */
+export async function inviteToStoreSpace(spaceId: string, userPeerID: string): Promise<void> {
+  const hostingUrl = getHostingUrl();
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_INVITE}`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ spaceId, userPeerID }),
+  });
+  await handleResponse<unknown>(response);
+}
+
+/**
+ * 从店铺空间踢出用户
+ */
+export async function kickFromStoreSpace(
+  spaceId: string,
+  userPeerID: string,
+  reason?: string
+): Promise<void> {
+  const hostingUrl = getHostingUrl();
+  const response = await fetch(`${hostingUrl}${HOSTING_API.MATRIX_STORE_KICK}`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ spaceId, userPeerID, reason }),
+  });
+  await handleResponse<unknown>(response);
+}

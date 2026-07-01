@@ -1,0 +1,161 @@
+/**
+ * Fulfillment Provider API Service (Supply Chain FF-1d)
+ *
+ * Connect / disconnect POD providers (Printful etc.),
+ * browse catalogs, import products, list synced products.
+ *
+ * NOTE: client.ts request() auto-unwraps {"data": ...} envelopes,
+ * so callers receive the inner payload directly.
+ */
+
+import { NODE_API } from '../../config/apiPaths';
+import { authGet, authPost, authDel } from './helpers';
+import type {
+  ProviderConnection,
+  ConnectProviderRequest,
+  CatalogPage,
+  CatalogProduct,
+  StoreSyncPage,
+  StoreSyncProduct,
+  ImportProductRequest,
+  ImportResult,
+  SyncedProduct,
+  SyncStatus,
+  FulfillmentOrder,
+  SupplyChainAlert,
+  AutoActionRule,
+  CreateRuleRequest,
+} from '../../types/fulfillment';
+
+export async function getFulfillmentProviders(): Promise<ProviderConnection[]> {
+  const res = await authGet<ProviderConnection[]>(NODE_API.FULFILLMENT_PROVIDERS);
+  return Array.isArray(res) ? res : [];
+}
+
+export async function connectFulfillmentProvider(
+  providerID: string,
+  params: ConnectProviderRequest
+): Promise<ProviderConnection> {
+  return authPost<ProviderConnection>(NODE_API.FULFILLMENT_CONNECT(providerID), params);
+}
+
+export async function disconnectFulfillmentProvider(providerID: string): Promise<void> {
+  await authDel(NODE_API.FULFILLMENT_DISCONNECT(providerID));
+}
+
+export async function getFulfillmentProviderStatus(
+  providerID: string
+): Promise<ProviderConnection> {
+  return authGet<ProviderConnection>(NODE_API.FULFILLMENT_STATUS(providerID));
+}
+
+export async function getFulfillmentCatalog(
+  providerID: string,
+  opts?: { search?: string; offset?: number; limit?: number }
+): Promise<CatalogPage> {
+  const params = new URLSearchParams();
+  if (opts?.search) params.set('search', opts.search);
+  if (opts?.offset != null) params.set('offset', String(opts.offset));
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  const path = `${NODE_API.FULFILLMENT_CATALOG(providerID)}${qs ? `?${qs}` : ''}`;
+  return authGet<CatalogPage>(path);
+}
+
+export async function getFulfillmentCatalogProduct(
+  providerID: string,
+  productID: string
+): Promise<CatalogProduct> {
+  return authGet<CatalogProduct>(NODE_API.FULFILLMENT_CATALOG_PRODUCT(providerID, productID));
+}
+
+export async function importFulfillmentProduct(
+  providerID: string,
+  params: ImportProductRequest
+): Promise<ImportResult> {
+  return authPost<ImportResult>(NODE_API.FULFILLMENT_IMPORT(providerID), params);
+}
+
+export async function getStoreSyncProducts(
+  providerID: string,
+  opts?: { offset?: number; limit?: number }
+): Promise<StoreSyncPage> {
+  const params = new URLSearchParams();
+  if (opts?.offset != null) params.set('offset', String(opts.offset));
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  const path = `${NODE_API.FULFILLMENT_STORE_PRODUCTS(providerID)}${qs ? `?${qs}` : ''}`;
+  return authGet<StoreSyncPage>(path);
+}
+
+export async function getStoreSyncProduct(
+  providerID: string,
+  syncProductID: string
+): Promise<StoreSyncProduct> {
+  return authGet<StoreSyncProduct>(NODE_API.FULFILLMENT_STORE_PRODUCT(providerID, syncProductID));
+}
+
+export async function importStoreSyncProduct(
+  providerID: string,
+  syncProductID: string,
+  params?: { retailMarkup?: number; title?: string; tags?: string[]; variantIds?: string[] }
+): Promise<ImportResult> {
+  return authPost<ImportResult>(NODE_API.FULFILLMENT_IMPORT(providerID), {
+    syncProductId: syncProductID,
+    retailMarkup: params?.retailMarkup,
+    title: params?.title,
+    tags: params?.tags,
+    variantIds: params?.variantIds,
+  });
+}
+
+export async function getSyncedProducts(providerID: string): Promise<SyncedProduct[]> {
+  const res = await authGet<SyncedProduct[]>(NODE_API.FULFILLMENT_SYNCED_PRODUCTS(providerID));
+  return Array.isArray(res) ? res : [];
+}
+
+export async function syncProduct(slug: string): Promise<SyncStatus> {
+  return authPost<SyncStatus>(NODE_API.FULFILLMENT_SYNC_PRODUCT(slug));
+}
+
+export async function getFulfillmentOrderStatus(orderID: string): Promise<FulfillmentOrder | null> {
+  try {
+    return await authGet<FulfillmentOrder>(NODE_API.FULFILLMENT_ORDER_STATUS(orderID));
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Alerts & AutoAction Rules (FF-4)
+// ---------------------------------------------------------------------------
+
+export async function getAlerts(opts?: {
+  dismissed?: boolean;
+  limit?: number;
+}): Promise<SupplyChainAlert[]> {
+  const params = new URLSearchParams();
+  if (opts?.dismissed != null) params.set('dismissed', String(opts.dismissed));
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  const path = `${NODE_API.FULFILLMENT_ALERTS}${qs ? `?${qs}` : ''}`;
+  const res = await authGet<SupplyChainAlert[]>(path);
+  return Array.isArray(res) ? res : [];
+}
+
+export async function dismissAlert(alertID: string): Promise<void> {
+  await authDel(NODE_API.FULFILLMENT_ALERT(alertID));
+}
+
+export async function getRules(): Promise<AutoActionRule[]> {
+  const res = await authGet<AutoActionRule[]>(NODE_API.FULFILLMENT_RULES);
+  return Array.isArray(res) ? res : [];
+}
+
+export async function createRule(rule: CreateRuleRequest): Promise<AutoActionRule> {
+  return authPost<AutoActionRule>(NODE_API.FULFILLMENT_RULES, rule);
+}
+
+export async function deleteRule(ruleID: string): Promise<void> {
+  await authDel(NODE_API.FULFILLMENT_RULE(ruleID));
+}

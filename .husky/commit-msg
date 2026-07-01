@@ -1,0 +1,22 @@
+# 提交信息格式检查
+commit_msg=$(cat "$1")
+
+# 正则：type(scope): subject
+pattern="^(feat|fix|refactor|test|docs|chore|style|perf)(\([a-z]+(-[a-z]+)*\))?: .{1,72}$"
+
+if ! echo "$commit_msg" | head -1 | grep -qE "$pattern"; then
+  echo ""
+  echo "❌ 提交信息格式错误！"
+  echo ""
+  echo "正确格式: <type>(<scope>): <subject>"
+  echo ""
+  echo "类型: feat | fix | refactor | test | docs | chore | style | perf"
+  echo "范围: core | ui | web | config | scripts | docs | store-policy"
+  echo ""
+  echo "示例:"
+  echo "  feat(core): add useProducts hook"
+  echo "  fix(ui): ProductCard responsive layout"
+  echo "  refactor(core): migrate matrixService to TS"
+  echo ""
+  exit 1
+fi

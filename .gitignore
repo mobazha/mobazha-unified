@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Cache
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.bak
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Claude Code (本地配置，不提交)
+.claude/
+
+# Testing
+coverage/
+playwright-report/
+playwright-report-*/
+playwright/.auth/
+test-results/
+e2e-screenshots/
+apps/web/e2e-screenshots/
+apps/web/playwright/.auth/
+
+# Temporary E2E screenshots (not baselines)
+apps/web/smoke-*.png
+apps/web/standalone-smoke-*.png
+
+# Demo journey screenshots (generated, not baselines)
+apps/web/e2e/demo-output/
+
+# Diagnostic scripts and output (temporary)
+apps/web/e2e-diagnostic-output/
+apps/web/e2e/diagnose-*.spec.ts
+apps/web/scripts/diagnose-*.mjs
+
+# Reports (keep structure, ignore content)
+reports/*.md
+reports/history/
+!reports/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+Thumbs.db
+
+
+apps/web/e2e/e2e-artifacts/*

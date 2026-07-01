@@ -1,0 +1,76 @@
+{
+  "name": "@mobazha/core",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./services/*": {
+      "types": "./dist/services/*.d.ts",
+      "import": "./dist/services/*.mjs",
+      "require": "./dist/services/*.js"
+    },
+    "./stores/*": {
+      "types": "./dist/stores/*.d.ts",
+      "import": "./dist/stores/*.mjs",
+      "require": "./dist/stores/*.js"
+    },
+    "./hooks/*": {
+      "types": "./dist/hooks/*.d.ts",
+      "import": "./dist/hooks/*.mjs",
+      "require": "./dist/hooks/*.js"
+    },
+    "./types/*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/types/*.mjs",
+      "require": "./dist/types/*.js"
+    }
+  },
+  "scripts": {
+    "generate:api": "openapi-typescript api-spec/openapi.json -o types/api-generated.d.ts && node ../../scripts/gen-api-paths.mjs && prettier --write types/api-generated.d.ts config/apiPaths.generated.ts",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --testPathPattern 'integration'",
+    "test:e2e": "vitest run --testPathPattern 'flows'",
+    "test:watch": "vitest",
+    "test:health": "vitest run --testPathPattern 'healthCheck'"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "bignumber.js": "^9.3.1",
+    "dompurify": "^3.3.1",
+    "ethers": "^6.14.1",
+    "i18n-iso-countries": "^7.14.0",
+    "isomorphic-dompurify": "^2.35.0",
+    "openapi-fetch": "^0.17.0",
+    "openpgp": "^6.3.0",
+    "viem": "^2.44.1",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "@types/dompurify": "^3.0.5",
+    "@types/react": "^19.0.2",
+    "jsdom": "^26.0.0",
+    "openapi-typescript": "^7.13.0",
+    "react": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.2",
+    "web-vitals": "^4.2.4"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "react": "^19.0.0"
+  }
+}

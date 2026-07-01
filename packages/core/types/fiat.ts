@@ -1,0 +1,129 @@
+/**
+ * Fiat payment types — mirrors backend contracts/fiat_types.go
+ */
+
+export type CaptureMode = 'automatic' | 'manual';
+
+export interface StripeSessionData {
+  clientSecret: string;
+  publishableKey: string;
+  connectedAccountId?: string;
+}
+
+export interface PayPalSessionData {
+  orderID: string;
+  clientID: string;
+}
+
+export interface FiatPaymentSession {
+  sessionID: string;
+  captureMode: CaptureMode;
+  expiresAt: string;
+  status: string;
+  approveURL?: string;
+
+  stripe?: StripeSessionData;
+  paypal?: PayPalSessionData;
+}
+
+export interface PaymentMethodInfo {
+  type: string;
+  brand: string;
+  last4: string;
+}
+
+export interface FiatPaymentResult {
+  paymentID: string;
+  status: string;
+  amount: number;
+  currency: string;
+  paymentMethod: PaymentMethodInfo;
+}
+
+export interface FiatPaymentDetail {
+  paymentID: string;
+  status: string;
+  amount: number;
+  currency: string;
+  sellerAccountID: string;
+  paymentMethod: PaymentMethodInfo;
+  createdAt: string;
+  receiptURL?: string;
+}
+
+export interface FiatProviderInfo {
+  providerID: string;
+  status: string;
+  accountID: string;
+}
+
+export interface PaymentMethodsResponse {
+  crypto: string[];
+  fiat: FiatProviderInfo[];
+}
+
+export interface FiatAccountStatus {
+  accountID: string;
+  email?: string;
+  isActive: boolean;
+  status: string;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  requirements?: string[];
+}
+
+export interface FiatProviderConfigView {
+  providerID: string;
+  accountID?: string;
+  publicKey?: string;
+  secretKey?: string;
+  webhookSecret?: string;
+  isActive: boolean;
+  webhookAutoConfigured?: boolean;
+}
+
+export interface WebhookSetupResult {
+  webhookID: string;
+  webhookSecret: string;
+}
+
+export interface FiatProviderConfigInput {
+  providerID: string;
+  secretKey: string;
+  publicKey: string;
+  webhookSecret: string;
+}
+
+export interface CreateFiatPaymentParams {
+  providerID: string;
+  orderID: string;
+  amount: number;
+  currency: string;
+  description?: string;
+  returnURL?: string;
+  cancelURL?: string;
+}
+
+export interface FiatRefundParams {
+  amount?: number;
+  currency?: string;
+  reason?: string;
+}
+
+export interface FiatRefundResult {
+  refundID: string;
+  status: 'succeeded' | 'pending' | 'failed';
+  amount: number;
+  currency: string;
+}
+
+export type FiatProviderID = 'stripe' | 'paypal';
+
+export type FiatPaymentStatus =
+  | 'idle'
+  | 'creating'
+  | 'pending'
+  | 'processing'
+  | 'succeeded'
+  | 'failed'
+  | 'cancelled';

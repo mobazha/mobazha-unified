@@ -1,0 +1,24 @@
+name: Attribution
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notices-and-new-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify attribution notices and new source headers
+        env:
+          ATTRIBUTION_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: ./scripts/check-attribution.sh

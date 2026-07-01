@@ -1,0 +1,60 @@
+{
+  "name": "mobazha-unified",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Mobazha unified React Web platform",
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:remote-test": "pnpm --filter @mobazha/web dev:remote-test",
+    "dev:vite": "pnpm --filter @mobazha/web dev:vite",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint -- --fix",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:unit": "turbo test:unit",
+    "test:e2e": "turbo test:e2e",
+    "openapi": "make openapi",
+    "openapi:codegen": "make openapi-codegen",
+    "openapi:check": "make openapi-check",
+    "validate:quick": "./tools/scripts/validate-quick.sh",
+    "validate": "./tools/scripts/validate.sh",
+    "review": "./tools/scripts/review-staged.sh",
+    "commit": "./tools/scripts/commit-with-review.sh",
+    "report": "cat ./reports/latest.md",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.4",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "ethers@6.16.0>ws": "8.21.0",
+      "jayson@4.3.0>ws": "7.5.11",
+      "jsdom@26.1.0>ws": "8.21.0",
+      "jsdom@27.4.0>ws": "8.21.0",
+      "rpc-websockets@9.3.2>ws": "8.21.0",
+      "viem@2.44.1>ws": "8.21.0"
+    }
+  },
+  "dependencies": {
+    "@discord/embedded-app-sdk": "^2.4.0"
+  }
+}

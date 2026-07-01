@@ -1,0 +1,876 @@
+'use client';
+
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Save,
+  Loader2,
+  Check,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Eye,
+  Tags,
+} from 'lucide-react';
+import {
+  useI18n,
+  useCurrency,
+  getImageUrl,
+  DEFAULT_LOCAL_CURRENCY,
+  resolveProductSupplyMode,
+} from '@mobazha/core';
+import type { ContractType, Image, ShippingProfile } from '@mobazha/core';
+import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ProductTypeSelector } from './ProductTypeSelector';
+import { BasicInfoSection } from './BasicInfoSection';
+import { MediaSection } from './MediaSection';
+import { RwaTokenFields } from './RwaTokenFields';
+import { PhysicalGoodFields } from './PhysicalGoodFields';
+import { VariantOptionEditor } from './VariantOptionEditor';
+import { VariantInventoryTable } from './VariantInventoryTable';
+import { InventoryPolicyField } from './InventoryPolicyField';
+import { ProcessingTimeSelect } from './ProcessingTimeSelect';
+import { AiImageGeneratePanel, AiSetupPrompt } from './AiAssistant';
+import { SupplySummaryBar } from './SupplySummaryBar';
+import type { ProductSupplyContext, SupplySummaryAction, SupplySummaryView } from '@mobazha/core';
+import { TokenInput } from '@/components/ui/TokenInput';
+import { cn } from '@/lib/utils';
+
+type WizardStep = 'essentials' | 'media' | 'details' | 'review';
+
+const STEPS: WizardStep[] = ['essentials', 'media', 'details', 'review'];
+
+interface MobileListingWizardProps {
+  formData: ListingFormData;
+  errors: FormErrors;
+  isSubmitting: boolean;
+  isEditMode?: boolean;
+  listingSlug?: string;
+  supplyContext?: ProductSupplyContext;
+  supplySummary?: SupplySummaryView;
+  supplySummaryLoading?: boolean;
+  onSupplySummaryAction?: (action: SupplySummaryAction) => void;
+
+  updateField: <K extends keyof ListingFormData>(key: K, value: ListingFormData[K]) => void;
+  changeContractType: (type: ContractType) => void;
+  addTag: (tag: string) => void;
+  removeTag: (tag: string) => void;
+  updateVariantOptions: (options: VariantOption[]) => void;
+  updateSkus: (skus: SkuItem[]) => void;
+  validate: () => boolean;
+
+  onSubmit: () => void;
+  onSaveDraft: () => void;
+  onCancel: () => void;
+  onDelete?: () => void;
+  onPreview?: () => void;
+  onPriceChange?: (value: string) => void;
+  onPriceFocus?: () => void;
+  onPriceBlur?: (value: string) => void;
+
+  aiLoadingAction?: string | null;
+  onAiImproveTitle?: () => void;
+  onAiPolishDescription?: () => void;
+  onAiSuggestTags?: () => void;
+  aiImageUrls?: string[];
+  aiNotConfigured?: boolean;
+  onAiApplyAll?: (result: import('@mobazha/core').AiGenerateResponse) => void;
+}
+
+interface AccordionItemProps {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}
+
+function AccordionItem({ title, children, defaultOpen = false }: AccordionItemProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const id = React.useId();
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        aria-controls={`accordion-${id}`}
+        className="w-full flex items-center justify-between px-4 py-3 bg-card text-left"
+      >
+        <span className="text-sm font-medium text-foreground">{title}</span>
+        {open ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        )}
+      </button>
+      {open && (
+        <div id={`accordion-${id}`} role="region" className="px-4 pb-4 pt-2">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MobileListingWizard({
+  formData,
+  errors,
+  isSubmitting,
+  isEditMode = false,
+  listingSlug,
+  supplyContext,
+  supplySummary,
+  supplySummaryLoading,
+  onSupplySummaryAction,
+  updateField,
+  changeContractType,
+  addTag,
+  removeTag,
+  updateVariantOptions,
+  updateSkus,
+  validate,
+  onSubmit,
+  onSaveDraft,
+  onCancel,
+  onDelete,
+  onPreview,
+  onPriceChange,
+  onPriceFocus,
+  onPriceBlur,
+  aiLoadingAction,
+  onAiImproveTitle,
+  onAiPolishDescription,
+  onAiSuggestTags,
+  aiImageUrls,
+  aiNotConfigured,
+  onAiApplyAll,
+}: MobileListingWizardProps) {
+  const { t } = useI18n();
+  const { formatPrice } = useCurrency();
+  const [currentStep, setCurrentStep] = useState<WizardStep>('essentials');
+  const [publishError, setPublishError] = useState<string | null>(null);
+
+  const currentIndex = STEPS.indexOf(currentStep);
+  const isFirstStep = currentIndex === 0;
+  const isLastStep = currentIndex === STEPS.length - 1;
+
+  const stepLabels: Record<WizardStep, string> = useMemo(
+    () => ({
+      essentials: t('listing.mobile.stepEssentials'),
+      media: t('listing.mobile.stepMedia'),
+      details: t('listing.mobile.stepDetails'),
+      review: t('listing.mobile.stepReview'),
+    }),
+    [t]
+  );
+
+  const validateStep = useCallback((): boolean => {
+    if (currentStep === 'essentials') {
+      if (!formData.title.trim()) {
+        validate();
+        return false;
+      }
+      if (formData.contractType !== 'RWA_TOKEN' && !formData.price) {
+        validate();
+        return false;
+      }
+    }
+    return true;
+  }, [currentStep, formData.title, formData.price, formData.contractType, validate]);
+
+  const goNext = useCallback(() => {
+    if (!isLastStep && validateStep()) {
+      setPublishError(null);
+      setCurrentStep(STEPS[currentIndex + 1]);
+    }
+  }, [currentIndex, isLastStep, validateStep]);
+
+  const goPrev = useCallback(() => {
+    if (!isFirstStep) {
+      setPublishError(null);
+      setCurrentStep(STEPS[currentIndex - 1]);
+    }
+  }, [currentIndex, isFirstStep]);
+
+  const handleSubmit = useCallback(() => {
+    setPublishError(null);
+
+    if (!validate()) {
+      const isRwa = formData.contractType === 'RWA_TOKEN';
+      const errorChecks: { check: boolean; step: WizardStep; label: string }[] = [
+        { check: !formData.title.trim(), step: 'essentials', label: t('listing.title') },
+        {
+          check: !isRwa && (!formData.price || parseFloat(formData.price) <= 0),
+          step: 'essentials',
+          label: t('listing.price'),
+        },
+        { check: formData.images.length === 0, step: 'media', label: t('listing.photos') },
+      ];
+      if (isRwa) {
+        errorChecks.push(
+          {
+            check: !formData.tokenAddress?.trim(),
+            step: 'details',
+            label: t('listing.tokenAddress', { defaultValue: 'Token Address' }),
+          },
+          {
+            check: !formData.blockchain,
+            step: 'details',
+            label: t('listing.blockchain', { defaultValue: 'Blockchain' }),
+          }
+        );
+      }
+      const firstError = errorChecks.find(e => e.check);
+      if (firstError) {
+        setPublishError(
+          t('listing.mobile.requiredMissing', {
+            field: firstError.label,
+            defaultValue: `${firstError.label} is required`,
+          })
+        );
+        setCurrentStep(firstError.step);
+      }
+      return;
+    }
+    onSubmit();
+  }, [
+    validate,
+    onSubmit,
+    formData.title,
+    formData.price,
+    formData.images.length,
+    formData.contractType,
+    formData.tokenAddress,
+    formData.blockchain,
+    t,
+  ]);
+
+  const normalizeTag = useCallback((input: string) => {
+    return input
+      .trim()
+      .toLowerCase()
+      .replace(/#/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-|-$/g, '');
+  }, []);
+
+  const handleTagsChange = useCallback(
+    (newTags: string[]) => {
+      const added = newTags.filter(tg => !formData.tags.includes(tg));
+      const removed = formData.tags.filter(tg => !newTags.includes(tg));
+      added.forEach(tg => addTag(tg));
+      removed.forEach(tg => removeTag(tg));
+    },
+    [formData.tags, addTag, removeTag]
+  );
+
+  const handleImagesChange = useCallback(
+    (images: Image[]) => updateField('images', images),
+    [updateField]
+  );
+  const handleVideoChange = useCallback(
+    (video: string) => updateField('introVideo', video),
+    [updateField]
+  );
+  const handleAltVideoLinksChange = useCallback(
+    (links: string[]) => updateField('altIntroVideoLinks', links),
+    [updateField]
+  );
+  const handleShippingProfileChange = useCallback(
+    (profile: ShippingProfile | null) => updateField('shippingProfile', profile || undefined),
+    [updateField]
+  );
+
+  const getPreviewImageUrl = useCallback((image: Image) => {
+    const hash = image.small || image.medium || image.original;
+    if (!hash) return '';
+    return getImageUrl(hash) || '';
+  }, []);
+
+  const reviewChecklist = useMemo(() => {
+    const items: { label: string; done: boolean; required: boolean; step: WizardStep }[] = [
+      {
+        label: t('listing.title'),
+        done: formData.title.trim().length > 0,
+        required: true,
+        step: 'essentials',
+      },
+      {
+        label: t('listing.price'),
+        done: formData.price !== '' && formData.price !== '0',
+        required: true,
+        step: 'essentials',
+      },
+      {
+        label: t('listing.photos'),
+        done: formData.images.length > 0,
+        required: true,
+        step: 'media',
+      },
+      {
+        label: t('listing.tags'),
+        done: formData.tags.length > 0,
+        required: false,
+        step: 'details',
+      },
+      {
+        label: t('listing.productType'),
+        done: !!formData.productType,
+        required: false,
+        step: 'details',
+      },
+    ];
+    if (formData.contractType === 'PHYSICAL_GOOD') {
+      items.push({
+        label: t('listing.tabs.shipping'),
+        done: !!formData.shippingProfile,
+        required: false,
+        step: 'details',
+      });
+    }
+    if (formData.contractType === 'RWA_TOKEN') {
+      items.push(
+        {
+          label: t('listing.tokenAddress', { defaultValue: 'Token Address' }),
+          done: !!formData.tokenAddress?.trim(),
+          required: true,
+          step: 'details',
+        },
+        {
+          label: t('listing.blockchain', { defaultValue: 'Blockchain' }),
+          done: !!formData.blockchain,
+          required: true,
+          step: 'details',
+        }
+      );
+    }
+    return items;
+  }, [formData, t]);
+
+  return (
+    <div
+      className="fixed inset-0 bg-muted/30 flex flex-col z-50"
+      data-testid="mobile-listing-wizard"
+    >
+      {/* Header */}
+      <header className="shrink-0 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-4 h-12">
+          <button
+            type="button"
+            onClick={isFirstStep ? onCancel : goPrev}
+            className="flex items-center gap-1 text-sm text-muted-foreground min-w-[44px] min-h-[44px] justify-center"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {isFirstStep ? t('common.cancel') : t('common.back')}
+          </button>
+
+          <span className="text-sm font-medium text-foreground">
+            {isEditMode ? t('listing.editListing') : t('listing.createListing')}
+          </span>
+
+          <div className="min-w-[44px]">
+            {isEditMode && onPreview && (
+              <button
+                type="button"
+                onClick={onPreview}
+                aria-label={t('listing.preview', { defaultValue: 'Preview listing' })}
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] text-muted-foreground"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Progress bar + step labels */}
+        <div
+          role="progressbar"
+          aria-valuenow={currentIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={STEPS.length}
+          aria-label={`${stepLabels[currentStep]} (${currentIndex + 1}/${STEPS.length})`}
+          className="px-4 pb-2"
+        >
+          <div className="flex gap-1 mb-1.5">
+            {STEPS.map((step, i) => (
+              <div
+                key={step}
+                className={cn(
+                  'h-1 flex-1 rounded-full transition-colors',
+                  i <= currentIndex ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            ))}
+          </div>
+          <div className="flex gap-1">
+            {STEPS.map((step, i) => (
+              <span
+                key={step}
+                className={cn(
+                  'flex-1 text-center text-[10px] leading-tight transition-colors',
+                  i === currentIndex
+                    ? 'text-primary font-medium'
+                    : i < currentIndex
+                      ? 'text-muted-foreground'
+                      : 'text-muted-foreground/50'
+                )}
+              >
+                {stepLabels[step]}
+              </span>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {isEditMode &&
+          listingSlug &&
+          supplyContext &&
+          supplySummary &&
+          resolveProductSupplyMode(supplyContext) !== 'none' && (
+            <SupplySummaryBar
+              context={supplyContext}
+              summary={supplySummary}
+              loading={supplySummaryLoading}
+              onAction={onSupplySummaryAction}
+            />
+          )}
+
+        {/* Step 1: Essentials */}
+        {currentStep === 'essentials' && (
+          <>
+            <Card className="p-4">
+              <h2 className="text-base font-semibold text-foreground mb-3">
+                {t('listing.productType')}
+              </h2>
+              <ProductTypeSelector
+                value={formData.contractType}
+                onChange={changeContractType}
+                disabled={isSubmitting}
+              />
+            </Card>
+
+            {formData.contractType !== 'RWA_TOKEN' ? (
+              <>
+                <BasicInfoSection
+                  compact
+                  title={formData.title}
+                  shortDescription={formData.shortDescription}
+                  description={formData.description}
+                  price={formData.price}
+                  compareAtPrice={formData.compareAtPrice}
+                  pricingCurrency={formData.pricingCurrency}
+                  contractType={formData.contractType}
+                  condition={formData.condition}
+                  grams={formData.grams}
+                  weightUnit={formData.weightUnit}
+                  barcode={formData.skus[0]?.barcode}
+                  onTitleChange={v => updateField('title', v)}
+                  onShortDescriptionChange={v => updateField('shortDescription', v)}
+                  onDescriptionChange={v => updateField('description', v)}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
+                  onPriceFocus={onPriceFocus}
+                  onPriceBlur={onPriceBlur}
+                  onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
+                  onCurrencyChange={v => updateField('pricingCurrency', v)}
+                  onConditionChange={v => updateField('condition', v)}
+                  onGramsChange={v => updateField('grams', v)}
+                  onWeightUnitChange={v => updateField('weightUnit', v)}
+                  packageLength={formData.packageLength}
+                  packageWidth={formData.packageWidth}
+                  packageHeight={formData.packageHeight}
+                  dimensionUnit={formData.dimensionUnit}
+                  brand={formData.brand}
+                  productType={formData.productType}
+                  onPackageLengthChange={v => updateField('packageLength', v)}
+                  onPackageWidthChange={v => updateField('packageWidth', v)}
+                  onPackageHeightChange={v => updateField('packageHeight', v)}
+                  onDimensionUnitChange={v => updateField('dimensionUnit', v)}
+                  onBrandChange={v => updateField('brand', v)}
+                  onProductTypeChange={v => updateField('productType', v)}
+                  onBarcodeChange={v => {
+                    const newSkus = [...formData.skus];
+                    if (newSkus[0]) {
+                      newSkus[0] = { ...newSkus[0], barcode: v };
+                      updateField('skus', newSkus);
+                    }
+                  }}
+                  errors={errors}
+                  onAiImproveTitle={onAiImproveTitle}
+                  onAiPolishDescription={onAiPolishDescription}
+                  aiLoadingAction={aiLoadingAction}
+                />
+              </>
+            ) : (
+              <>
+                <Card className="p-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3">
+                    {t('listing.basicInfo')}
+                  </h2>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.title')} <span className="text-destructive">*</span>
+                      </label>
+                      <input
+                        value={formData.title}
+                        onChange={e => updateField('title', e.target.value)}
+                        placeholder={t('listing.titlePlaceholder')}
+                        maxLength={140}
+                        className={cn(
+                          'w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm',
+                          errors.title ? 'border-destructive' : 'border-border'
+                        )}
+                      />
+                      {errors.title && (
+                        <p className="text-destructive text-xs mt-1">{errors.title}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.description')}
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={e => updateField('description', e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm resize-none"
+                        placeholder={t('listing.descriptionPlaceholder')}
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <RwaTokenFields
+                  blockchain={formData.blockchain || 'ETH'}
+                  tokenAddress={formData.tokenAddress}
+                  cryptoListingCurrencyCode={formData.cryptoListingCurrencyCode}
+                  price={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  minQuantity={formData.minQuantity || 1}
+                  maxQuantity={formData.maxQuantity || 100}
+                  acceptedCurrencies={formData.acceptedCurrencies || []}
+                  onBlockchainChange={v => updateField('blockchain', v)}
+                  onTokenAddressChange={v => updateField('tokenAddress', v)}
+                  onCryptoListingCurrencyCodeChange={v =>
+                    updateField('cryptoListingCurrencyCode', v)
+                  }
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
+                  onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                  onMinQuantityChange={v => updateField('minQuantity', v)}
+                  onMaxQuantityChange={v => updateField('maxQuantity', v)}
+                  onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                  errors={errors}
+                />
+              </>
+            )}
+          </>
+        )}
+
+        {/* Step 2: Media */}
+        {currentStep === 'media' && (
+          <div className="space-y-4">
+            <MediaSection
+              images={formData.images}
+              introVideo={formData.introVideo}
+              altIntroVideoLinks={formData.altIntroVideoLinks}
+              onImagesChange={handleImagesChange}
+              onVideoChange={handleVideoChange}
+              onAltVideoLinksChange={handleAltVideoLinksChange}
+              errors={errors}
+            />
+
+            {aiNotConfigured && <AiSetupPrompt />}
+
+            {aiImageUrls && aiImageUrls.length > 0 && !aiNotConfigured && onAiApplyAll && (
+              <AiImageGeneratePanel
+                imageUrls={aiImageUrls}
+                contractType={formData.contractType}
+                onApply={onAiApplyAll}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Step 3: Details (accordion sections) */}
+        {currentStep === 'details' && (
+          <div className="space-y-3">
+            <AccordionItem title={t('listing.tags')} defaultOpen>
+              <TokenInput
+                tokens={formData.tags}
+                onTokensChange={handleTagsChange}
+                placeholder={t('listing.enterTag')}
+                prefix="#"
+                normalize={normalizeTag}
+                tokenClassName="bg-primary/10 text-primary"
+              />
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-muted-foreground">{t('listing.tagsHelper')}</p>
+                {onAiSuggestTags && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm h-11 px-3 sm:text-xs sm:h-7 sm:px-2"
+                    onClick={onAiSuggestTags}
+                    disabled={aiLoadingAction === 'suggest_tags'}
+                  >
+                    {aiLoadingAction === 'suggest_tags' ? (
+                      <Loader2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Tags className="w-4 h-4 sm:w-3 sm:h-3 mr-1 text-purple-500" />
+                    )}
+                    {t('ai.suggestTags', { defaultValue: 'AI Suggest' })}
+                  </Button>
+                )}
+              </div>
+            </AccordionItem>
+
+            <AccordionItem title={t('listing.productType')}>
+              <Input
+                value={formData.productType}
+                onChange={e => updateField('productType', e.target.value)}
+                placeholder={t('listing.productTypePlaceholder')}
+              />
+            </AccordionItem>
+
+            {formData.contractType === 'PHYSICAL_GOOD' && (
+              <AccordionItem title={t('listing.tabs.shipping')}>
+                <PhysicalGoodFields
+                  shippingProfile={formData.shippingProfile}
+                  onShippingProfileChange={handleShippingProfileChange}
+                />
+              </AccordionItem>
+            )}
+
+            {formData.contractType === 'PHYSICAL_GOOD' && (
+              <AccordionItem title={t('listing.tabs.variants')}>
+                <VariantOptionEditor options={formData.options} onChange={updateVariantOptions} />
+                {formData.options.length > 0 && (
+                  <div className="mt-3">
+                    <VariantInventoryTable
+                      skus={formData.skus}
+                      onChange={updateSkus}
+                      pricingCurrency={formData.pricingCurrency}
+                      basePrice={formData.price}
+                      productImages={formData.images}
+                    />
+                  </div>
+                )}
+                <InventoryPolicyField
+                  className="mt-4 pt-4 border-t border-border"
+                  value={formData.inventoryPolicy}
+                  onChange={val => updateField('inventoryPolicy', val)}
+                />
+              </AccordionItem>
+            )}
+
+            {formData.contractType === 'DIGITAL_GOOD' && (
+              <AccordionItem title={t('listing.tabs.files')}>
+                {/* Phase 1.0: 数字商品资产挂载发生在编辑页（需要 listingSlug）。
+                    新建页只保存为草稿，避免发布"空壳"商品。*/}
+                <div
+                  className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
+                  role="note"
+                  data-testid="listing-mobile-digital-save-first-hint"
+                >
+                  <p className="font-medium mb-1">{t('listing.digital.saveFirstTitle')}</p>
+                  <p className="text-muted-foreground">{t('listing.digital.saveFirst')}</p>
+                </div>
+              </AccordionItem>
+            )}
+
+            {formData.contractType !== 'RWA_TOKEN' &&
+              formData.contractType !== 'CRYPTOCURRENCY' && (
+                <>
+                  <AccordionItem title={t('listing.tabs.other')}>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.processingTime')}
+                      </label>
+                      <ProcessingTimeSelect
+                        value={formData.processingTime}
+                        onChange={val => updateField('processingTime', val)}
+                      />
+                    </div>
+                  </AccordionItem>
+                </>
+              )}
+          </div>
+        )}
+
+        {/* Step 4: Review */}
+        {currentStep === 'review' && (
+          <div className="space-y-3">
+            {/* Preview card */}
+            <Card className="overflow-hidden">
+              <div className="aspect-[16/9] bg-muted relative">
+                {formData.images[0] ? (
+                  <img
+                    src={getPreviewImageUrl(formData.images[0])}
+                    alt={
+                      formData.title || t('listing.productImage', { defaultValue: 'Product image' })
+                    }
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <Eye className="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <h3 className="font-medium text-foreground text-base line-clamp-2">
+                  {formData.title || t('listing.productTitle')}
+                </h3>
+                <p className="text-primary font-bold text-lg mt-0.5">
+                  {formData.price
+                    ? formatPrice(
+                        Number(formData.price),
+                        formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY
+                      )
+                    : formatPrice(0, formData.pricingCurrency || DEFAULT_LOCAL_CURRENCY)}
+                </p>
+                {formData.shortDescription && (
+                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+                    {formData.shortDescription}
+                  </p>
+                )}
+              </div>
+            </Card>
+
+            {/* Checklist */}
+            <Card className="p-3">
+              <h3 className="text-sm font-medium text-foreground mb-2">
+                {t('listing.mobile.readinessCheck')}
+              </h3>
+              <div className="space-y-1.5">
+                {reviewChecklist.map(item => {
+                  const Wrapper = item.done ? 'div' : 'button';
+                  return (
+                    <Wrapper
+                      key={item.label}
+                      {...(!item.done && {
+                        type: 'button' as const,
+                        onClick: () => {
+                          setPublishError(null);
+                          setCurrentStep(item.step);
+                        },
+                      })}
+                      className={cn(
+                        'flex items-center gap-2 w-full text-left',
+                        !item.done && 'active:opacity-70'
+                      )}
+                    >
+                      {item.done ? (
+                        <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                      ) : item.required ? (
+                        <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      )}
+                      <span
+                        className={cn(
+                          'text-sm',
+                          item.done
+                            ? 'text-foreground'
+                            : item.required
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                        )}
+                      >
+                        {item.label}
+                        {item.required && !item.done && ' *'}
+                      </span>
+                      {!item.done && (
+                        <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto shrink-0" />
+                      )}
+                    </Wrapper>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Edit mode: delete */}
+            {isEditMode && onDelete && (
+              <Button
+                variant="outline"
+                className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={onDelete}
+                disabled={isSubmitting}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {t('listing.deleteListing')}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Error banner */}
+      {publishError && (
+        <div className="shrink-0 bg-destructive/10 border-t border-destructive/20 px-4 py-2 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+          <span className="text-xs text-destructive">{publishError}</span>
+        </div>
+      )}
+
+      {/* Bottom action bar */}
+      <div className="shrink-0 bg-background border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {isLastStep ? (
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={onSaveDraft}
+              disabled={isSubmitting}
+            >
+              {t('listing.saveDraft')}
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting ||
+                // Phase 1.0: 新建页发布数字商品会得到无资产空壳，强制走 Save Draft。
+                (!isEditMode && formData.contractType === 'DIGITAL_GOOD')
+              }
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-1" />
+              )}
+              {isEditMode ? t('listing.save') : t('listing.publish')}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={onSaveDraft}
+              disabled={isSubmitting}
+            >
+              {t('listing.saveDraft')}
+            </Button>
+            <Button className="flex-1" onClick={goNext}>
+              {t('common.next')}
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default MobileListingWizard;

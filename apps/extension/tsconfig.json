@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["chrome", "node"],
+    "paths": {
+      "@/*": ["../web/src/*"],
+      "@mobazha/core": ["../../packages/core/index.ts"],
+      "@mobazha/core/*": ["../../packages/core/*"],
+      "@mobazha/ui": ["../../packages/ui/index.ts"],
+      "@mobazha/ui/*": ["../../packages/ui/*"],
+      "next/link": ["../web/src/compat/link.tsx"],
+      "next/navigation": ["../web/src/compat/navigation.tsx"],
+      "next/image": ["../web/src/compat/image.tsx"],
+      "next/font/google": ["../web/src/compat/font-google.ts"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../web/src/types/outpost.d.ts",
+    "../../packages/core/types/window.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

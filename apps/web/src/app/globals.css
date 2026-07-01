@@ -1,0 +1,961 @@
+@import 'tailwindcss';
+
+/* ===== Tailwind CSS v4 Theme Configuration ===== */
+@theme {
+  /* 字体配置 */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ===== shadcn/ui 语义化颜色 ===== */
+
+  /* 背景和前景 */
+  --color-background: var(--theme-background);
+  --color-foreground: var(--theme-textPrimary);
+
+  /* 卡片 */
+  --color-card: var(--theme-surface);
+  --color-card-foreground: var(--theme-textPrimary);
+
+  /* 弹出层 */
+  --color-popover: var(--theme-surface);
+  --color-popover-foreground: var(--theme-textPrimary);
+
+  /* 主色调 */
+  --color-primary: var(--theme-primary);
+  --color-primary-foreground: #ffffff;
+
+  /* 次要色 */
+  --color-secondary: var(--theme-backgroundAlt);
+  --color-secondary-foreground: var(--theme-textPrimary);
+
+  /* Muted */
+  --color-muted: var(--theme-backgroundAlt);
+  --color-muted-foreground: var(--theme-textMuted);
+
+  /* 强调色 */
+  --color-accent: var(--theme-backgroundAlt);
+  --color-accent-foreground: var(--theme-textPrimary);
+
+  /* 错误/危险色 */
+  --color-destructive: var(--theme-error);
+  --color-destructive-foreground: #ffffff;
+
+  /* 边框和输入框 */
+  --color-border: var(--theme-border);
+  --color-input: var(--theme-border);
+  --color-ring: var(--theme-primary);
+
+  /* 兼容旧组件 */
+  --color-surface: var(--theme-surface);
+  --color-surface-hover: var(--theme-surfaceHover);
+  --color-text-primary: var(--theme-textPrimary);
+  --color-text-secondary: var(--theme-textSecondary);
+  --color-text-muted: var(--theme-textMuted);
+
+  /* 功能色 */
+  --color-success: var(--theme-success);
+  --color-warning: var(--theme-warning);
+  --color-error: var(--theme-error);
+  --color-info: var(--theme-info);
+
+  /* 图表色板（recharts 等直接引用） */
+  --color-chart-1: var(--theme-primary);
+  --color-chart-2: var(--theme-success);
+  --color-chart-3: var(--theme-info);
+  --color-chart-4: var(--theme-warning);
+  --color-chart-5: var(--theme-secondary);
+
+  /* 渐变和发光 */
+  --color-glow: var(--theme-glow, transparent);
+
+  /* 阴影 */
+  --shadow-glow: 0 0 20px var(--theme-glow, transparent);
+
+  /* 圆角 */
+  --radius-lg: 0.5rem;
+  --radius-md: calc(var(--radius-lg) - 2px);
+  --radius-sm: calc(var(--radius-lg) - 4px);
+
+  /* 动画 */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/* Content paths for Tailwind CSS v4 */
+@source '../../../packages/ui/**/*.{js,ts,jsx,tsx}';
+
+/* ===== 主题 CSS 变量定义 ===== */
+
+/* 默认主题 (Classic Light) */
+:root {
+  /* 主要色彩 */
+  --theme-primary: #00bcd4;
+  --theme-primaryLight: #4dd0e1;
+  --theme-primaryDark: #0097a7;
+
+  /* 次要色彩 */
+  --theme-secondary: #ff5722;
+  --theme-secondaryLight: #ff8a65;
+  --theme-secondaryDark: #e64a19;
+
+  /* 强调色 */
+  --theme-accent: #00bcd4;
+
+  /* 功能色 */
+  --theme-success: #10b981;
+  --theme-warning: #f59e0b;
+  --theme-error: #ef4444;
+  --theme-info: #3b82f6;
+
+  /* 背景色 */
+  --theme-background: #ffffff;
+  --theme-backgroundAlt: #f8fafc;
+  --theme-surface: #ffffff;
+  --theme-surfaceHover: #f1f5f9;
+
+  /* 文字色 */
+  --theme-textPrimary: #0f172a;
+  --theme-textSecondary: #475569;
+  --theme-textMuted: #94a3b8;
+  --theme-textInverse: #ffffff;
+
+  /* 边框色 */
+  --theme-border: #e2e8f0;
+  --theme-borderLight: #f1f5f9;
+
+  /* Hero 品牌区域渐变变量 (Classic 主题) */
+  --hero-gradient-from: #0f172a;
+  --hero-gradient-via: #164e63;
+  --hero-gradient-to: #0f172a;
+  --hero-accent: #22d3ee;
+  --hero-accent-secondary: #2dd4bf;
+  --hero-glow: #06b6d4;
+
+  /* Safe area insets for iOS */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Classic Dark */
+.dark {
+  --theme-primary: #26c6da;
+  --theme-primaryLight: #4dd0e1;
+  --theme-primaryDark: #00acc1;
+  --theme-secondary: #ff7043;
+  --theme-secondaryLight: #ff8a65;
+  --theme-secondaryDark: #f4511e;
+  --theme-accent: #26c6da;
+  --theme-success: #34d399;
+  --theme-warning: #fbbf24;
+  --theme-error: #f87171;
+  --theme-info: #60a5fa;
+  --theme-background: #0f172a;
+  --theme-backgroundAlt: #1e293b;
+  --theme-surface: #1e293b;
+  --theme-surfaceHover: #334155;
+  --theme-textPrimary: #f8fafc;
+  --theme-textSecondary: #cbd5e1;
+  --theme-textMuted: #64748b;
+  --theme-textInverse: #0f172a;
+  --theme-border: #334155;
+  --theme-borderLight: #475569;
+}
+
+/* ===== Crypto Theme ===== */
+[data-theme='crypto'] {
+  --theme-primary: #00d26a;
+  --theme-primaryLight: #4ade80;
+  --theme-primaryDark: #059669;
+  --theme-secondary: #8b5cf6;
+  --theme-secondaryLight: #a78bfa;
+  --theme-secondaryDark: #7c3aed;
+  --theme-accent: #00d26a;
+  --theme-success: #00d26a;
+  --theme-warning: #facc15;
+  --theme-error: #f43f5e;
+  --theme-info: #06b6d4;
+  --theme-background: #fafafa;
+  --theme-backgroundAlt: #f5f5f5;
+  --theme-surface: #ffffff;
+  --theme-surfaceHover: #f0f0f0;
+  --theme-textPrimary: #171717;
+  --theme-textSecondary: #525252;
+  --theme-textMuted: #a3a3a3;
+  --theme-textInverse: #ffffff;
+  --theme-border: #e5e5e5;
+  --theme-borderLight: #f5f5f5;
+  --theme-glow: rgba(0, 210, 106, 0.3);
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #0a0a0a;
+  --hero-gradient-via: #052e16;
+  --hero-gradient-to: #0a0a0a;
+  --hero-accent: #4ade80;
+  --hero-accent-secondary: #34d399;
+  --hero-glow: #22c55e;
+}
+
+[data-theme='crypto'].dark {
+  --theme-primary: #00ff85;
+  --theme-primaryLight: #4aff9f;
+  --theme-primaryDark: #00d26a;
+  --theme-secondary: #a78bfa;
+  --theme-secondaryLight: #c4b5fd;
+  --theme-secondaryDark: #8b5cf6;
+  --theme-accent: #00ff85;
+  --theme-success: #00ff85;
+  --theme-warning: #ffd600;
+  --theme-error: #ff4757;
+  --theme-info: #00d9ff;
+  --theme-background: #0a0a0a;
+  --theme-backgroundAlt: #141414;
+  --theme-surface: #1a1a1a;
+  --theme-surfaceHover: #262626;
+  --theme-textPrimary: #fafafa;
+  --theme-textSecondary: #a3a3a3;
+  --theme-textMuted: #525252;
+  --theme-textInverse: #0a0a0a;
+  --theme-border: #262626;
+  --theme-borderLight: #333333;
+  --theme-glow: rgba(0, 255, 133, 0.4);
+  --theme-gradient: linear-gradient(135deg, #00ff85 0%, #00d9ff 100%);
+}
+
+/* ===== Business Theme ===== */
+[data-theme='business'] {
+  --theme-primary: #2563eb;
+  --theme-primaryLight: #3b82f6;
+  --theme-primaryDark: #1d4ed8;
+  --theme-secondary: #d97706;
+  --theme-secondaryLight: #f59e0b;
+  --theme-secondaryDark: #b45309;
+  --theme-accent: #2563eb;
+  --theme-success: #059669;
+  --theme-warning: #d97706;
+  --theme-error: #dc2626;
+  --theme-info: #0284c7;
+  --theme-background: #ffffff;
+  --theme-backgroundAlt: #f8fafc;
+  --theme-surface: #ffffff;
+  --theme-surfaceHover: #f1f5f9;
+  --theme-textPrimary: #1e293b;
+  --theme-textSecondary: #475569;
+  --theme-textMuted: #94a3b8;
+  --theme-textInverse: #ffffff;
+  --theme-border: #cbd5e1;
+  --theme-borderLight: #e2e8f0;
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #0f172a;
+  --hero-gradient-via: #1e3a5f;
+  --hero-gradient-to: #0f172a;
+  --hero-accent: #60a5fa;
+  --hero-accent-secondary: #38bdf8;
+  --hero-glow: #3b82f6;
+}
+
+[data-theme='business'].dark {
+  --theme-primary: #3b82f6;
+  --theme-primaryLight: #60a5fa;
+  --theme-primaryDark: #2563eb;
+  --theme-secondary: #f59e0b;
+  --theme-secondaryLight: #fbbf24;
+  --theme-secondaryDark: #d97706;
+  --theme-accent: #3b82f6;
+  --theme-success: #10b981;
+  --theme-warning: #f59e0b;
+  --theme-error: #ef4444;
+  --theme-info: #0ea5e9;
+  --theme-background: #0f172a;
+  --theme-backgroundAlt: #1e293b;
+  --theme-surface: #1e293b;
+  --theme-surfaceHover: #334155;
+  --theme-textPrimary: #f1f5f9;
+  --theme-textSecondary: #94a3b8;
+  --theme-textMuted: #64748b;
+  --theme-textInverse: #0f172a;
+  --theme-border: #334155;
+  --theme-borderLight: #475569;
+}
+
+/* ===== Cyberpunk Theme ===== */
+[data-theme='cyberpunk'] {
+  --theme-primary: #9333ea;
+  --theme-primaryLight: #a855f7;
+  --theme-primaryDark: #7e22ce;
+  --theme-secondary: #ec4899;
+  --theme-secondaryLight: #f472b6;
+  --theme-secondaryDark: #db2777;
+  --theme-accent: #ec4899;
+  --theme-success: #22c55e;
+  --theme-warning: #eab308;
+  --theme-error: #ef4444;
+  --theme-info: #06b6d4;
+  --theme-background: #fafafa;
+  --theme-backgroundAlt: #f5f5f5;
+  --theme-surface: #ffffff;
+  --theme-surfaceHover: #f5f5f5;
+  --theme-textPrimary: #18181b;
+  --theme-textSecondary: #52525b;
+  --theme-textMuted: #a1a1aa;
+  --theme-textInverse: #ffffff;
+  --theme-border: #e4e4e7;
+  --theme-borderLight: #f4f4f5;
+  --theme-gradient: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #09090b;
+  --hero-gradient-via: #581c87;
+  --hero-gradient-to: #09090b;
+  --hero-accent: #f472b6;
+  --hero-accent-secondary: #a78bfa;
+  --hero-glow: #ec4899;
+}
+
+[data-theme='cyberpunk'].dark {
+  --theme-primary: #a855f7;
+  --theme-primaryLight: #c084fc;
+  --theme-primaryDark: #9333ea;
+  --theme-secondary: #f472b6;
+  --theme-secondaryLight: #f9a8d4;
+  --theme-secondaryDark: #ec4899;
+  --theme-accent: #f472b6;
+  --theme-success: #4ade80;
+  --theme-warning: #facc15;
+  --theme-error: #f87171;
+  --theme-info: #22d3ee;
+  --theme-background: #09090b;
+  --theme-backgroundAlt: #18181b;
+  --theme-surface: #18181b;
+  --theme-surfaceHover: #27272a;
+  --theme-textPrimary: #fafafa;
+  --theme-textSecondary: #a1a1aa;
+  --theme-textMuted: #52525b;
+  --theme-textInverse: #09090b;
+  --theme-border: #27272a;
+  --theme-borderLight: #3f3f46;
+  --theme-glow: rgba(168, 85, 247, 0.4);
+  --theme-gradient: linear-gradient(135deg, #a855f7 0%, #f472b6 100%);
+}
+
+/* ===== Nature Theme ===== */
+[data-theme='nature'] {
+  --theme-primary: #059669;
+  --theme-primaryLight: #10b981;
+  --theme-primaryDark: #047857;
+  --theme-secondary: #b45309;
+  --theme-secondaryLight: #d97706;
+  --theme-secondaryDark: #92400e;
+  --theme-accent: #059669;
+  --theme-success: #059669;
+  --theme-warning: #d97706;
+  --theme-error: #dc2626;
+  --theme-info: #0891b2;
+  --theme-background: #fefdfb;
+  --theme-backgroundAlt: #fef7ed;
+  --theme-surface: #ffffff;
+  --theme-surfaceHover: #f5f0e8;
+  --theme-textPrimary: #1c1917;
+  --theme-textSecondary: #57534e;
+  --theme-textMuted: #a8a29e;
+  --theme-textInverse: #ffffff;
+  --theme-border: #d6d3d1;
+  --theme-borderLight: #e7e5e4;
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #0c0a09;
+  --hero-gradient-via: #14532d;
+  --hero-gradient-to: #0c0a09;
+  --hero-accent: #a3e635;
+  --hero-accent-secondary: #4ade80;
+  --hero-glow: #84cc16;
+}
+
+[data-theme='nature'].dark {
+  --theme-primary: #34d399;
+  --theme-primaryLight: #6ee7b7;
+  --theme-primaryDark: #10b981;
+  --theme-secondary: #fbbf24;
+  --theme-secondaryLight: #fcd34d;
+  --theme-secondaryDark: #f59e0b;
+  --theme-accent: #34d399;
+  --theme-success: #34d399;
+  --theme-warning: #fbbf24;
+  --theme-error: #f87171;
+  --theme-info: #22d3ee;
+  --theme-background: #0c0a09;
+  --theme-backgroundAlt: #1c1917;
+  --theme-surface: #1c1917;
+  --theme-surfaceHover: #292524;
+  --theme-textPrimary: #fafaf9;
+  --theme-textSecondary: #a8a29e;
+  --theme-textMuted: #57534e;
+  --theme-textInverse: #0c0a09;
+  --theme-border: #292524;
+  --theme-borderLight: #44403c;
+}
+
+/* ===== Luxury Theme ===== */
+[data-theme='luxury'] {
+  --theme-primary: #b8860b;
+  --theme-primaryLight: #daa520;
+  --theme-primaryDark: #8b6914;
+  --theme-secondary: #1f2937;
+  --theme-secondaryLight: #374151;
+  --theme-secondaryDark: #111827;
+  --theme-accent: #b8860b;
+  --theme-success: #059669;
+  --theme-warning: #b8860b;
+  --theme-error: #991b1b;
+  --theme-info: #1e40af;
+  --theme-background: #fafafa;
+  --theme-backgroundAlt: #f5f5f5;
+  --theme-surface: #ffffff;
+  --theme-surfaceHover: #f0f0f0;
+  --theme-textPrimary: #111827;
+  --theme-textSecondary: #4b5563;
+  --theme-textMuted: #9ca3af;
+  --theme-textInverse: #ffffff;
+  --theme-border: #d1d5db;
+  --theme-borderLight: #e5e7eb;
+
+  /* Hero 品牌区域渐变变量 */
+  --hero-gradient-from: #000000;
+  --hero-gradient-via: #78350f;
+  --hero-gradient-to: #000000;
+  --hero-accent: #fbbf24;
+  --hero-accent-secondary: #facc15;
+  --hero-glow: #f59e0b;
+}
+
+[data-theme='luxury'].dark {
+  --theme-primary: #ffd700;
+  --theme-primaryLight: #ffe44d;
+  --theme-primaryDark: #daa520;
+  --theme-secondary: #e5e7eb;
+  --theme-secondaryLight: #f3f4f6;
+  --theme-secondaryDark: #d1d5db;
+  --theme-accent: #ffd700;
+  --theme-success: #34d399;
+  --theme-warning: #ffd700;
+  --theme-error: #fca5a5;
+  --theme-info: #93c5fd;
+  --theme-background: #000000;
+  --theme-backgroundAlt: #0a0a0a;
+  --theme-surface: #111111;
+  --theme-surfaceHover: #1a1a1a;
+  --theme-textPrimary: #ffffff;
+  --theme-textSecondary: #d1d5db;
+  --theme-textMuted: #6b7280;
+  --theme-textInverse: #000000;
+  --theme-border: #262626;
+  --theme-borderLight: #333333;
+  --theme-glow: rgba(255, 215, 0, 0.3);
+  --theme-gradient: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+}
+
+/* ===================================================================== *
+ * Embedded-channel theme overrides (MVP-3 M2)
+ *
+ * Telegram: colors are applied via inline `style` on <html> by
+ * TGMiniAppProvider (JS-driven). Inline custom properties beat any
+ * stylesheet rule, so no CSS-level override is needed here. The previous
+ * approach used `var(--tg-*, var(--theme-*))` which created cyclic
+ * self-references on <html> (no parent to inherit from), causing colors to
+ * resolve to the CSS guaranteed-invalid value when a --tg-* param was
+ * missing → dark text on dark background.
+ *
+ * The `data-embedded` attribute is still set for non-color concerns (layout
+ * adjustments, component visibility) — see isEmbeddedApp checks in TSX.
+ * ===================================================================== */
+
+/* Reserved for future embedded channels — left as no-op blocks so reviewers
+   can see the extension point. Populate when the corresponding provider
+   (DiscordActivityProvider, StandaloneBrandProvider) publishes its vars. */
+html[data-embedded='discord'],
+html.dark[data-embedded='discord'] {
+  /* TODO(MS-Phase-3 / Discord): map --dc-* → --theme-* once available. */
+}
+
+html[data-embedded='standalone'],
+html.dark[data-embedded='standalone'] {
+  /* TODO(Standalone): brand-themed storefronts may reuse --theme-* as-is or
+     layer a store-specific override injected by admin. No-op for now. */
+}
+
+/* ===== 基础样式 ===== */
+
+body {
+  color: var(--theme-textPrimary);
+  background-color: var(--theme-background);
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior-y: contain;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  /* 主题切换过渡动画 */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Mobile keyboard: ensure focused inputs stay visible */
+@media (max-width: 1023px) {
+  input:focus,
+  textarea:focus,
+  select:focus,
+  [contenteditable]:focus {
+    scroll-margin-bottom: 8rem;
+  }
+}
+
+/* ===== MVP-3 A1 — Telegram Mini App viewport utilities =====
+ *
+ * `TGMiniAppProvider` publishes `--tg-viewport-stable-h` on `<html>` when the
+ * app is running inside Telegram (see TGMiniAppProvider.tsx A1 effect). The
+ * stable-height value excludes keyboard animation, matching what TG iOS gives
+ * Mini Apps after `expand()`.
+ *
+ * Use `min-h-screen-tg` on the topmost scroll container of Mobile pages that
+ * also render a fixed bottom CTA bar (Checkout, Cart, Product detail). In
+ * non-Telegram environments the variable is undefined, so the fallback chain
+ * resolves to `100dvh` (if supported) → `100vh`, which matches prior Web
+ * behavior. Do NOT replace every `min-h-screen` globally — only the few pages
+ * whose CTAs were observed to be clipped by the TG toolbar.
+ */
+@utility min-h-screen-tg {
+  min-height: 100vh;
+  min-height: 100dvh; /* progressive enhancement for modern browsers */
+  min-height: var(--tg-viewport-stable-h, 100dvh);
+}
+
+/* Safe area utilities */
+@utility pt-safe {
+  padding-top: var(--safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+@utility pl-safe {
+  padding-left: var(--safe-area-inset-left);
+}
+
+@utility pr-safe {
+  padding-right: var(--safe-area-inset-right);
+}
+
+@utility mt-safe {
+  margin-top: var(--safe-area-inset-top);
+}
+
+@utility mb-safe {
+  margin-bottom: var(--safe-area-inset-bottom);
+}
+
+/* Hide scrollbar but keep functionality */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Touch action utilities */
+@utility touch-pan-x {
+  touch-action: pan-x;
+}
+
+@utility touch-pan-y {
+  touch-action: pan-y;
+}
+
+/* Mobile-friendly tap highlight */
+@utility tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improved focus styles for accessibility */
+*:focus-visible {
+  outline: none;
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width)
+    var(--theme-background);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width))
+    var(--theme-primary);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+/* Custom scrollbar for desktop */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--theme-border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-textMuted);
+  }
+}
+
+/* Glow effect utility */
+.glow {
+  box-shadow: 0 0 20px var(--theme-glow, transparent);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: var(--theme-gradient, var(--theme-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== 多端用户体验工具类 ===== */
+
+/* 
+ * 移动端紧凑模式 CSS 变量
+ * 基于原 mobazha-mobile 设计规范（4px 网格系统）
+ */
+:root {
+  /* 动画时长（原版规范） */
+  --animation-duration-fast: 150ms;
+  --animation-duration-normal: 200ms;
+  --animation-duration-slow: 300ms;
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 移动端紧凑间距变量 */
+@media (max-width: 767px) {
+  :root {
+    --spacing-card: 12px; /* 原版 md: 12px */
+    --spacing-list-item: 10px; /* 原版 py: 8-12px */
+    --spacing-section: 16px; /* 区块间距 */
+    --font-size-body: 14px; /* 原版正文 14-15px */
+    --font-size-title: 18px; /* 原版标题 17-18px */
+    --font-size-small: 12px; /* 原版辅助 12-13px */
+  }
+}
+
+/* 桌面端标准间距变量 */
+@media (min-width: 768px) {
+  :root {
+    --spacing-card: 16px;
+    --spacing-list-item: 12px;
+    --spacing-section: 24px;
+    --font-size-body: 16px;
+    --font-size-title: 20px;
+    --font-size-small: 14px;
+  }
+}
+
+/* ===== 触摸反馈工具类 ===== */
+
+/* 
+ * 触摸反馈 - 模拟原版 TouchableWithoutFeedback 效果
+ * 轻微缩小 + 透明度变化
+ */
+@utility touch-feedback {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--animation-duration-fast) var(--animation-easing),
+    opacity var(--animation-duration-fast) var(--animation-easing);
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+}
+
+/* 列表项触摸反馈 - 背景色变化 */
+@utility touch-feedback-bg {
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--animation-duration-fast) var(--animation-easing);
+  &:active {
+    background-color: var(--theme-surfaceHover);
+  }
+}
+
+/* ===== 悬停效果工具类（桌面端） ===== */
+
+/* 卡片悬停提升效果 */
+@utility hover-lift {
+  transition:
+    transform var(--animation-duration-normal) var(--animation-easing),
+    box-shadow var(--animation-duration-normal) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* 轻微悬停提升 */
+@utility hover-lift-sm {
+  transition:
+    transform var(--animation-duration-fast) var(--animation-easing),
+    box-shadow var(--animation-duration-fast) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* 图片悬停缩放（用于容器内） */
+@utility hover-scale {
+  transition: transform var(--animation-duration-slow) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* 悬停背景高亮 */
+@utility hover-highlight {
+  transition: background-color var(--animation-duration-fast) var(--animation-easing);
+  @media (min-width: 768px) {
+    &:hover {
+      background-color: var(--theme-surfaceHover);
+    }
+  }
+}
+
+/* ===== 移动端紧凑模式组件类 ===== */
+
+/* 紧凑卡片内边距 */
+@utility compact-card {
+  padding: var(--spacing-card);
+}
+
+/* 紧凑列表项 */
+@utility compact-list-item {
+  padding-top: var(--spacing-list-item);
+  padding-bottom: var(--spacing-list-item);
+}
+
+/* 紧凑正文字体 */
+@utility compact-text {
+  font-size: var(--font-size-body);
+}
+
+/* 紧凑标题字体 */
+@utility compact-heading {
+  font-size: var(--font-size-title);
+}
+
+/* 紧凑辅助文字 */
+@utility compact-small {
+  font-size: var(--font-size-small);
+}
+
+/* ===== 动画工具类 ===== */
+
+/* 淡入动画 */
+@utility animate-fade-in {
+  animation: fadeIn var(--animation-duration-normal) var(--animation-easing);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 从下滑入动画 */
+@utility animate-slide-up {
+  animation: slideUp var(--animation-duration-normal) var(--animation-easing);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 从右滑入动画 */
+@utility animate-slide-in-right {
+  animation: slideInRight var(--animation-duration-normal) var(--animation-easing);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 缩放弹入动画 */
+@utility animate-scale-in {
+  animation: scaleIn var(--animation-duration-fast) var(--animation-easing);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Page entrance animation — fade + subtle slide-up on mobile */
+@utility animate-page-enter {
+  animation: pageEnter 0.25s ease-out both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter {
+    animation: none !important;
+  }
+}
+
+/* ===== 触摸目标最小尺寸 ===== */
+
+/* 确保触摸目标符合 44x44pt 最小要求 */
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 内联触摸目标（只确保高度） */
+@utility touch-target-inline {
+  min-height: 44px;
+}
+
+/* ===== 响应式间距快捷类 ===== */
+
+/* 移动端紧凑，桌面端正常的间距 */
+@utility gap-responsive {
+  gap: 12px;
+  @media (min-width: 768px) {
+    gap: 16px;
+  }
+}
+
+@utility p-responsive {
+  padding: 12px;
+  @media (min-width: 768px) {
+    padding: 16px;
+  }
+}
+
+@utility py-responsive {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  @media (min-width: 768px) {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+@utility px-responsive {
+  padding-left: 12px;
+  padding-right: 12px;
+  @media (min-width: 768px) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ===== 响应式字体快捷类 ===== */
+
+/* 移动端小，桌面端正常 */
+@utility text-responsive {
+  font-size: 14px;
+  @media (min-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+@utility text-responsive-sm {
+  font-size: 12px;
+  @media (min-width: 768px) {
+    font-size: 14px;
+  }
+}
+
+@utility text-responsive-lg {
+  font-size: 18px;
+  @media (min-width: 768px) {
+    font-size: 20px;
+  }
+}
+
+/* ===== Storefront mode: hide marketplace-only elements on first paint ===== */
+html[data-storefront] .marketplace-only {
+  display: none !important;
+}
+html:not([data-storefront]) .storefront-only {
+  display: none !important;
+}
+
+/* ===== 减弱动画支持 (prefers-reduced-motion) ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
