@@ -5,9 +5,14 @@
 # Node
 node_modules
 **/node_modules
+.pnpm-store
+**/.pnpm-store
 
 # Build outputs
 .next
+**/.next
+.turbo
+**/.turbo
 **/dist
 **/build
 
@@ -19,6 +24,9 @@ node_modules
 # IDE
 .idea
 .vscode
+.claude
+.codegraph
+.cursor
 *.swp
 *.swo
 
@@ -36,11 +44,17 @@ pnpm-debug.log*
 # Test coverage
 coverage
 **/coverage
+reports
+**/playwright-report
+**/test-results
+**/e2e-diagnostic-output
+**/e2e-screenshots
 
 # Documentation
 docs
 *.md
 !README.md
+!THIRD_PARTY_NOTICES.md
 
 # CI/CD
 .github
@@ -55,4 +69,3 @@ docs
 Dockerfile*
 docker-compose*
 .dockerignore
-
