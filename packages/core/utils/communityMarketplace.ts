@@ -30,7 +30,7 @@ export function marketplaceLogoInitials(name: string, identifier: string): strin
   return source.slice(0, 2).toUpperCase();
 }
 
-/** i18n key for join mode from public projection. */
+/** i18n key for legacy group marketplace join mode from public projection. */
 export function marketplaceJoinModeKey(joinMode?: string): string {
   switch (joinMode) {
     case 'open':
@@ -43,6 +43,28 @@ export function marketplaceJoinModeKey(joinMode?: string): string {
       return 'marketplace.joinModeGroupMember';
     default:
       return 'marketplace.joinModePublic';
+  }
+}
+
+/** i18n key for native marketplace buyer access mode from public projection. */
+export function marketplaceBuyerAccessModeKey(buyerAccessMode?: string): string {
+  switch (buyerAccessMode) {
+    case 'open':
+      return 'marketplace.enums.buyerAccessMode.open';
+    default:
+      return 'marketplace.enums.buyerAccessMode.open';
+  }
+}
+
+/** i18n key for native marketplace seller review mode from public projection. */
+export function marketplaceSellerReviewModeKey(sellerReviewMode?: string): string {
+  switch (sellerReviewMode) {
+    case 'auto':
+      return 'marketplace.enums.sellerReviewMode.auto';
+    case 'manual':
+      return 'marketplace.enums.sellerReviewMode.manual';
+    default:
+      return 'marketplace.enums.sellerReviewMode.manual';
   }
 }
 

@@ -50,7 +50,8 @@ describe('Marketplace API', () => {
     slug: 'crypto-collectibles',
     status: 'published',
     ownerUserID: 'owner-1',
-    joinMode: 'approval',
+    buyerAccessMode: 'open',
+    sellerReviewMode: 'manual',
     catalogMode: 'curated',
     discoverability: 'public',
     sellerEntryMode: 'operator_invited',
@@ -89,7 +90,8 @@ describe('Marketplace API', () => {
       const result = await marketplaceApi.createMarketplace({
         name: 'Crypto Collectibles',
         description: 'A marketplace for digital collectibles',
-        joinMode: 'approval',
+        buyerAccessMode: 'open',
+        sellerReviewMode: 'manual',
         catalogMode: 'curated',
       });
 
@@ -221,10 +223,18 @@ describe('Marketplace API', () => {
         { status: 'approved', visible: true, reason: 'compliance approved' }
       );
 
-      mockHostingDel.mockResolvedValueOnce({ removed: true, peerID: 'QmSeller1' });
-      await marketplaceApi.removeMarketplaceSeller('mp1', 'QmSeller1');
-      expect(mockHostingDel).toHaveBeenCalledWith(
-        '/platform/v1/marketplaces/mp1/sellers/QmSeller1'
+      mockHostingPost.mockResolvedValueOnce({ ...mockSeller, status: 'rejected' });
+      await marketplaceApi.declineMarketplaceSellerInvitation('mp1');
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplace-memberships/mp1/decline',
+        undefined
+      );
+
+      mockHostingPost.mockResolvedValueOnce({ ...mockSeller, status: 'left' });
+      await marketplaceApi.leaveMarketplaceMembership('mp1');
+      expect(mockHostingPost).toHaveBeenCalledWith(
+        '/platform/v1/marketplace-memberships/mp1/leave',
+        undefined
       );
     });
   });
@@ -333,7 +343,8 @@ describe('Marketplace API', () => {
       const mockConfig = {
         id: 'mp1',
         vertical: 'collectibles',
-        joinMode: 'approval',
+        buyerAccessMode: 'open',
+        sellerReviewMode: 'manual',
         catalogMode: 'curated',
         discoverability: 'public',
         sellerEntryMode: 'operator_invited',

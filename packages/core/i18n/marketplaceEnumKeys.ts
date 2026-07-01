@@ -1,9 +1,10 @@
 import type {
+  MarketplaceBuyerAccessMode,
   MarketplaceCatalogMode,
   MarketplaceDiscoverability,
   MarketplaceDomain,
-  MarketplaceJoinMode,
   MarketplaceLifecycleStatus,
+  MarketplaceSellerReviewMode,
   MarketplaceSellerEntryMode,
   MarketplaceStoreStatus,
 } from '../types/marketplace';
@@ -22,10 +23,11 @@ export type MarketplaceCatalogModeKey =
   | 'marketplace.enums.catalogMode.open'
   | 'marketplace.enums.catalogMode.curated';
 
-export type MarketplaceJoinModeKey =
-  | 'marketplace.enums.joinMode.open'
-  | 'marketplace.enums.joinMode.approval'
-  | 'marketplace.enums.joinMode.invite';
+export type MarketplaceBuyerAccessModeKey = 'marketplace.enums.buyerAccessMode.open';
+
+export type MarketplaceSellerReviewModeKey =
+  | 'marketplace.enums.sellerReviewMode.auto'
+  | 'marketplace.enums.sellerReviewMode.manual';
 
 export type MarketplaceSellerEntryModeKey =
   | 'marketplace.enums.sellerEntryMode.operatorInvited'
@@ -74,10 +76,19 @@ export const MARKETPLACE_CATALOG_MODE_KEYS: Record<
   curated: 'marketplace.enums.catalogMode.curated',
 };
 
-export const MARKETPLACE_JOIN_MODE_KEYS: Record<MarketplaceJoinMode, MarketplaceJoinModeKey> = {
-  open: 'marketplace.enums.joinMode.open',
-  approval: 'marketplace.enums.joinMode.approval',
-  invite: 'marketplace.enums.joinMode.invite',
+export const MARKETPLACE_BUYER_ACCESS_MODE_KEYS: Record<
+  MarketplaceBuyerAccessMode,
+  MarketplaceBuyerAccessModeKey
+> = {
+  open: 'marketplace.enums.buyerAccessMode.open',
+};
+
+export const MARKETPLACE_SELLER_REVIEW_MODE_KEYS: Record<
+  MarketplaceSellerReviewMode,
+  MarketplaceSellerReviewModeKey
+> = {
+  auto: 'marketplace.enums.sellerReviewMode.auto',
+  manual: 'marketplace.enums.sellerReviewMode.manual',
 };
 
 export const MARKETPLACE_SELLER_ENTRY_MODE_KEYS: Record<

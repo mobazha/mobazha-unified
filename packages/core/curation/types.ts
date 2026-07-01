@@ -1,10 +1,11 @@
 import type {
+  MarketplaceBuyerAccessMode,
   MarketplaceCatalogMode,
   MarketplaceCurationBrand,
   MarketplaceCurationConfig,
   MarketplaceCurationFeaturedItem,
   MarketplaceDiscoverability,
-  MarketplaceJoinMode,
+  MarketplaceSellerReviewMode,
   MarketplaceSellerEntryMode,
 } from '../types/marketplace';
 
@@ -44,7 +45,8 @@ export interface VerticalPreset {
 export interface CurationConfig {
   id: string;
   vertical: VerticalId;
-  joinMode: MarketplaceJoinMode;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
   catalogMode: MarketplaceCatalogMode;
   discoverability: MarketplaceDiscoverability;
   sellerEntryMode: MarketplaceSellerEntryMode;
@@ -67,7 +69,8 @@ export function mapMarketplaceConfigToCuration(raw: MarketplaceCurationConfig): 
   return {
     id: raw.id,
     vertical: raw.vertical,
-    joinMode: raw.joinMode,
+    buyerAccessMode: raw.buyerAccessMode,
+    sellerReviewMode: raw.sellerReviewMode,
     catalogMode: raw.catalogMode,
     discoverability: raw.discoverability,
     sellerEntryMode: raw.sellerEntryMode,

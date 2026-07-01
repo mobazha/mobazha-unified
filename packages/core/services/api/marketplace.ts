@@ -257,12 +257,21 @@ export async function updateMarketplaceSeller(
   );
 }
 
-export async function removeMarketplaceSeller(
-  marketplaceId: string,
-  peerID: string
-): Promise<{ removed: boolean; peerID: string }> {
-  return hostingDel<{ removed: boolean; peerID: string }>(
-    HOSTING_API.MARKETPLACE_SELLER(marketplaceId, peerID)
+export async function declineMarketplaceSellerInvitation(
+  marketplaceId: string
+): Promise<MarketplaceStoreMembership> {
+  return hostingPost<MarketplaceStoreMembership>(
+    HOSTING_API.MARKETPLACE_MEMBERSHIP_DECLINE(marketplaceId),
+    undefined
+  );
+}
+
+export async function leaveMarketplaceMembership(
+  marketplaceId: string
+): Promise<MarketplaceStoreMembership> {
+  return hostingPost<MarketplaceStoreMembership>(
+    HOSTING_API.MARKETPLACE_MEMBERSHIP_LEAVE(marketplaceId),
+    undefined
   );
 }
 

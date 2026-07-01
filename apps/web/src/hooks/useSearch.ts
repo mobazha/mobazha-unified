@@ -13,6 +13,7 @@ import {
   useMarketplaceContext,
   useNativeMarketplaceAttribution,
   useCurrency,
+  resolveProductCardSellerDisplay,
 } from '@mobazha/core';
 import { toast } from '@/components/ui/use-toast';
 import type { ProductListItem, AddWishlistParams } from '@mobazha/core';
@@ -156,12 +157,11 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     getImageUrl(item.thumbnail?.large) ||
     '';
 
-  const vendorName =
-    item.vendorName ||
-    (item.vendorPeerID
-      ? `${item.vendorPeerID.substring(0, 6)}…${item.vendorPeerID.slice(-4)}`
-      : '');
-  const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
+  const seller = resolveProductCardSellerDisplay({
+    peerID: item.vendorPeerID,
+    name: item.vendorName,
+    avatarUrl: getImageUrl(item.vendorAvatarHashes?.small),
+  });
 
   const { currencyCode, divisibility } = parsePriceFields(item.price);
   const displayPrice = listingDisplayPriceFromListItem(item);
@@ -177,8 +177,8 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
     image: thumbnailUrl,
     vendor: {
       peerID: item.vendorPeerID || '',
-      name: vendorName,
-      avatar: vendorAvatar,
+      name: seller.name,
+      avatar: seller.avatarUrl,
     },
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,

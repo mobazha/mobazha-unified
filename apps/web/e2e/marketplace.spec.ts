@@ -4,11 +4,73 @@
  */
 
 import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
 import { mockMarketplaceOperatorAPI, MOCK_PEER_ID } from './fixtures/mock-api-routes';
 
+const NOW = new Date().toISOString();
+
+const PUBLIC_MARKETPLACE = {
+  id: 'mp1',
+  name: 'Crypto Collectibles',
+  slug: 'mp1',
+  description: 'Curated collectibles marketplace',
+  logoURL: '',
+  bannerURL: '',
+  publicURL: '',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
+  catalogMode: 'curated',
+  discoverability: 'public',
+  sellerEntryMode: 'seller_self_serve',
+  vertical: 'collectibles',
+  sellerCount: 1,
+  productCount: 2,
+  updatedAt: NOW,
+};
+
+function wrapData<T>(data: T): string {
+  return JSON.stringify({ data });
+}
+
+async function mockPublicMarketplacePages(page: Page) {
+  await page.route('**/platform/v1/public-marketplaces/mp1**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        marketplace: PUBLIC_MARKETPLACE,
+        sellers: [{ peerID: MOCK_PEER_ID, productGroups: [], updatedAt: NOW }],
+        featured: [],
+        banners: [],
+        listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+      }),
+    });
+  });
+
+  await page.route('**/platform/v1/public-marketplaces**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    if (route.request().url().includes('/platform/v1/public-marketplaces/')) {
+      return route.fallback();
+    }
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        marketplaces: [PUBLIC_MARKETPLACE],
+        total: 1,
+        page: 1,
+        pageSize: 100,
+        totalPage: 1,
+      }),
+    });
+  });
+}
+
 test.describe('Marketplace List Page', () => {
   test.beforeEach(async ({ page }) => {
+    await mockPublicMarketplacePages(page);
     await page.goto('/marketplace');
   });
 
@@ -19,9 +81,7 @@ test.describe('Marketplace List Page', () => {
 
   test('should show marketplace cards', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    const content = page.locator('main');
-    await expect(content).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Crypto Collectibles' })).toBeVisible();
   });
 
   test('should have search functionality', async ({ page }) => {
@@ -35,20 +95,15 @@ test.describe('Marketplace List Page', () => {
 
   test('should navigate to marketplace detail', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    const marketplaceCard = page
-      .locator('[data-testid="marketplace-card"], .marketplace-card, article')
-      .first();
-
-    if (await marketplaceCard.isVisible()) {
-      await marketplaceCard.click();
-      await page.waitForURL(/\/marketplace\/\w+/, { timeout: 5000 }).catch(() => {});
-    }
+    await page.getByRole('link', { name: 'Crypto Collectibles' }).click();
+    await expect(page).toHaveURL(/\/marketplace\/mp1$/);
+    await expect(page.getByRole('heading', { name: 'Crypto Collectibles' })).toBeVisible();
   });
 });
 
 test.describe('Marketplace Detail Page', () => {
   test.beforeEach(async ({ page }) => {
+    await mockPublicMarketplacePages(page);
     await page.goto('/marketplace/mp1');
   });
 
@@ -63,29 +118,17 @@ test.describe('Marketplace Detail Page', () => {
     await page.waitForLoadState('domcontentloaded');
 
     const stats = page.getByText(/member|product|seller/i);
-    expect(await stats.count()).toBeGreaterThanOrEqual(0);
+    await expect(stats.first()).toBeVisible();
   });
 
   test('should display products tab', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    const productsSection = page.locator(
-      '[data-testid="products"], .products-grid, [role="tabpanel"]'
-    );
-
-    if (await productsSection.isVisible()) {
-      await expect(productsSection).toBeVisible();
-    }
+    await expect(page.locator('#collectible-marketplace-listings')).toBeVisible();
   });
 
   test('should show join button for non-members', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    const joinButton = page.locator('button').filter({ hasText: /join|加入/i });
-
-    if (await joinButton.count()) {
-      await expect(joinButton.first()).toBeVisible();
-    }
+    await expect(page.getByTestId('marketplace-apply-to-sell')).toBeVisible();
   });
 
   test('should show seller application option', async ({ page }) => {
@@ -93,7 +136,7 @@ test.describe('Marketplace Detail Page', () => {
 
     const sellerButton = page.locator('button, a').filter({ hasText: /sell|卖家|apply/i });
 
-    expect(await sellerButton.count()).toBeGreaterThanOrEqual(0);
+    await expect(sellerButton.first()).toBeVisible();
   });
 });
 
@@ -117,7 +160,11 @@ test.describe('Marketplace Operator Console', () => {
 
     await expect(page.getByTestId('operator-marketplace-detail')).toBeVisible();
     await expect(page.getByText('Crypto Collectibles')).toBeVisible();
-    await expect(page.getByText(/^(approved|已批准)$/i)).toBeVisible();
+    await expect(
+      page
+        .getByTestId('operator-membership-row')
+        .filter({ has: page.getByText(/^(approved|已批准)$/i) })
+    ).toBeVisible();
   });
 });
 

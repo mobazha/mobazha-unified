@@ -46,7 +46,8 @@ vi.mock('@mobazha/core', async importOriginal => {
     startCasdoorLogin: vi.fn(),
     resolveCurationMarketBackHref: (href: string) => href,
     marketplaceHref: () => '/marketplace/test-market',
-    marketplaceJoinModeKey: () => 'marketplace.joinModeApproval',
+    marketplaceBuyerAccessModeKey: () => 'marketplace.enums.buyerAccessMode.open',
+    marketplaceSellerReviewModeKey: () => 'marketplace.enums.sellerReviewMode.manual',
     marketplaceVerticalKey: () => 'marketplace.vertical.general',
     MARKETPLACE_CATALOG_MODE_KEYS: {
       open: 'marketplace.enums.catalogMode.open',
@@ -66,7 +67,8 @@ const baseMarketplace = {
   name: 'Test Market',
   slug: 'test-market',
   publicURL: 'https://test.example',
-  joinMode: 'approval',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
   catalogMode: 'curated',
   discoverability: 'public',
   sellerEntryMode: 'seller_self_serve',
@@ -226,7 +228,7 @@ describe('MarketplaceSellPage', () => {
       marketplace: {
         ...baseMarketplace,
         catalogMode: 'open',
-        joinMode: 'open',
+        sellerReviewMode: 'auto',
       },
     });
 
@@ -312,18 +314,17 @@ describe('MarketplaceSellPage', () => {
     );
   });
 
-  it('blocks self-service UI for invite-only markets', async () => {
+  it('blocks self-service UI for operator-invited markets', async () => {
     mockSellHook({
       marketplace: {
         ...baseMarketplace,
-        sellerEntryMode: 'seller_self_serve',
-        joinMode: 'invite',
+        sellerEntryMode: 'operator_invited',
       },
     });
 
     render(<MarketplaceSellPage />);
 
-    expect(screen.getByText('marketplace.sell.inviteOnlyPolicy')).toBeInTheDocument();
+    expect(screen.getByText('marketplace.sell.operatorInvitedPolicy')).toBeInTheDocument();
     expect(screen.queryByTestId('sell-submit-application')).toBeNull();
   });
 
@@ -331,7 +332,7 @@ describe('MarketplaceSellPage', () => {
     mockSellHook({
       marketplace: {
         ...baseMarketplace,
-        joinMode: 'invite',
+        sellerEntryMode: 'operator_invited',
         vertical: 'collectibles',
         description: 'Invite-only marketplace for verified stores',
       },
@@ -373,7 +374,6 @@ describe('MarketplaceSellPage', () => {
       application: null,
       marketplace: {
         ...baseMarketplace,
-        joinMode: 'approval',
         sellerEntryMode: 'seller_self_serve',
       },
     });

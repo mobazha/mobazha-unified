@@ -10,6 +10,9 @@ const mockUpdateMarketplace = vi.fn();
 const mockArchiveMarketplace = vi.fn();
 const mockVerifyCustomDomain = vi.fn();
 const mockRefresh = vi.fn();
+const mockPublish = vi.fn();
+const mockSuspend = vi.fn();
+const mockResume = vi.fn();
 const mockAddCurationItem = vi.fn();
 const mockReorderCurationByKind = vi.fn();
 const mockToggleCurationItem = vi.fn();
@@ -18,6 +21,7 @@ const mockLoadCurationCandidates = vi.fn();
 let mockReviewEventsError: string | null = null;
 let mockAttributionSummaryError: string | null = null;
 let mockAttributionSummaryLoading = false;
+let mockPageLoading = false;
 let mockAttributionSummary: {
   from: string;
   to: string;
@@ -50,7 +54,8 @@ const marketplace: NativeMarketplace = {
   slug: 'operator-market',
   status: 'published',
   ownerUserID: 'owner-1',
-  joinMode: 'approval',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
   catalogMode: 'curated',
   discoverability: 'public',
   sellerEntryMode: 'operator_invited',
@@ -110,6 +115,8 @@ const stores = [
     invitedAt: '2026-01-20T00:00:00Z',
   }),
 ];
+let currentMarketplace: NativeMarketplace = marketplace;
+let currentStores: MarketplaceStoreMembership[] = stores;
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'mp-1' }),
@@ -158,8 +165,8 @@ vi.mock('@mobazha/core', async importOriginal => {
       formatDate: (value: string) => `formatted:${value}`,
     }),
     useOperatorMarketplace: () => ({
-      marketplace,
-      stores,
+      marketplace: currentMarketplace,
+      stores: currentStores,
       reviewEvents: [
         {
           id: 8,
@@ -181,7 +188,7 @@ vi.mock('@mobazha/core', async importOriginal => {
         rejected: 0,
         suspended: 0,
       },
-      loading: false,
+      loading: mockPageLoading,
       loadFailed: false,
       reviewEventsError: mockReviewEventsError,
       attributionSummary: mockAttributionSummary,
@@ -201,7 +208,9 @@ vi.mock('@mobazha/core', async importOriginal => {
       curationError: null,
       working: null,
       refresh: mockRefresh,
-      publish: vi.fn(),
+      publish: mockPublish,
+      suspend: mockSuspend,
+      resume: mockResume,
       update: mockUpdateMarketplace,
       archive: mockArchiveMarketplace,
       invite: vi.fn(),
@@ -220,6 +229,82 @@ vi.mock('@/components', () => ({
   Header: () => <div data-testid="header" />,
   Footer: () => <div data-testid="footer" />,
 }));
+
+vi.mock('@/components/ui/tabs', async () => {
+  const ReactActual = await vi.importActual<typeof import('react')>('react');
+  const TabsContext = ReactActual.createContext<{
+    value: string;
+    onValueChange: (value: string) => void;
+  } | null>(null);
+
+  return {
+    Tabs: ({
+      defaultValue,
+      value,
+      onValueChange,
+      children,
+      className,
+    }: {
+      defaultValue?: string;
+      value?: string;
+      onValueChange?: (value: string) => void;
+      children: React.ReactNode;
+      className?: string;
+    }) => {
+      const [internalValue, setInternalValue] = ReactActual.useState(defaultValue ?? '');
+      const activeValue = value ?? internalValue;
+      const handleValueChange = (nextValue: string) => {
+        if (value === undefined) setInternalValue(nextValue);
+        onValueChange?.(nextValue);
+      };
+      return (
+        <TabsContext.Provider value={{ value: activeValue, onValueChange: handleValueChange }}>
+          <div className={className}>{children}</div>
+        </TabsContext.Provider>
+      );
+    },
+    TabsList: ({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+      <div role="tablist" className={className} {...props}>
+        {children}
+      </div>
+    ),
+    TabsTrigger: ({
+      value,
+      children,
+      className,
+      ...props
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & { value: string }) => {
+      const context = ReactActual.useContext(TabsContext);
+      const selected = context?.value === value;
+      return (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selected}
+          className={className}
+          onClick={() => context?.onValueChange(value)}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    },
+    TabsContent: ({
+      value,
+      children,
+      className,
+      ...props
+    }: React.HTMLAttributes<HTMLDivElement> & { value: string }) => {
+      const context = ReactActual.useContext(TabsContext);
+      if (context?.value !== value) return null;
+      return (
+        <div role="tabpanel" className={className} {...props}>
+          {children}
+        </div>
+      );
+    },
+  };
+});
 
 vi.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
@@ -258,12 +343,19 @@ vi.mock('@/components/Operator/OperatorMarketplaceCurationPanel', () => ({
 
 import MarketplaceOperatorDetailPage from '@/app/operator/marketplaces/[id]/page';
 
+function goToOperatorTab(tab: 'overview' | 'curation' | 'sellers' | 'settings') {
+  fireEvent.click(screen.getByTestId(`operator-tab-${tab}`));
+}
+
 describe('MarketplaceOperatorDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    currentMarketplace = marketplace;
+    currentStores = stores;
     mockReviewEventsError = null;
     mockAttributionSummaryError = null;
     mockAttributionSummaryLoading = false;
+    mockPageLoading = false;
     mockAttributionSummary = {
       from: '2026-01-01T00:00:00Z',
       to: '2026-01-31T00:00:00Z',
@@ -295,8 +387,136 @@ describe('MarketplaceOperatorDetailPage', () => {
     latestCurationPanelProps = null;
   });
 
+  it('defaults to overview and switches tabs to the right workspaces', () => {
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-tab-content-overview')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-overview-readiness')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-attribution-funnel-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('curation-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('settings-card')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('operator-membership-filters')).not.toBeInTheDocument();
+
+    goToOperatorTab('curation');
+    expect(screen.getByTestId('operator-tab-content-curation')).toBeInTheDocument();
+    expect(screen.getByTestId('curation-panel')).toBeInTheDocument();
+
+    goToOperatorTab('sellers');
+    expect(screen.getByTestId('operator-tab-content-sellers')).toBeInTheDocument();
+    expect(screen.getByTestId('operator-membership-filters')).toBeInTheDocument();
+
+    goToOperatorTab('settings');
+    expect(screen.getByTestId('operator-tab-content-settings')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-card')).toBeInTheDocument();
+  });
+
+  it('keeps the curation tab active across the loading refresh after a mutation', () => {
+    const { rerender } = render(<MarketplaceOperatorDetailPage />);
+
+    goToOperatorTab('curation');
+    expect(screen.getByTestId('operator-tab-content-curation')).toBeInTheDocument();
+
+    mockPageLoading = true;
+    rerender(<MarketplaceOperatorDetailPage />);
+    expect(screen.queryByTestId('operator-tab-curation')).not.toBeInTheDocument();
+
+    mockPageLoading = false;
+    rerender(<MarketplaceOperatorDetailPage />);
+    expect(screen.getByTestId('operator-tab-content-curation')).toBeInTheDocument();
+    expect(screen.queryByTestId('operator-tab-content-overview')).not.toBeInTheDocument();
+  });
+
+  it('keeps self-serve empty marketplaces publish/resume-eligible when domain is verified', () => {
+    currentMarketplace = {
+      ...marketplace,
+      status: 'draft',
+      sellerEntryMode: 'seller_self_serve',
+      domains: [
+        {
+          host: 'market.example.test',
+          kind: 'subdomain',
+          verificationStatus: 'verified',
+          isPrimary: true,
+        },
+      ],
+    };
+    currentStores = [];
+    const { unmount } = render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-marketplace-publish')).toBeEnabled();
+    expect(
+      screen.getByText('marketplace.operator.launchChecklistSellerSelfServe')
+    ).toBeInTheDocument();
+
+    unmount();
+    currentMarketplace = { ...currentMarketplace, status: 'suspended' };
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-marketplace-resume')).toBeEnabled();
+  });
+
+  it('disables suspended resume until launch checklist readiness is met', async () => {
+    currentMarketplace = {
+      ...marketplace,
+      status: 'suspended',
+      sellerEntryMode: 'operator_invited',
+      domains: [],
+    };
+    currentStores = [];
+
+    render(<MarketplaceOperatorDetailPage />);
+
+    const resumeButton = screen.getByTestId('operator-marketplace-resume');
+    expect(resumeButton).toBeDisabled();
+    goToOperatorTab('settings');
+    expect(screen.getByTestId('operator-launch-checklist')).toBeInTheDocument();
+    goToOperatorTab('overview');
+    expect(screen.getByTestId('operator-resume-disabled-hint')).toBeInTheDocument();
+
+    fireEvent.click(resumeButton);
+    await waitFor(() => expect(mockResume).not.toHaveBeenCalled());
+  });
+
+  it('enables suspended resume and calls API when readiness checklist is complete', async () => {
+    const { unmount } = render(<MarketplaceOperatorDetailPage />);
+    fireEvent.click(screen.getByTestId('operator-marketplace-suspend'));
+    await waitFor(() => expect(mockSuspend).toHaveBeenCalledTimes(1));
+
+    unmount();
+    currentMarketplace = {
+      ...marketplace,
+      status: 'suspended',
+      sellerEntryMode: 'operator_invited',
+      domains: [
+        {
+          host: 'market.example.test',
+          kind: 'subdomain',
+          verificationStatus: 'verified',
+          isPrimary: true,
+        },
+      ],
+    };
+    currentStores = [
+      buildStore({
+        id: 99,
+        peerID: 'peer-ready',
+        status: 'approved',
+        isVisible: true,
+      }),
+    ];
+    render(<MarketplaceOperatorDetailPage />);
+
+    const resumeButton = screen.getByTestId('operator-marketplace-resume');
+    expect(resumeButton).toBeEnabled();
+    expect(screen.queryByTestId('operator-resume-disabled-hint')).not.toBeInTheDocument();
+
+    fireEvent.click(resumeButton);
+    await waitFor(() => expect(mockResume).toHaveBeenCalledTimes(1));
+  });
+
   it('wires settings save to useOperatorMarketplace.update and shows success toast', async () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('settings');
     expect(latestSettingsCardProps).not.toBeNull();
 
     await act(async () => {
@@ -310,6 +530,7 @@ describe('MarketplaceOperatorDetailPage', () => {
   it('shows destructive toast when settings save fails', async () => {
     mockUpdateMarketplace.mockRejectedValueOnce(new Error('update failed'));
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('settings');
     expect(latestSettingsCardProps).not.toBeNull();
 
     await act(async () => {
@@ -327,6 +548,7 @@ describe('MarketplaceOperatorDetailPage', () => {
 
   it('wires archive action and navigates back to console on success', async () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('settings');
     expect(latestSettingsCardProps).not.toBeNull();
 
     await act(async () => {
@@ -339,6 +561,7 @@ describe('MarketplaceOperatorDetailPage', () => {
 
   it('shows localized toast for custom-domain verify result variants', async () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('settings');
     expect(latestSettingsCardProps).not.toBeNull();
 
     await act(async () => {
@@ -394,6 +617,7 @@ describe('MarketplaceOperatorDetailPage', () => {
 
   it('shows pending count/filter without invited stores', async () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     const rows = screen.getAllByTestId('operator-membership-row');
     expect(rows[0]).toHaveAttribute('data-peerid', 'peer-applied');
@@ -412,6 +636,7 @@ describe('MarketplaceOperatorDetailPage', () => {
 
   it('shows curated empty-group message and group description/item count', async () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     expect(screen.getByText('marketplace.operator.productGroupWithCount')).toBeInTheDocument();
     expect(screen.getByText('Hot picks')).toBeInTheDocument();
@@ -426,6 +651,7 @@ describe('MarketplaceOperatorDetailPage', () => {
 
   it('uses valid actions only for each status', () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     expect(screen.getByTestId('operator-approve-peer-applied')).toBeInTheDocument();
     expect(screen.getByTestId('operator-reject-peer-applied')).toBeInTheDocument();
@@ -441,6 +667,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockReviewSeller.mockRejectedValueOnce(new Error('failed reject'));
 
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('operator-approve-peer-applied'));
@@ -470,6 +697,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockReviewSeller.mockResolvedValue(undefined);
 
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('operator-approve-peer-applied'));
@@ -512,6 +740,7 @@ describe('MarketplaceOperatorDetailPage', () => {
 
   it('renders per-store review history disclosure', () => {
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     const disclosure = screen.getByTestId('operator-review-history-peer-applied');
     expect(disclosure).toBeInTheDocument();
@@ -529,6 +758,7 @@ describe('MarketplaceOperatorDetailPage', () => {
     mockLoadCurationCandidates.mockRejectedValueOnce(new Error('candidate failed'));
 
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('curation');
     expect(latestCurationPanelProps).not.toBeNull();
 
     await expect(
@@ -583,6 +813,7 @@ describe('MarketplaceOperatorDetailPage', () => {
   it('shows localized generic review-history load error without raw API text', () => {
     mockReviewEventsError = 'RAW_REVIEW_HISTORY_FAILURE';
     render(<MarketplaceOperatorDetailPage />);
+    goToOperatorTab('sellers');
 
     expect(screen.getByTestId('operator-review-events-error')).toBeInTheDocument();
     expect(screen.getByText('marketplace.operator.reviewHistoryLoadFailed')).toBeInTheDocument();
@@ -625,12 +856,14 @@ describe('MarketplaceOperatorDetailPage', () => {
     expect(screen.getByTestId('operator-attribution-summary-error')).toBeInTheDocument();
     expect(screen.queryByTestId('operator-attribution-no-data')).not.toBeInTheDocument();
     expect(screen.getByTestId('operator-attribution-summary-retry')).toBeInTheDocument();
-    expect(screen.getByTestId('operator-membership-filters')).toBeInTheDocument();
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('operator-attribution-summary-retry'));
     });
     expect(mockRefresh).toHaveBeenCalledTimes(1);
+
+    goToOperatorTab('sellers');
+    expect(screen.getByTestId('operator-membership-filters')).toBeInTheDocument();
   });
 
   it('renders summary loading state without no-data or error state', () => {

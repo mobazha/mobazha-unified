@@ -22,7 +22,8 @@ vi.mock('@mobazha/core/config/curationHomePath', () => ({
 const mockMarketplaceConfig: MarketplaceCurationConfig = {
   id: 'm2-wilson',
   vertical: 'collectibles',
-  joinMode: 'approval',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
   catalogMode: 'open',
   discoverability: 'public',
   sellerEntryMode: 'operator_invited',

@@ -28,12 +28,12 @@ const Image = forwardRef<HTMLImageElement, ImageProps>(
       height,
       fill,
       priority,
-      quality,
-      placeholder,
-      blurDataURL,
-      loader,
-      unoptimized,
-      sizes,
+      quality: _quality,
+      placeholder: _placeholder,
+      blurDataURL: _blurDataURL,
+      loader: _loader,
+      unoptimized: _unoptimized,
+      sizes: _sizes,
       style,
       className,
       ...props
@@ -52,7 +52,6 @@ const Image = forwardRef<HTMLImageElement, ImageProps>(
           inset: 0,
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
           ...style,
         }
       : style || {};

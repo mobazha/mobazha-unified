@@ -4122,6 +4122,324 @@
         "tags": ["ipns"]
       }
     },
+    "/platform/v1/marketplace-memberships/mine": {
+      "get": {
+        "operationId": "marketplace-memberships-mine",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List Marketplace invitations and memberships for the current store",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplace-memberships/review-events": {
+      "get": {
+        "operationId": "marketplace-membership-review-events-feed",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "beforeID",
+            "schema": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List seller review notifications across marketplaces",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplace-memberships/review-events/read-all": {
+      "post": {
+        "operationId": "marketplace-membership-review-events-read-all",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Mark all seller review notifications as read",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplace-memberships/{marketplaceID}/decline": {
+      "post": {
+        "operationId": "marketplace-memberships-decline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "marketplaceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Decline a marketplace invitation as the invited store",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplace-memberships/{marketplaceID}/leave": {
+      "post": {
+        "operationId": "marketplace-memberships-leave",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "marketplaceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Leave a marketplace as the current store",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplace-memberships/{marketplaceID}/review-events": {
+      "get": {
+        "operationId": "marketplace-membership-review-events-mine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "marketplaceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List seller review notifications for the current store",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplace-memberships/{marketplaceID}/review-events/{eventID}/read": {
+      "post": {
+        "operationId": "marketplace-membership-review-events-read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "marketplaceID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "eventID",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Mark a seller review notification as read",
+        "tags": ["marketplaces"]
+      }
+    },
     "/platform/v1/marketplaces": {
       "post": {
         "operationId": "marketplaces-create",
@@ -4129,7 +4447,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Platform_MarketplaceOwnerRequest"
+                "$ref": "#/components/schemas/Platform_MarketplaceCreateBody"
               }
             }
           },
@@ -4301,7 +4619,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Platform_MarketplaceOwnerRequest"
+                "$ref": "#/components/schemas/Platform_MarketplaceUpdateRequest"
               }
             }
           },
@@ -4335,6 +4653,66 @@
           }
         ],
         "summary": "Update marketplace by ID",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/attribution-summary": {
+      "get": {
+        "operationId": "marketplaces-attribution-summary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get the Marketplace buyer-journey funnel summary",
         "tags": ["marketplaces"]
       }
     },
@@ -4393,6 +4771,386 @@
         "tags": ["marketplaces"]
       }
     },
+    "/platform/v1/marketplaces/{id}/curation": {
+      "get": {
+        "operationId": "marketplaces-curation-list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List operator-owned marketplace curation items",
+        "tags": ["marketplaces"]
+      },
+      "post": {
+        "operationId": "marketplaces-curation-create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceCurationCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Add a seller, listing, or banner to marketplace curation",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/curation/candidates": {
+      "get": {
+        "operationId": "marketplaces-curation-candidates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List sellers and listings available for marketplace curation",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/curation/reorder": {
+      "put": {
+        "operationId": "marketplaces-curation-reorder",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceCurationReorderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Atomically reorder a marketplace curation section",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/curation/{itemID}": {
+      "delete": {
+        "operationId": "marketplaces-curation-delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "itemID",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove a marketplace curation item",
+        "tags": ["marketplaces"]
+      },
+      "put": {
+        "operationId": "marketplaces-curation-update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "itemID",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceCurationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Enable or disable a marketplace curation item",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/domains/custom/verify": {
+      "post": {
+        "operationId": "marketplaces-custom-domain-verify",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Verify the marketplace custom-domain DNS challenge",
+        "tags": ["marketplaces"]
+      }
+    },
     "/platform/v1/marketplaces/{id}/link": {
       "get": {
         "operationId": "marketplaces-link",
@@ -4434,6 +5192,67 @@
           }
         ],
         "summary": "Get marketplace share link",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/seller-review-events": {
+      "get": {
+        "operationId": "marketplaces-seller-review-events-list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "peerID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List marketplace seller decision audit history",
         "tags": ["marketplaces"]
       }
     },
@@ -4485,7 +5304,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "List marketplace seller whitelist",
+        "summary": "List marketplace store memberships",
         "tags": ["marketplaces"]
       }
     },
@@ -4544,56 +5363,6 @@
       }
     },
     "/platform/v1/marketplaces/{id}/sellers/{peerID}": {
-      "delete": {
-        "operationId": "marketplaces-sellers-delete",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "peerID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success envelope inner data."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Remove marketplace seller",
-        "tags": ["marketplaces"]
-      },
       "put": {
         "operationId": "marketplaces-sellers-update",
         "parameters": [
@@ -4652,6 +5421,58 @@
           }
         ],
         "summary": "Update marketplace seller status",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/marketplaces/{id}/sellers/{peerID}/accept": {
+      "post": {
+        "operationId": "marketplaces-sellers-accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "peerID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Accept a marketplace invitation as the invited store",
         "tags": ["marketplaces"]
       }
     },
@@ -5363,6 +6184,317 @@
         "tags": ["product-groups"]
       }
     },
+    "/platform/v1/public-marketplaces": {
+      "get": {
+        "operationId": "public-marketplaces-list",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "vertical",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Discover published native marketplaces",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/public-marketplaces/{identifier}": {
+      "get": {
+        "operationId": "public-marketplaces-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get a published native marketplace storefront",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/public-marketplaces/{identifier}/attribution-events": {
+      "post": {
+        "operationId": "public-marketplace-attribution-events-create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceAttributionEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Record an anonymous Marketplace buyer-journey event",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/public-marketplaces/{identifier}/seller-applications": {
+      "post": {
+        "operationId": "public-marketplace-seller-applications-create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_MarketplaceSellerApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Apply the current store to a marketplace",
+        "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/public-marketplaces/{identifier}/seller-applications/mine": {
+      "delete": {
+        "operationId": "public-marketplace-seller-applications-withdraw",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Withdraw the current store's pending marketplace application",
+        "tags": ["marketplaces"]
+      },
+      "get": {
+        "operationId": "public-marketplace-seller-applications-mine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get the current store's marketplace application",
+        "tags": ["marketplaces"]
+      }
+    },
     "/platform/v1/relay/execute": {
       "post": {
         "operationId": "relay-execute",
@@ -6019,15 +7151,7 @@
           {
             "explode": false,
             "in": "query",
-            "name": "groupPlatform",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "groupChatID",
+            "name": "marketplaceID",
             "schema": {
               "type": "string"
             }
@@ -6055,7 +7179,7 @@
             "description": "Error"
           }
         },
-        "summary": "Check whitelist vs group-marketplace vs none access",
+        "summary": "Check whitelist vs marketplace vs none access",
         "tags": ["store-access"]
       }
     },
@@ -8160,198 +9284,6 @@
         "operationId": "search-listings",
         "parameters": [
           {
-            "description": "Search query string.",
-            "explode": false,
-            "in": "query",
-            "name": "q",
-            "schema": {
-              "description": "Search query string.",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Results per page (max 100).",
-            "explode": false,
-            "in": "query",
-            "name": "pageSize",
-            "schema": {
-              "default": 20,
-              "description": "Results per page (max 100).",
-              "format": "int64",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Sort field (price, added, online, rating).",
-            "explode": false,
-            "in": "query",
-            "name": "s",
-            "schema": {
-              "description": "Sort field (price, added, online, rating).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Sort order (asc, desc).",
-            "explode": false,
-            "in": "query",
-            "name": "o",
-            "schema": {
-              "description": "Sort order (asc, desc).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
-            "explode": false,
-            "in": "query",
-            "name": "sortBy",
-            "schema": {
-              "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Moderated filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "m",
-            "schema": {
-              "description": "Moderated filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Vendor filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "vendor",
-            "schema": {
-              "description": "Vendor filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Tor filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "tor",
-            "schema": {
-              "description": "Tor filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Location filter (pipe-separated country codes).",
-            "explode": false,
-            "in": "query",
-            "name": "lf",
-            "schema": {
-              "description": "Location filter (pipe-separated country codes).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Peer ID filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "id",
-            "schema": {
-              "description": "Peer ID filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing type filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "lt",
-            "schema": {
-              "description": "Listing type filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing type filter alias.",
-            "explode": false,
-            "in": "query",
-            "name": "type",
-            "schema": {
-              "description": "Listing type filter alias.",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Product type filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "productType",
-            "schema": {
-              "description": "Product type filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing condition filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "lc",
-            "schema": {
-              "description": "Listing condition filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Rating filter (pipe-separated integers).",
-            "explode": false,
-            "in": "query",
-            "name": "pr",
-            "schema": {
-              "description": "Rating filter (pipe-separated integers).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Status filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "ps",
-            "schema": {
-              "description": "Status filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Minimum price filter (minimal units integer).",
-            "explode": false,
-            "in": "query",
-            "name": "minPrice",
-            "schema": {
-              "description": "Minimum price filter (minimal units integer).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Maximum price filter (minimal units integer).",
-            "explode": false,
-            "in": "query",
-            "name": "maxPrice",
-            "schema": {
-              "description": "Maximum price filter (minimal units integer).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Price currency code (e.g. USD). Recommended with min/max price.",
-            "explode": false,
-            "in": "query",
-            "name": "currency",
-            "schema": {
-              "description": "Price currency code (e.g. USD). Recommended with min/max price.",
-              "type": "string"
-            }
-          },
-          {
             "description": "Page number (1-based).",
             "explode": false,
             "in": "query",
@@ -8361,16 +9293,6 @@
               "description": "Page number (1-based).",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Browse mode for q=* : discover (default) or all.",
-            "explode": false,
-            "in": "query",
-            "name": "browse",
-            "schema": {
-              "description": "Browse mode for q=* : discover (default) or all.",
-              "type": "string"
             }
           }
         ],
@@ -8456,6 +9378,18 @@
               "format": "int64",
               "type": "integer"
             }
+          },
+          {
+            "description": "Time window in hours.",
+            "explode": false,
+            "in": "query",
+            "name": "hours",
+            "schema": {
+              "default": 168,
+              "description": "Time window in hours.",
+              "format": "int64",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -8478,7 +9412,7 @@
             "description": "Error"
           }
         },
-        "summary": "Get hot (trending) listings ranked by rating across all time",
+        "summary": "Get hot (trending) listings",
         "tags": ["listings"]
       }
     },
@@ -9316,198 +10250,6 @@
         "operationId": "search-profiles",
         "parameters": [
           {
-            "description": "Search query string.",
-            "explode": false,
-            "in": "query",
-            "name": "q",
-            "schema": {
-              "description": "Search query string.",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Results per page (max 100).",
-            "explode": false,
-            "in": "query",
-            "name": "pageSize",
-            "schema": {
-              "default": 20,
-              "description": "Results per page (max 100).",
-              "format": "int64",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Sort field (price, added, online, rating).",
-            "explode": false,
-            "in": "query",
-            "name": "s",
-            "schema": {
-              "description": "Sort field (price, added, online, rating).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Sort order (asc, desc).",
-            "explode": false,
-            "in": "query",
-            "name": "o",
-            "schema": {
-              "description": "Sort order (asc, desc).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
-            "explode": false,
-            "in": "query",
-            "name": "sortBy",
-            "schema": {
-              "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Moderated filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "m",
-            "schema": {
-              "description": "Moderated filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Vendor filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "vendor",
-            "schema": {
-              "description": "Vendor filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Tor filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "tor",
-            "schema": {
-              "description": "Tor filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Location filter (pipe-separated country codes).",
-            "explode": false,
-            "in": "query",
-            "name": "lf",
-            "schema": {
-              "description": "Location filter (pipe-separated country codes).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Peer ID filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "id",
-            "schema": {
-              "description": "Peer ID filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing type filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "lt",
-            "schema": {
-              "description": "Listing type filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing type filter alias.",
-            "explode": false,
-            "in": "query",
-            "name": "type",
-            "schema": {
-              "description": "Listing type filter alias.",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Product type filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "productType",
-            "schema": {
-              "description": "Product type filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing condition filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "lc",
-            "schema": {
-              "description": "Listing condition filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Rating filter (pipe-separated integers).",
-            "explode": false,
-            "in": "query",
-            "name": "pr",
-            "schema": {
-              "description": "Rating filter (pipe-separated integers).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Status filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "ps",
-            "schema": {
-              "description": "Status filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Minimum price filter (minimal units integer).",
-            "explode": false,
-            "in": "query",
-            "name": "minPrice",
-            "schema": {
-              "description": "Minimum price filter (minimal units integer).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Maximum price filter (minimal units integer).",
-            "explode": false,
-            "in": "query",
-            "name": "maxPrice",
-            "schema": {
-              "description": "Maximum price filter (minimal units integer).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Price currency code (e.g. USD). Recommended with min/max price.",
-            "explode": false,
-            "in": "query",
-            "name": "currency",
-            "schema": {
-              "description": "Price currency code (e.g. USD). Recommended with min/max price.",
-              "type": "string"
-            }
-          },
-          {
             "description": "Page number (1-based).",
             "explode": false,
             "in": "query",
@@ -9517,16 +10259,6 @@
               "description": "Page number (1-based).",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Browse mode for q=* : discover (default) or all.",
-            "explode": false,
-            "in": "query",
-            "name": "browse",
-            "schema": {
-              "description": "Browse mode for q=* : discover (default) or all.",
-              "type": "string"
             }
           }
         ],
@@ -9780,198 +10512,6 @@
       "get": {
         "operationId": "root-search",
         "parameters": [
-          {
-            "description": "Search query string.",
-            "explode": false,
-            "in": "query",
-            "name": "q",
-            "schema": {
-              "description": "Search query string.",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Results per page (max 100).",
-            "explode": false,
-            "in": "query",
-            "name": "pageSize",
-            "schema": {
-              "default": 20,
-              "description": "Results per page (max 100).",
-              "format": "int64",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Sort field (price, added, online, rating).",
-            "explode": false,
-            "in": "query",
-            "name": "s",
-            "schema": {
-              "description": "Sort field (price, added, online, rating).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Sort order (asc, desc).",
-            "explode": false,
-            "in": "query",
-            "name": "o",
-            "schema": {
-              "description": "Sort order (asc, desc).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
-            "explode": false,
-            "in": "query",
-            "name": "sortBy",
-            "schema": {
-              "description": "Sort alias (price-asc, price-desc, added-asc, added-desc, online-desc, relevance).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Moderated filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "m",
-            "schema": {
-              "description": "Moderated filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Vendor filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "vendor",
-            "schema": {
-              "description": "Vendor filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Tor filter (true/false).",
-            "explode": false,
-            "in": "query",
-            "name": "tor",
-            "schema": {
-              "description": "Tor filter (true/false).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Location filter (pipe-separated country codes).",
-            "explode": false,
-            "in": "query",
-            "name": "lf",
-            "schema": {
-              "description": "Location filter (pipe-separated country codes).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Peer ID filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "id",
-            "schema": {
-              "description": "Peer ID filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing type filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "lt",
-            "schema": {
-              "description": "Listing type filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing type filter alias.",
-            "explode": false,
-            "in": "query",
-            "name": "type",
-            "schema": {
-              "description": "Listing type filter alias.",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Product type filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "productType",
-            "schema": {
-              "description": "Product type filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Listing condition filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "lc",
-            "schema": {
-              "description": "Listing condition filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Rating filter (pipe-separated integers).",
-            "explode": false,
-            "in": "query",
-            "name": "pr",
-            "schema": {
-              "description": "Rating filter (pipe-separated integers).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Status filter (pipe-separated).",
-            "explode": false,
-            "in": "query",
-            "name": "ps",
-            "schema": {
-              "description": "Status filter (pipe-separated).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Minimum price filter (minimal units integer).",
-            "explode": false,
-            "in": "query",
-            "name": "minPrice",
-            "schema": {
-              "description": "Minimum price filter (minimal units integer).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Maximum price filter (minimal units integer).",
-            "explode": false,
-            "in": "query",
-            "name": "maxPrice",
-            "schema": {
-              "description": "Maximum price filter (minimal units integer).",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Price currency code (e.g. USD). Recommended with min/max price.",
-            "explode": false,
-            "in": "query",
-            "name": "currency",
-            "schema": {
-              "description": "Price currency code (e.g. USD). Recommended with min/max price.",
-              "type": "string"
-            }
-          },
           {
             "description": "Page number (0-based).",
             "explode": false,
@@ -29406,7 +29946,41 @@
         "required": ["ipnsRecord"],
         "type": "object"
       },
-      "Platform_MarketplaceOwnerRequest": {
+      "Platform_MarketplaceAttributionEventRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "campaign": {
+            "type": "string"
+          },
+          "eventID": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "journeyID": {
+            "type": "string"
+          },
+          "listingSlug": {
+            "type": "string"
+          },
+          "medium": {
+            "type": "string"
+          },
+          "peerID": {
+            "type": "string"
+          },
+          "referrerHost": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": ["eventID", "journeyID", "eventType"],
+        "type": "object"
+      },
+      "Platform_MarketplaceCreateBody": {
         "additionalProperties": false,
         "properties": {
           "attribution": {
@@ -29415,13 +29989,16 @@
           "bannerURL": {
             "type": "string"
           },
+          "buyerAccessMode": {
+            "type": "string"
+          },
           "catalogMode": {
             "type": "string"
           },
           "catalogQuery": {
             "type": "string"
           },
-          "chatTitle": {
+          "description": {
             "type": "string"
           },
           "discoverability": {
@@ -29430,19 +30007,16 @@
           "domain": {
             "type": "string"
           },
-          "joinMode": {
-            "type": "string"
-          },
           "logoURL": {
             "type": "string"
           },
           "name": {
             "type": "string"
           },
-          "publicDescription": {
+          "sellerEntryMode": {
             "type": "string"
           },
-          "sellerEntryMode": {
+          "sellerReviewMode": {
             "type": "string"
           },
           "slug": {
@@ -29452,36 +30026,70 @@
             "type": "string"
           },
           "theme": {},
-          "themeJSON": {
-            "type": "string"
-          },
           "vertical": {
-            "type": "string"
-          },
-          "visibility": {
             "type": "string"
           }
         },
-        "required": [
-          "vertical",
-          "name",
-          "chatTitle",
-          "slug",
-          "publicDescription",
-          "logoURL",
-          "bannerURL",
-          "joinMode",
-          "catalogMode",
-          "discoverability",
-          "domain",
-          "subdomain",
-          "catalogQuery",
-          "theme",
-          "themeJSON",
-          "attribution",
-          "sellerEntryMode",
-          "visibility"
-        ],
+        "required": ["name"],
+        "type": "object"
+      },
+      "Platform_MarketplaceCurationCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "listingSlug": {
+            "type": "string"
+          },
+          "peerID": {
+            "type": "string"
+          }
+        },
+        "required": ["kind"],
+        "type": "object"
+      },
+      "Platform_MarketplaceCurationReorderRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "itemIDs": {
+            "items": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": ["array", "null"]
+          },
+          "kind": {
+            "type": "string"
+          }
+        },
+        "required": ["kind", "itemIDs"],
+        "type": "object"
+      },
+      "Platform_MarketplaceCurationUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "isActive": {
+            "type": ["boolean", "null"]
+          }
+        },
+        "required": ["isActive"],
+        "type": "object"
+      },
+      "Platform_MarketplaceSellerApplicationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "productGroupIDs": {
+            "items": {
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": ["array", "null"]
+          }
+        },
+        "required": ["productGroupIDs"],
         "type": "object"
       },
       "Platform_MarketplaceSellerInviteRequest": {
@@ -29489,34 +30097,79 @@
         "properties": {
           "peerID": {
             "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "tenantID": {
-            "type": "string"
-          },
-          "userID": {
-            "type": "string"
-          },
-          "visible": {
-            "type": ["boolean", "null"]
           }
         },
-        "required": ["peerID", "userID", "tenantID", "status", "visible"],
+        "required": ["peerID"],
         "type": "object"
       },
       "Platform_MarketplaceSellerUpdateRequest": {
         "additionalProperties": false,
         "properties": {
+          "reason": {
+            "type": "string"
+          },
           "status": {
             "type": "string"
           },
           "visible": {
-            "type": ["boolean", "null"]
+            "type": "boolean"
           }
         },
-        "required": ["status", "visible"],
+        "type": "object"
+      },
+      "Platform_MarketplaceUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attribution": {
+            "type": "string"
+          },
+          "bannerURL": {
+            "type": "string"
+          },
+          "buyerAccessMode": {
+            "type": "string"
+          },
+          "catalogMode": {
+            "type": "string"
+          },
+          "catalogQuery": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "discoverability": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "logoURL": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sellerEntryMode": {
+            "type": "string"
+          },
+          "sellerReviewMode": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "subdomain": {
+            "type": "string"
+          },
+          "theme": {},
+          "vertical": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "Platform_MatrixProvisionRequest": {
@@ -29574,10 +30227,7 @@
           "authType": {
             "type": "string"
           },
-          "groupChatID": {
-            "type": "string"
-          },
-          "groupPlatform": {
+          "marketplaceID": {
             "type": "string"
           },
           "userGroupID": {
@@ -31684,21 +32334,7 @@
       "Search_ListMeta": {
         "additionalProperties": false,
         "properties": {
-          "browseMode": {
-            "type": "string"
-          },
-          "catalogTotal": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "hasMore": {
-            "type": "boolean"
-          },
           "total": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "vendorCount": {
             "format": "int64",
             "type": "integer"
           }

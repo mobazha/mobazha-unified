@@ -8,6 +8,7 @@ import {
   hasPeerIDPrefix,
   identityNameProps,
   IDENTITY_NAME_CLASS,
+  resolveProductCardSellerDisplay,
 } from '../../utils/identity';
 
 describe('isFullPeerID', () => {
@@ -154,6 +155,199 @@ describe('formatNotificationName', () => {
     expect(formatNotificationName(undefined)).toBe('');
     expect(formatNotificationName({})).toBe('');
     expect(formatNotificationName({ handle: '', name: '', peerID: '' })).toBe('');
+  });
+});
+
+describe('resolveProductCardSellerDisplay', () => {
+  const fullPeerID = '12D3KooWLYPUhoYt48FsocbqbD7CntQd1UgdEceZdKV9DVqXG2k8';
+
+  it('prefers profileName over listing name and handle', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        profileName: 'Profile Shop',
+        name: 'Listing Shop',
+        handle: 'listing-handle',
+      })
+    ).toEqual({ name: 'Profile Shop', avatarUrl: undefined });
+  });
+
+  it('falls back to listing name then handle', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: 'Listing Shop',
+        handle: 'listing-handle',
+      })
+    ).toEqual({ name: 'Listing Shop', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        handle: 'listing-handle',
+      })
+    ).toEqual({ name: 'listing-handle', avatarUrl: undefined });
+  });
+
+  it('trims name candidates', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        profileName: '  Profile Shop  ',
+      })
+    ).toEqual({ name: 'Profile Shop', avatarUrl: undefined });
+  });
+
+  it('prefers profileAvatarUrl over listing avatarUrl', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: 'Shop',
+        profileAvatarUrl: 'https://example.com/profile.png',
+        avatarUrl: 'https://example.com/listing.png',
+      })
+    ).toEqual({
+      name: 'Shop',
+      avatarUrl: 'https://example.com/profile.png',
+    });
+  });
+
+  it('uses listing avatar when profile avatar is missing', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: 'Shop',
+        avatarUrl: 'https://example.com/listing.png',
+      })
+    ).toEqual({
+      name: 'Shop',
+      avatarUrl: 'https://example.com/listing.png',
+    });
+  });
+
+  it('rejects raw peer ID and peer-ID-shaped listing names', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: fullPeerID,
+        handle: 'readable-handle',
+      })
+    ).toEqual({ name: 'readable-handle', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: fullPeerID,
+      })
+    ).toEqual({ name: '', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        name: fullPeerID,
+      })
+    ).toEqual({ name: '', avatarUrl: undefined });
+  });
+
+  it('rejects Unicode-ellipsis truncated peer IDs and falls through to handle', () => {
+    const ipfsPeerID = 'QmY8tRnCds3WPCabcdefgh';
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: ipfsPeerID,
+        name: 'QmY8…efgh',
+        handle: 'card-shop',
+      })
+    ).toEqual({ name: 'card-shop', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: '12D3Ko…iK21',
+        handle: 'libp2p-shop',
+      })
+    ).toEqual({ name: 'libp2p-shop', avatarUrl: undefined });
+  });
+
+  it('rejects three-dot truncated peer IDs and falls through to handle', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: '12D3...iK21',
+        handle: 'readable-handle',
+      })
+    ).toEqual({ name: 'readable-handle', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: '12D3...iK21',
+      })
+    ).toEqual({ name: '', avatarUrl: undefined });
+  });
+
+  it('rejects prefix-only Unicode-ellipsis truncated peer IDs', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: '12D3…iK21',
+        handle: 'ellipsis-handle',
+      })
+    ).toEqual({ name: 'ellipsis-handle', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: 'QmY8tRnCds3WPCabcdefgh',
+        name: 'Qm…efgh',
+        handle: 'ipfs-handle',
+      })
+    ).toEqual({ name: 'ipfs-handle', avatarUrl: undefined });
+  });
+
+  it('rejects listing names equal to common truncations of peerID', () => {
+    const ipfsPeerID = 'QmY8tRnCds3WPCabcdefgh';
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: ipfsPeerID,
+        name: truncatePeerId(ipfsPeerID),
+        handle: 'fallback-handle',
+      })
+    ).toEqual({ name: 'fallback-handle', avatarUrl: undefined });
+  });
+
+  it('keeps ordinary merchant names that are not truncated peer IDs', () => {
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: 'Tech Collectibles',
+      })
+    ).toEqual({ name: 'Tech Collectibles', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: 'QmShop Corner',
+      })
+    ).toEqual({ name: 'QmShop Corner', avatarUrl: undefined });
+
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: 'Tech...Collectibles',
+      })
+    ).toEqual({ name: 'Tech...Collectibles', avatarUrl: undefined });
+  });
+
+  it('returns empty name when no readable seller label exists', () => {
+    expect(resolveProductCardSellerDisplay({ peerID: fullPeerID })).toEqual({
+      name: '',
+      avatarUrl: undefined,
+    });
+    expect(
+      resolveProductCardSellerDisplay({
+        peerID: fullPeerID,
+        name: '   ',
+        handle: '',
+      })
+    ).toEqual({ name: '', avatarUrl: undefined });
   });
 });
 
