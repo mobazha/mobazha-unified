@@ -48,8 +48,20 @@ export interface AIStatus {
   daily_limit: number;
   daily_used: number;
   byok_configured: boolean;
-  /** Whether the configured model supports image/vision input. Defaults to true when not reported. */
+  /** Platform AI: text route (generate/chat) configured. */
+  text_available?: boolean;
+  /** Platform AI: vision route configured. Sovereign BYOK: use supports_vision instead. */
+  vision_available?: boolean;
+  /** Sovereign local LLM: whether the runtime supports image input. */
   supports_vision?: boolean;
+}
+
+/** Whether listing/image AI features should treat vision as available. */
+export function aiStatusSupportsVision(status: AIStatus): boolean {
+  if (typeof status.vision_available === 'boolean') {
+    return status.vision_available !== false;
+  }
+  return status.supports_vision !== false;
 }
 
 export async function getAIStatus(): Promise<AIStatus> {

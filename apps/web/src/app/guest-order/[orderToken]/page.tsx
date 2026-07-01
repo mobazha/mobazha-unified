@@ -2,8 +2,16 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Package } from 'lucide-react';
-import { useI18n } from '@mobazha/core';
+import {
+  formatUserName,
+  isFullPeerID,
+  profileApi,
+  useI18n,
+  buildProductHref,
+  type UserProfile,
+} from '@mobazha/core';
 import { Header } from '@/components';
 import {
   buyerPortalTokenStorageKey,
@@ -26,7 +34,24 @@ import { TokenIcon } from '@/components/Payment/TokenIcon';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
+import { GuestOrderStageStrip } from '@/components/orders/GuestOrderStageStrip';
+import { GuestOrderMilestones } from '@/components/orders/GuestOrderMilestones';
+import { hasGuestPublicTrackingInfo } from '@/components/orders/guestOrderStages';
+import { useGuestOrderKind } from '@mobazha/core';
 import { cn } from '@/lib/utils';
+
+function resolveSellerPeerID(order: GuestOrderStatus): string | undefined {
+  if (isFullPeerID(order.sellerPeerID)) return order.sellerPeerID;
+  const itemPeerID = order.items.find(item => isFullPeerID(item.sellerPeerID))?.sellerPeerID;
+  return isFullPeerID(itemPeerID) ? itemPeerID : undefined;
+}
+
+function sellerDisplayName(peerID: string | undefined, profile: UserProfile | null): string {
+  return formatUserName(
+    { name: profile?.name, handle: profile?.handle, peerID },
+    { truncateChars: 6 }
+  );
+}
 
 function toPaymentInfo(order: GuestOrderStatus): ExternalWalletPaymentInfo {
   return {
@@ -70,7 +95,10 @@ export default function GuestOrderPage() {
   const [order, setOrder] = useState<GuestOrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [buyerPortalToken, setBuyerPortalToken] = useState<string | undefined>();
+  const [sellerProfile, setSellerProfile] = useState<UserProfile | null>(null);
+  const [sellerProfilePeerID, setSellerProfilePeerID] = useState<string | undefined>(undefined);
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
+  const { orderKind } = useGuestOrderKind(order, { buyerPortalToken });
 
   // Keep the recovery token out of Referer headers even for legacy query-link
   // visits, then strip it from the visible URL after local recovery.
@@ -139,6 +167,22 @@ export default function GuestOrderPage() {
     };
   }, [orderToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const sellerPeerID = useMemo(() => (order ? resolveSellerPeerID(order) : undefined), [order]);
+
+  useEffect(() => {
+    if (!sellerPeerID) return;
+    let cancelled = false;
+    profileApi.getProfile(sellerPeerID).then(profile => {
+      if (!cancelled) {
+        setSellerProfilePeerID(sellerPeerID);
+        setSellerProfile(profile);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sellerPeerID]);
+
   if (error && !order) {
     return (
       <div className="min-h-screen bg-background">
@@ -166,11 +210,15 @@ export default function GuestOrderPage() {
   const display = resolveStatusDisplay(order.state, guestStatusCfg);
   const coinSymbol = resolveTokenIdForDisplay(order.paymentCoin);
   const priceCur = order.priceCurrency || coinSymbol;
+  const resolvedSellerProfile =
+    sellerPeerID && sellerProfilePeerID === sellerPeerID ? sellerProfile : null;
+  const sellerName = sellerDisplayName(sellerPeerID, resolvedSellerProfile);
 
   const showPaymentInfo = order.state === 'AWAITING_PAYMENT' && !order.poolDetected;
   const isPoolDetected = order.state === 'AWAITING_PAYMENT' && !!order.poolDetected;
   const showConfirmations = order.state === 'PAYMENT_DETECTED' || isPoolDetected;
-  const showTracking = order.state === 'SHIPPED' && order.trackingNumber;
+  const showTracking =
+    (order.state === 'SHIPPED' || order.state === 'COMPLETED') && hasGuestPublicTrackingInfo(order);
   // Digital deliveries become available once the order is FUNDED. For a
   // physical-only order, BuyerDigitalAssetsSection short-circuits to render
   // nothing (no grants found), so it's safe to mount for any post-funded
@@ -194,6 +242,21 @@ export default function GuestOrderPage() {
               ariaLabel={t('guestOrder.tokenHelpTitle')}
             />
           </div>
+          {(sellerName || !sellerPeerID) && (
+            <div className="mt-2 text-sm text-muted-foreground">
+              <span>{t('common.seller')}: </span>
+              {sellerPeerID ? (
+                <Link
+                  href={`/store/${encodeURIComponent(sellerPeerID)}`}
+                  className="font-medium text-primary"
+                >
+                  {sellerName}
+                </Link>
+              ) : (
+                <span className="font-medium text-foreground">{t('common.store')}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={cn('p-4 rounded-lg text-center', display.color)}>
@@ -203,6 +266,12 @@ export default function GuestOrderPage() {
           </div>
           {display.description && <p className="text-sm mt-1 opacity-80">{display.description}</p>}
         </div>
+
+        <GuestOrderStageStrip state={order.state} orderKind={orderKind} />
+
+        {(order.state === 'FUNDED' || order.state === 'SHIPPED' || order.state === 'COMPLETED') && (
+          <GuestOrderMilestones order={order} />
+        )}
 
         {order.state === 'EXPIRED' && (
           <div
@@ -255,7 +324,22 @@ export default function GuestOrderPage() {
           />
         )}
 
-        {showDigitalDeliveries && buyerPortalToken && (
+        {showDigitalDeliveries && !buyerPortalToken && orderKind === 'digital' && (
+          <div
+            role="note"
+            className="rounded-lg border border-amber-300/60 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/30 p-4 text-sm space-y-2"
+            data-testid="guest-portal-token-missing"
+          >
+            <p className="font-semibold text-amber-900 dark:text-amber-100">
+              {t('guestOrder.portalTokenMissingTitle')}
+            </p>
+            <p className="text-xs text-amber-800/90 dark:text-amber-200/80 leading-relaxed">
+              {t('guestOrder.portalTokenMissingBody')}
+            </p>
+          </div>
+        )}
+
+        {showDigitalDeliveries && buyerPortalToken && orderKind === 'digital' && (
           <BuyerDigitalAssetsSection
             orderId={order.orderToken}
             buyerPortalToken={buyerPortalToken}
@@ -267,7 +351,11 @@ export default function GuestOrderPage() {
             <p className="text-sm font-medium mb-1">{t('guestOrder.trackingInfo')}</p>
             <p className="text-sm">
               {order.carrier && <span className="text-muted-foreground">{order.carrier}: </span>}
-              <span className="font-mono">{order.trackingNumber}</span>
+              {order.trackingNumber ? (
+                <span className="font-mono">{order.trackingNumber}</span>
+              ) : (
+                <span className="text-muted-foreground">{order.carrier}</span>
+              )}
             </p>
           </div>
         )}
@@ -276,25 +364,66 @@ export default function GuestOrderPage() {
           <div className="p-4">
             <p className="text-sm font-medium mb-2">{t('guestOrder.items')}</p>
             <div className="space-y-2">
-              {order.items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 py-1">
-                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-                    <Package className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+              {order.items.map((item, idx) => {
+                // In Sovereign mode the sellerPeerID is the internal sentinel
+                // "default" (StandaloneTenantID), not a real P2P peer ID.
+                // Omit peerID so the product page fetches from the local node.
+                const effectivePeerID = isFullPeerID(item.sellerPeerID)
+                  ? item.sellerPeerID
+                  : sellerPeerID;
+                const productHref = item.listingSlug
+                  ? buildProductHref(item.listingSlug, effectivePeerID)
+                  : undefined;
+                const Inner = (
+                  <>
+                    <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {item.thumbnail ? (
+                        <img
+                          src={item.thumbnail}
+                          alt={item.listingTitle}
+                          className="w-full h-full object-cover"
+                          onError={e => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            (
+                              e.currentTarget.nextElementSibling as HTMLElement | null
+                            )?.style.setProperty('display', 'flex');
+                          }}
+                        />
+                      ) : null}
+                      <Package
+                        className="w-5 h-5 text-muted-foreground"
+                        aria-hidden="true"
+                        style={{ display: item.thumbnail ? 'none' : undefined }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{item.listingTitle}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('guestOrder.quantityLabel')} {item.quantity}
+                      </p>
+                    </div>
+                    <span className="text-sm text-muted-foreground font-mono flex-shrink-0">
+                      {renderPairedPrice(item.unitPrice, priceCur, priceCur, {
+                        isMinimalUnit: true,
+                        divisibility: order.priceDivisibility,
+                      })}
+                    </span>
+                  </>
+                );
+                return productHref ? (
+                  <Link
+                    key={idx}
+                    href={productHref}
+                    className="flex items-center gap-3 py-1 rounded-md hover:bg-muted transition-colors -mx-1 px-1"
+                  >
+                    {Inner}
+                  </Link>
+                ) : (
+                  <div key={idx} className="flex items-center gap-3 py-1">
+                    {Inner}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{item.listingTitle}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('guestOrder.quantityLabel')} {item.quantity}
-                    </p>
-                  </div>
-                  <span className="text-sm text-muted-foreground font-mono flex-shrink-0">
-                    {renderPairedPrice(item.unitPrice, priceCur, priceCur, {
-                      isMinimalUnit: true,
-                      divisibility: order.priceDivisibility,
-                    })}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="p-4 flex justify-between items-center font-medium">

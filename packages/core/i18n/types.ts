@@ -199,6 +199,7 @@ export interface TranslationResource {
     userGroups?: string;
     receivingAccounts?: string;
     receivingAccountsDesc?: string;
+    refundsDesc?: string;
     wishlist?: string;
     wishlistDesc?: string;
     wishlistEmpty?: string;
@@ -207,6 +208,8 @@ export interface TranslationResource {
     wishlistItemCount?: string;
     notifications?: string;
     notificationsDesc?: string;
+    collectibles?: string;
+    collectiblesDesc?: string;
     settings?: string;
     settingsDesc?: string;
     appearance?: string;
@@ -274,6 +277,31 @@ export interface TranslationResource {
     viewAllReviews: string;
     anonymous: string;
     rwaToken?: string;
+    collectibleTitle?: {
+      whatYouReceiveTitle: string;
+      whatYouReceiveBody: string;
+      deliveryNote: string;
+      sourceEscrowPaymentNote?: string;
+      lifecycleTitle: string;
+      lifecycle: {
+        buy: string;
+        title: string;
+        hold: string;
+        redeem: string;
+      };
+      certNumber: string;
+      grade: string;
+      serial: string;
+      titleNetwork: string;
+      custody: {
+        source: string;
+        hub: string;
+        unknown: string;
+      };
+      trustLimitation: string;
+      catalogLink: string;
+      purchaseTitle: string;
+    };
   };
 
   // 搜索
@@ -409,6 +437,7 @@ export interface TranslationResource {
     noStatusOrders: string;
     // Order detail page
     backToOrders: string;
+    backToCases: string;
     placedOn: string;
     orderNotFound: string;
     orderNotFoundMessage: string;
@@ -429,6 +458,7 @@ export interface TranslationResource {
     packageShipped: string;
     orderCompleted: string;
     fundsReleased: string;
+    fundsReleasedToBuyer: string;
     disputeOpened: string;
     disputeResolved: string;
     // Order items
@@ -438,6 +468,10 @@ export interface TranslationResource {
     shipping: string;
     free: string;
     moderatorFee: string;
+    platformFee: string;
+    networkFee: string;
+    sellerPayout: string;
+    buyerPayout: string;
     // Parties
     seller: string;
     buyer: string;
@@ -461,6 +495,8 @@ export interface TranslationResource {
     actions?: TranslationSection;
     dispute?: TranslationSection;
     disputeDisplay?: TranslationSection;
+    disputeOverview?: TranslationSection;
+    tabs?: TranslationSection;
   };
 
   // 聊天
@@ -686,11 +722,13 @@ export interface TranslationResource {
       productGroups: string;
       accessRequests: string;
       addresses: string;
+      refunds?: string;
       blocked: string;
       moderation: string;
       receiving?: string;
       chatEncryption: string;
       advanced: string;
+      marketplaceMemberships?: string;
     };
     // 访问控制
     accessControl?: TranslationSection & {
@@ -897,6 +935,49 @@ export interface TranslationResource {
     fee: string;
     noModeratorsFound: string;
     disputes?: string;
+    findModerators: string;
+    sortedBy?: string;
+    maxFeeOption?: string;
+    addToStore?: string;
+    addedToStore?: string;
+    inYourStore?: string;
+    storeSettingsContextBanner?: string;
+    addToStoreBanner?: string;
+    recommendedDirectoryTitle?: string;
+    customTabTitle?: string;
+    customLookupTitle?: string;
+    customLookupHint?: string;
+    customLookupAction?: string;
+    customPeerIdLabel?: string;
+    customPeerIdPlaceholder?: string;
+    customLookupReady?: string;
+    customLookupNeedFullPeerID?: string;
+    customUnverifiedBadge?: string;
+    customLookupTrustNote?: string;
+    directoryEmpty?: string;
+    directoryEmptyHint?: string;
+    directoryLookupSearching?: string;
+    directoryLookupNotFound?: string;
+    directoryLookupNotModerator?: string;
+    directoryError?: string;
+    pageIntro?: string;
+    searchDirectoryLabel?: string;
+    feeDisputeNote?: string;
+    directoryUnavailable?: string;
+    directoryFilteredEmpty?: string;
+    backToModerators?: string;
+    backToStoreSettings?: string;
+    backToBrowse?: string;
+    tabAbout?: string;
+    tabReviews?: string;
+    tabTerms?: string;
+    feeOfTransaction?: string;
+    contactInformation?: string;
+    notFound?: string;
+    notFoundDesc?: string;
+    noReviewsForModerator?: string;
+    directoryExpandHint?: string;
+    viewFullProfile?: string;
   };
 
   // 支付选择
@@ -965,6 +1046,56 @@ export interface TranslationResource {
     digitalAssets: string;
   };
 
+  // DG-1.12: digital-goods cost calculator (public marketing page).
+  // Optional so existing locales fall back to the English copy until
+  // translation sync. Empty default keeps `useI18n` happy in tests.
+  costCalc?: {
+    pageTitle?: string;
+    pageSubtitle?: string;
+    inputsTitle?: string;
+    unitPriceLabel?: string;
+    monthlySalesLabel?: string;
+    processorLabel?: string;
+    resultsTitle?: string;
+    perSale?: string;
+    perMonth?: string;
+    feeRate?: string;
+    morBadge?: string;
+    morPartial?: string;
+    youHandle?: string;
+    asOfNote?: string;
+    sourceLink?: string;
+    bestForYou?: string;
+    highlightLine?: string;
+    honestyTitle?: string;
+    honestyBody?: string;
+    learnMoreResponsibilities?: string;
+    disclaimerTitle?: string;
+    disclaimerBody?: string;
+  };
+
+  // DG-1.10: seller data-portability page (/admin/settings/data-export).
+  // Optional so locales can fall back to English while translations sync.
+  dataExport?: {
+    cardTitle?: string;
+    cardDescription?: string;
+    pageTitle?: string;
+    pageDescription?: string;
+    listingsTitle?: string;
+    listingsDescription?: string;
+    salesTitle?: string;
+    salesDescription?: string;
+    customersTitle?: string;
+    customersDescription?: string;
+    csvButton?: string;
+    jsonButton?: string;
+    downloading?: string;
+    toastSuccess?: string;
+    toastError?: string;
+    noteTitle?: string;
+    noteBody?: string;
+  };
+
   // 搜索扩展
   searchExtended: {
     searchPlaceholder: string;
@@ -972,7 +1103,12 @@ export interface TranslationResource {
     clearAll: string;
     popularCategories: string;
     products: string;
+    productsFromStores?: string;
     stores: string;
+    discoverHint?: string;
+    browseAllProducts?: string;
+    browseAllActive?: string;
+    backToDiscover?: string;
   };
 
   // 设置扩展
@@ -1006,9 +1142,60 @@ export interface TranslationResource {
     paymentAndShippingDesc?: string;
     storePoliciesSaved?: string;
     termsDesc?: string;
+    digitalReviewWindowTitle?: string;
+    digitalReviewWindowDesc?: string;
+    digitalReviewWindowLabel?: string;
+    digitalReviewWindowUnit?: string;
+    digitalReviewWindowHelper?: string;
+    digitalReviewWindowInvalid?: string;
+    operatorResponsibilities?: string;
+    operatorResponsibilitiesDesc?: string;
+    operatorResponsibilitiesPageTitle?: string;
+    operatorResponsibilitiesMatrixTitle?: string;
+    operatorResponsibilitiesIntro?: string;
+    operatorResponsibilitiesPlatformTitle?: string;
+    operatorResponsibilitiesPlatformInfra?: string;
+    operatorResponsibilitiesPlatformAUP?: string;
+    operatorResponsibilitiesPlatformCustody?: string;
+    operatorResponsibilitiesPlatformTech?: string;
+    operatorResponsibilitiesSellerTitle?: string;
+    operatorResponsibilitiesSellerTax?: string;
+    operatorResponsibilitiesSellerContent?: string;
+    operatorResponsibilitiesSellerProcessor?: string;
+    operatorResponsibilitiesSellerCustomer?: string;
+    operatorResponsibilitiesSellerSelfHost?: string;
+    operatorResponsibilitiesDigitalNoteTitle?: string;
+    operatorResponsibilitiesDigitalNote?: string;
+    operatorResponsibilitiesAckSectionTitle?: string;
+    operatorResponsibilitiesAckSectionDesc?: string;
+    operatorResponsibilitiesAckLabel?: string;
+    operatorResponsibilitiesAckedAt?: string;
+    operatorResponsibilitiesUnacked?: string;
+    operatorResponsibilitiesAckSaved?: string;
+    operatorResponsibilitiesAckConfirm?: string;
+    operatorResponsibilitiesAckVersion?: string;
+    operatorResponsibilitiesRevokeAck?: string;
+    operatorResponsibilitiesRevokeTitle?: string;
+    operatorResponsibilitiesRevokeDesc?: string;
+    operatorResponsibilitiesRevokeConfirm?: string;
+    operatorResponsibilitiesVersionOutdated?: string;
+    operatorResponsibilitiesViewSettings?: string;
+    operatorResponsibilitiesStandaloneBadge?: string;
+    operatorResponsibilitiesDigitalLink?: string;
     termsPlaceholder?: string;
     storeModerators?: string;
     storeModeratorsDesc?: string;
+    storeModeratorsEmptyDesc?: string;
+    storeModeratorsLoadFailed?: string;
+    moderatorAlreadyAdded?: string;
+    moderatorNotFound?: string;
+    moderatorNotConfigured?: string;
+    moderatorPreviewLoading?: string;
+    moderatorPeerIdFormatHint?: string;
+    profileUnavailable?: string;
+    viewModeratorProfile?: string;
+    addFromMarketplace?: string;
+    storeModeratorExpandHint?: string;
     advanced: string;
     analytics: string;
     analyticsDesc: string;
@@ -1186,6 +1373,9 @@ export interface TranslationResource {
     sales: string;
     purchases: string;
     myOrders?: string;
+    myCases?: string;
+    operatorMarketplaces?: string;
+    marketplaceInvitations?: string;
     rwaAssets?: string;
     settings: string;
     logout: string;
@@ -1484,6 +1674,7 @@ export interface TranslationResource {
       shippedYourOrder: string;
       youShippedOrder: string;
       completedOrder: string;
+      ratedOrder?: string;
       staleWarning: string;
       expired: string;
     };
@@ -1814,6 +2005,8 @@ export interface TranslationResource {
       image: string;
       selectImage: string;
       variant: string;
+      productId?: string;
+      productIdPlaceholder?: string;
       price: string;
       compareAtPrice: string;
       quantity: string;
@@ -1839,6 +2032,29 @@ export interface TranslationResource {
         duplicateOptionName: string;
         maxCombinations: string;
       };
+    };
+    priceHierarchy?: {
+      title?: string;
+      description?: string;
+      storefront?: string;
+      base?: string;
+    };
+    priceSync?: {
+      title?: string;
+      description?: string;
+      applyAll?: string;
+      keepVariants?: string;
+      reviewVariants?: string;
+    };
+    priceLowWarning?: string;
+    fulfillment?: {
+      title?: string;
+      supplierCost?: string;
+      supplierCostInCurrency?: string;
+      yourPrice?: string;
+      margin?: string;
+      marginUnavailable?: string;
+      variantPrices?: string;
     };
     policies: string;
     returnPolicy: string;
@@ -2252,6 +2468,326 @@ export interface TranslationResource {
     };
   };
 
+  collectibles?: {
+    title: string;
+    subtitle: string;
+    catalog?: {
+      title: string;
+      custodyCatalogTitle?: string;
+      custodyCatalogSubtitle?: string;
+      tabCatalog?: string;
+      tabMyCards?: string;
+      tabRedemptions?: string;
+      navAria?: string;
+      myCardsConnectPrompt?: string;
+      connectWalletCta?: string;
+      myCardsHoldHint?: string;
+      myCardsEmpty?: string;
+      subtitle: string;
+      backToMarketplace: string;
+      myCardsCta: string;
+      viewCustodyCta: string;
+      onChainProofTitle: string;
+      redeemableYes: string;
+      redeemableNo: string;
+      display: {
+        m2Wilson001: {
+          name: string;
+        };
+      };
+      custody: {
+        inHub: string;
+        sourceCustody: string;
+        redeemRequested: string;
+        redeemed: string;
+        pending: string;
+        unknown: string;
+      };
+    };
+    detailTitle: string;
+    backToList: string;
+    featureDisabled: string;
+    trustNote: string;
+    empty: string;
+    tokenizedCard: string;
+    hubSlot: string;
+    chain: string;
+    metadata: string;
+    viewDetails: string;
+    alreadyRedeemed: string;
+    validity?: {
+      active: string;
+      burned: string;
+      voided: string;
+      unknown: string;
+      voidedDetailTitle: string;
+      voidedDetailBody: string;
+      invalidationReason: string;
+      invalidatedAt: string;
+    };
+    onChain: {
+      mintTx: string;
+      mintConfirmedSlot: string;
+      burnTx: string;
+      viewOnExplorer: string;
+    };
+    checkout: {
+      onePerOrderTitle: string;
+      onePerOrderDesc: string;
+      hubPrimarySaleTitle: string;
+      metadataTitle: string;
+      holderWalletTitle: string;
+      holderWalletDesc: string;
+      holderWalletConnected: string;
+      holderWalletMissing: string;
+      holderWalletWrongNamespace: string;
+      connectSolanaWallet: string;
+      switchSolanaWallet: string;
+      connectingWallet: string;
+      escrowCryptoOnlyNote?: string;
+    };
+    redeem: {
+      title: string;
+      description: string;
+      mint?: string;
+      holderOnlyNote?: string;
+      stepWallet?: string;
+      stepVerify?: string;
+      stepVerifyDesc?: string;
+      stepAddress?: string;
+      stepSubmit?: string;
+      stepSubmitDesc?: string;
+      wallet: string;
+      expectedHolder: string;
+      walletMismatch: string;
+      connectWallet: string;
+      connecting: string;
+      solanaWalletRequired: string;
+      shippingAddress: string;
+      shippingPlaceholder: string;
+      shippingPrivacy: string;
+      submit: string;
+      processing: string;
+      successTitle: string;
+      successDesc: string;
+      failedTitle: string;
+      trackingLabel: string;
+      viewTracking: string;
+    };
+    redemptions: {
+      title: string;
+      subtitle: string;
+      empty: string;
+      viewTracking: string;
+      backToCollectibles: string;
+    };
+    tracking: {
+      title: string;
+      detailsTitle: string;
+      statusLabel: string;
+      submittedAt: string;
+      burnConfirmed: string;
+      shippingAddress: string;
+      shippingAddressOnFile: string;
+      trackingNumber: string;
+      slaDue: string;
+      nftMint: string;
+      viewCard: string;
+      loadFailed: string;
+      notFound: string;
+      inProgressHint: string;
+      phase: {
+        redeem_requested: string;
+        shipped: string;
+        settled: string;
+      };
+    };
+    primarySale: {
+      title: string;
+      certNumber: string;
+      viewNft: string;
+      loadFailed: string;
+      supportHint: string;
+      mintLastError: string;
+      mintErrors: {
+        pendingConfirmation: string;
+        onChainFailed: string;
+        interrupted: string;
+        generic: string;
+      };
+      phase: {
+        awaiting_payment: string;
+        awaiting_bridge: string;
+        awaiting_hub: string;
+        awaiting_hub_minting: string;
+        awaiting_hub_minted: string;
+        payout_pending: string;
+        payout_complete: string;
+        payout_failed: string;
+      };
+    };
+    hubOps: {
+      title: string;
+      subtitle: string;
+      redemptionId: string;
+      redemptionIdPlaceholder: string;
+      load: string;
+      loadFailed: string;
+      fulfillmentTitle: string;
+      trackingPlaceholder: string;
+      ship: string;
+      settle: string;
+      shipSuccess: string;
+      shipFailed: string;
+      settleSuccess: string;
+      settleFailed: string;
+      viewBuyerTracking: string;
+      noActions: string;
+      mintRecoveryTitle: string;
+      mintRecoverySubtitle: string;
+      recoveryLimit: string;
+      royaltyBps: string;
+      recoverMints: string;
+      recoverSuccess: string;
+      recoverFailed: string;
+      recovered: string;
+      skipped: string;
+      failed: string;
+      attempted: string;
+      recentResults: string;
+      pendingRedemptionsTitle: string;
+      pendingRedemptionsSubtitle: string;
+      refreshQueue: string;
+      queueLoadFailed: string;
+      queueEmpty: string;
+      selectRedemption: string;
+      releaseQueueTitle: string;
+      releaseQueueSubtitle: string;
+      releaseRetry: string;
+      releaseRetrySuccess: string;
+      releaseRetryFailed: string;
+      releaseRetryReleased: string;
+      releaseStatus: string;
+      orderId: string;
+      hubSlotStatus: string;
+      releaseError: string;
+      intakeTitle: string;
+      intakeSubtitle: string;
+      certNumber: string;
+      grade: string;
+      serial: string;
+      hubLocation: string;
+      currentHolder: string;
+      currentHolderPlaceholder: string;
+      currentHolderHint: string;
+      mintHolderDefault: string;
+      mintHolderDefaultHint: string;
+      mintHolderRequired: string;
+      submitIntake: string;
+      intakeSuccess: string;
+      intakeFailed: string;
+      slotsTitle: string;
+      slotsSubtitle: string;
+      slotStatus: string;
+      mint: string;
+      reject: string;
+      mintSuccess: string;
+      mintFailed: string;
+      rejectSuccess: string;
+      rejectFailed: string;
+      alertReleaseFailed: string;
+      alertMintPending: string;
+      alertMintError: string;
+      backToCollectibles: string;
+      workbenchNav: string;
+    };
+    sourceOps: {
+      title: string;
+      subtitle: string;
+      createTitle: string;
+      createSubtitle: string;
+      sellerPeerID: string;
+      holderWallet: string;
+      holderWalletPlaceholder: string;
+      guaranteeAmount: string;
+      guaranteeCurrency: string;
+      submitCreate: string;
+      createSuccess: string;
+      createFailed: string;
+      listTitle: string;
+      listSubtitle: string;
+      depositStatus: string;
+      seller: string;
+      holder: string;
+      nftMint: string;
+      order: string;
+      tracking: string;
+      defaultReason: string;
+      defaultReasonPlaceholder: string;
+      mintRoyaltyBps: string;
+      mint: string;
+      mintSuccess: string;
+      mintFailed: string;
+      mintHolderRequired: string;
+      recordFirstSale: string;
+      firstSaleTitle: string;
+      firstSaleSubtitle: string;
+      buyerPeerID: string;
+      priceAmount: string;
+      currencyCode: string;
+      divisibility: string;
+      protectionRefId: string;
+      firstSaleSuccess: string;
+      firstSaleFailed: string;
+      ship: string;
+      shipSuccess: string;
+      shipFailed: string;
+      settle: string;
+      settleSuccess: string;
+      settleFailed: string;
+      markDefaulted: string;
+      markDefaultVoidNotice?: string;
+      hubTitleValidity?: string;
+      defaultSuccess: string;
+      defaultFailed: string;
+      defaultRefundStatus: string;
+      defaultRefundError: string;
+      defaultRefundPendingNotice: string;
+      refreshDefaultRefund: string;
+      retryDefaultRefund: string;
+      defaultRefundPending: string;
+      defaultRefundFailed: string;
+      refreshQueue: string;
+      queueLoadFailed: string;
+      queueEmpty: string;
+      releaseStatus: string;
+      trackingPlaceholder: string;
+      approve?: string;
+      reject?: string;
+      approveSuccess?: string;
+      approveFailed?: string;
+      rejectSuccess?: string;
+      rejectFailed?: string;
+      rejectionReason?: string;
+      rejectionReasonPlaceholder?: string;
+      operatorNextAction?: string;
+      submissionEvidence?: string;
+      evidenceFront?: string;
+      evidenceBack?: string;
+      evidenceOpenLink?: string;
+      evidenceFrontAlt?: string;
+      evidenceBackAlt?: string;
+    };
+    sourceDeposit?: {
+      status: Record<string, string>;
+      nextAction: Record<string, string>;
+      operatorNext: Record<string, string>;
+      defaultRefund?: {
+        status: Record<string, string>;
+      };
+    };
+  };
+
   // 配送选项配置
   shippingConfig?: TranslationSection & {
     noOptions?: string;
@@ -2521,18 +3057,70 @@ export interface TranslationResource {
     notConfigured?: string;
     setupPrompt?: string;
     goToSettings?: string;
+    goToModels?: string;
     error?: string;
     title?: string;
     openAssistant?: string;
     history?: string;
     newChat?: string;
     untitled?: string;
+    untitledWithTime?: string;
     noConversations?: string;
     welcomeMessage?: string;
     welcomeHint?: string;
     inputPlaceholder?: string;
     stopGenerating?: string;
     send?: string;
+    toolAnalyzing?: string;
+    toolChecked?: string;
+    toolFailed?: string;
+    approval?: {
+      title?: string;
+      actionLabel?: string;
+      approve?: string;
+      reject?: string;
+      appliedTitle?: string;
+      appliedDescription?: string;
+      rejectedTitle?: string;
+      rejectedDescription?: string;
+      applyFailed?: string;
+      rejectFailed?: string;
+      statusApplied?: string;
+      statusRejected?: string;
+      statusFailed?: string;
+      pendingBanner?: string;
+      actionBanner?: string;
+      retry?: string;
+      viewInChat?: string;
+    };
+  };
+
+  product_import?: {
+    needs_input?: string;
+    needs_review?: string;
+    needs_approval?: string;
+    completed?: string;
+    partially_completed?: string;
+    failed?: string;
+    deliveryMetricSources?: string;
+    deliveryMetricProposals?: string;
+    deliveryMetricReviewable?: string;
+    deliveryMetricPendingApproval?: string;
+    deliveryOpenWorkbench?: string;
+    structuredStatus?: string;
+    nextAction?: {
+      extract_candidates?: string;
+      review_proposals?: string;
+      provide_product_details?: string;
+      unknown?: string;
+    };
+    itemStatus?: {
+      new?: string;
+      needs_review?: string;
+      ready?: string;
+      skipped?: string;
+      applied?: string;
+    };
   };
 
   standalone?: {
@@ -2600,6 +3188,9 @@ export interface TranslationResource {
     noCasesFilterHint?: string;
     noCasesDesc?: string;
     caseDetail?: string;
+    caseIdLabel?: string;
+    viewCase?: string;
+    copyCaseId?: string;
   };
   admin?: {
     title?: string;
@@ -2607,6 +3198,8 @@ export interface TranslationResource {
       dashboard?: string;
       products?: string;
       orders?: string;
+      storeSales?: string;
+      funds?: string;
       analytics?: string;
       discounts?: string;
       settings?: string;
@@ -2625,6 +3218,17 @@ export interface TranslationResource {
       backToShopping?: string;
       mainNavigation?: string;
       aiAgents?: string;
+      home?: string;
+      aiSection?: string;
+      aiWorkspace?: string;
+      aiConnect?: string;
+      aiModels?: string;
+      payments?: string;
+    };
+    payments?: {
+      pageDesc?: string;
+      pageDescCryptoOnly?: string;
+      payoutInfoTitle?: string;
     };
     dashboard?: {
       welcome?: string;
@@ -2671,6 +3275,150 @@ export interface TranslationResource {
       actionPendingReview?: string;
       actionToFulfill?: string;
       actionDisputed?: string;
+      supplyNeedsAttentionTitle?: string;
+      supplyNeedsAttentionCount?: string;
+      supplyNeedsAttentionViewAll?: string;
+    };
+    workspace?: {
+      title?: string;
+      subtitle?: string;
+      opportunitiesTitle?: string;
+      noOpportunities?: string;
+      noOpportunitiesHint?: string;
+      chatTitle?: string;
+      badgeAiOff?: string;
+      badgeLocalAi?: string;
+      badgeByok?: string;
+      badgePlatform?: string;
+      badgeReady?: string;
+      cardNoPayments?: string;
+      cardNoPaymentsDesc?: string;
+      cardNoProducts?: string;
+      cardNoProductsDesc?: string;
+      cardNoProductsOutcome?: string;
+      cardProductImport?: string;
+      cardProductImportDesc?: string;
+      cardProductImportOutcome?: string;
+      setupBannerTitle?: string;
+      setupBannerDesc?: string;
+      setupBannerCta?: string;
+      valueSummary?: string;
+      cardActionGo?: string;
+      cardActionAsk?: string;
+      cardActionHelp?: string;
+      cardActionSuggest?: string;
+      cardActionDraft?: string;
+      cardActionPlan?: string;
+      cardActionImport?: string;
+      contextBarPrefix?: string;
+      situationJoiner?: string;
+      emptyPrimaryCta?: string;
+      emptyPrimaryCtaDefault?: string;
+      emptyPrimaryCtaSpecific?: string;
+      emptyPrimaryCtaSpecificTask?: string;
+      composerPlaceholder?: string;
+      composerHint?: string;
+      composerDropHint?: string;
+      composerFileDraftSummary?: string;
+      composerFileDraftHintChat?: string;
+      composerFileDraftRemove?: string;
+      composerFileDraftMaxReached?: string;
+      composerFileDraftTotalSizeExceeded?: string;
+      composerFileTooLargeForText?: string;
+      composerFileAttachedToChatTitle?: string;
+      composerFileAttachedToChatDescription?: string;
+      composerFileChatDefaultSingle?: string;
+      composerFileChatDefaultMultiple?: string;
+      composerFileNameJoiner?: string;
+      composerUnsupportedFile?: string;
+      composerSomeFilesSkipped?: string;
+      composerUpload?: string;
+      composerAttachReference?: string;
+      opportunitiesShowMore?: string;
+      opportunitiesMobileCount?: string;
+      chatAssistantTitle?: string;
+      chatAttachmentViewImage?: string;
+      chatAttachmentPreviewTitle?: string;
+      layoutHideTasks?: string;
+      layoutShowTasks?: string;
+      layoutEnterFocus?: string;
+      layoutExitFocus?: string;
+      layoutCollapseHistory?: string;
+      layoutExpandHistory?: string;
+      importRunOpenChat?: string;
+      importRunTaskTitle?: string;
+      importRunTaskSummary?: string;
+      importRunTaskParsing?: string;
+      importRunContinueReview?: string;
+      cardAskAi?: string;
+      cardAskAiDesc?: string;
+      cardAskAiPrompt?: string;
+      cardPendingOrdersPrompt?: string;
+      cardFulfillOrdersPrompt?: string;
+      cardDisputedOrdersPrompt?: string;
+      cardSupplyAttentionPrompt?: string;
+      cardNoProductsPrompt?: string;
+      cardPendingOrdersOutcome?: string;
+      cardFulfillOrdersOutcome?: string;
+      cardDisputedOrdersOutcome?: string;
+      cardSupplyAttentionOutcome?: string;
+      chatEmptyTitle?: string;
+      chatEmptyHint?: string;
+      quickActionImport?: string;
+      quickActionImportPrompt?: string;
+      quickActionOrders?: string;
+      quickActionOrdersPrompt?: string;
+      quickActionFocus?: string;
+      quickActionFocusPrompt?: string;
+      quickActionListings?: string;
+      quickActionListingsPrompt?: string;
+      importRunTitle?: string;
+      importRunSummary?: string;
+      importRunStatusRunning?: string;
+      importRunStatusReview?: string;
+      importRunStatusApproval?: string;
+      importRunStatusReady?: string;
+      importRunStatusChecking?: string;
+      importRunStatusFailed?: string;
+      importRunStatusCancelled?: string;
+      importRunOpenWorkbench?: string;
+      sourceMaterialCompactPlaceholder?: string;
+      sourceMaterialImport?: string;
+      sourceMaterialImportStartedTitle?: string;
+      sourceMaterialImportStartedDescription?: string;
+      sourceMaterialImportParsingTitle?: string;
+      sourceMaterialImportParsingDescription?: string;
+      sourceMaterialImportFailed?: string;
+      chatNotConfigured?: string;
+      chatInputDisabled?: string;
+      sourceMaterialTitle?: string;
+      sourceMaterialHint?: string;
+      sourceMaterialPlaceholder?: string;
+      sourceMaterialAttach?: string;
+      sourceMaterialAttachedTitle?: string;
+      sourceMaterialAttachedDescription?: string;
+      sourceMaterialAttachFailed?: string;
+      sourceMaterialRemove?: string;
+      sourceMaterialUntitled?: string;
+      sourceMaterialMaxReached?: string;
+      skillRunRemove?: string;
+    };
+    ai?: {
+      models?: {
+        title?: string;
+        subtitle?: string;
+      };
+      tabs?: {
+        workspace?: string;
+        workspaceHint?: string;
+        models?: string;
+        modelsHint?: string;
+        modelsPending?: string;
+        settings?: string;
+        connect?: string;
+        connectHint?: string;
+        backToWorkspace?: string;
+      };
     };
     checklist?: {
       title?: string;
@@ -2721,9 +3469,47 @@ export interface TranslationResource {
       noResultsDesc?: string;
       colProduct?: string;
       colStock?: string;
+      colAvailability?: string;
       colType?: string;
       colPrice?: string;
       outOfStock?: string;
+      availabilityManualAction?: string;
+      availabilitySupplierUnavailable?: string;
+      filterNeedsAttention?: string;
+      supplyModeExternal?: string;
+      supplyModeLicense?: string;
+      supplyModeInstant?: string;
+      supplyModeTracked?: string;
+      availabilityInstant?: string;
+      availabilityBySupplier?: string;
+      availabilitySupplierGeneric?: string;
+      availabilityKeysLeft?: string;
+      availabilityImportKeys?: string;
+      availabilityAvailable?: string;
+      availabilityLowStock?: string;
+      availabilityStockDetailed?: string;
+      availabilityStockDetailedLow?: string;
+      availabilityDash?: string;
+      availabilityLoading?: string;
+      summaryInstantReady?: string;
+      summaryMissingDigital?: string;
+      summaryKeys?: string;
+      summaryKeysHeld?: string;
+      summaryKeysEmpty?: string;
+      summaryStock?: string;
+      summaryStockLow?: string;
+      summaryStockOnHand?: string;
+      summaryStockOnHandLow?: string;
+      summaryStockDetailed?: string;
+      summaryStockDetailedLow?: string;
+      summaryExternal?: string;
+      summarySupplierGeneric?: string;
+      summaryManualAction?: string;
+      summarySupplierUnavailable?: string;
+      ctaManageVariants?: string;
+      ctaImportKeys?: string;
+      ctaConfigureDigital?: string;
+      ctaViewSourcing?: string;
       preview?: string;
       edit?: string;
       duplicate?: string;
@@ -2743,8 +3529,226 @@ export interface TranslationResource {
       viewGrid?: string;
       selectAll?: string;
       selectProduct?: string;
+      actionRestock?: string;
+      actionImportKeys?: string;
+      bulkRestockSelected?: string;
+      bulkImportSelected?: string;
+      bulkRestockTitle?: string;
+      bulkRestockDesc?: string;
+      bulkRestockQuantityLabel?: string;
+      bulkRestockQuantityHint?: string;
+      bulkRestockConfirm?: string;
+      bulkRestockSuccess?: string;
+      bulkRestockPartialFail?: string;
+      bulkImportTitle?: string;
+      bulkImportDesc?: string;
+      bulkImportPlaceholder?: string;
+      bulkImportConfirm?: string;
+      bulkImportSuccess?: string;
+      bulkImportPartialFail?: string;
       createNew?: string;
       sourceFromProvider?: string;
+      importFromGumroad?: string;
+      smartImport?: string;
+      priceStorefront?: string;
+      priceBase?: string;
+    };
+    productImport?: {
+      backToProducts?: string;
+      title?: string;
+      subtitle?: string;
+      standardTitle?: string;
+      standardDesc?: string;
+      standardCta?: string;
+      smartTitle?: string;
+      smartDesc?: string;
+      uploadTitle?: string;
+      uploadHint?: string;
+      dropzone?: string;
+      formats?: string;
+      uploading?: string;
+      uploadCta?: string;
+      errors?: {
+        fileTooLarge?: string;
+        uploadFailed?: string;
+      };
+      workbench?: {
+        backToHub?: string;
+        title?: string;
+        subtitle?: string;
+        sources?: string;
+        validationTitle?: string;
+        validationCount?: string;
+        validationShowDetails?: string;
+        validationHideDetails?: string;
+        mobileToolbarRunning?: string;
+        mobileToolbarReviewing?: string;
+        primaryApplyReadyMobile?: string;
+        emptyRows?: string;
+        missingRun?: string;
+        loadFailed?: string;
+        createApproval?: string;
+        createApprovalFailed?: string;
+        goToProducts?: string;
+        colTitle?: string;
+        colPrice?: string;
+        colQty?: string;
+        colSource?: string;
+        colStatus?: string;
+        colActions?: string;
+        statusApplied?: string;
+        statusPendingApproval?: string;
+        statusNeedsReview?: string;
+        continueWithAi?: string;
+        continueWithAiLabel?: string;
+        skillRunMaxReached?: string;
+        chatTitle?: string;
+        runStatusRunning?: string;
+        runStatusWaiting?: string;
+        runStatusCompleted?: string;
+        runStatusFailed?: string;
+        runStatusCancelled?: string;
+        summaryReviewable?: string;
+        summaryActionable?: string;
+        summaryApplied?: string;
+        summaryFailed?: string;
+        filterLabel?: string;
+        pageScopeHint?: string;
+        progress?: {
+          label?: string;
+          parse?: string;
+          review?: string;
+          apply?: string;
+        };
+        selectAll?: string;
+        selectRow?: string;
+        expandRow?: string;
+        collapseRow?: string;
+        selectedCount?: string;
+        batchPrepare?: string;
+        batchApproveApply?: string;
+        batchReject?: string;
+        batchPrepareSuccess?: string;
+        batchApplySuccess?: string;
+        batchApplyPartial?: string;
+        batchRejectSuccess?: string;
+        batchNothingToPrepare?: string;
+        batchNothingToApprove?: string;
+        batchNothingToReject?: string;
+        noRowDetails?: string;
+        untitledProduct?: string;
+        fieldsToConfirm?: string;
+        notDetected?: string;
+        descriptionLabel?: string;
+        noDescription?: string;
+        reviewChecklist?: string;
+        fieldsComplete?: string;
+        missingField?: {
+          title?: string;
+          price?: string;
+          quantity?: string;
+        };
+        missingFieldLabel?: {
+          title?: string;
+          price?: string;
+          quantity?: string;
+        };
+        rowMissingSummary?: string;
+        rowReadySummary?: string;
+        appliedSummary?: string;
+        assistantTitle?: string;
+        assistantProcessing?: string;
+        assistantNeedsReview?: string;
+        assistantReady?: string;
+        assistantNextStep?: string;
+        assistantCheckMissing?: string;
+        assistantCheckRows?: string;
+        assistantUnavailable?: string;
+        assistantOpenChat?: string;
+        assistantCloseChat?: string;
+        pagination?: string;
+        filter?: {
+          all?: string;
+          needs_review?: string;
+          pending_approval?: string;
+          applied?: string;
+          approval_failed?: string;
+        };
+        userFilter?: {
+          all?: string;
+          needs_fix?: string;
+          ready?: string;
+          applied?: string;
+          failed?: string;
+        };
+        userState?: {
+          needs_fix?: string;
+          ready?: string;
+          applied?: string;
+          failed?: string;
+          rejected?: string;
+        };
+        summaryNeedsFix?: string;
+        summaryReady?: string;
+        summaryAllClear?: string;
+        primaryApplyReady?: string;
+        primaryGoFix?: string;
+        singleRowApply?: string;
+        expandToFix?: string;
+        fixDetailsTitle?: string;
+        fixDetailsHint?: string;
+        fieldRequired?: string;
+        fieldPlaceholderPrice?: string;
+        fieldPlaceholderQty?: string;
+        saveDraft?: string;
+        saveDraftSuccess?: string;
+        saveDraftFailed?: string;
+        missingDraftVersion?: string;
+        invalidPrice?: string;
+        invalidQuantity?: string;
+        completeFieldsFirst?: string;
+        fixWithAi?: string;
+        imageSourceLabel?: string;
+        previewUnavailable?: string;
+        assistantApplyReady?: string;
+      };
+    };
+    gumroadImport?: {
+      backToProducts?: string;
+      title?: string;
+      subtitle?: string;
+      tokenLabel?: string;
+      tokenHint?: string;
+      tokenHelpLink?: string;
+      scopeNote?: string;
+      fileNote?: string;
+      previewButton?: string;
+      errors?: {
+        tokenRequired?: string;
+      };
+      toast?: {
+        successTitle?: string;
+        successDesc?: string;
+      };
+      summary?: {
+        fetched?: string;
+        eligible?: string;
+        skipped?: string;
+      };
+      review?: {
+        eligibleTitle?: string;
+        skippedTitle?: string;
+        confirmButton?: string;
+      };
+      done?: {
+        title?: string;
+        summary?: string;
+        fallback?: string;
+        fileReminderTitle?: string;
+        errorsTitle?: string;
+        importMore?: string;
+        goToProducts?: string;
+      };
     };
     orders?: {
       title?: string;
@@ -2773,13 +3777,66 @@ export interface TranslationResource {
       batchConfirmSuccess?: string;
       noPendingSelected?: string;
       showingCount?: string;
+      allOrders?: string;
       standardOrders?: string;
       guestOrders?: string;
+      sourceStandard?: string;
+      sourceGuest?: string;
       guestBadge?: string;
       guestOrderTitle?: string;
+      orderItemCount?: string;
       guestItemCount?: string;
       guestItemCountPlural?: string;
       noGuestOrders?: string;
+      guestOrderDetail?: string;
+      statusLabel?: string;
+      amountLabel?: string;
+      timeLabel?: string;
+      buyerTypeLabel?: string;
+      contactLabel?: string;
+      shippingAddress?: string;
+      digitalDelivery?: string;
+      technicalInfo?: string;
+      coinLabel?: string;
+      tokenLabel?: string;
+      guestOrderItems?: string;
+      paymentRailLabel?: string;
+      listingCurrencyLabel?: string;
+      guestActionsTitle?: string;
+      guestDetailLoadFailed?: string;
+      guestDigitalDeliverHelp?: string;
+      guestPhysicalShipHelp?: string;
+      guestOrderTypeDigital?: string;
+      guestOrderTypePhysical?: string;
+      guestOrderTypeUnknown?: string;
+      guestContractTypeMissingTitle?: string;
+      guestContractTypeMissingHelp?: string;
+      guestCarrierPlaceholder?: string;
+      guestTrackingPlaceholder?: string;
+      guestMarkDelivered?: string;
+      guestMarkShipped?: string;
+      guestCompleteHelp?: string;
+      guestCompleteOrder?: string;
+      guestShipSuccess?: string;
+      guestCompleteSuccess?: string;
+      guestActionFailed?: string;
+      guestActionWaitingPayment?: string;
+      guestActionCompleted?: string;
+      guestActionExpired?: string;
+      guestActionNoAction?: string;
+      guestToggleTracking?: string;
+      guestFulfillmentTitle?: string;
+      guestFulfillmentDigitalHint?: string;
+      guestMilestoneFunded?: string;
+      guestMilestoneShipped?: string;
+      guestMilestoneCompleted?: string;
+      guestMilestoneTimePending?: string;
+      guestCopyOrderToken?: string;
+      guestCopyOrderLink?: string;
+      guestDigitalStatusAuthFailed?: string;
+      guestTrackingReadonly?: string;
+      guestShareWithBuyerTitle?: string;
+      guestNoContactHint?: string;
     };
     analytics?: {
       title?: string;
@@ -2987,6 +4044,9 @@ export interface TranslationResource {
       step3Desc?: string;
       setupPayments?: string;
       setupPaymentsDesc?: string;
+      setupPaymentsDescCryptoOnly?: string;
+      setupXmrWallet?: string;
+      setupXmrWalletDesc?: string;
       paymentConfigured?: string;
       storeName?: string;
       storeNamePlaceholder?: string;
@@ -3002,6 +4062,7 @@ export interface TranslationResource {
       featureVariants?: string;
       featureShipping?: string;
       featurePricing?: string;
+      featureCryptoPricing?: string;
       completeTitle?: string;
       completeDesc?: string;
       viewStore?: string;
@@ -3043,12 +4104,56 @@ export interface TranslationResource {
       generalDesc?: string;
       accessControl?: string;
       accessControlDesc?: string;
+      funds?: string;
+      fundsDesc?: string;
       payments?: string;
       paymentsDesc?: string;
+      paymentsDescCryptoOnly?: string;
       integrations?: string;
       integrationsDesc?: string;
+      integrationsDescNoAi?: string;
+      aiModelsCard?: string;
+      aiModelsCardDesc?: string;
       guestCheckout?: string;
       guestCheckoutDesc?: string;
+    };
+    finance?: {
+      title?: string;
+      subtitle?: string;
+      notApplicable?: string;
+      fetchError?: string;
+      availableBalance?: string;
+      pendingConfirmation?: string;
+      pendingHint?: string;
+      balanceUnavailable?: string;
+      quickActionsTitle?: string;
+      withdrawTitle?: string;
+      withdrawDesc?: string;
+      transactionsTitle?: string;
+      transactionsDesc?: string;
+      walletManagementTitle?: string;
+      setupWalletTitle?: string;
+      setupWalletDesc?: string;
+      exportSecretsTitle?: string;
+      exportSecretsDesc?: string;
+      manageNodesTitle?: string;
+      manageNodesDesc?: string;
+      advancedTitle?: string;
+      rpcEndpointLabel?: string;
+      rpcConfigHint?: string;
+      rpcNotAvailable?: string;
+      walletTotalBalance?: string;
+      walletTotalBalanceHint?: string;
+      walletNotSetUpHint?: string;
+      walletNotSetUpTitle?: string;
+      walletNotSetUpDesc?: string;
+      walletNotSetUpCta?: string;
+      walletNotSetUpBadge?: string;
+      walletNotProvisioned?: string;
+      walletNotOpen?: string;
+      walletDisconnected?: string;
+      actionRequiresWallet?: string;
+      walletStatusUnknown?: string;
     };
     guestCheckout?: {
       title?: string;
@@ -3071,10 +4176,31 @@ export interface TranslationResource {
       acceptedCoinsHelpBody?: string;
       paymentTimeoutHelpTitle?: string;
       paymentTimeoutHelpBody?: string;
+      paymentPolicyNote?: string;
+      paymentPolicyLink?: string;
+      receivingAccountsInlineNote?: string;
+      missingAccountWarning?: string;
+      receivingAccountsNote?: string;
+      receivingAccountsLink?: string;
+    };
+    paymentPolicy?: {
+      title?: string;
+      description?: string;
+      chainConfirmedTitle?: string;
+      chainConfirmedDesc?: string;
+      mempoolAcceptedTitle?: string;
+      mempoolAcceptedDesc?: string;
+      scopeNote?: string;
+      loadError?: string;
+      saveError?: string;
+      saveSuccess?: string;
     };
     integrations?: {
       title?: string;
       subtitle?: string;
+      subtitleNoAi?: string;
+      aiMovedBanner?: string;
+      aiMovedLink?: string;
       tabNotifications?: string;
       tabWebhooks?: string;
       tabAI?: string;
@@ -3218,11 +4344,20 @@ export interface TranslationResource {
       aiSaveActivate?: string;
       aiProviderActive?: string;
       aiApiKeySaved?: string;
+      aiSovereignGuideTitle?: string;
+      aiSovereignGuideDesc?: string;
+      aiSovereignGuideStep1?: string;
+      aiSovereignGuideStep2?: string;
+      aiSovereignGuideStep3?: string;
+      aiSovereignEndpoint?: string;
+      aiSovereignEndpointHint?: string;
+      aiSovereignApiKeyOptional?: string;
       aiPlatformActive?: string;
       aiPlatformTitle?: string;
       aiPlatformDesc?: string;
       aiDailyUsage?: string;
       aiPlatformUpgrade?: string;
+      aiByokExpand?: string;
       unsavedChanges?: string;
 
       paymentProviders?: { title?: string; subtitle?: string };
@@ -3976,6 +5111,9 @@ export interface TranslationResource {
     networkMismatchNeedTestnet?: string;
     networkMismatchTitle?: string;
     networkMismatchDesc?: string;
+    saveFailed?: string;
+    nameInUse?: string;
+    addressInUse?: string;
   };
 
   saasHome?: {
@@ -4005,6 +5143,7 @@ export interface TranslationResource {
       emptyTitle: string;
       emptySubtitle: string;
       growingCta: string;
+      newOnNetwork: string;
     };
     popularProducts: {
       title: string;
@@ -4121,9 +5260,60 @@ export interface TranslationResource {
     rateUpdated?: string;
   };
 
+  help?: {
+    backToStore: string;
+    exchangeUsdtPayment: {
+      title: string;
+      intro: string;
+      step1Title: string;
+      step1Desc: string;
+      step2Title: string;
+      step2Desc: string;
+      trc20Warning: string;
+      step3Title: string;
+      step3Desc: string;
+      networkTableTitle: string;
+      networkTableHeaders: {
+        mobazha: string;
+        okx: string;
+        binance: string;
+        htx: string;
+      };
+      networkRows: {
+        bsc: { mobazha: string; okx: string; binance: string; htx: string };
+        sol: { mobazha: string; okx: string; binance: string; htx: string };
+        base: { mobazha: string; okx: string; binance: string; htx: string };
+        matic: { mobazha: string; okx: string; binance: string; htx: string };
+        eth: { mobazha: string; okx: string; binance: string; htx: string };
+      };
+      exchangeGuidesTitle: string;
+      links: {
+        okx: string;
+        binance: string;
+        htx: string;
+      };
+      faqTitle: string;
+      faq: {
+        trc20Q: string;
+        trc20A: string;
+        okxBscQ: string;
+        okxBscA: string;
+        kycQ: string;
+        kycA: string;
+        refundQ: string;
+        refundA: string;
+      };
+      custodialTitle: string;
+      custodialDesc: string;
+      disclaimer: string;
+    };
+  };
+
   support?: {
     documentation: string;
     documentationDesc: string;
+    exchangeUsdtPayment?: string;
+    exchangeUsdtPaymentDesc?: string;
     community: string;
     communityDesc: string;
   };
@@ -4169,6 +5359,27 @@ export interface TranslationResource {
   auth?: TranslationSection;
 
   collections?: TranslationSection;
+
+  supplyAvailability?: {
+    checking?: string;
+    quoteError?: string;
+    allAvailable?: string;
+    unavailableTitle?: string;
+    unavailableBody?: string;
+    manualActionTitle?: string;
+    manualActionBody?: string;
+    warningTitle?: string;
+    statusAvailable?: string;
+    statusLowStock?: string;
+    statusOutOfStock?: string;
+    statusUnlimited?: string;
+    statusManualAction?: string;
+    statusSupplierUnavailable?: string;
+    statusUnknown?: string;
+    orderConflictStock?: string;
+    orderConflictManual?: string;
+    orderConflictGeneric?: string;
+  };
 
   guestCheckout?: {
     cartEmpty?: string;
@@ -4218,10 +5429,16 @@ export interface TranslationResource {
     saveLinkDescription?: string;
     saveLinkCopy?: string;
     saveLinkCopied?: string;
+    digitalSaveLinkTitle?: string;
+    digitalSaveLinkBody?: string;
     paymentAmountHelpTitle?: string;
     paymentAmountHelpBody?: string;
     expireTimeHelpTitle?: string;
     expireTimeHelpBody?: string;
+    mixedContractTypesTitle?: string;
+    mixedContractTypesBody?: string;
+    missingContractTypeTitle?: string;
+    missingContractTypeBody?: string;
   };
 
   guestOrder?: {
@@ -4263,6 +5480,26 @@ export interface TranslationResource {
     expiredHelpTitle?: string;
     expiredHelpBody?: string;
     doNotPayAgain?: string;
+    stageProgress?: string;
+    milestonesTitle?: string;
+    portalTokenMissingTitle?: string;
+    portalTokenMissingBody?: string;
+    milestones?: {
+      funded?: string;
+      shipped?: string;
+      completed?: string;
+      timePending?: string;
+    };
+    stages?: {
+      payment?: string;
+      confirming?: string;
+      paid?: string;
+      delivered?: string;
+      deliveredGeneric?: string;
+      shipped?: string;
+      complete?: string;
+      expired?: string;
+    };
     confirmation?: {
       poolDetected?: string;
       poolDetectedDesc?: string;
@@ -4323,6 +5560,57 @@ export interface TranslationResource {
     other?: string;
     otherDesc?: string;
     onboarding?: string;
+    sovereign?: {
+      banner?: {
+        title?: string;
+        body?: string;
+      };
+      showHighRisk?: {
+        label?: string;
+        description?: string;
+      };
+      hiddenCount?: string;
+      risk?: {
+        local?: string;
+        mixed?: string;
+        cloud?: string;
+        mixedTooltip?: string;
+        cloudTooltip?: string;
+      };
+      developerOptions?: string;
+      localLlm?: {
+        title?: string;
+        body?: string;
+        bodySimple?: string;
+        edit?: string;
+        editConfig?: string;
+        checking?: string;
+        afterInstall?: string;
+        otherEngines?: string;
+        alreadyInstalled?: string;
+        configureEndpoint?: string;
+        engines?: {
+          ollama?: {
+            name?: string;
+            tagline?: string;
+            recommendedModel?: string;
+            cta?: string;
+          };
+          llamacpp?: {
+            name?: string;
+            tagline?: string;
+            recommendedModel?: string;
+            cta?: string;
+          };
+          lmstudio?: {
+            name?: string;
+            tagline?: string;
+            recommendedModel?: string;
+            cta?: string;
+          };
+        };
+      };
+    };
     autoConnect?: {
       title?: string;
       desc?: string;
@@ -4395,7 +5683,23 @@ export interface TranslationResource {
     storeFound?: string;
     searchFallback?: string;
   };
+
+  // Sovereign-specific shared labels.
+  sovereign?: TranslationSection;
+
+  // Digital asset shared labels (Supply Chain Phase 1.0)
+  digital?: TranslationSection;
 }
+
+type DeepPartialValue<T> = T extends string
+  ? string
+  : T extends Array<infer U>
+    ? Array<DeepPartialValue<U>>
+    : T extends Record<string, unknown>
+      ? { [K in keyof T]?: DeepPartialValue<T[K]> }
+      : T;
+
+export type PartialTranslationResource = DeepPartialValue<TranslationResource>;
 
 // i18n 上下文类型
 export interface I18nContextType {

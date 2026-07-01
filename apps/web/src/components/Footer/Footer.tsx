@@ -12,20 +12,13 @@ import {
   useStorefrontMode,
   useStorefrontProfile,
   stripHtmlTags,
+  getBrandConfig,
+  isSovereignMode,
+  projectRuntimeCryptoPaymentMethods,
+  useFiatPaymentVisible,
+  useRuntimeConfig,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
-
-const FOOTER_CRYPTO_TOKENS = [
-  { id: 'BTC', name: 'Bitcoin' },
-  { id: 'ETH', name: 'Ethereum' },
-  { id: 'BNB', name: 'BNB Chain' },
-  { id: 'BASE', name: 'Base' },
-  { id: 'SOL', name: 'Solana' },
-  { id: 'LTC', name: 'Litecoin' },
-  { id: 'TRX', name: 'TRON' },
-  { id: 'USDT', name: 'Tether (USDT)' },
-  { id: 'USDC', name: 'USD Coin (USDC)' },
-];
 
 const FOOTER_FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
   {
@@ -109,6 +102,10 @@ const socialLinks = [
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
+  const runtimeConfig = useRuntimeConfig();
+  const fiatVisible = useFiatPaymentVisible();
+  const footerCryptoTokens = projectRuntimeCryptoPaymentMethods(runtimeConfig);
+  const showPaymentMethods = footerCryptoTokens.length > 0 || fiatVisible;
   const { profile, isAuthenticated } = useUserStore();
   const standaloneMode = useStorefrontMode();
   const storefrontProfile = useStorefrontProfile();
@@ -167,7 +164,9 @@ export const Footer: React.FC = () => {
       { label: t('policies.termsOfService'), href: '/policies/terms' },
       { label: t('policies.shipping'), href: '/policies/shipping' },
       { label: t('policies.returns'), href: '/policies/returns' },
-      { label: t('policies.buyerProtectionPolicy'), href: '/policies/buyer-protection' },
+      ...(!isSovereignMode()
+        ? [{ label: t('policies.buyerProtectionPolicy'), href: '/policies/buyer-protection' }]
+        : []),
       { label: t('policies.refundTitle'), href: '/policies/refund' },
     ],
   };
@@ -321,24 +320,32 @@ export const Footer: React.FC = () => {
           </Grid>
 
           {/* Payment Methods */}
-          <div className="flex items-center gap-3 mb-8">
-            <span className="text-xs text-muted-foreground/60 uppercase tracking-wide">
-              {t('footer.paymentMethods')}
-            </span>
-            <div className="flex items-center gap-2 opacity-60">
-              {FOOTER_CRYPTO_TOKENS.map(({ id, name }) => (
-                <span key={id} title={name}>
-                  <TokenIcon token={id} size={20} />
-                </span>
-              ))}
-              <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
-              {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
-                <span key={id} title={name} className="flex items-center">
-                  {icon}
-                </span>
-              ))}
+          {showPaymentMethods && (
+            <div className="flex items-center gap-3 mb-8">
+              <span className="text-xs text-muted-foreground/60 uppercase tracking-wide">
+                {t('footer.paymentMethods')}
+              </span>
+              <div className="flex items-center gap-2 opacity-60">
+                {footerCryptoTokens.map(({ id, name }) => (
+                  <span key={id} title={name}>
+                    <TokenIcon token={id} size={20} />
+                  </span>
+                ))}
+                {fiatVisible && (
+                  <>
+                    {footerCryptoTokens.length > 0 && (
+                      <span className="w-px h-4 bg-border mx-1" aria-hidden="true" />
+                    )}
+                    {FOOTER_FIAT_METHODS.map(({ id, name, icon }) => (
+                      <span key={id} title={name} className="flex items-center">
+                        {icon}
+                      </span>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -346,14 +353,16 @@ export const Footer: React.FC = () => {
               {standaloneMode && brandProfile ? (
                 <>
                   © {new Date().getFullYear()} {brandProfile.name}.{' '}
-                  <a
-                    href="https://mobazha.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary transition-colors"
-                  >
-                    Powered by Mobazha
-                  </a>
+                  {!getBrandConfig()?.hidePoweredBy && (
+                    <a
+                      href="https://mobazha.org"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Powered by Mobazha
+                    </a>
+                  )}
                 </>
               ) : (
                 <>

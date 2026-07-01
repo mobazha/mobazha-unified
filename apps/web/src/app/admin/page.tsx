@@ -3,22 +3,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   useI18n,
-  useUserStore,
-  useCurrency,
-  productDataService,
-  useSales,
   isStandalone,
   useReceivingAccounts,
   useUserContext,
+  getAdminStorePaymentsPath,
 } from '@mobazha/core';
-import type { ProductListItem } from '@mobazha/core';
 import {
   Package,
   ShoppingCart,
   TrendingUp,
   Star,
   Zap,
-  Plus,
   Eye,
   Palette,
   AlertCircle,
@@ -28,128 +23,29 @@ import {
   Layers,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAdminDashboardData } from '@/hooks/useAdminDashboardData';
 import { usePlatform } from '@mobazha/ui/hooks';
 import {
   StatCard,
-  RecentOrderRow,
+  AdminRecentOrderRow,
   TopProductRow,
   EmptyState,
   ListSkeleton,
   SetupChecklist,
   MnemonicBackupBanner,
+  MoneroPoolStatusBanner,
+  XmrWalletSetupBanner,
   ActionItems,
+  SupplyNeedsAttentionCard,
   getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
 import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
 import StandaloneSetupWizard from '@/components/admin/StandaloneSetupWizard';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
-
-const REVENUE_STATES = new Set(['COMPLETED', 'SHIPPED', 'PAYMENT_FINALIZED']);
-
-function useDashboardData() {
-  const { t } = useI18n();
-  const { profile } = useUserStore();
-  const { formatPrice, fromMinimalUnit, localCurrency, convertToLocal } = useCurrency();
-
-  const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [productsError, setProductsError] = useState<string | null>(null);
-  const [ratingAvg, setRatingAvg] = useState<number | null>(null);
-  const [ratingCount, setRatingCount] = useState(0);
-
-  const {
-    orders: salesOrders,
-    isLoading: salesLoading,
-    error: salesError,
-  } = useSales({ limit: 20 });
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await productDataService.getMyListings();
-        if (!cancelled) setProducts(data);
-      } catch (err) {
-        if (!cancelled)
-          setProductsError(
-            err instanceof Error ? err.message : t('admin.dashboard.failedToLoadProducts')
-          );
-      } finally {
-        if (!cancelled) setProductsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!profile?.peerID) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const ratings = await productDataService.getStoreRatings(profile.peerID);
-        if (!cancelled) {
-          setRatingAvg(ratings.average);
-          setRatingCount(ratings.count);
-        }
-      } catch {
-        // Ratings are non-critical; silent fallback to defaults
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [profile?.peerID]);
-
-  const recentOrders = useMemo(() => salesOrders.slice(0, 5), [salesOrders]);
-
-  const topProducts = useMemo(
-    () =>
-      [...products]
-        .sort((a, b) => {
-          const ratingDiff = (b.averageRating || 0) - (a.averageRating || 0);
-          if (ratingDiff !== 0) return ratingDiff;
-          return (b.ratingCount || 0) - (a.ratingCount || 0);
-        })
-        .slice(0, 5),
-    [products]
-  );
-
-  const totalSalesDisplay = useMemo(() => {
-    if (!salesOrders.length) return '—';
-    let total = 0;
-    for (const order of salesOrders) {
-      if (!order.total?.amount || !REVENUE_STATES.has(order.state)) continue;
-      const cc = getOrderCurrencyCode(order);
-      try {
-        total += convertToLocal(fromMinimalUnit(order.total.amount, cc), cc);
-      } catch {
-        // Skip orders with unknown currencies
-      }
-    }
-    if (total <= 0) return '—';
-    return formatPrice(total, localCurrency);
-  }, [salesOrders, convertToLocal, fromMinimalUnit, formatPrice, localCurrency]);
-
-  return {
-    profile,
-    products,
-    productsLoading,
-    productsError,
-    salesOrders,
-    salesLoading,
-    salesError,
-    ratingAvg,
-    ratingCount,
-    recentOrders,
-    topProducts,
-    totalSalesDisplay,
-  };
-}
+import { useFeature } from '@mobazha/core/hooks/useFeature';
 
 function DashboardHeader({ name }: { name: string }) {
   const { t } = useI18n();
@@ -180,7 +76,10 @@ function ErrorBanner({ message }: { message: string }) {
 
 export default function AdminDashboardPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const isMobile = useIsMobile();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const searchParams = useSearchParams();
   const {
     profile,
     products,
@@ -188,21 +87,28 @@ export default function AdminDashboardPage() {
     productsError,
     salesOrders,
     salesLoading,
+    guestLoading,
     salesError,
     ratingAvg,
     ratingCount,
     recentOrders,
     topProducts,
     totalSalesDisplay,
-  } = useDashboardData();
+    totalOrderCount,
+  } = useAdminDashboardData();
 
   const { hasStore } = useUserContext();
-  const searchParams = useSearchParams();
   const [sessionDismissed, setSessionDismissed] = useState(false);
+
+  useEffect(() => {
+    if (aiWorkspaceEnabled && searchParams.get('tab') === 'workspace') {
+      router.replace('/admin/ai/workspace');
+    }
+  }, [aiWorkspaceEnabled, searchParams, router]);
 
   const standaloneMode = useMemo(() => isStandalone(), []);
 
-  // Standalone first-run setup detection
+  // Standalone first-run setup detection — always wait for GET /v1/system/setup.
   const [standaloneSetupNeeded, setStandaloneSetupNeeded] = useState<boolean | null>(
     standaloneMode ? null : false
   );
@@ -221,6 +127,7 @@ export default function AdminDashboardPage() {
           setStandaloneCompletedSteps(status.completedSteps);
         }
       } catch {
+        // Tor latency / transient errors: prefer admin login over re-onboarding.
         if (!cancelled) setStandaloneSetupNeeded(false);
       }
     })();
@@ -288,6 +195,7 @@ export default function AdminDashboardPage() {
     return (
       <div data-testid="admin-dashboard">
         <DashboardHeader name={displayName} />
+        <XmrWalletSetupBanner />
         <SetupChecklist hasProducts={false} productsLoading={false} />
         {profile?.visibility === 'private' && (
           <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
@@ -321,6 +229,10 @@ export default function AdminDashboardPage() {
 
       <MnemonicBackupBanner />
 
+      <XmrWalletSetupBanner />
+
+      <MoneroPoolStatusBanner />
+
       {profile?.visibility === 'private' && (
         <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
           <Lock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -352,7 +264,7 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.noPaymentMethodsWarning')}
             </p>
             <Link
-              href="/admin/settings/payments"
+              href={getAdminStorePaymentsPath()}
               className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
             >
               {t('admin.dashboard.setUpPayments')} →
@@ -363,6 +275,8 @@ export default function AdminDashboardPage() {
 
       {/* Action Items — seller to-dos */}
       <ActionItems orders={salesOrders} loading={salesLoading} />
+
+      <SupplyNeedsAttentionCard products={products} loading={productsLoading} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -378,10 +292,10 @@ export default function AdminDashboardPage() {
         <StatCard
           icon={ShoppingCart}
           label={t('admin.dashboard.totalOrders')}
-          value={String(salesOrders.length)}
+          value={String(totalOrderCount)}
           sublabel={t('admin.dashboard.allTime')}
           color="info"
-          loading={salesLoading}
+          loading={salesLoading || guestLoading}
           href="/admin/orders"
         />
         <StatCard
@@ -391,7 +305,9 @@ export default function AdminDashboardPage() {
           sublabel={t('admin.dashboard.completedOrders')}
           color="success"
           loading={salesLoading}
-          href="/admin/analytics"
+          href={
+            typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '/admin/orders' : '/admin/analytics'
+          }
         />
         <StatCard
           icon={Star}
@@ -404,7 +320,11 @@ export default function AdminDashboardPage() {
           }
           color="warning"
           loading={productsLoading && ratingAvg === null}
-          href="/admin/analytics"
+          href={
+            typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
+              ? '/admin/products'
+              : '/admin/analytics'
+          }
         />
       </div>
 
@@ -454,22 +374,24 @@ export default function AdminDashboardPage() {
           </Link>
         )}
 
-        <Link
-          href="/admin/storefront"
-          className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-        >
-          <div className="p-2.5 sm:p-3 rounded-lg bg-warning/10 text-warning group-hover:bg-warning group-hover:text-primary-foreground transition-colors">
-            <Palette className="w-5 h-5" />
-          </div>
-          <div className="text-center sm:text-left">
-            <p className="text-xs sm:text-base font-medium text-foreground">
-              {t('admin.dashboard.designStore')}
-            </p>
-            <p className="hidden sm:block text-sm text-muted-foreground">
-              {t('admin.dashboard.designStoreDesc')}
-            </p>
-          </div>
-        </Link>
+        {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+          <Link
+            href="/admin/storefront"
+            className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-3 sm:p-5 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+          >
+            <div className="p-2.5 sm:p-3 rounded-lg bg-warning/10 text-warning group-hover:bg-warning group-hover:text-primary-foreground transition-colors">
+              <Palette className="w-5 h-5" />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-base font-medium text-foreground">
+                {t('admin.dashboard.designStore')}
+              </p>
+              <p className="hidden sm:block text-sm text-muted-foreground">
+                {t('admin.dashboard.designStoreDesc')}
+              </p>
+            </div>
+          </Link>
+        )}
 
         {isMobile ? (
           <>
@@ -484,17 +406,19 @@ export default function AdminDashboardPage() {
                 <p className="text-xs font-medium text-foreground">{t('admin.nav.collections')}</p>
               </div>
             </Link>
-            <Link
-              href="/admin/discounts"
-              className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
-            >
-              <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                <Tag className="w-5 h-5" />
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-medium text-foreground">{t('admin.nav.discounts')}</p>
-              </div>
-            </Link>
+            {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+              <Link
+                href="/admin/discounts"
+                className="flex flex-col items-center gap-2 p-3 bg-card border border-border rounded-xl hover:border-primary/30 hover:shadow-sm transition-all group min-h-[44px]"
+              >
+                <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div className="text-center">
+                  <p className="text-xs font-medium text-foreground">{t('admin.nav.discounts')}</p>
+                </div>
+              </Link>
+            )}
           </>
         ) : (
           <a
@@ -532,14 +456,17 @@ export default function AdminDashboardPage() {
               {t('admin.dashboard.viewAll')}
             </Link>
           </div>
-          {salesLoading ? (
+          {salesLoading || guestLoading ? (
             <ListSkeleton />
           ) : recentOrders.length > 0 ? (
             <div className="-mx-4 sm:mx-0">
               <div className="flex sm:block overflow-x-auto sm:overflow-visible gap-3 sm:gap-0 px-4 sm:px-0 pb-2 sm:pb-0 snap-x snap-mandatory">
-                {recentOrders.map(order => (
-                  <div key={order.orderID} className="min-w-[260px] sm:min-w-0 snap-start">
-                    <RecentOrderRow order={order} />
+                {recentOrders.map(entry => (
+                  <div
+                    key={entry.source === 'standard' ? entry.order.orderID : entry.order.orderToken}
+                    className="min-w-[260px] sm:min-w-0 snap-start"
+                  >
+                    <AdminRecentOrderRow entry={entry} />
                   </div>
                 ))}
               </div>

@@ -10,8 +10,25 @@ import {
 
 function runtimeMethods(ids: string[]) {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
+    authMode: 'standalone',
+    deployment: { mode: 'standalone', allowExternalResources: true },
+    experience: { kind: 'store' },
+    capabilitiesReady: true,
+    features: {},
     capabilities: {
+      commerce: { storefront: true, storeAdmin: true, checkout: true },
+      marketplace: {
+        discovery: false,
+        operator: false,
+        selling: false,
+        curation: false,
+        sellerReview: false,
+        customDomains: false,
+        releasePublishing: false,
+        attribution: false,
+      },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
       payments: {
         methods: ids.map(id => ({ id, kind: 'crypto', flow: 'address-transfer' })),
       },

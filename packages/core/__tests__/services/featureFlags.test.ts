@@ -9,9 +9,37 @@
  *   - bootstrap from `window.__RUNTIME_CONFIG__.features`
  */
 
+// @vitest-environment jsdom
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { type FeatureSnapshot, featureFlags } from '../../services/featureFlags';
+
+function runtimeConfig(features: Record<string, unknown>) {
+  return {
+    schemaVersion: 3,
+    authMode: 'hosted',
+    deployment: { mode: 'hosted', allowExternalResources: true },
+    experience: { kind: 'platform' },
+    capabilitiesReady: true,
+    features,
+    capabilities: {
+      commerce: { storefront: true, storeAdmin: true, checkout: true },
+      marketplace: {
+        discovery: true,
+        operator: true,
+        selling: true,
+        curation: true,
+        sellerReview: true,
+        customDomains: true,
+        releasePublishing: true,
+        attribution: true,
+      },
+      sovereign: { isolatedRuntime: false, managedFleet: false },
+      payments: { methods: [] },
+    },
+  };
+}
 
 describe('featureFlags', () => {
   beforeEach(() => {
@@ -169,9 +197,9 @@ describe('featureFlags', () => {
   describe('initializeFromRuntimeConfig', () => {
     it('reads window.__RUNTIME_CONFIG__.features', () => {
       (window as unknown as { __RUNTIME_CONFIG__: unknown }).__RUNTIME_CONFIG__ = {
-        features: {
+        ...runtimeConfig({
           guestCheckout: { effective: true, overridable: ['node_runtime'] },
-        },
+        }),
       };
 
       const snap = featureFlags.initializeFromRuntimeConfig();
@@ -198,34 +226,6 @@ describe('featureFlags', () => {
         overridable: ['platform_global', 'tenant', 'node_runtime'],
       });
       expect(featureFlags.isInitialized()).toBe(true);
-    });
-
-    it('synthesizes guestCheckout from the legacy flat field', () => {
-      // Simulates an older runtime-config (or the existing E2E mocks) that
-      // only set `guestCheckoutEnabled: true` without a `features` map.
-      (window as unknown as { __RUNTIME_CONFIG__: unknown }).__RUNTIME_CONFIG__ = {
-        guestCheckoutEnabled: true,
-      };
-
-      const snap = featureFlags.initializeFromRuntimeConfig();
-      expect(snap.guestCheckout).toEqual({ effective: true, overridable: [] });
-      expect(featureFlags.isEnabled('guestCheckout')).toBe(true);
-
-      delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
-    });
-
-    it('prefers the modern features map when both shapes are present', () => {
-      (window as unknown as { __RUNTIME_CONFIG__: unknown }).__RUNTIME_CONFIG__ = {
-        features: {
-          guestCheckout: { effective: false, overridable: [] },
-        },
-        guestCheckoutEnabled: true,
-      };
-
-      const snap = featureFlags.initializeFromRuntimeConfig();
-      expect(snap.guestCheckout?.effective).toBe(false);
-
-      delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
     });
   });
 

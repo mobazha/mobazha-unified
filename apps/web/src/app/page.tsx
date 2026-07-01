@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Header, Hero, ProductSection, Footer } from '@/components';
 import { Container } from '@/components/layouts';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -24,13 +24,19 @@ import {
   useStorefrontMode,
   useStorefrontPeerID,
   useStorefrontProfile,
-  parsePriceFields,
+  productCardPriceFieldsFromListItem,
   isStandalone,
+  useIsSubMarket,
+  useRuntimeConfig,
+  shouldRenderMarketplaceExperienceAtRoot,
+  resolveProductCardSellerDisplay,
 } from '@mobazha/core';
+import { MarketplaceDetailPageContent } from '@/components/CommunityMarketplace/MarketplaceDetailPageContent';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
 import type { ProductListItem } from '@mobazha/core';
 import type { SearchedUser } from '@mobazha/core/services/api/products';
 import { getListingsWithDedup } from '@/utils/requestDedup';
+import { MarketplaceHomePage } from '@/components/MarketplaceDiscovery/MarketplaceHomePage';
 
 const HOMEPAGE_EXCLUDE_TYPES = new Set(['hero', 'testimonials', 'store-tabs']);
 const noopFn = () => {};
@@ -40,7 +46,7 @@ interface DisplayProduct {
   slug: string;
   title: string;
   imageUrl: string;
-  price: number;
+  price: number | string;
   currency?: string;
   divisibility?: number;
   originalPrice?: number;
@@ -51,18 +57,18 @@ interface DisplayProduct {
   reviewCount: number;
   freeShipping?: boolean;
   isDigital?: boolean;
+  priceFrom?: boolean;
   moderators?: string[];
 }
 
 function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
-  const vendorName =
-    item.vendorName ||
-    (item.vendorPeerID
-      ? `${item.vendorPeerID.substring(0, 6)}…${item.vendorPeerID.slice(-4)}`
-      : '');
-  const vendorAvatar = getImageUrl(item.vendorAvatarHashes?.small);
+  const seller = resolveProductCardSellerDisplay({
+    peerID: item.vendorPeerID,
+    name: item.vendorName,
+    avatarUrl: getImageUrl(item.vendorAvatarHashes?.small),
+  });
 
-  const { amount, currencyCode, divisibility } = parsePriceFields(item.price);
+  const priceFields = productCardPriceFieldsFromListItem(item);
 
   return {
     id: item.slug,
@@ -72,11 +78,12 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
       getImageUrl(item.thumbnail?.medium) ||
       getImageUrl(item.thumbnail?.small) ||
       'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop',
-    price: amount,
-    currency: currencyCode,
-    divisibility,
-    vendorName,
-    vendorAvatar,
+    price: priceFields.price,
+    currency: priceFields.currencyCode,
+    divisibility: priceFields.divisibility,
+    priceFrom: priceFields.priceFrom,
+    vendorName: seller.name,
+    vendorAvatar: seller.avatarUrl,
     vendorPeerID: item.vendorPeerID,
     rating: item.averageRating || 0,
     reviewCount: item.ratingCount || 0,
@@ -87,8 +94,30 @@ function convertToDisplayProduct(item: ProductListItem): DisplayProduct {
 }
 
 export default function HomePage() {
+  const pathname = usePathname();
   const storefrontMode = useStorefrontMode();
   const storefrontPeerID = useStorefrontPeerID();
+  const isSubMarket = useIsSubMarket();
+  const { needsOnboarding } = useUserStore();
+  const runtimeConfig = useRuntimeConfig();
+
+  const renderMarketplaceAtRoot = shouldRenderMarketplaceExperienceAtRoot({
+    pathname,
+    experience: runtimeConfig.experience,
+    storefrontMode,
+    isSubMarket,
+    needsOnboarding,
+  });
+
+  if (renderMarketplaceAtRoot && runtimeConfig.experience.marketplaceIdentifier) {
+    return (
+      <MarketplaceDetailPageContent identifier={runtimeConfig.experience.marketplaceIdentifier} />
+    );
+  }
+
+  if (isSubMarket) {
+    return <MarketplaceHomePage />;
+  }
 
   if (storefrontMode) {
     return <StandaloneHomePage overridePeerID={storefrontPeerID} />;
@@ -254,7 +283,7 @@ function SaaSHomePage() {
             products={popularProducts}
             isLoading={isLoadingPopular}
             showViewAll
-            viewAllHref="/marketplace?sort=popular"
+            viewAllHref="/search?q=*&sortBy=rating"
           />
         )}
 
@@ -267,7 +296,8 @@ function SaaSHomePage() {
               products={latestProducts}
               isLoading={isLoadingProducts}
               showViewAll
-              viewAllHref="/marketplace?sort=newest"
+              viewAllHref="/search?q=*&sortBy=newest"
+              showStoreAttribution
             />
           </div>
         )}
@@ -428,7 +458,9 @@ function StandaloneHomePage({ overridePeerID }: { overridePeerID?: string | null
             products={trendingProducts.slice(0, 8)}
             isLoading={isLoading}
             showViewAll
-            viewAllHref={effectivePeerID ? `/store/${effectivePeerID}` : '/'}
+            viewAllHref={
+              __SOVEREIGN__ ? '/store' : effectivePeerID ? `/store/${effectivePeerID}` : '/'
+            }
           />
         </div>
       </main>

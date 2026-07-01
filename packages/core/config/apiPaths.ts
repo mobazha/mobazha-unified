@@ -16,6 +16,9 @@
  */
 import { NODE_API_PATHS, HOSTING_API_PATHS, SEARCH_API_PATHS } from './apiPaths.generated';
 
+/** Backend settlement action path segment. */
+export type SettlementActionKind = 'confirm' | 'cancel' | 'complete' | 'dispute-release';
+
 // ============================================================
 // 节点 API（mobazha3.0，经 hosting 反向代理）
 // 与 getGatewayUrl() 拼接（getGatewayUrl 已含 /v1 前缀）
@@ -23,6 +26,9 @@ import { NODE_API_PATHS, HOSTING_API_PATHS, SEARCH_API_PATHS } from './apiPaths.
 // ============================================================
 export const NODE_API = {
   ...NODE_API_PATHS,
+  // Public, versioned product capability snapshot.
+  RUNTIME_CONFIG: '/runtime-config',
+
   // --- Profiles ---
   PROFILES: '/profiles',
   PROFILE_AVATAR: (peerID: string, size: string = 'medium') => `/profiles/${peerID}/avatar/${size}`,
@@ -34,12 +40,19 @@ export const NODE_API = {
   PREFERENCES: '/preferences',
   PREFERENCES_CURRENCY: '/preferences/currency',
 
+  // --- Store policy ---
+  STORE_POLICY: '/store-policy',
+  STORE_POLICY_MODERATORS: '/store-policy/moderators',
+  STORE_POLICY_MODERATOR: (peerID: string) => `/store-policy/moderators/${peerID}`,
+  STORE_POLICY_PUBLISHED: (peerID: string) => `/store-policy/${peerID}/published`,
+
   // --- Listings ---
   LISTINGS: '/listings',
   LISTING: (slug: string) => `/listings/${slug}`,
   LISTING_PEER: (peerID: string, slug: string) => `/listings/${peerID}/${slug}`,
   LISTINGS_INDEX: '/listings/index',
   LISTINGS_INDEX_PEER: (peerID: string) => `/listings/index/${peerID}`,
+  LISTINGS_SUPPLY_SUMMARY: '/listings/supply-summary',
 
   // --- Ratings ---
   RATINGS_INDEX: '/ratings/index',
@@ -52,30 +65,45 @@ export const NODE_API = {
   PURCHASES: '/purchases',
   SALES: '/sales',
   ORDERS: '/orders',
+
+  // --- Data export (DG-1.10 — "Your store, your data, your customers") ---
+  // CSV/JSON downloads of vendor-side listings, sales, and aggregated buyer
+  // lists. Frontend appends ?format=csv|json (default csv).
+  EXPORTS_LISTINGS: '/exports/listings',
+  EXPORTS_SALES: '/exports/sales',
+  EXPORTS_CUSTOMERS: '/exports/customers',
+
+  // --- Vendor migration (DG-1.9 — "Storefront creators can leave with") ---
+  // Single endpoint handles both dry-run preview and actual import via the
+  // request body's `dryRun` flag. SaaS / Standalone only — Sovereign build
+  // omits the handler entirely.
+  LISTINGS_IMPORT_GUMROAD: '/listings/import/gumroad',
   ORDER: (orderId: string) => `/orders/${orderId}`,
   /** @deprecated Use ORDERS (POST /v1/orders) instead. '/purchase' does not exist in backend. */
   PURCHASE: '/orders',
   ORDERS_ESTIMATE: '/orders/estimate',
   ORDERS_CHECKOUT_BREAKDOWN: '/orders/checkout-breakdown',
+  ORDERS_SUPPLY_QUOTE: '/orders/supply-quote',
   ORDER_CONFIRM: (orderId: string) => `/orders/${orderId}/confirm`,
   ORDER_SHIP: (orderId: string) => `/orders/${orderId}/ship`,
   ORDER_COMPLETE: (orderId: string) => `/orders/${orderId}/complete`,
   ORDER_CANCEL: (orderId: string) => `/orders/${orderId}/cancel`,
   ORDER_EXTEND_PROTECTION: (orderId: string) => `/orders/${orderId}/extend-protection`,
   ORDER_REFUND: (orderId: string) => `/orders/${orderId}/refund`,
+  ORDER_REFUND_ADDRESS: (orderId: string) => `/orders/${orderId}/refund-address`,
   ORDER_PAYMENT: (orderId: string) => `/orders/${orderId}/payment`,
+  ORDER_PAYMENT_SESSION: (orderId: string) => `/orders/${orderId}/payment-session`,
   ORDER_RATE: (orderId: string) => `/orders/${orderId}/rate`,
   ORDER_SPEND: (orderId: string) => `/orders/${orderId}/spend`,
   ORDER_PAYMENT_REMAINING: (orderId: string) => `/orders/${orderId}/payment/remaining`,
-
-  // --- Order Instructions (orderID in URL) ---
-  ORDER_INSTRUCTIONS_COMPLETE: (orderId: string) => `/orders/${orderId}/instructions/complete`,
-  ORDER_INSTRUCTIONS_CONFIRM: (orderId: string) => `/orders/${orderId}/instructions/confirm`,
-  ORDER_INSTRUCTIONS_CANCEL: (orderId: string) => `/orders/${orderId}/instructions/cancel`,
-  ORDER_INSTRUCTIONS_REFUND: (orderId: string) => `/orders/${orderId}/instructions/refund`,
-  ORDER_INSTRUCTIONS_PAYMENT: (orderId: string) => `/orders/${orderId}/instructions/payment`,
-  DISPUTE_INSTRUCTIONS_RELEASE: (orderId: string) => `/disputes/${orderId}/instructions/release`,
-
+  ORDER_SETTLEMENT_ACTION: (orderId: string, action: SettlementActionKind) =>
+    `/orders/${orderId}/settlement-actions/${action}`,
+  ORDER_SETTLEMENT_ACTION_STATUS: (
+    orderId: string,
+    action: SettlementActionKind,
+    actionId: string
+  ) =>
+    `/orders/${orderId}/settlement-actions/${action}/status?actionId=${encodeURIComponent(actionId)}`,
   // --- Disputes (orderID in URL) ---
   DISPUTE_OPEN: (orderId: string) => `/disputes/${orderId}/open`,
   DISPUTE_AFTER_SALE: (orderId: string) => `/disputes/${orderId}/after-sale`,
@@ -111,9 +139,24 @@ export const NODE_API = {
   AI_CONFIG: '/settings/ai',
   AI_PROVIDERS: '/settings/ai/providers',
   AI_TEST_CONNECTION: '/settings/ai/test',
-  AI_CHAT: '/ai/chat',
-  AI_CHAT_SESSIONS: '/ai/chat/sessions',
-  AI_CHAT_SESSION: (sessionId: string) => `/ai/chat/${sessionId}`,
+  AGENT_CHAT_SESSION: NODE_API_PATHS.AGENT_CHAT_BY_SESSION_ID,
+  /** Smart product import — multipart ingest (full-service distributions only). */
+  AGENT_PRODUCT_IMPORT_INGEST: '/agent/product-import/ingest',
+  AGENT_PRODUCT_IMPORT_RUNS_ADVANCE: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/advance`,
+  AGENT_PRODUCT_IMPORT_RUNS_WORKBENCH: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/workbench`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVALS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approvals`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_DECISIONS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-decisions`,
+  AGENT_PRODUCT_IMPORT_RUNS_APPROVAL_APPLICATIONS: (runId: string) =>
+    `/agent/product-import/runs/${encodeURIComponent(runId)}/approval-applications`,
+  AGENT_ARTIFACT: (artifactId: string) => `/agent/artifacts/${encodeURIComponent(artifactId)}`,
+  AGENT_ARTIFACT_CONTENT: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}/content`,
+  AGENT_ARTIFACTS_APPROVAL: (artifactId: string) =>
+    `/agent/artifacts/${encodeURIComponent(artifactId)}/approval`,
 
   // --- Social / Follow ---
   FOLLOW: (peerID: string) => `/following/${peerID}`,
@@ -262,6 +305,31 @@ export const NODE_API = {
   SYSTEM_UPDATE_TRIGGER: '/system/update-trigger',
   SYSTEM_UPDATE_CONFIG: '/system/update-config',
 
+  // --- Monero NodePool admin (Sovereign only) ---
+  // host:port addresses are URL-encoded on the client (encodeURIComponent)
+  // and decoded by chi's {address} path parameter on the server.
+  SYSTEM_MONERO_NODES: '/system/monero-nodes',
+  SYSTEM_MONERO_NODE: (address: string) => `/system/monero-nodes/${encodeURIComponent(address)}`,
+  SYSTEM_MONERO_NODE_SWITCH: (address: string) =>
+    `/system/monero-nodes/${encodeURIComponent(address)}/switch`,
+
+  // --- XMR wallet admin (Sovereign only) ---
+  WALLET_XMR_BALANCE: '/wallet/xmr/balance',
+  WALLET_XMR_WITHDRAW: '/wallet/xmr/withdraw',
+  WALLET_XMR_SWEEP_ALL: '/wallet/xmr/sweep-all',
+
+  // --- XMR user-sovereignty surface (restricted distributions, admin-only) ---
+  // adminOnlyAuthSecurity on the backend: no API tokens. Each request
+  // round-trips to monero-wallet-rpc; nothing is cached server-side.
+  WALLET_XMR_SECRETS_MNEMONIC: '/wallet/xmr/secrets/mnemonic',
+  WALLET_XMR_SECRETS_VIEW_ONLY: '/wallet/xmr/secrets/view-only',
+  WALLET_XMR_TRANSFERS: '/wallet/xmr/transfers',
+
+  // --- XMR wallet setup wizard (Sovereign only) ---
+  // Single POST endpoint multiplexed on { action: "create" | "restore" |
+  // "confirm-backup" }; GET reports whether xmr-wallet.json exists.
+  SYSTEM_SETUP_WIZARD_XMR_WALLET: '/system/setup-wizard/xmr-wallet',
+
   // --- Auth Tokens (standalone local token management) ---
   AUTH_TOKENS: '/auth/tokens',
   AUTH_TOKEN: (tokenID: string) => `/auth/tokens/${tokenID}`,
@@ -278,10 +346,18 @@ export const NODE_API = {
 
   // --- Guest Checkout (anonymous direct-payment orders) ---
   GUEST_ORDERS: '/guest/orders',
+  GUEST_ORDERS_QUOTE: '/guest/orders/quote',
   GUEST_ORDER: (token: string) => `/guest/orders/${token}`,
   GUEST_ORDER_SHIP: (token: string) => `/guest/orders/${token}/ship`,
   GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${token}/complete`,
+  // PM-3a: Admin-only full order detail (includes shipping address ciphertext)
+  GUEST_ORDER_ADMIN_DETAIL: (token: string) => `/guest/orders/${token}/detail`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
+
+  /** Edition capability manifest (safe fallback when absent) */
+  SETTINGS_PAYMENT_POLICY: '/settings/payment-policy',
+  // PM-3a: Vendor PGP public key (public endpoint for buyer encryption)
+  SETTINGS_PGP_KEY: '/settings/pgp-key',
 
   // --- Fulfillment (Supply Chain) ---
   FULFILLMENT_PROVIDERS: '/fulfillment/providers',
@@ -324,6 +400,10 @@ export const NODE_API = {
   // --- Digital Assets — Buyer Portal (guest token or authenticated buyer/admin) ---
   ORDER_DIGITAL_ASSETS: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-assets`,
+  ORDER_DIGITAL_DELIVERY_STATUS: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-delivery`,
+  ORDER_DIGITAL_DELIVERY_RETRY: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/digital-delivery/retry`,
   ORDER_DIGITAL_DOWNLOAD: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/digital-download`,
 
@@ -443,50 +523,81 @@ export const HOSTING_API = {
   STORE_ACCESS_SETTINGS: '/platform/v1/store-access-settings',
   STORE_ACCESS_LIST: '/platform/v1/store-access-list',
 
-  // --- Group Marketplace ---
-  GROUP_MARKETPLACE_LISTINGS: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/listings`,
-  GROUP_MARKETPLACE_SELLERS: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers`,
-  GROUP_MARKETPLACE_SELLERS_APPLY: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/apply`,
-  GROUP_MARKETPLACE_SELLER_REVIEW: (platform: string, chatId: string, sellerId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/sellers/${sellerId}/review`,
-  GROUP_MARKETPLACE_CHECK_ADMIN: (platform: string, chatId: string) =>
-    `/platform/v1/group-marketplace/${platform}/${chatId}/check-admin`,
-
   // --- Marketplaces ---
   MARKETPLACES: '/platform/v1/marketplaces',
   MARKETPLACE: (id: string) => `/platform/v1/marketplaces/${id}`,
-  MARKETPLACE_BY_SLUG: (slug: string) => `/platform/v1/marketplaces/slug/${slug}`,
-  MARKETPLACES_ME_OWNED: '/platform/v1/marketplaces/me/owned',
-  MARKETPLACES_ME_JOINED: '/platform/v1/marketplaces/me/joined',
-  MARKETPLACES_FEATURED: '/platform/v1/marketplaces/featured',
-  MARKETPLACE_MEMBERS: (id: string) => `/platform/v1/marketplaces/${id}/members`,
-  MARKETPLACE_JOIN: (id: string) => `/platform/v1/marketplaces/${id}/join`,
-  MARKETPLACE_LEAVE: (id: string) => `/platform/v1/marketplaces/${id}/leave`,
-  MARKETPLACE_MEMBER_ROLE: (marketplaceId: string, memberId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/members/${memberId}/role`,
-  MARKETPLACE_MEMBER: (marketplaceId: string, memberId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/members/${memberId}`,
-  MARKETPLACE_SELLER_APPLICATIONS: (id: string) =>
-    `/platform/v1/marketplaces/${id}/seller-applications`,
-  MARKETPLACE_SELLER_APPLICATION_REVIEW: (marketplaceId: string, applicationId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/seller-applications/${applicationId}/review`,
-  MARKETPLACE_SELLER_STATUS: (marketplaceId: string, sellerId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/sellers/${sellerId}/status`,
-  MARKETPLACE_PRODUCTS: (id: string) => `/platform/v1/marketplaces/${id}/products`,
-  MARKETPLACE_PRODUCT: (marketplaceId: string, productId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}`,
-  MARKETPLACE_PRODUCT_REVIEW: (marketplaceId: string, productId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}/review`,
-  MARKETPLACE_PRODUCT_FEATURED: (marketplaceId: string, productId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/products/${productId}/featured`,
-  MARKETPLACE_ANNOUNCEMENTS: (id: string) => `/platform/v1/marketplaces/${id}/announcements`,
-  MARKETPLACE_ANNOUNCEMENT: (marketplaceId: string, announcementId: string) =>
-    `/platform/v1/marketplaces/${marketplaceId}/announcements/${announcementId}`,
-  MARKETPLACE_ACTIVITY: (id: string) => `/platform/v1/marketplaces/${id}/activity`,
-
+  MARKETPLACE_PREVIEW: (id: string) => `/platform/v1/marketplaces/${id}/preview`,
+  MARKETPLACE_PUBLISH: (id: string) => `/platform/v1/marketplaces/${id}/publish`,
+  MARKETPLACE_SUSPEND: (id: string) => `/platform/v1/marketplaces/${id}/suspend`,
+  MARKETPLACES_MINE: '/platform/v1/marketplaces/mine',
+  MARKETPLACE_CONFIG: (id: string) => `/platform/v1/marketplaces/${id}/config`,
+  MARKETPLACE_CONFIG_CURRENT: '/platform/v1/marketplaces/current/config',
+  MARKETPLACE_LINK: (id: string) => `/platform/v1/marketplaces/${id}/link`,
+  MARKETPLACE_CUSTOM_DOMAIN_VERIFY: (id: string) =>
+    `/platform/v1/marketplaces/${id}/domains/custom/verify`,
+  MARKETPLACE_SELLERS: (id: string) => `/platform/v1/marketplaces/${id}/sellers`,
+  MARKETPLACE_SELLER_INVITE: (id: string) => `/platform/v1/marketplaces/${id}/sellers/invite`,
+  MARKETPLACE_SELLER: (marketplaceId: string, peerID: string) =>
+    `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}`,
+  MARKETPLACE_SELLER_ACCEPT: (marketplaceId: string, peerID: string) =>
+    `/platform/v1/marketplaces/${marketplaceId}/sellers/${encodeURIComponent(peerID)}/accept`,
+  MARKETPLACE_SELLER_REVIEW_EVENTS: (marketplaceId: string) =>
+    `/platform/v1/marketplaces/${marketplaceId}/seller-review-events`,
+  MARKETPLACE_MEMBERSHIPS_MINE: '/platform/v1/marketplace-memberships/mine',
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS: '/platform/v1/marketplace-memberships/review-events',
+  MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL:
+    '/platform/v1/marketplace-memberships/review-events/read-all',
+  MARKETPLACE_MEMBERSHIP_REVIEW_EVENTS: (marketplaceId: string) =>
+    `/platform/v1/marketplace-memberships/${marketplaceId}/review-events`,
+  MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ: (marketplaceId: string, eventId: string | number) =>
+    `/platform/v1/marketplace-memberships/${marketplaceId}/review-events/${encodeURIComponent(String(eventId))}/read`,
+  MARKETPLACE_MEMBERSHIP_DECLINE: (marketplaceId: string) =>
+    `/platform/v1/marketplace-memberships/${marketplaceId}/decline`,
+  MARKETPLACE_MEMBERSHIP_LEAVE: (marketplaceId: string) =>
+    `/platform/v1/marketplace-memberships/${marketplaceId}/leave`,
+  PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
+  PUBLIC_MARKETPLACE_DETAIL: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}`,
+  PUBLIC_MARKETPLACE_SELLER_APPLICATIONS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications`,
+  PUBLIC_MARKETPLACE_SELLER_APPLICATION_MINE: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/seller-applications/mine`,
+  PUBLIC_MARKETPLACE_ATTRIBUTION_EVENTS: (identifier: string) =>
+    `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
+  MARKETPLACE_ATTRIBUTION_SUMMARY: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/attribution-summary`,
+  MARKETPLACE_CURATION: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation`,
+  MARKETPLACE_CURATION_CANDIDATES: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/candidates`,
+  MARKETPLACE_CURATION_REORDER: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/reorder`,
+  MARKETPLACE_CURATION_ITEM: (id: string, itemID: number | string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/curation/${encodeURIComponent(String(itemID))}`,
+  COMMUNITY_MARKETPLACES_BY_PLATFORM: (platform: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}`,
+  COMMUNITY_MARKETPLACES_VERIFY_MEMBER: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceId)}/verify-member`,
+  COMMUNITY_MARKETPLACES_TELEGRAM_VERIFY_MEMBER: (instanceId: string) =>
+    `/platform/v1/community-marketplaces/telegram/${encodeURIComponent(instanceId)}/verify-member`,
+  COMMUNITY_MARKETPLACES_DISCORD_VERIFY_MEMBER: (instanceId: string) =>
+    `/platform/v1/community-marketplaces/discord/${encodeURIComponent(instanceId)}/verify-member`,
+  COMMUNITY_MARKETPLACE_PLATFORM_LISTINGS: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/listings`,
+  COMMUNITY_MARKETPLACE_PLATFORM_SELLERS: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/sellers`,
+  COMMUNITY_MARKETPLACE_PLATFORM_SELLERS_APPLY: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/sellers/apply`,
+  COMMUNITY_MARKETPLACE_PLATFORM_SELLER_REVIEW: (
+    platform: string,
+    instanceId: string,
+    sellerId: string
+  ) => `/platform/v1/community-marketplaces/${platform}/${instanceId}/sellers/${sellerId}/review`,
+  COMMUNITY_MARKETPLACE_PLATFORM_CHECK_ADMIN: (platform: string, instanceId: string) =>
+    `/platform/v1/community-marketplaces/${platform}/${instanceId}/check-admin`,
+  COMMUNITY_MARKETPLACE_GROUPS: '/platform/v1/community-marketplaces/groups',
+  COMMUNITY_MARKETPLACE_PUBLIC_DETAIL: (identifier: string) =>
+    `/platform/v1/community-marketplaces/public/${encodeURIComponent(identifier)}`,
   // --- Auth Tokens (MCP / API) ---
   AUTH_TOKENS: '/platform/v1/auth/tokens',
   AUTH_TOKEN: (tokenID: string) => `/platform/v1/auth/tokens/${tokenID}`,
@@ -537,6 +648,28 @@ export const HOSTING_API = {
     `/platform/v1/stores/${peerID}/storefronts/${sfID}`,
   // MS2a.2b: public slug → (peerID, storefront) resolver.
   STOREFRONTS_BY_SLUG: (slug: string) => `/platform/v1/storefronts/by-slug/${slug}`,
+
+  // --- Collectibles Hub+NFT (P1 · SaaS only · collectiblesHubEnabled) ---
+  // Compatibility aliases retain the original singular names while every
+  // canonical path comes from the generated Hosting OpenAPI contract above.
+  COLLECTIBLES_HUB_SLOT: HOSTING_API_PATHS.COLLECTIBLES_HUB_SLOTS_BY_ID,
+  COLLECTIBLES_HUB_SLOT_REJECT: HOSTING_API_PATHS.COLLECTIBLES_HUB_SLOTS_REJECT,
+  COLLECTIBLES_HUB_SLOT_MINT: HOSTING_API_PATHS.COLLECTIBLES_HUB_SLOTS_MINT,
+  COLLECTIBLES_NFT: HOSTING_API_PATHS.COLLECTIBLES_NFTS_BY_MINT,
+  COLLECTIBLES_NFT_BURN_TX: HOSTING_API_PATHS.COLLECTIBLES_NFTS_BURN_TX,
+  COLLECTIBLES_REDEMPTION: HOSTING_API_PATHS.COLLECTIBLES_REDEMPTIONS_BY_ID,
+  COLLECTIBLES_REDEMPTION_SHIP: HOSTING_API_PATHS.COLLECTIBLES_REDEMPTIONS_SHIP,
+  COLLECTIBLES_REDEMPTION_SETTLE: HOSTING_API_PATHS.COLLECTIBLES_REDEMPTIONS_SETTLE,
+  COLLECTIBLES_PRIMARY_SALE_BY_ORDER: HOSTING_API_PATHS.COLLECTIBLES_PRIMARY_SALES_BY_ORDER,
+  COLLECTIBLES_MY_SOURCE_DEPOSIT_SHIP: HOSTING_API_PATHS.COLLECTIBLES_MY_SOURCE_DEPOSITS_SHIP,
+  COLLECTIBLES_SOURCE_DEPOSIT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_BY_ID,
+  COLLECTIBLES_SOURCE_DEPOSIT_APPROVE: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_APPROVE,
+  COLLECTIBLES_SOURCE_DEPOSIT_REJECT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_REJECT,
+  COLLECTIBLES_SOURCE_DEPOSIT_MINT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_MINT,
+  COLLECTIBLES_SOURCE_DEPOSIT_FIRST_SALE: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_FIRST_SALE,
+  COLLECTIBLES_SOURCE_DEPOSIT_SHIP: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_SHIP,
+  COLLECTIBLES_SOURCE_DEPOSIT_SETTLE: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_SETTLE,
+  COLLECTIBLES_SOURCE_DEPOSIT_DEFAULT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_DEFAULT,
 } as const;
 
 // ============================================================
@@ -549,8 +682,7 @@ export const SEARCH_API = {
   SEARCH_LISTINGS: '/search/v1/listings',
   SEARCH_PROFILES: '/search/v1/profiles',
   LISTINGS_FRESH: (limit: number) => `/search/v1/listings/fresh?limit=${limit}`,
-  LISTINGS_HOT: (hours: number, limit: number) =>
-    `/search/v1/listings/hot?hours=${hours}&limit=${limit}`,
+  LISTINGS_HOT: (limit: number) => `/search/v1/listings/hot?limit=${limit}`,
   PROFILE_LISTINGS: (peerID: string) => `/search/v1/profiles/${peerID}/listings`,
   PROFILE_RAW: (peerID: string) => `/search/v1/profiles/${peerID}/raw`,
   REPORTS: '/search/v1/reports',

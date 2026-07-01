@@ -7,6 +7,8 @@ import { HStack, VStack, Grid } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
+import { ImageThumbnails } from '@/components/ui/image-thumbnails';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { StarRating } from '@/components/ui/star-rating';
 import { cn } from '@/lib/utils';
@@ -30,10 +32,20 @@ import {
   useFiatProviders,
   usePaymentMethods,
   getTokenIdFromPaymentCoin,
+  filterVisibleAcceptedCurrencies,
+  buildProductHref,
+  isCollectibleHubNftListing,
+  filterPublicProductDisplayTags,
+  resolveRelatedListingsScopeTag,
+  useFeature,
 } from '@mobazha/core';
 import type { ApplicableDiscount } from '@mobazha/core';
 import type { Product, ProductRating, RatingIndex, UserProfile } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
+import {
+  isCollectibleDemoCardImageUrl,
+  resolveCollectibleListingImageUrl,
+} from '@mobazha/core/curation/collectibleMarketplace';
 import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
 import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
@@ -46,11 +58,11 @@ import { RwaAssetDetail } from '@/components/RwaToken';
 import { ShareButton } from '@/components/Share';
 import { ReviewList } from '@/components/Review';
 
-// 获取库存数量（从 SKU 计算）
+// 获取库存数量（从 SKU 计算；-1 表示旧平台无限库存）
 function getStockQuantity(product: Product): number {
-  if (!product.item.skus || product.item.skus.length === 0) {
-    return 999; // 默认无限库存
-  }
+  if (!product.item.skus || product.item.skus.length === 0) return 999;
+  const hasUnlimited = product.item.skus.some(sku => Number(sku.quantity) < 0);
+  if (hasUnlimited) return 999;
   return product.item.skus.reduce((sum, sku) => sum + (Number(sku.quantity) || 0), 0);
 }
 
@@ -97,6 +109,7 @@ export function ProductDetail({
   onToggleWishlist,
 }: ProductDetailProps) {
   const { t } = useI18n();
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const router = useRouter();
   const { formatPrice, renderPairedPrice, fromMinimalUnit } = useCurrency();
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
@@ -137,8 +150,17 @@ export function ProductDetail({
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(peerID || product?.vendorID?.peerID);
 
+  // Sovereign: guest checkout via XMR is always available; skip fiat/crypto method check.
   const paymentAvailable =
-    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+    __SOVEREIGN__ || paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+
+  const displayAcceptedCurrencies = useMemo(
+    () =>
+      filterVisibleAcceptedCurrencies(product?.metadata?.acceptedCurrencies ?? []).map(
+        coin => getTokenIdFromPaymentCoin(coin) || coin
+      ),
+    [product?.metadata?.acceptedCurrencies]
+  );
 
   const isStorePaused = !isOwnProduct && vendor?.storePaused === true;
 
@@ -321,11 +343,22 @@ export function ProductDetail({
 
   // 计算图片 URL 数组
   const imageUrls = useMemo(() => {
-    if (!product?.item?.images) return [];
-    return product.item.images
-      .map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
-      .filter((url): url is string => !!url);
-  }, [product]);
+    const fromListing =
+      product?.item?.images
+        ?.map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
+        .map(url => resolveCollectibleListingImageUrl(slug, url))
+        .filter((url): url is string => !!url) ?? [];
+
+    if (fromListing.length > 0) return fromListing;
+
+    const fallback = resolveCollectibleListingImageUrl(slug, undefined);
+    return fallback ? [fallback] : [];
+  }, [product, slug]);
+
+  const usesDemoCardArt = useMemo(
+    () => imageUrls.some(url => isCollectibleDemoCardImageUrl(url)),
+    [imageUrls]
+  );
 
   const imageSwipeHandlers = useSwipeGesture({
     onSwipeLeft: useCallback(
@@ -366,6 +399,7 @@ export function ProductDetail({
 
   const handleAddToCart = useCallback(() => {
     if (!product) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN') return;
 
     const vendorPeerID = product.vendorID?.peerID || peerID || currentUserProfile?.peerID;
     if (!vendorPeerID) return;
@@ -400,6 +434,7 @@ export function ProductDetail({
   // 立即购买
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN') return;
 
     // 构建购买参数并导航到 checkout 页面
     const checkoutParams = new URLSearchParams({
@@ -445,7 +480,12 @@ export function ProductDetail({
           : `${t('product.addToCart')} - ${tgPriceDisplay}`;
     cta.setText(text);
     cta.setOnClick(shouldShow ? handleNativeAddToCart : undefined);
-    cta.setDisabled(tgStock === 0 || isStorePaused);
+    cta.setDisabled(
+      !shouldShow ||
+        tgStock === 0 ||
+        isStorePaused ||
+        product?.metadata?.contractType === 'RWA_TOKEN'
+    );
     return () => {
       cta.setText(undefined);
     };
@@ -453,7 +493,9 @@ export function ProductDetail({
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
-    const url = `${window.location.origin}/product/${product.slug}`;
+    const url = buildProductHref(product.slug, peerID || product.vendorID?.peerID, {
+      baseUrl: window.location.origin,
+    });
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -468,7 +510,7 @@ export function ProductDetail({
     }
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
-  }, [product]);
+  }, [product, peerID]);
 
   const _handleMessage = useCallback(() => {
     if (onMessage) {
@@ -559,16 +601,20 @@ export function ProductDetail({
   const estimatedDelivery = getEstimatedDelivery(product);
   const vendorPeerID = product.vendorID?.peerID;
   const acceptedCurrencies = product.metadata?.acceptedCurrencies || [];
-  const displayAcceptedCurrencies = acceptedCurrencies.map(
-    coin => getTokenIdFromPaymentCoin(coin) || coin
-  );
   const rwaTradeMode = product.metadata?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
     product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
-  const tags = product.item.tags || [];
+  const rawTags = product.item.tags || [];
+  const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
+  const relatedListingsScopeTag = useMemo(() => resolveRelatedListingsScopeTag(rawTags), [rawTags]);
   const category = product.item.productType || '';
 
-  const purchaseDisabled = isOffline || stock === 0 || !paymentAvailable || isStorePaused;
+  const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
+  const isRwaToken =
+    product?.metadata?.contractType === 'RWA_TOKEN' &&
+    !(collectiblesHubEnabled && isCollectibleHubNft);
+  const purchaseDisabled =
+    isOffline || stock === 0 || !paymentAvailable || isStorePaused || isRwaToken;
 
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
@@ -692,7 +738,7 @@ export function ProductDetail({
                   <img
                     src={imageUrls[selectedImage] || imageUrls[0]}
                     alt={product.item.title}
-                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal ? 'object-contain' : 'object-cover'}`}
+                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal || usesDemoCardArt ? 'object-contain' : 'object-cover'}`}
                   />
                   {/* 放大提示 */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -745,27 +791,19 @@ export function ProductDetail({
             {/* Thumbnails & View Photos */}
             <div className="flex items-center gap-2 sm:gap-3">
               {imageUrls.length > 1 && (
-                <div className="flex gap-2 sm:gap-3 overflow-x-auto flex-1">
-                  {imageUrls.slice(0, isModal ? 4 : imageUrls.length).map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      aria-label={`View image ${index + 1}`}
-                      data-testid={`product-detail-thumbnail-${index}`}
-                      className={`flex-shrink-0 ${isModal ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
-                        selectedImage === index
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-transparent hover:border-border'
-                      }`}
-                    >
-                      <img
-                        src={image}
-                        alt={`${product.item.title} - Image ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
+                <ImageThumbnails
+                  imageUrls={imageUrls}
+                  activeIndex={selectedImage}
+                  onSelect={setSelectedImage}
+                  altPrefix={`${product.item.title} image`}
+                  className="flex-1 gap-2 sm:gap-3"
+                  itemClassName={cn(
+                    'touch-feedback rounded-md sm:rounded-lg',
+                    isModal ? 'h-14 w-14' : 'h-16 w-16 sm:h-20 sm:w-20'
+                  )}
+                  dataTestIdPrefix="product-detail-thumbnail"
+                  maxVisible={isModal ? 4 : undefined}
+                />
               )}
               {/* 查看图片链接 */}
               {imageUrls.length > 0 && (
@@ -830,7 +868,7 @@ export function ProductDetail({
               />
             )}
 
-            <BuyerProtectionBadge variant="inline" className="mt-1" />
+            {!__SOVEREIGN__ && <BuyerProtectionBadge variant="inline" className="mt-1" />}
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (
@@ -1009,11 +1047,11 @@ export function ProductDetail({
               </div>
             )}
 
-            {/* Verified Moderator Badge */}
-            <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
+            {/* Verified Moderator Badge — hidden in Sovereign (no moderator/arbitration system) */}
+            {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
-            {/* Buyer Protection */}
-            {!isOwnProduct && <BuyerProtectionBanner />}
+            {/* Buyer Protection — hidden in Sovereign (XMR direct pay, no escrow/arbitration) */}
+            {!isOwnProduct && !__SOVEREIGN__ && <BuyerProtectionBanner />}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (
@@ -1145,7 +1183,7 @@ export function ProductDetail({
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Decrease quantity"
+                      aria-label={t('cart.decreaseQuantity')}
                       data-testid="product-detail-qty-decrease"
                       className={cn(
                         'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
@@ -1162,7 +1200,7 @@ export function ProductDetail({
                       max={stock}
                       value={quantity}
                       disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Quantity"
+                      aria-label={t('cart.quantity')}
                       data-testid="product-detail-qty-input"
                       onChange={e => {
                         const val = parseInt(e.target.value, 10);
@@ -1189,7 +1227,7 @@ export function ProductDetail({
                     <button
                       onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                       disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Increase quantity"
+                      aria-label={t('cart.increaseQuantity')}
                       data-testid="product-detail-qty-increase"
                       className={cn(
                         'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
@@ -1281,12 +1319,12 @@ export function ProductDetail({
                   )}
                 </VStack>
 
-                {(acceptedCurrencies.length > 0 || fiatActiveProviders.length > 0) && (
+                {(displayAcceptedCurrencies.length > 0 || fiatActiveProviders.length > 0) && (
                   <div className="pt-3 border-t border-border space-y-2">
                     {fiatActiveProviders.length > 0 && (
                       <PaymentMethodBadges
                         fiatProviders={fiatActiveProviders.map(p => p.providerID)}
-                        showCrypto={acceptedCurrencies.length > 0}
+                        showCrypto={displayAcceptedCurrencies.length > 0}
                         size="sm"
                       />
                     )}
@@ -1423,6 +1461,7 @@ export function ProductDetail({
               vendorPeerID={vendorPeerID}
               vendorName={vendor?.name}
               currentSlug={product.slug}
+              scopeTag={relatedListingsScopeTag}
               maxItems={isModal ? 4 : 6}
               compact={isModal}
             />
@@ -1433,139 +1472,17 @@ export function ProductDetail({
       {/* 移动端底部操作栏占位空间 */}
       <div className="h-20 lg:hidden" />
 
-      {/* 图片预览模态框 */}
-      {isImagePreviewOpen && imageUrls.length > 0 && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-          onClick={() => setIsImagePreviewOpen(false)}
-          onKeyDown={e => {
-            if (e.key === 'Escape') {
-              setIsImagePreviewOpen(false);
-            } else if (e.key === 'ArrowLeft') {
-              setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-            } else if (e.key === 'ArrowRight') {
-              setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-            }
-          }}
-          tabIndex={0}
-          ref={el => el?.focus()}
-        >
-          {/* 关闭按钮 */}
-          <button
-            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
-            onClick={() => setIsImagePreviewOpen(false)}
-            aria-label="Close image preview"
-            data-testid="product-detail-preview-close"
-          >
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-
-          {/* 图片计数 */}
-          <div className="absolute top-4 left-4 text-white/80 text-sm">
-            {selectedImage + 1} / {imageUrls.length}
-          </div>
-
-          {/* 主图片 */}
-          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img
-              src={imageUrls[selectedImage]}
-              alt={product.item.title}
-              className="max-w-full max-h-[85vh] object-contain"
-            />
-          </div>
-
-          {/* 左右切换按钮 */}
-          {imageUrls.length > 1 && (
-            <>
-              <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-                }}
-                aria-label="Previous image"
-                data-testid="product-detail-preview-prev"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-                }}
-                aria-label="Next image"
-                data-testid="product-detail-preview-next"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </>
-          )}
-
-          {/* 底部缩略图 */}
-          {imageUrls.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 rounded-lg p-2">
-              {imageUrls.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={e => {
-                    e.stopPropagation();
-                    setSelectedImage(index);
-                  }}
-                  aria-label={`View image ${index + 1}`}
-                  className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${
-                    selectedImage === index
-                      ? 'border-white'
-                      : 'border-transparent opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.item.title} - Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <ImageLightbox
+        imageUrls={imageUrls}
+        open={isImagePreviewOpen}
+        selectedIndex={selectedImage}
+        onSelectIndex={setSelectedImage}
+        onOpenChange={setIsImagePreviewOpen}
+        variant="product"
+        altPrefix={product.item.title}
+        ariaLabel="Product image preview"
+        testIdPrefix="product-detail-preview"
+      />
     </div>
   );
 }

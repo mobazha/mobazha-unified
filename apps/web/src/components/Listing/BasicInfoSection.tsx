@@ -2,7 +2,12 @@
 
 import React, { useCallback } from 'react';
 import type { ContractType, ProductCondition, WeightUnit, DimensionUnit } from '@mobazha/core';
-import { useI18n, calculateDiscountPercent, STANDARD_PRODUCT_TYPES } from '@mobazha/core';
+import {
+  useI18n,
+  calculateDiscountPercent,
+  STANDARD_PRODUCT_TYPES,
+  isSovereignMode,
+} from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
 import {
   Select,
@@ -31,6 +36,8 @@ interface BasicInfoSectionProps {
   onShortDescriptionChange?: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onPriceChange: (value: string) => void;
+  onPriceFocus?: () => void;
+  onPriceBlur?: (value: string) => void;
   onCompareAtPriceChange?: (value: string) => void;
   onCurrencyChange: (value: string) => void;
   onConditionChange?: (value: ProductCondition) => void;
@@ -67,7 +74,12 @@ interface BasicInfoSectionProps {
   aiLoadingAction?: string | null;
 }
 
-const currencies = [
+// Sovereign is crypto-native: listings are priced natively in XMR (the only
+// payment coin supported), with no fiat conversion layer.
+// SaaS/full-node mode retains the full fiat+crypto picker.
+const SOVEREIGN_CURRENCIES = [{ value: 'XMR', label: 'XMR (ɱ)' }];
+
+const SAAS_CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
   { value: 'CNY', label: 'CNY (¥)' },
   { value: 'EUR', label: 'EUR (€)' },
@@ -77,6 +89,8 @@ const currencies = [
   { value: 'ETH', label: 'ETH (Ξ)' },
   { value: 'USDT', label: 'USDT' },
 ];
+
+const currencies = isSovereignMode() ? SOVEREIGN_CURRENCIES : SAAS_CURRENCIES;
 
 const conditions: { value: ProductCondition; labelKey: string }[] = [
   { value: 'NEW', labelKey: 'listing.conditions.new' },
@@ -103,6 +117,8 @@ export function BasicInfoSection({
   onShortDescriptionChange,
   onDescriptionChange,
   onPriceChange,
+  onPriceFocus,
+  onPriceBlur,
   onCompareAtPriceChange,
   onCurrencyChange,
   onConditionChange,
@@ -154,6 +170,8 @@ export function BasicInfoSection({
       BTC: '₿',
       ETH: 'Ξ',
       USDT: '$',
+      LTC: 'Ł',
+      XMR: 'ɱ',
     };
     return symbols[pricingCurrency] || pricingCurrency;
   }, [pricingCurrency]);
@@ -288,6 +306,8 @@ export function BasicInfoSection({
                   min="0"
                   value={price}
                   onChange={e => onPriceChange(e.target.value)}
+                  onFocus={onPriceFocus}
+                  onBlur={e => onPriceBlur?.(e.target.value)}
                   className={inputInnerClass}
                   placeholder="0.00"
                 />

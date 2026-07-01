@@ -14,7 +14,7 @@ describe('featureFlagsCache', () => {
   afterEach(() => {
     setCachedFeatureFlags(null);
     featureFlags.reset();
-    delete (globalThis as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
+    delete (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__;
   });
 
   it('merges server flags without dropping runtime-config baseline keys', () => {
@@ -37,9 +37,29 @@ describe('featureFlagsCache', () => {
   });
 
   it('invalidation restores runtime-config baseline and clears API cache', () => {
-    (globalThis as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__ = {
+    (window as unknown as { __RUNTIME_CONFIG__?: unknown }).__RUNTIME_CONFIG__ = {
+      schemaVersion: 3,
+      authMode: 'standalone',
+      deployment: { mode: 'standalone', allowExternalResources: false },
+      experience: { kind: 'store' },
+      capabilitiesReady: true,
       features: {
         guestCheckout: { effective: true, overridable: [] },
+      },
+      capabilities: {
+        commerce: { storefront: true, storeAdmin: true, checkout: true },
+        marketplace: {
+          discovery: false,
+          operator: false,
+          selling: false,
+          curation: false,
+          sellerReview: false,
+          customDomains: false,
+          releasePublishing: false,
+          attribution: false,
+        },
+        sovereign: { isolatedRuntime: false, managedFleet: false },
+        payments: { methods: [] },
       },
     };
     featureFlags.initializeFromRuntimeConfig();

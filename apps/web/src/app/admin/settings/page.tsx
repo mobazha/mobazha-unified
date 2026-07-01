@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useI18n, useUserContext } from '@mobazha/core';
+import { useI18n, useUserContext, useFeature } from '@mobazha/core';
 import { useUserStore } from '@mobazha/core/stores/userStore';
 import {
   Shield,
@@ -9,11 +9,13 @@ import {
   Scale,
   User,
   Plug,
-  Wallet,
   PauseCircle,
   PlayCircle,
   Megaphone,
-  ShoppingBag,
+  ShieldCheck,
+  Download,
+  Sparkles,
+  Store,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -152,6 +154,8 @@ function StoreStatusToggle() {
 export default function AdminSettingsPage() {
   const { t } = useI18n();
   const { isEmbeddedApp } = usePlatform();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const isSovereign = __SOVEREIGN__;
 
   return (
     <div data-testid="admin-settings">
@@ -178,12 +182,37 @@ export default function AdminSettingsPage() {
             description={t('admin.settings.profileDesc')}
             href="/admin/settings/profile"
           />
-          <SettingsCard
-            icon={Shield}
-            title={t('admin.settings.accessControl')}
-            description={t('admin.settings.accessControlDesc')}
-            href="/admin/settings/access-control"
-          />
+          {!isSovereign && (
+            <SettingsCard
+              icon={Shield}
+              title={t('admin.settings.accessControl')}
+              description={t('admin.settings.accessControlDesc')}
+              href="/admin/settings/access-control"
+            />
+          )}
+          {/* DG-1.14: operator responsibilities — surfaces the platform/seller
+              compliance contract. Hidden in Sovereign mode because the content
+              describes a SaaS platform relationship (CDN, Stripe, DMCA) that
+              does not apply to self-hosted I2P nodes. */}
+          {!isSovereign && (
+            <SettingsCard
+              icon={ShieldCheck}
+              title={t('settingsExtended.operatorResponsibilities')}
+              description={t('settingsExtended.operatorResponsibilitiesDesc')}
+              href="/admin/settings/responsibilities"
+            />
+          )}
+          {/* DG-1.10: data export — "Your store, your data, your customers".
+              Hidden in Sovereign mode because the /v1/exports/* backend handlers
+              require the full OrderService and are excluded by restricted distributions. */}
+          {!isSovereign && (
+            <SettingsCard
+              icon={Download}
+              title={t('dataExport.cardTitle')}
+              description={t('dataExport.cardDescription')}
+              href="/admin/settings/data-export"
+            />
+          )}
         </SettingsSection>
 
         {/* Transaction Rules */}
@@ -195,50 +224,65 @@ export default function AdminSettingsPage() {
             href="/admin/settings/policies"
           />
           <SettingsCard
-            icon={Wallet}
-            title={t('admin.settings.payments')}
-            description={t('admin.settings.paymentsDesc')}
-            href="/admin/settings/payments"
-          />
-          <SettingsCard
-            icon={ShoppingBag}
-            title={t('admin.settings.guestCheckout')}
-            description={t('admin.settings.guestCheckoutDesc')}
-            href="/admin/settings/guest-checkout"
-          />
-          <SettingsCard
             icon={Truck}
             title={t('admin.settings.shipping')}
             description={t('admin.settings.shippingDesc')}
             href="/admin/settings/shipping"
           />
-          <SettingsCard
-            icon={Scale}
-            title={t('admin.settings.moderators')}
-            description={t('admin.settings.moderatorsDesc')}
-            href="/admin/settings/moderators"
-          />
+          {!isSovereign && (
+            <SettingsCard
+              icon={Scale}
+              title={t('admin.settings.moderators')}
+              description={t('admin.settings.moderatorsDesc')}
+              href="/admin/settings/moderators"
+            />
+          )}
         </SettingsSection>
 
-        {/* Growth */}
-        <SettingsSection title={t('admin.settings.sectionGrowth')}>
-          <SettingsCard
-            icon={Megaphone}
-            title={t('admin.settings.salesChannels')}
-            description={t('admin.settings.salesChannelsDesc')}
-            href="/admin/settings/sales-channels"
-          />
-        </SettingsSection>
+        {!isSovereign && (
+          <SettingsSection title={t('admin.settings.sectionGrowth')}>
+            <SettingsCard
+              icon={Megaphone}
+              title={t('admin.settings.salesChannels')}
+              description={t('admin.settings.salesChannelsDesc')}
+              href="/admin/settings/sales-channels"
+            />
+            <SettingsCard
+              icon={Store}
+              title={t('marketplace.memberships.settingsCardTitle')}
+              description={t('marketplace.memberships.settingsCardDesc')}
+              href="/admin/settings/marketplace-memberships"
+            />
+          </SettingsSection>
+        )}
 
-        {/* Extensions */}
-        <SettingsSection title={t('admin.settings.sectionExtensions')}>
-          <SettingsCard
-            icon={Plug}
-            title={t('admin.settings.integrations')}
-            description={t('admin.settings.integrationsDesc')}
-            href="/admin/settings/integrations"
-          />
-        </SettingsSection>
+        {/* Extensions — AI config / webhooks / fulfillment.
+            Hidden in Sovereign mode: the only sub-page that survives there is
+            the AI tab, which has been hoisted to /admin/ai/connect (a sidebar
+            entry of its own). Showing the card would re-create the duplicate
+            "two AI configuration entry points" UX we just consolidated. */}
+        {!isSovereign && (
+          <SettingsSection title={t('admin.settings.sectionExtensions')}>
+            {aiWorkspaceEnabled && (
+              <SettingsCard
+                icon={Sparkles}
+                title={t('admin.settings.aiModelsCard')}
+                description={t('admin.settings.aiModelsCardDesc')}
+                href="/admin/ai/models?from=settings"
+              />
+            )}
+            <SettingsCard
+              icon={Plug}
+              title={t('admin.settings.integrations')}
+              description={
+                aiWorkspaceEnabled
+                  ? t('admin.settings.integrationsDescNoAi')
+                  : t('admin.settings.integrationsDesc')
+              }
+              href="/admin/settings/integrations"
+            />
+          </SettingsSection>
+        )}
       </div>
     </div>
   );

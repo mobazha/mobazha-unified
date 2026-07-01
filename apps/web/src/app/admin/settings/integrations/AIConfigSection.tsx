@@ -17,6 +17,8 @@ import {
   ExternalLink,
   Zap,
   Key,
+  Shield,
+  Terminal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +35,40 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
-export function AIConfigSection() {
+const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
+
+export interface AIConfigSectionProps {
+  /**
+   * When true, suppress the inline "Install Ollama" guide block that ships in
+   * Sovereign mode. The dedicated `LocalLlmEnginePanel` (rendered above this
+   * component on `/admin/ai/connect`) already covers runtime installation and
+   * provides three engine options instead of just Ollama, so showing both
+   * would duplicate the same call to action.
+   */
+  hideSovereignInstallGuide?: boolean;
+  /**
+   * When true, hide the feature showcase cards (image generation, text polish,
+   * store AI). Used in Sovereign mode where the page should be compact.
+   */
+  hideFeatureShowcase?: boolean;
+  /**
+   * When true, the config form starts collapsed when the provider is already
+   * configured. The user can expand it via an "Edit" link.
+   */
+  startCollapsedWhenConfigured?: boolean;
+  /**
+   * Compact layout for `/admin/ai/models`: hides feature cards, collapses BYOK
+   * form when platform AI is active, and hides the redundant enable header.
+   */
+  settingsPageLayout?: boolean;
+}
+
+export function AIConfigSection({
+  hideSovereignInstallGuide = false,
+  hideFeatureShowcase = false,
+  startCollapsedWhenConfigured = false,
+  settingsPageLayout = false,
+}: AIConfigSectionProps = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
 
@@ -52,6 +87,7 @@ export function AIConfigSection() {
   const [baseUrl, setBaseUrl] = useState('');
   const [enabled, setEnabled] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [formCollapsed, setFormCollapsed] = useState(false);
 
   const [savedSnapshot, setSavedSnapshot] = useState({
     provider: '',
@@ -133,13 +169,23 @@ export function AIConfigSection() {
         setEnabled(cfg.enabled);
         const initialProvider = cfg.active_provider || providerList[0]?.id || '';
         applyProviderToForm(initialProvider, cfg, providerList);
+        if (startCollapsedWhenConfigured && cfg.active_provider && cfg.enabled) {
+          const providerState = cfg.providers?.[cfg.active_provider];
+          if (providerState?.has_api_key || isSovereign) {
+            setFormCollapsed(true);
+          }
+        } else if (settingsPageLayout && status?.source === 'platform') {
+          setFormCollapsed(true);
+        }
+      } else if (settingsPageLayout && status?.source === 'platform') {
+        setFormCollapsed(true);
       }
     } catch {
       setLoadError(true);
     } finally {
       setLoading(false);
     }
-  }, [applyProviderToForm]);
+  }, [applyProviderToForm, startCollapsedWhenConfigured, settingsPageLayout]);
 
   useEffect(() => {
     fetchData();
@@ -161,11 +207,12 @@ export function AIConfigSection() {
     setTesting(true);
     setTestResult(null);
     try {
+      const effectiveBaseUrl = baseUrl || selectedProviderInfo?.default_base_url || '';
       const result = await aiSettingsApi.testAIConnection({
         provider: selectedProvider,
-        api_key: apiKey || undefined,
+        api_key: apiKey || (isSovereign ? 'ollama' : undefined),
         model: model || selectedProviderInfo?.default_model || '',
-        base_url: baseUrl || selectedProviderInfo?.default_base_url || '',
+        base_url: effectiveBaseUrl,
       });
       setTestResult(result);
     } catch {
@@ -178,14 +225,19 @@ export function AIConfigSection() {
   async function handleSave() {
     setSaving(true);
     try {
+      const effectiveBaseUrl =
+        baseUrl || (isSovereign ? selectedProviderInfo?.default_base_url || '' : '');
+      const effectiveModel = model || selectedProviderInfo?.default_model || '';
       const input: AIConfigInput = {
         provider: selectedProvider,
-        model,
-        base_url: baseUrl,
+        model: effectiveModel,
+        base_url: effectiveBaseUrl,
         enabled,
       };
       if (apiKey) {
         input.api_key = apiKey;
+      } else if (isSovereign) {
+        input.api_key = 'ollama';
       }
       const result = await aiSettingsApi.saveAIConfig(input);
       setConfig(result);
@@ -246,13 +298,19 @@ export function AIConfigSection() {
     );
   }
 
-  const anyProviderConfigured = config?.providers
-    ? Object.values(config.providers).some(p => p.has_api_key)
-    : false;
-  const canTest = !!selectedProvider && (!!apiKey || hasExistingKey);
+  const canTest = !!selectedProvider && (isSovereign || !!apiKey || hasExistingKey);
 
   const isPlatformAI = aiStatus?.source === 'platform';
   const isByokAI = aiStatus?.source === 'byok';
+  const hideEnableHeader = settingsPageLayout && isPlatformAI && !!aiStatus;
+  const showFormCollapseToggle =
+    startCollapsedWhenConfigured || (settingsPageLayout && isPlatformAI);
+  const formCollapseLabel =
+    settingsPageLayout && isPlatformAI
+      ? t('admin.integrations.aiByokExpand')
+      : t('aiAgents.sovereign.localLlm.editConfig', {
+          defaultValue: 'Edit AI endpoint configuration',
+        });
 
   const statusBadgeVariant = isByokAI ? 'default' : isPlatformAI ? 'secondary' : 'outline';
   const statusBadgeText = isByokAI
@@ -262,33 +320,89 @@ export function AIConfigSection() {
       : t('admin.integrations.aiNotConfigured');
 
   return (
-    <div className="space-y-6">
-      {/* Header card with enable toggle */}
-      <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl">
-        <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
-          <Sparkles className="w-5 h-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-foreground">{t('admin.integrations.aiTitle')}</h3>
-            <Badge variant={statusBadgeVariant} className="text-xs">
-              {statusBadgeText}
-            </Badge>
+    <div id="ai-endpoint-config" className="space-y-6 scroll-mt-24">
+      {/* Header card with enable toggle — hidden on settings page when platform AI already covers status */}
+      {!hideEnableHeader && (
+        <div className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl">
+          <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.aiDesc')}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-foreground">{t('admin.integrations.aiTitle')}</h3>
+              <Badge variant={statusBadgeVariant} className="text-xs">
+                {statusBadgeText}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{t('admin.integrations.aiDesc')}</p>
+          </div>
+          <div className="shrink-0 pt-0.5">
+            <Switch
+              id="ai-enabled-header"
+              checked={enabled}
+              onCheckedChange={setEnabled}
+              aria-label={t('admin.integrations.aiEnabled')}
+            />
+          </div>
         </div>
-        <div className="shrink-0 pt-0.5">
-          <Switch
-            id="ai-enabled-header"
-            checked={enabled}
-            onCheckedChange={setEnabled}
-            aria-label={t('admin.integrations.aiEnabled')}
-          />
+      )}
+      {/* Sovereign: Local LLM setup guide.
+          Hidden when rendered alongside `LocalLlmEnginePanel` (e.g. on
+          `/admin/ai/connect`), which already covers runtime installation with
+          a richer 3-engine picker. Kept for the legacy Settings →
+          Integrations page so it still works as a standalone surface. */}
+      {isSovereign && !hideSovereignInstallGuide && (
+        <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
+            <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {t('admin.integrations.aiSovereignGuideTitle')}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('admin.integrations.aiSovereignGuideDesc')}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-xs text-foreground">
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                  1
+                </span>
+                <span>{t('admin.integrations.aiSovereignGuideStep1')}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground">
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                  2
+                </span>
+                <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">
+                  {t('admin.integrations.aiSovereignGuideStep2')}
+                </code>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground">
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shrink-0">
+                  3
+                </span>
+                <span>{t('admin.integrations.aiSovereignGuideStep3')}</span>
+              </div>
+            </div>
+            <a
+              href="https://ollama.com/download"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline mt-1"
+            >
+              <Terminal className="w-3 h-3" />
+              ollama.com/download
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Platform AI status banner */}
-      {isPlatformAI && aiStatus && (
+      {!isSovereign && isPlatformAI && aiStatus && (
         <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
           <div className="p-2 rounded-lg bg-primary/10 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
@@ -327,269 +441,367 @@ export function AIConfigSection() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Key className="w-3 h-3" />
-              <span>{t('admin.integrations.aiPlatformUpgrade')}</span>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge
+                variant={aiStatus.text_available === false ? 'outline' : 'secondary'}
+                className="text-xs font-normal"
+              >
+                <FileText className="w-3 h-3 mr-1" />
+                {t('admin.integrations.aiTextRoute', { defaultValue: 'Text AI' })}
+                {aiStatus.text_available === false && ' — off'}
+              </Badge>
+              <Badge
+                variant={aiStatus.vision_available === false ? 'outline' : 'secondary'}
+                className="text-xs font-normal"
+              >
+                <Image className="w-3 h-3 mr-1" />
+                {t('admin.integrations.aiVisionRoute', { defaultValue: 'Vision AI' })}
+                {aiStatus.vision_available === false && ' — off'}
+              </Badge>
             </div>
+            {!settingsPageLayout && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Key className="w-3 h-3" />
+                <span>{t('admin.integrations.aiPlatformUpgrade')}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Feature showcase */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[
-          { icon: Image, text: t('admin.integrations.aiFeatureGenerate') },
-          { icon: FileText, text: t('admin.integrations.aiFeaturePolish') },
-          { icon: Palette, text: t('admin.integrations.aiFeatureStore') },
-        ].map(({ icon: Icon, text }) => (
-          <div
-            key={text}
-            className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/50 border border-border/50"
-          >
-            <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            <span className="text-xs text-muted-foreground leading-relaxed">{text}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Config form card */}
-      <div className="border border-border rounded-xl p-5 space-y-4 bg-card">
-        {/* Provider pills */}
-        <div className="space-y-1.5">
-          <Label>
-            {t('admin.integrations.aiProvider')} <span className="text-destructive">*</span>
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            {providers.map(p => {
-              const isSelected = selectedProvider === p.id;
-              const isActive = config?.active_provider === p.id;
-              const isConfigured = !!config?.providers?.[p.id]?.has_api_key;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleProviderPillClick(p.id)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
-                    isSelected
-                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                      : isConfigured
-                        ? 'bg-muted text-foreground border-border hover:border-primary/50'
-                        : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
-                  )}
-                >
-                  {isConfigured && !isSelected && <Check className="w-3 h-3 text-green-500" />}
-                  {p.label}
-                  {isActive && (
-                    <Badge
-                      variant={isSelected ? 'secondary' : 'default'}
-                      className="text-[10px] px-1.5 py-0 h-4 leading-4"
-                    >
-                      {t('admin.integrations.aiProviderActive')}
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* API Key */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label>
-              {t('admin.integrations.aiApiKey')} <span className="text-destructive">*</span>
-            </Label>
-            {selectedProviderInfo?.help_url && (
-              <a
-                href={selectedProviderInfo.help_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-              >
-                {t('admin.integrations.aiGetApiKey')}
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-          </div>
-          <Input
-            type="password"
-            value={apiKey}
-            onChange={e => {
-              setApiKey(e.target.value);
-              setTestResult(null);
-            }}
-            placeholder={
-              hasExistingKey
-                ? t('admin.integrations.aiApiKeyUpdate')
-                : t('admin.integrations.aiApiKeyPlaceholder')
-            }
-          />
-          {hasExistingKey && !apiKey && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Check className="w-3 h-3 text-green-500" />
-              {t('admin.integrations.aiApiKeySaved')}
-            </p>
-          )}
-        </div>
-
-        {/* Test Connection */}
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleTestConnection}
-            disabled={!canTest || testing}
-            className="gap-1.5"
-          >
-            {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
-            {t('admin.integrations.aiTestConnection')}
-          </Button>
-          {testResult && (
-            <span
-              className={`text-sm flex items-center gap-1 ${testResult.success ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
+      {/* Feature showcase — hidden in compact Sovereign / dedicated settings page */}
+      {!hideFeatureShowcase && !settingsPageLayout && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { icon: Image, text: t('admin.integrations.aiFeatureGenerate') },
+            { icon: FileText, text: t('admin.integrations.aiFeaturePolish') },
+            { icon: Palette, text: t('admin.integrations.aiFeatureStore') },
+          ].map(({ icon: Icon, text }) => (
+            <div
+              key={text}
+              className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/50 border border-border/50"
             >
-              {testResult.success ? (
-                <>
-                  <Check className="w-4 h-4" /> {t('admin.integrations.aiTestSuccess')}
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-4 h-4" />{' '}
-                  {testResult.error || t('admin.integrations.aiTestFailed')}
-                </>
-              )}
-            </span>
-          )}
+              <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <span className="text-xs text-muted-foreground leading-relaxed">{text}</span>
+            </div>
+          ))}
         </div>
+      )}
 
-        {/* Advanced Settings (Model / Base URL) */}
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(prev => !prev)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          aria-expanded={showAdvanced}
-          aria-controls="ai-config-advanced"
-        >
-          <ChevronDown
-            className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
-          />
-          {t('admin.integrations.aiAdvancedSettings')}
-        </button>
+      {/* Config form card — collapsible in Sovereign compact mode */}
+      <div className="border border-border rounded-xl bg-card overflow-hidden">
+        {showFormCollapseToggle && (
+          <button
+            type="button"
+            onClick={() => setFormCollapsed(prev => !prev)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+            aria-expanded={!formCollapsed}
+            aria-controls="ai-endpoint-config-form"
+          >
+            <span className="text-sm text-muted-foreground">{formCollapseLabel}</span>
+            <ChevronDown
+              className={cn(
+                'w-4 h-4 text-muted-foreground transition-transform',
+                !formCollapsed && 'rotate-180'
+              )}
+            />
+          </button>
+        )}
 
-        {showAdvanced && (
-          <div id="ai-config-advanced" className="space-y-4 pl-1 border-l-2 border-muted ml-1.5">
-            <div className="pl-3 space-y-4">
-              {/* Model */}
+        {!formCollapsed && (
+          <div
+            id="ai-endpoint-config-form"
+            className={cn(
+              'space-y-4',
+              showFormCollapseToggle ? 'p-5 pt-4 border-t border-border' : 'p-5'
+            )}
+          >
+            {/* Provider pills — hidden in Sovereign (only one provider) */}
+            {!isSovereign && providers.length > 1 && (
               <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5">
-                  {t('admin.integrations.aiModel')}
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {t('common.optional')}
-                  </span>
+                <Label>
+                  {t('admin.integrations.aiProvider')} <span className="text-destructive">*</span>
                 </Label>
-                {modelOptions.length > 0 ? (
-                  <div className="space-y-1.5">
-                    <Select
-                      value={modelOptions.includes(model) ? model : '_custom'}
-                      onValueChange={v => setModel(v === '_custom' ? '' : v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            selectedProviderInfo?.default_model ||
-                            t('admin.integrations.aiModelPlaceholder')
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {modelOptions.map(m => (
-                          <SelectItem key={m} value={m}>
-                            {m}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="_custom">
-                          {t('admin.integrations.aiModelCustom')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {!modelOptions.includes(model) && (
-                      <Input
-                        value={model}
-                        onChange={e => setModel(e.target.value)}
-                        placeholder={t('admin.integrations.aiModelCustomPlaceholder')}
-                      />
-                    )}
-                  </div>
-                ) : (
-                  <Input
-                    value={model}
-                    onChange={e => setModel(e.target.value)}
-                    placeholder={
-                      selectedProviderInfo?.default_model ||
-                      t('admin.integrations.aiModelPlaceholder')
-                    }
-                  />
-                )}
+                <div className="flex flex-wrap gap-2">
+                  {providers.map(p => {
+                    const isSelected = selectedProvider === p.id;
+                    const isActive = config?.active_provider === p.id;
+                    const isConfigured = !!config?.providers?.[p.id]?.has_api_key;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleProviderPillClick(p.id)}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                            : isConfigured
+                              ? 'bg-muted text-foreground border-border hover:border-primary/50'
+                              : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                        )}
+                      >
+                        {isConfigured && !isSelected && (
+                          <Check className="w-3 h-3 text-green-500" />
+                        )}
+                        {p.label}
+                        {isActive && (
+                          <Badge
+                            variant={isSelected ? 'secondary' : 'default'}
+                            className="text-[10px] px-1.5 py-0 h-4 leading-4"
+                          >
+                            {t('admin.integrations.aiProviderActive')}
+                          </Badge>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
 
-              {/* Base URL */}
+            {/* Sovereign: Base URL as primary field */}
+            {isSovereign && (
               <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5">
-                  {t('admin.integrations.aiBaseUrl')}
-                  {isCustomProvider ? (
-                    <span className="text-destructive">*</span>
-                  ) : (
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {t('common.optional')}
-                    </span>
-                  )}
+                <Label>
+                  {t('admin.integrations.aiSovereignEndpoint')}{' '}
+                  <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   value={baseUrl}
                   onChange={e => setBaseUrl(e.target.value)}
                   placeholder={
-                    selectedProviderInfo?.default_base_url ||
-                    t('admin.integrations.aiBaseUrlPlaceholder')
+                    selectedProviderInfo?.default_base_url || 'http://localhost:11434/v1'
                   }
                 />
-                {isCustomProvider && !baseUrl && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
-                    {t('admin.integrations.aiBaseUrlRequired')}
-                  </p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  {t('admin.integrations.aiSovereignEndpointHint')}
+                </p>
+              </div>
+            )}
+
+            {/* API Key */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label>
+                  {t('admin.integrations.aiApiKey')}{' '}
+                  {isSovereign ? (
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {t('common.optional')}
+                    </span>
+                  ) : (
+                    <span className="text-destructive">*</span>
+                  )}
+                </Label>
+                {!isSovereign && selectedProviderInfo?.help_url && (
+                  <a
+                    href={selectedProviderInfo.help_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    {t('admin.integrations.aiGetApiKey')}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 )}
               </div>
+              <Input
+                type="password"
+                value={apiKey}
+                onChange={e => {
+                  setApiKey(e.target.value);
+                  setTestResult(null);
+                }}
+                placeholder={
+                  hasExistingKey
+                    ? t('admin.integrations.aiApiKeyUpdate')
+                    : t('admin.integrations.aiApiKeyPlaceholder')
+                }
+              />
+              {isSovereign && !hasExistingKey && !apiKey && (
+                <p className="text-xs text-muted-foreground">
+                  {t('admin.integrations.aiSovereignApiKeyOptional')}
+                </p>
+              )}
+              {hasExistingKey && !apiKey && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Check className="w-3 h-3 text-green-500" />
+                  {t('admin.integrations.aiApiKeySaved')}
+                </p>
+              )}
+            </div>
+
+            {/* Test Connection */}
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleTestConnection}
+                disabled={!canTest || testing}
+                className="gap-1.5"
+              >
+                {testing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wifi className="w-4 h-4" />
+                )}
+                {t('admin.integrations.aiTestConnection')}
+              </Button>
+              {testResult && (
+                <span
+                  className={`text-sm flex items-center gap-1 ${testResult.success ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
+                >
+                  {testResult.success ? (
+                    <>
+                      <Check className="w-4 h-4" /> {t('admin.integrations.aiTestSuccess')}
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4" />{' '}
+                      {testResult.error || t('admin.integrations.aiTestFailed')}
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
+
+            {/* Advanced Settings (Model / Base URL) */}
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(prev => !prev)}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-expanded={showAdvanced}
+              aria-controls="ai-config-advanced"
+            >
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+              />
+              {t('admin.integrations.aiAdvancedSettings')}
+            </button>
+
+            {showAdvanced && (
+              <div
+                id="ai-config-advanced"
+                className="space-y-4 pl-1 border-l-2 border-muted ml-1.5"
+              >
+                <div className="pl-3 space-y-4">
+                  {/* Model */}
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5">
+                      {t('admin.integrations.aiModel')}
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {t('common.optional')}
+                      </span>
+                    </Label>
+                    {modelOptions.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <Select
+                          value={modelOptions.includes(model) ? model : '_custom'}
+                          onValueChange={v => setModel(v === '_custom' ? '' : v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={
+                                selectedProviderInfo?.default_model ||
+                                t('admin.integrations.aiModelPlaceholder')
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {modelOptions.map(m => (
+                              <SelectItem key={m} value={m}>
+                                {m}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="_custom">
+                              {t('admin.integrations.aiModelCustom')}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {!modelOptions.includes(model) && (
+                          <Input
+                            value={model}
+                            onChange={e => setModel(e.target.value)}
+                            placeholder={t('admin.integrations.aiModelCustomPlaceholder')}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <Input
+                        value={model}
+                        onChange={e => setModel(e.target.value)}
+                        placeholder={
+                          selectedProviderInfo?.default_model ||
+                          t('admin.integrations.aiModelPlaceholder')
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* Base URL */}
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-1.5">
+                      {t('admin.integrations.aiBaseUrl')}
+                      {isCustomProvider ? (
+                        <span className="text-destructive">*</span>
+                      ) : (
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {t('common.optional')}
+                        </span>
+                      )}
+                    </Label>
+                    <Input
+                      value={baseUrl}
+                      onChange={e => setBaseUrl(e.target.value)}
+                      placeholder={
+                        selectedProviderInfo?.default_base_url ||
+                        t('admin.integrations.aiBaseUrlPlaceholder')
+                      }
+                    />
+                    {isCustomProvider && !baseUrl && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        {t('admin.integrations.aiBaseUrlRequired')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Validation hint */}
+            {!isSovereign && enabled && !hasExistingKey && !apiKey && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-md text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{t('admin.integrations.aiApiKeyRequired')}</span>
+              </div>
+            )}
+
+            {/* Save */}
+            <div className="flex justify-end gap-3 pt-2">
+              {isDirty && (
+                <span className="text-xs text-muted-foreground self-center">
+                  {t('admin.integrations.unsavedChanges')}
+                </span>
+              )}
+              <Button
+                onClick={handleSave}
+                disabled={
+                  saving ||
+                  !selectedProvider ||
+                  (!isSovereign && enabled && !hasExistingKey && !apiKey)
+                }
+              >
+                {saving
+                  ? t('admin.integrations.saving')
+                  : isActiveProvider
+                    ? t('admin.integrations.save')
+                    : t('admin.integrations.aiSaveActivate')}
+              </Button>
             </div>
           </div>
         )}
-
-        {/* Validation hint */}
-        {enabled && !hasExistingKey && !apiKey && (
-          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-md text-sm">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{t('admin.integrations.aiApiKeyRequired')}</span>
-          </div>
-        )}
-
-        {/* Save */}
-        <div className="flex justify-end gap-3 pt-2">
-          {isDirty && (
-            <span className="text-xs text-muted-foreground self-center">
-              {t('admin.integrations.unsavedChanges')}
-            </span>
-          )}
-          <Button
-            onClick={handleSave}
-            disabled={saving || !selectedProvider || (enabled && !hasExistingKey && !apiKey)}
-          >
-            {saving
-              ? t('admin.integrations.saving')
-              : isActiveProvider
-                ? t('admin.integrations.save')
-                : t('admin.integrations.aiSaveActivate')}
-          </Button>
-        </div>
       </div>
     </div>
   );

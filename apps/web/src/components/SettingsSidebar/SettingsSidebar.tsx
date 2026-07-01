@@ -4,7 +4,18 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n, isStandalone } from '@mobazha/core';
-import { Settings, User, MapPin, Link2, Ban, Key, Wrench, Scale } from 'lucide-react';
+import {
+  Settings,
+  User,
+  MapPin,
+  Link2,
+  Ban,
+  Key,
+  Wrench,
+  Scale,
+  Wallet,
+  Store,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarItem {
@@ -13,6 +24,7 @@ interface SidebarItem {
   href: string;
   icon: React.ReactNode;
   saasOnly?: boolean;
+  hideSovereign?: boolean;
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -21,6 +33,7 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.profile',
     href: '/settings/page-profile',
     icon: <User className="w-4 h-4" />,
+    hideSovereign: true,
   },
   {
     id: 'general',
@@ -33,30 +46,50 @@ const sidebarItems: SidebarItem[] = [
     labelKey: 'settings.sidebar.account',
     href: '/settings/account',
     icon: <Link2 className="w-4 h-4" />,
+    hideSovereign: true,
   },
   {
     id: 'addresses',
     labelKey: 'settings.sidebar.addresses',
     href: '/settings/addresses',
     icon: <MapPin className="w-4 h-4" />,
+    hideSovereign: true,
+  },
+  {
+    id: 'refunds',
+    labelKey: 'settings.sidebar.refunds',
+    href: '/settings/refunds',
+    icon: <Wallet className="w-4 h-4" />,
+    hideSovereign: true,
   },
   {
     id: 'blocked',
     labelKey: 'settings.sidebar.blocked',
     href: '/settings/blocked',
     icon: <Ban className="w-4 h-4" />,
+    hideSovereign: true,
   },
   {
     id: 'chat-encryption',
     labelKey: 'settings.sidebar.chatEncryption',
     href: '/settings/chat-encryption',
     icon: <Key className="w-4 h-4" />,
+    hideSovereign: true,
   },
   {
     id: 'moderation',
     labelKey: 'settings.sidebar.moderation',
     href: '/settings/moderation',
     icon: <Scale className="w-4 h-4" />,
+    hideSovereign: true,
+  },
+  {
+    id: 'marketplace-memberships',
+    labelKey: 'settings.sidebar.marketplaceMemberships',
+    href: '/settings/marketplace-memberships',
+    icon: <Store className="w-4 h-4" />,
+    saasOnly: true,
+    hideSovereign: true,
   },
   {
     id: 'advanced',
@@ -70,9 +103,15 @@ export const SettingsSidebar: React.FC = () => {
   const { t } = useI18n();
   const pathname = usePathname();
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const isSovereign = __SOVEREIGN__;
   const visibleItems = useMemo(
-    () => (standaloneMode ? sidebarItems.filter(item => !item.saasOnly) : sidebarItems),
-    [standaloneMode]
+    () =>
+      sidebarItems.filter(item => {
+        if (isSovereign && item.hideSovereign) return false;
+        if (standaloneMode && item.saasOnly) return false;
+        return true;
+      }),
+    [standaloneMode, isSovereign]
   );
 
   return (

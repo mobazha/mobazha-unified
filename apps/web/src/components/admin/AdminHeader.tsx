@@ -8,6 +8,7 @@ import {
   useUserStore,
   getImageUrl,
   useStorefrontMode,
+  useMarketplaceContext,
   useChatStore,
   selectTotalUnreadCount,
 } from '@mobazha/core';
@@ -25,7 +26,16 @@ import {
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { NotificationDropdown } from '../Notification';
-import { ArrowLeft, Eye, User, LogOut, MessageSquare, MessageCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  User,
+  LogOut,
+  MessageSquare,
+  MessageCircle,
+  ShoppingBag,
+} from 'lucide-react';
+import { ordersListPath } from '@/lib/ordersNavigation';
 import { useAIChatStore } from '@mobazha/core/stores';
 import { usePlatform } from '@mobazha/ui/hooks';
 
@@ -38,6 +48,7 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   const { t } = useI18n();
   const { profile, logout } = useUserStore();
   const standaloneMode = useStorefrontMode();
+  const { isSubMarket } = useMarketplaceContext();
   const toggleAIChat = useAIChatStore(s => s.toggle);
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const totalUnread = useChatStore(selectTotalUnreadCount);
@@ -60,10 +71,10 @@ export function AdminHeader({ title }: AdminHeaderProps) {
   };
 
   const handleViewStore = () => {
-    if (profile?.peerID) {
-      router.push(`/store/${profile.peerID}`);
-    } else if (standaloneMode) {
+    if (standaloneMode || (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__)) {
       router.push('/');
+    } else if (profile?.peerID) {
+      router.push(`/store/${profile.peerID}`);
     }
   };
 
@@ -85,6 +96,27 @@ export function AdminHeader({ title }: AdminHeaderProps) {
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">{t('userMenu.viewStore')}</span>
           </button>
+        ) : isSubMarket ? (
+          <>
+            <Link
+              href="/"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+              data-testid="admin-back-to-submarket"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('admin.nav.backToMarketplace')}</span>
+            </Link>
+            {profile?.peerID ? (
+              <button
+                onClick={handleViewStore}
+                className="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+                data-testid="admin-view-store"
+              >
+                <Eye className="w-4 h-4" />
+                <span>{t('userMenu.viewStore')}</span>
+              </button>
+            ) : null}
+          </>
         ) : (
           <>
             <Link
@@ -217,6 +249,15 @@ export function AdminHeader({ title }: AdminHeaderProps) {
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   {t('userMenu.viewStore')}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => router.push(ordersListPath('admin', 'purchases'))}
+                  className="cursor-pointer"
+                  data-testid="admin-menu-my-purchases"
+                >
+                  <ShoppingBag className="mr-2 h-4 w-4" />
+                  {t('order.myPurchases')}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem

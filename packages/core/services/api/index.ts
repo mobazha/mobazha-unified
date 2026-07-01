@@ -14,6 +14,7 @@ export {
   setStoreContextHeaders,
   getHeadersWithContext,
   getImageUrl,
+  getAbsoluteImageUrl,
   getMediaBaseURL,
   setStandaloneBuyerAuth,
   isStandaloneBuyerAuth,
@@ -51,6 +52,13 @@ export {
   authDel,
   authSafeGet,
   authRequest,
+  nodeAuthGet,
+  nodeAuthPost,
+  nodeAuthPut,
+  nodeAuthPatch,
+  nodeAuthDel,
+  nodeAuthSafeGet,
+  nodeAuthRequest,
   publicGet,
   publicPost,
   publicSafeGet,
@@ -72,13 +80,16 @@ export {
   onOpenApiUnauthorized,
 } from './openapi-client';
 
+export { refreshRuntimeConfig } from './runtimeConfig';
+
 // 商品 API
 export * as productsApi from './products';
 export type { StoreListingsResult } from './products';
+export type { StoreRelatedListingsOptions } from './products';
 
 // 订单 API
 export * as ordersApi from './orders';
-export type { OrderInstructionsResponse } from './orders';
+export type { AcceptDisputeSettlementContext } from './orders';
 
 // 用户/店铺 API
 export * as profileApi from './profile';
@@ -91,6 +102,9 @@ export * as moderatorsApi from './moderators';
 
 // 集市 API
 export * as marketplaceApi from './marketplace';
+
+// Collectibles Hub+NFT API (P1)
+export * as collectiblesApi from './collectibles';
 
 // 权限控制 API
 export * as accessApi from './access';
@@ -129,11 +143,19 @@ export type {
 
 // 通知 API
 export * as notificationsApi from './notifications';
-export type { Notification, NotificationFilter, NotificationsResult } from './notifications';
+export type {
+  Notification,
+  NotificationFilter,
+  NotificationsResult,
+  NotificationSource,
+  MarketplaceReviewStatus,
+  MarketplaceReviewEventsResult,
+} from './notifications';
 export { getNotificationRoute, NOTIFICATION_FILTER_TYPES } from './notifications';
 
 // 争议/仲裁 API
 export * as disputesApi from './disputes';
+export type { CaseListItem } from './disputes';
 
 // 图片上传 API
 export * as imagesApi from './images';
@@ -210,11 +232,43 @@ export type { WebhookEndpoint, WebhookDelivery, WebhookDeliveriesResponse } from
 export * as systemApi from './system';
 export type { SetupStatusResponse, SetupCompletedSteps, InitialSetupResponse } from './system';
 
+// Data export API (DG-1.10 — listings/sales/customers CSV+JSON downloads)
+export * as exportsApi from './exports';
+export type { ExportKind, ExportFormat, ExportResult } from './exports';
+
+// Gumroad import API (DG-1.9 — vendor migration tool)
+export * as gumroadImportApi from './gumroadImport';
+export type {
+  GumroadImportResponse,
+  GumroadImportPreviewItem,
+  GumroadImportListingResult,
+  GumroadImportedItem,
+  GumroadImportError,
+} from './gumroadImport';
+
+// Monero (XMR) admin API — Sovereign only
+export * as moneroApi from './monero';
+export type {
+  MoneroNodeInfo,
+  MoneroNodePoolSnapshot,
+  MoneroNodeAddRequest,
+  MoneroWithdrawRequest,
+  MoneroWithdrawResult,
+  MoneroSweepAllRequest,
+  MoneroSweepAllResult,
+  Piconero,
+} from './monero';
+
 // Sales Channels API (Store Links + Store Bot)
 export { resolveStoreShortCode } from './salesChannels';
 
 // Guest Checkout API
 export * as guestCheckoutApi from './guestCheckout';
+
+// Store payment policy API
+export * as paymentPolicyApi from './paymentPolicy';
+export type { StorePaymentPolicy, UtxoConfirmationPolicy } from './paymentPolicy';
+
 export type {
   GuestCartItem as GuestCartItemApi,
   CreateGuestOrderRequest,
@@ -222,6 +276,10 @@ export type {
   GuestOrderStatus,
   GuestOrderSummary,
   GuestCheckoutSettings,
+  GuestOrderSupplyQuoteItem,
+  GuestOrderSupplyQuoteResponse,
+  QuoteGuestOrderSupplyRequest,
+  SupplyAvailabilityStatus,
 } from './guestCheckout';
 
 // API Tokens (MCP / programmatic access)
@@ -247,6 +305,7 @@ export type {
   AIStatus,
   AITestConnectionResult,
 } from './aiSettings';
+export { aiStatusSupportsVision } from './aiSettings';
 export type {
   ChannelConfig,
   ChannelFieldSchema,
