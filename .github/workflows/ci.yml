@@ -107,12 +107,16 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Build Next.js production server
+        run: pnpm --filter @mobazha/web build:next
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
             apps/web/.next
+            apps/web/dist
             packages/*/dist
           retention-days: 7
 
