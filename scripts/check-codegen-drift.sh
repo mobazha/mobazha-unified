@@ -12,21 +12,36 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "=== Regenerating types + paths from committed spec ==="
-pnpm --filter @mobazha/core generate:api
-pnpm exec prettier --write \
-  packages/core/types/api-generated.d.ts \
-  packages/core/config/apiPaths.generated.ts
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+SPEC="packages/core/api-spec/openapi.json"
+TYPES_OUT="$TMP_DIR/api-generated.d.ts"
+PATHS_OUT="$TMP_DIR/apiPaths.generated.ts"
+OPENAPI_TYPESCRIPT="packages/core/node_modules/.bin/openapi-typescript"
+PRETTIER="node_modules/.bin/prettier"
+
+if [ ! -x "$OPENAPI_TYPESCRIPT" ] || [ ! -x "$PRETTIER" ]; then
+  echo "ERROR: Required local codegen tools are missing. Run pnpm install first."
+  exit 1
+fi
+
+"$OPENAPI_TYPESCRIPT" "$SPEC" -o "$TYPES_OUT"
+node scripts/gen-api-paths.mjs "$SPEC" "$PATHS_OUT"
+"$PRETTIER" --config .prettierrc --write "$TYPES_OUT" "$PATHS_OUT" >/dev/null
 
 echo "=== Checking for drift ==="
-DRIFT_FILES=(
-  "packages/core/types/api-generated.d.ts"
-  "packages/core/config/apiPaths.generated.ts"
+DRIFT_PAIRS=(
+  "packages/core/types/api-generated.d.ts:$TYPES_OUT"
+  "packages/core/config/apiPaths.generated.ts:$PATHS_OUT"
 )
 
 DRIFTED=()
-for f in "${DRIFT_FILES[@]}"; do
-  if ! git diff --quiet -- "$f" 2>/dev/null; then
-    DRIFTED+=("$f")
+for pair in "${DRIFT_PAIRS[@]}"; do
+  committed="${pair%%:*}"
+  generated="${pair#*:}"
+  if ! cmp -s "$committed" "$generated"; then
+    DRIFTED+=("$committed")
   fi
 done
 

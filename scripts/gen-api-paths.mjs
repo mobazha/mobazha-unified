@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global process, console */
 /**
  * gen-api-paths.mjs — Generate apiPaths.generated.ts from merged OpenAPI spec.
  *
@@ -7,7 +8,7 @@
  * grouped by service (NODE_API, HOSTING_API, SEARCH_API).
  */
 import { readFileSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -93,7 +94,10 @@ function buildValue(path, stripForPath, params) {
 // Main
 // ---------------------------------------------------------------------------
 
-const specPath = join(__dirname, '..', 'packages', 'core', 'api-spec', 'openapi.json');
+const [specArg, outputArg] = process.argv.slice(2);
+const specPath = specArg
+  ? resolve(process.cwd(), specArg)
+  : join(__dirname, '..', 'packages', 'core', 'api-spec', 'openapi.json');
 const spec = JSON.parse(readFileSync(specPath, 'utf8'));
 const allPaths = Object.keys(spec.paths || {}).sort();
 
@@ -159,7 +163,9 @@ for (const group of GROUPS) {
   lines.push('');
 }
 
-const outPath = join(__dirname, '..', 'packages', 'core', 'config', 'apiPaths.generated.ts');
+const outPath = outputArg
+  ? resolve(process.cwd(), outputArg)
+  : join(__dirname, '..', 'packages', 'core', 'config', 'apiPaths.generated.ts');
 writeFileSync(outPath, lines.join('\n'));
 console.log(`Wrote ${outPath}`);
 console.log(`  ${totalPaths} path constants across ${GROUPS.length} groups`);
