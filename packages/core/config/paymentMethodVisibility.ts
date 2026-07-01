@@ -2,17 +2,12 @@
  * Payment method visibility — projects backend runtime capabilities into UI.
  *
  * Apply visibility here (API projection + checkout session), not in each UI leaf.
- * Optional payment methods fail closed until a versioned backend snapshot is
- * available. Crypto retains its legacy projection for older backends.
+ * Payment methods fail closed until an authoritative backend snapshot is available.
  */
-import {
-  getSupportedChains,
-  getTokenById,
-  isPaymentCoinEnabled,
-  isRetiredPaymentChain,
-} from '../data/tokens';
+import { getTokenById, isPaymentCoinEnabled, isRetiredPaymentChain } from '../data/tokens';
 import {
   getRuntimePaymentCapabilities,
+  getRuntimeConfig,
   hasRuntimePaymentCapabilities,
   supportsRuntimePaymentMethod,
   type RuntimeConfig,
@@ -63,12 +58,10 @@ const RUNTIME_PAYMENT_ALIASES: Record<string, string> = {
   MONERO: 'XMR',
 };
 
-/** Marketing projection that fails closed until the backend publishes schema v2. */
+/** Marketing projection from the backend-authoritative capability snapshot. */
 export function projectRuntimeCryptoPaymentMethods(
   config: RuntimeConfig
 ): RuntimePaymentDisplayMethod[] {
-  if (config.schemaVersion < 2) return [];
-
   const projected: RuntimePaymentDisplayMethod[] = [];
   const seen = new Set<string>();
   for (const method of config.capabilities.payments.methods) {
@@ -88,11 +81,14 @@ function runtimeChainID(chain: string): string {
   return upper === 'TRON' ? 'TRX' : upper;
 }
 
-function isTransparentZecRuntimeCapability(token: { chain: string; id: string }): boolean {
+function isTransparentZecRuntimeCapability(
+  token: { chain: string; id: string },
+  config: RuntimeConfig = getRuntimeConfig()
+): boolean {
   const chain = runtimeChainID(token.chain);
   if (chain !== 'ZEC' && token.id.trim().toUpperCase() !== 'ZEC') return false;
-  if (!hasRuntimePaymentCapabilities()) return false;
-  return getRuntimePaymentCapabilities().some(
+  if (!hasRuntimePaymentCapabilities(config)) return false;
+  return getRuntimePaymentCapabilities(config).some(
     method =>
       method.kind === 'crypto' &&
       method.id.trim().toUpperCase() === 'ZEC' &&
@@ -105,18 +101,22 @@ export function isTronPaymentCoin(coinOrChain: string): boolean {
   return upper === 'TRON' || upper === 'TRX' || upper.startsWith('TRX');
 }
 
-export function isVisibleAcceptedCurrency(coin: string): boolean {
+export function isVisibleAcceptedCurrency(
+  coin: string,
+  config: RuntimeConfig = getRuntimeConfig()
+): boolean {
   const trimmed = coin.trim();
   if (!trimmed) return false;
 
   const token = getTokenById(trimmed);
   const chain = runtimeChainID(token?.chain ?? trimmed);
-  if (token?.disabled && !isTransparentZecRuntimeCapability(token)) return false;
-  if (hasRuntimePaymentCapabilities() && !supportsRuntimePaymentMethod(chain, 'crypto')) {
+  if (token?.disabled && !isTransparentZecRuntimeCapability(token, config)) return false;
+  if (!hasRuntimePaymentCapabilities(config)) return false;
+  if (!supportsRuntimePaymentMethod(chain, 'crypto', config)) {
     return false;
   }
 
-  if (isTronPaymentVisible()) return true;
+  if (isTronPaymentVisible(config)) return true;
 
   const lower = trimmed.toLowerCase();
   if (lower.includes('crypto:tron:') || lower.includes(':tron:')) return false;
@@ -127,8 +127,11 @@ export function isVisibleAcceptedCurrency(coin: string): boolean {
   return true;
 }
 
-export function filterVisibleAcceptedCurrencies(coins: string[]): string[] {
-  return coins.filter(isVisibleAcceptedCurrency);
+export function filterVisibleAcceptedCurrencies(
+  coins: string[],
+  config: RuntimeConfig = getRuntimeConfig()
+): string[] {
+  return coins.filter(coin => isVisibleAcceptedCurrency(coin, config));
 }
 
 export function filterVisibleFiatProviderIDs(providerIDs: string[]): string[] {
@@ -139,10 +142,8 @@ export function filterVisibleFiatProviderIDs(providerIDs: string[]): string[] {
 export function isPaymentTokenVisible(token: { chain: string; id: string }): boolean {
   const configuredToken = getTokenById(token.id);
   if (configuredToken?.disabled && !isTransparentZecRuntimeCapability(token)) return false;
-  if (
-    hasRuntimePaymentCapabilities() &&
-    !supportsRuntimePaymentMethod(runtimeChainID(token.chain), 'crypto')
-  ) {
+  if (!hasRuntimePaymentCapabilities()) return false;
+  if (!supportsRuntimePaymentMethod(runtimeChainID(token.chain), 'crypto')) {
     return false;
   }
   if (isTronPaymentVisible()) return true;
@@ -247,13 +248,10 @@ export function persistCheckoutFiatSelection(providerID: string): void {
 
 /** Marketing / stats: chain count aligned with visible checkout chains. */
 export function getVisibleSupportedChainCount(): number {
-  if (hasRuntimePaymentCapabilities()) {
-    return new Set(
-      getRuntimePaymentCapabilities()
-        .filter(method => method.kind === 'crypto')
-        .map(method => method.id.toUpperCase())
-    ).size;
-  }
-  const chains = getSupportedChains();
-  return chains.filter(c => c.id !== 'TRON').length;
+  if (!hasRuntimePaymentCapabilities()) return 0;
+  return new Set(
+    getRuntimePaymentCapabilities()
+      .filter(method => method.kind === 'crypto')
+      .map(method => method.id.toUpperCase())
+  ).size;
 }

@@ -27,9 +27,8 @@ import {
   productCardPriceFieldsFromListItem,
   isStandalone,
   useIsSubMarket,
-  getCurationHomePath,
-  resolveCurationMarketplaceIdentifier,
-  shouldRenderCurationMarketplaceAtRoot,
+  useRuntimeConfig,
+  shouldRenderMarketplaceExperienceAtRoot,
   resolveProductCardSellerDisplay,
 } from '@mobazha/core';
 import { MarketplaceDetailPageContent } from '@/components/CommunityMarketplace/MarketplaceDetailPageContent';
@@ -100,22 +99,20 @@ export default function HomePage() {
   const storefrontPeerID = useStorefrontPeerID();
   const isSubMarket = useIsSubMarket();
   const { needsOnboarding } = useUserStore();
-  const curationHomePath = getCurationHomePath();
+  const runtimeConfig = useRuntimeConfig();
 
-  const renderCurationAtRoot = shouldRenderCurationMarketplaceAtRoot({
+  const renderMarketplaceAtRoot = shouldRenderMarketplaceExperienceAtRoot({
     pathname,
-    curationHomePath,
-    isStandalone: isStandalone(),
+    experience: runtimeConfig.experience,
     storefrontMode,
     isSubMarket,
     needsOnboarding,
   });
 
-  if (renderCurationAtRoot && curationHomePath) {
-    const marketplaceIdentifier = resolveCurationMarketplaceIdentifier(curationHomePath);
-    if (marketplaceIdentifier) {
-      return <MarketplaceDetailPageContent identifier={marketplaceIdentifier} />;
-    }
+  if (renderMarketplaceAtRoot && runtimeConfig.experience.marketplaceIdentifier) {
+    return (
+      <MarketplaceDetailPageContent identifier={runtimeConfig.experience.marketplaceIdentifier} />
+    );
   }
 
   if (isSubMarket) {

@@ -10,6 +10,7 @@ import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { isStandalone, useUserStore, useUserContext } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
+import { RuntimeCapabilityBoundary } from '@/components/RuntimeCapabilityBoundary';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -56,7 +57,7 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
   );
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   const standaloneMode = useMemo(() => isStandalone(), []);
   const { isAuthenticated, isLoading: authLoading } = useUserStore();
 
@@ -106,5 +107,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <AuthGuard>
       <AdminLayoutShell>{children}</AdminLayoutShell>
     </AuthGuard>
+  );
+}
+
+export default function AdminLayout(props: AdminLayoutProps) {
+  return (
+    <RuntimeCapabilityBoundary capability="commerce.storeAdmin">
+      <AdminLayoutContent {...props} />
+    </RuntimeCapabilityBoundary>
   );
 }

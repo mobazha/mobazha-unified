@@ -12,6 +12,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
+import { runtimeConfigScript } from './fixtures/runtime-config';
 
 const OUT = 'test-results/screenshots/guest-checkout';
 const MOCK_ORDER_TOKEN = 'gst_test_order';
@@ -87,11 +88,14 @@ async function mockAppShell(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body:
-          'window.__RUNTIME_CONFIG__ = { ' +
-          'features: { guestCheckout: { effective: true, overridable: [] } }, ' +
-          'guestCheckoutEnabled: true ' +
-          '};',
+        body: runtimeConfigScript({
+          deployment: 'standalone',
+          guestCheckout: true,
+          paymentMethods: [
+            { id: 'BTC', kind: 'crypto', flow: 'address-transfer' },
+            { id: 'ETH', kind: 'crypto', flow: 'address-transfer' },
+          ],
+        }),
       })
   );
   await page.route(

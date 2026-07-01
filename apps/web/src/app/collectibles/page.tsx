@@ -10,8 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   collectibleHolderMatchesWallet,
-  getCurationHomePath,
-  resolveCurationMarketBackHref,
+  resolveMarketplaceBackHref,
   isCollectiblesPublicCatalogUnavailableError,
   resolveCollectibleCatalogDisplay,
   useCollectibleNFTs,
@@ -30,9 +29,7 @@ export default function CollectiblesPage() {
 
   const catalogUnavailable = !!error && isCollectiblesPublicCatalogUnavailableError(error);
   const catalogReady = !loading && !catalogUnavailable;
-  const curationHomeHref = resolveCurationMarketBackHref(
-    getCurationHomePath() ?? '/marketplace/m2-wilson'
-  );
+  const curationHomeHref = resolveMarketplaceBackHref('/marketplace/m2-wilson');
   const solanaWalletAddress = useMemo(() => {
     if (!isConnected || !address?.trim() || address.startsWith('0x')) return null;
     if (chain?.chainNamespace && chain.chainNamespace !== 'solana') return null;
@@ -125,7 +122,12 @@ export default function CollectiblesPage() {
                 >
                   {t('collectibles.catalog.tabMyCards')}
                 </Button>
-                <Button asChild size="sm" variant="outline" data-testid="collectibles-tab-redemptions">
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  data-testid="collectibles-tab-redemptions"
+                >
                   <Link href="/collectibles/redemptions">
                     {t('collectibles.catalog.tabRedemptions')}
                   </Link>
@@ -140,7 +142,10 @@ export default function CollectiblesPage() {
               </Card>
 
               {activeView === 'myCards' && !solanaWalletAddress ? (
-                <Card className="mb-6 p-6 text-center" data-testid="collectibles-my-cards-disconnected">
+                <Card
+                  className="mb-6 p-6 text-center"
+                  data-testid="collectibles-my-cards-disconnected"
+                >
                   <Wallet className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden />
                   <p className="text-sm text-muted-foreground">
                     {t('collectibles.catalog.myCardsConnectPrompt')}
@@ -184,7 +189,9 @@ export default function CollectiblesPage() {
                   ) : null}
 
                   {loading && displayItems.length === 0 ? (
-                    <p className="text-center text-sm text-muted-foreground">{t('common.loading')}</p>
+                    <p className="text-center text-sm text-muted-foreground">
+                      {t('common.loading')}
+                    </p>
                   ) : null}
 
                   {!loading && displayItems.length === 0 ? (
@@ -220,7 +227,9 @@ export default function CollectiblesPage() {
                                 {display.displayName}
                               </h2>
                               {display.grade ? (
-                                <p className="mt-1 text-sm text-muted-foreground">{display.grade}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                  {display.grade}
+                                </p>
                               ) : null}
                               <div className="mt-3 flex flex-wrap gap-2">
                                 <Badge variant="secondary">{t(display.custodyStatusKey)}</Badge>

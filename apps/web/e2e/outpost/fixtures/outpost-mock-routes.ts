@@ -8,6 +8,7 @@
  */
 
 import type { Page } from '@playwright/test';
+import { runtimeConfigScript } from '../../fixtures/runtime-config';
 
 function wrapData<T>(data: T): string {
   return JSON.stringify({ data });
@@ -224,11 +225,11 @@ async function mockOutpostAppShell(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body:
-          'window.__RUNTIME_CONFIG__ = { ' +
-          'features: { guestCheckout: { effective: true, overridable: [] } }, ' +
-          'guestCheckoutEnabled: true ' +
-          '};',
+        body: runtimeConfigScript({
+          deployment: 'outpost',
+          guestCheckout: true,
+          paymentMethods: [{ id: 'XMR', kind: 'crypto', flow: 'address-transfer' }],
+        }),
       })
   );
   await page.route(

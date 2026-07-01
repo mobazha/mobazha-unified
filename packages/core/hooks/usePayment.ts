@@ -142,9 +142,11 @@ export function usePayment(): UsePaymentReturn {
   const [instructions, setInstructions] = useState<PaymentInstructions | null>(null);
   const [result, setResult] = useState<PaymentResult | null>(null);
   const supportedCoins = useMemo(() => {
-    if (runtimeConfig.schemaVersion < 2) return [];
     const visible = new Set(
-      filterVisibleAcceptedCurrencies(SUPPORTED_COINS.map(coin => coin.code))
+      filterVisibleAcceptedCurrencies(
+        SUPPORTED_COINS.map(coin => coin.code),
+        runtimeConfig
+      )
     );
     return SUPPORTED_COINS.filter(coin => visible.has(coin.code));
   }, [runtimeConfig]);

@@ -1,7 +1,7 @@
 /**
  * Backend edition capability adapter.
  *
- * Compatibility adapter over the shared node runtime-config contract.
+ * Community payment-policy projection over the shared RuntimeConfig V3 contract.
  */
 
 import { refreshRuntimeConfig } from '../services/api/runtimeConfig';

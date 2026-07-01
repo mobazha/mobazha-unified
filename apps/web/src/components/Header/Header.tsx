@@ -34,6 +34,7 @@ import {
   isStandaloneBuyerAuth,
   useUserContext,
   useMarketplaceContext,
+  useRuntimeCapability,
   useRuntimePaymentFlow,
 } from '@mobazha/core';
 import {
@@ -84,9 +85,16 @@ export const Header: React.FC = () => {
   const setCartOpen = useCartDrawerStore(state => state.setOpen);
   const cartItemCount = useCartStore(state => state.getItemCount());
   const hasExternalWalletPayments = useRuntimePaymentFlow('external-wallet');
+  const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
+  const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
 
   const standaloneMode = useStorefrontMode();
-  const showMaasUserMenu = isAuthenticated && isHosted() && !standaloneMode && !isOutpost;
+  const showMaasUserMenu =
+    isAuthenticated &&
+    isHosted() &&
+    !standaloneMode &&
+    !isOutpost &&
+    (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const storefrontProfile = useStorefrontProfile();
   const {
     isSubMarket,
@@ -424,22 +432,26 @@ export const Header: React.FC = () => {
 
                   {showMaasUserMenu ? (
                     <>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/operator/marketplaces')}
-                        className="cursor-pointer"
-                        data-testid="header-menu-operator-marketplaces"
-                      >
-                        <Building2 className="mr-2 h-4 w-4" />
-                        {t('userMenu.operatorMarketplaces')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => router.push('/settings/marketplace-memberships')}
-                        className="cursor-pointer"
-                        data-testid="header-menu-marketplace-invitations"
-                      >
-                        <Mail className="mr-2 h-4 w-4" />
-                        {t('userMenu.marketplaceInvitations')}
-                      </DropdownMenuItem>
+                      {hasMarketplaceOperator ? (
+                        <DropdownMenuItem
+                          onClick={() => router.push('/operator/marketplaces')}
+                          className="cursor-pointer"
+                          data-testid="header-menu-operator-marketplaces"
+                        >
+                          <Building2 className="mr-2 h-4 w-4" />
+                          {t('userMenu.operatorMarketplaces')}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {hasMarketplaceSellerReview ? (
+                        <DropdownMenuItem
+                          onClick={() => router.push('/settings/marketplace-memberships')}
+                          className="cursor-pointer"
+                          data-testid="header-menu-marketplace-invitations"
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          {t('userMenu.marketplaceInvitations')}
+                        </DropdownMenuItem>
+                      ) : null}
                       <DropdownMenuSeparator />
                     </>
                   ) : null}

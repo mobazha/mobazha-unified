@@ -265,24 +265,11 @@ export interface BrandConfig {
   network?: BrandNetworkConfig;
 }
 
-/** Outpost-specific runtime configuration. */
-export interface OutpostConfig {
-  enabled: boolean;
-  /** When true, the frontend must not load any third-party resources (fonts, SDKs, CDNs). */
-  disableExternalResources: boolean;
-  /** White-label brand overrides (undefined = Mobazha defaults). */
-  brand?: BrandConfig;
-}
-
-let outpostConfig: OutpostConfig = { enabled: false, disableExternalResources: false };
-
-export function getOutpostConfig(): OutpostConfig {
-  return outpostConfig;
-}
+let runtimeBrandConfig: BrandConfig | undefined;
 
 /** Returns the brand config if present, or undefined for Mobazha defaults. */
 export function getBrandConfig(): BrandConfig | undefined {
-  return outpostConfig.brand;
+  return runtimeBrandConfig;
 }
 
 /**
@@ -292,7 +279,7 @@ export function getBrandConfig(): BrandConfig | undefined {
  * therefore hide all network/node-pool surface area.
  */
 export function getBrandNetworkConfig(): Required<BrandNetworkConfig> {
-  const network = outpostConfig.brand?.network;
+  const network = runtimeBrandConfig?.network;
   return {
     allowUserCustomNode: network?.allowUserCustomNode === true,
     showAdvancedDiagnostics: network?.showAdvancedDiagnostics === true,
@@ -302,18 +289,18 @@ export function getBrandNetworkConfig(): Required<BrandNetworkConfig> {
 }
 
 export function isOutpostMode(): boolean {
-  if (outpostConfig.enabled) return true;
+  if (getRuntimeConfig().deployment.mode === 'outpost') return true;
   if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return true;
   return false;
 }
 
 /**
  * Returns true when external resource loading (Google Fonts, third-party CDNs)
- * should be suppressed. True for all outpost builds and when the runtime config
- * explicitly sets `disableExternalResources`.
+ * should be suppressed. True for all outpost builds and whenever the runtime
+ * deployment denies external resources.
  */
 export function isExternalResourcesDisabled(): boolean {
-  if (outpostConfig.disableExternalResources) return true;
+  if (!getRuntimeConfig().deployment.allowExternalResources) return true;
   if (typeof __OUTPOST__ !== 'undefined' && __OUTPOST__) return true;
   return false;
 }
@@ -545,8 +532,6 @@ export function initEnvFromProcess(): void {
   });
 }
 
-import { setCurationHomePathFromRuntimeConfig } from './curationHomePath';
-
 /**
  * Apply runtime config published by the backend bootstrap route.
  *
@@ -558,39 +543,9 @@ import { setCurationHomePathFromRuntimeConfig } from './curationHomePath';
  */
 export function applyRuntimeConfig(runtimeConfig: RuntimeConfig = getRuntimeConfig()): void {
   if (typeof window === 'undefined') return;
-  // Note: feature flags (`rc.features` and the legacy `rc.guestCheckoutEnabled`)
-  // are consumed by `services/featureFlags.ts`, not this function. Call sites
-  // use `featureFlags.isEnabled(key)` or `useFeature(key)` instead of reading
-  // env config.
-  const rc = runtimeConfig as {
-    saasUrl?: string;
-    curationHomePath?: string;
-    authMode?: string;
-    outpostMode?: boolean;
-    disableExternalResources?: boolean;
-    brand?: {
-      name?: string;
-      shortName?: string;
-      tagline?: string;
-      description?: string;
-      primaryColor?: string;
-      accentColor?: string;
-      logoUrl?: string;
-      faviconUrl?: string;
-      privacyNotice?: string;
-      hidePoweredBy?: boolean;
-      network?: {
-        allowUserCustomNode?: boolean;
-        showAdvancedDiagnostics?: boolean;
-        showNodePoolUI?: boolean;
-        allowDiscoverToggle?: boolean;
-      };
-    };
-  };
-
-  if ('curationHomePath' in rc) {
-    setCurationHomePathFromRuntimeConfig(rc.curationHomePath);
-  }
+  // Feature flags are consumed by services/featureFlags.ts. Deployment,
+  // experience, and capabilities remain in the central RuntimeConfig store.
+  const rc = runtimeConfig;
 
   if (rc.authMode === 'standalone' || rc.authMode === 'basic' || rc.authMode === 'hosted') {
     currentEnv = {
@@ -630,19 +585,11 @@ export function applyRuntimeConfig(runtimeConfig: RuntimeConfig = getRuntimeConf
     };
   }
 
-  if (rc.outpostMode) {
-    outpostConfig = {
-      enabled: true,
-      disableExternalResources: rc.disableExternalResources !== false,
-      brand: rc.brand?.name ? (rc.brand as BrandConfig) : undefined,
-    };
-  } else if (rc.disableExternalResources) {
-    outpostConfig = { ...outpostConfig, disableExternalResources: true };
-  }
+  runtimeBrandConfig = rc.brand?.name ? (rc.brand as unknown as BrandConfig) : undefined;
 
   // Apply brand overrides to the document
-  if (outpostConfig.brand) {
-    const b = outpostConfig.brand;
+  if (runtimeBrandConfig) {
+    const b = runtimeBrandConfig;
     if (b.name) {
       document.title = b.name;
     }

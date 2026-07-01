@@ -13,7 +13,7 @@ import {
   type MarketplaceContextValue,
 } from '@mobazha/core/hooks/useMarketplaceContext';
 import { resolveMarketplaceSubdomainFromWindow } from '@mobazha/core/marketplace/subdomain';
-import { getCurationHomePath } from '@mobazha/core/config/curationHomePath';
+import { useRuntimeConfig } from '@mobazha/core';
 import { getCurrentMarketplaceConfig } from '@mobazha/core/services/api/marketplace';
 
 function normalizeWindowHostname(hostname: string): string | null {
@@ -63,11 +63,12 @@ export function MarketplaceProvider({
   children: ReactNode;
 }) {
   const skipWindowResolve = !!(initialSubdomain || initialDomain || initialConfig);
-  const hasCurationHomePath = !!getCurationHomePath();
+  const runtimeConfig = useRuntimeConfig();
+  const isDedicatedMarketplace = runtimeConfig.experience.kind === 'marketplace';
   const windowDomain = useSyncExternalStore(
     () => () => {},
     () => {
-      if (skipWindowResolve || !hasCurationHomePath || typeof window === 'undefined') {
+      if (skipWindowResolve || !isDedicatedMarketplace || typeof window === 'undefined') {
         return null;
       }
       return normalizeWindowHostname(window.location.hostname);
