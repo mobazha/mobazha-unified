@@ -30,6 +30,8 @@ import {
 } from '@mobazha/core';
 import WAValidator from 'multicoin-address-validator';
 import type { ReceivingAccount, ReceivingAccountInput } from '@mobazha/core/services/api/wallet';
+import { ApiError } from '@mobazha/core/services/api/client';
+import { useToast } from '@/components/ui/use-toast';
 
 type ChainFamily = 'evm' | 'solana' | 'utxo' | 'tron';
 type NetworkMode = 'mainnet' | 'testnet';
@@ -264,6 +266,41 @@ function isNetworkMismatchError(errorKey: string | null): boolean {
   );
 }
 
+function suggestDefaultAccountName(chainId: string, accounts: ReceivingAccount[]): string {
+  const base = `My ${chainId} Wallet`;
+  const used = new Set(accounts.map(acc => acc.name.trim()).filter(Boolean));
+  if (!used.has(base)) return base;
+  let suffix = 2;
+  while (used.has(`${base} ${suffix}`)) {
+    suffix += 1;
+  }
+  return `${base} ${suffix}`;
+}
+
+function receivingSaveErrorMessage(
+  error: unknown,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
+  if (error instanceof ApiError) {
+    const message = error.message.toLowerCase();
+    if (error.status === 409 || error.code === 'CONFLICT') {
+      if (message.includes('name already used')) {
+        return t('receivingAccounts.nameInUse');
+      }
+      if (message.includes('address already used')) {
+        return t('receivingAccounts.addressInUse');
+      }
+    }
+    if (error.message.trim()) {
+      return error.message;
+    }
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return t('receivingAccounts.saveFailed');
+}
+
 function addressPlaceholder(chain: ChainMeta | undefined, networkMode: NetworkMode): string {
   if (!chain) return '';
 
@@ -355,6 +392,7 @@ interface AccountFormProps {
   saving: boolean;
   isEdit: boolean;
   networkMode: NetworkMode;
+  suggestAccountName: (chainId: string) => string;
 }
 
 const AccountForm: React.FC<AccountFormProps> = ({
@@ -365,6 +403,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
   saving,
   isEdit,
   networkMode,
+  suggestAccountName,
 }) => {
   const { t } = useI18n();
   const { walletInfo, isConnected, openModal } = useWallet();
@@ -463,7 +502,7 @@ const AccountForm: React.FC<AccountFormProps> = ({
                       ...form,
                       chainType: c.id,
                       activeTokens: meta ? meta.tokens.map(tok => tok.symbol) : [],
-                      name: form.name || `My ${c.name} Wallet`,
+                      name: form.name.trim() ? form.name : suggestAccountName(c.id),
                     });
                   }}
                   className={cn(
@@ -814,6 +853,7 @@ const AccountRow: React.FC<AccountRowProps> = ({
 
 export const CryptoReceivingSection: React.FC = () => {
   const { t } = useI18n();
+  const { toast } = useToast();
   const { data: accounts = [], isLoading } = useReceivingAccounts();
   const addMutation = useAddReceivingAccount();
   const updateMutation = useUpdateReceivingAccount();
@@ -880,10 +920,19 @@ export const CryptoReceivingSection: React.FC = () => {
       setShowForm(false);
       setEditingId(null);
       setForm(emptyForm);
-    } catch {
-      // errors are surfaced by mutation states
+    } catch (error) {
+      toast({
+        title: t('common.error', { defaultValue: 'Error' }),
+        description: receivingSaveErrorMessage(error, t),
+        variant: 'destructive',
+      });
     }
-  }, [form, editingId, addMutation, updateMutation]);
+  }, [form, editingId, addMutation, updateMutation, toast, t]);
+
+  const suggestAccountName = useCallback(
+    (chainId: string) => suggestDefaultAccountName(chainId, cryptoAccounts),
+    [cryptoAccounts]
+  );
 
   const handleToggleActive = useCallback(
     async (acc: ReceivingAccount) => {
@@ -1031,6 +1080,7 @@ export const CryptoReceivingSection: React.FC = () => {
           saving={addMutation.isPending || updateMutation.isPending}
           isEdit={editingId !== null}
           networkMode={networkMode}
+          suggestAccountName={suggestAccountName}
         />
       )}
 

@@ -8597,6 +8597,10 @@ export const en: TranslationResource = {
     networkMismatchTitle: 'Network mismatch detected',
     networkMismatchDesc:
       '{{count}} address(es) do not match current environment network ({{network}}). Please update them to avoid payment issues.',
+    saveFailed: 'Could not save receiving address. Please try again.',
+    nameInUse:
+      'This name is already used on this network. Choose a different name for this receiving address.',
+    addressInUse: 'This address is already linked to another receiving account.',
   },
 
   fiat: {
