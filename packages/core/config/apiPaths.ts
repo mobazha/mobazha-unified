@@ -649,52 +649,26 @@ export const HOSTING_API = {
   STOREFRONTS_BY_SLUG: (slug: string) => `/platform/v1/storefronts/by-slug/${slug}`,
 
   // --- Collectibles Hub+NFT (P1 · SaaS only · collectiblesHubEnabled) ---
-  COLLECTIBLES_HUB_INTAKE: '/platform/v1/collectibles/hub/intake',
-  COLLECTIBLES_HUB_SLOTS: '/platform/v1/collectibles/hub/slots',
-  COLLECTIBLES_HUB_SLOT: (id: string) =>
-    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}`,
-  COLLECTIBLES_HUB_SLOT_REJECT: (id: string) =>
-    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}/reject`,
-  COLLECTIBLES_HUB_SLOT_MINT: (id: string) =>
-    `/platform/v1/collectibles/hub/slots/${encodeURIComponent(id)}/mint`,
-  COLLECTIBLES_NFTS: '/platform/v1/collectibles/nfts',
-  COLLECTIBLES_NFT: (mint: string) => `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}`,
-  COLLECTIBLES_NFT_BURN_TX: (mint: string) =>
-    `/platform/v1/collectibles/nfts/${encodeURIComponent(mint)}/burn-tx`,
-  COLLECTIBLES_WALLETS: '/platform/v1/collectibles/wallets',
-  COLLECTIBLES_REDEMPTIONS: '/platform/v1/collectibles/redemptions',
-  COLLECTIBLES_REDEMPTION: (id: string) =>
-    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}`,
-  COLLECTIBLES_REDEMPTION_SHIP: (id: string) =>
-    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/ship`,
-  COLLECTIBLES_REDEMPTION_SETTLE: (id: string) =>
-    `/platform/v1/collectibles/redemptions/${encodeURIComponent(id)}/settle`,
-  COLLECTIBLES_HUB_REDEMPTIONS: '/platform/v1/collectibles/hub/redemptions',
-  COLLECTIBLES_RECONCILE_RECOVER_MINTS: '/platform/v1/collectibles/reconcile/recover-mints',
-  COLLECTIBLES_PRIMARY_SALES_RELEASE_QUEUE: '/platform/v1/collectibles/primary-sales/release-queue',
-  COLLECTIBLES_PRIMARY_SALES_RELEASE_RETRY: '/platform/v1/collectibles/primary-sales/release-retry',
-  COLLECTIBLES_PRIMARY_SALE_BY_ORDER: (orderId: string) =>
-    `/platform/v1/collectibles/primary-sales/by-order/${encodeURIComponent(orderId)}`,
-  COLLECTIBLES_SOURCE_DEPOSITS: '/platform/v1/collectibles/source-deposits',
-  COLLECTIBLES_MY_SOURCE_DEPOSITS: '/platform/v1/collectibles/my/source-deposits',
-  COLLECTIBLES_MY_SOURCE_DEPOSIT_SHIP: (id: string) =>
-    `/platform/v1/collectibles/my/source-deposits/${encodeURIComponent(id)}/ship`,
-  COLLECTIBLES_SOURCE_DEPOSIT: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}`,
-  COLLECTIBLES_SOURCE_DEPOSIT_APPROVE: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/approve`,
-  COLLECTIBLES_SOURCE_DEPOSIT_REJECT: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/reject`,
-  COLLECTIBLES_SOURCE_DEPOSIT_MINT: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/mint`,
-  COLLECTIBLES_SOURCE_DEPOSIT_FIRST_SALE: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/first-sale`,
-  COLLECTIBLES_SOURCE_DEPOSIT_SHIP: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/ship`,
-  COLLECTIBLES_SOURCE_DEPOSIT_SETTLE: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/settle`,
-  COLLECTIBLES_SOURCE_DEPOSIT_DEFAULT: (id: string) =>
-    `/platform/v1/collectibles/source-deposits/${encodeURIComponent(id)}/default`,
+  // Compatibility aliases retain the original singular names while every
+  // canonical path comes from the generated Hosting OpenAPI contract above.
+  COLLECTIBLES_HUB_SLOT: HOSTING_API_PATHS.COLLECTIBLES_HUB_SLOTS_BY_ID,
+  COLLECTIBLES_HUB_SLOT_REJECT: HOSTING_API_PATHS.COLLECTIBLES_HUB_SLOTS_REJECT,
+  COLLECTIBLES_HUB_SLOT_MINT: HOSTING_API_PATHS.COLLECTIBLES_HUB_SLOTS_MINT,
+  COLLECTIBLES_NFT: HOSTING_API_PATHS.COLLECTIBLES_NFTS_BY_MINT,
+  COLLECTIBLES_NFT_BURN_TX: HOSTING_API_PATHS.COLLECTIBLES_NFTS_BURN_TX,
+  COLLECTIBLES_REDEMPTION: HOSTING_API_PATHS.COLLECTIBLES_REDEMPTIONS_BY_ID,
+  COLLECTIBLES_REDEMPTION_SHIP: HOSTING_API_PATHS.COLLECTIBLES_REDEMPTIONS_SHIP,
+  COLLECTIBLES_REDEMPTION_SETTLE: HOSTING_API_PATHS.COLLECTIBLES_REDEMPTIONS_SETTLE,
+  COLLECTIBLES_PRIMARY_SALE_BY_ORDER: HOSTING_API_PATHS.COLLECTIBLES_PRIMARY_SALES_BY_ORDER,
+  COLLECTIBLES_MY_SOURCE_DEPOSIT_SHIP: HOSTING_API_PATHS.COLLECTIBLES_MY_SOURCE_DEPOSITS_SHIP,
+  COLLECTIBLES_SOURCE_DEPOSIT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_BY_ID,
+  COLLECTIBLES_SOURCE_DEPOSIT_APPROVE: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_APPROVE,
+  COLLECTIBLES_SOURCE_DEPOSIT_REJECT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_REJECT,
+  COLLECTIBLES_SOURCE_DEPOSIT_MINT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_MINT,
+  COLLECTIBLES_SOURCE_DEPOSIT_FIRST_SALE: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_FIRST_SALE,
+  COLLECTIBLES_SOURCE_DEPOSIT_SHIP: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_SHIP,
+  COLLECTIBLES_SOURCE_DEPOSIT_SETTLE: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_SETTLE,
+  COLLECTIBLES_SOURCE_DEPOSIT_DEFAULT: HOSTING_API_PATHS.COLLECTIBLES_SOURCE_DEPOSITS_DEFAULT,
 } as const;
 
 // ============================================================

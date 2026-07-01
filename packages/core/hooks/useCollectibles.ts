@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { collectiblesApi } from '../services/api/collectibles';
+import * as collectibleRequests from '../services/api/collectibles';
 import { shouldPollCollectiblePrimarySale } from '../collectibles/primarySale';
 import { shouldPollCollectibleRedemption } from '../collectibles/redemption';
 import type {
@@ -12,6 +13,71 @@ import type {
 
 const DEFAULT_PRIMARY_SALE_POLL_MS = 8_000;
 const DEFAULT_REDEMPTION_POLL_MS = 10_000;
+
+export interface CollectibleActions {
+  getCollectibleRedemption: typeof collectibleRequests.getCollectibleRedemption;
+  listCollectibleHubSlots: typeof collectibleRequests.listCollectibleHubSlots;
+  listCollectibleSourceDeposits: typeof collectibleRequests.listCollectibleSourceDeposits;
+  createCollectibleSourceDeposit: typeof collectibleRequests.createCollectibleSourceDeposit;
+  approveCollectibleSourceDeposit: typeof collectibleRequests.approveCollectibleSourceDeposit;
+  rejectCollectibleSourceDeposit: typeof collectibleRequests.rejectCollectibleSourceDeposit;
+  mintCollectibleSourceDeposit: typeof collectibleRequests.mintCollectibleSourceDeposit;
+  recordCollectibleSourceDepositFirstSale: typeof collectibleRequests.recordCollectibleSourceDepositFirstSale;
+  shipCollectibleSourceDeposit: typeof collectibleRequests.shipCollectibleSourceDeposit;
+  settleCollectibleSourceDeposit: typeof collectibleRequests.settleCollectibleSourceDeposit;
+  defaultCollectibleSourceDeposit: typeof collectibleRequests.defaultCollectibleSourceDeposit;
+  intakeCollectibleHubSlot: typeof collectibleRequests.intakeCollectibleHubSlot;
+  listCollectibleHubRedemptions: typeof collectibleRequests.listCollectibleHubRedemptions;
+  listCollectiblePrimarySaleReleaseQueue: typeof collectibleRequests.listCollectiblePrimarySaleReleaseQueue;
+  retryCollectiblePrimarySaleReleases: typeof collectibleRequests.retryCollectiblePrimarySaleReleases;
+  mintCollectibleHubSlot: typeof collectibleRequests.mintCollectibleHubSlot;
+  rejectCollectibleHubSlot: typeof collectibleRequests.rejectCollectibleHubSlot;
+  shipCollectibleRedemption: typeof collectibleRequests.shipCollectibleRedemption;
+  settleCollectibleRedemption: typeof collectibleRequests.settleCollectibleRedemption;
+  recoverCollectiblePendingMints: typeof collectibleRequests.recoverCollectiblePendingMints;
+  bindCollectibleWallet: typeof collectibleRequests.bindCollectibleWallet;
+  buildCollectibleBurnTx: typeof collectibleRequests.buildCollectibleBurnTx;
+  createCollectibleRedemption: typeof collectibleRequests.createCollectibleRedemption;
+  listMyCollectibleSourceDeposits: typeof collectibleRequests.listMyCollectibleSourceDeposits;
+  submitMyCollectibleSourceDeposit: typeof collectibleRequests.submitMyCollectibleSourceDeposit;
+  shipMyCollectibleSourceDeposit: typeof collectibleRequests.shipMyCollectibleSourceDeposit;
+}
+
+const collectibleActions: CollectibleActions = {
+  getCollectibleRedemption: collectibleRequests.getCollectibleRedemption,
+  listCollectibleHubSlots: collectibleRequests.listCollectibleHubSlots,
+  listCollectibleSourceDeposits: collectibleRequests.listCollectibleSourceDeposits,
+  createCollectibleSourceDeposit: collectibleRequests.createCollectibleSourceDeposit,
+  approveCollectibleSourceDeposit: collectibleRequests.approveCollectibleSourceDeposit,
+  rejectCollectibleSourceDeposit: collectibleRequests.rejectCollectibleSourceDeposit,
+  mintCollectibleSourceDeposit: collectibleRequests.mintCollectibleSourceDeposit,
+  recordCollectibleSourceDepositFirstSale:
+    collectibleRequests.recordCollectibleSourceDepositFirstSale,
+  shipCollectibleSourceDeposit: collectibleRequests.shipCollectibleSourceDeposit,
+  settleCollectibleSourceDeposit: collectibleRequests.settleCollectibleSourceDeposit,
+  defaultCollectibleSourceDeposit: collectibleRequests.defaultCollectibleSourceDeposit,
+  intakeCollectibleHubSlot: collectibleRequests.intakeCollectibleHubSlot,
+  listCollectibleHubRedemptions: collectibleRequests.listCollectibleHubRedemptions,
+  listCollectiblePrimarySaleReleaseQueue:
+    collectibleRequests.listCollectiblePrimarySaleReleaseQueue,
+  retryCollectiblePrimarySaleReleases: collectibleRequests.retryCollectiblePrimarySaleReleases,
+  mintCollectibleHubSlot: collectibleRequests.mintCollectibleHubSlot,
+  rejectCollectibleHubSlot: collectibleRequests.rejectCollectibleHubSlot,
+  shipCollectibleRedemption: collectibleRequests.shipCollectibleRedemption,
+  settleCollectibleRedemption: collectibleRequests.settleCollectibleRedemption,
+  recoverCollectiblePendingMints: collectibleRequests.recoverCollectiblePendingMints,
+  bindCollectibleWallet: collectibleRequests.bindCollectibleWallet,
+  buildCollectibleBurnTx: collectibleRequests.buildCollectibleBurnTx,
+  createCollectibleRedemption: collectibleRequests.createCollectibleRedemption,
+  listMyCollectibleSourceDeposits: collectibleRequests.listMyCollectibleSourceDeposits,
+  submitMyCollectibleSourceDeposit: collectibleRequests.submitMyCollectibleSourceDeposit,
+  shipMyCollectibleSourceDeposit: collectibleRequests.shipMyCollectibleSourceDeposit,
+};
+
+/** Stable mutation/query commands for UI orchestration without exposing API modules to components. */
+export function useCollectibleActions(): CollectibleActions {
+  return collectibleActions;
+}
 
 export interface UseCollectibleQueryOptions {
   enabled?: boolean;
