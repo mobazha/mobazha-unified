@@ -156,6 +156,8 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/domains/custom/verify`,
   MARKETPLACES_LINK: (id: string) => `/platform/v1/marketplaces/${encodeURIComponent(id)}/link`,
   MARKETPLACES_MINE: '/platform/v1/marketplaces/mine',
+  MARKETPLACES_PREVIEW: (id: string) =>
+    `/platform/v1/marketplaces/${encodeURIComponent(id)}/preview`,
   MARKETPLACES_SELLER_REVIEW_EVENTS: (id: string) =>
     `/platform/v1/marketplaces/${encodeURIComponent(id)}/seller-review-events`,
   MARKETPLACES_SELLERS_ACCEPT: (id: string, peerID: string) =>

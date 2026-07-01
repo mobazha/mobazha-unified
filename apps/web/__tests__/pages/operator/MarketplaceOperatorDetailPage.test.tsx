@@ -6,6 +6,7 @@ import type { MarketplaceStoreMembership, NativeMarketplace } from '@mobazha/cor
 const mockToast = vi.fn();
 const mockReviewSeller = vi.fn();
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 const mockUpdateMarketplace = vi.fn();
 const mockArchiveMarketplace = vi.fn();
 const mockVerifyCustomDomain = vi.fn();
@@ -53,6 +54,10 @@ const marketplace: NativeMarketplace = {
   name: 'Operator Market',
   slug: 'operator-market',
   status: 'published',
+  draftRevision: 2,
+  publishedRevision: 1,
+  hasUnpublishedChanges: false,
+  publishedAt: '2026-01-01T00:00:00Z',
   ownerUserID: 'owner-1',
   buyerAccessMode: 'open',
   sellerReviewMode: 'manual',
@@ -117,10 +122,14 @@ const stores = [
 ];
 let currentMarketplace: NativeMarketplace = marketplace;
 let currentStores: MarketplaceStoreMembership[] = stores;
+let mockSearchParams = new URLSearchParams();
+const mockPathname = '/operator/marketplaces/mp-1';
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'mp-1' }),
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: () => mockSearchParams,
+  usePathname: () => mockPathname,
 }));
 
 vi.mock('@mobazha/core', async importOriginal => {
@@ -350,6 +359,7 @@ function goToOperatorTab(tab: 'overview' | 'curation' | 'sellers' | 'settings') 
 describe('MarketplaceOperatorDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
     currentMarketplace = marketplace;
     currentStores = stores;
     mockReviewEventsError = null;
@@ -408,6 +418,43 @@ describe('MarketplaceOperatorDetailPage', () => {
     goToOperatorTab('settings');
     expect(screen.getByTestId('operator-tab-content-settings')).toBeInTheDocument();
     expect(screen.getByTestId('settings-card')).toBeInTheDocument();
+  });
+
+  it('initializes active tab from a valid tab query (deep link)', () => {
+    mockSearchParams = new URLSearchParams('tab=sellers');
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-tab-content-sellers')).toBeInTheDocument();
+    expect(screen.queryByTestId('operator-tab-content-overview')).not.toBeInTheDocument();
+  });
+
+  it('falls back to overview when tab query is invalid', () => {
+    mockSearchParams = new URLSearchParams('tab=invalid-tab');
+    render(<MarketplaceOperatorDetailPage />);
+
+    expect(screen.getByTestId('operator-tab-content-overview')).toBeInTheDocument();
+    expect(screen.queryByTestId('operator-tab-content-settings')).not.toBeInTheDocument();
+  });
+
+  it('updates URL tab query and preserves unrelated params when tab changes', () => {
+    mockSearchParams = new URLSearchParams('foo=bar&sort=asc');
+    render(<MarketplaceOperatorDetailPage />);
+
+    goToOperatorTab('settings');
+    expect(mockReplace).toHaveBeenCalledWith(
+      '/operator/marketplaces/mp-1?foo=bar&sort=asc&tab=settings',
+      { scroll: false }
+    );
+  });
+
+  it('reacts to tab query changes after initial render', () => {
+    const { rerender } = render(<MarketplaceOperatorDetailPage />);
+    expect(screen.getByTestId('operator-tab-content-overview')).toBeInTheDocument();
+
+    mockSearchParams = new URLSearchParams('foo=bar&tab=curation');
+    rerender(<MarketplaceOperatorDetailPage />);
+    expect(screen.getByTestId('operator-tab-content-curation')).toBeInTheDocument();
+    expect(screen.queryByTestId('operator-tab-content-overview')).not.toBeInTheDocument();
   });
 
   it('keeps the curation tab active across the loading refresh after a mutation', () => {
@@ -512,6 +559,34 @@ describe('MarketplaceOperatorDetailPage', () => {
 
     fireEvent.click(resumeButton);
     await waitFor(() => expect(mockResume).toHaveBeenCalledTimes(1));
+  });
+
+  it('shows publish-changes action for published marketplace with unpublished draft and calls publish', async () => {
+    currentMarketplace = {
+      ...marketplace,
+      status: 'published',
+      hasUnpublishedChanges: true,
+    };
+    render(<MarketplaceOperatorDetailPage />);
+
+    const publishChangesButton = screen.getByTestId('operator-marketplace-publish');
+    expect(publishChangesButton).toBeInTheDocument();
+    expect(screen.getByTestId('operator-marketplace-suspend')).toBeInTheDocument();
+    fireEvent.click(publishChangesButton);
+
+    await waitFor(() => expect(mockPublish).toHaveBeenCalledTimes(1));
+  });
+
+  it('shows preview draft link only when marketplace is not archived', () => {
+    const { rerender } = render(<MarketplaceOperatorDetailPage />);
+    expect(screen.getByTestId('operator-marketplace-preview-link')).toBeInTheDocument();
+
+    currentMarketplace = {
+      ...marketplace,
+      status: 'archived',
+    };
+    rerender(<MarketplaceOperatorDetailPage />);
+    expect(screen.queryByTestId('operator-marketplace-preview-link')).not.toBeInTheDocument();
   });
 
   it('wires settings save to useOperatorMarketplace.update and shows success toast', async () => {

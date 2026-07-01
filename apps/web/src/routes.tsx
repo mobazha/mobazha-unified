@@ -176,6 +176,10 @@ if (!__OUTPOST__) {
       element: protectedPage(() => import('./app/operator/marketplaces/[id]/page')),
     },
     {
+      path: '/operator/marketplaces/:id/preview',
+      element: protectedPage(() => import('./app/operator/marketplaces/[id]/preview/page')),
+    },
+    {
       path: '/marketplace/:slug/sell',
       element: protectedPage(() => import('./app/marketplace/[slug]/sell/page')),
     },
