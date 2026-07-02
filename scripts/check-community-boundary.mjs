@@ -41,7 +41,20 @@ for (const forbidden of ['@reown/', '@walletconnect/']) {
   }
 }
 
-const sourceExtensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
+const publicTextExtensions = new Set([
+  '.css',
+  '.html',
+  '.js',
+  '.jsx',
+  '.json',
+  '.md',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.tsx',
+  '.yaml',
+  '.yml',
+]);
 const privateProductName = ['out', 'post'].join('');
 const privateIdentity = new RegExp(
   `\\b(?:${privateProductName}|mobazha[-_ ]commercial|commercial[-_ ]node|asgardium|the market place)\\b`,
@@ -49,18 +62,18 @@ const privateIdentity = new RegExp(
 );
 const privateImplementation = /\b(?:monero|xmr)\b/i;
 
-function scanSource(path) {
+function scanPublicTree(path) {
   for (const entry of readdirSync(path, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name === '__tests__' || entry.name === 'dist') continue;
+    if (entry.name === 'node_modules' || entry.name === 'dist') continue;
     const child = join(path, entry.name);
     if (entry.isDirectory()) {
-      scanSource(child);
+      scanPublicTree(child);
       continue;
     }
     if (privateImplementation.test(child)) {
       fail(`private implementation path leaked into public tree: ${child}`);
     }
-    if (!sourceExtensions.has(extname(entry.name))) continue;
+    if (!publicTextExtensions.has(extname(entry.name))) continue;
     const source = readFileSync(child, 'utf8');
     if (privateIdentity.test(source)) {
       fail(`private product identity leaked into production source: ${child}`);
@@ -71,7 +84,12 @@ function scanSource(path) {
   }
 }
 
-scanSource('apps/web/src');
-scanSource('apps/web/e2e');
-scanSource('packages/core');
+for (const publicRoot of [
+  'apps/web/src',
+  'apps/web/e2e',
+  'packages/core',
+  'packages/commerce-web',
+]) {
+  scanPublicTree(publicRoot);
+}
 console.log('community boundary check passed');
