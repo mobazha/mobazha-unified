@@ -33,14 +33,7 @@ export {
   HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY,
 } from './apiPaths';
 
-export {
-  getAdminStorePaymentsPath,
-  getAdminFinancePath,
-  getAdminXmrWalletPath,
-  getAdminXmrWithdrawPath,
-  getAdminXmrSecretsPath,
-  getAdminXmrTransfersPath,
-} from './adminPaths';
+export { getAdminStorePaymentsPath } from './adminPaths';
 
 export interface AppConfig {
   /** Use mock data instead of real API */

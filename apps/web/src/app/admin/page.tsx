@@ -35,11 +35,8 @@ import {
   ListSkeleton,
   SetupChecklist,
   MnemonicBackupBanner,
-  MoneroPoolStatusBanner,
-  XmrWalletSetupBanner,
   ActionItems,
   SupplyNeedsAttentionCard,
-  getOrderCurrencyCode,
 } from '@/components/admin/dashboard';
 import OnboardingWizard, { isOnboardingDismissed } from '@/components/admin/OnboardingWizard';
 import StandaloneSetupWizard from '@/components/admin/StandaloneSetupWizard';
@@ -195,7 +192,6 @@ export default function AdminDashboardPage() {
     return (
       <div data-testid="admin-dashboard">
         <DashboardHeader name={displayName} />
-        <XmrWalletSetupBanner />
         <SetupChecklist hasProducts={false} productsLoading={false} />
         {profile?.visibility === 'private' && (
           <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
@@ -228,10 +224,6 @@ export default function AdminDashboardPage() {
       <SetupChecklist hasProducts={hasProducts} productsLoading={productsLoading} />
 
       <MnemonicBackupBanner />
-
-      <XmrWalletSetupBanner />
-
-      <MoneroPoolStatusBanner />
 
       {profile?.visibility === 'private' && (
         <div className="flex items-start gap-3 p-4 mb-4 rounded-lg bg-primary/10 border border-primary/20">
@@ -306,7 +298,9 @@ export default function AdminDashboardPage() {
           color="success"
           loading={salesLoading}
           href={
-            typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '/admin/orders' : '/admin/analytics'
+            typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__
+              ? '/admin/orders'
+              : '/admin/analytics'
           }
         />
         <StatCard

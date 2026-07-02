@@ -55,12 +55,11 @@ const SOVEREIGN_SETTINGS = {
   storeModerators: [],
   mispaymentBuffer: 1,
   version: '',
-  preferredCurrencies: ['LTC', 'XMR'],
+  preferredCurrencies: ['BTC', 'BCH', 'LTC'],
 };
 
 const SOVEREIGN_EXCHANGE_RATES = {
   LTC: { last: 80 },
-  XMR: { last: 170 },
   BTC: { last: 65000 },
 };
 
@@ -163,7 +162,7 @@ export async function mockSovereignSessionAPIs(page: Page): Promise<void> {
       body: JSON.stringify({
         data: [
           { code: 'LTC', name: 'Litecoin', divisibility: 8, currencyType: 'crypto' },
-          { code: 'XMR', name: 'Monero', divisibility: 12, currencyType: 'crypto' },
+          { code: 'BCH', name: 'Bitcoin Cash', divisibility: 8, currencyType: 'crypto' },
         ],
       }),
     })

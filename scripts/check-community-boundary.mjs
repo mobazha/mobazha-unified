@@ -42,23 +42,36 @@ for (const forbidden of ['@reown/', '@walletconnect/']) {
 }
 
 const sourceExtensions = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
-const privateIdentity = /\b(?:outpost|mobazha[-_ ]commercial|commercial[-_ ]node)\b/i;
+const privateProductName = ['out', 'post'].join('');
+const privateIdentity = new RegExp(
+  `\\b(?:${privateProductName}|mobazha[-_ ]commercial|commercial[-_ ]node|asgardium|the market place)\\b`,
+  'i'
+);
+const privateImplementation = /\b(?:monero|xmr)\b/i;
 
 function scanSource(path) {
   for (const entry of readdirSync(path, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name === '__tests__') continue;
+    if (entry.name === 'node_modules' || entry.name === '__tests__' || entry.name === 'dist') continue;
     const child = join(path, entry.name);
     if (entry.isDirectory()) {
       scanSource(child);
       continue;
     }
+    if (privateImplementation.test(child)) {
+      fail(`private implementation path leaked into public tree: ${child}`);
+    }
     if (!sourceExtensions.has(extname(entry.name))) continue;
-    if (privateIdentity.test(readFileSync(child, 'utf8'))) {
+    const source = readFileSync(child, 'utf8');
+    if (privateIdentity.test(source)) {
       fail(`private product identity leaked into production source: ${child}`);
+    }
+    if (privateImplementation.test(source)) {
+      fail(`private implementation leaked into public source: ${child}`);
     }
   }
 }
 
 scanSource('apps/web/src');
+scanSource('apps/web/e2e');
 scanSource('packages/core');
 console.log('community boundary check passed');

@@ -61,8 +61,6 @@ const TOKEN_SYMBOL_MAP: Record<string, string> = {
   CFX: 'cfx',
   // MBZ
   MBZ: 'mbz',
-  // Monero
-  XMR: 'xmr',
 };
 
 // 法币映射 - 用于法币时显示默认图标
@@ -90,7 +88,7 @@ const FIAT_CURRENCIES = new Set([
 ]);
 
 // CDN 中不存在的 symbol，直接从 local 开始加载
-const CDN_MISSING = new Set(['base', 'mbz', 'xmr', 'arbitrum', 'sol']);
+const CDN_MISSING = new Set(['base', 'mbz', 'arbitrum', 'sol']);
 
 // 本地图标文件名映射（用于 fallback）
 const LOCAL_ICON_MAP: Record<string, string> = {
@@ -123,7 +121,6 @@ const LOCAL_ICON_MAP: Record<string, string> = {
   trx: 'TRX',
   tron: 'TRX',
   mbz: 'MBZ',
-  xmr: 'XMR',
 };
 
 export interface TokenIconProps {

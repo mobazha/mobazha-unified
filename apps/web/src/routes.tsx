@@ -386,23 +386,6 @@ if (!__SOVEREIGN__) {
         },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
-        { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
-        {
-          path: 'finance/xmr-wallet',
-          element: lazyPage(() => import('./app/admin/finance/xmr-wallet/page')),
-        },
-        {
-          path: 'finance/xmr-withdraw',
-          element: lazyPage(() => import('./app/admin/finance/xmr-withdraw/page')),
-        },
-        {
-          path: 'finance/xmr-secrets',
-          element: lazyPage(() => import('./app/admin/finance/xmr-secrets/page')),
-        },
-        {
-          path: 'finance/xmr-transfers',
-          element: lazyPage(() => import('./app/admin/finance/xmr-transfers/page')),
-        },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
         {
           path: 'discounts/new',
@@ -450,11 +433,6 @@ if (!__SOVEREIGN__) {
         {
           path: 'settings/shipping',
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
-        },
-        {
-          // Sovereign-only: Monero NodePool admin (linked from payments page)
-          path: 'settings/monero-nodes',
-          element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
         {
           path: 'settings/policies',
@@ -692,24 +670,6 @@ if (__SOVEREIGN__) {
         { index: true, element: lazyPage(() => import('./app/admin/page')) },
         { path: 'products', element: lazyPage(() => import('./app/admin/products/page')) },
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
-        { path: 'finance', element: lazyPage(() => import('./app/admin/finance/page')) },
-        {
-          // Canonical Monero wallet ops under Funds (sidebar); keep registered here for Sovereign builds.
-          path: 'finance/xmr-wallet',
-          element: lazyPage(() => import('./app/admin/finance/xmr-wallet/page')),
-        },
-        {
-          path: 'finance/xmr-withdraw',
-          element: lazyPage(() => import('./app/admin/finance/xmr-withdraw/page')),
-        },
-        {
-          path: 'finance/xmr-secrets',
-          element: lazyPage(() => import('./app/admin/finance/xmr-secrets/page')),
-        },
-        {
-          path: 'finance/xmr-transfers',
-          element: lazyPage(() => import('./app/admin/finance/xmr-transfers/page')),
-        },
         {
           path: 'collections',
           element: lazyPage(() => import('./app/admin/collections/page')),
@@ -730,11 +690,6 @@ if (__SOVEREIGN__) {
         {
           path: 'settings/shipping',
           element: lazyPage(() => import('./app/admin/settings/shipping/page')),
-        },
-        {
-          // Sovereign-only: Monero NodePool admin (linked from /admin/finance)
-          path: 'settings/monero-nodes',
-          element: lazyPage(() => import('./app/admin/settings/monero-nodes/page')),
         },
         {
           path: 'settings/policies',

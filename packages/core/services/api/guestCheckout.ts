@@ -121,8 +121,8 @@ export interface GuestCheckoutSettings {
   acceptedCoins: string[];
   /**
    * Runtime-available subset of acceptedCoins computed by the node.
-   * Coins without the required sidecar (e.g. XMR without monero-wallet-rpc)
-   * are excluded. Buyer-facing payment selectors MUST use this field.
+   * Coins without their required runtime capability are excluded.
+   * Buyer-facing payment selectors MUST use this field.
    * Falls back to acceptedCoins when the server is an older build that
    * does not yet return this field.
    */
@@ -169,7 +169,7 @@ export interface GuestOrderSummary {
   paymentCoin: string;
   paymentAmount: string;
   priceCurrency: string;
-  /** Listing/payment atomic-unit scale (e.g. XMR = 12); optional on older nodes. */
+  /** Listing/payment atomic-unit scale; optional on older nodes. */
   priceDivisibility?: number;
   items: GuestOrderItemResponse[];
   contactEmail?: string;

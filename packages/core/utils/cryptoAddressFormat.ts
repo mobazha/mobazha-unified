@@ -29,12 +29,6 @@ export function isTronBase58Address(address: string): boolean {
   return TRON_ADDRESS_PATTERN.test(trimmed);
 }
 
-export function isMoneroAddress(address: string): boolean {
-  const trimmed = address.trim();
-  if (trimmed.length < 95 || trimmed.length > 110) return false;
-  return trimmed[0] === '4' || trimmed[0] === '8';
-}
-
 /** Permissive UTXO-family length check (BTC/BCH/LTC/ZEC). */
 export function isPermissiveUtxoAddress(address: string): boolean {
   const trimmed = address.trim();
@@ -42,13 +36,12 @@ export function isPermissiveUtxoAddress(address: string): boolean {
   return !/\s/.test(trimmed);
 }
 
-export type PaymentAssetFamily = 'evm' | 'solana' | 'tron' | 'monero' | 'utxo' | 'unknown';
+export type PaymentAssetFamily = 'evm' | 'solana' | 'tron' | 'utxo' | 'unknown';
 
 export function resolvePaymentAssetFamily(assetId: string): PaymentAssetFamily {
   if (assetId.startsWith('crypto:eip155:')) return 'evm';
   if (assetId.startsWith('crypto:solana:')) return 'solana';
   if (assetId.includes(':tron:') || assetId.endsWith(':trx:native')) return 'tron';
-  if (assetId.includes(':monero:') || assetId.includes(':xmr:')) return 'monero';
   if (assetId.startsWith('crypto:bip122:') || assetId === 'crypto:bitcoincash:mainnet:native') {
     return 'utxo';
   }

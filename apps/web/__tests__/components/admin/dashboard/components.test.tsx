@@ -40,7 +40,7 @@ vi.mock('@mobazha/core', () => ({
   }),
   formatPrice: (amount: number, currency: string) => `${amount} ${currency}`,
   fromMinimalUnit: (amount: number | string, currency: string) => {
-    const decimals: Record<string, number> = { BTC: 8, ETH: 18, XMR: 12 };
+    const decimals: Record<string, number> = { BTC: 8, ETH: 18, LTC: 8 };
     return Number(amount) / 10 ** (decimals[currency] ?? 2);
   },
   getImageUrl: (hash: string) => `https://img.test/${hash}`,

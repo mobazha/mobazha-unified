@@ -150,9 +150,8 @@ export function ProductDetail({
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(peerID || product?.vendorID?.peerID);
 
-  // Sovereign: guest checkout via XMR is always available; skip fiat/crypto method check.
   const paymentAvailable =
-    __SOVEREIGN__ || paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
+    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
   const displayAcceptedCurrencies = useMemo(
     () =>
@@ -605,8 +604,8 @@ export function ProductDetail({
   const rwaEscrowTimeoutSeconds =
     product.metadata?.rwaEscrowTimeoutSeconds || product.metadata?.escrowTimeoutSeconds || 86400;
   const rawTags = product.item.tags || [];
-  const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
-  const relatedListingsScopeTag = useMemo(() => resolveRelatedListingsScopeTag(rawTags), [rawTags]);
+  const tags = filterPublicProductDisplayTags(rawTags);
+  const relatedListingsScopeTag = resolveRelatedListingsScopeTag(rawTags);
   const category = product.item.productType || '';
 
   const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
@@ -1050,7 +1049,7 @@ export function ProductDetail({
             {/* Verified Moderator Badge — hidden in Sovereign (no moderator/arbitration system) */}
             {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
-            {/* Buyer Protection — hidden in Sovereign (XMR direct pay, no escrow/arbitration) */}
+            {/* Buyer Protection is unavailable in direct-payment distributions. */}
             {!isOwnProduct && !__SOVEREIGN__ && <BuyerProtectionBanner />}
 
             {/* Desktop action card: seller actions vs buyer purchase */}

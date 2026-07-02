@@ -32,31 +32,3 @@ describe('isTransientRequestError', () => {
     expect(isTransientRequestError(timeout)).toBe(false);
   });
 });
-
-describe('isWalletOperational', () => {
-  it('is true only when rpc is connected or wallet is open', async () => {
-    const { isWalletOperational } = await import('../../../services/api/monero');
-
-    expect(isWalletOperational({ connected: true, endpoint: 'x' }, null)).toBe(true);
-    expect(
-      isWalletOperational(null, {
-        exists: true,
-        walletOpen: true,
-        backupConfirmed: true,
-        createdAt: 1,
-      })
-    ).toBe(true);
-    expect(
-      isWalletOperational(null, {
-        exists: true,
-        walletOpen: false,
-        address: '44abc',
-        backupConfirmed: true,
-        createdAt: 1,
-      })
-    ).toBe(false);
-    expect(isWalletOperational({ connected: false, endpoint: 'x', error: 'down' }, null)).toBe(
-      false
-    );
-  });
-});

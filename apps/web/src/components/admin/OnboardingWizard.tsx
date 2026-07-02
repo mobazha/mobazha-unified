@@ -10,17 +10,12 @@ import {
   getImageUrl,
   useReceivingAccounts,
   getAdminStorePaymentsPath,
-  getAdminXmrWalletPath,
   useFiatPaymentVisible,
 } from '@mobazha/core';
 import { isSovereignMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
 import { createProfile as apiCreateProfile } from '@mobazha/core/services/api/profile';
-import {
-  getXMRWalletSetupStatus,
-  type MoneroWalletSetupStatus,
-} from '@mobazha/core/services/api/monero';
 import {
   Store,
   ShoppingBag,
@@ -166,31 +161,13 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const isSovereign = useMemo(() => isSovereignMode(), []);
 
   const { data: receivingAccounts } = useReceivingAccounts();
-  const [xmrWalletStatus, setXmrWalletStatus] = useState<MoneroWalletSetupStatus | null>(null);
 
-  useEffect(() => {
-    if (!isSovereign) return;
-    let cancelled = false;
-    getXMRWalletSetupStatus()
-      .then(status => {
-        if (!cancelled) setXmrWalletStatus(status);
-      })
-      .catch(() => {
-        if (!cancelled) setXmrWalletStatus(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isSovereign]);
+  const hasPayment = useMemo(
+    () => Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false),
+    [receivingAccounts]
+  );
 
-  const hasPayment = useMemo(() => {
-    if (isSovereign) {
-      return Boolean(xmrWalletStatus?.exists);
-    }
-    return Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false);
-  }, [isSovereign, receivingAccounts, xmrWalletStatus]);
-
-  const paymentsSetupPath = isSovereign ? getAdminXmrWalletPath() : getAdminStorePaymentsPath();
+  const paymentsSetupPath = getAdminStorePaymentsPath();
 
   const TOTAL_STEPS = 4;
   const profileAlreadyComplete = useMemo(() => isProfileComplete(profile), [profile]);
@@ -717,28 +694,6 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
           )}
 
-          {!hasPayment && isSovereign && (
-            <div
-              role="alert"
-              className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4"
-            >
-              <Wallet className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">
-                  {t('admin.dashboard.xmrWalletMissingTitle', {
-                    defaultValue: 'Monero wallet not set up',
-                  })}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {t('admin.dashboard.xmrWalletMissingDesc', {
-                    defaultValue:
-                      'XMR payments will fail until you create or restore a wallet. The setup takes about a minute.',
-                  })}
-                </p>
-              </div>
-            </div>
-          )}
-
           <Link
             href={paymentsSetupPath}
             className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent/50 transition-colors group"
@@ -748,21 +703,12 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">
-                {isSovereign
-                  ? t('admin.onboarding.setupXmrWallet', {
-                      defaultValue: 'Set up Monero wallet',
-                    })
-                  : t('admin.onboarding.setupPayments') || 'Set up payment methods'}
+                {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {isSovereign
-                  ? t('admin.onboarding.setupXmrWalletDesc', {
-                      defaultValue:
-                        'Create or restore the wallet that receives buyer payments on this store.',
-                    })
-                  : fiatVisible
-                    ? t('admin.onboarding.setupPaymentsDesc')
-                    : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
+                {fiatVisible
+                  ? t('admin.onboarding.setupPaymentsDesc')
+                  : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

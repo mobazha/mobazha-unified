@@ -90,9 +90,7 @@ export interface PaymentRPCStatusEntry {
   error?: string;
 }
 
-export interface PaymentRPCStatusResponse {
-  xmr?: PaymentRPCStatusEntry;
-}
+export type PaymentRPCStatusResponse = Record<string, PaymentRPCStatusEntry>;
 
 // --- Setup API ---
 

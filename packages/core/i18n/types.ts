@@ -4045,8 +4045,6 @@ export interface TranslationResource {
       setupPayments?: string;
       setupPaymentsDesc?: string;
       setupPaymentsDescCryptoOnly?: string;
-      setupXmrWallet?: string;
-      setupXmrWalletDesc?: string;
       paymentConfigured?: string;
       storeName?: string;
       storeNamePlaceholder?: string;

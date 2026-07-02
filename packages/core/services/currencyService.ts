@@ -71,8 +71,8 @@ export function getLastFetchTime(): number | null {
 export async function fetchExchangeRates(forceRefresh = false): Promise<ExchangeRates> {
   const now = Date.now();
 
-  // Sovereign mode is fully crypto-native — listings are priced natively in
-  // XMR with no fiat conversion layer. Skip the external exchange
+  // Sovereign mode is fully crypto-native and has no fiat conversion layer.
+  // Skip the external exchange
   // rate fetch entirely to preserve the zero-outbound guarantee. Returning
   // an empty rate map signals to callers that no fiat ≈ display should
   // be rendered.

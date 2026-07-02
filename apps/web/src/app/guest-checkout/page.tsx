@@ -147,7 +147,7 @@ export default function GuestCheckoutPage() {
   const [contactEmail, setContactEmail] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [acceptedCoins, setAcceptedCoins] = useState<string[]>([]);
-  const [coinsLoading, setCoinsLoading] = useState(false);
+  const [coinsLoading, setCoinsLoading] = useState(true);
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
   const supplyQuote = useGuestSupplyQuote(items, items.length > 0);
 
@@ -162,12 +162,13 @@ export default function GuestCheckoutPage() {
     getGuestCheckoutSettings()
       .then(res => {
         // Use availableCoins (runtime-filtered by the node) so payment methods
-        // that lack the required sidecar (e.g. XMR without monero-wallet-rpc)
+        // that lack a required runtime capability
         // are never shown to the buyer.
         const coins = Array.isArray(res.availableCoins) ? res.availableCoins : [];
         setAcceptedCoins(sanitizeAcceptedPaymentCoins(coins));
       })
-      .catch(() => setAcceptedCoins([]));
+      .catch(() => setAcceptedCoins([]))
+      .finally(() => setCoinsLoading(false));
   }, [items]);
 
   const stepLabels: Record<string, string> = {

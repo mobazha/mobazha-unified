@@ -1,22 +1,17 @@
 'use client';
 
-import React, { useState, lazy, Suspense, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useI18n, getAdminFinancePath, useFiatPaymentVisible } from '@mobazha/core';
+import React, { useState, lazy, Suspense } from 'react';
+import { useI18n, useFiatPaymentVisible } from '@mobazha/core';
 import { ChevronDown, Wallet, CreditCard, Coins, ExternalLink } from 'lucide-react';
 import { SettingsPageHeader, SettingsSection } from '@/components/SettingsLayout';
 
-const CryptoReceivingSection = __SOVEREIGN__
-  ? () => null
-  : lazy(() =>
-      import('./CryptoReceivingSection').then(m => ({ default: m.CryptoReceivingSection }))
-    );
+const CryptoReceivingSection = lazy(() =>
+  import('./CryptoReceivingSection').then(m => ({ default: m.CryptoReceivingSection }))
+);
 
-const PaymentProvidersSection = __SOVEREIGN__
-  ? () => null
-  : lazy(() =>
-      import('./PaymentProvidersSection').then(m => ({ default: m.PaymentProvidersSection }))
-    );
+const PaymentProvidersSection = lazy(() =>
+  import('./PaymentProvidersSection').then(m => ({ default: m.PaymentProvidersSection }))
+);
 
 const GuestCheckoutPolicySection = lazy(() =>
   import('@/components/admin/policy/GuestCheckoutPolicySection').then(m => ({
@@ -102,17 +97,6 @@ function PayoutInfoSection() {
 export default function AdminPaymentsPage() {
   const { t } = useI18n();
   const fiatVisible = useFiatPaymentVisible();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!__SOVEREIGN__) return;
-    router.replace(getAdminFinancePath());
-  }, [router]);
-
-  if (__SOVEREIGN__) {
-    return <div data-testid="admin-payments" className="min-h-[120px]" aria-busy="true" />;
-  }
-
   const description = fiatVisible
     ? t('admin.payments.pageDesc')
     : t('admin.payments.pageDescCryptoOnly');
