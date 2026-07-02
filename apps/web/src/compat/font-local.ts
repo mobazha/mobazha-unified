@@ -3,7 +3,13 @@
 
 /** Vite compatibility layer for the subset of next/font/local used by the shared frontend. */
 interface LocalFontConfig {
+  src?: string | string[];
   variable?: string;
+  weight?: string;
+  style?: string;
+  display?: string;
+  preload?: boolean;
+  fallback?: string[];
 }
 
 interface LocalFontResult {
