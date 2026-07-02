@@ -7912,7 +7912,7 @@ export interface paths {
     };
     /**
      * Unified payment session view for an order
-     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, Safe-backed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).
+     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (persisted monitored-address flows), escrow_v1 (legacy signed escrow flows), and provider_checkout (hosted payment providers).
      */
     get: operations['orders-get-payment-session'];
     put?: never;

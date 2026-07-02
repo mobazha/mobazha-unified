@@ -354,14 +354,6 @@ export const TOKENS: TokenConfig[] = [
     isNative: false,
     decimals: 6,
   },
-  {
-    id: 'XMR',
-    assetId: 'crypto:monero:mainnet:native',
-    token: 'XMR',
-    chain: 'XMR',
-    isNative: true,
-    decimals: 12,
-  },
 ];
 
 const TOKENS_BY_ID = new Map<string, TokenConfig>(
@@ -609,14 +601,6 @@ export const CHAINS: PaymentChainConfig[] = [
     type: 'blockchain',
     isExternalWallet: true,
     disabled: true,
-  },
-  {
-    id: 'XMR',
-    name: 'Monero',
-    iconCode: 'XMR',
-    color: '#ff6600',
-    type: 'blockchain',
-    isExternalWallet: true,
   },
   {
     id: 'ETH',
@@ -968,10 +952,6 @@ export function getCompatibleChainTypes(paymentCoin?: string, blockchain?: strin
 
       if (parsed.namespace === 'zcash') {
         return getChainTypeAliases('ZEC');
-      }
-
-      if (parsed.namespace === 'monero') {
-        return getChainTypeAliases('XMR');
       }
 
       return [];

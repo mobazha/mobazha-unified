@@ -43,7 +43,6 @@ const RUNTIME_PAYMENT_DISPLAY: Record<string, RuntimePaymentDisplayMethod> = {
   ARBITRUM: { id: 'ARBITRUM', name: 'Arbitrum' },
   SOL: { id: 'SOL', name: 'Solana' },
   TRX: { id: 'TRX', name: 'TRON' },
-  XMR: { id: 'XMR', name: 'Monero' },
   USDT: { id: 'USDT', name: 'Tether (USDT)' },
   USDC: { id: 'USDC', name: 'USD Coin (USDC)' },
 };
@@ -55,7 +54,6 @@ const RUNTIME_PAYMENT_ALIASES: Record<string, string> = {
   ARB: 'ARBITRUM',
   SOLANA: 'SOL',
   TRON: 'TRX',
-  MONERO: 'XMR',
 };
 
 /** Marketing projection from the backend-authoritative capability snapshot. */

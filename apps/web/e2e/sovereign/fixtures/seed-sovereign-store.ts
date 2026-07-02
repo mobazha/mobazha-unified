@@ -11,8 +11,6 @@ import type { APIRequestContext } from '@playwright/test';
 const DUMMY_CID = 'QmfQkD8pBSBCBxWEwFSu4XaDVSWK6bjnNuaWZjMyQbyDub';
 
 export const BTC_ASSET_ID = 'crypto:bip122:000000000019d6689c085ae165831e93:native';
-export const XMR_ASSET_ID = 'crypto:monero:mainnet:native';
-
 function basicAuth(password: string): string {
   return 'Basic ' + Buffer.from(`admin:${password}`).toString('base64');
 }

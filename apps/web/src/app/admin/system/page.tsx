@@ -624,36 +624,35 @@ export default function SystemPage() {
             {t('system.rpc.title', { defaultValue: 'Payment RPC Status' })}
           </h2>
           <div className="space-y-3">
-            {rpcStatus.xmr && (
-              <div className="flex items-center gap-3">
+            {Object.entries(rpcStatus).map(([id, status]) => (
+              <div key={id} className="flex items-center gap-3">
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${rpcStatus.xmr.connected ? 'bg-green-500' : 'bg-destructive'}`}
+                  className={`w-2.5 h-2.5 rounded-full ${status.connected ? 'bg-green-500' : 'bg-destructive'}`}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground">Monero (wallet-rpc)</div>
+                  <div className="text-sm font-medium text-foreground">{id}</div>
                   <div className="text-xs text-muted-foreground font-mono truncate">
-                    {rpcStatus.xmr.endpoint || 'Not configured'}
+                    {status.endpoint || 'Not configured'}
                   </div>
-                  {rpcStatus.xmr.blockHeight != null && (
+                  {status.blockHeight != null && (
                     <div className="text-xs text-muted-foreground">
-                      Block: {rpcStatus.xmr.blockHeight.toLocaleString()}
+                      Block: {status.blockHeight.toLocaleString()}
                     </div>
                   )}
                 </div>
                 <span
-                  className={`text-xs font-medium ${rpcStatus.xmr.connected ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
+                  className={`text-xs font-medium ${status.connected ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
                 >
-                  {rpcStatus.xmr.connected
+                  {status.connected
                     ? t('system.rpc.connected', { defaultValue: 'Connected' })
                     : t('system.rpc.disconnected', { defaultValue: 'Disconnected' })}
                 </span>
               </div>
-            )}
-            {!rpcStatus.xmr && (
+            ))}
+            {Object.keys(rpcStatus).length === 0 && (
               <p className="text-sm text-muted-foreground">
                 {t('system.rpc.noneConfigured', {
-                  defaultValue:
-                    'No payment RPC configured. Go to Settings → Payments to set up XMR wallet-rpc.',
+                  defaultValue: 'No payment RPC configured. Go to Settings → Payments to continue.',
                 })}
               </p>
             )}

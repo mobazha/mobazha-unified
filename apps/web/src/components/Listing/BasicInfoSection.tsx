@@ -6,7 +6,9 @@ import {
   useI18n,
   calculateDiscountPercent,
   STANDARD_PRODUCT_TYPES,
-  isSovereignMode,
+  useRuntimeConfig,
+  useFiatPaymentVisible,
+  projectRuntimeCryptoPaymentMethods,
 } from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
 import {
@@ -74,23 +76,13 @@ interface BasicInfoSectionProps {
   aiLoadingAction?: string | null;
 }
 
-// Sovereign is crypto-native: listings are priced natively in XMR (the only
-// payment coin supported), with no fiat conversion layer.
-// SaaS/full-node mode retains the full fiat+crypto picker.
-const SOVEREIGN_CURRENCIES = [{ value: 'XMR', label: 'XMR (ɱ)' }];
-
-const SAAS_CURRENCIES = [
+const FIAT_CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
   { value: 'CNY', label: 'CNY (¥)' },
   { value: 'EUR', label: 'EUR (€)' },
   { value: 'GBP', label: 'GBP (£)' },
   { value: 'JPY', label: 'JPY (¥)' },
-  { value: 'BTC', label: 'BTC (₿)' },
-  { value: 'ETH', label: 'ETH (Ξ)' },
-  { value: 'USDT', label: 'USDT' },
 ];
-
-const currencies = isSovereignMode() ? SOVEREIGN_CURRENCIES : SAAS_CURRENCIES;
 
 const conditions: { value: ProductCondition; labelKey: string }[] = [
   { value: 'NEW', labelKey: 'listing.conditions.new' },
@@ -146,6 +138,19 @@ export function BasicInfoSection({
   aiLoadingAction,
 }: BasicInfoSectionProps) {
   const { t } = useI18n();
+  const runtimeConfig = useRuntimeConfig();
+  const fiatVisible = useFiatPaymentVisible();
+  const currencies = React.useMemo(() => {
+    const projected = projectRuntimeCryptoPaymentMethods(runtimeConfig).map(method => ({
+      value: method.id,
+      label: `${method.id} (${method.name})`,
+    }));
+    const available = [...(fiatVisible ? FIAT_CURRENCIES : []), ...projected];
+    if (pricingCurrency && !available.some(currency => currency.value === pricingCurrency)) {
+      available.push({ value: pricingCurrency, label: pricingCurrency });
+    }
+    return available;
+  }, [fiatVisible, pricingCurrency, runtimeConfig]);
 
   const isPhysicalGood = contractType === 'PHYSICAL_GOOD';
   const showCondition = isPhysicalGood;
@@ -171,7 +176,6 @@ export function BasicInfoSection({
       ETH: 'Ξ',
       USDT: '$',
       LTC: 'Ł',
-      XMR: 'ɱ',
     };
     return symbols[pricingCurrency] || pricingCurrency;
   }, [pricingCurrency]);

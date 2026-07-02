@@ -246,19 +246,6 @@ export type {
   GumroadImportError,
 } from './gumroadImport';
 
-// Monero (XMR) admin API — Sovereign only
-export * as moneroApi from './monero';
-export type {
-  MoneroNodeInfo,
-  MoneroNodePoolSnapshot,
-  MoneroNodeAddRequest,
-  MoneroWithdrawRequest,
-  MoneroWithdrawResult,
-  MoneroSweepAllRequest,
-  MoneroSweepAllResult,
-  Piconero,
-} from './monero';
-
 // Sales Channels API (Store Links + Store Bot)
 export { resolveStoreShortCode } from './salesChannels';
 

@@ -786,15 +786,11 @@ export default function StandaloneSetupWizard({
                   {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {isSovereignMode()
-                    ? t('sovereign.setupPaymentsDesc', {
-                        defaultValue: 'Configure XMR wallet-rpc endpoint',
-                      })
-                    : fiatVisible
-                      ? t('admin.onboarding.setupPaymentsDesc') ||
-                        'Add crypto wallets, connect Stripe or PayPal'
-                      : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
-                        'Add crypto receiving addresses for your store'}
+                  {fiatVisible
+                    ? t('admin.onboarding.setupPaymentsDesc') ||
+                      'Add crypto wallets, connect Stripe or PayPal'
+                    : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
+                      'Add crypto receiving addresses for your store'}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />

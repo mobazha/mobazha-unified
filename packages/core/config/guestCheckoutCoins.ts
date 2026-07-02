@@ -28,7 +28,6 @@ const GUEST_SUPPORTED_CHAIN_IDS = [
   'LTC',
   'BCH',
   'ZEC',
-  'XMR',
   'BSC',
   'MATIC',
   'BASE',

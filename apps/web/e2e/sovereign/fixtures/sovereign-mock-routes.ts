@@ -2,7 +2,7 @@
  * Sovereign Mock API Routes
  *
  * Mock data and route handlers for Sovereign-specific E2E tests.
- * Sovereign only supports LTC + XMR (no BTC/ETH/EVM chains).
+ * Payment methods are projected from the runtime capability snapshot.
  *
  * All JSON responses use the Phase G envelope: { data: T } or { error: {...} }
  */
@@ -59,42 +59,9 @@ const MOCK_GUEST_ORDER_STATUS_LTC = {
   updatedAt: new Date().toISOString(),
 };
 
-// ── Guest Checkout mock data (XMR) ──────────────────────────────────────────
-
-const MOCK_GUEST_ORDER_XMR = {
-  orderToken: 'gst_sovereign_xmr_token_xyz789',
-  paymentAddress: '4A2BtPyx2aHGY7kR1Pqx8MQXN2E9a4NXhM5cmJmSPpbLFbzaaWLQiPmS8LqX6qFNyuaKTZrHcX1',
-  paymentAmount: '165000000000',
-  paymentCoin: 'XMR',
-  priceCurrency: 'USD',
-  priceDivisibility: 2,
-  expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-  items: [
-    {
-      listingHash: 'QmSovereignHash002',
-      listingTitle: 'Encrypted USB Drive (64GB)',
-      listingSlug: 'encrypted-usb-drive-64gb',
-      sellerPeerID: '12D3KooWSovereignPeerID',
-      quantity: 1,
-      unitPrice: '2800',
-    },
-  ],
-};
-
-const MOCK_GUEST_ORDER_STATUS_XMR = {
-  ...MOCK_GUEST_ORDER_XMR,
-  state: 'AWAITING_PAYMENT',
-  confirmations: 0,
-  requiredConfs: 10,
-  chainBlockTimeSec: 120,
-  poolDetected: false,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
-
 const MOCK_GUEST_CHECKOUT_SETTINGS = {
   enabled: true,
-  acceptedCoins: ['LTC', 'XMR'],
+  acceptedCoins: ['LTC'],
   paymentTimeoutMinutes: 30,
 };
 
@@ -141,7 +108,7 @@ const SOVEREIGN_PRODUCT_DETAIL = {
     format: 'FIXED_PRICE',
     pricingCurrency: { code: 'USD', divisibility: 2 },
     expiry: '2030-12-31T23:59:59Z',
-    acceptedCurrencies: ['LTC', 'XMR'],
+    acceptedCurrencies: ['LTC'],
   },
   item: {
     title: 'Encrypted USB Drive (64GB)',
@@ -228,7 +195,7 @@ async function mockSovereignAppShell(page: Page): Promise<void> {
         body: runtimeConfigScript({
           deployment: 'sovereign',
           guestCheckout: true,
-          paymentMethods: [{ id: 'XMR', kind: 'crypto', flow: 'address-transfer' }],
+          paymentMethods: [{ id: 'LTC', kind: 'crypto', flow: 'address-transfer' }],
         }),
       })
   );
@@ -239,7 +206,7 @@ async function mockSovereignAppShell(page: Page): Promise<void> {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          data: { LTC: { last: 80 }, XMR: { last: 170 }, BTC: { last: 65000 } },
+          data: { LTC: { last: 80 }, BTC: { last: 65000 } },
         }),
       })
   );
@@ -250,16 +217,16 @@ async function mockSovereignAppShell(page: Page): Promise<void> {
 }
 
 /**
- * Mock Guest Checkout APIs for a given coin (LTC or XMR).
+ * Mock Guest Checkout APIs for a runtime-advertised coin.
  */
 async function mockSovereignGuestAPIs(
   page: Page,
-  coin: 'LTC' | 'XMR' = 'LTC',
+  _coin: 'LTC' = 'LTC',
   statusState = 'AWAITING_PAYMENT',
   statusExtras: Record<string, unknown> = {}
 ): Promise<void> {
-  const orderResponse = coin === 'XMR' ? MOCK_GUEST_ORDER_XMR : MOCK_GUEST_ORDER_LTC;
-  const orderStatus = coin === 'XMR' ? MOCK_GUEST_ORDER_STATUS_XMR : MOCK_GUEST_ORDER_STATUS_LTC;
+  const orderResponse = MOCK_GUEST_ORDER_LTC;
+  const orderStatus = MOCK_GUEST_ORDER_STATUS_LTC;
 
   await page.route(
     url => isV1Api(url, '/settings/guest-checkout'),
@@ -350,9 +317,7 @@ export {
   injectSovereignCart,
   MOCK_ORDER_TOKEN,
   MOCK_GUEST_ORDER_LTC,
-  MOCK_GUEST_ORDER_XMR,
   MOCK_GUEST_ORDER_STATUS_LTC,
-  MOCK_GUEST_ORDER_STATUS_XMR,
   MOCK_GUEST_CHECKOUT_SETTINGS,
   SOVEREIGN_LISTINGS,
   SOVEREIGN_PRODUCT_DETAIL,

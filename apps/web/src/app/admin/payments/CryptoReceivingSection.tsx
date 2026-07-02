@@ -28,10 +28,10 @@ import {
   getEnvConfig,
   isTronPaymentVisible,
 } from '@mobazha/core';
-import WAValidator from 'multicoin-address-validator';
 import type { ReceivingAccount, ReceivingAccountInput } from '@mobazha/core/services/api/wallet';
 import { ApiError } from '@mobazha/core/services/api/client';
 import { useToast } from '@/components/ui/use-toast';
+import { validatePaymentAddressForChain } from '@/lib/paymentAddressValidation';
 
 type ChainFamily = 'evm' | 'solana' | 'utxo' | 'tron';
 type NetworkMode = 'mainnet' | 'testnet';
@@ -159,13 +159,6 @@ const SELECTABLE_CHAINS = CHAINS.filter(
 type ValidatorNetwork = 'prod' | 'testnet';
 
 const BTC_REGTEST_RE = /^bcrt1[0-9a-z]{39,59}$/i;
-const UTXO_VALIDATOR_SYMBOL: Record<string, string> = {
-  BTC: 'btc',
-  BCH: 'bch',
-  LTC: 'ltc',
-  ZEC: 'zec',
-};
-
 interface FormState {
   name: string;
   chainType: string;
@@ -201,14 +194,6 @@ function toValidatorNetwork(mode: NetworkMode): ValidatorNetwork {
   return mode === 'testnet' ? 'testnet' : 'prod';
 }
 
-function validateWithLibrary(address: string, symbol: string, network: ValidatorNetwork): boolean {
-  try {
-    return WAValidator.validate(address, symbol, network);
-  } catch {
-    return false;
-  }
-}
-
 function validateAddress(
   chain: ChainMeta | undefined,
   addr: string,
@@ -220,33 +205,30 @@ function validateAddress(
 
   switch (chain.family) {
     case 'evm': {
-      return validateWithLibrary(a, 'eth', targetNetwork)
+      return validatePaymentAddressForChain(a, chain.id, targetNetwork)
         ? null
         : 'receivingAccounts.invalidEvmAddress';
     }
     case 'solana': {
-      return validateWithLibrary(a, 'sol', targetNetwork)
+      return validatePaymentAddressForChain(a, chain.id, targetNetwork)
         ? null
         : 'receivingAccounts.invalidSolAddress';
     }
     case 'tron': {
-      return validateWithLibrary(a, 'trx', targetNetwork)
+      return validatePaymentAddressForChain(a, chain.id, targetNetwork)
         ? null
         : 'receivingAccounts.invalidTronAddress';
     }
     case 'utxo': {
-      const symbol = UTXO_VALIDATOR_SYMBOL[chain.id];
-      if (!symbol) return null;
-
       if (
-        validateWithLibrary(a, symbol, targetNetwork) ||
+        validatePaymentAddressForChain(a, chain.id, targetNetwork) ||
         (chain.id === 'BTC' && targetNetwork === 'testnet' && BTC_REGTEST_RE.test(a))
       ) {
         return null;
       }
 
       const oppositeNetwork: ValidatorNetwork = targetNetwork === 'testnet' ? 'prod' : 'testnet';
-      if (validateWithLibrary(a, symbol, oppositeNetwork)) {
+      if (validatePaymentAddressForChain(a, chain.id, oppositeNetwork)) {
         return networkMode === 'testnet'
           ? 'receivingAccounts.networkMismatchNeedTestnet'
           : 'receivingAccounts.networkMismatchNeedMainnet';

@@ -28,6 +28,7 @@ import {
   filterPublicProductDisplayTags,
   resolveRelatedListingsScopeTag,
   useFeature,
+  getTokenById,
   useMarketplaceContext,
   useNativeMarketplaceAttribution,
   type ArtListingSpecRow,
@@ -409,15 +410,14 @@ export function useProductDetail({
   const freeShipping = product ? hasFreeShipping(product) : false;
   const estimatedDelivery = product ? getEstimatedDelivery(product) : null;
   const vendorPeerID = product?.vendorID?.peerID;
-  // In Sovereign mode, the listing's acceptedCurrencies may contain stale defaults
-  // (BTC/ETH) set during listing creation. Display only the pricing currency,
-  // since Sovereign is XMR-only and payment coin is resolved at guest checkout.
+  // Direct-payment distributions resolve the actual payment asset during guest checkout.
+  // Display the listing's authoritative pricing currency instead of stale accepted defaults.
   const acceptedCurrencies = isSovereignMode()
     ? product?.metadata?.pricingCurrency?.code
       ? [product.metadata.pricingCurrency.code]
       : []
     : product?.metadata?.acceptedCurrencies || [];
-  const rawTags = product?.item.tags || [];
+  const rawTags = useMemo(() => product?.item.tags || [], [product?.item.tags]);
   const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
   const relatedListingsScopeTag = useMemo(() => resolveRelatedListingsScopeTag(rawTags), [rawTags]);
   const category = product?.item.productType || '';
@@ -464,10 +464,7 @@ export function useProductDetail({
     }
   }, [isCollectibleTitleListing, product?.slug]);
   const paymentAvailable =
-    isSovereignMode() ||
-    paymentMethodsLoading ||
-    vendorCrypto.length > 0 ||
-    vendorActiveFiat.length > 0;
+    paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
   const isRwaToken =
     product?.metadata?.contractType === 'RWA_TOKEN' &&
@@ -677,8 +674,12 @@ export function useProductDetail({
           large: '',
           original: '',
         };
-      const currency = product.metadata?.pricingCurrency?.code || 'XMR';
-      const divisibility = product.metadata?.pricingCurrency?.divisibility ?? 12;
+      const currency =
+        product.metadata?.pricingCurrency?.code ||
+        product.metadata?.acceptedCurrencies?.[0] ||
+        'BTC';
+      const divisibility =
+        product.metadata?.pricingCurrency?.divisibility ?? getTokenById(currency)?.decimals ?? 8;
       const options =
         hasVariants && Object.keys(selectedOptions).length > 0
           ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))

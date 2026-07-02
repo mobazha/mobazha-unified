@@ -240,12 +240,8 @@ export const STANDALONE_ENV: EnvConfig = {
  * explicitly. Product-specific network policy is supplied by the private distribution.
  */
 export interface BrandNetworkConfig {
-  /** Show a "paste your own monerod RPC" form on the NodePool admin page. */
-  allowUserCustomNode?: boolean;
   /** Show latency / fail-streak / source columns and other power-user diagnostics. */
   showAdvancedDiagnostics?: boolean;
-  /** Expose Settings → Monero Nodes (and the dashboard pool banner). */
-  showNodePoolUI?: boolean;
   /** Let the user toggle Tier-3 P2P discovery. */
   allowDiscoverToggle?: boolean;
 }
@@ -276,14 +272,12 @@ export function getBrandConfig(): BrandConfig | undefined {
  * Returns the brand network UI gating flags. Always returns an object so
  * callers can read fields without null-checking; missing values default to
  * `false` (the locked-down baseline). Mobazha defaults (no brand.yaml)
- * therefore hide all network/node-pool surface area.
+ * therefore hide all optional network diagnostics.
  */
 export function getBrandNetworkConfig(): Required<BrandNetworkConfig> {
   const network = runtimeBrandConfig?.network;
   return {
-    allowUserCustomNode: network?.allowUserCustomNode === true,
     showAdvancedDiagnostics: network?.showAdvancedDiagnostics === true,
-    showNodePoolUI: network?.showNodePoolUI === true,
     allowDiscoverToggle: network?.allowDiscoverToggle === true,
   };
 }

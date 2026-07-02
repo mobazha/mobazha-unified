@@ -21,28 +21,18 @@ import { Search, ScanLine, LayoutDashboard } from 'lucide-react';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { useScanQR } from '@/lib/platform';
 import { useToast } from '@/components/ui/use-toast';
-import WAValidator from 'multicoin-address-validator';
+import { validatePaymentAddressForChain } from '@/lib/paymentAddressValidation';
 
-const COINS_TO_CHECK: Array<{ symbol: string; name: string }> = [
-  { symbol: 'BTC', name: 'bitcoin' },
-  { symbol: 'BCH', name: 'bitcoincash' },
-  { symbol: 'LTC', name: 'litecoin' },
-  { symbol: 'ZEC', name: 'zcash' },
-  { symbol: 'ETH', name: 'ethereum' },
-];
+const COINS_TO_CHECK = ['BTC', 'BCH', 'LTC', 'ZEC', 'ETH'] as const;
 
 const validateCryptoAddress: AddressValidator = (address: string, coinHint?: string) => {
   const coins = coinHint
-    ? COINS_TO_CHECK.filter(({ symbol }) => symbol === coinHint.toUpperCase())
+    ? COINS_TO_CHECK.filter(symbol => symbol === coinHint.toUpperCase())
     : COINS_TO_CHECK;
 
-  for (const { symbol, name } of coins) {
-    try {
-      if (WAValidator.validate(address, name)) {
-        return { coin: symbol };
-      }
-    } catch {
-      // Validator may throw on unsupported formats
+  for (const symbol of coins) {
+    if (validatePaymentAddressForChain(address, symbol)) {
+      return { coin: symbol };
     }
   }
   return undefined;

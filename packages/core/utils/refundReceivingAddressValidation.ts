@@ -5,7 +5,6 @@
 
 import {
   isEvmHexAddress,
-  isMoneroAddress,
   isPermissiveUtxoAddress,
   isSolanaBase58Address,
   isTronBase58Address,
@@ -42,8 +41,6 @@ export function validateRefundReceivingAddressInput(
       return isSolanaBase58Address(trimmed) ? { valid: true } : { valid: false, code: 'format' };
     case 'tron':
       return isTronBase58Address(trimmed) ? { valid: true } : { valid: false, code: 'format' };
-    case 'monero':
-      return isMoneroAddress(trimmed) ? { valid: true } : { valid: false, code: 'format' };
     case 'utxo':
       return isPermissiveUtxoAddress(trimmed) ? { valid: true } : { valid: false, code: 'format' };
     default:

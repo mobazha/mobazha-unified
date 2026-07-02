@@ -7,11 +7,10 @@
  * Covers:
  *  1. Admin password login page
  *  2. Dashboard (empty + with products)
- *  3. Guest Checkout flow: cart → shipping → coin select (LTC/XMR) → payment
+ *  3. Guest Checkout flow: cart → shipping → runtime coin selection → payment
  *  4. Order status pages (LTC): awaiting → detected → funded → shipped → completed → expired
- *  5. Order status pages (XMR): pool detected → confirming (10-conf) → funded
- *  6. Buyer product browsing
- *  7. Settings → Guest Checkout config
+ *  5. Buyer product browsing
+ *  6. Settings → Guest Checkout config
  *
  * Output: test-results/screenshots/sovereign/
  *
@@ -121,7 +120,7 @@ test.describe('Sovereign Screenshots — Guest Checkout LTC Journey', () => {
     await page.screenshot({ path: `${OUT}/05-gc-shipping-filled.png`, fullPage: true });
   });
 
-  test('06 — Coin selection (LTC/XMR only)', async ({ page }) => {
+  test('06 — Coin selection from runtime capabilities', async ({ page }) => {
     await injectSovereignCart(page);
     await mockSovereignAppShell(page);
     await mockSovereignGuestAPIs(page, 'LTC');
@@ -245,80 +244,6 @@ test.describe('Sovereign Screenshots — LTC Order Status', () => {
     await page.waitForTimeout(2500);
 
     await page.screenshot({ path: `${OUT}/13-ltc-expired.png`, fullPage: true });
-  });
-});
-
-// ── 5. XMR Order Status Pages (Pool Detection + 10-conf) ────────────────────
-
-test.describe('Sovereign Screenshots — XMR Order Status', () => {
-  const xmrToken = 'gst_sovereign_xmr_token_xyz789';
-
-  test('14 — XMR payment instructions (via order page)', async ({ page }) => {
-    const xmrToken = 'gst_sovereign_xmr_token_xyz789';
-    await mockSovereignAppShell(page);
-    await mockSovereignGuestAPIs(page, 'XMR', 'AWAITING_PAYMENT');
-
-    await page.goto(`/guest-order/${xmrToken}`);
-    await page.waitForTimeout(2500);
-
-    await page.screenshot({ path: `${OUT}/14-xmr-payment-instructions.png`, fullPage: true });
-  });
-
-  test('15 — XMR pool detected (mempool)', async ({ page }) => {
-    await mockSovereignAppShell(page);
-    await mockSovereignGuestAPIs(page, 'XMR', 'AWAITING_PAYMENT', {
-      poolDetected: true,
-      confirmations: 0,
-      requiredConfs: 10,
-      chainBlockTimeSec: 120,
-    });
-
-    await page.goto(`/guest-order/${xmrToken}`);
-    await page.waitForTimeout(2500);
-
-    await page.screenshot({ path: `${OUT}/15-xmr-pool-detected.png`, fullPage: true });
-  });
-
-  test('16 — XMR confirming (3/10)', async ({ page }) => {
-    await mockSovereignAppShell(page);
-    await mockSovereignGuestAPIs(page, 'XMR', 'PAYMENT_DETECTED', {
-      confirmations: 3,
-      requiredConfs: 10,
-      chainBlockTimeSec: 120,
-    });
-
-    await page.goto(`/guest-order/${xmrToken}`);
-    await page.waitForTimeout(2500);
-
-    await page.screenshot({ path: `${OUT}/16-xmr-confirming-3-of-10.png`, fullPage: true });
-  });
-
-  test('17 — XMR confirming (8/10)', async ({ page }) => {
-    await mockSovereignAppShell(page);
-    await mockSovereignGuestAPIs(page, 'XMR', 'PAYMENT_DETECTED', {
-      confirmations: 8,
-      requiredConfs: 10,
-      chainBlockTimeSec: 120,
-    });
-
-    await page.goto(`/guest-order/${xmrToken}`);
-    await page.waitForTimeout(2500);
-
-    await page.screenshot({ path: `${OUT}/17-xmr-confirming-8-of-10.png`, fullPage: true });
-  });
-
-  test('18 — XMR funded', async ({ page }) => {
-    await mockSovereignAppShell(page);
-    await mockSovereignGuestAPIs(page, 'XMR', 'FUNDED', {
-      confirmations: 10,
-      requiredConfs: 10,
-      chainBlockTimeSec: 120,
-    });
-
-    await page.goto(`/guest-order/${xmrToken}`);
-    await page.waitForTimeout(2500);
-
-    await page.screenshot({ path: `${OUT}/18-xmr-funded.png`, fullPage: true });
   });
 });
 

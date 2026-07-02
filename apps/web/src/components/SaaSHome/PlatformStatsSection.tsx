@@ -42,7 +42,6 @@ const CHAIN_ECOSYSTEM_BY_CAPABILITY: Record<string, ChainEcosystemEntry> = {
   LINEA: { id: 'LINEA', name: 'Linea' },
   SOL: { id: 'SOL', name: 'Solana' },
   TRX: { id: 'TRX', name: 'TRON' },
-  XMR: { id: 'XMR', name: 'Monero' },
 };
 
 const FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
