@@ -1019,9 +1019,9 @@
         "tags": ["admin"]
       }
     },
-    "/platform/v1/admin/safe-payment/config": {
+    "/platform/v1/admin/managed-escrow/config": {
       "get": {
-        "operationId": "admin-get-safe-payment-config",
+        "operationId": "admin-get-managed-escrow-config",
         "responses": {
           "200": {
             "content": {
@@ -1049,16 +1049,16 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Safe payment platform fee configuration (admin)",
+        "summary": "Managed escrow platform fee configuration (admin)",
         "tags": ["admin"]
       },
       "patch": {
-        "operationId": "admin-patch-safe-payment-config",
+        "operationId": "admin-patch-managed-escrow-config",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Platform_AdminPatchSafePaymentConfigInputBody"
+                "$ref": "#/components/schemas/Platform_AdminPatchManagedEscrowConfigInputBody"
               }
             }
           },
@@ -1091,7 +1091,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Patch Safe payment platform fee configuration (admin)",
+        "summary": "Patch Managed escrow platform fee configuration (admin)",
         "tags": ["admin"]
       }
     },
@@ -32219,7 +32219,7 @@
         },
         "type": "object"
       },
-      "Platform_AdminPatchSafePaymentConfigInputBody": {
+      "Platform_AdminPatchManagedEscrowConfigInputBody": {
         "additionalProperties": false,
         "properties": {
           "platform_addrs": {

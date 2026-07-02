@@ -368,22 +368,22 @@ export interface paths {
     patch: operations['admin-patch-relay-config'];
     trace?: never;
   };
-  '/platform/v1/admin/safe-payment/config': {
+  '/platform/v1/admin/managed-escrow/config': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Safe payment platform fee configuration (admin) */
-    get: operations['admin-get-safe-payment-config'];
+    /** Managed escrow platform fee configuration (admin) */
+    get: operations['admin-get-managed-escrow-config'];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** Patch Safe payment platform fee configuration (admin) */
-    patch: operations['admin-patch-safe-payment-config'];
+    /** Patch Managed escrow platform fee configuration (admin) */
+    patch: operations['admin-patch-managed-escrow-config'];
     trace?: never;
   };
   '/platform/v1/admin/services': {
@@ -9531,7 +9531,7 @@ export interface components {
       /** Format: int64 */
       max_gas_price?: number;
     };
-    Platform_AdminPatchSafePaymentConfigInputBody: {
+    Platform_AdminPatchManagedEscrowConfigInputBody: {
       platform_addrs?: {
         [key: string]: string;
       };
@@ -11810,7 +11810,7 @@ export interface operations {
       };
     };
   };
-  'admin-get-safe-payment-config': {
+  'admin-get-managed-escrow-config': {
     parameters: {
       query?: never;
       header?: never;
@@ -11839,7 +11839,7 @@ export interface operations {
       };
     };
   };
-  'admin-patch-safe-payment-config': {
+  'admin-patch-managed-escrow-config': {
     parameters: {
       query?: never;
       header?: never;
@@ -11848,7 +11848,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['Platform_AdminPatchSafePaymentConfigInputBody'];
+        'application/json': components['schemas']['Platform_AdminPatchManagedEscrowConfigInputBody'];
       };
     };
     responses: {
