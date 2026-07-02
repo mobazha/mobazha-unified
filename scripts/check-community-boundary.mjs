@@ -61,6 +61,10 @@ const privateIdentity = new RegExp(
   'i'
 );
 const privateImplementation = /\b(?:monero|xmr)\b/i;
+const retiredPrivateIdentifiers = [
+  ['allow', 'UserCustomNode'].join(''),
+  ['show', 'NodePoolUI'].join(''),
+];
 
 function scanPublicTree(path) {
   for (const entry of readdirSync(path, { withFileTypes: true })) {
@@ -80,6 +84,11 @@ function scanPublicTree(path) {
     }
     if (privateImplementation.test(source)) {
       fail(`private implementation leaked into public source: ${child}`);
+    }
+    for (const identifier of retiredPrivateIdentifiers) {
+      if (source.includes(identifier)) {
+        fail(`retired private frontend identifier leaked into public source: ${child}`);
+      }
     }
   }
 }
