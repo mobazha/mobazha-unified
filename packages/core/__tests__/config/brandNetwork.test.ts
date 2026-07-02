@@ -16,9 +16,7 @@ describe('getBrandNetworkConfig', () => {
 
     const network = getBrandNetworkConfig();
     expect(network).toEqual({
-      allowUserCustomNode: false,
       showAdvancedDiagnostics: false,
-      showNodePoolUI: false,
       allowDiscoverToggle: false,
     });
   });
