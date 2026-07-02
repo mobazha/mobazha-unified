@@ -83,7 +83,7 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.7.0",
-    "eslint-config-next": "^16.1.1",
+    "eslint-config-next": "^16.2.10",
     "jsdom": "^26.0.0",
     "postcss": "^8.4.49",
     "react-markdown": "^10.1.0",
