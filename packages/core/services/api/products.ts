@@ -496,6 +496,9 @@ export async function fetchFeaturedStores(limit = 6): Promise<SearchedUser[]> {
 
 /**
  * 获取平台统计（SaaS 首页 Platform Stats）
+ *
+ * 商品数用 browse=all / catalogTotal：默认 discover 模式只返回精选子集（meta.total），
+ * 批量导入后 catalogTotal 才是全网上架总量。
  */
 export async function fetchPlatformStats(): Promise<{
   storeCount: number;
@@ -504,11 +507,11 @@ export async function fetchPlatformStats(): Promise<{
   try {
     const [profilesResult, listingsResult] = await Promise.all([
       searchProfiles({ query: '*', pageSize: 1, vendor: true }),
-      searchListings({ query: '*', pageSize: 1 }),
+      searchListings({ query: '*', pageSize: 1, browse: 'all' }),
     ]);
     return {
       storeCount: profilesResult.total,
-      listingCount: listingsResult.total,
+      listingCount: listingsResult.catalogTotal ?? listingsResult.total,
     };
   } catch (error) {
     console.error('Failed to fetch platform stats:', error);
