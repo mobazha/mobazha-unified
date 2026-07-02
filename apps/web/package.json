@@ -76,7 +76,7 @@
     "@tailwindcss/postcss": "^4.0.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.1.0",
+    "@testing-library/react": "^16.3.2",
     "@types/dompurify": "^3.0.5",
     "@types/jszip": "^3.4.1",
     "@types/node": "^22.10.5",
