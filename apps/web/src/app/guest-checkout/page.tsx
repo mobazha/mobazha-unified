@@ -44,6 +44,10 @@ import { AnonymousModeBanner } from '@/components/GuestCheckout/AnonymousModeBan
 import { GuestSupplyAvailabilityPanel } from '@/components/GuestCheckout/GuestSupplyAvailabilityPanel';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
+import type {
+  CommerceGuestOrderRequest,
+  CommerceGuestOrderResponse,
+} from '@mobazha/commerce-web/checkout';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -63,7 +67,7 @@ const EMPTY_ADDRESS: Address = {
 type PaymentState =
   | { status: 'idle' }
   | { status: 'submitting' }
-  | { status: 'awaiting'; data: GuestOrderResponse }
+  | { status: 'awaiting'; data: CommerceGuestOrderResponse }
   | { status: 'error'; message: string };
 
 function buildAddressPayload(addr: Address): {
@@ -92,7 +96,7 @@ function buildOrderRequest(
   encryptedAddr: string | null,
   email: string,
   coin: string
-): CreateGuestOrderRequest {
+): CommerceGuestOrderRequest {
   return {
     items: items.map(i => ({
       listingSlug: i.slug,

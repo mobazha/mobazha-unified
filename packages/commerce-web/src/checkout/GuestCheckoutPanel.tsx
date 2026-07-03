@@ -1,26 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CommerceHttpClient } from '../http';
 import { CommerceButton, CommerceCard, CommercePageHeader } from '../ui';
+import {
+  createGuestCheckoutAdapter,
+  type CommerceGuestOrderResponse,
+} from './contracts';
 
 export interface CommerceGuestItem {
   listingSlug: string;
   listingHash: string;
   title?: string;
   quantity: number;
-}
-
-interface GuestCheckoutSettingsDTO {
-  enabled: boolean;
-  acceptedCoins?: string;
-  availableCoins?: string;
-}
-
-interface GuestOrderResponse {
-  orderToken: string;
-  paymentAddress: string;
-  paymentAmount: string;
-  paymentCoin: string;
-  expiresAt: string;
 }
 
 export interface GuestCheckoutPanelProps {
@@ -31,37 +21,31 @@ export interface GuestCheckoutPanelProps {
   title?: string;
 }
 
-function coinList(settings: GuestCheckoutSettingsDTO): string[] {
-  return (settings.availableCoins ?? settings.acceptedCoins ?? '')
-    .split(',')
-    .map(value => value.trim())
-    .filter(Boolean);
-}
-
 export function GuestCheckoutPanel({
   client,
   items,
-  settingsPath = '/v1/guest-checkout/settings',
+  settingsPath = '/v1/settings/guest-checkout',
   ordersPath = '/v1/guest/orders',
   title = 'Guest checkout',
 }: GuestCheckoutPanelProps) {
   const [coins, setCoins] = useState<string[]>([]);
   const [coin, setCoin] = useState('');
   const [email, setEmail] = useState('');
-  const [order, setOrder] = useState<GuestOrderResponse>();
+  const [order, setOrder] = useState<CommerceGuestOrderResponse>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    void client
-      .request<GuestCheckoutSettingsDTO>(settingsPath)
+    const checkout = createGuestCheckoutAdapter(client, { settingsPath, ordersPath });
+    void checkout
+      .getSettings()
       .then(settings => {
-        const available = settings.enabled ? coinList(settings) : [];
+        const available = settings.enabled ? settings.availableCoins : [];
         setCoins(available);
         setCoin(current => current || available[0] || '');
       })
       .catch(next => setError(next instanceof Error ? next.message : String(next)));
-  }, [client, settingsPath]);
+  }, [client, ordersPath, settingsPath]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -69,13 +53,8 @@ export function GuestCheckoutPanel({
     setBusy(true);
     setError('');
     try {
-      setOrder(
-        await client.request<GuestOrderResponse>(ordersPath, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items, paymentCoin: coin, contactEmail: email || undefined }),
-        })
-      );
+      const checkout = createGuestCheckoutAdapter(client, { settingsPath, ordersPath });
+      setOrder(await checkout.createOrder({ items: [...items], paymentCoin: coin, contactEmail: email || undefined }));
     } catch (next) {
       setError(next instanceof Error ? next.message : String(next));
     } finally {

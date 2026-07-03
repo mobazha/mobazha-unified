@@ -123,8 +123,6 @@ export interface GuestCheckoutSettings {
    * Runtime-available subset of acceptedCoins computed by the node.
    * Coins without their required runtime capability are excluded.
    * Buyer-facing payment selectors MUST use this field.
-   * Falls back to acceptedCoins when the server is an older build that
-   * does not yet return this field.
    */
   availableCoins: string[];
   maxOrderAmount?: string;
@@ -136,15 +134,10 @@ function fromGuestCheckoutSettingsDTO(res: GuestCheckoutSettingsDTO): GuestCheck
     .split(',')
     .map(coin => coin.trim())
     .filter(Boolean);
-  // Prefer the server-computed availableCoins when present; fall back to
-  // acceptedCoins for backward-compatibility with older node builds.
-  const availableCoins =
-    res.availableCoins !== undefined
-      ? (res.availableCoins || '')
-          .split(',')
-          .map(coin => coin.trim())
-          .filter(Boolean)
-      : acceptedCoins;
+  const availableCoins = (res.availableCoins || '')
+    .split(',')
+    .map(coin => coin.trim())
+    .filter(Boolean);
   return {
     enabled: !!res.enabled,
     acceptedCoins,
@@ -157,11 +150,13 @@ function fromGuestCheckoutSettingsDTO(res: GuestCheckoutSettingsDTO): GuestCheck
 interface GuestCheckoutSettingsDTO {
   enabled: boolean;
   acceptedCoins: string;
-  /** Computed by the node at query time; absent on older builds. */
-  availableCoins?: string;
+  /** Computed by the node at query time. */
+  availableCoins: string;
   maxOrderAmount?: string;
   paymentTimeout: number;
 }
+
+type GuestCheckoutSettingsUpdateDTO = Omit<GuestCheckoutSettingsDTO, 'availableCoins'>;
 
 export interface GuestOrderSummary {
   orderToken: string;
@@ -266,7 +261,7 @@ export function getGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
 export function updateGuestCheckoutSettings(
   settings: GuestCheckoutSettings
 ): Promise<GuestCheckoutSettings> {
-  const payload: GuestCheckoutSettingsDTO = {
+  const payload: GuestCheckoutSettingsUpdateDTO = {
     enabled: settings.enabled,
     acceptedCoins: settings.acceptedCoins.join(','),
     maxOrderAmount: settings.maxOrderAmount,
