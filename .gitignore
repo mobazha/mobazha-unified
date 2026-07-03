@@ -58,6 +58,7 @@ apps/web/scripts/diagnose-*.mjs
 reports/*.md
 reports/history/
 !reports/.gitkeep
+!reports/README.md
 
 # Logs
 *.log

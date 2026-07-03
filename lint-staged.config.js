@@ -1,10 +1,10 @@
 module.exports = {
-  // TypeScript/JavaScript 文件
-  '*.{ts,tsx,js,jsx}': ['eslint --fix', 'prettier --write'],
+  // TypeScript and JavaScript sources, including ESM and CommonJS config files.
+  '*.{ts,tsx,js,jsx,mjs,cjs}': ['eslint --fix', 'prettier --write'],
 
-  // 样式文件
+  // Stylesheets
   '*.{css,scss}': ['prettier --write'],
 
-  // JSON/YAML/Markdown
+  // Project metadata and documentation
   '*.{json,yaml,yml,md}': ['prettier --write'],
 };
