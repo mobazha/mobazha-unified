@@ -42,7 +42,7 @@ jobs:
       - name: Check codegen drift
         run: bash scripts/check-codegen-drift.sh
 
-      - name: Check Community Edition boundary
+      - name: Check default release boundary
         run: pnpm community:check
 
       - name: Run ESLint

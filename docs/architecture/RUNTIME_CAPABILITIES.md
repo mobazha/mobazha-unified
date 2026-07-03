@@ -3,7 +3,7 @@
 ## Decision
 
 Mobazha Unified has one public repository, one `main` branch, and one shared web
-application. Community Store, Hosted Store, Marketplace and Sovereign are composed
+application. Standalone Store, Hosted Store, Marketplace and Sovereign are composed
 from four orthogonal runtime axes instead of frontend forks:
 
 - `authMode`: authentication transport only;
@@ -77,14 +77,14 @@ interface RuntimeConfig {
 
 | Composition           | Deployment | Experience  | Product capabilities                         |
 | --------------------- | ---------- | ----------- | -------------------------------------------- |
-| Community Store       | standalone | store       | commerce + allowlisted payments              |
-| Hosted Platform       | hosted     | platform    | commerce + marketplace + commercial payments |
+| Standalone Store      | standalone | store       | commerce + allowlisted payments              |
+| Hosted Platform       | hosted     | platform    | commerce + marketplace + extended payments   |
 | Dedicated Marketplace | hosted     | marketplace | commerce + marketplace                       |
-| Sovereign               | sovereign    | store       | commerce + isolated runtime + local payments |
+| Sovereign             | sovereign  | store       | commerce + isolated runtime + local payments  |
 
-The Community manifest is release metadata and a payment fallback profile. It is
-not a global frontend identity and business UI must not branch on an
-`isCommunityEdition()` helper.
+The default manifest is release metadata and a payment fallback profile. It is
+not a global frontend identity, and business UI must not branch on an edition
+name.
 
 ## UI rules
 
