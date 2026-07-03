@@ -26,11 +26,11 @@ export const HOSTING_API_PATHS = {
   ADMIN_FIAT_PROVIDERS: '/platform/v1/admin/fiat-providers',
   ADMIN_FIAT_PROVIDERS_BY_PROVIDER: (provider: string) =>
     `/platform/v1/admin/fiat-providers/${encodeURIComponent(provider)}`,
+  ADMIN_MANAGED_ESCROW_CONFIG: '/platform/v1/admin/managed-escrow/config',
   ADMIN_MODERATORS: '/platform/v1/admin/moderators',
   ADMIN_MODERATORS_BY_PEER_ID: (peerID: string) =>
     `/platform/v1/admin/moderators/${encodeURIComponent(peerID)}`,
   ADMIN_RELAY_CONFIG: '/platform/v1/admin/relay/config',
-  ADMIN_MANAGED_ESCROW_CONFIG: '/platform/v1/admin/managed-escrow/config',
   ADMIN_SERVICES: '/platform/v1/admin/services',
   ADMIN_STATS: '/platform/v1/admin/stats',
   ADMIN_TENANTS: '/platform/v1/admin/tenants',
