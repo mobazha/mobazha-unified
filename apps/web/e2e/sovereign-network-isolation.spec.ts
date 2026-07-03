@@ -62,6 +62,16 @@ function resolveOrigin(page: { url: () => string }, baseURL?: string): string {
   return 'http://localhost:3000';
 }
 
+async function waitForInitialRequests(page: {
+  waitForLoadState: (state: 'domcontentloaded') => Promise<void>;
+  waitForTimeout: (ms: number) => Promise<void>;
+}) {
+  // Sovereign pages keep same-origin polling/stream connections alive, so
+  // Playwright's networkidle state is not a valid readiness signal here.
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1000);
+}
+
 test.describe('Sovereign Network Isolation', () => {
   test('homepage makes zero third-party requests', async ({ page, baseURL }) => {
     const thirdPartyRequests: string[] = [];
@@ -74,7 +84,7 @@ test.describe('Sovereign Network Isolation', () => {
     });
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForInitialRequests(page);
 
     expect(thirdPartyRequests).toEqual([]);
   });
@@ -90,7 +100,7 @@ test.describe('Sovereign Network Isolation', () => {
     });
 
     await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
+    await waitForInitialRequests(page);
 
     expect(thirdPartyRequests).toEqual([]);
   });
@@ -106,7 +116,7 @@ test.describe('Sovereign Network Isolation', () => {
     });
 
     await page.goto('/guest-checkout');
-    await page.waitForLoadState('networkidle');
+    await waitForInitialRequests(page);
 
     expect(thirdPartyRequests).toEqual([]);
   });
@@ -122,7 +132,7 @@ test.describe('Sovereign Network Isolation', () => {
     });
 
     await page.goto('/track');
-    await page.waitForLoadState('networkidle');
+    await waitForInitialRequests(page);
 
     expect(thirdPartyRequests).toEqual([]);
   });
@@ -142,7 +152,7 @@ test.describe('Sovereign Network Isolation', () => {
     const pages = ['/', '/admin', '/guest-checkout', '/track', '/cart'];
     for (const p of pages) {
       await page.goto(p);
-      await page.waitForLoadState('networkidle');
+      await waitForInitialRequests(page);
     }
 
     expect(blockedHits).toEqual([]);

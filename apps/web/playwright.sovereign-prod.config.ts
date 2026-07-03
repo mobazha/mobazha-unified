@@ -37,7 +37,10 @@ export default defineConfig({
     {
       name: 'sovereign-prod',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /sovereign/,
+      // Match executable specs only. A broad /sovereign/ pattern also treats
+      // helper modules under e2e/sovereign/fixtures as test files, and
+      // Playwright then rejects legitimate imports from those helpers.
+      testMatch: /sovereign.*\.spec\.ts$/,
     },
   ],
 

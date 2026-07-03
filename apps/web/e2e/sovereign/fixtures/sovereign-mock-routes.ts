@@ -160,6 +160,7 @@ const SOVEREIGN_PRODUCT_DETAIL = {
 const SOVEREIGN_CART_ITEM = {
   slug: 'encrypted-usb-64gb',
   title: 'Encrypted USB Drive (64GB)',
+  contractType: 'PHYSICAL_GOOD',
   listingHash: 'QmSovereignHash002',
   price: { amount: 4500, currency: 'USD', divisibility: 2 },
   thumbnail: 'https://picsum.photos/id/60/300/300',
