@@ -1,14 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { Package, Star } from 'lucide-react';
-import { useCurrency, getImageUrl } from '@mobazha/core';
+import { getImageUrl } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
-import { getProductCurrencyCode } from './utils';
+import { ListingPriceLabel } from '@/components/Product/ListingPriceLabel';
 
 export function TopProductRow({ product }: { product: ProductListItem }) {
-  const { formatPrice, fromMinimalUnit } = useCurrency();
   const thumbnail = product.thumbnail?.small ? getImageUrl(product.thumbnail.small) : '';
-  const currencyCode = getProductCurrencyCode(product);
 
   return (
     <Link
@@ -26,11 +24,9 @@ export function TopProductRow({ product }: { product: ProductListItem }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{product.title}</p>
-        {product.price?.amount != null && (
-          <p className="text-xs text-muted-foreground">
-            {formatPrice(fromMinimalUnit(product.price.amount, currencyCode), currencyCode)}
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground">
+          <ListingPriceLabel listItem={product} />
+        </p>
       </div>
       {product.averageRating != null && product.averageRating > 0 && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">

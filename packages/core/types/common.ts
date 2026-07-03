@@ -50,7 +50,8 @@ export type ApiErrorCode =
   | 'INTERNAL_ERROR'
   | 'SERVICE_UNAVAILABLE'
   | 'RATE_LIMITED'
-  | 'PROVIDER_ERROR';
+  | 'PROVIDER_ERROR'
+  | 'REFUND_ADDRESS_REQUIRED';
 
 /**
  * @deprecated Use DataEnvelope<T> instead. Kept for backward compatibility during migration.
@@ -110,7 +111,8 @@ export interface PriceCurrency {
  * amount 是最小单位（如美分、聪），需要除以 10^divisibility 得到标准显示值
  */
 export interface Price {
-  amount: number;
+  /** Minimal-unit integer; string preserves large crypto amounts from API JSON. */
+  amount: number | string;
   currency: PriceCurrency;
 }
 

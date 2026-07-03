@@ -11,16 +11,23 @@ import {
   type RwaTradeMode,
 } from '@/components/ProductCard';
 import { useProductModal } from '@/hooks';
-import { useUserStore, useVerifiedModerators, usePrefetchProduct } from '@mobazha/core';
+import {
+  useUserStore,
+  useVerifiedModerators,
+  usePrefetchProduct,
+  buildProductHref,
+  useI18n,
+} from '@mobazha/core';
 
 interface Product {
   id: string;
   slug: string;
   title: string;
   imageUrl?: string;
-  price: number;
+  price: number | string;
   currency?: string;
   divisibility?: number;
+  priceFrom?: boolean;
   vendorName?: string;
   vendorAvatar?: string;
   vendorPeerID?: string;
@@ -36,6 +43,8 @@ interface Product {
   rwaTradeMode?: RwaTradeMode;
   /** 仲裁员 peerID 列表 */
   moderators?: string[];
+  /** 店铺归属文案（Network Activity 等场景） */
+  storeAttribution?: string;
 }
 
 export interface ProductSectionProps {
@@ -47,6 +56,10 @@ export interface ProductSectionProps {
   viewAllHref?: string;
   containerSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   titleClassName?: string;
+  /** 为每个商品卡片展示 "from {storeName}" 店铺归属 */
+  showStoreAttribution?: boolean;
+  /** 可选：监听商品卡片点击（不影响默认导航/弹窗行为） */
+  onProductClick?: (product: Product) => void;
 }
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
@@ -58,7 +71,10 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   viewAllHref = '/marketplace',
   containerSize = 'xl',
   titleClassName,
+  showStoreAttribution = false,
+  onProductClick,
 }) => {
+  const { t } = useI18n();
   const { openProduct, isMobile } = useProductModal();
   const profile = useUserStore(state => state.profile);
   const { hasVerifiedMod } = useVerifiedModerators();
@@ -67,6 +83,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   // 处理商品点击
   const handleProductClick = useCallback(
     (e: React.MouseEvent, product: Product) => {
+      onProductClick?.(product);
       // 阻止 Link 的默认导航（桌面端）
       if (!isMobile) {
         e.preventDefault();
@@ -74,7 +91,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
       }
       // 移动端让 Link 正常工作
     },
-    [isMobile, openProduct]
+    [isMobile, onProductClick, openProduct]
   );
 
   // 处理举报
@@ -127,11 +144,14 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
             : products.map((product, index) => {
                 // 构建商品链接，如果有 vendorPeerID 则添加 peerID 参数
-                const productHref = product.vendorPeerID
-                  ? `/product/${product.slug}?peerID=${product.vendorPeerID}`
-                  : `/product/${product.slug}`;
+                const productHref = buildProductHref(product.slug, product.vendorPeerID);
                 // 检查是否为自己的商品
                 const isOwnListing = profile?.peerID === product.vendorPeerID;
+                const storeAttribution =
+                  product.storeAttribution ||
+                  (showStoreAttribution && product.vendorName
+                    ? t('saasHome.networkActivity.fromStore', { storeName: product.vendorName })
+                    : undefined);
                 return (
                   <Link
                     key={`${product.id}-${index}`}
@@ -145,7 +165,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       price={product.price}
                       currency={product.currency}
                       divisibility={product.divisibility}
+                      priceFrom={product.priceFrom}
                       vendorName={product.vendorName}
+                      storeAttribution={storeAttribution}
                       vendorAvatar={product.vendorAvatar}
                       vendorPeerID={product.vendorPeerID}
                       rating={product.rating}

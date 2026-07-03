@@ -13,10 +13,6 @@ export interface CommunityEditionManifest {
     rails: readonly string[];
   };
   deploymentTargets: readonly string[];
-  zcash: {
-    transparentOnly: boolean;
-    defaultDerivation: string;
-  };
 }
 
 /** Inline manifest projection — keep aligned with config/editions/community.json */
@@ -26,14 +22,10 @@ export const COMMUNITY_EDITION_MANIFEST: CommunityEditionManifest = {
   license: 'MPL-2.0',
   paymentPluginSdkLicense: 'Apache-2.0',
   payment: {
-    chains: ['BTC', 'BCH', 'LTC', 'ZEC'],
+    chains: ['BTC', 'BCH', 'LTC'],
     rails: ['utxo_transparent'],
   },
   deploymentTargets: ['standalone'],
-  zcash: {
-    transparentOnly: true,
-    defaultDerivation: 'transparent',
-  },
 };
 
 export const COMMUNITY_PAYMENT_CHAINS = COMMUNITY_EDITION_MANIFEST.payment.chains;
@@ -41,7 +33,3 @@ export const COMMUNITY_PAYMENT_CHAINS = COMMUNITY_EDITION_MANIFEST.payment.chain
 export const COMMUNITY_PAYMENT_CHAIN_SET = new Set<string>(
   COMMUNITY_PAYMENT_CHAINS.map(chain => chain.toUpperCase())
 );
-
-export function isCommunityEdition(): boolean {
-  return true;
-}

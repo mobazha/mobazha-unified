@@ -6,6 +6,7 @@ import { HStack, VStack } from '@/components/layouts';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { useI18n, type DisplayOrder } from '@mobazha/core';
 import { formatUserName } from '@mobazha/core/utils/identity';
+import { IdentityName } from '@/components/IdentityName';
 
 export interface OrderCounterpartyCardProps {
   displayOrder: DisplayOrder;
@@ -40,7 +41,9 @@ export const OrderCounterpartyCard = memo(function OrderCounterpartyCard({
           className="w-9 h-9 ring-1 ring-border/50"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+          <IdentityName className="text-sm font-semibold text-foreground truncate">
+            {displayName}
+          </IdentityName>
           <p className="text-xs text-muted-foreground">{roleLabel}</p>
         </div>
       </Link>
@@ -67,14 +70,14 @@ export const OrderCounterpartyCard = memo(function OrderCounterpartyCard({
       )}
       {order.moderator && (
         <PartyCard
-          label={t('order.moderator')}
+          label={t('order.moderatorStandby')}
           name={formatUserName(order.moderator, { fallback: t('order.moderator') })}
           avatar={order.moderator.avatar}
           location={order.moderator.location}
           href={`/moderators/${order.moderator.id}`}
           extra={
             <span className="text-xs text-primary font-medium">
-              {t('order.moderatorFeePercent', { fee: order.moderator.fee })}
+              {t('order.moderatorFeeOnDispute', { fee: order.moderator.fee })}
             </span>
           }
         />
@@ -112,9 +115,9 @@ function PartyCard({
             className="w-11 h-11 ring-2 ring-border/50 group-hover:ring-primary/30 transition-all"
           />
           <VStack gap="none">
-            <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
+            <IdentityName className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
               {name}
-            </span>
+            </IdentityName>
             {location && <span className="text-xs text-muted-foreground">{location}</span>}
             {extra}
           </VStack>

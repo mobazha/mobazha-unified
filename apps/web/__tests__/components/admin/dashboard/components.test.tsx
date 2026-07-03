@@ -38,8 +38,38 @@ vi.mock('@mobazha/core', () => ({
     formatPrice: (amount: number, currency: string) => `${currency} ${amount.toFixed(2)}`,
     fromMinimalUnit: (amount: number, _currency: string) => amount / 100,
   }),
+  formatPrice: (amount: number, currency: string) => `${amount} ${currency}`,
+  fromMinimalUnit: (amount: number | string, currency: string) => {
+    const decimals: Record<string, number> = { BTC: 8, ETH: 18, LTC: 8 };
+    return Number(amount) / 10 ** (decimals[currency] ?? 2);
+  },
   getImageUrl: (hash: string) => `https://img.test/${hash}`,
+  orderListItemThumbnailDisplayUrl: (order: { thumbnail?: { small?: string } | string }) => {
+    if (!order.thumbnail) return '';
+    if (typeof order.thumbnail === 'string') return `https://img.test/${order.thumbnail}`;
+    return order.thumbnail.small ? `https://img.test/${order.thumbnail.small}` : '';
+  },
   isStandalone: () => false,
+}));
+
+vi.mock('@mobazha/core/data/tokens', async importOriginal => {
+  const actual = await importOriginal<typeof import('@mobazha/core/data/tokens')>();
+  return {
+    ...actual,
+    resolveTokenIdForDisplay: (coin: string) => coin,
+    getPaymentCoinDisplayLabel: (coin: string) => coin,
+  };
+});
+
+vi.mock('@/components/Product/ListingPriceLabel', () => ({
+  ListingPriceLabel: () => React.createElement('span', null, 'USD 15.00'),
+}));
+
+vi.mock('@mobazha/core/services/api/guestCheckout', () => ({
+  guestOrderListThumbnailUrl: (order: { items?: Array<{ thumbnail?: string }> }) => {
+    const thumb = order.items?.find(item => item.thumbnail)?.thumbnail;
+    return thumb ? `https://img.test/${thumb}` : '';
+  },
 }));
 
 vi.mock('next/link', () => ({
@@ -53,6 +83,7 @@ import { StatCard } from '@/components/admin/dashboard/StatCard';
 import { EmptyState } from '@/components/admin/dashboard/EmptyState';
 import { ListSkeleton } from '@/components/admin/dashboard/ListSkeleton';
 import { RecentOrderRow } from '@/components/admin/dashboard/RecentOrderRow';
+import { AdminRecentOrderRow } from '@/components/admin/dashboard/AdminRecentOrderRow';
 import { TopProductRow } from '@/components/admin/dashboard/TopProductRow';
 import { Package } from 'lucide-react';
 
@@ -185,6 +216,44 @@ describe('RecentOrderRow', () => {
   });
 });
 
+// ── AdminRecentOrderRow ──────────────────────────────────────────────────────
+
+describe('AdminRecentOrderRow', () => {
+  it('formats guest order payment amounts from minimal units', () => {
+    render(
+      <AdminRecentOrderRow
+        entry={{
+          source: 'guest',
+          order: {
+            orderToken: 'gst-test',
+            state: 'AWAITING_PAYMENT',
+            paymentCoin: 'ETH',
+            paymentAmount: '28500000000000000',
+            priceCurrency: 'USD',
+            items: [
+              {
+                listingHash: 'QmListing',
+                listingTitle: 'Guest Widget',
+                listingSlug: 'guest-widget',
+                sellerPeerID: 'QmSeller',
+                thumbnail: 'QmThumb',
+                quantity: 1,
+                unitPrice: '2500',
+              },
+            ],
+            createdAt: '2026-05-18T12:00:00Z',
+            updatedAt: '2026-05-18T12:00:00Z',
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText('Guest Widget')).toBeInTheDocument();
+    expect(screen.getByText('0.0285 ETH')).toBeInTheDocument();
+    expect(screen.queryByText('28500000000000000 ETH')).not.toBeInTheDocument();
+  });
+});
+
 // ── TopProductRow ────────────────────────────────────────────────────────────
 
 describe('TopProductRow', () => {
@@ -215,7 +284,7 @@ describe('TopProductRow', () => {
   it('links to listing page', () => {
     render(<TopProductRow product={baseProduct as any} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/listing/vintage-tee');
+    expect(link).toHaveAttribute('href', '/listing/edit/vintage-tee?from=admin');
   });
 
   it('hides rating when zero', () => {

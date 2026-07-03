@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 
-const DEFAULT_SITE_URL = 'https://app.mobazha.org';
+const DEFAULT_SITE_URL: string =
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '' : 'https://app.mobazha.org';
 
 /**
  * Resolve the site base URL for SSR metadata (OG, JSON-LD, breadcrumb items).

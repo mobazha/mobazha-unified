@@ -1,7 +1,21 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { useI18n, type DisplayOrder } from '@mobazha/core';
+import {
+  useI18n,
+  type DisplayOrder,
+  type CancellationContext,
+  getFulfillmentStepLabelKey,
+  getPendingBuyerPaidHintKey,
+  getProcessingBuyerStatusKey,
+  getProcessingSellerStatusKey,
+  getShippedBuyerStatusKey,
+  getShippedHintKey,
+  getShippedSellerStatusKey,
+  getDeliveredBuyerStatusKey,
+  getDeliveredSellerStatusKey,
+} from '@mobazha/core';
+import { formatOrderDate } from '@/components/Order/utils';
 import { cn } from '@/lib/utils';
 import {
   Clock,
@@ -13,6 +27,7 @@ import {
   XCircle,
   RotateCcw,
   ShieldAlert,
+  Gavel,
 } from 'lucide-react';
 
 export interface OrderStatusCardProps {
@@ -27,13 +42,102 @@ interface StatusConfig {
   color: string;
   bgColor: string;
   progress: number;
+  paymentStepLabel?: string;
+}
+
+function resolveCancellationCopy(
+  cancellation: CancellationContext | undefined,
+  isBuyer: boolean,
+  t: (key: string) => string
+): Pick<StatusConfig, 'message' | 'hint'> {
+  if (!cancellation) {
+    return {
+      message: t('order.statusCard.cancelled'),
+      hint: undefined,
+    };
+  }
+
+  const { kind, wasFunded, refundConfirmed } = cancellation;
+
+  switch (kind) {
+    case 'seller_decline':
+      return {
+        message: isBuyer
+          ? wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedBuyerFundedRefunded')
+              : t('order.statusCard.declinedBuyerFunded')
+            : t('order.statusCard.declinedBuyerUnfunded')
+          : wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedSellerFundedRefunded')
+              : t('order.statusCard.declinedSellerFunded')
+            : t('order.statusCard.declinedSellerUnfunded'),
+        hint: isBuyer
+          ? wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedHintBuyerFundedRefunded')
+              : t('order.statusCard.declinedHintBuyerFunded')
+            : t('order.statusCard.declinedHintBuyerUnfunded')
+          : wasFunded
+            ? refundConfirmed
+              ? t('order.statusCard.declinedHintSellerFundedRefunded')
+              : t('order.statusCard.declinedHintSellerFunded')
+            : t('order.statusCard.declinedHintSellerUnfunded'),
+      };
+    case 'payment_verification_timeout':
+      return {
+        message: isBuyer
+          ? t('order.statusCard.paymentVerificationTimeoutBuyer')
+          : t('order.statusCard.paymentVerificationTimeoutSeller'),
+        hint: isBuyer
+          ? t('order.statusCard.paymentVerificationTimeoutHintBuyer')
+          : t('order.statusCard.paymentVerificationTimeoutHintSeller'),
+      };
+    case 'cancelled_paid':
+      return {
+        message: isBuyer
+          ? refundConfirmed
+            ? t('order.statusCard.cancelledPaidBuyerRefunded')
+            : t('order.statusCard.cancelledPaidBuyer')
+          : refundConfirmed
+            ? t('order.statusCard.cancelledPaidSellerRefunded')
+            : t('order.statusCard.cancelledPaidSeller'),
+        hint: isBuyer
+          ? refundConfirmed
+            ? t('order.statusCard.cancelledPaidHintBuyerRefunded')
+            : t('order.statusCard.cancelledPaidHintBuyer')
+          : refundConfirmed
+            ? t('order.statusCard.cancelledPaidHintSellerRefunded')
+            : t('order.statusCard.cancelledPaidHintSeller'),
+      };
+    case 'cancelled_unpaid':
+      return {
+        message: isBuyer
+          ? t('order.statusCard.cancelledUnpaidBuyer')
+          : t('order.statusCard.cancelledUnpaidSeller'),
+        hint: isBuyer
+          ? t('order.statusCard.cancelledUnpaidHintBuyer')
+          : t('order.statusCard.cancelledUnpaidHintSeller'),
+      };
+    case 'payment_timeout':
+    default:
+      return {
+        message: isBuyer
+          ? t('order.statusCard.cancelledBuyer')
+          : t('order.statusCard.cancelledSeller'),
+        hint: isBuyer
+          ? t('order.statusCard.cancelledHintBuyer')
+          : t('order.statusCard.cancelledHintSeller'),
+      };
+  }
 }
 
 export const OrderStatusCard = memo(function OrderStatusCard({
   displayOrder: order,
   className,
 }: OrderStatusCardProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const isCryptoPayment = !order.fiatPayment;
 
@@ -83,7 +187,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
             hint: failedReasonHint,
             color: 'text-destructive',
             bgColor: 'bg-destructive/8 border-destructive/20',
-            progress: 1,
+            progress: 0,
+            paymentStepLabel: t('order.statusCard.stepPaymentRequired'),
           };
         }
         if (isSubmittedAwaitingVerification) {
@@ -93,7 +198,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
             hint: isBuyer ? submittedHint : undefined,
             color: 'text-warning',
             bgColor: 'bg-warning/8 border-warning/20',
-            progress: 1,
+            progress: 0,
+            paymentStepLabel: t('order.statusCard.stepPaymentReview'),
           };
         }
         return {
@@ -105,6 +211,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           color: 'text-destructive',
           bgColor: 'bg-destructive/8 border-destructive/20',
           progress: 0,
+          paymentStepLabel: t('order.statusCard.stepPaymentRequired'),
         };
       case 'pending':
       case 'paid':
@@ -113,10 +220,7 @@ export const OrderStatusCard = memo(function OrderStatusCard({
           message: isBuyer
             ? t('order.statusCard.pendingBuyer')
             : t('order.statusCard.pendingSeller'),
-          hint:
-            isBuyer && isCryptoPayment
-              ? t('order.statusCard.pendingBuyerConfirmingHint')
-              : undefined,
+          hint: isBuyer ? t(getPendingBuyerPaidHintKey(order.contractType)) : undefined,
           color: 'text-warning',
           bgColor: 'bg-warning/8 border-warning/20',
           progress: 1,
@@ -125,8 +229,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: PackageCheck,
           message: isBuyer
-            ? t('order.statusCard.processingBuyer')
-            : t('order.statusCard.processingSeller'),
+            ? t(getProcessingBuyerStatusKey(order.contractType))
+            : t(getProcessingSellerStatusKey(order.contractType)),
           color: 'text-info',
           bgColor: 'bg-info/8 border-info/20',
           progress: 2,
@@ -135,9 +239,9 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: Truck,
           message: isBuyer
-            ? t('order.statusCard.shippedBuyer')
-            : t('order.statusCard.shippedSeller'),
-          hint: isBuyer ? t('order.statusCard.shippedHint') : undefined,
+            ? t(getShippedBuyerStatusKey(order.contractType))
+            : t(getShippedSellerStatusKey(order.contractType)),
+          hint: isBuyer ? t(getShippedHintKey(order.contractType)) : undefined,
           color: 'text-primary',
           bgColor: 'bg-primary/8 border-primary/20',
           progress: 3,
@@ -146,8 +250,8 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: CheckCircle2,
           message: isBuyer
-            ? t('order.statusCard.deliveredBuyer')
-            : t('order.statusCard.deliveredSeller'),
+            ? t(getDeliveredBuyerStatusKey(order.contractType))
+            : t(getDeliveredSellerStatusKey(order.contractType)),
           color: 'text-primary',
           bgColor: 'bg-primary/8 border-primary/20',
           progress: 3,
@@ -164,24 +268,39 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         return {
           icon: ShieldAlert,
           message: t('order.statusCard.disputed'),
-          hint: t('order.statusCard.disputedHint'),
+          hint: isBuyer
+            ? t('order.statusCard.disputedHintBuyer')
+            : order.userRole === 'seller'
+              ? t('order.statusCard.disputedHintSeller')
+              : t('order.statusCard.disputedHint'),
           color: 'text-destructive',
           bgColor: 'bg-destructive/8 border-destructive/20',
           progress: -1,
         };
-      case 'cancelled':
+      case 'decided':
+        return {
+          icon: Gavel,
+          message: t('order.statusCard.decided'),
+          hint: isBuyer
+            ? t('order.statusCard.decidedHintBuyer')
+            : order.userRole === 'seller'
+              ? t('order.statusCard.decidedHintSeller')
+              : t('order.statusCard.decidedHint'),
+          color: 'text-primary',
+          bgColor: 'bg-primary/8 border-primary/20',
+          progress: -1,
+        };
+      case 'cancelled': {
+        const cancellationCopy = resolveCancellationCopy(order.cancellation, isBuyer, t);
         return {
           icon: XCircle,
-          message: isBuyer
-            ? t('order.statusCard.cancelledBuyer')
-            : t('order.statusCard.cancelledSeller'),
-          hint: isBuyer
-            ? t('order.statusCard.cancelledHintBuyer')
-            : t('order.statusCard.cancelledHintSeller'),
+          message: cancellationCopy.message,
+          hint: cancellationCopy.hint,
           color: 'text-amber-600 dark:text-amber-400',
           bgColor: 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/40',
           progress: -1,
         };
+      }
       case 'refunded':
         return {
           icon: RotateCcw,
@@ -202,26 +321,61 @@ export const OrderStatusCard = memo(function OrderStatusCard({
   }, [
     order.status,
     order.userRole,
+    order.contractType,
     order.awaitingPaymentVerification,
     order.paymentVerificationFailed,
     order.paymentVerificationFailureReason,
-    isCryptoPayment,
+    order.cancellation,
     t,
   ]);
 
   const stepLabels = useMemo(
     () => [
-      t('order.statusCard.stepPaid'),
+      config.paymentStepLabel || t('order.statusCard.stepPaid'),
       t('order.statusCard.stepAccepted'),
-      t('order.statusCard.stepShipped'),
+      t(getFulfillmentStepLabelKey(order.contractType)),
       t('order.statusCard.stepComplete'),
     ],
-    [t]
+    [config.paymentStepLabel, order.contractType, t]
   );
 
   const Icon = config.icon;
   const isTerminal = config.progress < 0;
   const cancelReason = order.cancelReason;
+  const showUserCancelReason =
+    !!cancelReason &&
+    cancelReason !== 'payment_timeout' &&
+    cancelReason !== 'payment_verification_timeout';
+
+  // Payment progress (partial / verified intermediate state) — shown only
+  // for crypto payments still in the awaiting/pending verification window
+  // where the buyer has deposited something but the verifier has not yet
+  // flipped the order to "verified". Hide on terminal states and on the
+  // verification-failed branch to avoid mixed-signal UI.
+  const paymentProgress = order.paymentProgress;
+  const showPaymentProgress =
+    !!paymentProgress &&
+    paymentProgress.percentage > 0 &&
+    isCryptoPayment &&
+    !isTerminal &&
+    !order.paymentVerificationFailed &&
+    (order.status === 'awaiting_payment' || order.status === 'pending');
+
+  const paymentProgressReceivedLabel =
+    paymentProgress && showPaymentProgress
+      ? t('order.statusCard.paymentProgressReceived', {
+          received: paymentProgress.totalReceivedFormatted ?? paymentProgress.totalReceived,
+          expected: paymentProgress.expectedAmountFormatted ?? paymentProgress.expectedAmount,
+          percentage: paymentProgress.percentage,
+        })
+      : '';
+
+  const paymentProgressOverpaidLabel =
+    paymentProgress && showPaymentProgress && paymentProgress.overpaidAmount
+      ? t('order.statusCard.paymentProgressOverpaid', {
+          amount: paymentProgress.overpaidAmountFormatted ?? paymentProgress.overpaidAmount,
+        })
+      : '';
 
   return (
     <div
@@ -235,28 +389,50 @@ export const OrderStatusCard = memo(function OrderStatusCard({
         <div className="flex-1 min-w-0">
           <p className={cn('text-sm font-semibold', config.color)}>{config.message}</p>
           {config.hint && <p className="text-xs text-muted-foreground mt-0.5">{config.hint}</p>}
-          {isTerminal && cancelReason && (
+          {isTerminal && showUserCancelReason && (
             <p className="text-xs text-muted-foreground mt-1">
               {t('order.statusCard.reason')}: {cancelReason}
             </p>
           )}
-          {isTerminal && order.status === 'cancelled' && (order.createdAt || order.cancelledAt) && (
+          {isTerminal && order.status === 'cancelled' && order.cancelledAt && (
             <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-2">
-              {order.createdAt && (
-                <span>
-                  {t('order.statusCard.orderedAt')}: {new Date(order.createdAt).toLocaleString()}
-                </span>
-              )}
-              {order.cancelledAt && (
-                <span>
-                  {t('order.statusCard.cancelledAt')}:{' '}
-                  {new Date(order.cancelledAt).toLocaleString()}
-                </span>
-              )}
+              <span>
+                {t('order.statusCard.cancelledAt')}:{' '}
+                {formatOrderDate(order.cancelledAt, { locale, includeSeconds: true })}
+              </span>
             </div>
           )}
         </div>
       </div>
+
+      {showPaymentProgress && paymentProgress && (
+        <div className="mt-3 px-0.5" data-testid="order-payment-progress">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+            <span>{t('order.statusCard.paymentProgress')}</span>
+            <span className="font-medium text-foreground tabular-nums">
+              {paymentProgress.percentage}%
+            </span>
+          </div>
+          <div
+            className="h-1.5 w-full rounded-full bg-muted-foreground/15 overflow-hidden"
+            role="progressbar"
+            aria-valuenow={paymentProgress.percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${paymentProgress.percentage}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">{paymentProgressReceivedLabel}</p>
+          {paymentProgressOverpaidLabel && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
+              {paymentProgressOverpaidLabel}
+            </p>
+          )}
+        </div>
+      )}
 
       {!isTerminal && (
         <div className="mt-3 px-0.5">

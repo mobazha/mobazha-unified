@@ -1,17 +1,30 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useI18n, getImageUrl } from '@mobazha/core';
+import {
+  analyzeContractTypes,
+  useI18n,
+  getImageUrl,
+  mustAssetIdFromTokenId,
+  buildProductHref,
+  sanitizeAcceptedPaymentCoins,
+} from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
+  buyerPortalTokenStorageKey,
   getGuestCheckoutSettings,
   createGuestOrder,
+  getGuestOrderStatus,
   type CreateGuestOrderRequest,
   type GuestOrderResponse,
 } from '@mobazha/core/services/api/guestCheckout';
-import { GUEST_CHECKOUT_DEFAULT_COINS } from '@mobazha/core/config/guestCheckoutCoins';
+import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
+import { useGuestSupplyQuote } from '@mobazha/core/hooks/useGuestSupplyQuote';
+import { isSovereignMode } from '@mobazha/core/config/env';
+import { getGatewayUrl } from '@mobazha/core/services/api/config';
+import { useAddressEncryption } from '@mobazha/core/hooks/useAddressEncryption';
 import type { Address } from '@mobazha/core';
 import { Header } from '@/components';
 import { Container } from '@/components/layouts';
@@ -28,12 +41,18 @@ import {
   type ExternalWalletPaymentInfo,
 } from '@/components/Payment/ExternalWalletPayment';
 import { AnonymousModeBanner } from '@/components/GuestCheckout/AnonymousModeBanner';
+import { GuestSupplyAvailabilityPanel } from '@/components/GuestCheckout/GuestSupplyAvailabilityPanel';
 import { SaveOrderLinkCard } from '@/components/GuestCheckout/SaveOrderLinkCard';
 import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
+import type {
+  CommerceGuestOrderRequest,
+  CommerceGuestOrderResponse,
+} from '@mobazha/commerce-web/checkout';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
-const STEPS: Step[] = ['cart', 'shipping', 'coin', 'payment'];
+const STEPS_WITH_SHIPPING: Step[] = ['cart', 'shipping', 'coin', 'payment'];
+const STEPS_DIGITAL: Step[] = ['cart', 'coin', 'payment'];
 
 const EMPTY_ADDRESS: Address = {
   name: '',
@@ -48,34 +67,52 @@ const EMPTY_ADDRESS: Address = {
 type PaymentState =
   | { status: 'idle' }
   | { status: 'submitting' }
-  | { status: 'awaiting'; data: GuestOrderResponse }
+  | { status: 'awaiting'; data: CommerceGuestOrderResponse }
   | { status: 'error'; message: string };
+
+function buildAddressPayload(addr: Address): {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  addressNotes?: string;
+} {
+  return {
+    name: addr.name,
+    address: addr.addressLineOne,
+    city: addr.city,
+    state: addr.state,
+    postalCode: addr.postalCode,
+    country: addr.country,
+    addressNotes: addr.addressNotes || undefined,
+  };
+}
 
 function buildOrderRequest(
   items: GuestCartItem[],
-  addr: Address,
+  addr: Address | null,
+  encryptedAddr: string | null,
   email: string,
   coin: string
-): CreateGuestOrderRequest {
+): CommerceGuestOrderRequest {
   return {
     items: items.map(i => ({
-      slug: i.slug,
+      listingSlug: i.slug,
       listingHash: i.listingHash,
       quantity: i.quantity,
-      options: i.options,
-      shipping: i.shipping,
+      options: i.options?.map(opt => ({ [opt.name]: opt.value })),
+      shippingOption: i.shipping?.name,
+      shippingService: i.shipping?.service,
     })),
     paymentCoin: coin,
     contactEmail: email || undefined,
-    shippingAddress: {
-      name: addr.name,
-      address: addr.addressLineOne,
-      city: addr.city,
-      state: addr.state,
-      postalCode: addr.postalCode,
-      country: addr.country,
-      addressNotes: addr.addressNotes || undefined,
-    },
+    ...(addr !== null && encryptedAddr
+      ? { shippingAddress: encryptedAddr }
+      : addr !== null
+        ? { shippingAddress: buildAddressPayload(addr) }
+        : {}),
   };
 }
 
@@ -89,6 +126,19 @@ function toPaymentInfo(data: GuestOrderResponse, coin: string): ExternalWalletPa
   };
 }
 
+function buildGuestOrderUrl(
+  orderToken: string,
+  buyerPortalToken?: string,
+  absolute = false
+): string {
+  const path = `/guest-order/${encodeURIComponent(orderToken)}`;
+  const fragment = buyerPortalToken
+    ? `#buyerPortalToken=${encodeURIComponent(buyerPortalToken)}`
+    : '';
+  if (!absolute || typeof window === 'undefined') return `${path}${fragment}`;
+  return `${window.location.origin}${path}${fragment}`;
+}
+
 export default function GuestCheckoutPage() {
   const { t } = useI18n();
   const router = useRouter();
@@ -96,19 +146,34 @@ export default function GuestCheckoutPage() {
     useGuestCartStore();
   const [step, setStep] = useState<Step>('cart');
   const [addressData, setAddressData] = useState<Address>(EMPTY_ADDRESS);
+  // PM-3a: holds the PGP-encrypted address ciphertext once encryption succeeds.
+  const [encryptedAddress, setEncryptedAddress] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>('');
-  const [acceptedCoins, setAcceptedCoins] = useState<string[]>(GUEST_CHECKOUT_DEFAULT_COINS);
+  const [acceptedCoins, setAcceptedCoins] = useState<string[]>([]);
+  const [coinsLoading, setCoinsLoading] = useState(true);
   const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
+  const supplyQuote = useGuestSupplyQuote(items, items.length > 0);
+
+  // PM-3a: fetch vendor PGP public key for client-side address encryption.
+  // Only needed for physical goods that require a shipping address.
+  const hasPhysicalItems = items.some(i => i.contractType === 'PHYSICAL_GOOD');
+  const { encryptionAvailable, encryptAddress } = useAddressEncryption(
+    isSovereignMode() && hasPhysicalItems ? getGatewayUrl() : ''
+  );
 
   useEffect(() => {
     getGuestCheckoutSettings()
       .then(res => {
-        const coins = res.acceptedCoins;
-        if (Array.isArray(coins) && coins.length > 0) setAcceptedCoins(coins);
+        // Use availableCoins (runtime-filtered by the node) so payment methods
+        // that lack a required runtime capability
+        // are never shown to the buyer.
+        const coins = Array.isArray(res.availableCoins) ? res.availableCoins : [];
+        setAcceptedCoins(sanitizeAcceptedPaymentCoins(coins));
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => setAcceptedCoins([]))
+      .finally(() => setCoinsLoading(false));
+  }, [items]);
 
   const stepLabels: Record<string, string> = {
     cart: t('guestCheckout.stepCart'),
@@ -119,9 +184,23 @@ export default function GuestCheckoutPage() {
 
   const total = getTotal();
   const itemCount = getItemCount();
+  const contractTypeCheckout = useMemo(() => analyzeContractTypes(items), [items]);
+  const {
+    hasMissing: hasMissingContractType,
+    hasMixed: hasMixedContractTypes,
+    canCheckout: canContinueCart,
+    isAllDigital,
+    hasDigitalItems,
+  } = contractTypeCheckout;
+  const STEPS = isAllDigital ? STEPS_DIGITAL : STEPS_WITH_SHIPPING;
+  const supplyBlocksCheckout =
+    items.length > 0 &&
+    (supplyQuote.loading || (supplyQuote.authoritative && !supplyQuote.canProceed));
 
   const handleAddressChange = (field: keyof Address, value: string) => {
     setAddressData(prev => ({ ...prev, [field]: value }));
+    // Reset cached ciphertext whenever the user edits the address.
+    setEncryptedAddress(null);
   };
 
   const canSubmitShipping =
@@ -139,28 +218,101 @@ export default function GuestCheckoutPage() {
     []
   );
 
+  // Poll order status when in 'awaiting' state. Auto-navigate to the order
+  // status page as soon as the payment is detected or confirmed.
+  useEffect(() => {
+    if (paymentState.status !== 'awaiting') return;
+    const { orderToken, buyerPortalToken } = paymentState.data;
+    let cancelled = false;
+    const interval = setInterval(() => {
+      if (cancelled) return;
+      getGuestOrderStatus(orderToken)
+        .then(res => {
+          if (cancelled) return;
+          if (res.state !== 'AWAITING_PAYMENT') {
+            router.push(buildGuestOrderUrl(orderToken, buyerPortalToken));
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [paymentState, router]);
+
   const submitGuestOrder = useCallback(
     async (coin: string) => {
+      if (hasMissingContractType || hasMixedContractTypes) {
+        setPaymentState({
+          status: 'error',
+          message: hasMixedContractTypes
+            ? t('order.mixedContractTypesBody')
+            : t('order.missingContractTypeBody'),
+        });
+        setStep('cart');
+        return;
+      }
       setPaymentState({ status: 'submitting' });
       try {
-        const req = buildOrderRequest(items, addressData, contactEmail, coin);
+        // PM-3a: for physical orders, try to encrypt the address client-side
+        // before sending. Falls back to plaintext if PGP is not configured.
+        let finalEncrypted: string | null = encryptedAddress;
+        if (!isAllDigital && encryptionAvailable && !finalEncrypted) {
+          finalEncrypted = await encryptAddress(buildAddressPayload(addressData));
+          if (!submitOrderAbortRef.current && finalEncrypted) {
+            setEncryptedAddress(finalEncrypted);
+          }
+        }
+
+        const req = buildOrderRequest(
+          items,
+          isAllDigital ? null : addressData,
+          isAllDigital ? null : finalEncrypted,
+          contactEmail,
+          coin
+        );
         const res = await createGuestOrder(req);
         if (submitOrderAbortRef.current) return;
+        if (res.buyerPortalToken && typeof window !== 'undefined') {
+          window.sessionStorage.setItem(
+            buyerPortalTokenStorageKey(res.orderToken),
+            res.buyerPortalToken
+          );
+        }
         setPaymentState({ status: 'awaiting', data: res });
         clearCart();
       } catch (err) {
         if (submitOrderAbortRef.current) return;
-        const msg = err instanceof Error ? err.message : 'Order creation failed';
-        setPaymentState({ status: 'error', message: msg });
+        setPaymentState({
+          status: 'error',
+          message: resolveGuestOrderCreationError(err, t),
+        });
       }
     },
-    [items, addressData, contactEmail, clearCart]
+    [
+      items,
+      isAllDigital,
+      addressData,
+      encryptedAddress,
+      encryptionAvailable,
+      encryptAddress,
+      contactEmail,
+      clearCart,
+      hasMissingContractType,
+      hasMixedContractTypes,
+      t,
+    ]
   );
 
   const handleCoinSelect = (tokenId: string) => {
-    setSelectedCoin(tokenId);
+    const paymentCoin =
+      tokenId.startsWith('crypto:') || tokenId.startsWith('fiat:')
+        ? tokenId
+        : mustAssetIdFromTokenId(tokenId);
+    setSelectedCoin(paymentCoin);
     setStep('payment');
-    void submitGuestOrder(tokenId);
+    void submitGuestOrder(paymentCoin);
   };
 
   return (
@@ -211,8 +363,9 @@ export default function GuestCheckoutPage() {
                           key={`${item.slug}-${(item.options ?? []).map(o => o.value).join(',')}`}
                           thumbnailUrl={thumbUrl}
                           title={item.title}
-                          href={`/product/${item.slug}?peerID=${item.vendorPeerID}`}
+                          href={buildProductHref(item.slug, item.vendorPeerID)}
                           options={item.options}
+                          contractType={item.contractType}
                           unitPrice={item.price.amount}
                           currency={item.price.currency}
                           quantity={item.quantity}
@@ -235,8 +388,63 @@ export default function GuestCheckoutPage() {
                     </div>
                   )}
 
-                  <Button className="w-full" size="lg" onClick={() => setStep('shipping')}>
-                    {t('guestCheckout.continueToShipping')}
+                  {(hasMixedContractTypes || hasMissingContractType) && (
+                    <div
+                      role="alert"
+                      className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm"
+                    >
+                      <p className="font-medium">
+                        {hasMixedContractTypes
+                          ? t('order.mixedContractTypesTitle')
+                          : t('order.missingContractTypeTitle')}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        {hasMixedContractTypes
+                          ? t('order.mixedContractTypesBody')
+                          : t('order.missingContractTypeBody')}
+                      </p>
+                    </div>
+                  )}
+
+                  {supplyQuote.showPanel && (
+                    <GuestSupplyAvailabilityPanel
+                      cartItems={items}
+                      quote={supplyQuote.quote}
+                      loading={supplyQuote.loading}
+                      error={supplyQuote.error}
+                      blocking={supplyBlocksCheckout}
+                    />
+                  )}
+
+                  {/* For digital-only orders, show a compact email field before
+                      proceeding to coin selection (no shipping address needed). */}
+                  {isAllDigital && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cart-email">{t('guestCheckout.emailLabel')}</Label>
+                      <Input
+                        id="cart-email"
+                        type="email"
+                        value={contactEmail}
+                        onChange={e => setContactEmail(e.target.value)}
+                        placeholder="your@email.com"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('guestCheckout.emailDigitalHint', {
+                          defaultValue: 'Optional. We use this to send order updates.',
+                        })}
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => setStep(isAllDigital ? 'coin' : 'shipping')}
+                    disabled={!canContinueCart || supplyBlocksCheckout}
+                  >
+                    {isAllDigital
+                      ? t('guestCheckout.continueToPayment')
+                      : t('guestCheckout.continueToShipping')}
                   </Button>
                 </>
               )}
@@ -278,6 +486,30 @@ export default function GuestCheckoutPage() {
                 </CardContent>
               </Card>
 
+              {/* PM-3a: encryption status indicator */}
+              {isSovereignMode() && (
+                <div
+                  className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
+                    encryptionAvailable
+                      ? 'bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                  }`}
+                >
+                  <span>{encryptionAvailable ? '🔒' : '⚠️'}</span>
+                  <span>
+                    {encryptionAvailable
+                      ? t('guestCheckout.addressWillBeEncrypted', {
+                          defaultValue:
+                            "Your address will be encrypted with the seller's PGP key before sending.",
+                        })
+                      : t('guestCheckout.addressNotEncrypted', {
+                          defaultValue:
+                            'This seller has not configured PGP encryption. Your address will be sent as plaintext.',
+                        })}
+                  </span>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -302,12 +534,25 @@ export default function GuestCheckoutPage() {
               <p className="text-sm text-muted-foreground">
                 {t('guestCheckout.choosePaymentHint')}
               </p>
-              <PaymentCryptoSelector
-                acceptedCurrencies={acceptedCoins}
-                selectedTokenId={selectedCoin}
-                onSelect={handleCoinSelect}
-                showFiatMethods={false}
-              />
+              {coinsLoading ? (
+                <div className="h-24 flex items-center justify-center">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : acceptedCoins.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  {t('guestCheckout.noPaymentMethodsAvailable', {
+                    defaultValue:
+                      'No payment methods available. The seller has not configured accepted cryptocurrencies yet.',
+                  })}
+                </p>
+              ) : (
+                <PaymentCryptoSelector
+                  acceptedCurrencies={acceptedCoins}
+                  selectedTokenId={selectedCoin}
+                  onSelect={handleCoinSelect}
+                  showFiatMethods={false}
+                />
+              )}
               <Button
                 variant="outline"
                 className="w-full"
@@ -372,12 +617,27 @@ export default function GuestCheckoutPage() {
                     </span>
                   </div>
 
+                  {hasDigitalItems && (
+                    <div
+                      role="note"
+                      className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm"
+                      data-testid="guest-checkout-digital-save-link-hint"
+                    >
+                      <p className="font-semibold mb-1">
+                        {t('guestCheckout.digitalSaveLinkTitle')}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {t('guestCheckout.digitalSaveLinkBody')}
+                      </p>
+                    </div>
+                  )}
+
                   <SaveOrderLinkCard
-                    orderUrl={
-                      typeof window !== 'undefined'
-                        ? `${window.location.origin}/guest-order/${paymentState.data.orderToken}`
-                        : `/guest-order/${paymentState.data.orderToken}`
-                    }
+                    orderUrl={buildGuestOrderUrl(
+                      paymentState.data.orderToken,
+                      paymentState.data.buyerPortalToken,
+                      true
+                    )}
                     title={t('guestCheckout.saveLinkTitle')}
                     description={t('guestCheckout.saveLinkDescription')}
                     copyLabel={t('guestCheckout.saveLinkCopy')}
@@ -391,7 +651,14 @@ export default function GuestCheckoutPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() => router.push(`/guest-order/${paymentState.data.orderToken}`)}
+                    onClick={() =>
+                      router.push(
+                        buildGuestOrderUrl(
+                          paymentState.data.orderToken,
+                          paymentState.data.buyerPortalToken
+                        )
+                      )
+                    }
                   >
                     {t('guestCheckout.trackOrderStatus')}
                   </Button>

@@ -9,7 +9,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { FeaturedProductsProps, ProductListItem } from '@mobazha/core';
-import { productDataService, getImageUrl, useI18n, useCurrencyFormat } from '@mobazha/core';
+import { productDataService, getImageUrl, useI18n, buildProductHref } from '@mobazha/core';
+import { ListingPriceLabel } from '@/components/Product/ListingPriceLabel';
 
 interface Props extends FeaturedProductsProps {
   peerId: string;
@@ -32,7 +33,6 @@ export function FeaturedProductsSection({
   peerId,
 }: Props) {
   const { t } = useI18n();
-  const { formatLocalPrice } = useCurrencyFormat();
   const isPreview = peerId === PREVIEW_PEER;
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [isLoading, setIsLoading] = useState(!isPreview);
@@ -103,7 +103,7 @@ export function FeaturedProductsSection({
           {products.map(product => (
             <a
               key={product.slug}
-              href={`/product/${product.slug}?peerID=${peerId}`}
+              href={buildProductHref(product.slug, peerId)}
               className="group overflow-hidden transition-shadow hover:shadow-lg"
               style={{ borderRadius: 'var(--store-radius)' }}
             >
@@ -125,11 +125,11 @@ export function FeaturedProductsSection({
                 </h3>
                 {product.price && (
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {formatLocalPrice(
-                      Number(product.price.amount || 0),
-                      product.price.currency?.code || 'USD',
-                      { divisibility: product.price.currency?.divisibility }
-                    )}
+                    <ListingPriceLabel
+                      listItem={product}
+                      currencyCode={product.price.currency?.code}
+                      divisibility={product.price.currency?.divisibility}
+                    />
                   </p>
                 )}
               </div>

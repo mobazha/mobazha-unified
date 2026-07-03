@@ -5,13 +5,16 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { cn } from '@/lib/utils';
 import {
   getImageUrl,
   decodeHtmlEntities,
   sanitizeHtml,
+  stripHtmlTags,
   getTokenIdFromPaymentCoin,
+  filterVisibleAcceptedCurrencies,
   useI18n,
   useCartStore,
   useChatStore,
@@ -30,6 +33,10 @@ import {
 } from 'lucide-react';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
+import { UniquePieceBadge } from './UniquePieceBadge';
+import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
+import { ArtListingSpecsTable } from './ArtListingSpecsTable';
+import { CollectibleTitleListingPanel } from './CollectibleTitleListingPanel';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
@@ -64,6 +71,7 @@ export function ProductDetailMobile({
     ratingsLoading,
     error,
     imageUrls,
+    usesDemoCardArt,
     priceInfo,
     compareAtPrice,
     stock,
@@ -76,9 +84,17 @@ export function ProductDetailMobile({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    relatedListingsScopeTag,
+    isRwaToken,
+    isCollectibleTitleListing,
+    collectibleListingMeta,
+    collectibleTitleNetworkLabel,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isUniquePiece,
+    authenticityCertificateUrl,
+    artListingSpecs,
     hasVariants,
     selectedOptions,
     unavailableVariants,
@@ -99,12 +115,16 @@ export function ProductDetailMobile({
     renderPairedPrice,
     t,
     router,
+    isOffline,
   } = useProductDetail({ slug, peerID, onProductLoaded });
 
   const cartItemCount = useCartStore(state => state.getItemCount());
   const vendorUnreadCount = useChatStore(selectUnreadCountByPeerID(vendorPeerID));
   const displayAcceptedCurrencies = React.useMemo(
-    () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),
+    () =>
+      filterVisibleAcceptedCurrencies(acceptedCurrencies).map(
+        coin => getTokenIdFromPaymentCoin(coin) || coin
+      ),
     [acceptedCurrencies]
   );
 
@@ -125,6 +145,11 @@ export function ProductDetailMobile({
 
   // --- Error ---
   if (error || !product) {
+    const offlineMessage = isOffline
+      ? t('product.storeOffline', {
+          defaultValue: 'This store is currently offline. Please try again later.',
+        })
+      : null;
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center px-4">
@@ -138,10 +163,16 @@ export function ProductDetailMobile({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              d={
+                isOffline
+                  ? 'M18.364 5.636a9 9 0 11-12.728 12.728 9 9 0 0112.728-12.728M12 9v4m0 4h.01'
+                  : 'M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              }
             />
           </svg>
-          <p className="text-muted-foreground mb-4">{error || t('product.notFound')}</p>
+          <p className="text-muted-foreground mb-4">
+            {offlineMessage || error || t('product.notFound')}
+          </p>
           <Link href="/marketplace">
             <Button>{t('common.backToMarket')}</Button>
           </Link>
@@ -150,8 +181,35 @@ export function ProductDetailMobile({
     );
   }
 
+  const purchaseDisabled =
+    isOffline || stock === 0 || (!__SOVEREIGN__ && !paymentAvailable) || isRwaToken;
+
   return (
     <div data-testid="product-detail-mobile">
+      {/* Offline banner */}
+      {isOffline && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 mx-4 mt-3 mb-1 flex items-center gap-2.5">
+          <svg
+            className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+          <p className="text-xs text-amber-800 dark:text-amber-200">
+            {t('product.offlineBanner', {
+              defaultValue:
+                'This seller is currently offline. You can browse the listing but purchasing is unavailable until they come back online.',
+            })}
+          </p>
+        </div>
+      )}
       {/* Cart success toast */}
       {cartSuccess && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -175,7 +233,7 @@ export function ProductDetailMobile({
             <img
               src={imageUrls[selectedImage] || imageUrls[0]}
               alt={product.item.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full ${usesDemoCardArt ? 'object-contain p-2' : 'object-cover'}`}
               onClick={() => setIsImagePreviewOpen(true)}
             />
             {/* Counter badge */}
@@ -246,8 +304,25 @@ export function ProductDetailMobile({
               {renderPairedPrice(compareAtPrice, priceInfo.currency)}
             </span>
           )}
-          <BuyerProtectionBadge variant="inline" />
+          {!__SOVEREIGN__ && !isCollectibleTitleListing && <BuyerProtectionBadge variant="inline" />}
         </div>
+
+        {isCollectibleTitleListing && collectibleListingMeta ? (
+          <CollectibleTitleListingPanel
+            meta={collectibleListingMeta}
+            titleNetworkLabel={collectibleTitleNetworkLabel}
+            compact
+          />
+        ) : null}
+
+        {(isUniquePiece || authenticityCertificateUrl) && (
+          <div className="space-y-2">
+            {isUniquePiece && <UniquePieceBadge compact />}
+            {authenticityCertificateUrl && (
+              <AuthenticityCertificateCard certificateUrl={authenticityCertificateUrl} compact />
+            )}
+          </div>
+        )}
 
         {/* Title + Rating + More */}
         <div>
@@ -263,6 +338,11 @@ export function ProductDetailMobile({
               {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
             </span>
           </div>
+          {product.item.shortDescription?.trim() && (
+            <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-snug">
+              {stripHtmlTags(product.item.shortDescription)}
+            </p>
+          )}
         </div>
 
         {/* Discount badges */}
@@ -299,7 +379,7 @@ export function ProductDetailMobile({
         )}
 
         {/* Shipping quick info */}
-        {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+        {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
           <div className="flex items-center gap-2 text-xs">
             {freeShipping ? (
               <span className="inline-flex items-center gap-1 text-primary font-medium">
@@ -366,8 +446,8 @@ export function ProductDetailMobile({
           )}
         </div>
 
-        {/* RWA Detail */}
-        {product.metadata?.contractType === 'RWA_TOKEN' && (
+        {/* RWA Detail — legacy EVM only */}
+        {product.metadata?.contractType === 'RWA_TOKEN' && !isCollectibleTitleListing && (
           <RwaAssetDetail
             product={product}
             compact
@@ -397,8 +477,8 @@ export function ProductDetailMobile({
           </div>
         )}
 
-        <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
-        {!isOwnProduct && <BuyerProtectionBanner />}
+        {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
+        {!isOwnProduct && !__SOVEREIGN__ && !isCollectibleTitleListing && <BuyerProtectionBanner />}
 
         {/* Payment unavailable warning */}
         {!isOwnProduct && !paymentAvailable && stock > 0 && (
@@ -415,8 +495,8 @@ export function ProductDetailMobile({
           </div>
         )}
 
-        {/* Stock + Quantity (only for buyer) */}
-        {!isOwnProduct && (
+        {/* Stock + Quantity (only for buyer, ordinary listings) */}
+        {!isOwnProduct && !isCollectibleTitleListing && (
           <div className="flex items-center justify-between py-2">
             <div>
               {stock === 0 ? (
@@ -435,14 +515,21 @@ export function ProductDetailMobile({
                   onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
                   className="w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback"
                   aria-label={t('cart.decreaseQuantity')}
+                  data-testid="product-detail-qty-decrease"
                 >
                   -
                 </button>
-                <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+                <span
+                  className="w-8 text-center text-sm font-medium"
+                  data-testid="product-detail-qty-input"
+                >
+                  {quantity}
+                </span>
                 <button
                   onClick={() => setQuantity(prev => Math.min(stock, prev + 1))}
                   className="w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback"
                   aria-label={t('cart.increaseQuantity')}
+                  data-testid="product-detail-qty-increase"
                 >
                   +
                 </button>
@@ -460,6 +547,9 @@ export function ProductDetailMobile({
         )}
 
         {/* --- Accordion Sections --- */}
+        {artListingSpecs.length > 0 && (
+          <ArtListingSpecsTable specs={artListingSpecs} compact className="mb-1" />
+        )}
         <div className="divide-y divide-border border-t border-b border-border">
           {/* Description */}
           <details open className="group">
@@ -490,7 +580,7 @@ export function ProductDetailMobile({
           </details>
 
           {/* Shipping Options */}
-          {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+          {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
             <details className="group">
               <summary className="flex items-center justify-between py-3 cursor-pointer touch-feedback list-none">
                 <span className="font-semibold text-sm text-foreground">
@@ -587,6 +677,7 @@ export function ProductDetailMobile({
             vendorPeerID={vendorPeerID}
             vendorName={vendor?.name}
             currentSlug={product.slug}
+            scopeTag={relatedListingsScopeTag}
             maxItems={4}
             compact
           />
@@ -617,29 +708,31 @@ export function ProductDetailMobile({
           <div className="flex items-center gap-1">
             {/* Left icon group */}
             <div className="flex flex-shrink-0">
-              <button
-                onClick={openChatWithVendor}
-                className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
-              >
-                <svg
-                  className="w-5 h-5 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {!__SOVEREIGN__ && (
+                <button
+                  onClick={openChatWithVendor}
+                  className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                {vendorUnreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                    {vendorUnreadCount > 99 ? '99+' : vendorUnreadCount}
-                  </span>
-                )}
-              </button>
+                  <svg
+                    className="w-5 h-5 text-muted-foreground"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  {vendorUnreadCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                      {vendorUnreadCount > 99 ? '99+' : vendorUnreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => router.push('/cart')}
                 className="relative flex flex-col items-center justify-center w-11 h-11 touch-feedback active:bg-muted/50 rounded-lg"
@@ -679,139 +772,81 @@ export function ProductDetailMobile({
             </div>
             {/* Action buttons */}
             <div className="flex flex-1 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
-                onClick={handleAddToCart}
-                disabled={stock === 0 || !paymentAvailable}
-              >
-                {cartSuccess ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : !paymentAvailable ? (
-                  t('payment.paymentUnavailable')
-                ) : stock === 0 ? (
-                  t('product.outOfStock')
-                ) : (
-                  t('product.addToCart')
-                )}
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1 h-11 text-sm font-medium touch-feedback"
-                onClick={handleBuyNow}
-                disabled={stock === 0 || !paymentAvailable}
-              >
-                {t('product.buyNow')}
-              </Button>
+              {isCollectibleTitleListing ? (
+                <Button
+                  size="sm"
+                  className="flex-1 h-11 text-sm font-medium touch-feedback"
+                  onClick={handleBuyNow}
+                  disabled={purchaseDisabled}
+                  data-testid="product-detail-purchase-title"
+                >
+                  {isOffline
+                    ? t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                    : !paymentAvailable
+                      ? t('payment.paymentUnavailable')
+                      : stock === 0
+                        ? t('product.outOfStock')
+                        : t('product.collectibleTitle.purchaseTitle')}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
+                    onClick={handleAddToCart}
+                    disabled={purchaseDisabled}
+                    data-testid="product-detail-add-to-cart"
+                  >
+                    {cartSuccess ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : isOffline ? (
+                      t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                    ) : !paymentAvailable ? (
+                      t('payment.paymentUnavailable')
+                    ) : isRwaToken ? (
+                      t('payment.rwaNotSupported')
+                    ) : stock === 0 ? (
+                      t('product.outOfStock')
+                    ) : (
+                      t('product.addToCart')
+                    )}
+                  </Button>
+                  {!purchaseDisabled && (
+                    <Button
+                      size="sm"
+                      className="flex-1 h-11 text-sm font-medium touch-feedback"
+                      onClick={handleBuyNow}
+                      data-testid="product-detail-buy-now"
+                    >
+                      {t('product.buyNow')}
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* --- Fullscreen Image Preview --- */}
-      {isImagePreviewOpen && imageUrls.length > 0 && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-          onClick={() => setIsImagePreviewOpen(false)}
-          onKeyDown={e => {
-            if (e.key === 'Escape') setIsImagePreviewOpen(false);
-            else if (e.key === 'ArrowLeft')
-              setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-            else if (e.key === 'ArrowRight')
-              setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-          }}
-          tabIndex={0}
-          ref={el => el?.focus()}
-        >
-          <button
-            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center z-10"
-            onClick={() => setIsImagePreviewOpen(false)}
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          <div className="absolute top-4 left-4 text-white/80 text-sm">
-            {selectedImage + 1} / {imageUrls.length}
-          </div>
-          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img
-              src={imageUrls[selectedImage]}
-              alt={product.item.title}
-              className="max-w-full max-h-[85vh] object-contain"
-            />
-          </div>
-          {imageUrls.length > 1 && (
-            <>
-              <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-                }}
-                aria-label="Previous"
-              >
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </button>
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-                }}
-                aria-label="Next"
-              >
-                <ChevronRight className="w-6 h-6 text-white" />
-              </button>
-            </>
-          )}
-          {imageUrls.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 rounded-lg p-2">
-              {imageUrls.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={e => {
-                    e.stopPropagation();
-                    setSelectedImage(index);
-                  }}
-                  aria-label={`Image ${index + 1}`}
-                  className={cn(
-                    'w-12 h-12 rounded overflow-hidden border-2 transition-all',
-                    selectedImage === index
-                      ? 'border-white'
-                      : 'border-transparent opacity-60 hover:opacity-100'
-                  )}
-                >
-                  <img
-                    src={image}
-                    alt={`Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <ImageLightbox
+        imageUrls={imageUrls}
+        open={isImagePreviewOpen}
+        selectedIndex={selectedImage}
+        onSelectIndex={setSelectedImage}
+        onOpenChange={setIsImagePreviewOpen}
+        variant="product"
+        altPrefix={product.item.title}
+        ariaLabel="Product image preview"
+        testIdPrefix="product-detail-preview"
+      />
     </div>
   );
 }

@@ -2,11 +2,18 @@
  * 商品 API 服务
  */
 
-import type { Product, ProductListItem, RatingIndex, RatingDetail } from '../../types';
+import type {
+  ListingSupplySummaryRequest,
+  ListingSupplySummaryResponse,
+  Product,
+  ProductListItem,
+  RatingDetail,
+  RatingIndex,
+} from '../../types';
 import { getImageUrl } from './config';
 import type { Image } from '../../types';
 import { NODE_API, SEARCH_API } from '../../config/apiPaths';
-import { parsePriceFields } from '../../utils/transforms/priceTransform';
+import { minimalAmountAsNumber, parsePriceFields } from '../../utils/transforms/priceTransform';
 import { isStoreUnavailableError } from './client';
 import {
   authPost,
@@ -20,6 +27,20 @@ import {
   searchPost,
 } from './helpers';
 import { isStoreKnownOffline, markStoreOffline, markStoreOnline } from './storeStatusCache';
+import {
+  computeFeaturedStoreScore,
+  countUniqueVendors,
+  diversifyListingsByVendor,
+  homepageFeedFetchLimit,
+  HOMEPAGE_FEED_FETCH_BATCHES,
+  HOMEPAGE_MIN_VENDORS_FOR_HOT,
+} from '../../utils/homepageFeeds';
+import {
+  excludeListingBySlug,
+  filterListingsByScopeTag,
+  filterStoreOwnedListings,
+} from '../../utils/storeRelatedListings';
+import { slugToSearchQuery } from '../../utils/productUrl';
 
 // API 返回的搜索结果格式
 interface SearchResultItem {
@@ -63,8 +84,15 @@ export interface SearchListingsParams {
   type?: string;
   productType?: string;
   rating?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  currency?: string;
   shipping?: string;
   nsfw?: boolean;
+  /** discover (default) | all — only applies to q=* browse */
+  browse?: 'discover' | 'all';
+  /** Restrict results to these vendor peer IDs (search `id` param). */
+  peerIDs?: string[];
 }
 
 // 搜索商品的响应
@@ -74,6 +102,13 @@ export interface SearchListingsResponse {
   page: number;
   pageSize: number;
   hasMore: boolean;
+  vendorCount?: number;
+  catalogTotal?: number;
+  browseMode?: 'discover' | 'all';
+}
+
+export interface GetListingIndexOptions {
+  includeSupplySummary?: boolean;
 }
 
 // Profile search types are defined inline in searchProfiles()
@@ -165,16 +200,91 @@ export async function fetchTrendingListings(): Promise<ProductListItem[]> {
 }
 
 /**
- * 获取精选商品列表
+ * Adaptive over-fetch; returns the best candidate pool (may still be single-vendor).
  */
-export async function fetchFeaturedListings(): Promise<ProductListItem[]> {
+async function fetchListingPoolWithBatches(
+  load: (fetchLimit: number) => Promise<ProductListItem[]>
+): Promise<ProductListItem[]> {
+  const batches = [...new Set([homepageFeedFetchLimit(12), ...HOMEPAGE_FEED_FETCH_BATCHES])].sort(
+    (a, b) => a - b
+  );
+
+  let items: ProductListItem[] = [];
+  for (const fetchLimit of batches) {
+    items = await load(fetchLimit);
+    if (countUniqueVendors(items) > 1 || items.length < fetchLimit) {
+      break;
+    }
+  }
+  return items;
+}
+
+/**
+ * Fetch listing feed with adaptive over-fetch when one vendor monopolizes fresh/hot windows.
+ */
+async function fetchAndDiversifyListingFeed(
+  load: (fetchLimit: number) => Promise<ProductListItem[]>,
+  limit: number,
+  maxPerVendor = 2
+): Promise<ProductListItem[]> {
+  const batches = [
+    ...new Set([homepageFeedFetchLimit(limit), ...HOMEPAGE_FEED_FETCH_BATCHES]),
+  ].sort((a, b) => a - b);
+
+  let diversified: ProductListItem[] = [];
+
+  for (const fetchLimit of batches) {
+    const items = await load(fetchLimit);
+    diversified = diversifyListingsByVendor(items, { limit, maxPerVendor });
+    if (countUniqueVendors(items) > 1 || items.length < fetchLimit) {
+      return diversified;
+    }
+  }
+
+  return diversified;
+}
+
+/**
+ * 获取精选商品列表（SaaS 首页 Popular Products）
+ *
+ * Primary: hot listings (rating_count across all stores, no time window).
+ * Fallback: when hot pool has too few vendors (bulk-import skew), use fresh with max 1/store.
+ */
+export async function fetchFeaturedListings(limit = 8): Promise<ProductListItem[]> {
   try {
-    const response = await searchSafeGet<SearchApiResponse>(SEARCH_API.LISTINGS_HOT(24, 10), {});
-    return parseSearchResults(response);
+    const hotPool = await fetchListingPoolWithBatches(async fetchLimit => {
+      const response = await searchSafeGet<SearchApiResponse>(
+        SEARCH_API.LISTINGS_HOT(fetchLimit),
+        {}
+      );
+      return parseSearchResults(response);
+    });
+
+    if (countUniqueVendors(hotPool) >= HOMEPAGE_MIN_VENDORS_FOR_HOT) {
+      return diversifyListingsByVendor(hotPool, { limit, maxPerVendor: 1 });
+    }
+
+    return fetchAndDiversifyListingFeed(
+      async fetchLimit => {
+        const response = await searchSafeGet<SearchApiResponse>(
+          SEARCH_API.LISTINGS_FRESH(fetchLimit),
+          {}
+        );
+        return parseSearchResults(response);
+      },
+      limit,
+      1
+    );
   } catch (error) {
     console.error('Failed to fetch featured listings:', error);
     return [];
   }
+}
+
+export async function getListingSupplySummary(
+  req: ListingSupplySummaryRequest
+): Promise<ListingSupplySummaryResponse> {
+  return authPost<ListingSupplySummaryResponse>(NODE_API.LISTINGS_SUPPLY_SUMMARY, req);
 }
 
 /**
@@ -209,6 +319,53 @@ function imageFromCid(cid: string | undefined): Image | undefined {
   return { tiny: trimmed, small: trimmed, medium: trimmed, large: trimmed, original: trimmed };
 }
 
+function toListItemPrice(priceSource: unknown): ProductListItem['price'] | undefined {
+  if (typeof priceSource !== 'object' || priceSource === null) return undefined;
+  const { amountString, currencyCode, divisibility } = parsePriceFields(
+    priceSource as ProductListItem['price']
+  );
+  if (!currencyCode) {
+    return { amount: amountString, currency: { code: '', divisibility: divisibility ?? 2 } };
+  }
+  return {
+    amount: amountString,
+    currency: { code: currencyCode, divisibility: divisibility ?? 2 },
+  };
+}
+
+function mapSearchListingItem(item: ProfileListingItem, storePeerID: string): ProductListItem {
+  const price = toListItemPrice(item.price) ?? {
+    amount: 0,
+    currency: { code: '', divisibility: 2 },
+  };
+  const mapped: ProductListItem = {
+    slug: item.slug,
+    title: item.title,
+    thumbnail:
+      transformImageUrls(
+        hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
+        storePeerID
+      ) ?? ({} as Image),
+    price,
+    vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
+    cid: item.cid ?? item.hash,
+    contractType: item.contractType as ProductListItem['contractType'],
+    nsfw: item.nsfw?.status,
+  };
+  const basePrice = toListItemPrice(item.basePrice);
+  const priceMax = toListItemPrice(item.priceMax);
+  if (basePrice) mapped.basePrice = basePrice;
+  if (priceMax) mapped.priceMax = priceMax;
+  if (typeof item.priceHasRange === 'boolean') mapped.priceHasRange = item.priceHasRange;
+  if (Array.isArray(item.tags)) {
+    const tags = item.tags.filter(
+      (tag): tag is string => typeof tag === 'string' && tag.trim().length > 0
+    );
+    if (tags.length > 0) mapped.tags = tags;
+  }
+  return mapped;
+}
+
 /**
  * 获取店铺商品列表
  */
@@ -221,39 +378,40 @@ export async function fetchStoreListings(
     []
   );
   return raw.map(item => {
-    const priceSource =
-      typeof item.price === 'object' && item.price !== null
-        ? (item.price as unknown as ProductListItem['price'])
-        : undefined;
-    const { amount, currencyCode, divisibility } = parsePriceFields(priceSource);
-    return {
-      slug: item.slug,
-      title: item.title,
-      thumbnail:
-        transformImageUrls(
-          hasImageHash(item.thumbnail) ? item.thumbnail : imageFromCid(item.image),
-          storePeerID
-        ) ?? ({} as Image),
-      price: currencyCode
-        ? { amount, currency: { code: currencyCode, divisibility: divisibility ?? 2 } }
-        : { amount, currency: { code: '', divisibility: divisibility ?? 2 } },
-      vendorPeerID: item.vendorPeerID ?? item.peerID ?? storePeerID,
-      cid: item.cid ?? item.hash,
-      contractType: item.contractType as ProductListItem['contractType'],
-      nsfw: item.nsfw?.status,
-    };
+    const mapped = mapSearchListingItem(item, storePeerID);
+    return mapped;
   });
+}
+
+/** Search fallback for related listings — requires explicit store ownership on each row. */
+async function fetchStrictStoreListingsFromSearch(
+  storePeerID: string,
+  pageSize: number
+): Promise<ProductListItem[]> {
+  const raw = await searchSafeGet<ProfileListingItem[]>(
+    `${SEARCH_API.PROFILE_LISTINGS(storePeerID)}?pageSize=${pageSize}`,
+    []
+  );
+
+  return raw
+    .filter(item => {
+      const owner = (item.vendorPeerID ?? item.peerID)?.trim();
+      return owner === storePeerID;
+    })
+    .map(item => mapSearchListingItem(item, storePeerID));
 }
 
 /**
  * 获取商品索引（自己的商品）
  * 超时时间增加到 60 秒，因为网关 API 有时响应较慢
  */
-export async function getListingIndex(): Promise<ProductListItem[]> {
-  const data = await publicSafeGet<ProductListItem[] | { success: false }>(
-    NODE_API.LISTINGS_INDEX,
-    []
-  );
+export async function getListingIndex(
+  options: GetListingIndexOptions = {}
+): Promise<ProductListItem[]> {
+  const path = options.includeSupplySummary
+    ? `${NODE_API.LISTINGS_INDEX}?includeSupplySummary=true`
+    : NODE_API.LISTINGS_INDEX;
+  const data = await publicSafeGet<ProductListItem[] | { success: false }>(path, []);
 
   if (!data || (data as { success: false }).success === false) {
     return [];
@@ -318,6 +476,49 @@ export async function getStoreListingsWithFallback(
   }
 }
 
+export interface StoreRelatedListingsOptions {
+  /** Exclude the current product from recommendations */
+  excludeSlug?: string;
+  /** Maximum number of related listings to return */
+  limit?: number;
+  /** Page size when querying search fallback */
+  pageSize?: number;
+  /** When set, only return same-store listings carrying this tag (curated cohort scope). */
+  scopeTag?: string;
+}
+
+/**
+ * Store-scoped related listings for product detail "More from this store".
+ *
+ * Node index rows without vendorPeerID are untrusted (production can return
+ * global demo catalog). Only explicit vendorPeerID matches are kept; strict
+ * search fallback uses the same ownership rule. Mock mode stamps vendorPeerID
+ * in dataService before this path runs.
+ */
+export async function getStoreRelatedListings(
+  peerID: string,
+  options: StoreRelatedListingsOptions = {}
+): Promise<ProductListItem[]> {
+  const storePeerID = peerID.trim();
+  if (!storePeerID) return [];
+
+  const limit = options.limit ?? 12;
+  const pageSize = options.pageSize ?? Math.max(limit + 1, 12);
+
+  let listings = filterStoreOwnedListings(await getStoreListingIndex(storePeerID), storePeerID);
+
+  if (listings.length === 0) {
+    listings = filterStoreOwnedListings(
+      await fetchStrictStoreListingsFromSearch(storePeerID, pageSize),
+      storePeerID
+    );
+  }
+
+  listings = filterListingsByScopeTag(listings, options.scopeTag);
+
+  return excludeListingBySlug(listings, options.excludeSlug).slice(0, limit);
+}
+
 /**
  * 获取商品详情
  */
@@ -341,28 +542,87 @@ export interface PublicListingResult {
 }
 
 /**
- * 获取公开商品详情（无需认证）
- *
- * Uses the shared storeStatusCache: if the store is known offline and we
- * have a peerID, returns immediately with isOffline=true so the UI can
- * display an appropriate message instead of silently showing nothing.
+ * Build a minimal Product from search-index summary data so the UI can
+ * render a degraded product page when the seller node is offline.
  */
-export async function getPublicListing(
+async function getListingFromSearchFallback(peerID: string, slug: string): Promise<Product | null> {
+  try {
+    const items = await fetchStoreListings(peerID, 100);
+    const match = items.find(item => item.slug === slug);
+    if (!match) return null;
+
+    const thumbnail = match.thumbnail ?? ({} as Image);
+    const currCode = match.price?.currency?.code || '';
+    const divisibility = match.price?.currency?.divisibility ?? 2;
+
+    return {
+      slug: match.slug,
+      vendorID: { peerID: match.vendorPeerID ?? peerID, name: match.vendorName },
+      metadata: {
+        version: 0,
+        contractType: match.contractType ?? 'PHYSICAL_GOOD',
+        format: 'FIXED_PRICE',
+        expiry: '',
+        acceptedCurrencies: [],
+        pricingCurrency: { code: currCode, divisibility },
+        escrowTimeoutHours: 0,
+      },
+      item: {
+        title: match.title,
+        description: '',
+        processingTime: '',
+        price: minimalAmountAsNumber(match.price?.amount),
+        nsfw: match.nsfw ?? false,
+        tags: [],
+        images: [thumbnail],
+        productType: match.productType,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve vendor peerID for canonical /product/{slug} URLs via public search.
+ * Hosted gateways require peerID for GET /listings/{peerID}/{slug}.
+ */
+export async function resolveListingVendorPeerFromSearch(
+  slug: string
+): Promise<string | undefined> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return undefined;
+
+  try {
+    const { products } = await searchListings({
+      query: slugToSearchQuery(normalizedSlug),
+      pageSize: 20,
+      browse: 'all',
+      sortBy: 'relevance',
+    });
+    const match = products.find(item => item.slug === normalizedSlug);
+    const peerID = match?.vendorPeerID?.trim();
+    return peerID || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchPublicListingWithPeer(
   slug: string,
-  peerID?: string
+  peerID: string
 ): Promise<PublicListingResult> {
-  if (peerID && isStoreKnownOffline(peerID)) {
-    return { listing: null, isOffline: true };
+  if (isStoreKnownOffline(peerID)) {
+    const fallback = await getListingFromSearchFallback(peerID, slug);
+    return { listing: fallback, isOffline: true };
   }
 
-  const path = !peerID
-    ? NODE_API.LISTING(slug)
-    : `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
+  const path = `${NODE_API.LISTING_PEER(peerID, slug)}?usecache=true`;
 
   try {
     const data = await publicGet<{ listing?: Product } & Product>(path);
     const listing = data.listing ?? data;
-    if (peerID) markStoreOnline(peerID);
+    markStoreOnline(peerID);
 
     if (listing?.item?.images?.length) {
       return {
@@ -378,10 +638,55 @@ export async function getPublicListing(
     }
     return { listing, isOffline: false };
   } catch (err) {
-    if (peerID && isStoreUnavailableError(err)) {
+    if (isStoreUnavailableError(err)) {
       markStoreOffline(peerID);
-      return { listing: null, isOffline: true };
+      const fallback = await getListingFromSearchFallback(peerID, slug);
+      return { listing: fallback, isOffline: true };
     }
+    return { listing: null, isOffline: false };
+  }
+}
+
+/**
+ * 获取公开商品详情（无需认证）
+ *
+ * When the store is offline, falls back to search-index summary data so the
+ * UI can render a degraded (read-only) product page with an offline banner
+ * instead of showing a jarring "connection failed" modal.
+ */
+export async function getPublicListing(
+  slug: string,
+  peerID?: string
+): Promise<PublicListingResult> {
+  const explicitPeerID = peerID?.trim() || undefined;
+  if (explicitPeerID) {
+    return fetchPublicListingWithPeer(slug, explicitPeerID);
+  }
+
+  const resolvedPeerID = await resolveListingVendorPeerFromSearch(slug);
+  if (resolvedPeerID) {
+    return fetchPublicListingWithPeer(slug, resolvedPeerID);
+  }
+
+  // Legacy slug-only node path (local seller / contexts where it remains public).
+  try {
+    const data = await publicGet<{ listing?: Product } & Product>(NODE_API.LISTING(slug));
+    const listing = data.listing ?? data;
+
+    if (listing?.item?.images?.length) {
+      return {
+        listing: {
+          ...listing,
+          thumbnail: listing.item.images[0],
+          title: listing.item.title,
+          slug: listing.slug ?? slug,
+          vendorPeerID: listing.vendorID?.peerID,
+        } as Product,
+        isOffline: false,
+      };
+    }
+    return { listing, isOffline: false };
+  } catch {
     return { listing: null, isOffline: false };
   }
 }
@@ -484,7 +789,7 @@ export async function fetchFeaturedStores(limit = 6): Promise<SearchedUser[]> {
   try {
     const result = await searchProfiles({ query: '*', pageSize: 20, vendor: true });
     return result.users
-      .map(user => ({ ...user, _score: computeStoreScore(user) }))
+      .map(user => ({ ...user, _score: computeFeaturedStoreScore(user) }))
       .sort((a, b) => b._score - a._score)
       .slice(0, limit)
       .map(({ _score: _, ...user }) => user);
@@ -519,16 +824,6 @@ export async function fetchPlatformStats(): Promise<{
   }
 }
 
-function computeStoreScore(user: SearchedUser): number {
-  const activityScore = user.listingCount * 0.3 + user.reviewCount * 0.2;
-  const qualityScore = user.rating * 0.2;
-  const brandScore =
-    (user.avatar ? 1 : 0) * 0.1 +
-    (user.shortDescription ? 1 : 0) * 0.1 +
-    (user.listingCount > 0 ? 1 : 0) * 0.1;
-  return activityScore + qualityScore + brandScore;
-}
-
 /**
  * 举报商品
  */
@@ -544,6 +839,53 @@ export async function reportListing(
  * 搜索商品
  * 参考移动端: mobazha-mobile/api/search.js
  */
+async function fetchSearchListingsRaw(queryString: string) {
+  return searchRawGet<{
+    data?: SearchResultItem[] | SearchApiResponse;
+    meta?: {
+      total?: number;
+      hasMore?: boolean;
+      vendorCount?: number;
+      catalogTotal?: number;
+      browseMode?: 'discover' | 'all';
+    };
+    results?: { total?: number; morePages?: boolean; results?: SearchResultItem[] };
+    total?: number;
+    morePages?: boolean;
+  }>(`${SEARCH_API.SEARCH_LISTINGS}?${queryString}`, {});
+}
+
+function parseSearchListingsResponse(
+  raw: Awaited<ReturnType<typeof fetchSearchListingsRaw>>,
+  pageSize: number,
+  page = 0
+): Pick<
+  SearchListingsResponse,
+  'products' | 'total' | 'hasMore' | 'vendorCount' | 'catalogTotal' | 'browseMode'
+> {
+  const innerData = raw?.data ?? raw;
+  const products = parseSearchResults(innerData);
+  const meta = raw?.meta;
+  const total =
+    meta?.total ??
+    (innerData as SearchApiResponse)?.results?.total ??
+    raw?.total ??
+    products.length;
+  const hasMore =
+    meta?.hasMore ??
+    (innerData as SearchApiResponse)?.results?.morePages ??
+    raw?.morePages ??
+    (page + 1) * pageSize < total;
+  return {
+    products,
+    total,
+    hasMore,
+    vendorCount: meta?.vendorCount,
+    catalogTotal: meta?.catalogTotal,
+    browseMode: meta?.browseMode,
+  };
+}
+
 export async function searchListings(
   params: SearchListingsParams
 ): Promise<SearchListingsResponse> {
@@ -555,18 +897,27 @@ export async function searchListings(
     type,
     productType,
     rating,
+    minPrice,
+    maxPrice,
+    currency,
     shipping,
     nsfw = false,
+    browse,
+    peerIDs,
   } = params;
 
   // 构建查询参数
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
     q: searchQuery,
-    p: String(page),
+    p: String(page + 1),
     pageSize: String(pageSize),
     sortBy,
   });
+
+  if (browse === 'all') {
+    queryParams.append('browse', 'all');
+  }
 
   // 添加可选过滤参数
   if (productType && productType !== 'all') {
@@ -576,7 +927,16 @@ export async function searchListings(
     queryParams.append('type', type);
   }
   if (rating && rating > 0) {
-    queryParams.append('rating', String(rating));
+    queryParams.append('pr', String(rating));
+  }
+  if (minPrice != null && minPrice >= 0) {
+    queryParams.append('minPrice', String(minPrice));
+  }
+  if (maxPrice != null && maxPrice >= 0) {
+    queryParams.append('maxPrice', String(maxPrice));
+  }
+  if (currency) {
+    queryParams.append('currency', currency);
   }
   if (shipping && shipping !== 'any') {
     queryParams.append('shipping', shipping);
@@ -584,25 +944,14 @@ export async function searchListings(
   if (nsfw) {
     queryParams.append('nsfw', 'true');
   }
+  if (peerIDs && peerIDs.length > 0) {
+    queryParams.append('id', peerIDs.join('|'));
+  }
 
   try {
-    const raw = await searchRawGet<{
-      data?: SearchResultItem[] | SearchApiResponse;
-      meta?: { total?: number };
-      results?: { total?: number; morePages?: boolean; results?: SearchResultItem[] };
-      total?: number;
-      morePages?: boolean;
-    }>(`${SEARCH_API.SEARCH_LISTINGS}?${queryParams.toString()}`, {});
-
-    const innerData = raw?.data ?? raw;
-    const products = parseSearchResults(innerData);
-
-    const total =
-      raw?.meta?.total ??
-      (innerData as SearchApiResponse)?.results?.total ??
-      raw?.total ??
-      products.length;
-    const hasMore = (innerData as SearchApiResponse)?.results?.morePages ?? raw?.morePages ?? false;
+    const raw = await fetchSearchListingsRaw(queryParams.toString());
+    const { products, total, hasMore, vendorCount, catalogTotal, browseMode } =
+      parseSearchListingsResponse(raw, pageSize, page);
 
     return {
       products,
@@ -610,6 +959,9 @@ export async function searchListings(
       page,
       pageSize,
       hasMore,
+      vendorCount,
+      catalogTotal,
+      browseMode,
     };
   } catch (error) {
     console.error('Failed to search listings:', error);
@@ -632,17 +984,21 @@ export async function searchProfiles(params: {
   page?: number;
   pageSize?: number;
   vendor?: boolean;
+  peerIDs?: string[];
 }): Promise<SearchProfilesResponse> {
-  const { query, page = 0, pageSize = 20, vendor } = params;
+  const { query, page = 0, pageSize = 20, vendor, peerIDs } = params;
 
   const searchQuery = query.trim() === '' ? '*' : query;
   const queryParams = new URLSearchParams({
     q: searchQuery,
-    p: String(page),
+    p: String(page + 1),
     pageSize: String(pageSize),
   });
   if (vendor !== undefined) {
     queryParams.append('vendor', String(vendor));
+  }
+  if (peerIDs && peerIDs.length > 0) {
+    queryParams.append('id', peerIDs.join('|'));
   }
 
   try {
@@ -659,7 +1015,7 @@ export async function searchProfiles(params: {
         ratingCount?: number;
         listingCount?: number;
       }>;
-      meta?: { total?: number };
+      meta?: { total?: number; hasMore?: boolean };
     }
 
     const raw = await searchRawGet<RawProfileResponse>(
@@ -682,7 +1038,7 @@ export async function searchProfiles(params: {
     }));
 
     const total = raw?.meta?.total ?? users.length;
-    const hasMore = (page + 1) * pageSize < total;
+    const hasMore = raw?.meta?.hasMore ?? (page + 1) * pageSize < total;
 
     return {
       users,

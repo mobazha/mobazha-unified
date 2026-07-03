@@ -13,9 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ProductImageNative } from '@/components/ui/product-image';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, resolveOrderStatusLabelKey } from '@mobazha/core';
 import { Copy } from 'lucide-react';
 import type { Order } from './OrderCard';
+import { OrderSettlementBadge } from './OrderSettlementBadge';
 
 // ============ Types ============
 
@@ -29,9 +30,9 @@ export interface OrderTableProps {
   /** 联系对方回调 */
   onContact?: (peerId: string, displayName?: string) => void;
   /** 接受订单回调 */
-  onAccept?: (orderId: string, paymentCoin?: string) => void;
+  onAccept?: (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => void;
   /** 拒绝订单回调 */
-  onReject?: (orderId: string, paymentCoin?: string) => void;
+  onReject?: (orderId: string, paymentCoin?: string, paymentEscrowType?: string) => void;
   className?: string;
 }
 
@@ -165,6 +166,11 @@ export const OrderTable = memo(function OrderTable({
               labelKey: 'order.statusLabels.unknown',
               className: 'bg-muted text-muted-foreground border-transparent',
             };
+            const statusLabelKey = resolveOrderStatusLabelKey(
+              order.status,
+              order.contractType,
+              status.labelKey
+            );
             const showActions = shouldShowActions(order.rawState);
 
             return (
@@ -263,7 +269,9 @@ export const OrderTable = memo(function OrderTable({
                           variant="outline"
                           className="h-7 px-2 text-xs"
                           onClick={e =>
-                            handleButtonClick(e, () => onReject?.(order.id, order.paymentCoin))
+                            handleButtonClick(e, () =>
+                              onReject?.(order.id, order.paymentCoin, order.paymentEscrowType)
+                            )
                           }
                         >
                           {t('order.actions.decline')}
@@ -272,16 +280,26 @@ export const OrderTable = memo(function OrderTable({
                           size="sm"
                           className="h-7 px-3 text-xs bg-primary hover:bg-primary/90"
                           onClick={e =>
-                            handleButtonClick(e, () => onAccept?.(order.id, order.paymentCoin))
+                            handleButtonClick(e, () =>
+                              onAccept?.(order.id, order.paymentCoin, order.paymentEscrowType)
+                            )
                           }
                         >
                           {t('order.actions.accept')}
                         </Button>
                       </>
                     ) : (
-                      <Badge variant="outline" className={cn('text-xs', status.className)}>
-                        {t(status.labelKey)}
-                      </Badge>
+                      <>
+                        <Badge variant="outline" className={cn('text-xs', status.className)}>
+                          {t(statusLabelKey)}
+                        </Badge>
+                        <OrderSettlementBadge
+                          settlementState={order.settlementState}
+                          settlementAction={order.settlementAction}
+                          settlementActionId={order.settlementActionId}
+                          settlementTxHash={order.settlementTxHash}
+                        />
+                      </>
                     )}
                   </div>
                 </TableCell>

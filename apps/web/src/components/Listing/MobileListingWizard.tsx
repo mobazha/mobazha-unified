@@ -14,8 +14,14 @@ import {
   Eye,
   Tags,
 } from 'lucide-react';
-import { useI18n, useCurrency, getGatewayUrl, DEFAULT_LOCAL_CURRENCY } from '@mobazha/core';
-import type { ContractType, Image, ShippingProfile } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getImageUrl,
+  DEFAULT_LOCAL_CURRENCY,
+  resolveProductSupplyMode,
+} from '@mobazha/core';
+import type { ContractType, Image, ShippingProfile, SourceDepositListingPrefillInput } from '@mobazha/core';
 import type { ListingFormData, FormErrors, VariantOption, SkuItem } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -25,14 +31,17 @@ import {
   BasicInfoSection,
   MediaSection,
   RwaTokenFields,
+  SourceCustodyListingFields,
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalFileSection,
+  InventoryPolicyField,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiSetupPrompt,
+  SupplySummaryBar,
 } from '@/components/Listing';
+import type { ProductSupplyContext, SupplySummaryAction, SupplySummaryView } from '@mobazha/core';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { cn } from '@/lib/utils';
 
@@ -45,6 +54,11 @@ interface MobileListingWizardProps {
   errors: FormErrors;
   isSubmitting: boolean;
   isEditMode?: boolean;
+  listingSlug?: string;
+  supplyContext?: ProductSupplyContext;
+  supplySummary?: SupplySummaryView;
+  supplySummaryLoading?: boolean;
+  onSupplySummaryAction?: (action: SupplySummaryAction) => void;
 
   updateField: <K extends keyof ListingFormData>(key: K, value: ListingFormData[K]) => void;
   changeContractType: (type: ContractType) => void;
@@ -59,6 +73,9 @@ interface MobileListingWizardProps {
   onCancel: () => void;
   onDelete?: () => void;
   onPreview?: () => void;
+  onPriceChange?: (value: string) => void;
+  onPriceFocus?: () => void;
+  onPriceBlur?: (value: string) => void;
 
   aiLoadingAction?: string | null;
   onAiImproveTitle?: () => void;
@@ -67,6 +84,7 @@ interface MobileListingWizardProps {
   aiImageUrls?: string[];
   aiNotConfigured?: boolean;
   onAiApplyAll?: (result: import('@mobazha/core').AiGenerateResponse) => void;
+  sourceDepositPrefillInput?: SourceDepositListingPrefillInput | null;
 }
 
 interface AccordionItemProps {
@@ -109,6 +127,11 @@ export function MobileListingWizard({
   errors,
   isSubmitting,
   isEditMode = false,
+  listingSlug,
+  supplyContext,
+  supplySummary,
+  supplySummaryLoading,
+  onSupplySummaryAction,
   updateField,
   changeContractType,
   addTag,
@@ -121,6 +144,9 @@ export function MobileListingWizard({
   onCancel,
   onDelete,
   onPreview,
+  onPriceChange,
+  onPriceFocus,
+  onPriceBlur,
   aiLoadingAction,
   onAiImproveTitle,
   onAiPolishDescription,
@@ -128,6 +154,7 @@ export function MobileListingWizard({
   aiImageUrls,
   aiNotConfigured,
   onAiApplyAll,
+  sourceDepositPrefillInput = null,
 }: MobileListingWizardProps) {
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
@@ -269,7 +296,7 @@ export function MobileListingWizard({
   const getPreviewImageUrl = useCallback((image: Image) => {
     const hash = image.small || image.medium || image.original;
     if (!hash) return '';
-    return `${getGatewayUrl()}/media/images/${hash}`;
+    return getImageUrl(hash) || '';
   }, []);
 
   const reviewChecklist = useMemo(() => {
@@ -313,7 +340,7 @@ export function MobileListingWizard({
         step: 'details',
       });
     }
-    if (formData.contractType === 'RWA_TOKEN') {
+    if (formData.contractType === 'RWA_TOKEN' && !sourceDepositPrefillInput) {
       items.push(
         {
           label: t('listing.tokenAddress', { defaultValue: 'Token Address' }),
@@ -330,7 +357,7 @@ export function MobileListingWizard({
       );
     }
     return items;
-  }, [formData, t]);
+  }, [formData, t, sourceDepositPrefillInput]);
 
   return (
     <div
@@ -409,19 +436,43 @@ export function MobileListingWizard({
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {isEditMode &&
+          listingSlug &&
+          supplyContext &&
+          supplySummary &&
+          resolveProductSupplyMode(supplyContext) !== 'none' && (
+            <SupplySummaryBar
+              context={supplyContext}
+              summary={supplySummary}
+              loading={supplySummaryLoading}
+              onAction={onSupplySummaryAction}
+            />
+          )}
+
         {/* Step 1: Essentials */}
         {currentStep === 'essentials' && (
           <>
-            <Card className="p-4">
-              <h2 className="text-base font-semibold text-foreground mb-3">
-                {t('listing.productType')}
-              </h2>
-              <ProductTypeSelector
-                value={formData.contractType}
-                onChange={changeContractType}
-                disabled={isSubmitting}
-              />
-            </Card>
+            {sourceDepositPrefillInput ? (
+              <Card className="border-primary/20 bg-primary/5 p-4">
+                <h2 className="mb-2 text-base font-semibold text-foreground">
+                  {t('listing.productType')}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('listing.sourceDeposit.lockedTypeHint')}
+                </p>
+              </Card>
+            ) : (
+              <Card className="p-4">
+                <h2 className="text-base font-semibold text-foreground mb-3">
+                  {t('listing.productType')}
+                </h2>
+                <ProductTypeSelector
+                  value={formData.contractType}
+                  onChange={changeContractType}
+                  disabled={isSubmitting}
+                />
+              </Card>
+            )}
 
             {formData.contractType !== 'RWA_TOKEN' ? (
               <>
@@ -441,7 +492,9 @@ export function MobileListingWizard({
                   onTitleChange={v => updateField('title', v)}
                   onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
+                  onPriceFocus={onPriceFocus}
+                  onPriceBlur={onPriceBlur}
                   onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
@@ -470,6 +523,57 @@ export function MobileListingWizard({
                   onAiImproveTitle={onAiImproveTitle}
                   onAiPolishDescription={onAiPolishDescription}
                   aiLoadingAction={aiLoadingAction}
+                />
+              </>
+            ) : sourceDepositPrefillInput ? (
+              <>
+                <Card className="p-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3">
+                    {t('listing.basicInfo')}
+                  </h2>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.title')} <span className="text-destructive">*</span>
+                      </label>
+                      <input
+                        value={formData.title}
+                        onChange={e => updateField('title', e.target.value)}
+                        placeholder={t('listing.titlePlaceholder')}
+                        maxLength={140}
+                        className={cn(
+                          'w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm',
+                          errors.title ? 'border-destructive' : 'border-border'
+                        )}
+                      />
+                      {errors.title && (
+                        <p className="text-destructive text-xs mt-1">{errors.title}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t('listing.description')}
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={e => updateField('description', e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm resize-none"
+                        placeholder={t('listing.descriptionPlaceholder')}
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <SourceCustodyListingFields
+                  prefill={sourceDepositPrefillInput}
+                  price={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  acceptedCurrencies={formData.acceptedCurrencies || []}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
+                  onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                  onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                  errors={errors}
                 />
               </>
             ) : (
@@ -527,7 +631,7 @@ export function MobileListingWizard({
                   onCryptoListingCurrencyCodeChange={v =>
                     updateField('cryptoListingCurrencyCode', v)
                   }
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={onPriceChange ?? (v => updateField('price', v))}
                   onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
                   onMinQuantityChange={v => updateField('minQuantity', v)}
                   onMaxQuantityChange={v => updateField('maxQuantity', v)}
@@ -629,15 +733,26 @@ export function MobileListingWizard({
                     />
                   </div>
                 )}
+                <InventoryPolicyField
+                  className="mt-4 pt-4 border-t border-border"
+                  value={formData.inventoryPolicy}
+                  onChange={val => updateField('inventoryPolicy', val)}
+                />
               </AccordionItem>
             )}
 
             {formData.contractType === 'DIGITAL_GOOD' && (
               <AccordionItem title={t('listing.tabs.files')}>
-                <DigitalFileSection
-                  files={formData.digitalFiles}
-                  onFilesChange={files => updateField('digitalFiles', files)}
-                />
+                {/* Phase 1.0: 数字商品资产挂载发生在编辑页（需要 listingSlug）。
+                    新建页只保存为草稿，避免发布"空壳"商品。*/}
+                <div
+                  className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
+                  role="note"
+                  data-testid="listing-mobile-digital-save-first-hint"
+                >
+                  <p className="font-medium mb-1">{t('listing.digital.saveFirstTitle')}</p>
+                  <p className="text-muted-foreground">{t('listing.digital.saveFirst')}</p>
+                </div>
               </AccordionItem>
             )}
 
@@ -653,40 +768,6 @@ export function MobileListingWizard({
                         value={formData.processingTime}
                         onChange={val => updateField('processingTime', val)}
                       />
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {t('listing.inventoryPolicy.label')}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('listing.inventoryPolicy.helper')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={formData.inventoryPolicy === 'continue'}
-                        onClick={() =>
-                          updateField(
-                            'inventoryPolicy',
-                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
-                          )
-                        }
-                        className={cn(
-                          'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                            formData.inventoryPolicy === 'continue'
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
-                          )}
-                        />
-                      </button>
                     </div>
                   </AccordionItem>
                 </>
@@ -822,7 +903,15 @@ export function MobileListingWizard({
             >
               {t('listing.saveDraft')}
             </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>
+            <Button
+              className="flex-1"
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting ||
+                // Phase 1.0: 新建页发布数字商品会得到无资产空壳，强制走 Save Draft。
+                (!isEditMode && formData.contractType === 'DIGITAL_GOOD')
+              }
+            >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
               ) : (

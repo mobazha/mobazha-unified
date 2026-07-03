@@ -22,6 +22,8 @@ import {
   NODE_API,
   useUserContext,
   useFeatureFlags,
+  useFeature,
+  useRuntimeCapability,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
@@ -45,13 +47,45 @@ import {
   User,
   Link2,
   MapPin,
+  Wallet,
   Lock,
   Ban,
   Wrench,
   Send,
   ShoppingCart,
   Globe,
+  ClipboardList,
+  Layers,
+  Building2,
+  Mail,
 } from 'lucide-react';
+
+function MeCasesEntry() {
+  const { t } = useI18n();
+  const { isAuthenticated, profile } = useUserStore();
+  const hideModeration = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
+
+  if (!isAuthenticated || !profile?.moderator || hideModeration) {
+    return null;
+  }
+
+  return (
+    <Link href="/cases" className="block" data-testid="me-cases-link">
+      <div className="bg-background border border-border rounded-xl p-3 flex items-center gap-3 hover:bg-muted/40 active:bg-muted/60 transition-colors">
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+          <ClipboardList className="w-5 h-5 text-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">{t('userMenu.myCases')}</p>
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {t('moderation.description')}
+          </p>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+      </div>
+    </Link>
+  );
+}
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -60,6 +94,7 @@ interface FeatureItemProps {
   onClick?: () => void;
   href?: string;
   rightElement?: React.ReactNode;
+  testId?: string;
 }
 
 const FeatureItem: React.FC<FeatureItemProps> = ({
@@ -69,6 +104,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   onClick,
   href,
   rightElement,
+  testId,
 }) => {
   const content = (
     <div className="flex items-center gap-3 py-3 px-3 min-h-[52px] rounded-lg hover:bg-muted/50 active:bg-muted transition-colors cursor-pointer touch-feedback">
@@ -84,10 +120,18 @@ const FeatureItem: React.FC<FeatureItemProps> = ({
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return (
+      <Link href={href} data-testid={testId}>
+        {content}
+      </Link>
+    );
   }
 
-  return <div onClick={onClick}>{content}</div>;
+  return (
+    <div onClick={onClick} data-testid={testId}>
+      {content}
+    </div>
+  );
 };
 
 // --- Section label ---
@@ -172,6 +216,17 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
   const { t, locale, setLocale, supportedLocales, localeInfo } = useI18n();
   const { isDark, toggleDarkMode } = useTheme();
   const { isEmbeddedApp: isEmbedded } = usePlatform();
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const standaloneMode = useStorefrontMode();
+  const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
+  const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
+  const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
+  const showMaasMenu =
+    authenticated &&
+    isHosted() &&
+    !standaloneMode &&
+    !isSovereign &&
+    (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);
 
@@ -199,6 +254,32 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
               description={t('me.addressesDesc')}
               href="/settings/addresses"
             />
+            <FeatureItem
+              icon={<Wallet className="w-5 h-5" />}
+              title={t('settings.sidebar.refunds')}
+              description={t('me.refundsDesc')}
+              href="/settings/refunds"
+            />
+            {showMaasMenu && (
+              <>
+                {hasMarketplaceOperator ? (
+                  <FeatureItem
+                    icon={<Building2 className="w-5 h-5" />}
+                    title={t('userMenu.operatorMarketplaces')}
+                    href="/operator/marketplaces"
+                    testId="me-operator-marketplaces"
+                  />
+                ) : null}
+                {hasMarketplaceSellerReview ? (
+                  <FeatureItem
+                    icon={<Mail className="w-5 h-5" />}
+                    title={t('userMenu.marketplaceInvitations')}
+                    href="/settings/marketplace-memberships"
+                    testId="me-marketplace-invitations"
+                  />
+                ) : null}
+              </>
+            )}
           </div>
         </>
       )}
@@ -219,6 +300,14 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
               description={t('me.notificationsDesc')}
               href="/notifications"
             />
+            {collectiblesHubEnabled && (
+              <FeatureItem
+                icon={<Layers className="w-5 h-5" />}
+                title={t('me.collectibles')}
+                description={t('me.collectiblesDesc')}
+                href="/collectibles"
+              />
+            )}
           </div>
         </>
       )}
@@ -596,6 +685,8 @@ export default function MePage() {
               </div>
             </Link>
 
+            <MeCasesEntry />
+
             <InlineSettings authenticated={true} />
 
             {/* Logout */}
@@ -711,6 +802,8 @@ export default function MePage() {
                 </div>
               </Link>
             )}
+
+          <MeCasesEntry />
 
           {/* Multi-Store console (Phase MS1) — gated by multistoreMyStoresUIEnabled flag */}
           {showMyStoresEntry && (

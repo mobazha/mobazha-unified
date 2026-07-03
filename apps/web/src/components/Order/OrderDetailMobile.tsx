@@ -4,33 +4,50 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton-compat';
-import { MessageCircle, Package, MapPin, ExternalLink, Printer } from 'lucide-react';
+import { MessageCircle, Package, ExternalLink, Printer } from 'lucide-react';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { DisputeModal } from '@/components/Order/modals/DisputeModal';
 import { cn } from '@/lib/utils';
+import { orderDetailPath } from '@/lib/ordersNavigation';
 import {
   useI18n,
-  isOrderFulfilled,
+  isOrderShipped,
   getOrderActions,
   getPrimaryAction,
   getActionButtonConfig,
   ordersApi,
   disputesApi,
+  useFeature,
+  useChatStore,
+  formatUserName,
+  isDisputeRulingAvailable,
+  isActiveCryptoDisputeStatus,
+  shouldShowDisputeArchiveCard,
+  resolveDigitalEntitlementDisputePhase,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useOrderChat } from '@/hooks/useOrderChat';
+import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
+import { ModeratorDisputeRulingDialog } from '@/components/Order/ModeratorDisputeRulingDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider/TGMiniAppProvider';
 import { useHaptic } from '@/lib/platform';
 import {
   OrderChat,
+  OrderChatContextStrip,
   AcceptOrderDialog,
-  FulfillOrderDialog,
+  ShipOrderDialog,
   OrderConfirmDialog,
+  OrderRating,
   WriteReviewDialog,
+  ConfirmReceiptDialog,
+  AcceptPayoutDialog,
+  SellerDigitalDeliveryStatus,
+  OrderShipment,
+  getDigitalDeliveryTimestamp,
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
@@ -45,9 +62,16 @@ import {
   OrderCounterpartyCard,
   OrderContractView,
   OrderDisputeBanner,
+  DisputeSummaryCard,
+  DisputeHistoryCard,
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
+  OrderSettlementCard,
+  OrderCreatedAtMeta,
+  DisputeOverviewCard,
+  DisputeEvidencePanel,
+  DisputeResolutionBar,
   getStatusLabel,
 } from '@/components/Order/cards';
 import {
@@ -56,6 +80,11 @@ import {
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
+import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { CollectiblePrimarySaleCard } from '@/components/Order/cards/CollectiblePrimarySaleCard';
+import { OrderRefundAddressBanner } from '@/components/Order/cards/OrderRefundAddressBanner';
+import { OrderRefundDestinationCard } from '@/components/Order/cards/OrderRefundDestinationCard';
+import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
 
 function SectionTitle({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -95,10 +124,12 @@ function ModeratorBadge({
         <p className="text-sm font-semibold text-foreground truncate">
           {moderator.name || t('order.moderator')}
         </p>
-        <p className="text-xs text-muted-foreground">{t('order.moderator')}</p>
+        <p className="text-xs text-muted-foreground">{t('order.moderatorStandby')}</p>
       </div>
       {moderator.fee && (
-        <span className="text-xs text-primary font-medium shrink-0">{moderator.fee}%</span>
+        <span className="text-xs text-primary font-medium shrink-0">
+          {t('order.moderatorFeeOnDispute', { fee: moderator.fee })}
+        </span>
       )}
     </div>
   );
@@ -107,34 +138,68 @@ function ModeratorBadge({
 export interface OrderDetailMobileProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
+  listBackPath?: string;
+  focusDispute?: boolean;
+  initialTab?: 'details' | 'discussion' | 'evidence';
 }
 
-export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobileProps) {
+type OrderDetailMobileTab = 'details' | 'discussion' | 'evidence';
+
+export function OrderDetailMobile({
+  orderId,
+  viewingContext,
+  listBackPath = '/orders',
+  focusDispute = false,
+  initialTab = 'details',
+}: OrderDetailMobileProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const supplyChainEnabled = useFeature('supplyChainEnabled');
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const chatDrawerOpen = useChatStore(state => state.drawerOpen);
+  const closeChatDrawer = useChatStore(state => state.closeDrawer);
 
   const {
     displayOrder,
     coreOrder,
+    latestSettlementAction,
     isLoading,
     error,
     refetch,
     currentUserPeerID,
     counterparty,
-    chatParticipants,
     isActionLoading,
+    isTransitioning,
+    completePhase,
+    acceptPayoutPhase,
+    isModeratedOrder,
     executeConfirmAction,
+    showAcceptPayoutDialog,
+    openAcceptPayoutDialog,
+    closeAcceptPayoutDialog,
+    confirmAcceptPayout,
+    showConfirmReceiptDialog,
+    openConfirmReceiptDialog,
+    closeConfirmReceiptDialog,
+    confirmReceipt,
     showReviewDialog,
+    openReviewDialog,
     reviewProductTitle,
-    submitReviewAndComplete,
-    skipReviewAndComplete,
+    submitRating,
     closeReviewDialog,
     copyOrderId,
     copyContract,
-    chatMessages,
-    sendMessage,
+    buyerRefundAddress,
+    buyerRefundAddressDraft,
+    buyerNeedsRefundAddress,
+    showRefundDestination,
+    isSavingRefundAddress,
+    saveBuyerRefundAddress,
+    ensureBuyerRefundAddress,
+    notifyOrderActionError,
     acceptOrderProps,
-    fulfillOrderProps,
+    shipOrderProps,
+    sellerDigitalDelivery,
   } = useOrderDetailPage(orderId, viewingContext);
 
   // NOTE (MVP-1 partial migration): `haptic` has moved to the platform-abstract
@@ -151,19 +216,135 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
   const [showFiatRefundDialog, setShowFiatRefundDialog] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
-  const [showFulfillDialog, setShowFulfillDialog] = useState(false);
+  const [showShipDialog, setShowShipDialog] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'discussion'>('details');
+  const [activeTab, setActiveTab] = useState<OrderDetailMobileTab>(initialTab);
+
+  const orderChat = useOrderChat({
+    orderId,
+    displayOrder,
+    currentUserPeerID,
+    isActive: activeTab === 'discussion',
+  });
+  const disputeSectionRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isSheetOpen,
+    isResolving,
+    isOpeningSheet,
+    draft: rulingDraft,
+    activePreset,
+    validationErrors: rulingValidationErrors,
+    vendorNotConfirmed,
+    constraints: rulingConstraints,
+    openRulingSheet,
+    applyPreset,
+    closeSheet,
+    setBuyerPercentage,
+    setVendorPercentage,
+    setResolution,
+    submitRuling,
+  } = useModeratorDisputeResolution(orderId, refetch);
+
+  const moderatorRulingBuyerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.buyer?.name, peerID: displayOrder?.buyer?.peerID },
+        { fallback: t('order.buyer') }
+      ),
+    [displayOrder?.buyer, t]
+  );
+  const moderatorRulingSellerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.vendor?.name, peerID: displayOrder?.vendor?.peerID },
+        { fallback: t('order.seller') }
+      ),
+    [displayOrder?.vendor, t]
+  );
+
+  // Moderator viewing a disputed order → use dedicated dispute view mode
+  const isModeratorDisputeView =
+    !!displayOrder && displayOrder.userRole === 'moderator' && !!displayOrder.dispute;
+
+  const orderViewType = useMemo((): 'sale' | 'purchase' => {
+    if (viewingContext === 'sale') return 'sale';
+    if (viewingContext === 'purchase') return 'purchase';
+    if (displayOrder?.userRole === 'seller') return 'sale';
+    return 'purchase';
+  }, [viewingContext, displayOrder?.userRole]);
+
+  const syncTabToUrl = useCallback(
+    (tab: OrderDetailMobileTab) => {
+      const detailRole = orderViewType === 'sale' ? 'sale' : 'purchase';
+      const fromShell =
+        listBackPath.startsWith('/admin/orders') && detailRole === 'purchase' ? 'admin' : undefined;
+      let tabParam: string | undefined;
+      if (tab === 'discussion') tabParam = 'discussion';
+      else if (tab === 'evidence') tabParam = 'evidence';
+      else if (isModeratorDisputeView) tabParam = 'dispute';
+      router.replace(orderDetailPath(orderId, detailRole, { fromShell, tab: tabParam }), {
+        scroll: false,
+      });
+    },
+    [orderId, orderViewType, listBackPath, router, isModeratorDisputeView]
+  );
+
+  const handleTabChange = useCallback(
+    (tab: OrderDetailMobileTab) => {
+      setActiveTab(tab);
+      syncTabToUrl(tab);
+    },
+    [syncTabToUrl]
+  );
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, orderId]);
+
+  useEffect(() => {
+    if (activeTab !== 'evidence') return;
+    if (!displayOrder) return;
+    if (
+      displayOrder.userRole === 'moderator' &&
+      displayOrder.dispute &&
+      (displayOrder.dispute.evidenceHashes?.length ?? 0) > 0
+    ) {
+      return;
+    }
+    handleTabChange('details');
+  }, [activeTab, displayOrder, handleTabChange]);
+
+  useEffect(() => {
+    if (activeTab !== 'discussion') return;
+    const store = useChatStore.getState();
+    if (chatDrawerOpen) {
+      closeChatDrawer();
+    } else if (store.currentRoomId) {
+      store.setCurrentRoom(null);
+    }
+  }, [activeTab, chatDrawerOpen, closeChatDrawer]);
+
+  useEffect(() => {
+    if (!focusDispute || !displayOrder) return;
+    handleTabChange('details');
+    if (!isModeratorDisputeView) {
+      const timer = window.setTimeout(() => {
+        disputeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 350);
+      return () => window.clearTimeout(timer);
+    }
+  }, [focusDispute, displayOrder, isModeratorDisputeView, handleTabChange]);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
     if (!displayOrder) return '';
-    return getStatusLabel(displayOrder.status, t);
+    return getStatusLabel(displayOrder.status, t, displayOrder.contractType);
   }, [displayOrder, t]);
 
   const hasTracking = useMemo(() => {
@@ -174,10 +355,63 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
     );
   }, [displayOrder]);
 
+  const canOpenModeratedDispute = useMemo(
+    () =>
+      !!displayOrder &&
+      isModeratedOrder &&
+      !displayOrder.dispute &&
+      ((displayOrder.userRole === 'buyer' &&
+        ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+        (displayOrder.userRole === 'seller' &&
+          ['shipped', 'delivered'].includes(displayOrder.status))),
+    [displayOrder, isModeratedOrder]
+  );
+
   const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
     if (!displayOrder?.protection) return null;
     return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
   }, [displayOrder]);
+
+  const hasActiveCryptoDispute = useMemo(
+    () => !!displayOrder?.dispute && isActiveCryptoDisputeStatus(displayOrder.status),
+    [displayOrder]
+  );
+
+  const showDisputeArchive = useMemo(
+    () =>
+      displayOrder
+        ? shouldShowDisputeArchiveCard(displayOrder.dispute, displayOrder.status)
+        : false,
+    [displayOrder]
+  );
+
+  const disputeRulingPendingAcceptance = useMemo(
+    () => (displayOrder?.dispute ? isDisputeRulingAvailable(displayOrder.dispute) : false),
+    [displayOrder?.dispute]
+  );
+
+  const digitalEntitlementDisputePhase = useMemo(
+    () =>
+      displayOrder
+        ? resolveDigitalEntitlementDisputePhase(displayOrder.status, displayOrder.dispute)
+        : 'none',
+    [displayOrder]
+  );
+
+  const showModeratorEvidenceTab = useMemo(
+    () => (displayOrder?.dispute?.evidenceHashes?.length ?? 0) > 0,
+    [displayOrder?.dispute?.evidenceHashes]
+  );
+
+  const showDisputeDiscussionBar = useMemo(
+    () =>
+      !!coreOrder &&
+      coreOrder.state === 'DISPUTED' &&
+      !disputeRulingPendingAcceptance &&
+      !isModeratorDisputeView &&
+      activeTab === 'details',
+    [coreOrder, disputeRulingPendingAcceptance, isModeratorDisputeView, activeTab]
+  );
 
   const handleExtendProtection = useCallback(async () => {
     try {
@@ -196,6 +430,23 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       !displayOrder?.hasRated,
     [displayOrder]
   );
+  const shouldBlockAutoRefund = useMemo(() => {
+    if (displayOrder?.fundsReleasedAtConfirmation) return true;
+    const settlementState = (latestSettlementAction?.state || '').trim().toLowerCase();
+    const settlementAction = (
+      latestSettlementAction?.settlementAction ||
+      latestSettlementAction?.action ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
+    return (
+      settlementState === 'confirmed' &&
+      (settlementAction === 'cancel' ||
+        settlementAction === 'confirm' ||
+        settlementAction === 'release')
+    );
+  }, [displayOrder?.fundsReleasedAtConfirmation, latestSettlementAction]);
 
   const hasAfterSaleDispute = !!displayOrder?.afterSaleDispute;
 
@@ -207,10 +458,11 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           router.push(`/payment?orderID=${orderId}`);
           break;
         case 'Cancel':
+          if (!ensureBuyerRefundAddress()) break;
           setConfirmDialog('cancel');
           break;
         case 'Complete':
-          executeConfirmAction('complete');
+          openConfirmReceiptDialog();
           break;
         case 'Accept':
           setShowAcceptDialog(true);
@@ -218,13 +470,62 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         case 'Decline':
           setConfirmDialog('decline');
           break;
-        case 'Fulfill':
-          setShowFulfillDialog(true);
+        case 'Ship':
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.isLoading) {
+            toast({
+              title: t('order.digitalDelivery.checking'),
+            });
+            break;
+          }
+          if (
+            sellerDigitalDelivery.isDigitalOrder &&
+            !sellerDigitalDelivery.status &&
+            sellerDigitalDelivery.error
+          ) {
+            toast({
+              title: t('order.digitalDelivery.syncFailed'),
+              description: sellerDigitalDelivery.error,
+              variant: 'destructive',
+            });
+            haptic.error();
+            break;
+          }
+          if (sellerDigitalDelivery.canSyncDelivery) {
+            void sellerDigitalDelivery.syncDelivery();
+            break;
+          }
+          if (sellerDigitalDelivery.canRetryDelivery) {
+            void sellerDigitalDelivery.retryDelivery();
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.manualFallbackAllowed) {
+            setShowShipDialog(true);
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder) {
+            sellerDigitalDelivery.refreshStatus();
+            toast({
+              title: t('order.digitalDelivery.pendingTitle'),
+              description: t('order.digitalDelivery.pendingDesc'),
+            });
+            break;
+          }
+          setShowShipDialog(true);
           break;
         case 'Refund':
+          if (shouldBlockAutoRefund) {
+            toast({
+              title: t('order.actions.manualRefundRequired'),
+              description: t('order.actions.manualRefundRequiredDesc'),
+              variant: 'destructive',
+            });
+            haptic.error();
+            break;
+          }
           if (displayOrder?.fiatPayment) {
             setShowFiatRefundDialog(true);
           } else {
+            if (!ensureBuyerRefundAddress()) break;
             setConfirmDialog('refund');
           }
           break;
@@ -232,9 +533,10 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setConfirmDialog('claim');
           break;
         case 'AcceptPayout':
-          setConfirmDialog('acceptPayout');
+          openAcceptPayoutDialog();
           break;
         case 'Dispute':
+          if (!ensureBuyerRefundAddress()) break;
           setIsAfterSaleDispute(false);
           setShowDisputeModal(true);
           break;
@@ -243,21 +545,36 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
           setShowDisputeModal(true);
           break;
         case 'WriteReview':
-          executeConfirmAction('complete');
+          openReviewDialog();
           break;
       }
     },
-    [router, orderId, executeConfirmAction, displayOrder]
+    [
+      router,
+      orderId,
+      openConfirmReceiptDialog,
+      openReviewDialog,
+      displayOrder,
+      sellerDigitalDelivery,
+      shouldBlockAutoRefund,
+      openAcceptPayoutDialog,
+      ensureBuyerRefundAddress,
+      t,
+      toast,
+    ]
   );
 
   const handleConfirmAction = useCallback(async () => {
-    if (!confirmDialog) return;
+    if (!confirmDialog || isActionLoading) return;
     const actionType = confirmDialog;
-    setConfirmDialog(null);
     const ok = await executeConfirmAction(actionType);
-    if (ok) haptic.success();
-    else haptic.error();
-  }, [confirmDialog, executeConfirmAction, haptic]);
+    if (ok) {
+      setConfirmDialog(null);
+      haptic.success();
+    } else {
+      haptic.error();
+    }
+  }, [confirmDialog, executeConfirmAction, haptic, isActionLoading]);
 
   const handleFiatRefund = useCallback(
     async (params: { amount?: number; currency?: string; reason?: string }) => {
@@ -271,6 +588,8 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
   const handleDisputeSubmit = useCallback(
     async (claim: string, evidenceHashes?: string[]) => {
+      if (!isAfterSaleDispute && !ensureBuyerRefundAddress()) return;
+
       setIsDisputeLoading(true);
       try {
         await ordersApi.openDispute(orderId, claim, evidenceHashes);
@@ -283,16 +602,21 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         setTimeout(() => refetch(), 500);
       } catch (error) {
         haptic.error();
-        toast({
-          title: t('order.actions.error'),
-          description: (error as Error).message,
-          variant: 'destructive',
-        });
+        notifyOrderActionError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setIsDisputeLoading(false);
       }
     },
-    [orderId, refetch, t, toast, haptic]
+    [
+      orderId,
+      refetch,
+      t,
+      toast,
+      haptic,
+      isAfterSaleDispute,
+      ensureBuyerRefundAddress,
+      notifyOrderActionError,
+    ]
   );
 
   const handleAfterSaleDisputeSubmit = useCallback(
@@ -324,14 +648,14 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
   // --- TG BackButton ---
   useEffect(() => {
     if (!isTG || !backButton) return;
-    const onBack = () => router.back();
+    const onBack = () => router.push(listBackPath);
     backButton.onClick(onBack);
     backButton.show();
     return () => {
       backButton.offClick(onBack);
       backButton.hide();
     };
-  }, [isTG, backButton, router]);
+  }, [isTG, backButton, listBackPath, router]);
 
   // --- TG MainButton (maps to primary order action) ---
   const handleOrderActionRef = useRef(handleOrderAction);
@@ -346,14 +670,25 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       coreOrder.state || 'PENDING',
       displayOrder.userRole as CoreUserRole,
       {
-        isModerated: !!displayOrder.moderator,
-        isFulfilled: isOrderFulfilled(coreOrder),
+        isModerated: isModeratedOrder,
+        isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        inAfterSaleWindow: displayOrder.protection?.stage === 'AFTER_SALE_WINDOW',
+        hasAfterSaleDispute,
+        fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
-    );
+    ).filter(action => action !== 'Dispute');
     return !!getPrimaryAction(actions);
-  }, [isTG, mainButton, coreOrder, displayOrder]);
+  }, [
+    isTG,
+    mainButton,
+    coreOrder,
+    displayOrder,
+    isModeratedOrder,
+    hasAfterSaleDispute,
+    shouldBlockAutoRefund,
+  ]);
 
   useEffect(() => {
     if (!isTG || !mainButton || !coreOrder || !displayOrder) return;
@@ -362,12 +697,15 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       coreOrder.state || 'PENDING',
       displayOrder.userRole as CoreUserRole,
       {
-        isModerated: !!displayOrder.moderator,
-        isFulfilled: isOrderFulfilled(coreOrder),
+        isModerated: isModeratedOrder,
+        isShipped: isOrderShipped(coreOrder),
         paymentMethod: coreOrder.contract?.paymentSent?.method?.toString(),
         hasRated: displayOrder.hasRated,
+        inAfterSaleWindow: displayOrder.protection?.stage === 'AFTER_SALE_WINDOW',
+        hasAfterSaleDispute,
+        fundsReleasedAtConfirmation: shouldBlockAutoRefund,
       }
-    );
+    ).filter(action => action !== 'Dispute');
     const primary = getPrimaryAction(actions);
     if (!primary) {
       mainButton.hide();
@@ -383,7 +721,15 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       mainButton.offClick(onMain);
       mainButton.hide();
     };
-  }, [isTG, mainButton, coreOrder, displayOrder]);
+  }, [
+    isTG,
+    mainButton,
+    coreOrder,
+    displayOrder,
+    isModeratedOrder,
+    hasAfterSaleDispute,
+    shouldBlockAutoRefund,
+  ]);
 
   // --- Loading state ---
   if (isLoading) {
@@ -440,7 +786,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         <div className="px-4 py-12 text-center">
           <h2 className="text-lg font-semibold text-foreground mb-2">{t('order.orderNotFound')}</h2>
           <p className="text-sm text-muted-foreground mb-4">{t('order.orderNotFoundMessage')}</p>
-          <Button onClick={() => router.push('/orders')} size="sm">
+          <Button onClick={() => router.push(listBackPath)} size="sm">
             {t('order.backToOrders')}
           </Button>
         </div>
@@ -450,9 +796,16 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Header — clean title, no hash */}
+      {/* Header — use "Case #XYZ" for moderator dispute view */}
       <MobilePageHeader
-        title={t('order.details')}
+        title={
+          isModeratorDisputeView
+            ? `${t('moderation.caseIdLabel')} ${displayOrder.orderId.length > 12 ? `${displayOrder.orderId.slice(0, 6)}…${displayOrder.orderId.slice(-4)}` : displayOrder.orderId}`
+            : t('order.details')
+        }
+        onBack={
+          isModeratorDisputeView ? () => router.push('/cases') : () => router.push(listBackPath)
+        }
         rightAction={
           <button
             onClick={() => setShowMoreMenu(true)}
@@ -535,7 +888,7 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
             aria-selected={activeTab === 'details'}
             aria-controls="tabpanel-details"
             id="tab-details"
-            onClick={() => setActiveTab('details')}
+            onClick={() => handleTabChange('details')}
             className={cn(
               'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative',
               activeTab === 'details'
@@ -543,17 +896,37 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            {t('order.tabs.summary')}
+            {isModeratorDisputeView ? t('order.tabs.dispute') : t('order.tabs.summary')}
             {activeTab === 'details' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
           </button>
+          {isModeratorDisputeView && showModeratorEvidenceTab && (
+            <button
+              role="tab"
+              aria-selected={activeTab === 'evidence'}
+              aria-controls="tabpanel-evidence"
+              id="tab-evidence"
+              onClick={() => handleTabChange('evidence')}
+              className={cn(
+                'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative',
+                activeTab === 'evidence'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {t('order.tabs.evidence')}
+              {activeTab === 'evidence' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+          )}
           <button
             role="tab"
             aria-selected={activeTab === 'discussion'}
             aria-controls="tabpanel-discussion"
             id="tab-discussion"
-            onClick={() => setActiveTab('discussion')}
+            onClick={() => handleTabChange('discussion')}
             className={cn(
               'flex-1 py-2.5 text-sm font-medium text-center transition-colors relative flex items-center justify-center gap-1.5',
               activeTab === 'discussion'
@@ -561,8 +934,13 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            <MessageCircle className="w-4 h-4" />
-            {t('order.tabs.discussion')}
+            <MessageCircle className="w-4 h-4 shrink-0" />
+            <span className="truncate">{t('order.tabs.discussion')}</span>
+            {orderChat.unreadCount > 0 && (
+              <span className="px-1.5 py-0.5 min-w-[1.25rem] text-center bg-error text-white text-[10px] font-semibold rounded-full tabular-nums">
+                {orderChat.unreadCount > 99 ? '99+' : orderChat.unreadCount}
+              </span>
+            )}
             {activeTab === 'discussion' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
             )}
@@ -571,216 +949,451 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
       </div>
 
       {/* Content */}
-      {activeTab === 'details' ? (
+      {activeTab === 'details' && (
         <div
           role="tabpanel"
           id="tabpanel-details"
           aria-labelledby="tab-details"
           className="px-4 pt-3 space-y-4"
         >
-          {/* 1. Status + progress bar */}
-          <OrderStatusCard displayOrder={displayOrder} />
+          <OrderCreatedAtMeta createdAt={displayOrder.createdAt} />
 
-          {/* 2. Product card (vendor merged inline) */}
-          <OrderProductCard displayOrder={displayOrder} />
+          {/* ─── MODERATOR DISPUTE VIEW ─── */}
+          {isModeratorDisputeView ? (
+            <>
+              <DisputeOverviewCard displayOrder={displayOrder} />
 
-          {/* 3. Order summary — total, shipping, status badge */}
-          <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
-
-          {/* 4a. Fiat dispute banner (independent of order state) */}
-          {displayOrder.fiatDispute && (
-            <FiatDisputeBanner
-              fiatDispute={displayOrder.fiatDispute}
-              userRole={displayOrder.userRole}
-            />
-          )}
-
-          {/* 4b. Crypto dispute banner (only when active) */}
-          {displayOrder.dispute && (
-            <OrderDisputeBanner
-              displayOrder={displayOrder}
-              onOpenDispute={() => handleOrderAction('Dispute')}
-            />
-          )}
-
-          {/* 5. Tracking card — shown for shipped/delivered/completed */}
-          {hasTracking && (
-            <div>
-              <SectionTitle>{t('order.trackingSection.title')}</SectionTitle>
-              <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Package className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {displayOrder.shipper && (
-                      <p className="text-sm font-medium text-foreground">{displayOrder.shipper}</p>
-                    )}
-                    {displayOrder.trackingNumber ? (
-                      <p className="text-xs text-muted-foreground font-mono truncate">
-                        {displayOrder.trackingNumber}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {t('order.trackingSection.noTrackingNumber')}
-                      </p>
-                    )}
-                  </div>
-                  {displayOrder.trackingNumber && (
-                    <button
-                      onClick={() => {
-                        const query = encodeURIComponent(displayOrder.trackingNumber || '');
-                        window.open(`https://track24.net/?code=${query}`, '_blank');
-                      }}
-                      className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      {t('order.trackingSection.track')}
-                    </button>
-                  )}
+              {/* Collapsible order context */}
+              <details className="group rounded-xl border border-border/60 overflow-hidden">
+                <summary className="flex items-center justify-between px-4 py-3 bg-muted/30 cursor-pointer select-none text-sm font-medium text-foreground list-none">
+                  {t('order.orderSummary')}
+                  <svg
+                    className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </summary>
+                <div className="p-4 space-y-4">
+                  <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+                  <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+                  <OrderTimelineCard
+                    displayOrder={displayOrder}
+                    coreOrder={coreOrder}
+                    settlementAction={latestSettlementAction}
+                  />
                 </div>
+              </details>
+
+              {/* Spacer to prevent content being hidden behind sticky DisputeResolutionBar */}
+              <div className="h-20" />
+            </>
+          ) : (
+            <>
+              {/* 1. Status — dispute summary for active crypto disputes */}
+              {!isModeratorDisputeView &&
+                (hasActiveCryptoDispute ? (
+                  <DisputeSummaryCard
+                    displayOrder={displayOrder}
+                    onOpenDiscussion={() => handleTabChange('discussion')}
+                  />
+                ) : (
+                  <OrderStatusCard displayOrder={displayOrder} />
+                ))}
+
+              {buyerNeedsRefundAddress && (
+                <OrderRefundAddressBanner
+                  initialAddress={buyerRefundAddressDraft}
+                  isSaving={isSavingRefundAddress}
+                  onSave={async (address, options) => {
+                    await saveBuyerRefundAddress(address, options);
+                  }}
+                  className="mb-4"
+                />
+              )}
+
+              {showRefundDestination && (
+                <OrderRefundDestinationCard address={buyerRefundAddress} className="mb-4" />
+              )}
+
+              {!(
+                displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
+              ) && (
+                <OrderSettlementCard
+                  settlementAction={latestSettlementAction}
+                  paymentCoin={displayOrder.paymentCoin}
+                  chainId={displayOrder.chainId}
+                  cancellation={displayOrder.cancellation}
+                />
+              )}
+
+              {/* 2. Product card (vendor merged inline) */}
+              <OrderProductCard displayOrder={displayOrder} />
+
+              {displayOrder.userRole === 'seller' && (
+                <SellerDigitalDeliveryStatus
+                  {...sellerDigitalDelivery}
+                  canSyncDelivery={
+                    coreOrder?.state === 'AWAITING_SHIPMENT' &&
+                    sellerDigitalDelivery.canSyncDelivery
+                  }
+                  onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+                  onRetryDelivery={sellerDigitalDelivery.retryDelivery}
+                  onManageListing={slug =>
+                    window.open(`/listing/edit/${slug}?from=orders`, '_blank')
+                  }
+                  orderId={orderId}
+                  listingSlugs={sellerDigitalDelivery.listingSlugs}
+                  orderInDispute={hasActiveCryptoDispute}
+                  orderStatus={displayOrder.status}
+                  disputePhase={digitalEntitlementDisputePhase}
+                />
+              )}
+
+              {/* 2b. Buyer digital downloads — License keys, file links, etc. */}
+              {displayOrder.userRole === 'buyer' && (
+                <BuyerDigitalAssetsSection
+                  orderId={orderId}
+                  sellerPeerID={displayOrder.vendor.peerID}
+                  deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+                  disputePhase={digitalEntitlementDisputePhase}
+                  disputeResolution={displayOrder.dispute?.resolution}
+                  buyerPayoutPercent={displayOrder.dispute?.buyerPayoutPercent}
+                />
+              )}
+
+              {displayOrder.shipments && displayOrder.shipments.length > 0 && (
+                <OrderShipment
+                  shipments={displayOrder.shipments}
+                  orderId={orderId}
+                  userRole={displayOrder.userRole}
+                />
+              )}
+
+              {/* 3. Order summary — total, shipping, status badge */}
+              <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+
+              {/* 4a. Fiat dispute banner (independent of order state) */}
+              {displayOrder.fiatDispute && (
+                <FiatDisputeBanner
+                  fiatDispute={displayOrder.fiatDispute}
+                  userRole={displayOrder.userRole}
+                />
+              )}
+
+              {/* 4b. Dispute — archive for resolved, open banner only while active */}
+              <div ref={disputeSectionRef}>
+                {displayOrder.dispute &&
+                  displayOrder.userRole !== 'moderator' &&
+                  showDisputeArchive && (
+                    <DisputeHistoryCard
+                      displayOrder={displayOrder}
+                      onOpenDiscussion={() => handleTabChange('discussion')}
+                      className="mb-4"
+                    />
+                  )}
+                {displayOrder.dispute &&
+                  displayOrder.userRole !== 'moderator' &&
+                  !hasActiveCryptoDispute &&
+                  !showDisputeArchive && (
+                    <OrderDisputeBanner
+                      displayOrder={displayOrder}
+                      onOpenDispute={() => handleOrderAction('Dispute')}
+                    />
+                  )}
               </div>
-            </div>
-          )}
 
-          {/* 5b. Buyer protection — after tracking context */}
-          {protectionStage && displayOrder.protection && (
-            <OrderProtectionStatus
-              stage={protectionStage}
-              daysRemaining={displayOrder.protection.daysRemaining}
-              autoCompleteAt={displayOrder.protection.autoCompleteAt}
-              extendable={displayOrder.protection.extendable}
-              extended={displayOrder.protection.extended}
-              afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
-              userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
-              protectionLevel={displayOrder.protection.protectionLevel}
-              onExtendProtection={handleExtendProtection}
-            />
-          )}
+              {/* 5. Tracking card — shown for shipped/delivered/completed */}
+              {hasTracking && (
+                <div>
+                  <SectionTitle>{t('order.trackingSection.title')}</SectionTitle>
+                  <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Package className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {displayOrder.shipper && (
+                          <p className="text-sm font-medium text-foreground">
+                            {displayOrder.shipper}
+                          </p>
+                        )}
+                        {displayOrder.trackingNumber ? (
+                          <p className="text-xs text-muted-foreground font-mono truncate">
+                            {displayOrder.trackingNumber}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            {t('order.trackingSection.noTrackingNumber')}
+                          </p>
+                        )}
+                      </div>
+                      {displayOrder.trackingNumber && (
+                        <button
+                          onClick={() => {
+                            const query = encodeURIComponent(displayOrder.trackingNumber || '');
+                            window.open(`https://track24.net/?code=${query}`, '_blank');
+                          }}
+                          className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {t('order.trackingSection.track')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {showRatingInvite && (
-            <RatingInviteBanner
-              onWriteReview={() => executeConfirmAction('complete')}
-              onReportIssue={
-                displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
-                  ? () => {
-                      setIsAfterSaleDispute(true);
-                      setShowDisputeModal(true);
-                    }
-                  : undefined
-              }
-              disputeFiled={hasAfterSaleDispute}
-            />
-          )}
+              {/* 5b. Buyer protection — after tracking context */}
+              {protectionStage && displayOrder.protection && (
+                <OrderProtectionStatus
+                  stage={protectionStage}
+                  daysRemaining={displayOrder.protection.daysRemaining}
+                  autoCompleteAt={displayOrder.protection.autoCompleteAt}
+                  extendable={displayOrder.protection.extendable}
+                  extended={displayOrder.protection.extended}
+                  afterSaleWindowDays={displayOrder.protection.afterSaleWindowDays}
+                  userRole={displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole}
+                  protectionLevel={displayOrder.protection.protectionLevel}
+                  isModerated={isModeratedOrder}
+                  moderatorName={displayOrder.moderator?.name}
+                  canOpenDispute={canOpenModeratedDispute}
+                  onOpenDispute={() => handleOrderAction('Dispute')}
+                  onExtendProtection={handleExtendProtection}
+                  disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
+                />
+              )}
 
-          {displayOrder.afterSaleDispute && (
-            <AfterSaleDisputeCard
-              dispute={displayOrder.afterSaleDispute}
-              userRole={displayOrder.userRole}
-              onMessageCounterparty={() => setActiveTab('discussion')}
-              className="mt-3"
-            />
-          )}
+              {showRatingInvite && (
+                <RatingInviteBanner
+                  onWriteReview={openReviewDialog}
+                  onReportIssue={
+                    displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
+                      ? () => {
+                          setIsAfterSaleDispute(true);
+                          setShowDisputeModal(true);
+                        }
+                      : undefined
+                  }
+                  disputeFiled={hasAfterSaleDispute}
+                />
+              )}
 
-          {/* 6. Payment info */}
-          {(displayOrder.paymentTx || displayOrder.paymentLocked || displayOrder.fiatPayment) && (
-            <div>
-              <SectionTitle>{t('order.payment.title')}</SectionTitle>
-              <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
-            </div>
-          )}
+              {displayOrder.buyerRating && (
+                <OrderRating
+                  rating={displayOrder.buyerRating}
+                  reviewer={
+                    displayOrder.buyer?.peerID
+                      ? {
+                          peerID: displayOrder.buyer.peerID,
+                          name: displayOrder.buyer.name,
+                          avatar: displayOrder.buyer.avatar,
+                        }
+                      : undefined
+                  }
+                  timestamp={displayOrder.buyerRating.timestamp}
+                />
+              )}
 
-          {/* 7. Shipping address — physical goods only */}
-          {displayOrder.contractType === 'PHYSICAL_GOOD' &&
-            (displayOrder.shippingRecipient || displayOrder.shippingAddressLine1) && (
+              {displayOrder.afterSaleDispute && (
+                <AfterSaleDisputeCard
+                  dispute={displayOrder.afterSaleDispute}
+                  userRole={displayOrder.userRole}
+                  onMessageCounterparty={() => {
+                    handleTabChange('discussion');
+                    orderChat.focusComposer();
+                  }}
+                  className="mt-3"
+                />
+              )}
+
+              {/* 6. Payment info */}
+              {(displayOrder.paymentTx ||
+                displayOrder.paymentLocked ||
+                displayOrder.fiatPayment) && (
+                <div>
+                  <SectionTitle>{t('order.payment.title')}</SectionTitle>
+                  <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+                </div>
+              )}
+
+              <CollectiblePrimarySaleCard
+                orderId={orderId}
+                coreOrder={coreOrder}
+                enabled={collectiblesHubEnabled}
+              />
+
+              {/* 7. Shipping address — physical goods only */}
+              {displayOrder.contractType === 'PHYSICAL_GOOD' &&
+                (displayOrder.shippingRecipient || displayOrder.shippingAddressLine1) && (
+                  <div>
+                    <SectionTitle>{t('order.shippingDetails')}</SectionTitle>
+                    <OrderShippingCard displayOrder={displayOrder} />
+                  </div>
+                )}
+
+              {/* 7.5. Fulfillment status — seller-only, supply-chain orders */}
+              {supplyChainEnabled && displayOrder.userRole === 'seller' && (
+                <FulfillmentStatusCard orderId={orderId} />
+              )}
+
+              {/* 8. Parties — buyer (seller view) + moderator */}
+              {((displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID) ||
+                displayOrder.moderator ||
+                displayOrder.notes ||
+                displayOrder.alternateContactInfo) && (
+                <div>
+                  <SectionTitle>{t('order.additionalInfo')}</SectionTitle>
+                  <div className="space-y-2">
+                    {displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID && (
+                      <OrderCounterpartyCard displayOrder={displayOrder} variant="compact" />
+                    )}
+                    {displayOrder.moderator && (
+                      <ModeratorBadge moderator={displayOrder.moderator} />
+                    )}
+                    {(displayOrder.notes || displayOrder.alternateContactInfo) && (
+                      <OrderMemoCard displayOrder={displayOrder} />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 9. Order history timeline */}
               <div>
-                <SectionTitle>{t('order.shippingDetails')}</SectionTitle>
-                <OrderShippingCard displayOrder={displayOrder} />
+                <SectionTitle>{t('order.orderHistory')}</SectionTitle>
+                <OrderTimelineCard
+                  displayOrder={displayOrder}
+                  coreOrder={coreOrder}
+                  settlementAction={latestSettlementAction}
+                />
               </div>
-            )}
 
-          {/* 8. Parties — buyer (seller view) + moderator */}
-          {((displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID) ||
-            displayOrder.moderator ||
-            displayOrder.notes ||
-            displayOrder.alternateContactInfo) && (
-            <div>
-              <SectionTitle>{t('order.additionalInfo')}</SectionTitle>
-              <div className="space-y-2">
-                {displayOrder.userRole === 'seller' && displayOrder.buyer?.peerID && (
-                  <OrderCounterpartyCard displayOrder={displayOrder} variant="compact" />
-                )}
-                {displayOrder.moderator && <ModeratorBadge moderator={displayOrder.moderator} />}
-                {(displayOrder.notes || displayOrder.alternateContactInfo) && (
-                  <OrderMemoCard displayOrder={displayOrder} />
-                )}
-              </div>
-            </div>
+              {/* 10. Subtle dispute entry — moderated orders only */}
+              {!displayOrder.protection && canOpenModeratedDispute && (
+                <div className="text-center pb-2">
+                  <button
+                    onClick={() => handleOrderAction('Dispute')}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                    data-testid="order-detail-open-dispute"
+                  >
+                    {t('order.dispute.haveProblem')}
+                  </button>
+                </div>
+              )}
+            </>
           )}
-
-          {/* 9. Order history timeline */}
-          <div>
-            <SectionTitle>{t('order.orderHistory')}</SectionTitle>
-            <OrderTimelineCard displayOrder={displayOrder} coreOrder={coreOrder} />
-          </div>
-
-          {/* 10. Subtle dispute entry — moderated orders only */}
-          {!displayOrder.dispute &&
-            !!displayOrder.moderator &&
-            ((displayOrder.userRole === 'buyer' &&
-              ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
-              (displayOrder.userRole === 'seller' &&
-                ['shipped', 'delivered'].includes(displayOrder.status))) && (
-              <div className="text-center pb-2">
-                <button
-                  onClick={() => handleOrderAction('Dispute')}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
-                  data-testid="order-detail-open-dispute"
-                >
-                  {t('order.dispute.haveProblem')}
-                </button>
-              </div>
-            )}
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'evidence' && isModeratorDisputeView && displayOrder.dispute && (
+        <div
+          role="tabpanel"
+          id="tabpanel-evidence"
+          aria-labelledby="tab-evidence"
+          className="px-4 pt-3 pb-6"
+        >
+          <DisputeEvidencePanel
+            dispute={displayOrder.dispute}
+            onOpenDiscussion={() => handleTabChange('discussion')}
+          />
+        </div>
+      )}
+
+      {activeTab === 'discussion' && (
         <div
           role="tabpanel"
           id="tabpanel-discussion"
           aria-labelledby="tab-discussion"
-          className="px-4 pt-3"
+          className="flex flex-col h-[calc(100dvh-7.5rem)] min-h-0"
         >
-          <Card className="border border-border/60 shadow-sm overflow-hidden">
-            <OrderChat
-              orderId={orderId}
-              participants={chatParticipants}
-              messages={chatMessages}
-              currentUserId={currentUserPeerID || ''}
-              onSendMessage={sendMessage}
-              className="h-[calc(100vh-200px)] min-h-[400px]"
+          {displayOrder && (
+            <OrderChatContextStrip
+              displayOrder={displayOrder}
+              onBackToSummary={() => handleTabChange('details')}
+              compact
             />
-          </Card>
+          )}
+          <OrderChat
+            orderId={orderId}
+            layout="embedded"
+            className="flex-1 min-h-0 mx-4 mb-3 rounded-xl"
+            {...orderChat}
+          />
         </div>
       )}
 
-      {/* Fixed bottom action bar — hidden when RatingInviteBanner takes over or TG MainButton active */}
-      {activeTab === 'details' && coreOrder && !tgMainButtonActive && !showRatingInvite && (
-        <OrderActionSheet
-          orderState={coreOrder.state || 'PENDING'}
-          userRole={displayOrder.userRole as CoreUserRole}
-          timestamp={displayOrder.createdAt}
-          isModerated={!!displayOrder.moderator}
-          isFulfilled={isOrderFulfilled(coreOrder)}
-          paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
-          inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
-          onAction={handleOrderAction}
+      {/* Sticky bottom DisputeResolutionBar — moderator dispute view only */}
+      {isModeratorDisputeView && activeTab === 'details' && displayOrder.dispute && (
+        <DisputeResolutionBar
+          dispute={displayOrder.dispute}
+          onOpenRuling={openRulingSheet}
+          isResolving={isResolving}
+          isOpeningSheet={isOpeningSheet}
+          variant="sticky"
         />
       )}
+
+      {showDisputeDiscussionBar && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <p className="text-xs font-medium text-warning mb-2">
+            {t('order.footer.disputeReviewing')}
+          </p>
+          <Button
+            className="w-full h-12 text-[15px] font-semibold"
+            onClick={() => handleTabChange('discussion')}
+            data-testid="order-mobile-footer-open-discussion"
+          >
+            {t('order.actions.openDiscussion')}
+          </Button>
+        </div>
+      )}
+
+      {/* Fixed bottom action bar — hidden for moderator view, rating invite, or TG MainButton active */}
+      {!showDisputeDiscussionBar &&
+        !isModeratorDisputeView &&
+        activeTab === 'details' &&
+        coreOrder &&
+        !tgMainButtonActive &&
+        !showRatingInvite &&
+        !showReviewDialog &&
+        !showConfirmReceiptDialog &&
+        !showAcceptPayoutDialog && (
+          <OrderActionSheet
+            orderState={coreOrder.state || 'PENDING'}
+            userRole={displayOrder.userRole as CoreUserRole}
+            timestamp={displayOrder.createdAt}
+            isModerated={isModeratedOrder}
+            isShipped={isOrderShipped(coreOrder)}
+            paymentMethod={coreOrder.contract?.paymentSent?.method?.toString()}
+            fundsReleasedAtConfirmation={shouldBlockAutoRefund}
+            inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+            hasAfterSaleDispute={hasAfterSaleDispute}
+            contractType={shipOrderProps.contractType}
+            hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
+            digitalDeliveryStatus={sellerDigitalDelivery.status}
+            canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+            canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
+            manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
+            isTransitioning={isTransitioning || isActionLoading}
+            onAction={handleOrderAction}
+          />
+        )}
 
       {/* Dialogs */}
       {confirmDialog && (
         <OrderConfirmDialog
           open={!!confirmDialog}
-          onOpenChange={open => !open && setConfirmDialog(null)}
+          onOpenChange={open => {
+            if (!open && !isActionLoading) setConfirmDialog(null);
+          }}
           type={confirmDialog}
           onConfirm={handleConfirmAction}
           isLoading={isActionLoading}
@@ -804,16 +1417,20 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         orderId={acceptOrderProps.orderId}
         blockchain={acceptOrderProps.blockchain}
         paymentCoin={acceptOrderProps.paymentCoin}
+        paymentEscrowType={acceptOrderProps.paymentEscrowType}
+        paymentProductMode={acceptOrderProps.paymentProductMode}
+        contractType={acceptOrderProps.contractType}
         onSuccess={acceptOrderProps.onSuccess}
       />
 
-      <FulfillOrderDialog
-        open={showFulfillDialog}
-        onOpenChange={setShowFulfillDialog}
-        orderId={fulfillOrderProps.orderId}
-        contractType={fulfillOrderProps.contractType}
-        blockchain={fulfillOrderProps.blockchain}
-        onSuccess={fulfillOrderProps.onSuccess}
+      <ShipOrderDialog
+        open={showShipDialog}
+        onOpenChange={setShowShipDialog}
+        orderId={shipOrderProps.orderId}
+        contractType={shipOrderProps.contractType}
+        blockchain={shipOrderProps.blockchain}
+        itemCount={displayOrder?.items?.length || 1}
+        onSuccess={shipOrderProps.onSuccess}
       />
 
       <OrderContractView
@@ -823,19 +1440,46 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         onCopy={copyContract}
       />
 
+      <ConfirmReceiptDialog
+        open={showConfirmReceiptDialog}
+        onOpenChange={open => !open && closeConfirmReceiptDialog()}
+        onConfirm={() => void confirmReceipt()}
+        isLoading={isActionLoading}
+        completePhase={completePhase}
+        isModerated={isModeratedOrder}
+        contractType={displayOrder?.contractType}
+      />
+
+      {displayOrder?.dispute && (
+        <AcceptPayoutDialog
+          open={showAcceptPayoutDialog}
+          onOpenChange={open => !open && closeAcceptPayoutDialog()}
+          onConfirm={async () => {
+            const ok = await confirmAcceptPayout();
+            if (ok) haptic.success();
+            else haptic.error();
+          }}
+          isLoading={isActionLoading}
+          acceptPayoutPhase={acceptPayoutPhase}
+          isModerated={isModeratedOrder}
+          dispute={displayOrder.dispute}
+          settlementBreakdown={displayOrder.settlementBreakdown}
+          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+        />
+      )}
+
       <WriteReviewDialog
         open={showReviewDialog}
         productTitle={reviewProductTitle}
         onSubmit={async data => {
-          await submitReviewAndComplete(data);
+          await submitRating(data);
           haptic.success();
         }}
-        onSkip={async () => {
-          await skipReviewAndComplete();
-          haptic.success();
-        }}
+        onSkip={closeReviewDialog}
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
+        completePhase={completePhase}
+        isRateOnly
         isMobile
       />
 
@@ -852,6 +1496,26 @@ export function OrderDetailMobile({ orderId, viewingContext }: OrderDetailMobile
         open={showPackingSlip}
         onOpenChange={setShowPackingSlip}
         order={displayOrder}
+      />
+
+      <ModeratorDisputeRulingDialog
+        open={isSheetOpen}
+        onOpenChange={open => {
+          if (!open) closeSheet();
+        }}
+        draft={rulingDraft}
+        validationErrors={rulingValidationErrors}
+        activePreset={activePreset}
+        vendorNotConfirmed={vendorNotConfirmed}
+        constraints={rulingConstraints}
+        buyerLabel={moderatorRulingBuyerLabel}
+        sellerLabel={moderatorRulingSellerLabel}
+        isSubmitting={isResolving}
+        onApplyPreset={applyPreset}
+        onBuyerPercentageChange={setBuyerPercentage}
+        onVendorPercentageChange={setVendorPercentage}
+        onResolutionChange={setResolution}
+        onSubmit={submitRuling}
       />
     </div>
   );

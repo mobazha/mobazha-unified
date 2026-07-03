@@ -2,6 +2,12 @@ import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import './globals.css';
+import '@/lib/initPublicEnv';
+
+// __SOVEREIGN__ 是 Vite (apps/web/vite.config.ts) 的编译时 define。
+// Next.js 构建不替换此变量，导致裸引用在运行时抛 ReferenceError。
+// 在最早期挂载到 globalThis（覆盖 SSR）— 客户端再通过 inline script 兜底（见 <head>）。
+(globalThis as { __SOVEREIGN__?: boolean }).__SOVEREIGN__ = false;
 import {
   AuthProvider,
   MainContent,
@@ -15,10 +21,13 @@ import { OuterProviders } from '@/components/OuterProviders';
 import { ChatSystemLazy } from '@/components/ChatSystem';
 import { StandaloneThemeWrapper } from '@/components/StandaloneThemeWrapper';
 import { StorefrontProvider } from '@/components/StorefrontProvider';
+import { MarketplaceProvider } from '@/components/MarketplaceProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
 import { defaultFont, storeFontVariableClasses } from '@/lib/fonts';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
+import { getRequestMarketplaceContext } from '@/lib/ssrMarketplace';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 /**
  * AuthProvider 加载状态
@@ -36,9 +45,11 @@ function AuthProviderLoading() {
   );
 }
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mobazha.org';
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '' : 'https://app.mobazha.org');
 
-export const metadata: Metadata = {
+const defaultMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: 'Mobazha - Decentralized Marketplace',
@@ -77,6 +88,52 @@ export const metadata: Metadata = {
   },
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  const [marketplace, requestSiteUrl] = await Promise.all([
+    getRequestMarketplaceContext(),
+    getSiteUrl(),
+  ]);
+  const marketplaceConfig = marketplace.config;
+
+  if (!marketplaceConfig) {
+    return defaultMetadata;
+  }
+
+  const brandName = marketplaceConfig.brand.name || 'Mobazha Marketplace';
+  const description =
+    marketplaceConfig.brand.tagline ||
+    'Shop and grow with cryptos - A decentralized peer-to-peer marketplace';
+  const image = marketplaceConfig.brand.banner || marketplaceConfig.brand.logo || '/og-default.png';
+
+  return {
+    ...defaultMetadata,
+    metadataBase: new URL(requestSiteUrl || siteUrl),
+    title: {
+      default: brandName,
+      template: `%s | ${brandName}`,
+    },
+    description,
+    openGraph: {
+      type: 'website',
+      siteName: brandName,
+      title: brandName,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: brandName }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: brandName,
+      description,
+      images: [image],
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: brandName,
+    },
+  };
+}
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -92,6 +149,11 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const hdrs = await headers();
   const storefrontPeerID = hdrs.get('x-storefront-peerid') || hdrs.get('x-store-peerid') || null;
+  const {
+    subdomain: marketplaceSubdomain,
+    domain: marketplaceDomain,
+    config: marketplaceConfig,
+  } = await getRequestMarketplaceContext();
 
   return (
     <html
@@ -100,16 +162,70 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <head>
-        {/* Runtime config — injected by container init at startup (standalone mode).
-            Sets window.__RUNTIME_CONFIG__ with SAAS_API_URL and other env-specific values.
-            Must load synchronously before React hydration so applyRuntimeConfig() picks it up.
-            Uses document.write to guarantee blocking execution (same pattern as Telegram SDK below).
-            In SaaS/dev the file 404s silently — onerror="" suppresses console noise. */}
+        {/* __SOVEREIGN__ — Vite 编译时 define，Next.js 不替换。
+            必须在所有其他 script 之前定义，避免裸引用抛 ReferenceError。
+            Next.js 永远走 SaaS / Standalone，恒为 false。 */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.write('<scr'+'ipt src="/runtime-config.js" onerror=""><\\/scr'+'ipt>');`,
+            __html: `window.__SOVEREIGN__=false;`,
           }}
         />
+        {/* Sync <html lang> before hydration — reduces browser auto-translate misfires */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('mobazha-locale');
+                  if (saved) {
+                    document.documentElement.lang = saved;
+                    return;
+                  }
+                  var browser = (navigator.language || '').split('-')[0];
+                  if (browser) document.documentElement.lang = browser;
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var key = 'mbz:last-build-reload';
+                function textOf(value) {
+                  if (!value) return '';
+                  if (typeof value === 'string') return value;
+                  if (value.message) return value.message;
+                  if (value.reason) return textOf(value.reason);
+                  try { return String(value); } catch (e) { return ''; }
+                }
+                function shouldReload(value) {
+                  return /ChunkLoadError|Loading chunk|failed to fetch dynamically imported module|Failed to fetch dynamically imported module|Unable to preload CSS|older or newer deployment|Failed to find Server Action/i.test(textOf(value));
+                }
+                function reloadOnce() {
+                  try {
+                    var now = Date.now();
+                    var last = Number(sessionStorage.getItem(key) || '0');
+                    if (now - last < 30000) return;
+                    sessionStorage.setItem(key, String(now));
+                  } catch (e) {}
+                  location.reload();
+                }
+                window.addEventListener('error', function(event) {
+                  if (shouldReload(event.error || event.message)) reloadOnce();
+                }, true);
+                window.addEventListener('unhandledrejection', function(event) {
+                  if (shouldReload(event.reason)) reloadOnce();
+                }, true);
+              })();
+            `,
+          }}
+        />
+        {/* Versioned runtime config must execute before React hydration. The
+            public placeholder is a no-op in SaaS/dev; standalone deployments
+            proxy this path to the node's dynamic bootstrap handler. */}
+        <script src="/runtime-config.js" />
         {/* Storefront peerID — synchronous global for client hooks (SSR-injected) */}
         {storefrontPeerID && (
           <script
@@ -192,28 +308,34 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <QueryProvider>
           <OuterProviders>
             <StorefrontProvider peerID={storefrontPeerID}>
-              <Suspense fallback={<AuthProviderLoading />}>
-                <TGBackButtonManager />
-                <AuthProvider>
-                  <ProductModalProvider>
-                    <PaymentSelectorProvider>
-                      <StandaloneThemeWrapper>
-                        <MainContent>{children}</MainContent>
+              <MarketplaceProvider
+                initialSubdomain={marketplaceSubdomain}
+                initialDomain={marketplaceDomain}
+                initialConfig={marketplaceConfig}
+              >
+                <Suspense fallback={<AuthProviderLoading />}>
+                  <TGBackButtonManager />
+                  <AuthProvider>
+                    <ProductModalProvider>
+                      <PaymentSelectorProvider>
+                        <StandaloneThemeWrapper>
+                          <MainContent>{children}</MainContent>
 
-                        <NonEmbedUI>
-                          <MobileNav />
-                          <ChatSystemLazy />
-                          <PWAInstall />
-                          <SessionExpiredDialog />
-                        </NonEmbedUI>
+                          <NonEmbedUI>
+                            <MobileNav />
+                            <ChatSystemLazy />
+                            <PWAInstall />
+                            <SessionExpiredDialog />
+                          </NonEmbedUI>
 
-                        {/* Toast notifications */}
-                        <Toaster />
-                      </StandaloneThemeWrapper>
-                    </PaymentSelectorProvider>
-                  </ProductModalProvider>
-                </AuthProvider>
-              </Suspense>
+                          {/* Toast notifications */}
+                          <Toaster />
+                        </StandaloneThemeWrapper>
+                      </PaymentSelectorProvider>
+                    </ProductModalProvider>
+                  </AuthProvider>
+                </Suspense>
+              </MarketplaceProvider>
             </StorefrontProvider>
           </OuterProviders>
         </QueryProvider>

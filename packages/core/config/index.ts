@@ -7,6 +7,8 @@
 
 // 导出环境配置
 export * from './env';
+export * from './runtimeConfig';
+export * from './marketplaceExperience';
 
 // 导出测试账号配置
 export * from './testAccounts';
@@ -18,6 +20,10 @@ export * from './appkit';
 export * from './routeConfig';
 export * from './productTypes';
 export * from './guestCheckoutCoins';
+export * from './paymentMethodVisibility';
+export * from './checkoutPaymentPolicy';
+export * from './exchangeUsdtPaymentGuide';
+export * from './aiAdminPaths';
 
 // 导出 API 路径常量（按后端服务分组：NODE_API / HOSTING_API / SEARCH_API）
 export {
@@ -26,6 +32,8 @@ export {
   SEARCH_API,
   HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY,
 } from './apiPaths';
+
+export { getAdminStorePaymentsPath } from './adminPaths';
 
 export interface AppConfig {
   /** Use mock data instead of real API */

@@ -9,9 +9,9 @@ export type OrderState =
   | 'AWAITING_PAYMENT'
   | 'AWAITING_PAYMENT_VERIFICATION'
   | 'AWAITING_PICKUP'
-  | 'AWAITING_FULFILLMENT'
-  | 'PARTIALLY_FULFILLED'
-  | 'FULFILLED'
+  | 'AWAITING_SHIPMENT'
+  | 'PARTIALLY_SHIPPED'
+  | 'SHIPPED'
   | 'COMPLETED'
   | 'CANCELED'
   | 'DECLINED'
@@ -23,6 +23,12 @@ export type OrderState =
   | 'PROCESSING_ERROR'
   | 'DISPUTE_EXPIRED';
 
+/** 确认收货/完成订单时的分阶段 loading 状态 */
+export type CompletePhase = 'idle' | 'confirming' | 'releasing' | 'completing' | 'syncing-rating';
+
+/** 接受争议裁决时的分阶段 loading 状态 */
+export type AcceptPayoutPhase = 'idle' | 'releasing' | 'accepting';
+
 /**
  * 订单角色
  */
@@ -30,11 +36,65 @@ export type OrderRole = 'buyer' | 'vendor';
 
 export type PaymentVerificationStatus = 'pending' | 'verified' | 'failed';
 
+export interface SettlementActionSnapshot {
+  actionId: string;
+  action: string;
+  state: string;
+  txHash?: string;
+  relayTaskId?: string;
+  confirmations?: number;
+  lastError?: string;
+  updatedAt?: string;
+  settlementAction?: string;
+}
+
+/**
+ * Running tally of confirmed-and-deduplicated payments toward the order's
+ * expected amount. Backend rewrites this on every aggregation pass so the
+ * dashboard can render a live
+ * "you've paid X of Y" progress bar even before the order flips to
+ * "verified" and again afterwards if a late deposit lands.
+ *
+ * All amounts are decimal strings in the smallest unit declared by
+ * OrderOpen.Amount (wei / sat / atomic units / lamports for crypto; fiat
+ * uses the order currency's divisibility). Percentage is clamped to
+ * [0, 100] server-side so every client renders the same number.
+ */
+export interface PaymentProgress {
+  /** Running confirmed-and-deduplicated total, smallest unit decimal string. */
+  totalReceived: string;
+  /** Order's expected amount, smallest unit decimal string. */
+  expectedAmount: string;
+  /** Server-clamped percentage in [0, 100]. */
+  percentage: number;
+  /**
+   * Surplus over the expected amount (smallest unit decimal string).
+   * Populated only when the verifier detected a genuine overpayment;
+   * omitted on partial and exact paths.
+   */
+  overpaidAmount?: string;
+  /**
+   * Display-formatted amounts (smallest unit converted to the payment
+   * coin's natural unit, e.g. wei → ETH). The frontend transform fills
+   * these so the UI never has to know about divisibility / big.Int.
+   */
+  totalReceivedFormatted?: string;
+  expectedAmountFormatted?: string;
+  overpaidAmountFormatted?: string;
+}
+
 export interface OrderPaymentState {
   verificationStatus: PaymentVerificationStatus;
   verificationFailureReason?: string;
   verificationFailedAt?: string;
   fiatMetadata?: Record<string, string>;
+  /**
+   * Optional progress card for partial / pending crypto payments. Omitted
+   * when the order has no OrderOpen yet, when the expected amount is
+   * non-positive, or for fiat-only orders without an associated
+   * blockchain payment.
+   */
+  progress?: PaymentProgress;
 }
 
 /**
@@ -45,7 +105,8 @@ export interface OrderListItem {
   orderID: string;
   slug: string;
   title: string;
-  thumbnail: Image;
+  /** API returns a single CID string for list endpoints; Image object appears in mocks / legacy. */
+  thumbnail: Image | string;
   total: Price;
   quantity: number;
   timestamp: string;
@@ -59,9 +120,17 @@ export interface OrderListItem {
   buyerAvatar?: string;
   paymentCoin: CryptoType;
   coinType: string;
+  settlementAction?: string;
+  settlementActionId?: string;
+  settlementState?: string;
+  settlementTxHash?: string;
   shippingName?: string;
   shippingAddress?: string;
   moderated: boolean;
+  /** Opaque backend settlement type retained for order routing. */
+  paymentEscrowType?: string;
+  /** listing metadata contractType (PHYSICAL_GOOD / SERVICE / DIGITAL_GOOD) */
+  contractType?: string;
   unreadChatMessages?: number;
 }
 
@@ -71,7 +140,14 @@ export interface OrderListItem {
 export interface Order {
   contract: OrderContract;
   state: OrderState;
+  settlementActions?: SettlementActionSnapshot[];
+  pricingBreakdown?: OrderPricingBreakdown;
+  settlementBreakdown?: OrderSettlementBreakdown;
   paymentState?: OrderPaymentState;
+  paidAt?: string;
+  shippedAt?: string;
+  completedAt?: string;
+  lastStateChangeAt?: string;
   read: boolean;
   funded: boolean;
   unreadChatMessages: number;
@@ -85,9 +161,47 @@ export interface Order {
     extended: boolean;
     afterSaleWindowDays: number;
   };
+  afterSaleDispute?: {
+    reason?: string;
+    description?: string;
+    openedAt?: string;
+    reportedAt?: string;
+  };
   afterSaleDisputeReason?: string;
   afterSaleDisputeDesc?: string;
   afterSaleDisputeAt?: string;
+}
+
+export interface OrderPricingBreakdown {
+  subtotal: string;
+  shipping: string;
+  discounts: string;
+  taxes: string;
+  total: string;
+  currency: string;
+}
+
+export interface OrderSettlementBreakdownLine {
+  type: string;
+  amount: string;
+  address?: string;
+}
+
+export interface OrderSettlementBreakdown {
+  source?: string;
+  currency?: string;
+  escrowedAmount?: string;
+  sellerAmount?: string;
+  sellerAddress?: string;
+  buyerAmount?: string;
+  buyerAddress?: string;
+  moderatorAmount?: string;
+  moderatorAddress?: string;
+  platformAmount?: string;
+  platformAddress?: string;
+  transactionFee?: string;
+  txHash?: string;
+  lines?: OrderSettlementBreakdownLine[];
 }
 
 /**
@@ -100,7 +214,8 @@ export interface OrderContract {
   orderCancel?: OrderCancel;
   orderConfirmation?: OrderConfirmation;
   orderComplete?: OrderComplete;
-  orderFulfillments?: OrderFulfillment[];
+  /** API: repeated OrderShipment (Ricardian contract) */
+  orderShipments?: OrderShipment[];
 
   // 支付相关
   paymentSent?: PaymentSent;
@@ -121,6 +236,16 @@ export interface OrderContract {
 
   // 错误信息
   errors?: string[];
+
+  // SQL-backed application fields surfaced by the order detail API.
+  afterSaleDispute?: {
+    reason?: string;
+    description?: string;
+    openedAt?: string;
+    reportedAt?: string;
+  };
+  /** Buyer-declared crypto refund destination (SQL-backed, not in protobuf). */
+  refundAddress?: string;
 }
 
 /**
@@ -162,18 +287,18 @@ export interface OrderComplete {
 }
 
 /**
- * 订单履行 - 对应后端 OrderFulfillment
+ * 订单发货消息 - 对应后端 pb.OrderShipment
  */
-export interface OrderFulfillment {
+export interface OrderShipment {
   timestamp?: string;
-  fulfillments?: FulfilledItem[];
+  shipments?: ShippedItem[];
   releaseInfo?: EscrowRelease; // 仲裁订单的托管释放
 }
 
 /**
- * 履行项 - 对应后端 FulfilledItem
+ * 单条发货项 - 对应后端 OrderShipment.ShippedItem
  */
-export interface FulfilledItem {
+export interface ShippedItem {
   itemIndex?: number;
   note?: string;
   physicalDelivery?: PhysicalDelivery;
@@ -217,6 +342,13 @@ export interface PaymentSent {
   timestamp?: string;
   paymentTokenAddress?: string;
   buyerReceiveAddress?: string;
+  settlementSpec?: PaymentSettlementSpec;
+}
+
+export interface PaymentSettlementSpec {
+  method?: PaymentMethod | number;
+  payMode?: string;
+  escrowType?: string;
 }
 
 /**
@@ -262,6 +394,9 @@ export interface EscrowRelease {
   outpoints?: { fromID: string; value: string }[];
   toAddress?: string;
   toAmount?: string;
+  platformAddress?: string;
+  platformAmount?: string;
+  transactionFee?: string;
   txid?: string;
 }
 
@@ -270,7 +405,11 @@ export interface EscrowRelease {
  */
 export interface DisputeOpen {
   timestamp?: string;
+  /** Protobuf/API field for dispute reason text */
+  reason?: string;
   claim?: string;
+  evidenceHashes?: string[];
+  openedBy?: string;
 }
 
 /**
@@ -286,6 +425,7 @@ export interface DisputeClose {
     moderatorAddress?: string;
     moderatorAmount?: string;
     transactionFee?: string;
+    txid?: string;
   };
   timestamp?: string;
 }

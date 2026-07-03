@@ -7,7 +7,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton-compat';
 import { ProductCard, type ProductContractType } from '@/components/ProductCard/ProductCard';
-import { useI18n, productDataService, getImageUrl } from '@mobazha/core';
+import {
+  useI18n,
+  productDataService,
+  getImageUrl,
+  buildProductHref,
+  productCardPriceFieldsFromListItem,
+} from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +24,8 @@ export interface MoreFromStoreProps {
   vendorName?: string;
   /** 当前商品 slug（用于过滤） */
   currentSlug?: string;
+  /** 精选 cohort 标签；设置时仅展示同标签的店铺商品 */
+  scopeTag?: string;
   /** 显示的商品数量 */
   maxItems?: number;
   /** 紧凑模式（弹窗内使用） */
@@ -44,6 +52,7 @@ export const MoreFromStore = memo(function MoreFromStore({
   vendorPeerID,
   vendorName,
   currentSlug,
+  scopeTag,
   maxItems = 6,
   compact = false,
   className,
@@ -65,16 +74,15 @@ export const MoreFromStore = memo(function MoreFromStore({
     const fetchStoreProducts = async () => {
       setIsLoading(true);
       try {
-        // 获取店铺商品列表
-        const storeProducts = await productDataService.getStoreListings(vendorPeerID);
+        const storeProducts = await productDataService.getStoreRelatedListings(vendorPeerID, {
+          excludeSlug: currentSlug,
+          limit: maxItems,
+          scopeTag,
+        });
 
         if (isCancelled) return;
 
-        // 过滤掉当前商品
-        const filteredProducts = storeProducts.filter(p => p.slug !== currentSlug);
-
-        // 限制数量
-        setProducts(filteredProducts.slice(0, maxItems));
+        setProducts(storeProducts);
       } catch (error) {
         console.error('Failed to fetch store products:', error);
       } finally {
@@ -89,7 +97,7 @@ export const MoreFromStore = memo(function MoreFromStore({
     return () => {
       isCancelled = true;
     };
-  }, [vendorPeerID, currentSlug, maxItems]);
+  }, [vendorPeerID, currentSlug, scopeTag, maxItems]);
 
   // 如果没有 vendorPeerID 或没有其他商品，不渲染
   if (!vendorPeerID) {
@@ -172,6 +180,7 @@ export const MoreFromStore = memo(function MoreFromStore({
           )}
         >
           {products.map(product => {
+            const priceFields = productCardPriceFieldsFromListItem(product);
             const card = (
               <ProductCard
                 key={product.slug}
@@ -180,8 +189,10 @@ export const MoreFromStore = memo(function MoreFromStore({
                   getImageUrl(product.thumbnail?.medium, vendorPeerID) ||
                   getImageUrl(product.thumbnail?.small, vendorPeerID)
                 }
-                price={product.price?.amount || 0}
-                currency={product.price?.currency?.code}
+                price={priceFields.price}
+                currency={priceFields.currencyCode}
+                divisibility={priceFields.divisibility}
+                priceFrom={priceFields.priceFrom}
                 rating={product.averageRating}
                 reviewCount={product.ratingCount}
                 freeShipping={product.freeShipping && product.freeShipping.length > 0}
@@ -200,7 +211,7 @@ export const MoreFromStore = memo(function MoreFromStore({
               return <React.Fragment key={product.slug}>{card}</React.Fragment>;
             }
 
-            const href = `/product/${product.slug}${vendorPeerID ? `?peerID=${vendorPeerID}` : ''}`;
+            const href = buildProductHref(product.slug, vendorPeerID);
             return (
               <Link key={product.slug} href={href} className="block">
                 {card}

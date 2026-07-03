@@ -5,7 +5,7 @@
  */
 
 // 版本号：每次部署更新时递增此版本号
-const CACHE_VERSION = '3';
+const CACHE_VERSION = '5';
 const CACHE_NAME = `mobazha-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -40,15 +40,20 @@ const CACHE_STRATEGIES = {
 };
 
 // Install event - precache assets
+// Do NOT call skipWaiting here — the page prompts the user and sends SKIP_WAITING.
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(PRECACHE_ASSETS.filter(url => !url.includes('icon'))); // Icons may not exist yet
-      })
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(PRECACHE_ASSETS.filter(url => !url.includes('icon'))); // Icons may not exist yet
+    })
   );
+});
+
+// Activate pending update when the user taps "Refresh Now"
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Activate event - clean up old caches
@@ -79,6 +84,17 @@ self.addEventListener('fetch', event => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
+
+  // Let the browser/HTTP cache handle build-hashed Next assets directly.
+  // Service-worker cache-first JS can strand users on a mixed old/new build.
+  if (
+    url.origin === self.location.origin &&
+    (url.pathname === '/sw.js' ||
+      url.pathname === '/runtime-config.js' ||
+      url.pathname.startsWith('/_next/static/'))
+  ) {
+    return;
+  }
 
   // Determine cache strategy
   const strategy = getCacheStrategy(url);

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  analyzeContractTypes,
   convertCurrency,
   fromMinimalUnit,
   toMinimalUnit,
@@ -13,13 +14,22 @@ import {
   getImageUrl,
   useShippingAddresses,
   useCartStore,
+  parseCollectibleListingMetadata,
+  hasAuthoritativeCollectibleTitleMetadata,
+  useFeature,
+  useAppKit,
+  resolveCheckoutPaymentPolicyFromCheckoutItems,
+  persistCheckoutPaymentPolicy,
+  sanitizeCheckoutPaymentPolicySession,
 } from '@mobazha/core';
 import type { UserProfile } from '@mobazha/core';
+import type { OrderItemOption, ProductSku } from '@mobazha/core';
 import { discountsApi } from '@mobazha/core/services/api/discounts';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
 import { calculateDiscountAmount } from '@mobazha/core/utils/discountUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { useCheckoutSupplyQuote } from '@mobazha/core/hooks/useCheckoutSupplyQuote';
 import { useI18n } from '@mobazha/core';
 import {
   profileToCheckoutZones,
@@ -39,26 +49,75 @@ import type {
  * Supports two entry modes:
  *  1. Single-item "Buy Now": ?slug=xxx&peerID=yyy&quantity=1
  *  2. Multi-item from cart:  ?vendorPeerID=yyy&slugs=slug1,slug2
- *     (quantities read from useCartStore)
+ *     (quantities and options read from useCartStore)
+ *
+ * Both vendorPeerID and slugs are required for cart mode. A URL with only
+ * vendorPeerID and no slugs does not trigger cart mode — this prevents silently
+ * loading all cart items for that vendor when slugs are absent (e.g. truncated URL).
  */
 export function useCheckout(): UseCheckoutReturn {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { toast } = useToast();
-
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const {
+    address: appKitAddress,
+    isConnected: appKitConnected,
+    isInitializing: appKitInitializing,
+    connectSolana,
+    chain: appKitChain,
+  } = useAppKit();
   // ---- URL params ----
   const singleSlug = searchParams.get('slug');
   const singlePeerID = searchParams.get('peerID');
   const singleQty = parseInt(searchParams.get('quantity') || '1', 10);
+  const singleOptionsParam = searchParams.get('options');
 
   const cartVendorPeerID = searchParams.get('vendorPeerID');
   const cartSlugs = searchParams.get('slugs');
 
+  // Both params are required: vendorPeerID alone must not silently load all vendor
+  // cart items. buildCheckoutUrl always includes slugs for multi-item checkouts.
   const isCartMode = !!cartVendorPeerID && !!cartSlugs;
 
   // ---- Cart store (for multi-item mode) ----
   const cartItems = useCartStore(s => s.items);
+
+  const parseOptionsParam = useCallback((value: string | null): OrderItemOption[] | undefined => {
+    if (!value) return undefined;
+    const parsed = value
+      .split(',')
+      .map(part => part.trim())
+      .filter(Boolean)
+      .map(part => {
+        const idx = part.indexOf(':');
+        if (idx <= 0) return null;
+        const name = part.slice(0, idx).trim();
+        const optionValue = part.slice(idx + 1).trim();
+        if (!name || !optionValue) return null;
+        return { name, value: optionValue };
+      })
+      .filter((item): item is OrderItemOption => item !== null);
+    return parsed.length > 0 ? parsed : undefined;
+  }, []);
+
+  const findMatchingSku = useCallback(
+    (skus: ProductSku[] | undefined, options: OrderItemOption[] | undefined): ProductSku | null => {
+      if (!skus?.length || !options?.length) return null;
+      return (
+        skus.find(sku => {
+          if (!sku.selections || sku.selections.length !== options.length) return false;
+          return sku.selections.every(selection =>
+            options.some(
+              option => option.name === selection.option && option.value === selection.variant
+            )
+          );
+        }) ?? null
+      );
+    },
+    []
+  );
 
   // ---- Core state ----
   const [isLoading, setIsLoading] = useState(true);
@@ -115,22 +174,36 @@ export function useCheckout(): UseCheckoutReturn {
   const handleUpdateQuantity = useCallback((itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setCheckoutItems(prev =>
-      prev.map(item => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
+      prev.map(item => {
+        if (item.id !== itemId) return item;
+        const quantity = item.isAuthoritativeCollectibleTitle ? 1 : newQuantity;
+        return { ...item, quantity };
+      })
     );
   }, []);
 
   // ---- Resolve a single product into a CheckoutItem ----
   const resolveProduct = useCallback(
-    async (slug: string, vendorPeerID: string, quantity: number): Promise<CheckoutItem | null> => {
+    async (
+      slug: string,
+      vendorPeerID: string,
+      quantity: number,
+      options?: OrderItemOption[]
+    ): Promise<CheckoutItem | null> => {
       const product = await productDataService.getProduct(slug, vendorPeerID);
       if (!product) return null;
 
-      const price = Number(product.item.price) || 0;
+      const matchedSku = findMatchingSku(product.item.skus, options);
+      const price = Number(matchedSku?.price ?? product.item.price) || 0;
       const currency = product.metadata?.pricingCurrency?.code;
       if (!currency) {
         throw new Error(`Listing ${slug} is missing pricing currency`);
       }
-      const imageUrl = product.item.images?.[0]?.medium || product.item.images?.[0]?.small;
+      const imageUrl =
+        matchedSku?.images?.[0]?.medium ||
+        matchedSku?.images?.[0]?.small ||
+        product.item.images?.[0]?.medium ||
+        product.item.images?.[0]?.small;
       const sellerPeerID = product.vendorID?.peerID || vendorPeerID;
 
       let listingHash = '';
@@ -146,14 +219,25 @@ export function useCheckout(): UseCheckoutReturn {
         listingHash = String(raw.hash ?? raw.cid ?? '');
       }
 
+      const isAuthoritativeCollectibleTitle = hasAuthoritativeCollectibleTitleMetadata(product);
+      const collectibleMeta = isAuthoritativeCollectibleTitle
+        ? parseCollectibleListingMetadata(product)
+        : null;
+      const resolvedQuantity = isAuthoritativeCollectibleTitle ? 1 : quantity;
+
       return {
-        id: product.slug,
+        id:
+          options && options.length > 0
+            ? `${product.slug}:${options.map(option => `${option.name}=${option.value}`).join('|')}`
+            : product.slug,
+        listingSlug: product.slug,
         title: product.item.title,
         price,
         currency,
-        quantity,
+        quantity: resolvedQuantity,
         image: getImageUrl(imageUrl) || '',
         vendor: { name: sellerPeerID.slice(0, 8), peerID: sellerPeerID },
+        options,
         listingHash,
         contractType: product.metadata?.contractType,
         rwaTradeMode: product.metadata?.rwaTradeMode,
@@ -162,9 +246,16 @@ export function useCheckout(): UseCheckoutReturn {
         shippingZones: product.shippingProfile
           ? profileToCheckoutZones(product.shippingProfile)
           : undefined,
+        isCollectibleHubNft: isAuthoritativeCollectibleTitle,
+        isAuthoritativeCollectibleTitle,
+        fulfillment: collectibleMeta?.fulfillment,
+        hubSlotID: collectibleMeta?.hubSlotID,
+        nftMint: collectibleMeta?.nftMint,
+        certNumber: collectibleMeta?.certNumber,
+        hubLocation: collectibleMeta?.hubLocation,
       };
     },
-    []
+    [findMatchingSku]
   );
 
   // ---- Load products ----
@@ -179,22 +270,41 @@ export function useCheckout(): UseCheckoutReturn {
 
         if (isCartMode) {
           // Multi-item from cart
-          const slugList = cartSlugs!.split(',').filter(Boolean);
           const vendorID = cartVendorPeerID!;
+          const vendorCartItems = cartItems.filter(item => item.listing.vendorPeerID === vendorID);
+          const scopedCartItems = (() => {
+            if (!cartSlugs) return vendorCartItems;
+            const remaining = [...vendorCartItems];
+            return cartSlugs
+              .split(',')
+              .filter(Boolean)
+              .map(slug => {
+                const idx = remaining.findIndex(item => item.listing.slug === slug);
+                if (idx < 0) return null;
+                return remaining.splice(idx, 1)[0];
+              })
+              .filter((item): item is (typeof vendorCartItems)[number] => item !== null);
+          })();
 
           const resolved = await Promise.all(
-            slugList.map(slug => {
-              const cartItem = cartItems.find(
-                ci => ci.listing.slug === slug && ci.listing.vendorPeerID === vendorID
-              );
-              const qty = cartItem?.quantity || 1;
-              return resolveProduct(slug, vendorID, qty);
-            })
+            scopedCartItems.map(cartItem =>
+              resolveProduct(
+                cartItem.listing.slug,
+                vendorID,
+                cartItem.quantity || 1,
+                cartItem.options
+              )
+            )
           );
           items = resolved.filter((r): r is CheckoutItem => r !== null);
         } else if (singleSlug) {
           // Single item buy-now
-          const item = await resolveProduct(singleSlug, singlePeerID || '', singleQty);
+          const item = await resolveProduct(
+            singleSlug,
+            singlePeerID || '',
+            singleQty,
+            parseOptionsParam(singleOptionsParam)
+          );
           if (item) items = [item];
         }
 
@@ -256,7 +366,28 @@ export function useCheckout(): UseCheckoutReturn {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [singleSlug, singlePeerID, singleQty, cartVendorPeerID, cartSlugs]);
+  }, [
+    singleSlug,
+    singlePeerID,
+    singleQty,
+    singleOptionsParam,
+    cartVendorPeerID,
+    cartSlugs,
+    parseOptionsParam,
+    resolveProduct,
+    cartItems,
+  ]);
+
+  const checkoutPaymentPolicy = useMemo(
+    () => resolveCheckoutPaymentPolicyFromCheckoutItems(checkoutItems),
+    [checkoutItems]
+  );
+
+  useEffect(() => {
+    if (checkoutItems.length === 0) return;
+    persistCheckoutPaymentPolicy(checkoutPaymentPolicy);
+    sanitizeCheckoutPaymentPolicySession(checkoutPaymentPolicy);
+  }, [checkoutItems.length, checkoutPaymentPolicy]);
 
   // ---- Derived state ----
   const subtotal = useMemo(
@@ -362,20 +493,73 @@ export function useCheckout(): UseCheckoutReturn {
 
   const total = Math.max(0, subtotal + shippingTotal + taxTotal - discountTotal);
   const currency = checkoutItems[0]?.currency ?? '';
-
+  const contractTypeCheckout = useMemo(() => analyzeContractTypes(checkoutItems), [checkoutItems]);
+  const { hasMissing: hasMissingContractType, hasMixed: hasMixedContractTypes } =
+    contractTypeCheckout;
   const isRwaToken = useMemo(
     () => checkoutItems.some(i => i.contractType === 'RWA_TOKEN'),
     [checkoutItems]
+  );
+
+  const isCollectibleHubNftCheckout = useMemo(
+    () =>
+      collectiblesHubEnabled &&
+      checkoutItems.length > 0 &&
+      checkoutItems.every(item => item.isCollectibleHubNft),
+    [checkoutItems, collectiblesHubEnabled]
+  );
+
+  const requiresCollectibleHolderWallet = useMemo(
+    () =>
+      collectiblesHubEnabled &&
+      checkoutItems.length > 0 &&
+      checkoutItems.every(item => item.isAuthoritativeCollectibleTitle),
+    [checkoutItems, collectiblesHubEnabled]
+  );
+
+  const collectibleSolanaWallet = useMemo(() => {
+    if (!appKitConnected || !appKitAddress?.trim()) return null;
+    if (appKitAddress.startsWith('0x')) return null;
+    if (appKitChain?.chainNamespace && appKitChain.chainNamespace !== 'solana') {
+      return null;
+    }
+    return appKitAddress.trim();
+  }, [appKitConnected, appKitAddress, appKitChain]);
+
+  const isCollectibleHolderWalletReady =
+    !requiresCollectibleHolderWallet || !!collectibleSolanaWallet;
+
+  const isCollectibleHolderWalletWrongNamespace =
+    requiresCollectibleHolderWallet &&
+    appKitConnected &&
+    !!appKitAddress &&
+    !collectibleSolanaWallet;
+
+  const connectCollectibleHolderWallet = useCallback(() => {
+    void connectSolana();
+  }, [connectSolana]);
+
+  const isRwaCheckoutBlocked = useMemo(() => {
+    return checkoutItems.some(item => {
+      if (item.contractType !== 'RWA_TOKEN') return false;
+      if (item.isAuthoritativeCollectibleTitle) return !collectiblesHubEnabled;
+      return true;
+    });
+  }, [checkoutItems, collectiblesHubEnabled]);
+
+  const hasCollectibleQuantityIssue = useMemo(
+    () =>
+      isCollectibleHubNftCheckout &&
+      (checkoutItems.length !== 1 || (checkoutItems[0]?.quantity ?? 0) !== 1),
+    [checkoutItems, isCollectibleHubNftCheckout]
   );
 
   const rwaTradeMode = useMemo(() => {
     return checkoutItems.find(i => i.contractType === 'RWA_TOKEN')?.rwaTradeMode;
   }, [checkoutItems]);
 
-  const needsShippingAddress = useMemo(() => {
-    if (!checkoutItems.length) return false;
-    return checkoutItems.some(i => i.contractType === 'PHYSICAL_GOOD');
-  }, [checkoutItems]);
+  const needsShippingAddress =
+    contractTypeCheckout.needsShippingAddress && !isCollectibleHubNftCheckout;
 
   const selectedCountryCode = useMemo(() => {
     if (!selectedAddress) return undefined;
@@ -392,11 +576,35 @@ export function useCheckout(): UseCheckoutReturn {
   }, [checkoutItems, selectedShipping]);
 
   const canSubmit =
-    checkoutItems.length > 0 &&
+    !isRwaCheckoutBlocked &&
+    !hasCollectibleQuantityIssue &&
+    isCollectibleHolderWalletReady &&
     (!needsShippingAddress || !!selectedAddress) &&
     hasAllShippingSelected &&
     !hasShippingPricingIssue &&
     !isSubmitting;
+
+  const supplyQuoteLines = useMemo(
+    () =>
+      checkoutItems.map(item => {
+        const sel = selectedShipping[item.id];
+        return {
+          vendorPeerID: item.vendor.peerID,
+          listingSlug: item.listingSlug,
+          listingHash: item.listingHash ?? '',
+          quantity: item.quantity,
+          options: item.options?.map(opt => ({ [opt.name]: opt.value })),
+          shippingOption: sel?.zoneName,
+          shippingService: sel?.rateName,
+        };
+      }),
+    [checkoutItems, selectedShipping]
+  );
+
+  const supplyQuote = useCheckoutSupplyQuote(
+    supplyQuoteLines,
+    checkoutItems.length > 0 && !isLoading
+  );
 
   // ---- Auto-update shipping when address country changes ----
   useEffect(() => {
@@ -529,7 +737,7 @@ export function useCheckout(): UseCheckoutReturn {
         setIsValidatingDiscount(false);
       }
     },
-    [subtotal, currency, appliedDiscounts, toast, t]
+    [subtotal, currency, appliedDiscounts, checkoutItems, toast, t]
   );
 
   const handleRemoveDiscount = useCallback((id: string) => {
@@ -538,6 +746,51 @@ export function useCheckout(): UseCheckoutReturn {
 
   // ---- Create order ----
   const handleCreateOrder = useCallback(async () => {
+    if (!checkoutItems.length) {
+      toast({ title: t('checkout.noItems'), variant: 'destructive' });
+      return;
+    }
+    if (hasMissingContractType) {
+      toast({
+        title: t('order.missingContractTypeTitle'),
+        description: t('order.missingContractTypeBody'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (hasMixedContractTypes) {
+      toast({
+        title: t('order.mixedContractTypesTitle'),
+        description: t('order.mixedContractTypesBody'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (isRwaCheckoutBlocked) {
+      toast({
+        title: t('checkout.rwaNotSupported'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (hasCollectibleQuantityIssue) {
+      toast({
+        title: t('collectibles.checkout.onePerOrderTitle'),
+        description: t('collectibles.checkout.onePerOrderDesc'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (requiresCollectibleHolderWallet && !collectibleSolanaWallet) {
+      toast({
+        title: t('collectibles.checkout.holderWalletTitle'),
+        description: isCollectibleHolderWalletWrongNamespace
+          ? t('collectibles.checkout.holderWalletWrongNamespace')
+          : t('collectibles.checkout.holderWalletMissing'),
+        variant: 'destructive',
+      });
+      return;
+    }
     if (needsShippingAddress && !selectedAddress) {
       toast({ title: t('checkout.selectAddressFirst'), variant: 'destructive' });
       return;
@@ -554,11 +807,6 @@ export function useCheckout(): UseCheckoutReturn {
       });
       return;
     }
-    if (!checkoutItems.length) {
-      toast({ title: t('checkout.noItems'), variant: 'destructive' });
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const selectedApiAddress = apiAddresses.find(a => a.id === selectedAddress);
@@ -568,18 +816,38 @@ export function useCheckout(): UseCheckoutReturn {
       const discountCodes = appliedDiscounts.filter(d => d.code).map(d => d.code!);
 
       const result = await ordersApi.createOrder({
+        vendorId: checkoutItems[0]?.vendor.peerID,
         discountCodes: discountCodes.length > 0 ? discountCodes : undefined,
         items: checkoutItems.map(item => {
           const payload: {
             listingHash: string;
             quantity: number;
+            options?: OrderItemOption[];
             memo?: string;
             shipping?: { name: string; service: string; zoneId?: string; rateId?: string };
+            fulfillment?: string;
+            hubSlotID?: string;
+            nftMint?: string;
+            certNumber?: string;
+            holderWallet?: string;
           } = {
             listingHash: item.listingHash || item.id,
             quantity: item.quantity,
             memo: orderNote || undefined,
           };
+          if (item.options && item.options.length > 0) {
+            payload.options = item.options;
+          }
+
+          if (item.isAuthoritativeCollectibleTitle) {
+            if (item.fulfillment) payload.fulfillment = item.fulfillment;
+            if (item.hubSlotID) payload.hubSlotID = item.hubSlotID;
+            if (item.nftMint) payload.nftMint = item.nftMint;
+            if (item.certNumber) payload.certNumber = item.certNumber;
+            if (collectibleSolanaWallet) {
+              payload.holderWallet = collectibleSolanaWallet;
+            }
+          }
 
           if (item.contractType === 'PHYSICAL_GOOD') {
             const sel = selectedShipping[item.id];
@@ -610,6 +878,8 @@ export function useCheckout(): UseCheckoutReturn {
       // Build payment URL
       const paymentUrl = new URL('/payment', window.location.origin);
       paymentUrl.searchParams.set('orderID', result.orderID);
+      paymentUrl.searchParams.set('paymentPolicy', checkoutPaymentPolicy);
+      persistCheckoutPaymentPolicy(checkoutPaymentPolicy, result.orderID);
 
       if (result.amount) {
         const divisibility = result.amount.currency?.divisibility ?? 2;
@@ -626,20 +896,6 @@ export function useCheckout(): UseCheckoutReturn {
         paymentUrl.searchParams.set('quantity', String(first.quantity));
         paymentUrl.searchParams.set('contractType', first.contractType || 'SERVICE');
         if (first.image) paymentUrl.searchParams.set('image', first.image);
-      }
-
-      if (isRwaToken) {
-        paymentUrl.searchParams.set('isRwaToken', 'true');
-        if (rwaTradeMode !== undefined) {
-          paymentUrl.searchParams.set('rwaTradeMode', String(rwaTradeMode));
-        }
-        const rwaItem = checkoutItems.find(i => i.contractType === 'RWA_TOKEN');
-        if (rwaItem?.rwaEscrowTimeoutSeconds) {
-          paymentUrl.searchParams.set('escrowTimeout', String(rwaItem.rwaEscrowTimeoutSeconds));
-        }
-        if (rwaItem?.cryptoListingCurrencyCode) {
-          paymentUrl.searchParams.set('tokenCode', rwaItem.cryptoListingCurrencyCode);
-        }
       }
 
       router.push(paymentUrl.toString());
@@ -660,8 +916,8 @@ export function useCheckout(): UseCheckoutReturn {
     router,
     t,
     toast,
-    isRwaToken,
-    rwaTradeMode,
+    isRwaCheckoutBlocked,
+    hasCollectibleQuantityIssue,
     needsShippingAddress,
     selectedShipping,
     hasAllShippingSelected,
@@ -669,6 +925,12 @@ export function useCheckout(): UseCheckoutReturn {
     apiAddresses,
     currency,
     appliedDiscounts,
+    hasMissingContractType,
+    hasMixedContractTypes,
+    requiresCollectibleHolderWallet,
+    collectibleSolanaWallet,
+    isCollectibleHolderWalletWrongNamespace,
+    checkoutPaymentPolicy,
   ]);
 
   return {
@@ -713,6 +975,8 @@ export function useCheckout(): UseCheckoutReturn {
     handleCreateOrder,
     isSubmitting,
     canSubmit,
+    hasMixedContractTypes,
+    hasMissingContractType,
 
     appliedDiscounts,
     applicableDiscounts,
@@ -722,10 +986,19 @@ export function useCheckout(): UseCheckoutReturn {
     handleRemoveDiscount,
 
     isRwaToken,
+    isRwaCheckoutBlocked,
+    isCollectibleHubNftCheckout,
+    requiresCollectibleHolderWallet,
+    collectibleHolderWallet: collectibleSolanaWallet,
+    isCollectibleHolderWalletReady,
+    isCollectibleHolderWalletWrongNamespace,
+    connectCollectibleHolderWallet,
+    isCollectibleHolderConnecting: appKitInitializing,
     rwaTradeMode,
     needsShippingAddress,
     hasAllShippingSelected,
     hasShippingPricingIssue,
     hasFreeShippingSelection,
+    supplyQuote,
   };
 }

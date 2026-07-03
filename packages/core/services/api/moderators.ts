@@ -2,18 +2,22 @@
  * Moderators API Service
  * 仲裁员 API 服务
  *
- * 后端 API：GET /v1/moderators?include=profile
- * 返回 Profile[] 数组，每个 Profile 包含 moderatorInfo 字段
+ * 店铺仲裁人策略来自 StorePolicy；仲裁员目录仍通过 Node/Search
+ * profile 能力补齐展示信息。
  */
 
-import { apiClient } from './client';
+import { apiClient, ApiError } from './client';
 import { NODE_API, HOSTING_API } from '../../config/apiPaths';
-import { authGet, authPost, authDel, publicPost } from './helpers';
+import { truncatePeerId } from '../../utils/identity';
+import { fetchVerifiedModerators } from '../verifiedModerators';
+import { authGet, authPost, authPut, authDel, publicGet, publicPost, nodeAuthGet } from './helpers';
+import { fetchStoreMetadata, getMetadataEntry } from './storeMetadata';
 
 // Types
 export interface Moderator {
   id: string;
   peerID: string;
+  enabled?: boolean;
   name: string;
   handle?: string;
   avatar?: string;
@@ -56,6 +60,29 @@ export interface Moderator {
   };
   createdAt: string;
   updatedAt: string;
+}
+
+interface StorePolicyModeratorEntry {
+  peerID: string;
+  enabled?: boolean;
+  position?: number;
+}
+
+interface StorePolicyPublic {
+  revision: number;
+  moderators?: StorePolicyModeratorEntry[];
+}
+
+function normalizeStoreModeratorEntries(
+  value: StorePolicyModeratorEntry[] | StorePolicyPublic | null | undefined
+): StorePolicyModeratorEntry[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (value && typeof value === 'object' && Array.isArray(value.moderators)) {
+    return value.moderators;
+  }
+  return [];
 }
 
 /**
@@ -111,6 +138,7 @@ export interface ModeratorListParams {
   currency?: string;
   maxFee?: number;
   search?: string;
+  vendorPeerID?: string;
 }
 
 export interface ModeratorListResponse {
@@ -165,6 +193,10 @@ export interface Dispute {
 /**
  * 将后端的 feeType 字符串转换为前端格式
  */
+function isModeratorProfile(profile: BackendProfile): boolean {
+  return Boolean(profile.moderator || profile.moderatorInfo);
+}
+
 function convertFeeType(backendFeeType: string): 'percentage' | 'fixed' | 'fixed_plus_percentage' {
   switch (backendFeeType?.toUpperCase()) {
     case 'FIXED':
@@ -238,16 +270,45 @@ function convertProfileToModerator(profile: BackendProfile): Moderator {
 // API Functions
 
 /**
- * 获取用户偏好设置中的 storeModerators 列表
+ * 获取 StorePolicy 中的店铺仲裁人列表。
+ *
+ * buyer checkout 使用 seller public StorePolicy；seller admin 使用当前节点
+ * admin StorePolicy。Profile、Listing、Preferences 都不是当前策略来源。
  */
-async function getStoreModerators(): Promise<string[]> {
+async function getStoreModeratorEntries(
+  vendorPeerID?: string
+): Promise<StorePolicyModeratorEntry[]> {
   try {
-    const preferences = await authGet<{ storeModerators?: string[] }>(NODE_API.PREFERENCES);
-    return preferences.storeModerators || [];
+    if (vendorPeerID) {
+      const policy = await publicGet<StorePolicyPublic>(
+        NODE_API.STORE_POLICY_PUBLISHED(vendorPeerID)
+      );
+      return normalizeStoreModeratorEntries(policy);
+    }
+    const response = await authGet<StorePolicyModeratorEntry[] | StorePolicyPublic>(
+      NODE_API.STORE_POLICY_MODERATORS
+    );
+    return normalizeStoreModeratorEntries(response);
   } catch (error) {
-    console.warn('Error fetching store moderators:', error);
+    if (vendorPeerID) {
+      const metadata = await fetchStoreMetadata(vendorPeerID, ['store_policy']);
+      const policy = getMetadataEntry<StorePolicyPublic>(metadata, 'store_policy');
+      const entries = normalizeStoreModeratorEntries(policy);
+      if (policy || entries.length > 0) {
+        return entries;
+      }
+    }
+    if (error instanceof ApiError && error.status === 401) {
+      return [];
+    }
+    console.warn('Error fetching store policy moderators:', error);
     return [];
   }
+}
+
+async function getStoreModerators(vendorPeerID?: string): Promise<string[]> {
+  const entries = await getStoreModeratorEntries(vendorPeerID);
+  return entries.map(entry => entry.peerID).filter(Boolean);
 }
 
 /**
@@ -293,18 +354,18 @@ async function fetchProfiles(peerIDs: string[]): Promise<BackendProfile[]> {
 }
 
 /**
- * 获取仲裁员列表
+ * 获取仲裁员列表。
  *
- * 实现逻辑（参考桌面端）：
- * 1. 从 GET /v1/preferences 获取 storeModerators 列表（peerID 数组）
- * 2. 用 POST /v1/profiles/batch 批量获取这些 peerID 的 profile 信息
- * 3. 转换为前端 Moderator 格式
+ * seller admin 读取当前节点 StorePolicy；buyer checkout 读取 seller public
+ * StorePolicy，然后用 profiles/batch 补齐展示信息。
  */
 export async function getModerators(
   params: ModeratorListParams = {}
 ): Promise<ModeratorListResponse> {
-  // 步骤 1: 获取 storeModerators 列表
-  const moderatorPeerIDs = await getStoreModerators();
+  const moderatorEntries = (await getStoreModeratorEntries(params.vendorPeerID)).filter(
+    entry => !params.vendorPeerID || entry.enabled !== false
+  );
+  const moderatorPeerIDs = moderatorEntries.map(entry => entry.peerID).filter(Boolean);
 
   if (moderatorPeerIDs.length === 0) {
     return {
@@ -319,12 +380,41 @@ export async function getModerators(
   // 步骤 2: 批量获取 profile 信息
   const profiles = await fetchProfiles(moderatorPeerIDs);
 
-  // 既然这些 peerID 来自 storeModerators，我们就显示所有成功获取的 profile
+  // 既然这些 peerID 来自 StorePolicy，我们就显示所有成功获取的 profile
   // 即使没有 moderatorInfo，也显示（可能是用户还没设置调解员信息）
   const moderatorProfiles = profiles.filter(p => p && p.peerID);
+  const profileByPeer = new Map(moderatorProfiles.map(p => [p.peerID, p]));
 
-  // 转换格式
-  let moderators = moderatorProfiles.map(convertProfileToModerator);
+  // 转换格式；profile 拉取失败时仍保留 peerID 占位，避免列表与 StorePolicy 不一致
+  let moderators: Moderator[] = moderatorEntries.map(entry => {
+    const peerID = entry.peerID;
+    const profile = profileByPeer.get(peerID);
+    if (profile) {
+      return {
+        ...convertProfileToModerator(profile),
+        enabled: entry.enabled ?? true,
+      };
+    }
+    return {
+      id: peerID,
+      peerID,
+      enabled: entry.enabled ?? true,
+      name: truncatePeerId(peerID, 6),
+      languages: [],
+      fee: { percentage: 0, feeType: 'percentage' },
+      acceptedCurrencies: [],
+      verified: false,
+      stats: {
+        rating: 0,
+        ratingCount: 0,
+        disputesHandled: 0,
+        averageResolutionTime: 0,
+        successRate: 0,
+      },
+      createdAt: '',
+      updatedAt: '',
+    };
+  });
 
   // 前端过滤（后端 API 不支持这些参数）
   if (params.language) {
@@ -378,6 +468,200 @@ export async function getModerators(
 }
 
 /**
+ * 覆盖保存店铺仲裁人 peerID 列表
+ */
+export async function setStoreModerators(
+  peerIDs: string[]
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const unique = [...new Set(peerIDs.map(id => id.trim()).filter(Boolean))];
+    await authPut(NODE_API.STORE_POLICY_MODERATORS, {
+      moderators: unique.map((peerID, position) => ({
+        peerID,
+        enabled: true,
+        position,
+      })),
+    });
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update store moderators',
+    };
+  }
+}
+
+/**
+ * 添加店铺仲裁人（写入 StorePolicy）
+ */
+export async function addStoreModerator(
+  peerID: string
+): Promise<{ success: boolean; error?: string; moderator?: Moderator }> {
+  const trimmed = peerID.trim();
+  if (!trimmed) {
+    return { success: false, error: 'Peer ID is required' };
+  }
+
+  const current = await getStoreModerators();
+  if (current.includes(trimmed)) {
+    return { success: false, error: 'Moderator already added' };
+  }
+
+  const profiles = await fetchProfiles([trimmed]);
+  if (profiles.length === 0) {
+    return { success: false, error: 'Moderator profile not found' };
+  }
+  if (!isModeratorProfile(profiles[0])) {
+    return { success: false, error: 'Profile is not a moderator' };
+  }
+
+  const saveResult = await setStoreModerators([...current, trimmed]);
+  if (!saveResult.success) {
+    return saveResult;
+  }
+
+  const moderator = convertProfileToModerator(profiles[0]);
+  return { success: true, moderator };
+}
+
+/**
+ * 从店铺仲裁人列表移除
+ */
+export async function removeStoreModerator(
+  peerID: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const trimmed = peerID.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Peer ID is required' };
+    }
+    await authDel(NODE_API.STORE_POLICY_MODERATOR(trimmed));
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to remove store moderator',
+    };
+  }
+}
+
+/**
+ * 发现网络中的候选仲裁员（目录页）
+ *
+ * 1. 本地节点 GET /v1/moderators?include=profile（仅 Search 认证列表；DHT 扫描已移除）
+ * 2. 合并 Search verified moderators 中尚未出现的 peerID（profiles/batch）
+ * 3. 标记 verified 状态
+ *
+ * 未列入 Search 认证列表的调解员（如 E2E testuser3）需通过 Peer ID 直接 lookup。
+ */
+export async function discoverModerators(): Promise<Moderator[]> {
+  const verifiedSet = await fetchVerifiedModerators();
+  const profileByPeer = new Map<string, BackendProfile>();
+
+  try {
+    const networkProfiles = await nodeAuthGet<BackendProfile[]>(
+      `${NODE_API.SELF_MODERATOR}?include=profile`
+    );
+    if (Array.isArray(networkProfiles)) {
+      for (const profile of networkProfiles) {
+        if (profile?.peerID) {
+          profileByPeer.set(profile.peerID, profile);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Network moderator discovery unavailable:', error);
+  }
+
+  const missingVerified = Array.from(verifiedSet).filter(peerID => !profileByPeer.has(peerID));
+  if (missingVerified.length > 0) {
+    const verifiedProfiles = await fetchProfiles(missingVerified);
+    for (const profile of verifiedProfiles) {
+      if (profile.peerID) {
+        profileByPeer.set(profile.peerID, profile);
+      }
+    }
+  }
+
+  if (profileByPeer.size === 0) {
+    try {
+      const recommended = await getRecommendedModerators(20);
+      return recommended.map(mod => ({
+        ...mod,
+        verified: verifiedSet.has(mod.peerID),
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  return Array.from(profileByPeer.values())
+    .filter(isModeratorProfile)
+    .map(profile => {
+      const mod = convertProfileToModerator(profile);
+      mod.verified = verifiedSet.has(profile.peerID);
+      return mod;
+    });
+}
+
+export type ModeratorLookupResult =
+  | { status: 'found'; moderator: Moderator }
+  | { status: 'not_found' }
+  | { status: 'not_moderator'; profileName?: string };
+
+/**
+ * 按 Peer ID 查找调解员候选（目录搜索 / 手动添加预览）
+ */
+export async function lookupModeratorCandidate(peerID: string): Promise<ModeratorLookupResult> {
+  const trimmed = peerID.trim();
+  if (!trimmed) {
+    return { status: 'not_found' };
+  }
+
+  const verifiedSet = await fetchVerifiedModerators();
+  const profiles = await fetchProfiles([trimmed]);
+
+  if (profiles.length === 0) {
+    return { status: 'not_found' };
+  }
+
+  const profile = profiles[0];
+  if (!isModeratorProfile(profile)) {
+    return {
+      status: 'not_moderator',
+      profileName: profile.name || profile.handle,
+    };
+  }
+
+  const mod = convertProfileToModerator(profile);
+  mod.verified = verifiedSet.has(trimmed);
+  return { status: 'found', moderator: mod };
+}
+
+/**
+ * 通过 PeerID 获取仲裁员详情（优先 profiles/batch，fallback hosting API）
+ */
+export async function getModeratorDetail(peerID: string): Promise<Moderator | null> {
+  const trimmed = peerID.trim();
+  if (!trimmed) return null;
+
+  const lookup = await lookupModeratorCandidate(trimmed);
+  if (lookup.status === 'found') {
+    return lookup.moderator;
+  }
+
+  const verifiedSet = await fetchVerifiedModerators();
+
+  try {
+    const mod = await getModeratorByPeerId(trimmed);
+    mod.verified = verifiedSet.has(trimmed);
+    return mod;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 获取单个仲裁员详情
  */
 export async function getModerator(moderatorId: string): Promise<Moderator> {
@@ -404,8 +688,23 @@ export async function searchModerators(
 /**
  * 获取推荐仲裁员
  */
+function normalizeModeratorDisplayFields(mod: Moderator): Moderator {
+  const peerID = mod.peerID?.trim() || '';
+  const name = mod.name?.trim() || '';
+  const handle = mod.handle?.trim() || '';
+  const safeName = name && name !== peerID ? name : handle;
+  return {
+    ...mod,
+    name: safeName,
+    handle: handle || mod.handle,
+  };
+}
+
 export async function getRecommendedModerators(limit: number = 5): Promise<Moderator[]> {
-  return apiClient.get<Moderator[]>(`${HOSTING_API.MODERATORS_RECOMMENDED}?limit=${limit}`);
+  const items = await apiClient.get<Moderator[]>(
+    `${HOSTING_API.MODERATORS_RECOMMENDED}?limit=${limit}`
+  );
+  return (items ?? []).map(normalizeModeratorDisplayFields);
 }
 
 /**

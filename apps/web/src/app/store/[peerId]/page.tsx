@@ -39,6 +39,9 @@ import {
   usePrefetchProduct,
   useStoreActivity,
   queryKeys,
+  buildProductHref,
+  compareMinimalAmountStrings,
+  productCardPriceFieldsFromListItem,
 } from '@mobazha/core';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UserProfile, ProductListItem, Image, Collection } from '@mobazha/core';
@@ -66,9 +69,12 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { ShareButton } from '@/components/Share';
+import { IdentityName } from '@/components/IdentityName';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
 import { useProductModal } from '@/hooks';
+import { cn } from '@/lib/utils';
 import { getProfileWithDedup } from '@/utils/requestDedup';
+import { usePlatform } from '@mobazha/ui/hooks';
 import {
   RwaTab,
   StoreListingsToolbar,
@@ -106,6 +112,7 @@ export default function StorePage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const { openProduct, isMobile } = useProductModal();
+  const { isEmbeddedApp } = usePlatform();
   const { hasVerifiedMod } = useVerifiedModerators();
   const peerId = params.peerId as string;
   const {
@@ -375,12 +382,16 @@ export default function StorePage() {
     return product.contractType?.toUpperCase() === 'RWA_TOKEN';
   }, []);
 
-  // 从非 RWA 商品数据中提取 productType 列表
+  // 从非 RWA 商品数据中提取 productType 列表（排除访客不可见的草稿）
   const categories = useMemo((): CategoryItem[] => {
     const categoryMap = new Map<string, number>();
 
     products
-      .filter(product => !isRwaProduct(product))
+      .filter(product => {
+        if (isRwaProduct(product)) return false;
+        if (!isOwnStore && product.status === 'draft') return false;
+        return true;
+      })
       .forEach(product => {
         if (product.productType) {
           categoryMap.set(product.productType, (categoryMap.get(product.productType) || 0) + 1);
@@ -394,17 +405,24 @@ export default function StorePage() {
         count,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [products, isRwaProduct]);
+  }, [products, isRwaProduct, isOwnStore]);
 
   const productTitles = useMemo(
-    () => products.filter(p => !isRwaProduct(p) && p.title).map(p => p.title as string),
-    [products, isRwaProduct]
+    () =>
+      products
+        .filter(p => !isRwaProduct(p) && (!isOwnStore ? p.status !== 'draft' : true) && p.title)
+        .map(p => p.title as string),
+    [products, isRwaProduct, isOwnStore]
   );
 
   // 筛选后的商品列表（排除 RWA 商品，RWA 商品显示在数字资产 Tab）
   const filteredProducts = useMemo(() => {
-    // 首先过滤掉 RWA 商品
-    let result = products.filter(product => !isRwaProduct(product));
+    // 首先过滤掉 RWA 商品；访客还需过滤掉草稿商品
+    let result = products.filter(product => {
+      if (isRwaProduct(product)) return false;
+      if (!isOwnStore && product.status === 'draft') return false;
+      return true;
+    });
 
     // 搜索过滤（仅按标题搜索）
     if (filter.search.trim()) {
@@ -442,10 +460,20 @@ export default function StorePage() {
     // 排序
     switch (filter.sortBy) {
       case 'price-asc':
-        result.sort((a, b) => (a.price?.amount || 0) - (b.price?.amount || 0));
+        result.sort((a, b) =>
+          compareMinimalAmountStrings(
+            productCardPriceFieldsFromListItem(a).price,
+            productCardPriceFieldsFromListItem(b).price
+          )
+        );
         break;
       case 'price-desc':
-        result.sort((a, b) => (b.price?.amount || 0) - (a.price?.amount || 0));
+        result.sort((a, b) =>
+          compareMinimalAmountStrings(
+            productCardPriceFieldsFromListItem(b).price,
+            productCardPriceFieldsFromListItem(a).price
+          )
+        );
         break;
       case 'rating':
         result.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
@@ -704,11 +732,14 @@ export default function StorePage() {
   const stats = store?.stats || defaultStats;
 
   // 分别计算普通商品和 RWA 商品数量（使用统一的 isRwaProduct 辅助函数）
-  const { storeListingCount, rwaListingCount } = useMemo(() => {
+  // 访客视角需排除草稿，保持计数与实际显示一致
+  const { storeListingCount, rwaListingCount, visibleProductCount } = useMemo(() => {
     let storeCount = 0;
     let rwaCount = 0;
 
     products.forEach(product => {
+      const isDraft = !isOwnStore && product.status === 'draft';
+      if (isDraft) return;
       if (isRwaProduct(product)) {
         rwaCount++;
       } else {
@@ -716,8 +747,12 @@ export default function StorePage() {
       }
     });
 
-    return { storeListingCount: storeCount, rwaListingCount: rwaCount };
-  }, [products, isRwaProduct]);
+    return {
+      storeListingCount: storeCount,
+      rwaListingCount: rwaCount,
+      visibleProductCount: storeCount + rwaCount,
+    };
+  }, [products, isRwaProduct, isOwnStore]);
 
   if (isLoading) {
     return (
@@ -789,7 +824,7 @@ export default function StorePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {isMobile && (
+      {isMobile && !isEmbeddedApp && (
         <button
           onClick={() => router.back()}
           className="fixed top-3 left-3 z-40 lg:hidden w-9 h-9 rounded-full bg-background/80 backdrop-blur-sm shadow-md flex items-center justify-center active:scale-95 transition-transform"
@@ -912,9 +947,12 @@ export default function StorePage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0 text-white">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md">
+                    <IdentityName
+                      as="h1"
+                      className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md"
+                    >
                       {store.name || peerId.slice(0, 8)}
-                    </h1>
+                    </IdentityName>
                     {store.visibility === 'private' && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-black/40 text-white backdrop-blur-sm border border-white/20 shrink-0">
                         <Lock className="h-3 w-3" />
@@ -970,23 +1008,27 @@ export default function StorePage() {
                   {/* Stats row */}
                   <div className="flex items-center gap-3 sm:gap-5 mt-2 text-sm">
                     <span className="flex items-center gap-1">
-                      <span className="font-medium">{products.length}</span>
+                      <span className="font-medium">{visibleProductCount}</span>
                       <span className="opacity-70">{t('profile.listings')}</span>
                     </span>
-                    <button
-                      onClick={() => setActiveTab('followers')}
-                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-                    >
-                      <span className="font-medium">{stats.followerCount}</span>
-                      <span className="opacity-70">{t('profile.followers')}</span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('following')}
-                      className="flex items-center gap-1 hover:opacity-80 transition-opacity"
-                    >
-                      <span className="font-medium">{stats.followingCount}</span>
-                      <span className="opacity-70">{t('profile.following')}</span>
-                    </button>
+                    {!__SOVEREIGN__ && (
+                      <>
+                        <button
+                          onClick={() => setActiveTab('followers')}
+                          className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="font-medium">{stats.followerCount}</span>
+                          <span className="opacity-70">{t('profile.followers')}</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('following')}
+                          className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="font-medium">{stats.followingCount}</span>
+                          <span className="opacity-70">{t('profile.following')}</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1076,7 +1118,7 @@ export default function StorePage() {
                       </DropdownMenu>
                     </div>
                   </>
-                ) : (
+                ) : !__SOVEREIGN__ ? (
                   <>
                     <Button
                       variant={isFollowing ? 'secondary' : 'default'}
@@ -1125,7 +1167,7 @@ export default function StorePage() {
                       )}
                     </Button>
                   </>
-                )}
+                ) : null}
 
                 {heroCtaText && (
                   <a
@@ -1178,7 +1220,12 @@ export default function StorePage() {
         {/* Tabs — always visible (branded sections + tabs coexist) */}
         <>
           {/* Tabs */}
-          <div className="sticky top-16 z-30 bg-background border-b border-border">
+          <div
+            className={cn(
+              'sticky z-30 bg-background/95 backdrop-blur-sm border-b border-border',
+              'top-0 md:top-16'
+            )}
+          >
             <Container size="xl">
               <div className="relative">
                 <div className="flex items-center px-4 sm:px-6 overflow-x-auto scrollbar-hide">
@@ -1212,22 +1259,24 @@ export default function StorePage() {
                       )}
                     </button>
 
-                    {/* RWA 数字资产 Tab */}
-                    <button
-                      onClick={() => setActiveTab('rwa')}
-                      className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
-                        activeTab === 'rwa'
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {t('profile.rwa')}
-                      {rwaListingCount > 0 && (
-                        <span className="ml-1.5 text-xs sm:text-sm opacity-70">
-                          {rwaListingCount}
-                        </span>
-                      )}
-                    </button>
+                    {/* RWA 数字资产 Tab — hidden in Sovereign (no RWA support) */}
+                    {!__SOVEREIGN__ && (
+                      <button
+                        onClick={() => setActiveTab('rwa')}
+                        className={`whitespace-nowrap px-2.5 sm:px-5 py-3.5 text-sm sm:text-base font-medium transition-colors border-b-2 touch-feedback ${
+                          activeTab === 'rwa'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {t('profile.rwa')}
+                        {rwaListingCount > 0 && (
+                          <span className="ml-1.5 text-xs sm:text-sm opacity-70">
+                            {rwaListingCount}
+                          </span>
+                        )}
+                      </button>
+                    )}
 
                     {/* 评价 Tab */}
                     <button
@@ -1334,55 +1383,62 @@ export default function StorePage() {
                       </Grid>
                     ) : filteredProducts.length > 0 ? (
                       <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-                        {filteredProducts.map((product, index) => (
-                          <Link
-                            key={`${product.slug}-${index}`}
-                            href={`/product/${product.slug}?peerID=${peerId}`}
-                            onClick={e => {
-                              // 桌面端使用弹框
-                              if (!isMobile) {
-                                e.preventDefault();
-                                openProduct(product.slug, peerId);
-                              }
-                            }}
-                          >
-                            <ProductCard
-                              title={product.title}
-                              imageUrl={getImageUrl(product.thumbnail?.medium, storeImageHint)}
-                              price={Number(product.price?.amount || 0)}
-                              currency={product.price?.currency?.code}
-                              divisibility={product.price?.currency?.divisibility}
-                              // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
-                              vendorPeerID={peerId}
-                              rating={product.averageRating}
-                              reviewCount={product.ratingCount}
-                              freeShipping={product.freeShipping && product.freeShipping.length > 0}
-                              contractType={product.contractType as ProductContractType}
-                              tokenStandard={product.tokenStandard}
-                              rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                              hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                              isOwnListing={isOwnStore}
-                              onReport={() => {
-                                /* TODO: 打开举报对话框 */
+                        {filteredProducts.map((product, index) => {
+                          const priceFields = productCardPriceFieldsFromListItem(product);
+                          return (
+                            <Link
+                              key={`${product.slug}-${index}`}
+                              href={buildProductHref(product.slug, peerId)}
+                              onClick={e => {
+                                // 桌面端使用弹框
+                                if (!isMobile) {
+                                  e.preventDefault();
+                                  openProduct(product.slug, peerId);
+                                }
                               }}
-                              onBlock={() => {
-                                /* TODO: 实现屏蔽卖家功能 */
-                              }}
-                              // 自己商品的快捷操作
-                              onEdit={
-                                isOwnStore ? () => handleEditListing(product.slug) : undefined
-                              }
-                              onClone={
-                                isOwnStore ? () => handleCloneListing(product.slug) : undefined
-                              }
-                              onDelete={
-                                isOwnStore
-                                  ? () => handleOpenDeleteDialog(product.slug, product.title)
-                                  : undefined
-                              }
-                            />
-                          </Link>
-                        ))}
+                            >
+                              <ProductCard
+                                title={product.title}
+                                imageUrl={getImageUrl(product.thumbnail?.medium, storeImageHint)}
+                                price={priceFields.price}
+                                currency={priceFields.currencyCode}
+                                divisibility={priceFields.divisibility}
+                                priceFrom={priceFields.priceFrom}
+                                // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                                vendorPeerID={peerId}
+                                rating={product.averageRating}
+                                reviewCount={product.ratingCount}
+                                freeShipping={
+                                  product.freeShipping && product.freeShipping.length > 0
+                                }
+                                contractType={product.contractType as ProductContractType}
+                                tokenStandard={product.tokenStandard}
+                                rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                                hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                                isOwnListing={isOwnStore}
+                                status={isOwnStore ? product.status : undefined}
+                                onReport={() => {
+                                  /* TODO: 打开举报对话框 */
+                                }}
+                                onBlock={() => {
+                                  /* TODO: 实现屏蔽卖家功能 */
+                                }}
+                                // 自己商品的快捷操作
+                                onEdit={
+                                  isOwnStore ? () => handleEditListing(product.slug) : undefined
+                                }
+                                onClone={
+                                  isOwnStore ? () => handleCloneListing(product.slug) : undefined
+                                }
+                                onDelete={
+                                  isOwnStore
+                                    ? () => handleOpenDeleteDialog(product.slug, product.title)
+                                    : undefined
+                                }
+                              />
+                            </Link>
+                          );
+                        })}
                       </Grid>
                     ) : storeListingCount > 0 ? (
                       // 有商品但筛选后为空

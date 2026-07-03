@@ -27,12 +27,14 @@ export const SettingsPageHeader: React.FC<SettingsPageHeaderProps> = ({
   const pathname = usePathname();
   const { isEmbeddedApp } = usePlatform();
 
-  const isAdminRoute = pathname?.startsWith('/admin/settings');
-  const resolvedBackHref = backHref ?? (isAdminRoute ? '/admin/settings' : '/settings');
+  const isAdminSettingsRoute = pathname?.startsWith('/admin/settings');
+  const isAdminFinanceSubRoute = Boolean(pathname?.startsWith('/admin/finance/'));
+  const usePersistentAdminBackLink = isAdminSettingsRoute || isAdminFinanceSubRoute;
+  const resolvedBackHref = backHref ?? (isAdminSettingsRoute ? '/admin/settings' : '/settings');
 
-  // /admin/settings/* has no sidebar → always show back link
+  // /admin/settings/* and /admin/finance/* deep pages have no in-layout parent chrome → always show back link
   // /settings/* has a desktop sidebar → only show on mobile
-  const backLinkClass = isAdminRoute ? 'mb-3' : 'lg:hidden mb-3';
+  const backLinkClass = usePersistentAdminBackLink ? 'mb-3' : 'lg:hidden mb-3';
 
   // In TMA, Telegram's native BackButton already handles navigation —
   // our in-page "< Back" link is redundant and wastes vertical space.

@@ -1,9 +1,6 @@
 // Config
 export * from './config';
 
-// Community Edition capability boundary
-export * from './edition';
-
 // Providers (React Context Providers)
 export * from './providers';
 
@@ -31,6 +28,12 @@ export * from './types';
 
 // Utils
 export * from './utils';
+
+// Marketplace curation + native sub-market context
+export * from './curation';
+export * from './collectibles';
+export * from './verticals/modules';
+export * from './marketplace/subdomain';
 
 // i18n (国际化)
 export * from './i18n';

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Button } from '@/components/ui/button';
 import { ShareButton } from '@/components/Share';
+import { IdentityName } from '@/components/IdentityName';
 import { Ban, Paintbrush, Plus, Upload } from 'lucide-react';
 
 interface StoreStats {
@@ -104,9 +105,12 @@ export function BrandedHeroHeader({
 
             {/* Info */}
             <div className="flex-1 min-w-0 text-white">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold drop-shadow-md">
+              <IdentityName
+                as="h1"
+                className="text-2xl sm:text-3xl lg:text-4xl font-bold drop-shadow-md"
+              >
                 {heroTitle}
-              </h1>
+              </IdentityName>
               {heroSubtitle && (
                 <p className="mt-1 text-sm sm:text-base opacity-90 line-clamp-2 drop-shadow">
                   {heroSubtitle}

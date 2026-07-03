@@ -3,12 +3,13 @@
  * 统一支付 React Hook - 支持 EVM 链和扫描支付
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useWallet } from './useWallet';
 import { useEscrow } from './useEscrow';
 import { ordersApi } from '../services/api/orders';
-import { getEditionSelectableTokens } from '../edition/capabilities';
 import type { ChainId, EscrowParams, TransactionResult } from '../services/payment/types';
+import { filterVisibleAcceptedCurrencies } from '../config/paymentMethodVisibility';
+import { useRuntimeConfig } from './useRuntimeConfig';
 
 // 支付方式类型
 export type CheckoutPaymentMethod = 'evm_wallet' | 'scan' | 'direct';
@@ -75,11 +76,8 @@ export interface UsePaymentReturn {
     releaseTime?: number;
   }) => Promise<TransactionResult | null>;
 
-  // 扫描支付（BTC/LTC）
-  getPaymentInstructions: (
-    orderId: string,
-    currency: string
-  ) => Promise<PaymentInstructions | null>;
+  // 扫描/外部钱包支付
+  createPaymentSession: (orderId: string, currency: string) => Promise<PaymentInstructions | null>;
   checkPaymentStatus: (orderId: string) => Promise<PaymentResult | null>;
 
   // 直接支付（节点钱包）
@@ -96,17 +94,40 @@ export interface UsePaymentReturn {
   resetPayment: () => void;
 }
 
-// Community Edition: UTXO native coins only
-const SUPPORTED_COINS: PaymentCoin[] = getEditionSelectableTokens().map(token => ({
-  code: token.token,
-  name: token.chain,
-  type: 'utxo' as const,
-}));
+// 支持的币种列表
+const SUPPORTED_COINS: PaymentCoin[] = [
+  // EVM 原生币
+  { code: 'ETH', name: 'Ethereum', type: 'native', chainId: 1 },
+  { code: 'BNB', name: 'BNB Chain', type: 'native', chainId: 56 },
+  { code: 'MATIC', name: 'Polygon', type: 'native', chainId: 137 },
+  { code: 'ARB', name: 'Arbitrum', type: 'native', chainId: 42161 },
+  // 稳定币 (示例)
+  {
+    code: 'USDT',
+    name: 'Tether USD',
+    type: 'token',
+    chainId: 1,
+    tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  },
+  {
+    code: 'USDC',
+    name: 'USD Coin',
+    type: 'token',
+    chainId: 1,
+    tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  },
+  // UTXO 币种
+  { code: 'BTC', name: 'Bitcoin', type: 'utxo' },
+  { code: 'LTC', name: 'Litecoin', type: 'utxo' },
+  { code: 'BCH', name: 'Bitcoin Cash', type: 'utxo' },
+  { code: 'ZEC', name: 'Zcash', type: 'utxo' },
+];
 
 /**
  * 统一支付 Hook
  */
 export function usePayment(): UsePaymentReturn {
+  const runtimeConfig = useRuntimeConfig();
   const { isConnected, walletInfo, switchChain } = useWallet();
   const {
     createEscrow,
@@ -120,6 +141,15 @@ export function usePayment(): UsePaymentReturn {
   const [error, setError] = useState<string | null>(null);
   const [instructions, setInstructions] = useState<PaymentInstructions | null>(null);
   const [result, setResult] = useState<PaymentResult | null>(null);
+  const supportedCoins = useMemo(() => {
+    const visible = new Set(
+      filterVisibleAcceptedCurrencies(
+        SUPPORTED_COINS.map(coin => coin.code),
+        runtimeConfig
+      )
+    );
+    return SUPPORTED_COINS.filter(coin => visible.has(coin.code));
+  }, [runtimeConfig]);
 
   // 同步 escrow 错误
   useEffect(() => {
@@ -157,7 +187,7 @@ export function usePayment(): UsePaymentReturn {
       setError(null);
 
       // 找到币种对应的链
-      const coin = SUPPORTED_COINS.find(
+      const coin = supportedCoins.find(
         c => c.code === params.currency || c.tokenAddress === params.tokenAddress
       );
       if (!coin?.chainId) {
@@ -217,33 +247,29 @@ export function usePayment(): UsePaymentReturn {
         setIsLoading(false);
       }
     },
-    [isConnected, walletInfo?.chainId, switchChain, createEscrow]
+    [isConnected, walletInfo?.chainId, switchChain, createEscrow, supportedCoins]
   );
 
-  /**
-   * 获取扫描支付指令（BTC/LTC）
-   */
-  const getPaymentInstructions = useCallback(
+  const createPaymentSession = useCallback(
     async (orderId: string, currency: string): Promise<PaymentInstructions | null> => {
       setIsLoading(true);
       setError(null);
       setPaymentState('preparing');
 
       try {
-        const response = await ordersApi.getPaymentInstructions({ orderId, coin: currency });
-
-        if (response.error) {
-          throw new Error(response.error);
-        }
+        const session = await ordersApi.createOrderPaymentSession({
+          orderId,
+          paymentCoin: currency,
+        });
+        const target = session.fundingTarget;
 
         const paymentInstructions: PaymentInstructions = {
           orderId,
-          address: response.address || '',
-          amount: response.amount || '0',
+          address: target?.address || '',
+          amount: target?.amount || session.expectedAmount || '0',
           currency,
-          // QR 码可以在前端生成
-          qrCode: `bitcoin:${response.address}?amount=${response.amount}`,
-          expiresAt: Date.now() + 3600000, // 1 小时过期
+          qrCode: target?.qrPayload,
+          expiresAt: session.expiresAt ? new Date(session.expiresAt).getTime() : undefined,
         };
 
         setInstructions(paymentInstructions);
@@ -337,7 +363,7 @@ export function usePayment(): UsePaymentReturn {
    */
   const getAvailablePaymentMethods = useCallback(
     (currency: string): CheckoutPaymentMethod[] => {
-      const coin = SUPPORTED_COINS.find(c => c.code === currency);
+      const coin = supportedCoins.find(c => c.code === currency);
       if (!coin) return [];
 
       const methods: CheckoutPaymentMethod[] = [];
@@ -359,15 +385,15 @@ export function usePayment(): UsePaymentReturn {
 
       return methods;
     },
-    [isConnected]
+    [isConnected, supportedCoins]
   );
 
   /**
    * 获取支持的币种
    */
   const getSupportedCoins = useCallback((): PaymentCoin[] => {
-    return SUPPORTED_COINS;
-  }, []);
+    return supportedCoins;
+  }, [supportedCoins]);
 
   /**
    * 重置支付状态
@@ -404,7 +430,7 @@ export function usePayment(): UsePaymentReturn {
     payWithWallet,
 
     // 扫描支付
-    getPaymentInstructions,
+    createPaymentSession,
     checkPaymentStatus,
 
     // 直接支付

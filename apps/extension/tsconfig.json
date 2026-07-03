@@ -26,6 +26,11 @@
       "next/font/local": ["../web/src/compat/font-local.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "../../packages/core/types/window.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../web/src/types/sovereign.d.ts",
+    "../../packages/core/types/window.d.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

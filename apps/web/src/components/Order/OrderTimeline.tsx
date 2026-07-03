@@ -2,7 +2,15 @@
 
 import React, { memo, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, Package, CheckCircle, AlertCircle, RefreshCcw, Copy, ExternalLink } from 'lucide-react';
+import {
+  Check,
+  Package,
+  CheckCircle,
+  AlertCircle,
+  RefreshCcw,
+  Copy,
+  ExternalLink,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { getTrackingUrl, useI18n } from '@mobazha/core';
 import { copyToClipboard } from './utils';
@@ -87,7 +95,11 @@ function StarRating({ rating, maxRating = 5 }: { rating: number; maxRating?: num
 /**
  * Inline copy button for tracking numbers
  */
-const CopyTrackingButton = memo(function CopyTrackingButton({ trackingNumber }: { trackingNumber: string }) {
+const CopyTrackingButton = memo(function CopyTrackingButton({
+  trackingNumber,
+}: {
+  trackingNumber: string;
+}) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback(async () => {
@@ -242,7 +254,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 )}
                 {data?.trackingNumber && (
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{t('order.fulfillment.trackingNumber')}:</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('order.fulfillment.trackingNumber')}:
+                    </span>
                     {tUrl ? (
                       <a
                         href={tUrl}
@@ -261,7 +275,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 )}
                 {data?.note && (
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                    {t('order.fulfill.note')}: {data.note}
+                    {t('order.ship.note')}: {data.note}
                   </p>
                 )}
               </div>
@@ -284,10 +298,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
                   {icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Order Accepted</p>
+                  <p className="text-sm font-medium">{t('order.orderAccepted')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {data?.description ||
-                      "You received the order and can fulfill it whenever you're ready."}
+                    {data?.description || t('order.acceptedDescSeller')}
                   </p>
                 </div>
               </div>
@@ -311,7 +324,7 @@ const TimelineItemRow = memo(function TimelineItemRow({
                   {icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-error">Dispute opened</p>
+                  <p className="text-sm font-medium text-error">{t('order.disputeOpened')}</p>
                   {data?.claim && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{data.claim}</p>
                   )}
@@ -335,7 +348,9 @@ const TimelineItemRow = memo(function TimelineItemRow({
                 {icon}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Refunded {data?.refundAmount}</p>
+                <p className="text-sm font-medium">
+                  {t('order.refunded')} {data?.refundAmount}
+                </p>
                 {data?.txHash && (
                   <p className="text-xs text-muted-foreground font-mono truncate">
                     TX: {data.txHash}

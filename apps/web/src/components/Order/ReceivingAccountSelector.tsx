@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useI18n, walletApi } from '@mobazha/core';
-import { parseCanonicalPaymentCoin } from '@mobazha/core/data/tokens';
+import { getCompatibleChainTypes, useI18n, walletApi } from '@mobazha/core';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 
 export interface ReceivingAccountSelectorProps {
@@ -18,47 +17,6 @@ export interface ReceivingAccountSelectorProps {
   disabled?: boolean;
   /** 是否必填 */
   required?: boolean;
-}
-
-const NAMESPACE_TO_CHAIN_TYPES: Record<string, string[]> = {
-  eip155: ['ethereum', 'eth', 'evm'],
-  solana: ['solana', 'sol'],
-  bip122: ['bitcoin', 'btc'],
-  bitcoincash: ['bitcoincash', 'bch'],
-  zcash: ['zcash', 'zec'],
-  tron: ['tron', 'trx'],
-};
-
-const BLOCKCHAIN_MAPPING: Record<string, string[]> = {
-  ethereum: ['ethereum', 'eth', 'evm'],
-  solana: ['solana', 'sol'],
-  bitcoin: ['bitcoin', 'btc'],
-};
-
-function getCompatibleChainTypes(paymentCoin?: string, blockchain?: string): string[] | null {
-  if (paymentCoin) {
-    const lower = paymentCoin.toLowerCase();
-    if (lower.startsWith('fiat:')) {
-      const provider = lower.split(':')[1];
-      if (provider) return [`fiat:${provider}`];
-      return ['fiat'];
-    }
-    const parsed = parseCanonicalPaymentCoin(paymentCoin);
-    if (parsed) {
-      return NAMESPACE_TO_CHAIN_TYPES[parsed.namespace] ?? null;
-    }
-  }
-  if (blockchain) {
-    const lower = blockchain.toLowerCase();
-    for (const aliases of Object.values(NAMESPACE_TO_CHAIN_TYPES)) {
-      if (aliases.some(a => a === lower)) return aliases;
-    }
-    for (const aliases of Object.values(BLOCKCHAIN_MAPPING)) {
-      if (aliases.some(a => a === lower)) return aliases;
-    }
-    return [lower];
-  }
-  return null;
 }
 
 /**
@@ -90,8 +48,9 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
         const allAccounts = await walletApi.getReceivingAccounts();
         let activeAccounts = allAccounts.filter(acc => acc.isActive);
 
+        const hasChainHint = Boolean(paymentCoin?.trim() || blockchain?.trim());
         const validChainTypes = getCompatibleChainTypes(paymentCoin, blockchain);
-        if (validChainTypes) {
+        if (hasChainHint) {
           activeAccounts = activeAccounts.filter(acc =>
             validChainTypes.some(type => acc.chainType.toLowerCase() === type.toLowerCase())
           );
@@ -147,7 +106,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
   if (!isLoading && accounts.length === 0) {
     return (
       <div className="p-3 rounded-lg bg-warning/15 border border-warning/20">
-        <p className="text-sm text-warning">{t('order.fulfill.noReceivingAccount')}</p>
+        <p className="text-sm text-warning">{t('order.ship.noReceivingAccount')}</p>
       </div>
     );
   }
@@ -155,7 +114,7 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
   return (
     <div>
       <label className="text-sm font-medium text-foreground mb-1.5 block">
-        {t('order.fulfill.receivingAccount')} {required && '*'}
+        {t('order.ship.receivingAccount')} {required && '*'}
       </label>
       <select
         value={selectedAccountId || ''}
@@ -163,16 +122,14 @@ export const ReceivingAccountSelector: React.FC<ReceivingAccountSelectorProps> =
         className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
         disabled={disabled || isLoading}
       >
-        <option value="">{t('order.fulfill.selectReceivingAccount')}</option>
+        <option value="">{t('order.ship.selectReceivingAccount')}</option>
         {accounts.map(account => (
           <option key={account.id} value={account.id}>
             {account.name} ({account.chainType}) - {formatAddress(account.address)}
           </option>
         ))}
       </select>
-      <p className="text-xs text-muted-foreground mt-1">
-        {t('order.fulfill.receivingAccountHint')}
-      </p>
+      <p className="text-xs text-muted-foreground mt-1">{t('order.ship.receivingAccountHint')}</p>
     </div>
   );
 };

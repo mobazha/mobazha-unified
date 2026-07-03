@@ -1,71 +1,84 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { useI18n, usePaymentMethods } from '@mobazha/core';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  useI18n,
+  usePaymentMethods,
+  syncCheckoutPaymentSessionStorage,
+  persistCheckoutTokenSelection,
+  persistCheckoutFiatSelection,
+  sanitizeCheckoutFiatProvider,
+  isFiatAllowedByCheckoutPaymentPolicy,
+  normalizeCheckoutPaymentPolicy,
+  readCheckoutPaymentPolicyFromSession,
+  type CheckoutPaymentPolicy,
+} from '@mobazha/core';
 import { PaymentCryptoSelector } from '@/components/Payment';
+import { CheckoutSubpageHeader } from '@/components/Checkout/CheckoutSubpageHeader';
+import { useCheckoutSubpageReturn } from '@/hooks/useCheckoutSubpageReturn';
 
 /**
  * 移动端支付方式选择页面
  * 点击即选择并自动返回（符合移动端体验）
  */
 export default function PaymentMethodPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
+  const { navigateBack } = useCheckoutSubpageReturn('/checkout');
 
   const initialTokenId = searchParams.get('selected') || undefined;
+  const paymentPolicy = useMemo<CheckoutPaymentPolicy>(() => {
+    const fromQuery = searchParams.get('paymentPolicy');
+    if (fromQuery) return normalizeCheckoutPaymentPolicy(fromQuery);
+    if (typeof window === 'undefined') return 'all';
+    return readCheckoutPaymentPolicyFromSession();
+  }, [searchParams]);
+
   const [initialFiatProvider] = useState<string | undefined>(() => {
     if (typeof window === 'undefined') return undefined;
-    const saved = window.sessionStorage.getItem('checkout_selected_fiat_provider');
-    return saved || undefined;
+    return syncCheckoutPaymentSessionStorage({ paymentPolicy }).fiatProvider;
   });
   const vendorPeerID = searchParams.get('vendor') || undefined;
-  const returnUrl = searchParams.get('returnUrl') || '/checkout';
+
+  useEffect(() => {
+    syncCheckoutPaymentSessionStorage({ paymentPolicy });
+  }, [paymentPolicy]);
 
   const { activeFiat, crypto: acceptedCurrencies } = usePaymentMethods(vendorPeerID);
   const availableFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
+  const showFiatMethods = isFiatAllowedByCheckoutPaymentPolicy(paymentPolicy);
 
   const handleSelect = useCallback(
     (tokenId: string) => {
-      sessionStorage.setItem('checkout_selected_token', tokenId);
-      sessionStorage.removeItem('checkout_selected_fiat_provider');
-      router.push(returnUrl);
+      persistCheckoutTokenSelection(tokenId);
+      navigateBack();
     },
-    [returnUrl, router]
+    [navigateBack]
   );
 
   const handleFiatSelect = useCallback(
     (providerID: string) => {
-      sessionStorage.setItem('checkout_selected_fiat_provider', providerID);
-      sessionStorage.removeItem('checkout_selected_token');
-      router.push(returnUrl);
+      if (!showFiatMethods || !sanitizeCheckoutFiatProvider(providerID)) return;
+      persistCheckoutFiatSelection(providerID);
+      navigateBack();
     },
-    [returnUrl, router]
+    [navigateBack, showFiatMethods]
   );
-
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center h-14 px-4 gap-2">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full text-foreground touch-feedback active:bg-muted/50"
-            aria-label={t('common.back')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <span className="font-medium text-foreground">{t('payment.selectPaymentMethod')}</span>
-        </div>
-      </header>
+      <CheckoutSubpageHeader title={t('payment.selectPaymentMethod')} onBack={navigateBack} />
 
       <main className="flex-1 p-3">
+        {!showFiatMethods ? (
+          <p
+            className="mb-3 text-xs text-muted-foreground"
+            data-testid="checkout-payment-policy-note"
+          >
+            {t('collectibles.checkout.escrowCryptoOnlyNote')}
+          </p>
+        ) : null}
         <PaymentCryptoSelector
           selectedTokenId={initialTokenId}
           selectedFiatProvider={initialFiatProvider}
@@ -73,7 +86,7 @@ export default function PaymentMethodPage() {
           acceptedCurrencies={acceptedCurrencies}
           onSelect={handleSelect}
           onSelectFiat={handleFiatSelect}
-          showFiatMethods={true}
+          showFiatMethods={showFiatMethods}
         />
       </main>
     </div>

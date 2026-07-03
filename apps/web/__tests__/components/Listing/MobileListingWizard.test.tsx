@@ -50,6 +50,11 @@ vi.mock('@mobazha/core', () => ({
     formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
   }),
   getGatewayUrl: () => 'http://localhost:4002',
+  getImageUrl: (ref: string) => {
+    if (!ref) return '';
+    if (ref.startsWith('http://') || ref.startsWith('https://')) return ref;
+    return `http://localhost:4002/media/images/${ref}`;
+  },
   DEFAULT_LOCAL_CURRENCY: 'USD',
 }));
 
@@ -87,8 +92,13 @@ vi.mock('@/components/Listing', () => ({
   PhysicalGoodFields: () => React.createElement('div', null),
   VariantOptionEditor: () => React.createElement('div', null),
   VariantInventoryTable: () => React.createElement('div', null),
+  InventoryPolicyField: () =>
+    React.createElement('div', { 'data-testid': 'inventory-policy-field' }),
   DigitalFileSection: () => React.createElement('div', null),
   ProcessingTimeSelect: () => React.createElement('div', null),
+  AiImageGeneratePanel: () => React.createElement('div', { 'data-testid': 'ai-image-panel' }),
+  AiSetupPrompt: () => React.createElement('div', { 'data-testid': 'ai-setup-prompt' }),
+  SupplySummaryBar: () => React.createElement('div', { 'data-testid': 'supply-summary-bar' }),
 }));
 
 vi.mock('@/components/ui/button', () => ({

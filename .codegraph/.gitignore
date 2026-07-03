@@ -1,0 +1,20 @@
+# CodeGraph data files
+# These are local to each machine and should not be committed
+
+# Database
+*.db
+*.db-wal
+*.db-shm
+
+# Cache
+cache/
+
+# Logs
+*.log
+
+# Daemon runtime state
+daemon.pid
+daemon.sock
+
+# Hook markers
+.dirty

@@ -16,6 +16,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { isFiatPaymentVisible } from '@mobazha/core';
 import { authenticatedTest, getCasdoorToken, BACKEND_URL } from './fixtures/auth';
 import { setupMockAuth } from './fixtures/mock-auth';
 import {
@@ -30,7 +31,7 @@ import {
 
 authenticatedTest.describe('Settings — Payments', () => {
   authenticatedTest.beforeEach(async ({ authedPage }) => {
-    await authedPage.goto('/admin/settings/payments');
+    await authedPage.goto('/admin/payments');
     await authedPage.waitForLoadState('domcontentloaded');
   });
 
@@ -38,7 +39,7 @@ authenticatedTest.describe('Settings — Payments', () => {
     await authedPage.goto('/admin/settings');
     await authedPage.waitForLoadState('domcontentloaded');
 
-    const paymentsLink = authedPage.locator('a[href="/admin/settings/payments"]').first();
+    const paymentsLink = authedPage.locator('a[href="/admin/payments"]').first();
     await expect(paymentsLink).toBeVisible();
   });
 
@@ -51,6 +52,8 @@ authenticatedTest.describe('Settings — Payments', () => {
   authenticatedTest(
     'should show Stripe and PayPal provider cards on payments page',
     async ({ authedPage }) => {
+      test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
       const stripeCard = authedPage.getByText('Stripe');
       const paypalCard = authedPage.getByText('PayPal');
 
@@ -67,6 +70,8 @@ authenticatedTest.describe('Settings — Payments', () => {
   authenticatedTest(
     'provider cards should display connection status badges',
     async ({ authedPage }) => {
+      test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
       const statusText = authedPage.getByText(/connected|not connected|已连接|未连接/i);
       await expect(statusText.first()).toBeVisible();
     }
@@ -77,7 +82,9 @@ authenticatedTest.describe('Settings — Payments', () => {
 
 authenticatedTest.describe('Standalone Provider Config', () => {
   authenticatedTest('should show API key form when Configure clicked', async ({ authedPage }) => {
-    await authedPage.goto('/admin/settings/payments');
+    test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
+    await authedPage.goto('/admin/payments');
     await authedPage.waitForLoadState('domcontentloaded');
 
     const configBtn = authedPage.getByRole('button', { name: /configure api|配置 API/i }).first();
@@ -97,7 +104,9 @@ authenticatedTest.describe('Standalone Provider Config', () => {
   });
 
   authenticatedTest('secret visibility toggle should work', async ({ authedPage }) => {
-    await authedPage.goto('/admin/settings/payments');
+    test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
+    await authedPage.goto('/admin/payments');
     await authedPage.waitForLoadState('domcontentloaded');
 
     const configBtn = authedPage.getByRole('button', { name: /configure api|配置 API/i }).first();
@@ -121,7 +130,9 @@ authenticatedTest.describe('Standalone Provider Config', () => {
   });
 
   authenticatedTest('Save should be disabled without required fields', async ({ authedPage }) => {
-    await authedPage.goto('/admin/settings/payments');
+    test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
+    await authedPage.goto('/admin/payments');
     await authedPage.waitForLoadState('domcontentloaded');
 
     const configBtn = authedPage.getByRole('button', { name: /configure api|配置 API/i }).first();
@@ -411,6 +422,8 @@ test.describe('Checkout — Fiat Payment Flow', () => {
   });
 
   test('payment method page with fiat mock should render Stripe option', async ({ page }) => {
+    test.skip(!isFiatPaymentVisible(), 'Fiat payments hidden in UI');
+
     await setupMockAuth(page);
     await mockProductDetailAPI(page);
     await mockPreferencesAPI(page);

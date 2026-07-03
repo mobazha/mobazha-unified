@@ -113,7 +113,7 @@ describe('Access Control Type Validation', () => {
     it('should have correct structure for whitelist access', () => {
       const result: StoreAccessCheckResult = {
         hasFullAccess: true,
-        hasGroupAccess: false,
+        hasMarketplaceAccess: false,
         accessType: 'whitelist',
         needsRequest: false,
       };
@@ -122,28 +122,28 @@ describe('Access Control Type Validation', () => {
       expect(result.accessType).toBe('whitelist');
     });
 
-    it('should have correct structure for group marketplace access', () => {
+    it('should have correct structure for marketplace access', () => {
       const result: StoreAccessCheckResult = {
         hasFullAccess: false,
-        hasGroupAccess: true,
-        accessType: 'group_marketplace',
+        hasMarketplaceAccess: true,
+        accessType: 'marketplace',
         needsRequest: false,
-        groupInfo: {
-          platform: 'telegram',
-          chatId: '123456789',
-          chatTitle: 'Test Group',
+        marketplace: {
+          id: 'market-1',
+          name: 'Test Market',
+          slug: 'test-market',
         },
       };
 
-      expect(result.hasGroupAccess).toBe(true);
-      expect(result.accessType).toBe('group_marketplace');
-      expect(result.groupInfo?.platform).toBe('telegram');
+      expect(result.hasMarketplaceAccess).toBe(true);
+      expect(result.accessType).toBe('marketplace');
+      expect(result.marketplace?.id).toBe('market-1');
     });
 
     it('should have correct structure for no access', () => {
       const result: StoreAccessCheckResult = {
         hasFullAccess: false,
-        hasGroupAccess: false,
+        hasMarketplaceAccess: false,
         accessType: 'none',
         needsRequest: true,
         requestStatus: 'pending',
@@ -163,11 +163,13 @@ describe('Access Control Type Validation', () => {
         chatType: 'supergroup',
         chatTitle: 'Test Marketplace',
         chatUsername: 'test_marketplace',
+        platformUserId: '99887766',
         needsVerification: true,
       };
 
       expect(context.platform).toBe('telegram');
       expect(context.chatId).toBe('123456789');
+      expect(context.platformUserId).toBe('99887766');
       expect(context.needsVerification).toBe(true);
     });
 
@@ -182,19 +184,17 @@ describe('Access Control Type Validation', () => {
   });
 
   describe('ProductGroupAuthorization', () => {
-    it('should have correct structure for group marketplace auth', () => {
+    it('should have correct structure for marketplace auth', () => {
       const auth: ProductGroupAuthorization = {
         id: 1,
         productGroupId: 10,
-        authType: 'group_marketplace',
-        groupPlatform: 'telegram',
-        groupChatID: '123456789',
+        authType: 'marketplace',
+        marketplaceID: 'market-1',
         createdAt: '2024-01-01T00:00:00Z',
       };
 
-      expect(auth.authType).toBe('group_marketplace');
-      expect(auth.groupPlatform).toBe('telegram');
-      expect(auth.groupChatID).toBe('123456789');
+      expect(auth.authType).toBe('marketplace');
+      expect(auth.marketplaceID).toBe('market-1');
     });
 
     it('should have correct structure for user group auth', () => {

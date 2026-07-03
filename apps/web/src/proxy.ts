@@ -11,10 +11,20 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { REQUEST_URL_HEADER } from '@/lib/requestUrl';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://miniapptest.mobazha.org';
+const INFO_API_BASE =
+  process.env.NEXT_PUBLIC_INFO_API_URL || process.env.INTERNAL_INFO_API_URL || API_BASE;
 
-const PROXY_PREFIXES = ['/v1/', '/api/', '/info/'];
+const PROXY_PREFIXES = ['/v1/', '/api/', '/info/', '/platform/'];
+
+/** Forward full request URL to RSC (layouts / opengraph-image cannot use searchParams). */
+function nextWithRequestUrl(request: NextRequest, reqHeaders?: Headers): NextResponse {
+  const headers = reqHeaders ?? new Headers(request.headers);
+  headers.set(REQUEST_URL_HEADER, request.url);
+  return NextResponse.next({ request: { headers } });
+}
 
 function shouldProxyToBackend(pathname: string): boolean {
   return PROXY_PREFIXES.some(prefix => pathname.startsWith(prefix));
@@ -26,11 +36,15 @@ function shouldProxyToBackend(pathname: string): boolean {
  */
 async function proxyToBackend(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
-  const upstream = `${API_BASE}${pathname}${search}`;
+  // Browser search uses `/info/search/v1/*`; E2E info-api listens on `/search/v1/*` (port 18082).
+  const upstream = pathname.startsWith('/info/')
+    ? `${INFO_API_BASE.replace(/\/$/, '')}${pathname.slice('/info'.length)}${search}`
+    : `${API_BASE}${pathname}${search}`;
 
   const headers = new Headers(request.headers);
   headers.delete('host');
-  headers.set('host', new URL(API_BASE).host);
+  headers.set('host', new URL(upstream).host);
+  headers.set('accept-encoding', 'identity');
 
   const init: RequestInit = {
     method: request.method,
@@ -48,6 +62,8 @@ async function proxyToBackend(request: NextRequest): Promise<NextResponse> {
     const response = await fetch(upstream, init);
     const responseHeaders = new Headers(response.headers);
     responseHeaders.delete('www-authenticate');
+    responseHeaders.delete('content-encoding');
+    responseHeaders.delete('content-length');
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
@@ -74,6 +90,7 @@ const PUBLIC_ROUTES = [
   '/moderators',
   '/collections',
   '/collections/',
+  '/collectibles',
 ];
 
 /**
@@ -112,6 +129,18 @@ function isPublicRoute(pathname: string): boolean {
     const segments = pathname.split('/').filter(Boolean);
     if (segments.length === 2) {
       return true;
+    }
+  }
+
+  // 特殊处理 /collectibles/:mint（单级 mint 凭证详情公开）
+  // 排除 /collectibles/redemptions 与 /collectibles/redeem/*
+  if (pathname.startsWith('/collectibles/')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 2 && segments[0] === 'collectibles') {
+      const sub = segments[1];
+      if (sub !== 'redemptions' && sub !== 'redeem') {
+        return true;
+      }
     }
   }
 
@@ -165,6 +194,7 @@ export function proxy(request: NextRequest) {
     const reqHeaders = new Headers(request.headers);
     reqHeaders.set('x-storefront-peerid', storePeerID);
 
+    reqHeaders.set(REQUEST_URL_HEADER, request.url);
     const response = NextResponse.next({ request: { headers: reqHeaders } });
     response.cookies.set('mbz-storefront', storePeerID, {
       path: '/',
@@ -180,12 +210,12 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/internal/') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next();
+    return nextWithRequestUrl(request);
   }
 
   // 公开路由直接放行
   if (isPublicRoute(pathname)) {
-    return NextResponse.next();
+    return nextWithRequestUrl(request);
   }
 
   // 检查是否有认证 cookie
@@ -203,7 +233,7 @@ export function proxy(request: NextRequest) {
     // return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return nextWithRequestUrl(request);
 }
 
 /**

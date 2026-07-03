@@ -19,7 +19,6 @@ import {
   resolveRwaAsset,
   UniversalSwapService,
   TradeMode,
-  ordersApi,
   getExplorerResourceUrl,
   getCurrentChainId as getAppkitChainId,
   mustCanonicalCoin,
@@ -250,22 +249,11 @@ export function RwaPurchaseFlow({
       const usdAmount = (price * quantity) / Math.pow(10, pricingDivisibility);
       const paymentAmount = Math.floor(usdAmount * 1e6).toString(); // USDT 有 6 位小数
 
-      // 从后端获取身份地址
-      const paymentInstructions = await ordersApi.getPaymentInstructions({
-        orderId: externalOrderId,
-        coin: paymentCoin,
-      });
-
-      if (paymentInstructions.error) {
-        throw new Error(paymentInstructions.error);
-      }
-
-      if (!paymentInstructions.buyerAddress) {
+      // RWA is temporarily not maintained; keep this flow on wallet identity only.
+      const buyerIdentity = walletInfo?.address || '';
+      if (!buyerIdentity) {
         throw new Error(t('rwa.purchase.missingBuyerAddress'));
       }
-
-      // 身份地址（从后端获取，代表 Mobazha 系统中的用户身份）
-      const buyerIdentity = paymentInstructions.buyerAddress;
       // 买家接收 Token 的地址（使用当前钱包地址）
       const buyerReceiveAddress = walletInfo?.address || '';
 

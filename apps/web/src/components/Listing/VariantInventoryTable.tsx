@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState, useMemo, useRef, useEffect } from 'react';
 import { Edit3, Check, X, ImagePlus } from 'lucide-react';
-import { useI18n, getVariantLabel, getGatewayUrl } from '@mobazha/core';
+import { useI18n, getVariantLabel, getImageUrl } from '@mobazha/core';
 import type { Image } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -222,6 +222,9 @@ export function VariantInventoryTable({
               <TableHead className="font-medium min-w-[140px]">
                 {t('listing.variant.variant')}
               </TableHead>
+              <TableHead className="font-medium w-32">
+                {t('listing.variant.productId', { defaultValue: 'SKU code' })}
+              </TableHead>
               <TableHead className="font-medium w-28">
                 {t('listing.variant.price')}
                 <span className="text-xs text-muted-foreground ml-1">({pricingCurrency})</span>
@@ -266,7 +269,7 @@ export function VariantInventoryTable({
                       >
                         {sku.images?.[0] ? (
                           <img
-                            src={`${getGatewayUrl()}/media/images/${sku.images[0].tiny || sku.images[0].small || ''}`}
+                            src={getImageUrl(sku.images[0].tiny || sku.images[0].small || '') || ''}
                             alt=""
                             className="w-full h-full object-cover"
                           />
@@ -292,7 +295,7 @@ export function VariantInventoryTable({
                               }`}
                             >
                               <img
-                                src={`${getGatewayUrl()}/media/images/${img.tiny || img.small || ''}`}
+                                src={getImageUrl(img.tiny || img.small || '') || ''}
                                 alt=""
                                 className="w-full h-full object-cover"
                               />
@@ -318,6 +321,17 @@ export function VariantInventoryTable({
                   {/* 变体名称 */}
                   <TableCell className="font-medium text-sm">
                     <div className="flex items-center gap-2">{getVariantLabel(sku.selections)}</div>
+                  </TableCell>
+
+                  <TableCell>
+                    <Input
+                      value={sku.productID}
+                      onChange={e => updateSku(index, 'productID', e.target.value)}
+                      placeholder={t('listing.variant.productIdPlaceholder', {
+                        defaultValue: 'e.g. sku-blue',
+                      })}
+                      className="h-8 text-sm"
+                    />
                   </TableCell>
 
                   {/* 价格 */}

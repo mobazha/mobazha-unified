@@ -1,5 +1,5 @@
-export { FulfillModal } from './FulfillModal';
-export type { FulfillModalProps, FulfillmentData, ContractType } from './FulfillModal';
+export { ShipModal } from './ShipModal';
+export type { ShipModalProps, ShipmentData, ContractType } from './ShipModal';
 
 export { DisputeModal } from './DisputeModal';
 export type { DisputeModalProps } from './DisputeModal';

@@ -107,7 +107,7 @@ describe('Notification Types', () => {
 
     it('should map completion events to order_complete', () => {
       expect(eventTypeToSoundType('order.completed')).toBe('order_complete');
-      expect(eventTypeToSoundType('order.fulfilled')).toBe('order_complete');
+      expect(eventTypeToSoundType('order.shipped')).toBe('order_complete');
     });
 
     it('should map social events to chat_message (default)', () => {
@@ -120,7 +120,7 @@ describe('Notification Types', () => {
     it('should return true for valid order event types', () => {
       expect(isValidNotificationEventType('order.created')).toBe(true);
       expect(isValidNotificationEventType('order.payment_received')).toBe(true);
-      expect(isValidNotificationEventType('order.fulfilled')).toBe(true);
+      expect(isValidNotificationEventType('order.shipped')).toBe(true);
     });
 
     it('should return true for valid dispute event types', () => {
@@ -209,6 +209,22 @@ describe('Notification Store', () => {
       currentRoomId: null,
       currentPage: null,
     });
+  });
+
+  it('should preserve unread count when replacing notification list', () => {
+    const store = useNotificationStore.getState();
+    store.setUnreadCount(16);
+    store.setNotifications([
+      {
+        id: 'test-1',
+        type: 'order.created',
+        timestamp: new Date().toISOString(),
+        read: false,
+        orderID: 'order-123',
+      } as OrderNotificationData,
+    ]);
+
+    expect(useNotificationStore.getState().unreadCount).toBe(16);
   });
 
   it('should add notification correctly', () => {

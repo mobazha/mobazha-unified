@@ -7,7 +7,14 @@ import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { useI18n, useWishlist, useCurrency, usePriceUpdates, getImageUrl } from '@mobazha/core';
+import {
+  useI18n,
+  useWishlist,
+  useCurrency,
+  usePriceUpdates,
+  getImageUrl,
+  buildProductHref,
+} from '@mobazha/core';
 import type { WishlistItem, PriceUpdate } from '@mobazha/core';
 import { Heart, Trash2, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -128,7 +135,7 @@ function WishlistRow({
   return (
     <div className="flex items-center gap-4 p-4 bg-card rounded-lg border border-border hover:border-primary/20 transition-colors">
       <Link
-        href={`/product/${item.slug}?peerID=${item.peerID}`}
+        href={buildProductHref(item.slug, item.peerID)}
         className="flex items-center gap-4 flex-1 min-w-0"
       >
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-muted flex-shrink-0 overflow-hidden">

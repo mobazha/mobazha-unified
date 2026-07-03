@@ -13,7 +13,9 @@ import {
   type PurchaseData,
   type OrderEstimate,
   type PurchaseResult,
+  type AcceptDisputeSettlementContext,
 } from '../services/api/orders';
+import { buildAcceptDisputeSettlementContext } from '../utils/orderSettlement';
 import { useNotificationStore, selectOrderRefreshTrigger } from '../stores/notificationStore';
 import { queryKeys } from './queryKeys';
 import { formatQueryError } from './queryUtils';
@@ -283,9 +285,15 @@ export function useOrderPayment(orderId: string | null) {
     paid?: string;
   } | null>(null);
 
-  const instructionsMutation = useMutation({
-    mutationFn: (coin: string) => ordersApi.getPaymentInstructions({ orderId: orderId!, coin }),
-    onSuccess: result => setPaymentInfo(prev => ({ ...prev, ...result })),
+  const paymentSessionMutation = useMutation({
+    mutationFn: (paymentCoin: string) =>
+      ordersApi.createOrderPaymentSession({ orderId: orderId!, paymentCoin }),
+    onSuccess: session =>
+      setPaymentInfo(prev => ({
+        ...prev,
+        address: session.fundingTarget?.address,
+        amount: session.fundingTarget?.amount || session.expectedAmount,
+      })),
   });
 
   const fundMutation = useMutation({
@@ -293,16 +301,16 @@ export function useOrderPayment(orderId: string | null) {
       ordersApi.fundOrder({ ...params, orderId: orderId! }),
   });
 
-  const getPaymentInstructions = useCallback(
+  const createPaymentSession = useCallback(
     async (coin: string) => {
       if (!orderId) return null;
       try {
-        return await instructionsMutation.mutateAsync(coin);
+        return await paymentSessionMutation.mutateAsync(coin);
       } catch {
         return null;
       }
     },
-    [orderId, instructionsMutation]
+    [orderId, paymentSessionMutation]
   );
 
   const getPaymentRemaining = useCallback(async () => {
@@ -332,13 +340,13 @@ export function useOrderPayment(orderId: string | null) {
     [orderId, fundMutation]
   );
 
-  const isLoading = instructionsMutation.isPending || fundMutation.isPending;
+  const isLoading = paymentSessionMutation.isPending || fundMutation.isPending;
 
   return {
     isLoading,
-    error: formatQueryError(instructionsMutation.error || fundMutation.error),
+    error: formatQueryError(paymentSessionMutation.error || fundMutation.error),
     paymentInfo,
-    getPaymentInstructions,
+    createPaymentSession,
     getPaymentRemaining,
     fundOrder,
   };
@@ -382,13 +390,8 @@ export function useOrderActions() {
     (p: { orderID: string; decline?: boolean }) => ordersApi.confirmOrder(p),
     invalidateOrders
   );
-  const fulfill = useMutationAction(
-    (p: {
-      orderID: string;
-      physicalDelivery?: { shipper: string; trackingNumber: string };
-      digitalDelivery?: { url?: string; password?: string };
-      note?: string;
-    }) => ordersApi.fulfillOrder(p),
+  const ship = useMutationAction(
+    (p: Parameters<typeof ordersApi.shipOrder>[0]) => ordersApi.shipOrder(p),
     invalidateOrders
   );
   const complete = useMutationAction(
@@ -417,7 +420,8 @@ export function useOrderActions() {
     invalidateOrders
   );
   const acceptDisp = useMutationAction(
-    (orderId: string) => ordersApi.acceptDispute(orderId),
+    (p: { orderId: string; context?: AcceptDisputeSettlementContext }) =>
+      ordersApi.acceptDisputeWithSettlement(p.orderId, p.context),
     invalidateOrders
   );
   const resend = useMutationAction((p: { orderId: string; messageType: string }) =>
@@ -428,14 +432,9 @@ export function useOrderActions() {
     (orderID: string, decline = false) => confirm.execute({ orderID, decline }),
     [confirm]
   );
-  const fulfillOrder = useCallback(
-    (params: {
-      orderID: string;
-      physicalDelivery?: { shipper: string; trackingNumber: string };
-      digitalDelivery?: { url?: string; password?: string };
-      note?: string;
-    }) => fulfill.execute(params),
-    [fulfill]
+  const shipOrder = useCallback(
+    (params: Parameters<typeof ordersApi.shipOrder>[0]) => ship.execute(params),
+    [ship]
   );
   const completeOrder = useCallback(
     (params: {
@@ -462,7 +461,20 @@ export function useOrderActions() {
     (orderId: string, claim: string) => dispute.execute({ orderId, claim }),
     [dispute]
   );
-  const acceptDispute = useCallback((orderId: string) => acceptDisp.execute(orderId), [acceptDisp]);
+  const acceptDispute = useCallback(
+    (
+      orderId: string,
+      context?: AcceptDisputeSettlementContext & {
+        escrowType?: string | null;
+        settlementSpec?: { escrowType?: string };
+      }
+    ) =>
+      acceptDisp.execute({
+        orderId,
+        context: context ? buildAcceptDisputeSettlementContext(context) : undefined,
+      }),
+    [acceptDisp]
+  );
   const resendMessage = useCallback(
     (orderId: string, messageType: string) => resend.execute({ orderId, messageType }),
     [resend]
@@ -470,7 +482,7 @@ export function useOrderActions() {
 
   const isLoading =
     confirm.isPending ||
-    fulfill.isPending ||
+    ship.isPending ||
     complete.isPending ||
     cancel.isPending ||
     refund.isPending ||
@@ -480,7 +492,7 @@ export function useOrderActions() {
 
   const firstError =
     confirm.error ||
-    fulfill.error ||
+    ship.error ||
     complete.error ||
     cancel.error ||
     refund.error ||
@@ -490,25 +502,25 @@ export function useOrderActions() {
 
   const clearError = useCallback(() => {
     confirm.reset();
-    fulfill.reset();
+    ship.reset();
     complete.reset();
     cancel.reset();
     refund.reset();
     dispute.reset();
     acceptDisp.reset();
     resend.reset();
-  }, [confirm, fulfill, complete, cancel, refund, dispute, acceptDisp, resend]);
+  }, [confirm, ship, complete, cancel, refund, dispute, acceptDisp, resend]);
 
   return {
     isLoading,
     isConfirming: confirm.isPending,
-    isFulfilling: fulfill.isPending,
+    isShipping: ship.isPending,
     isCompleting: complete.isPending,
     isCancelling: cancel.isPending,
     isRefunding: refund.isPending,
     error: formatQueryError(firstError),
     confirmOrder,
-    fulfillOrder,
+    shipOrder,
     refundOrder,
     completeOrder,
     cancelOrder,

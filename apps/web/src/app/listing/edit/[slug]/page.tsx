@@ -38,12 +38,25 @@ import {
   useListing,
   useI18n,
   useCurrency,
-  getGatewayUrl,
+  getImageUrl,
   productsApi,
   convertProductToFormData,
   DEFAULT_LOCAL_CURRENCY,
+  queryKeys,
+  useUserStore,
+  digitalAssetsApi,
+  resolveProductSupplyMode,
+  useFeature,
+  buildProductHref,
 } from '@mobazha/core';
-import type { ContractType, Image, ShippingProfile, Product } from '@mobazha/core';
+import type {
+  ContractType,
+  Image,
+  ShippingProfile,
+  Product,
+  SupplySummaryAction,
+} from '@mobazha/core';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   ProductTypeSelector,
@@ -53,16 +66,28 @@ import {
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalFileSection,
+  InventoryPolicyField,
+  DigitalListingAssetsPanel,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiAssistButton,
   AiSetupPrompt,
   useListingAiIntegration,
   MobileListingWizard,
+  SupplySummaryBar,
 } from '@/components/Listing';
+import { useListingSupplySummary } from '@/hooks/useListingSupplySummary';
+import { useListingPriceChange } from '@/hooks/useListingPriceChange';
+import { BasePriceSyncDialog } from '@/components/Listing/BasePriceSyncDialog';
+import { ListingPriceHierarchyBanner } from '@/components/Listing/ListingPriceHierarchyBanner';
+import { ListingFulfillmentPricingPanel } from '@/components/Listing/ListingFulfillmentPricingPanel';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+
+// Sovereign is single-store: /store (no peerID) is the clean storefront URL.
+// SaaS /profile redirects to /store/:peerID — same intent, different path.
+const AFTER_LISTING_PATH =
+  typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? '/store' : '/profile';
 
 // 左侧导航标签
 type TabKey =
@@ -122,8 +147,15 @@ export default function EditListingPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { t } = useI18n();
+  const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
   const { formatPrice: formatCurrencyPrice } = useCurrency();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { profile: currentUserProfile } = useUserStore();
+  const previewHref = useMemo(
+    () => buildProductHref(slug, currentUserProfile?.peerID),
+    [slug, currentUserProfile?.peerID]
+  );
 
   // 加载现有商品数据
   const { listing, isLoading: isLoadingListing, error: loadError } = useListing(slug);
@@ -151,6 +183,26 @@ export default function EditListingPage() {
     reset,
   } = useListingForm(initialFormData);
 
+  const {
+    pendingSync,
+    setPendingSync,
+    handlePriceInput,
+    handlePriceFocus,
+    handlePriceBlur,
+    applyBaseOnly,
+    applyToAllVariants,
+    reviewVariants,
+  } = useListingPriceChange({
+    price: formData.price,
+    skus: formData.skus,
+    onPriceChange: value => updateField('price', value),
+    onSkusChange: updateSkus,
+    onReviewVariants: () => {
+      setActiveTab('variants');
+      sectionRefs.current.variants?.scrollIntoView({ behavior: 'smooth' });
+    },
+  });
+
   // 当 listing 数据加载完成后重置表单
   useEffect(() => {
     if (initialFormData) {
@@ -170,6 +222,7 @@ export default function EditListingPage() {
   const {
     aiLoadingAction,
     aiNotConfigured,
+    aiSupportsVision,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
@@ -205,6 +258,25 @@ export default function EditListingPage() {
       ref.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
+
+  const {
+    context: supplyContext,
+    summary: supplySummary,
+    loading: supplySummaryLoading,
+  } = useListingSupplySummary({
+    listingSlug: slug,
+    contractType: formData.contractType,
+    skus: formData.skus,
+    enabled: supplyAvailabilityEnabled,
+  });
+
+  const handleSupplySummaryAction = useCallback(
+    (action: SupplySummaryAction) => {
+      if (action === 'variants') scrollToSection('variants');
+      else if (action === 'digital') scrollToSection('files');
+    },
+    [scrollToSection]
+  );
 
   // 标签规范化函数
   const normalizeTag = useCallback((input: string) => {
@@ -260,6 +332,42 @@ export default function EditListingPage() {
     [updateField]
   );
 
+  const refreshListingCaches = useCallback(
+    async (listingSlug?: string) => {
+      const ownPeerID = currentUserProfile?.peerID;
+
+      // Clear listing caches before navigating so the destination page
+      // doesn't read stale snapshot data.
+      queryClient.removeQueries({ queryKey: queryKeys.products.myListings() });
+      if (ownPeerID) {
+        queryClient.removeQueries({ queryKey: queryKeys.products.store(ownPeerID) });
+      }
+
+      const invalidations: Array<Promise<unknown>> = [
+        queryClient.invalidateQueries({ queryKey: queryKeys.products.myListings() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.products.all }),
+      ];
+
+      if (ownPeerID) {
+        invalidations.push(
+          queryClient.invalidateQueries({ queryKey: queryKeys.products.store(ownPeerID) }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.profiles.detail(ownPeerID) })
+        );
+      }
+
+      if (listingSlug) {
+        invalidations.push(
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.products.detail(listingSlug, ownPeerID),
+          })
+        );
+      }
+
+      await Promise.allSettled(invalidations);
+    },
+    [currentUserProfile?.peerID, queryClient]
+  );
+
   // 提交表单（发布/更新）
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
@@ -274,6 +382,29 @@ export default function EditListingPage() {
         return;
       }
 
+      if (formData.contractType === 'DIGITAL_GOOD') {
+        try {
+          const assets = await digitalAssetsApi.listAssets(slug);
+          if (assets.length === 0) {
+            toast({
+              title: t('listing.digital.publishRequiresAssetTitle'),
+              description: t('listing.digital.publishRequiresAssetDesc'),
+              variant: 'destructive',
+            });
+            scrollToSection('files');
+            return;
+          }
+        } catch (err) {
+          toast({
+            title: t('common.error'),
+            description:
+              err instanceof Error ? err.message : t('listing.digital.publishAssetCheckFailed'),
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
       const result = await submit();
 
       if ('error' in result) {
@@ -283,14 +414,26 @@ export default function EditListingPage() {
           variant: 'destructive',
         });
       } else {
+        await refreshListingCaches(formData.slug || result.slug);
         toast({
           title: t('common.success'),
           description: t('listing.updateSuccess'),
         });
-        router.push('/profile');
+        router.push(AFTER_LISTING_PATH);
       }
     },
-    [validate, submit, toast, t, router]
+    [
+      validate,
+      submit,
+      refreshListingCaches,
+      formData.slug,
+      formData.contractType,
+      slug,
+      toast,
+      t,
+      router,
+      scrollToSection,
+    ]
   );
 
   // 保存草稿
@@ -304,24 +447,26 @@ export default function EditListingPage() {
         variant: 'destructive',
       });
     } else {
+      await refreshListingCaches(formData.slug || result.slug);
       toast({
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
-      router.push('/profile');
+      router.push(AFTER_LISTING_PATH);
     }
-  }, [submitDraft, toast, t, router]);
+  }, [submitDraft, refreshListingCaches, formData.slug, toast, t, router]);
 
   // 删除商品
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
     try {
       await productsApi.deleteListing(slug);
+      await refreshListingCaches(slug);
       toast({
         title: t('common.success'),
         description: t('listing.deleteSuccess'),
       });
-      router.push('/profile');
+      router.push(AFTER_LISTING_PATH);
     } catch {
       toast({
         title: t('common.error'),
@@ -332,13 +477,13 @@ export default function EditListingPage() {
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }
-  }, [slug, toast, t, router]);
+  }, [slug, refreshListingCaches, toast, t, router]);
 
-  // 获取图片URL用于预览
+  // 获取图片URL用于预览（支持外部 CDN URL 和内部 hash）
   const getPreviewImageUrl = useCallback((image: Image) => {
     const hash = image.small || image.medium || image.original;
     if (!hash) return '';
-    return `${getGatewayUrl()}/media/images/${hash}`;
+    return getImageUrl(hash) || '';
   }, []);
 
   // 加载中状态
@@ -368,7 +513,7 @@ export default function EditListingPage() {
           <Container>
             <div className="flex flex-col items-center justify-center">
               <p className="text-destructive">{loadError || t('listing.notFound')}</p>
-              <Button className="mt-4" onClick={() => router.push('/profile')}>
+              <Button className="mt-4" onClick={() => router.push(AFTER_LISTING_PATH)}>
                 {t('common.goBack')}
               </Button>
             </div>
@@ -389,6 +534,11 @@ export default function EditListingPage() {
           errors={errors}
           isSubmitting={isSubmitting}
           isEditMode
+          listingSlug={slug}
+          supplyContext={supplyAvailabilityEnabled ? supplyContext : undefined}
+          supplySummary={supplyAvailabilityEnabled ? supplySummary : undefined}
+          supplySummaryLoading={supplyAvailabilityEnabled ? supplySummaryLoading : false}
+          onSupplySummaryAction={supplyAvailabilityEnabled ? handleSupplySummaryAction : undefined}
           updateField={updateField}
           changeContractType={changeContractType}
           addTag={addTag}
@@ -400,7 +550,10 @@ export default function EditListingPage() {
           onSaveDraft={handleSaveDraft}
           onCancel={() => router.back()}
           onDelete={() => setShowDeleteDialog(true)}
-          onPreview={() => window.open(`/product/${slug}`, '_blank')}
+          onPreview={() => window.open(previewHref, '_blank')}
+          onPriceChange={handlePriceInput}
+          onPriceFocus={handlePriceFocus}
+          onPriceBlur={handlePriceBlur}
           aiLoadingAction={aiLoadingAction}
           onAiImproveTitle={handleAiImproveTitle}
           onAiPolishDescription={handleAiPolishDescription}
@@ -435,6 +588,17 @@ export default function EditListingPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <BasePriceSyncDialog
+          open={!!pendingSync}
+          variantCount={pendingSync?.variantCount ?? 0}
+          newPrice={pendingSync?.newPrice ?? ''}
+          onApplyAll={applyToAllVariants}
+          onKeepVariants={applyBaseOnly}
+          onReviewVariants={reviewVariants}
+          onOpenChange={open => {
+            if (!open) setPendingSync(null);
+          }}
+        />
       </>
     );
   }
@@ -450,7 +614,10 @@ export default function EditListingPage() {
           {/* 页面头部 */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Link href="/profile" className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <Link
+                href={AFTER_LISTING_PATH}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+              >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
@@ -476,7 +643,7 @@ export default function EditListingPage() {
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => window.open(`/product/${slug}`, '_blank')}
+                onClick={() => window.open(previewHref, '_blank')}
                 disabled={isSubmitting}
                 data-testid="listing-form-preview"
               >
@@ -585,6 +752,15 @@ export default function EditListingPage() {
 
             {/* 主内容区域 */}
             <div className="lg:col-span-10 space-y-6">
+              {supplyAvailabilityEnabled && resolveProductSupplyMode(supplyContext) !== 'none' && (
+                <SupplySummaryBar
+                  context={supplyContext}
+                  summary={supplySummary}
+                  loading={supplySummaryLoading}
+                  onAction={handleSupplySummaryAction}
+                />
+              )}
+
               {/* 商品类型选择 */}
               <Card
                 className="p-6"
@@ -604,6 +780,21 @@ export default function EditListingPage() {
 
               {/* 基础信息 - 非 RWA Token */}
               {formData.contractType !== 'RWA_TOKEN' && (
+                <div className="space-y-3">
+                  <ListingPriceHierarchyBanner
+                    basePrice={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    skus={formData.skus}
+                  />
+                  <ListingFulfillmentPricingPanel
+                    listingSlug={slug}
+                    basePrice={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    skus={formData.skus}
+                  />
+                </div>
+              )}
+              {formData.contractType !== 'RWA_TOKEN' && (
                 <BasicInfoSection
                   title={formData.title}
                   shortDescription={formData.shortDescription}
@@ -619,7 +810,9 @@ export default function EditListingPage() {
                   onTitleChange={v => updateField('title', v)}
                   onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={handlePriceInput}
+                  onPriceFocus={handlePriceFocus}
+                  onPriceBlur={handlePriceBlur}
                   onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
@@ -703,7 +896,7 @@ export default function EditListingPage() {
                     onCryptoListingCurrencyCodeChange={v =>
                       updateField('cryptoListingCurrencyCode', v)
                     }
-                    onPriceChange={v => updateField('price', v)}
+                    onPriceChange={handlePriceInput}
                     onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
                     onMinQuantityChange={v => updateField('minQuantity', v)}
                     onMaxQuantityChange={v => updateField('maxQuantity', v)}
@@ -733,8 +926,8 @@ export default function EditListingPage() {
               {/* AI 未配置引导 */}
               {aiNotConfigured && <AiSetupPrompt />}
 
-              {/* AI 从图片生成 */}
-              {aiImageUrls.length > 0 && !aiNotConfigured && (
+              {/* AI 从图片生成 — 仅当模型支持视觉时显示 */}
+              {aiImageUrls.length > 0 && !aiNotConfigured && aiSupportsVision && (
                 <AiImageGeneratePanel
                   imageUrls={aiImageUrls}
                   contractType={formData.contractType}
@@ -806,8 +999,9 @@ export default function EditListingPage() {
                 </div>
               )}
 
-              {/* 变体管理 - 仅物理商品 */}
-              {formData.contractType === 'PHYSICAL_GOOD' && (
+              {/* 变体管理 - 物理商品与数字商品（数字变体用于 variant 级交付配置） */}
+              {(formData.contractType === 'PHYSICAL_GOOD' ||
+                formData.contractType === 'DIGITAL_GOOD') && (
                 <Card
                   className="p-6"
                   ref={el => {
@@ -817,7 +1011,14 @@ export default function EditListingPage() {
                   <h2 className="text-lg font-semibold text-foreground mb-1">
                     {t('listing.variants.title')}
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">{t('listing.variantsDesc')}</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {formData.contractType === 'DIGITAL_GOOD'
+                      ? t('listing.digital.variantsDesc', {
+                          defaultValue:
+                            'Optional variants for different download bundles or license key pools. Set a SKU code on each variant to configure delivery separately.',
+                        })
+                      : t('listing.variantsDesc')}
+                  </p>
 
                   <VariantOptionEditor options={formData.options} onChange={updateVariantOptions} />
 
@@ -831,25 +1032,26 @@ export default function EditListingPage() {
                       className="mt-6"
                     />
                   )}
+
+                  {formData.contractType === 'PHYSICAL_GOOD' && (
+                    <InventoryPolicyField
+                      className="mt-6 pt-6 border-t border-border"
+                      value={formData.inventoryPolicy}
+                      onChange={val => updateField('inventoryPolicy', val)}
+                    />
+                  )}
                 </Card>
               )}
 
-              {/* 数字文件 - 仅数字商品 */}
+              {/* 数字商品 — 文件 / 链接 / License Key 池统一管理 */}
               {formData.contractType === 'DIGITAL_GOOD' && (
-                <Card
-                  className="p-6"
+                <div
                   ref={el => {
                     sectionRefs.current.files = el;
                   }}
                 >
-                  <h2 className="text-lg font-semibold text-foreground mb-4">
-                    {t('listing.tabs.files')}
-                  </h2>
-                  <DigitalFileSection
-                    files={formData.digitalFiles || []}
-                    onFilesChange={files => updateField('digitalFiles', files)}
-                  />
-                </Card>
+                  <DigitalListingAssetsPanel listingSlug={slug} skus={formData.skus} />
+                </div>
               )}
 
               {/* 其他设置 - 处理时间 */}
@@ -875,39 +1077,6 @@ export default function EditListingPage() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {t('listing.processingTimeHelper')}
                       </p>
-                    </div>
-                    {/* 库存策略 */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {t('listing.inventoryPolicy.label')}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('listing.inventoryPolicy.helper')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={formData.inventoryPolicy === 'continue'}
-                        onClick={() =>
-                          updateField(
-                            'inventoryPolicy',
-                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
-                          )
-                        }
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            formData.inventoryPolicy === 'continue'
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
                     </div>
                   </Card>
                 )}
@@ -950,6 +1119,18 @@ export default function EditListingPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BasePriceSyncDialog
+        open={!!pendingSync}
+        variantCount={pendingSync?.variantCount ?? 0}
+        newPrice={pendingSync?.newPrice ?? ''}
+        onApplyAll={applyToAllVariants}
+        onKeepVariants={applyBaseOnly}
+        onReviewVariants={reviewVariants}
+        onOpenChange={open => {
+          if (!open) setPendingSync(null);
+        }}
+      />
 
       <Footer />
     </div>

@@ -1,5 +1,6 @@
 import type { Image, Price } from './common';
 import type { ShippingProfile } from './shippingConfig';
+import type { ListingSupplySummaryItem } from './supplyAvailability';
 
 /**
  * 商品分类
@@ -21,6 +22,12 @@ export interface ProductListItem {
   title: string;
   thumbnail: Image;
   price: Price;
+  /** Fallback base price when variant prices override storefront display */
+  basePrice?: Price;
+  /** Highest explicit variant price when variants differ */
+  priceMax?: Price;
+  /** True when variant prices span a range */
+  priceHasRange?: boolean;
   averageRating?: number;
   ratingCount?: number;
   vendorPeerID: string;
@@ -43,6 +50,10 @@ export interface ProductListItem {
   status?: ListingStatus;
   /** 库存数量（列表 API 可能不返回，编辑页从 item.skus 汇总） */
   quantity?: number;
+  /** 卖家管理列表可用的供给/可售摘要；公开列表和旧节点可能不返回。 */
+  supplySummary?: ListingSupplySummaryItem;
+  /** Search/index tags when available (used for curated related-listing scope). */
+  tags?: string[];
 }
 
 /**
@@ -260,6 +271,7 @@ export interface ProductRating {
   deliverySpeed?: number;
   customerService?: number;
   review?: string;
+  imageHashes?: string[];
   anonymous?: boolean;
   buyerID?: {
     peerID: string;
@@ -287,6 +299,7 @@ export interface RatingDetail {
   timestamp: string;
   overall: number;
   review?: string;
+  imageHashes?: string[];
   anonymous?: boolean;
   buyerID?: {
     peerID: string;

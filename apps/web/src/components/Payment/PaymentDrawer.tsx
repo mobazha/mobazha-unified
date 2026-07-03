@@ -25,6 +25,8 @@ export interface PaymentDrawerProps {
   onSelectFiat?: (providerID: string) => void;
   availableFiatProviders?: string[];
   acceptedCurrencies?: string[];
+  showFiatMethods?: boolean;
+  paymentPolicyNoteKey?: string;
   selectedModerator?: Moderator;
   onSelectModerator?: (moderator: Moderator) => void;
   moderatorList?: Moderator[];
@@ -42,6 +44,8 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
   onSelectFiat,
   availableFiatProviders,
   acceptedCurrencies,
+  showFiatMethods = true,
+  paymentPolicyNoteKey,
   selectedModerator,
   onSelectModerator,
   moderatorList,
@@ -97,15 +101,25 @@ export const PaymentDrawer: React.FC<PaymentDrawerProps> = ({
 
         <div className={cn('mt-4 px-4', side === 'bottom' && 'overflow-y-auto')}>
           {type === 'payment' ? (
-            <PaymentCryptoSelector
-              selectedTokenId={selectedTokenId}
-              onSelect={handleTokenSelect}
-              selectedFiatProvider={selectedFiatProvider}
-              onSelectFiat={handleFiatSelect}
-              availableFiatProviders={availableFiatProviders}
-              acceptedCurrencies={acceptedCurrencies}
-              showFiatMethods={true}
-            />
+            <>
+              {paymentPolicyNoteKey ? (
+                <p
+                  className="mb-3 text-xs text-muted-foreground"
+                  data-testid="checkout-payment-policy-note"
+                >
+                  {t(paymentPolicyNoteKey)}
+                </p>
+              ) : null}
+              <PaymentCryptoSelector
+                selectedTokenId={selectedTokenId}
+                onSelect={handleTokenSelect}
+                selectedFiatProvider={selectedFiatProvider}
+                onSelectFiat={handleFiatSelect}
+                availableFiatProviders={availableFiatProviders}
+                acceptedCurrencies={acceptedCurrencies}
+                showFiatMethods={showFiatMethods}
+              />
+            </>
           ) : (
             <ModeratorSelector
               selectedModerator={selectedModerator}

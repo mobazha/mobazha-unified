@@ -17,6 +17,7 @@ export interface CartItemRowProps {
   href: string;
   options?: CartItemOption[];
   vendorName?: string;
+  contractType?: string;
   unitPrice: number;
   currency: string;
   quantity: number;
@@ -31,6 +32,7 @@ export function CartItemRow({
   href,
   options,
   vendorName,
+  contractType,
   unitPrice,
   currency,
   quantity,
@@ -67,6 +69,18 @@ export function CartItemRow({
           </button>
         </div>
 
+        {contractType && (
+          <span className="inline-block mt-0.5 text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+            {contractType === 'DIGITAL_GOOD'
+              ? t('product.digitalGood')
+              : contractType === 'PHYSICAL_GOOD'
+                ? t('product.physicalGood')
+                : contractType === 'SERVICE'
+                  ? t('product.serviceType')
+                  : null}
+          </span>
+        )}
+
         {options && options.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-0.5">
             {options.map((opt, i) => (
@@ -81,9 +95,7 @@ export function CartItemRow({
         )}
 
         {vendorName && (
-          <p className="text-xs text-muted-foreground truncate mt-0.5">
-            {vendorName}
-          </p>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{vendorName}</p>
         )}
 
         <div className="flex items-center justify-between mt-2">
@@ -113,9 +125,7 @@ export function CartItemRow({
             </button>
           </div>
 
-          <span className="text-sm font-semibold">
-            {renderPairedPrice(lineTotal, currency)}
-          </span>
+          <span className="text-sm font-semibold">{renderPairedPrice(lineTotal, currency)}</span>
         </div>
       </div>
     </div>

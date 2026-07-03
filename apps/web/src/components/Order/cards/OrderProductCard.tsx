@@ -4,7 +4,7 @@ import React, { memo, useMemo } from 'react';
 import Link from 'next/link';
 import { ProductImageNative } from '@/components/ui/product-image';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
-import { useI18n, useCurrency, type DisplayOrder } from '@mobazha/core';
+import { useI18n, useCurrency, buildProductHref, type DisplayOrder } from '@mobazha/core';
 
 export interface OrderProductCardProps {
   displayOrder: DisplayOrder;
@@ -33,10 +33,7 @@ export const OrderProductCard = memo(function OrderProductCard({
   }, [order.items, formatCurrencyPrice]);
 
   const item = order.items[0];
-  const hasSlug = !!order.slug;
-  const productHref = order.vendor?.peerID
-    ? `/product/${order.slug}?peerID=${order.vendor.peerID}`
-    : `/product/${order.slug}`;
+  const productHref = order.slug ? buildProductHref(order.slug, order.vendor?.peerID) : null;
 
   const cardContent = (
     <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl border border-border/50 hover:bg-muted/50 hover:border-primary/30 hover:shadow-sm transition-all group">
@@ -73,7 +70,7 @@ export const OrderProductCard = memo(function OrderProductCard({
 
   return (
     <div className={className}>
-      {hasSlug ? (
+      {productHref ? (
         <Link href={productHref} className="block">
           {cardContent}
         </Link>

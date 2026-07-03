@@ -4,6 +4,11 @@
  * In Next.js, next/font/google optimizes fonts at build time.
  * In Vite dev mode, we load fonts via Google Fonts CDN and return
  * compatible objects with className, variable, and style properties.
+ *
+ * Sovereign builds: the __SOVEREIGN__ compile-time guard ensures Vite
+ * tree-shakes the CDN URL literal so it never appears in the bundle.
+ * isExternalResourcesDisabled() provides an additional runtime guard
+ * for non-sovereign standalone deployments that disable external resources.
  */
 
 interface FontConfig {
@@ -20,10 +25,13 @@ interface FontResult {
   style: { fontFamily: string };
 }
 
+import { isExternalResourcesDisabled } from '@mobazha/core/config/env';
+
 const loadedFamilies = new Set<string>();
 
 function loadGoogleFont(family: string, weights?: string[]) {
-  if (typeof document === 'undefined') return;
+  if (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) return;
+  if (typeof document === 'undefined' || isExternalResourcesDisabled()) return;
   if (loadedFamilies.has(family)) return;
   loadedFamilies.add(family);
 

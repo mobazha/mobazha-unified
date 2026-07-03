@@ -6,10 +6,10 @@
  * Image grid with configurable columns, aspect ratio, and optional lightbox.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import type { GallerySectionProps } from '@mobazha/core';
 import { getImageUrl, useI18n } from '@mobazha/core';
-import { X } from 'lucide-react';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
 
 const COLS_CLASS = {
   2: 'sm:grid-cols-2',
@@ -33,21 +33,6 @@ export function GallerySection({
 }: GallerySectionProps & { storeHint?: string }) {
   const { t } = useI18n();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-
-  useEffect(() => {
-    if (lightboxIndex == null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowLeft')
-        setLightboxIndex(prev => (prev != null && prev > 0 ? prev - 1 : prev));
-      if (e.key === 'ArrowRight')
-        setLightboxIndex(prev => (prev != null && prev < images.length - 1 ? prev + 1 : prev));
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [lightboxIndex, images.length, closeLightbox]);
 
   if (!images.length) return null;
 
@@ -100,56 +85,20 @@ export function GallerySection({
         })}
       </div>
 
-      {lightboxIndex != null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-          onClick={() => setLightboxIndex(null)}
-        >
-          <button
-            type="button"
-            className="absolute top-4 right-4 text-white/80 hover:text-white"
-            onClick={() => setLightboxIndex(null)}
-            aria-label={t('common.dismiss')}
-          >
-            <X className="w-8 h-8" />
-          </button>
-          <img
-            src={getImageUrl(images[lightboxIndex].src, storeHint)}
-            alt={images[lightboxIndex].alt || ''}
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
-            onClick={e => e.stopPropagation()}
-          />
-          {images.length > 1 && (
-            <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3">
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm text-white/80 hover:text-white bg-white/10 rounded-md"
-                onClick={e => {
-                  e.stopPropagation();
-                  setLightboxIndex(Math.max(0, lightboxIndex - 1));
-                }}
-                disabled={lightboxIndex === 0}
-              >
-                ← {t('admin.storeBranding.galleryPrev')}
-              </button>
-              <span className="text-sm text-white/60 flex items-center">
-                {lightboxIndex + 1} / {images.length}
-              </span>
-              <button
-                type="button"
-                className="px-3 py-1.5 text-sm text-white/80 hover:text-white bg-white/10 rounded-md"
-                onClick={e => {
-                  e.stopPropagation();
-                  setLightboxIndex(Math.min(images.length - 1, lightboxIndex + 1));
-                }}
-                disabled={lightboxIndex === images.length - 1}
-              >
-                {t('admin.storeBranding.galleryNext')} →
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <ImageLightbox
+        imageUrls={images.map(image => getImageUrl(image.src, storeHint) || '').filter(Boolean)}
+        open={lightboxIndex != null}
+        selectedIndex={lightboxIndex ?? 0}
+        onSelectIndex={setLightboxIndex}
+        onOpenChange={open => {
+          if (!open) setLightboxIndex(null);
+        }}
+        altPrefix={title || t('admin.storeBranding.galleryImage')}
+        ariaLabel="Gallery image preview"
+        loopNavigation={false}
+        testIdPrefix="gallery-lightbox"
+        className="z-[110]"
+      />
     </div>
   );
 }

@@ -17,10 +17,20 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@mobazha/core': path.resolve(__dirname, '../../packages/core'),
-      '@mobazha/ui/hooks': path.resolve(__dirname, '../../packages/ui/hooks'),
-    },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      {
+        find: /^@mobazha\/core\/(.+)$/,
+        replacement: `${path.resolve(__dirname, '../../packages/core')}/$1`,
+      },
+      {
+        find: '@mobazha/core',
+        replacement: path.resolve(__dirname, '../../packages/core/index.ts'),
+      },
+      {
+        find: '@mobazha/ui/hooks',
+        replacement: path.resolve(__dirname, '../../packages/ui/hooks'),
+      },
+    ],
   },
 });

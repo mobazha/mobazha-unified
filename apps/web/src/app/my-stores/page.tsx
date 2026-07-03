@@ -270,7 +270,7 @@ function ClaimHintCard({
   // Docs link — i18n so we can localize later. Validate scheme to keep the
   // href from smuggling in a javascript:/data: URL via translation override.
   const rawHref = t('stores.console.claim.learnMoreHref', {
-    defaultValue: 'https://docs.mobazha.com/self-host/bind-account',
+    defaultValue: 'https://docs.mobazha.org/self-host/bind-account',
   });
   const learnMoreHref = isSafeExternalUrl(rawHref) ? rawHref : null;
   const learnMoreLabel = t('stores.console.claim.learnMore', { defaultValue: 'Learn more' });

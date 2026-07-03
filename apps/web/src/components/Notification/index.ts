@@ -1,8 +1,9 @@
 export { NotificationBadge } from './NotificationBadge';
 export { NotificationDropdown } from './NotificationDropdown';
-export { 
+export {
   NotificationCard,
   OrderNotificationCard,
   FollowNotificationCard,
   DisputeNotificationCard,
+  AggregatedOrderNotificationCard,
 } from './NotificationCard';

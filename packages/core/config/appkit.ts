@@ -1,23 +1,32 @@
 /**
- * AppKit 配置
+ * Wallet and contract configuration
  *
- * 钱包连接配置，支持多链
- * 使用 Reown AppKit 1.8.15
- *
- * IMPORTANT: This file must NOT import from @reown/appkit or viem.
- * Those packages contain browser-only code that breaks SSR when resolved
- * by the Next.js server bundler. AppKit network objects are resolved in
- * AppKitProvider.tsx (which has 'use client').
+ * Browser wallet connection uses the provider standards implemented in
+ * providers/AppKitProvider.tsx. The compatibility name is retained while the
+ * public API migrates to provider-neutral terminology.
  */
 
 import { getExplorerResourceUrl } from '../services/payment/explorers';
 import { getEnvConfig } from './env';
-
-// ============= Project ID =============
-// 从 Reown Dashboard (https://dashboard.reown.com) 获取
-export const APPKIT_PROJECT_ID = 'aee7e021e1d2b5d8e9ec92a4c7e78464';
+/** @deprecated Browser-injected providers do not require a project ID. */
+export const APPKIT_PROJECT_ID = '';
 
 // ============= Metadata =============
+
+const APPKIT_METADATA_FALLBACK_URL = 'https://mobazha.org';
+
+function resolveAppKitMetadataUrl(): string {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!siteUrl) {
+    return APPKIT_METADATA_FALLBACK_URL;
+  }
+  try {
+    new URL(siteUrl);
+    return siteUrl;
+  } catch {
+    return APPKIT_METADATA_FALLBACK_URL;
+  }
+}
 
 /**
  * 应用元数据
@@ -25,7 +34,7 @@ export const APPKIT_PROJECT_ID = 'aee7e021e1d2b5d8e9ec92a4c7e78464';
 export const APPKIT_METADATA = {
   name: 'Mobazha',
   description: 'Mobazha - Where digital assets trade privately in communities',
-  url: 'https://mobazha.org',
+  url: resolveAppKitMetadataUrl(),
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
 

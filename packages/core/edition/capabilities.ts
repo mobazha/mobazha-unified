@@ -4,11 +4,7 @@
  */
 
 import { TOKENS, getTokenById, type TokenConfig } from '../data/tokens';
-import {
-  COMMUNITY_PAYMENT_CHAIN_SET,
-  COMMUNITY_PAYMENT_CHAINS,
-  COMMUNITY_EDITION_MANIFEST,
-} from './manifest';
+import { COMMUNITY_PAYMENT_CHAIN_SET, COMMUNITY_PAYMENT_CHAINS } from './manifest';
 
 export class EditionCapabilityError extends Error {
   constructor(message: string) {
@@ -17,7 +13,7 @@ export class EditionCapabilityError extends Error {
   }
 }
 
-/** Normalize chain identifiers to uppercase chain codes (BTC, BCH, LTC, ZEC). */
+/** Normalize chain identifiers to uppercase chain codes (BTC, BCH, LTC). */
 export function normalizePaymentChain(chain: string): string {
   return (chain || '').trim().toUpperCase();
 }
@@ -46,10 +42,6 @@ export function allowsPaymentCoin(coin: string): boolean {
 
 export function supportsFiatPayments(): boolean {
   return false;
-}
-
-export function zcashTransparentOnly(): boolean {
-  return COMMUNITY_EDITION_MANIFEST.zcash.transparentOnly;
 }
 
 /**
@@ -97,7 +89,9 @@ export function getEditionSelectableTokens(): TokenConfig[] {
 }
 
 export function filterSelectableTokens(tokens: readonly TokenConfig[]): TokenConfig[] {
-  return tokens.filter(token => token.isNative && allowsPaymentChain(token.chain));
+  return tokens.filter(
+    token => token.isNative && !token.disabled && allowsPaymentChain(token.chain)
+  );
 }
 
 export interface PaymentSelectorOptions {

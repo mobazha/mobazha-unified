@@ -20,6 +20,8 @@ export interface FiatPaymentSectionProps {
   cancelUrl?: string;
   onPaymentSuccess: (result: FiatPaymentSuccessResult) => void;
   onPaymentError?: (message: string) => void;
+  /** When false, defers provider session creation until seller receipt is ready. */
+  canCreateSession?: boolean;
   disabled?: boolean;
   className?: string;
 }
@@ -35,6 +37,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   cancelUrl,
   onPaymentSuccess,
   onPaymentError,
+  canCreateSession = true,
   disabled = false,
   className,
 }) => {
@@ -46,7 +49,9 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (createdRef.current || !orderID || !providerID || !vendorPeerID) return;
+    if (createdRef.current || !canCreateSession || !orderID || !providerID || !vendorPeerID) {
+      return;
+    }
     createdRef.current = true;
     createSession(vendorPeerID, providerID as FiatProviderID, {
       providerID,
@@ -67,6 +72,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     returnUrl,
     cancelUrl,
     createSession,
+    canCreateSession,
     retryKey,
   ]);
 

@@ -6,6 +6,7 @@
 
 // 配置相关
 export * from './useConfig';
+export * from './useRuntimeConfig';
 
 // 商品相关
 export * from './useProducts';
@@ -14,6 +15,11 @@ export * from './useListingForm';
 // 订单相关
 export * from './useOrders';
 export * from './useOrderDetail';
+export * from './usePaymentReadinessPoll';
+export * from './useGuestDigitalDelivery';
+export * from './useGuestOrderKind';
+export * from './useGuestSupplyQuote';
+export * from './useCheckoutSupplyQuote';
 
 // 用户资料相关
 export * from './useProfile';
@@ -26,6 +32,7 @@ export * from './useAuthenticatedImage';
 
 // 国际化相关
 export * from './useI18n';
+export * from './useExchangeUsdtGuideDismiss';
 
 // 监控相关
 export * from './useMonitoring';
@@ -68,12 +75,20 @@ export * from './useCurrencySelection';
 
 // 认证仲裁员相关
 export * from './useVerifiedModerators';
+export * from './useStoreModerators';
+export * from './useModeratorDirectory';
+export * from './useModeratorPeerLookup';
+export * from './useModeratorDetail';
 
 // 访问控制相关
 export * from './useAccessControl';
 export * from './useUserGroups';
 export * from './useProductGroups';
 export * from './useGroupContext';
+export * from './useCommunityMarketplaces';
+export * from './usePublicMarketplaces';
+export * from './useCommunityMarketplaceEnrichment';
+export * from './useNativeMarketplaceSell';
 
 // RWA 资产相关
 export * from './useRwaAssets';
@@ -85,6 +100,8 @@ export * from './useOrderAction';
 export * from './useShippingAddresses';
 export type { DisplayAddress, DisplayAddressUI } from './useShippingAddresses';
 export { toDisplayAddressUI } from './useShippingAddresses';
+
+export * from './useRefundReceivingAddresses';
 
 // 配送档案管理相关（Shopify 模式）
 export * from './useShippingProfiles';
@@ -131,8 +148,16 @@ export * from './useStandaloneStoreInfo';
 // Storefront Mode (SSR-safe branded-subdomain detection)
 export * from './useStorefrontMode';
 
+// Native vertical sub-market (runtime host context)
+export * from './useMarketplaceContext';
+export * from './useNativeMarketplaces';
+export * from './useNativeMarketplaceAttribution';
+
 // Feature Flags (Phase MS — server-driven toggles + kill switches)
 export * from './useFeatureFlags';
+export * from './usePlatformFeatureFlagsHydration';
+export * from './useCollectibles';
+export * from './useCollectibleMarketplaceAttribution';
 
 // React Query key factory + utils (M4-3)
 export { queryKeys } from './queryKeys';
@@ -140,3 +165,6 @@ export { formatQueryError } from './queryUtils';
 
 // 统一 Feature Flag hook
 export * from './useFeature';
+
+// Product import workbench (AI smart import)
+export * from './useProductImportWorkbench';

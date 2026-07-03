@@ -1,20 +1,24 @@
 /**
  * Store Fonts — PG-201
  *
- * Inter is the default UI font and is preloaded at build time via next/font/google.
+ * Inter is the default UI font and is bundled from the repository via next/font/local.
  * Other store fonts are loaded on demand when a store theme requires them,
  * using Google Fonts CSS links injected at runtime. This avoids downloading
  * all 8 font families on initial page load.
  */
 
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import type { FontFamily } from '@mobazha/core';
+import { isExternalResourcesDisabled } from '@mobazha/core/config/env';
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: '../../public/fonts/inter-latin-wght-normal.woff2',
   variable: '--font-inter',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   preload: false,
+  fallback: ['system-ui', 'sans-serif'],
 });
 
 export const defaultFont = inter;
@@ -49,6 +53,8 @@ const loadedFonts = new Set<string>();
  * Idempotent — repeated calls for the same font are no-ops.
  */
 export function loadStoreFont(family: FontFamily): void {
+  if (typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) return;
+  if (isExternalResourcesDisabled()) return;
   if (family === 'inter' || loadedFonts.has(family)) return;
   const spec = GOOGLE_FONTS_URL_MAP[family];
   if (!spec) return;

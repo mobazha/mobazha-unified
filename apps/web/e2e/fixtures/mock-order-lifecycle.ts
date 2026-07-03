@@ -150,31 +150,35 @@ export const LIFECYCLE_ORDERS = {
     HOUR_AGO
   ),
 
-  AWAITING_FULFILLMENT: makeBaseOrder(
+  AWAITING_SHIPMENT: makeBaseOrder(
     'QmAwait001',
     'leather-backpack',
     'Handcrafted Leather Backpack',
     17500,
     119,
-    'AWAITING_FULFILLMENT',
+    'AWAITING_SHIPMENT',
     DAY_AGO,
     { orderConfirmation: { timestamp: HOUR_AGO } }
   ),
 
-  FULFILLED: makeBaseOrder(
+  SHIPPED: makeBaseOrder(
     'QmFulfill001',
     'organic-coffee',
     'Organic Coffee Beans — Ethiopia',
     2200,
     63,
-    'FULFILLED',
+    'SHIPPED',
     THREE_DAYS_AGO,
     {
       orderConfirmation: { timestamp: THREE_DAYS_AGO },
-      orderFulfillments: [
+      orderShipments: [
         {
           timestamp: DAY_AGO,
-          physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX9876543210' }],
+          shipments: [
+            {
+              physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX9876543210' },
+            },
+          ],
         },
       ],
     }

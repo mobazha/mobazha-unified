@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import React from 'react';
 import { AuthGuard } from '@/components';
+import { RuntimeCapabilityBoundary } from '@/components/RuntimeCapabilityBoundary';
 
 export const metadata: Metadata = {
   title: 'Checkout — Mobazha',
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
-  return <AuthGuard>{children}</AuthGuard>;
+  return (
+    <RuntimeCapabilityBoundary capability="commerce.checkout">
+      <AuthGuard>{children}</AuthGuard>
+    </RuntimeCapabilityBoundary>
+  );
 }

@@ -7,8 +7,10 @@ import {
   getDisputeTimeoutDetails,
   getGatewayUrl,
   NODE_API,
+  isDisputeRulingAvailable,
   type DisplayOrder,
 } from '@mobazha/core';
+// onResolve prop is kept for backward compat but no longer rendered (moved to DisputeResolutionBar)
 
 export interface OrderDisputeBannerProps {
   displayOrder: DisplayOrder;
@@ -20,7 +22,7 @@ export interface OrderDisputeBannerProps {
 export const OrderDisputeBanner = memo(function OrderDisputeBanner({
   displayOrder: order,
   onOpenDispute,
-  onResolve,
+  onResolve: _onResolve,
   className,
 }: OrderDisputeBannerProps) {
   const { t } = useI18n();
@@ -30,12 +32,13 @@ export const OrderDisputeBanner = memo(function OrderDisputeBanner({
     ['paid', 'processing', 'shipped', 'delivered'].includes(order.status) &&
     !order.dispute;
 
-  const canResolveDispute = order.userRole === 'moderator' && order.status === 'disputed';
+  // Moderator resolution is now handled by DisputeResolutionBar
+  const isModeratorView = order.userRole === 'moderator';
 
   return (
     <div className={className}>
-      {/* Active dispute banner */}
-      {order.dispute && (
+      {/* Open dispute only — resolved disputes use DisputeHistoryCard / DisputeSummaryCard */}
+      {order.dispute && !isModeratorView && !isDisputeRulingAvailable(order.dispute) && (
         <div className="p-3 sm:p-4 bg-error/8 border border-error/20 rounded-lg mb-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
@@ -68,29 +71,6 @@ export const OrderDisputeBanner = memo(function OrderDisputeBanner({
                 </div>
               )}
             </div>
-            {canResolveDispute && onResolve && (
-              <div className="flex gap-2 flex-shrink-0">
-                <Button size="sm" onClick={() => onResolve('buyer')} className="text-xs">
-                  {t('order.favorBuyer')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onResolve('seller')}
-                  className="text-xs"
-                >
-                  {t('order.favorSeller')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onResolve('split')}
-                  className="text-xs"
-                >
-                  {t('order.splitFunds')}
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       )}

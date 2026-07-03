@@ -32,6 +32,14 @@ import { getStoredToken } from '../services/auth/token';
 
 let inflightFetch: Promise<FeatureFlags | null> | null = null;
 
+/** Load platform flags when a SaaS JWT session is present (idempotent). */
+export async function ensureFeatureFlagsLoaded(): Promise<FeatureFlags | null> {
+  if (getCachedFeatureFlags() !== null) {
+    return getCachedFeatureFlags();
+  }
+  return fetchFlags();
+}
+
 async function fetchFlags(): Promise<FeatureFlags | null> {
   if (inflightFetch) return inflightFetch;
 
@@ -61,10 +69,10 @@ async function fetchFlags(): Promise<FeatureFlags | null> {
   return inflightFetch;
 }
 
-/** Drop the cached snapshot (e.g. after admin toggle or user re-login). */
+/** Drop the cached snapshot and restore runtime-config baseline (e.g. logout). */
 export function invalidateFeatureFlags(): void {
-  setCachedFeatureFlags(null);
   inflightFetch = null;
+  setCachedFeatureFlags(null);
 }
 
 export interface UseFeatureFlagsReturn {

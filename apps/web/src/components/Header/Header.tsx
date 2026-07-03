@@ -33,6 +33,9 @@ import {
   isStandalone,
   isStandaloneBuyerAuth,
   useUserContext,
+  useMarketplaceContext,
+  useRuntimeCapability,
+  useRuntimePaymentFlow,
 } from '@mobazha/core';
 import {
   Search,
@@ -45,10 +48,12 @@ import {
   LayoutDashboard,
   ClipboardList,
   Store,
+  Building2,
+  Mail,
 } from 'lucide-react';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { NotificationDropdown } from '../Notification';
-import { WalletConnectButton } from '../Wallet';
+import { WalletButton } from '../Wallet';
 import { CartDrawer } from '../CartDrawer';
 
 export const Header: React.FC = () => {
@@ -57,6 +62,9 @@ export const Header: React.FC = () => {
   const { t } = useI18n();
   const { isAuthenticated, profile, isLoading, logout } = useUserStore();
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
+  const isModerator = profile?.moderator === true;
+  const hideModeration = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
+  const isSovereign = hideModeration;
   const { isEmbeddedApp, shouldUseMobileView } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const [peerIdCopied, setPeerIdCopied] = useState(false);
@@ -76,10 +84,25 @@ export const Header: React.FC = () => {
   const cartOpen = useCartDrawerStore(state => state.isOpen);
   const setCartOpen = useCartDrawerStore(state => state.setOpen);
   const cartItemCount = useCartStore(state => state.getItemCount());
+  const hasExternalWalletPayments = useRuntimePaymentFlow('external-wallet');
+  const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
+  const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
 
   const standaloneMode = useStorefrontMode();
+  const showMaasUserMenu =
+    isAuthenticated &&
+    isHosted() &&
+    !standaloneMode &&
+    !isSovereign &&
+    (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const storefrontProfile = useStorefrontProfile();
+  const {
+    isSubMarket,
+    config: marketplaceConfig,
+    loading: marketplaceLoading,
+  } = useMarketplaceContext();
   const brandProfile = standaloneMode ? storefrontProfile : profile;
+  const subMarketBrand = isSubMarket ? marketplaceConfig?.brand : null;
   const isSearchPage = pathname === '/search';
 
   const handleSearch = (e: React.FormEvent) => {
@@ -111,6 +134,26 @@ export const Header: React.FC = () => {
                   size="sm"
                 />
                 <span className="font-bold text-xl text-foreground">{brandProfile.name}</span>
+              </>
+            ) : isSubMarket && marketplaceLoading ? (
+              <div
+                className="flex items-center gap-2"
+                aria-busy="true"
+                aria-label={t('marketplaceStarter.loadingTitle', {
+                  defaultValue: 'Loading marketplace',
+                })}
+              >
+                <div className="h-9 w-9 rounded-md bg-muted animate-pulse" />
+                <div className="h-6 w-28 rounded-md bg-muted animate-pulse" />
+              </div>
+            ) : isSubMarket && subMarketBrand?.name ? (
+              <>
+                {subMarketBrand.logo ? (
+                  <Avatar src={subMarketBrand.logo} name={subMarketBrand.name} size="sm" />
+                ) : (
+                  <Store className="h-8 w-8 text-primary" aria-hidden />
+                )}
+                <span className="font-bold text-xl text-foreground">{subMarketBrand.name}</span>
               </>
             ) : (
               <>
@@ -145,8 +188,8 @@ export const Header: React.FC = () => {
 
           {/* Navigation - Desktop */}
           <HStack gap="sm" className="flex items-center">
-            {/* 市场入口 (hidden in standalone mode) */}
-            {!standaloneMode && (
+            {/* 市场入口 (hub only — hidden in storefront + sub-market) */}
+            {!standaloneMode && !isSubMarket && (
               <Link href="/marketplace" data-testid="header-marketplace-link">
                 <Button
                   variant="ghost"
@@ -158,18 +201,21 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 匿名用户：开店入口 (SaaS only) */}
-            {!isAuthenticated && !isLoading && !standaloneMode && (
-              <Link href="/login?redirect=%2Fadmin" data-testid="header-start-selling-link">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  {t('footer.startSelling')}
-                </Button>
-              </Link>
-            )}
+            {/* 匿名用户：开店入口 (SaaS only, hidden in Sovereign) */}
+            {!isAuthenticated &&
+              !isLoading &&
+              !standaloneMode &&
+              !(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+                <Link href="/login?redirect=%2Fadmin" data-testid="header-start-selling-link">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {t('footer.startSelling')}
+                  </Button>
+                </Link>
+              )}
 
             {/* 卖家：店铺管理入口 */}
             {isAuthenticated && hasStore && !isPureBuyer && (
@@ -199,26 +245,28 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
-            {/* 已登录用户：通知、消息、钱包 */}
+            {/* 已登录用户：通知、消息 (Sovereign 隐藏 chat) */}
             {isAuthenticated && (
               <>
                 <NotificationDropdown />
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-primary/10 hover:text-primary transition-colors relative"
-                  onClick={shouldUseMobileView ? () => router.push('/chat') : openChatDrawer}
-                  aria-label={t('nav.openMessages')}
-                  data-testid="header-messages-btn"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  {totalUnread > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-error-foreground text-xs font-bold rounded-full">
-                      {totalUnread > 99 ? '99+' : totalUnread}
-                    </span>
-                  )}
-                </Button>
+                {!(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-primary/10 hover:text-primary transition-colors relative"
+                    onClick={shouldUseMobileView ? () => router.push('/chat') : openChatDrawer}
+                    aria-label={t('nav.openMessages')}
+                    data-testid="header-messages-btn"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    {totalUnread > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-error text-error-foreground text-xs font-bold rounded-full">
+                        {totalUnread > 99 ? '99+' : totalUnread}
+                      </span>
+                    )}
+                  </Button>
+                )}
               </>
             )}
 
@@ -250,8 +298,10 @@ export const Header: React.FC = () => {
             </button>
             <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
 
-            {/* 已登录：钱包连接 */}
-            {isAuthenticated && <WalletConnectButton />}
+            {/* Connected backends may expose flows that require an injected wallet. */}
+            {isAuthenticated &&
+              hasExternalWalletPayments &&
+              !(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && <WalletButton />}
 
             {/* 语言 & 主题切换 */}
             <LanguageSwitcher compact />
@@ -354,7 +404,7 @@ export const Header: React.FC = () => {
                   {!isPureSeller && (
                     <>
                       <DropdownMenuItem
-                        onClick={() => router.push('/orders?tab=purchases')}
+                        onClick={() => router.push('/orders')}
                         className="cursor-pointer"
                         data-testid="header-menu-orders"
                       >
@@ -364,6 +414,47 @@ export const Header: React.FC = () => {
                       <DropdownMenuSeparator />
                     </>
                   )}
+
+                  {/* 注册仲裁人：争议案件收件箱 */}
+                  {isModerator && !hideModeration && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => router.push('/cases')}
+                        className="cursor-pointer"
+                        data-testid="header-menu-cases"
+                      >
+                        <ClipboardList className="mr-2 h-4 w-4" />
+                        {t('userMenu.myCases')}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+
+                  {showMaasUserMenu ? (
+                    <>
+                      {hasMarketplaceOperator ? (
+                        <DropdownMenuItem
+                          onClick={() => router.push('/operator/marketplaces')}
+                          className="cursor-pointer"
+                          data-testid="header-menu-operator-marketplaces"
+                        >
+                          <Building2 className="mr-2 h-4 w-4" />
+                          {t('userMenu.operatorMarketplaces')}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {hasMarketplaceSellerReview ? (
+                        <DropdownMenuItem
+                          onClick={() => router.push('/settings/marketplace-memberships')}
+                          className="cursor-pointer"
+                          data-testid="header-menu-marketplace-invitations"
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          {t('userMenu.marketplaceInvitations')}
+                        </DropdownMenuItem>
+                      ) : null}
+                      <DropdownMenuSeparator />
+                    </>
+                  ) : null}
 
                   <DropdownMenuItem
                     onClick={() => router.push('/settings/general')}
@@ -385,34 +476,36 @@ export const Header: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-2"
-                data-testid="header-login-btn"
-                onClick={async () => {
-                  if (isEmbeddedApp) {
-                    router.push('/');
-                  } else if (isHosted()) {
-                    startCasdoorLogin();
-                  } else if (isStandalone()) {
-                    try {
-                      const { loginStandalone } = useUserStore.getState();
-                      const success = await loginStandalone();
-                      if (success && !isStandaloneBuyerAuth()) {
-                        router.push('/admin');
+              !(typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__) && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-2"
+                  data-testid="header-login-btn"
+                  onClick={async () => {
+                    if (isEmbeddedApp) {
+                      router.push('/');
+                    } else if (isHosted()) {
+                      startCasdoorLogin();
+                    } else if (isStandalone()) {
+                      try {
+                        const { loginStandalone } = useUserStore.getState();
+                        const success = await loginStandalone();
+                        if (success && !isStandaloneBuyerAuth()) {
+                          router.push('/admin');
+                        }
+                      } catch {
+                        router.push('/login');
                       }
-                    } catch {
+                    } else {
                       router.push('/login');
                     }
-                  } else {
-                    router.push('/login');
-                  }
-                }}
-              >
-                <LogIn className="h-4 w-4" />
-                {t('nav.login')}
-              </Button>
+                  }}
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t('nav.login')}
+                </Button>
+              )
             )}
           </HStack>
         </div>

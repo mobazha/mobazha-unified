@@ -1,5 +1,9 @@
 import type { MetadataRoute } from 'next';
 
+import '@/lib/initPublicEnv';
+import { isHostedMode } from '@mobazha/core/config/env';
+import { buildProductHref, parseCompositeListingSlug } from '@mobazha/core/utils/productUrl';
+import { fetchSearchListingCatalog, type SitemapListingItem } from '@/lib/ssrSearchCatalog';
 import { getSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
 
@@ -10,17 +14,43 @@ interface ListingIndexItem {
   hash?: string;
 }
 
+function unwrapListingIndex(json: unknown): ListingIndexItem[] {
+  if (Array.isArray(json)) return json;
+  if (json && typeof json === 'object' && 'data' in json) {
+    const data = (json as { data: unknown }).data;
+    if (Array.isArray(data)) return data;
+  }
+  return [];
+}
+
 async function fetchListingIndex(): Promise<ListingIndexItem[]> {
   try {
     const res = await fetch(`${API_BASE}/v1/listings/index`, {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    return unwrapListingIndex(await res.json());
   } catch {
     return [];
   }
+}
+
+function mapIndexListings(listings: ListingIndexItem[]): SitemapListingItem[] {
+  return listings.flatMap(listing => {
+    const { slug, peerID } = parseCompositeListingSlug(listing.slug);
+    return slug ? [{ slug, peerID }] : [];
+  });
+}
+
+async function fetchSitemapListings(): Promise<SitemapListingItem[]> {
+  if (isHostedMode()) {
+    const searchListings = await fetchSearchListingCatalog();
+    if (searchListings.length > 0) {
+      return searchListings;
+    }
+  }
+
+  return mapIndexListings(await fetchListingIndex());
 }
 
 /**
@@ -43,7 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // we anchor sitemap URLs at getSiteUrl() to reflect whichever domain served
   // this request rather than a build-time constant.
   const siteUrl = await getSiteUrl();
-  const listings = await fetchListingIndex();
+  const listings = await fetchSitemapListings();
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -51,18 +81,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/marketplace`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
   ];
 
-  const productRoutes: MetadataRoute.Sitemap = listings.map(listing => ({
-    url: `${siteUrl}/product/${listing.slug}`,
-    lastModified: now,
-    changeFrequency: 'weekly' as const,
-    priority: 0.9,
-  }));
+  const productRoutes = listings.reduce<MetadataRoute.Sitemap>((routes, listing) => {
+    if (!listing.slug) return routes;
+
+    routes.push({
+      url: buildProductHref(listing.slug, listing.peerID, { baseUrl: siteUrl }),
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    });
+    return routes;
+  }, []);
 
   const peerIds = new Set<string>();
   for (const listing of listings) {
-    const parts = listing.slug.split('/');
-    if (parts.length >= 2 && parts[0].startsWith('Qm')) {
-      peerIds.add(parts[0]);
+    if (listing.peerID) {
+      peerIds.add(listing.peerID);
     }
   }
   const storeRoutes: MetadataRoute.Sitemap = Array.from(peerIds).map(peerId => ({

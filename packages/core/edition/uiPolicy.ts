@@ -1,7 +1,5 @@
 /**
  * Community Edition UI policy — marketing surfaces, configuration allowlists, and copy keys.
- * Keeps production UI aligned with packages/core/edition/manifest without deleting
- * dormant compatibility code paths elsewhere in the monorepo.
  */
 
 import { CHAINS, TOKENS, mustAssetIdFromTokenId } from '../data/tokens';
@@ -13,7 +11,7 @@ export interface AdvertisedPaymentToken {
   name: string;
 }
 
-/** i18n keys for Community Edition seller/onboarding copy (no Stripe/PayPal/EVM wording). */
+/** i18n keys for Community Edition seller/onboarding copy. */
 export const EDITION_I18N_KEYS = {
   setupPaymentsDesc: 'admin.onboarding.setupPaymentsDescCommunity',
   setupPaymentChecklistDesc: 'admin.checklist.setupPaymentDescCommunity',
@@ -25,7 +23,7 @@ export const EDITION_I18N_KEYS = {
 
 /** Plain-text default for store FAQ templates (English seed content). */
 export function getEditionDefaultPaymentMethodsAnswer(): string {
-  return 'Bitcoin, Bitcoin Cash, Litecoin, and transparent Zcash.';
+  return 'Bitcoin, Bitcoin Cash, and Litecoin.';
 }
 
 /** Tokens/chains advertised on marketing surfaces (footer, homepage stats). */

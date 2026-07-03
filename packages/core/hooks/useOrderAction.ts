@@ -1,98 +1,33 @@
 'use client';
 
-/**
- * useOrderAction Hook
- * Community Edition: UTXO order actions only (BTC/BCH/LTC/ZEC).
- */
-
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useI18n } from './useI18n';
-import { isUTXOChain } from '../data/tokens';
-import { allowsPaymentCoin } from '../edition/capabilities';
-import type { OrderInstructionsResponse } from '../services/api/orders';
+import type { SettlementActionResponse } from '../services/api/orders';
 
-/**
- * 订单操作选项
- */
 export interface OrderActionOptions {
-  /**
-   * 获取操作指令的函数
-   * 用于 EVM/Solana 链，检查是否需要链上交易
-   *
-   * @param initiatorAddress 发起者钱包地址
-   * @returns 指令响应
-   */
-  getInstructions?: (initiatorAddress: string) => Promise<OrderInstructionsResponse>;
-
-  /**
-   * 执行操作的函数
-   * 调用后端 API 完成订单状态变更
-   *
-   * @param txID 链上交易 ID（如果执行了链上交易）
-   * @returns 操作结果
-   */
   executeAction: (txID?: string) => Promise<{ success: boolean; error?: string }>;
-
+  executeBackendSettlementAction?: () => Promise<SettlementActionResponse>;
   /**
-   * 订单的支付币种
-   * 用于判断链类型（UTXO vs EVM/Solana）
+   * Run the backend settlement action surface before the order state action.
+   * The backend decides whether that surface performs an on-chain settlement
+   * or returns a completed no-op for methods that settle elsewhere.
    */
-  paymentCoin?: string;
-
-  /**
-   * 操作成功回调
-   */
+  attemptBackendSettlementAction?: boolean;
   onSuccess?: () => void;
-
-  /**
-   * 操作失败回调
-   */
   onError?: (error: Error) => void;
-
-  /**
-   * 是否需要钱包连接（用于 EVM/Solana 链）
-   * 默认为 true
-   */
-  requireWallet?: boolean;
 }
 
-/**
- * useOrderAction 返回值
- */
 export interface UseOrderActionReturn {
-  /**
-   * 执行订单操作
-   */
   execute: (options: OrderActionOptions) => Promise<void>;
-
-  /**
-   * 是否正在执行
-   */
   isLoading: boolean;
-
-  /**
-   * 是否正在等待钱包连接
-   * 可用于显示"正在等待钱包连接..."的提示
-   */
+  /** Always false: order actions are backend-settled now. */
   isWaitingForWallet: boolean;
-
-  /**
-   * 最近的错误
-   */
   error: Error | null;
-
-  /**
-   * 清除错误
-   */
   clearError: () => void;
 }
 
-/**
- * Community Edition: UTXO order actions only. Non-UTXO frontend executors are excluded.
- */
 export function useOrderAction(): UseOrderActionReturn {
   const { t } = useI18n();
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -102,24 +37,33 @@ export function useOrderAction(): UseOrderActionReturn {
 
   const execute = useCallback(
     async (options: OrderActionOptions) => {
-      const { executeAction, paymentCoin, onSuccess, onError } = options;
+      const {
+        executeAction,
+        executeBackendSettlementAction,
+        attemptBackendSettlementAction,
+        onSuccess,
+        onError,
+      } = options;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        if (allowsPaymentCoin(paymentCoin ?? '') && isUTXOChain(paymentCoin)) {
-          const result = await executeAction();
-
-          if (!result.success) {
-            throw new Error(result.error || t('order.actions.operationFailed'));
+        let txID: string | undefined;
+        if (attemptBackendSettlementAction) {
+          if (!executeBackendSettlementAction) {
+            throw new Error(t('order.actions.operationFailed'));
           }
-
-          onSuccess?.();
-          return;
+          const settlement = await executeBackendSettlementAction();
+          txID = settlement.txHash || undefined;
         }
 
-        throw new Error(t('order.actions.operationFailed'));
+        const result = await executeAction(txID);
+        if (!result.success) {
+          throw new Error(result.error || t('order.actions.operationFailed'));
+        }
+
+        onSuccess?.();
       } catch (err) {
         const errorInstance = err instanceof Error ? err : new Error(String(err));
         console.error('[useOrderAction] Operation failed:', errorInstance);

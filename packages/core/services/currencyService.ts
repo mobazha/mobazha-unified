@@ -12,7 +12,13 @@ import {
   isCryptoCurrency,
   getBaseRateSymbol,
 } from '../data/currencies';
+import {
+  formatStandardCryptoAmount,
+  getPaymentCoinDisplayLabel,
+  isFiatPaymentCoin,
+} from '../data/tokens';
 import { getExchangeRates as fetchExchangeRatesApi } from './api/wallet';
+import { isSovereignMode } from '../config/env';
 
 // BigNumber 配置
 BigNumber.config({
@@ -65,6 +71,17 @@ export function getLastFetchTime(): number | null {
 export async function fetchExchangeRates(forceRefresh = false): Promise<ExchangeRates> {
   const now = Date.now();
 
+  // Sovereign mode is fully crypto-native and has no fiat conversion layer.
+  // Skip the external exchange
+  // rate fetch entirely to preserve the zero-outbound guarantee. Returning
+  // an empty rate map signals to callers that no fiat ≈ display should
+  // be rendered.
+  if (isSovereignMode()) {
+    cachedRates = {};
+    lastFetchTime = now;
+    return cachedRates;
+  }
+
   // 检查缓存
   if (!forceRefresh && lastFetchTime && now - lastFetchTime < CACHE_DURATION) {
     return cachedRates;
@@ -116,6 +133,8 @@ function addTokenRateMappings(rates: ExchangeRates): void {
   const mappings: Record<string, string> = {
     MATICUSDT: 'USDT',
     MATICUSDC: 'USDC',
+    ARBUSDT: 'USDT',
+    ARBUSDC: 'USDC',
     ETHUSDT: 'USDT',
     ETHUSDC: 'USDC',
   };
@@ -293,11 +312,8 @@ export function formatPrice(
       maximumFractionDigits: 2,
     }).format(numAmount);
   } else if (isCrypto) {
-    // 加密货币格式化
-    formattedAmount = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: minDecimals,
-      maximumFractionDigits: maxDecimals,
-    }).format(numAmount);
+    // 加密货币：有效数字精度，避免 0.00029838 BTC 被 Intl 四舍五入为 0
+    formattedAmount = formatStandardCryptoAmount(numAmount, currency);
   } else {
     // 法币格式化
     try {
@@ -323,18 +339,19 @@ export function formatPrice(
 
   // 添加符号或代码
   const symbol = getCurrencySymbol(currency);
+  const cryptoDisplayCode = getPaymentCoinDisplayLabel(currency) || currency;
 
   if (showSymbol && showCode) {
-    return `${formattedAmount} ${currency}`;
+    return `${formattedAmount} ${isCrypto ? cryptoDisplayCode : currency}`;
   } else if (showSymbol) {
-    // 加密货币符号放后面，法币符号放前面
+    // 加密货币用可读代码（ETH）而非符号（Ξ）；法币符号放前面
     if (isCrypto) {
-      return `${formattedAmount} ${symbol}`;
+      return `${formattedAmount} ${cryptoDisplayCode}`;
     } else {
       return `${symbol}${formattedAmount}`;
     }
   } else if (showCode) {
-    return `${formattedAmount} ${currency}`;
+    return `${formattedAmount} ${isCrypto ? cryptoDisplayCode : currency}`;
   }
 
   return formattedAmount;
@@ -514,6 +531,40 @@ export function formatLocalPrice(
 }
 
 /**
+ * Format a payment amount for UI display (crypto or fiat).
+ * Resolves display label from paymentCoin and/or currencyCode; returns null when
+ * amount or label is missing so callers can fall back to other formatters.
+ */
+export function formatPaymentAmount(
+  amount: string | number | undefined,
+  paymentCoin?: string,
+  currencyCode?: string
+): string | null {
+  if (amount === undefined || amount === null || amount === '') return null;
+
+  const fiatCurrency = resolveFiatPaymentCurrencyCode(paymentCoin);
+  const label =
+    fiatCurrency || (paymentCoin ? getPaymentCoinDisplayLabel(paymentCoin) : currencyCode || '');
+  if (!label) return null;
+
+  const numeric = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (!Number.isFinite(numeric)) return null;
+
+  const coinRef = isFiatPaymentCoin(paymentCoin) ? label : paymentCoin || label;
+  if (isCryptoCurrency(coinRef) || isCryptoCurrency(label)) {
+    return `${formatStandardCryptoAmount(numeric, coinRef)} ${label}`;
+  }
+
+  return formatPrice(numeric, label);
+}
+
+function resolveFiatPaymentCurrencyCode(paymentCoin?: string): string | undefined {
+  if (!paymentCoin || !isFiatPaymentCoin(paymentCoin)) return undefined;
+  const parts = paymentCoin.split(':');
+  return parts.length >= 3 && parts[2] ? parts[2].toUpperCase() : undefined;
+}
+
+/**
  * 导出服务对象
  */
 export const currencyService = {
@@ -526,6 +577,7 @@ export const currencyService = {
   fromMinimalUnit,
   toMinimalUnit,
   formatPrice,
+  formatPaymentAmount,
   convertAndFormatPrice,
   renderPairedPrice,
   formatLocalPrice,

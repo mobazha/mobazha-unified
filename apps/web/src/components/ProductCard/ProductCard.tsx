@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductImage } from '@/components/ui/product-image';
-import { useCurrencyFormat, useI18n } from '@mobazha/core';
+import { useCurrencyFormat, useI18n, identityNameProps } from '@mobazha/core';
 
 // HTML 实体解码
 function decodeHtmlEntities(text: string): string {
@@ -47,10 +47,14 @@ export interface ProductCardProps {
   divisibility?: number;
   /** 价格是否为最小单位 (如 cents, satoshi, wei)，默认为 true，因为 API 返回的都是最小单位 */
   priceInMinimalUnit?: boolean;
+  /** 变体价格有区间时显示 "From $X" */
+  priceFrom?: boolean;
   /** 原价（用于显示折扣） */
   originalPrice?: number | string;
   /** 卖家名称 */
   vendorName?: string;
+  /** 店铺归属文案（如 "from StoreName"），优先于 vendorName 展示 */
+  storeAttribution?: string;
   /** 卖家头像 */
   vendorAvatar?: string;
   /** 卖家 Peer ID (用于 block 功能) */
@@ -93,6 +97,8 @@ export interface ProductCardProps {
   onToggleWishlist?: (e: React.MouseEvent) => void;
   /** 预取回调（鼠标悬停/触摸时触发） */
   onPrefetch?: () => void;
+  /** 商品发布状态 (draft/published/private) */
+  status?: 'draft' | 'published' | 'private';
   /** 自定义类名 */
   className?: string;
 }
@@ -116,8 +122,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   currency,
   divisibility,
   priceInMinimalUnit = true,
+  priceFrom = false,
   originalPrice,
   vendorName,
+  storeAttribution,
   vendorAvatar,
   vendorPeerID,
   rating,
@@ -137,6 +145,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onClone,
   onDelete,
   onPrefetch,
+  status,
   isWishlist = false,
   onToggleWishlist,
   className,
@@ -185,7 +194,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       : null;
 
   const formatOptions = { isMinimalUnit: priceInMinimalUnit, divisibility };
-  const formattedPrice = currency ? formatLocalPrice(price, currency, formatOptions) : '—';
+  const formattedAmount = currency ? formatLocalPrice(price, currency, formatOptions) : '—';
+  const formattedPrice =
+    priceFrom && currency ? t('product.priceFrom', { price: formattedAmount }) : formattedAmount;
   const formattedOriginalPrice =
     originalPrice && currency ? formatLocalPrice(originalPrice, currency, formatOptions) : '';
 
@@ -235,6 +246,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         'overflow-hidden group cursor-pointer transition-all duration-200',
         'hover:shadow-lg hover:-translate-y-0.5',
         'active:scale-[0.98] active:opacity-90',
+        status === 'draft' && 'opacity-70',
         className
       )}
       onClick={onClick}
@@ -251,13 +263,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           src={imageUrl}
           alt={title}
           fill
+          fit="contain"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="transition-transform duration-300 group-hover:scale-105"
           iconSize="lg"
         />
 
+        {status === 'draft' && (
+          <span className="absolute top-2 left-2 z-10 bg-muted-foreground/80 text-white text-xs font-medium px-2 py-0.5 rounded">
+            {t('admin.statusDraft', { defaultValue: 'Draft' })}
+          </span>
+        )}
+
         {/* Verified Moderator 盾牌 - 左上角 */}
-        {hasVerifiedModerator && (
+        {hasVerifiedModerator && !status?.startsWith('draft') && (
           <div className="absolute top-2 left-2 z-10" title={t('listing.verifiedModerator')}>
             <div className="w-7 h-7 rounded-full bg-warning flex items-center justify-center shadow-md">
               <Shield className="w-4 h-4 text-white" fill="currentColor" />
@@ -468,27 +486,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* 卖家信息 & 配送标签 */}
-        {(vendorName || freeShipping) && (
+        {(vendorName || storeAttribution || freeShipping) && (
           <div
             className={cn(
               'flex items-center justify-between pt-1.5 border-t border-border',
               compact && 'pt-1'
             )}
           >
-            {vendorName && (
+            {(storeAttribution || vendorName) && (
               <div className="flex items-center gap-1.5 min-w-0">
                 {!compact && (
                   <Avatar
                     src={vendorAvatar}
-                    name={vendorName}
+                    name={vendorName || storeAttribution}
                     size="xs"
                     className="flex-shrink-0"
                   />
                 )}
                 <span
-                  className={cn('text-muted-foreground truncate text-xs', compact && 'text-xs')}
+                  {...identityNameProps(
+                    cn(
+                      'text-muted-foreground truncate text-xs',
+                      storeAttribution && 'text-foreground/80',
+                      compact && 'text-xs'
+                    )
+                  )}
                 >
-                  {vendorName}
+                  {storeAttribution || vendorName}
                 </span>
               </div>
             )}

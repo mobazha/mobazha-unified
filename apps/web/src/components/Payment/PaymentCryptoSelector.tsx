@@ -3,7 +3,14 @@
 import React, { useMemo, useCallback } from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useI18n, isFiatSelectionEnabled, resolvePaymentSelectorTokenIds } from '@mobazha/core';
+import {
+  getTokenIdFromPaymentCoin,
+  useI18n,
+  useFiatPaymentVisible,
+  filterVisiblePaymentTokens,
+  applyExchangeUsdtCheckoutTokenOrdering,
+  isExchangeUsdtPaymentGuideLocale,
+} from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
 import { TOKENS, CHAINS, FIAT_METHODS, groupTokensByCurrency, getChainById } from './config';
@@ -11,6 +18,8 @@ import type { CurrencyGroup } from './config';
 import { CryptoTokenCard } from './CryptoTokenCard';
 import { MultiChainTokenCard } from './MultiChainTokenCard';
 import { TokenIcon } from './TokenIcon';
+import { CryptoPaymentReadinessGuide } from './CryptoPaymentReadinessGuide';
+import { ExchangeUsdtPaymentTokenHint } from './ExchangeUsdtPaymentTokenHint';
 
 export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   selectedTokenId,
@@ -23,16 +32,17 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   className,
   isRwaTokenPurchase = false,
   rwaBlockchain,
-  showFiatMethods = false,
+  showFiatMethods = true,
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fiatVisible = useFiatPaymentVisible();
   const { isEmbedded } = useMiniAppPayment();
 
+  const effectiveShowFiat = showFiatMethods && fiatVisible;
+
   const hasFiat = useMemo(
-    () =>
-      isFiatSelectionEnabled(showFiatMethods) &&
-      Boolean(availableFiatProviders && availableFiatProviders.length > 0),
-    [showFiatMethods, availableFiatProviders]
+    () => effectiveShowFiat && availableFiatProviders && availableFiatProviders.length > 0,
+    [effectiveShowFiat, availableFiatProviders]
   );
 
   const activeFiatMethods = useMemo<FiatMethodConfig[]>(() => {
@@ -41,24 +51,40 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
   }, [hasFiat, availableFiatProviders]);
 
   const availableTokens = useMemo(() => {
-    const allowedIds = new Set(
-      resolvePaymentSelectorTokenIds({
-        isRwaTokenPurchase,
-        acceptedCurrencies,
-      })
-    );
-    if (allowedIds.size === 0) {
-      return [];
+    if (isRwaTokenPurchase && rwaBlockchain) {
+      return TOKENS.filter(
+        token => token.chain === rwaBlockchain && !token.isNative && !token.disabled
+      );
     }
-
     const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
-    return TOKENS.filter(
-      token =>
-        allowedIds.has(token.id) && !comingSoonChains.includes(token.chain) && !token.disabled
-    );
-  }, [isRwaTokenPurchase, acceptedCurrencies]);
+    let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain));
+    if (acceptedCurrencies) {
+      const accepted = new Set<string>();
+      for (const value of acceptedCurrencies) {
+        const normalized = value?.trim();
+        if (!normalized) continue;
+        accepted.add(normalized.toLowerCase());
+        const tokenID = getTokenIdFromPaymentCoin(normalized);
+        if (tokenID) {
+          accepted.add(tokenID.toLowerCase());
+        }
+      }
+      tokens = tokens.filter(token => {
+        const tokenID = token.id.trim().toLowerCase();
+        const canonical = token.assetId?.trim().toLowerCase();
+        return accepted.has(tokenID) || (canonical ? accepted.has(canonical) : false);
+      });
+    }
+    return filterVisiblePaymentTokens(tokens);
+  }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
 
-  const currencyGroups = useMemo(() => groupTokensByCurrency(availableTokens), [availableTokens]);
+  const currencyGroups = useMemo(() => {
+    const groups = groupTokensByCurrency(availableTokens);
+    if (!isExchangeUsdtPaymentGuideLocale(locale)) {
+      return groups;
+    }
+    return applyExchangeUsdtCheckoutTokenOrdering(groups) as CurrencyGroup[];
+  }, [availableTokens, locale]);
 
   const stablecoins = useMemo(
     () => currencyGroups.filter(g => g.category === 'stablecoin'),
@@ -229,6 +255,15 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
             </>
           )}
         </div>
+      )}
+
+      {availableTokens.length > 0 && isExchangeUsdtPaymentGuideLocale(locale) && (
+        <>
+          {selectedTokenId && !selectedFiatProvider && (
+            <ExchangeUsdtPaymentTokenHint tokenId={selectedTokenId} />
+          )}
+          <CryptoPaymentReadinessGuide />
+        </>
       )}
     </div>
   );

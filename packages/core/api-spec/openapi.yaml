@@ -15,7 +15,7 @@ info:
   version: '1.0.0'
   contact:
     name: Mobazha Team
-    url: https://mobazha.com
+    url: https://mobazha.org
   license:
     name: BSL-1.1
     url: https://mariadb.com/bsl11/
@@ -1857,13 +1857,19 @@ paths:
         '200':
           description: Order confirmed
 
-  /v1/orders/fulfill:
+  /v1/orders/{orderID}/ship:
     post:
       tags: [Node - Orders]
-      summary: Mark order as fulfilled
+      summary: Ship an order (add shipment tracking)
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Order fulfilled
+          description: Order shipped
 
   /v1/orders/complete:
     post:

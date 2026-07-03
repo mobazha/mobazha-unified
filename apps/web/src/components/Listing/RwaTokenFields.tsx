@@ -3,13 +3,7 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { Search, Plus, X, CheckCircle } from 'lucide-react';
 import type { BlockchainNetwork, RwaTokenInfo } from '@mobazha/core';
-import {
-  useI18n,
-  useCurrency,
-  mustAssetIdFromTokenId,
-  getEditionListingPaymentCoinOptions,
-  isCommunityEdition,
-} from '@mobazha/core';
+import { useI18n, useCurrency, mustAssetIdFromTokenId } from '@mobazha/core';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,12 +144,7 @@ export function RwaTokenFields({
   const [selectedToken, setSelectedToken] = useState<RwaTokenInfo | null>(null);
 
   // 当前区块链的支付币种
-  const paymentCurrencies = useMemo(() => {
-    if (isCommunityEdition()) {
-      return getEditionListingPaymentCoinOptions();
-    }
-    return getPaymentCurrencies(blockchain);
-  }, [blockchain]);
+  const paymentCurrencies = useMemo(() => getPaymentCurrencies(blockchain), [blockchain]);
 
   // 搜索 Token
   const filteredTokens = useMemo(() => {
@@ -197,7 +186,7 @@ export function RwaTokenFields({
   // 添加支付币种
   const handleAddCurrency = useCallback(() => {
     if (acceptedCurrencies.length < 5) {
-      const defaultCurrency = paymentCurrencies[0]?.code || mustAssetIdFromTokenId('BTC');
+      const defaultCurrency = paymentCurrencies[0]?.code || mustAssetIdFromTokenId('ETHUSDT');
       onAcceptedCurrenciesChange([...acceptedCurrencies, defaultCurrency]);
     }
   }, [acceptedCurrencies, paymentCurrencies, onAcceptedCurrenciesChange]);

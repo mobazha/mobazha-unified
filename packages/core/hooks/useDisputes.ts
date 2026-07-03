@@ -7,7 +7,9 @@ import {
   disputesApi,
   type CaseListItem,
   type DisputeCase,
+  type AcceptDisputeSettlementContext,
 } from '../services/api/disputes';
+import { buildAcceptDisputeSettlementContext } from '../utils/orderSettlement';
 
 interface DisputesState {
   cases: CaseListItem[];
@@ -95,7 +97,7 @@ export function useDisputes() {
   }, []);
 
   /**
-   * 仲裁人裁决 - 释放资金
+   * 仲裁人裁决 - 提交 close（广播 DISPUTE_CLOSE，非链上 release）
    */
   const resolveDispute = useCallback(
     async (
@@ -127,23 +129,35 @@ export function useDisputes() {
   );
 
   /**
-   * 接受裁决
+   * 接受裁决（需要后端结算时自动提交 settlement action 并轮询）
    */
-  const acceptResolution = useCallback(async (orderId: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    try {
-      const result = await disputesApi.acceptDisputeResolution(orderId);
-      setState(prev => ({ ...prev, isLoading: false }));
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to accept resolution');
+  const acceptResolution = useCallback(
+    async (
+      orderId: string,
+      context?: AcceptDisputeSettlementContext & {
+        escrowType?: string | null;
+        settlementSpec?: { escrowType?: string };
       }
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to accept resolution';
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
-      return { success: false, error: errorMessage };
-    }
-  }, []);
+    ) => {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      try {
+        const result = await disputesApi.acceptDisputeResolution(
+          orderId,
+          context ? buildAcceptDisputeSettlementContext(context) : undefined
+        );
+        setState(prev => ({ ...prev, isLoading: false }));
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to accept resolution');
+        }
+        return result;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to accept resolution';
+        setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
+        return { success: false, error: errorMessage };
+      }
+    },
+    []
+  );
 
   /**
    * 获取待处理案件数量
@@ -176,4 +190,3 @@ export function useDisputes() {
 }
 
 export default useDisputes;
-

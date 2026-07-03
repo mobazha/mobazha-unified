@@ -1,23 +1,16 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
 export const alt = 'Store on Mobazha';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
+import { profilePlainTextExcerpt, type SsrProfileData } from '@/lib/ssrProfile';
 
 const API_BASE = SSR_API_BASE;
 const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-interface ProfileData {
-  peerID?: string;
-  name?: string;
-  handle?: string;
-  about?: string;
-  avatarHashes?: { medium?: string; small?: string; original?: string };
-  stats?: { listingCount?: number; followerCount?: number };
-}
+type ProfileData = SsrProfileData;
 
 function getImageUrl(hash?: string): string | undefined {
   if (!hash) return undefined;
@@ -49,7 +42,7 @@ export default async function Image({ params }: { params: Promise<{ peerId: stri
   const profile = await fetchProfile(peerId);
 
   const name = profile?.name || profile?.handle || peerId.slice(0, 12);
-  const about = profile?.about?.slice(0, 120) || '';
+  const about = profile ? profilePlainTextExcerpt(profile, { peerId, maxLength: 120 }) : '';
   const avatarUrl = getImageUrl(profile?.avatarHashes?.medium || profile?.avatarHashes?.small);
   const listingCount = profile?.stats?.listingCount ?? 0;
 

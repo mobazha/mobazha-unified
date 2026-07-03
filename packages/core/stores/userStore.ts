@@ -26,6 +26,7 @@ import {
   type LoginCredentials,
 } from '../services/auth';
 import { connectWebSocket, disconnectWebSocket, setWebSocketBaseUrl } from '../services/websocket';
+import { invalidateFeatureFlags } from '../hooks/useFeatureFlags';
 import {
   getBuyerWebSocketUrl,
   getSellerWebSocketUrl,
@@ -667,6 +668,7 @@ export const useUserStore = create<UserState>()(
           setWebSocketBaseUrl(null);
           setStandaloneBuyerAuth(false);
           clearProfileCache();
+          invalidateFeatureFlags();
           clearAuth();
 
           if (redirectTo) {
@@ -826,9 +828,23 @@ export const useUserStore = create<UserState>()(
 
             if (is401) {
               console.warn('⚠️ Session restore failed: token invalid (401)');
+              disconnectWebSocket();
+              setWebSocketBaseUrl(null);
+              setStandaloneBuyerAuth(false);
+              clearProfileCache();
+              clearAuth();
               set({
+                profile: null,
+                settings: null,
+                isAuthenticated: false,
                 isLoading: false,
+                token: null,
                 isSessionRestored: true,
+                needsOnboarding: false,
+                sessionExpired: true,
+                authSource: null,
+                isAnonymousMiniAppUser: false,
+                isStoreOwner: false,
               });
               return false;
             }
@@ -978,7 +994,7 @@ export const useUserStore = create<UserState>()(
             if (result.success) {
               const { settings } = get();
               set({
-                settings: settings ? { ...settings, ...updates } : null,
+                settings: { ...(settings ?? {}), ...updates },
               });
               return true;
             }

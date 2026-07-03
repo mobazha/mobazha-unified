@@ -64,7 +64,7 @@ export function useGroupContext(options: UseGroupContextOptions = {}): UseGroupC
   const { autoInit = false, userPeerID } = options;
 
   const [context, setContext] = useState<GroupContext | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(autoInit);
   const [error, setError] = useState<string | null>(null);
 
   // 是否在群组环境中
@@ -117,13 +117,17 @@ export function useGroupContext(options: UseGroupContextOptions = {}): UseGroupC
     setError(null);
 
     try {
-      const result = await verifyGroupMembership(context.platform, context.chatId);
+      const result = await verifyGroupMembership(
+        context.platform,
+        context.chatId,
+        context.platformUserId
+      );
 
-      if (result.verified && result.chatTitle) {
-        // 更新群组标题
+      if (result.verified && (result.chatTitle || result.marketplaceID)) {
         const updatedContext: GroupContext = {
           ...context,
-          chatTitle: result.chatTitle,
+          chatTitle: result.chatTitle || context.chatTitle,
+          marketplaceID: result.marketplaceID || context.marketplaceID,
           needsVerification: false,
         };
         await save(updatedContext);

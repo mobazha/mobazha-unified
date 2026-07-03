@@ -33,7 +33,7 @@
     }
   },
   "scripts": {
-    "generate:api": "openapi-typescript ${OPENAPI_SPEC:-api-spec/openapi.yaml} -o types/api-generated.d.ts",
+    "generate:api": "openapi-typescript api-spec/openapi.json -o types/api-generated.d.ts && node ../../scripts/gen-api-paths.mjs",
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
@@ -53,6 +53,7 @@
     "i18n-iso-countries": "^7.14.0",
     "isomorphic-dompurify": "^2.35.0",
     "openapi-fetch": "^0.17.0",
+    "openpgp": "^6.3.0",
     "viem": "^2.44.1",
     "zustand": "^5.0.3"
   },
@@ -63,9 +64,10 @@
     "jsdom": "^26.0.0",
     "openapi-typescript": "^7.13.0",
     "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
-    "vitest": "^3.0.2",
+    "vitest": "^3.2.6",
     "web-vitals": "^4.2.4"
   },
   "peerDependencies": {

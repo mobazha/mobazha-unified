@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
-import { getGatewayUrl, useI18n } from '@mobazha/core';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getAbsoluteImageUrl, useI18n, useFeature, getAdminAiModelsPath } from '@mobazha/core';
 import type { AiGenerateResponse, Image, ListingFormData } from '@mobazha/core';
+import { aiStatusSupportsVision, getAIStatus } from '@mobazha/core/services/api/aiSettings';
 import { useToast, ToastAction } from '@/components/ui';
 import { useAiAssist } from './AiAssistant';
 
@@ -19,6 +20,8 @@ export function useListingAiIntegration({
 }: UseListingAiIntegrationParams) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const aiWorkspaceEnabled = useFeature('aiWorkspaceEnabled');
+  const aiModelsPath = getAdminAiModelsPath(aiWorkspaceEnabled);
   const {
     loadingAction: aiLoadingAction,
     lastError: aiError,
@@ -27,6 +30,19 @@ export function useListingAiIntegration({
     polishDescription,
     suggestTags,
   } = useAiAssist();
+
+  // Check if the configured AI model supports vision (image input).
+  // Defaults to true until confirmed otherwise to avoid flash-hiding the panel.
+  const [aiSupportsVision, setAiSupportsVision] = useState(true);
+  useEffect(() => {
+    getAIStatus()
+      .then(status => {
+        setAiSupportsVision(aiStatusSupportsVision(status));
+      })
+      .catch(() => {
+        // On error keep default (true) — don't hide the panel speculatively.
+      });
+  }, []);
 
   useEffect(() => {
     if (aiError) {
@@ -43,15 +59,21 @@ export function useListingAiIntegration({
         }),
         action: (
           <ToastAction
-            altText={t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
-            onClick={() => window.open('/admin/settings/integrations', '_blank')}
+            altText={
+              aiWorkspaceEnabled
+                ? t('ai.goToModels', { defaultValue: 'Configure AI Models' })
+                : t('ai.goToSettings', { defaultValue: 'Go to Settings' })
+            }
+            onClick={() => window.open(aiModelsPath, '_blank')}
           >
-            {t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
+            {aiWorkspaceEnabled
+              ? t('ai.goToModels', { defaultValue: 'Configure AI Models' })
+              : t('ai.goToSettings', { defaultValue: 'Go to Settings' })}
           </ToastAction>
         ),
       });
     }
-  }, [aiNotConfigured, toast, t]);
+  }, [aiNotConfigured, toast, t, aiWorkspaceEnabled, aiModelsPath]);
 
   const handleAiImproveTitle = useCallback(async () => {
     const improved = await improveTitle(formData.title, formData.description);
@@ -102,7 +124,7 @@ export function useListingAiIntegration({
       .map((img: Image) => {
         const hash = img.medium || img.small || img.original;
         if (!hash) return '';
-        return `${getGatewayUrl()}/media/images/${hash}`;
+        return getAbsoluteImageUrl(hash) || '';
       })
       .filter(Boolean);
   }, [formData.images]);
@@ -110,6 +132,7 @@ export function useListingAiIntegration({
   return {
     aiLoadingAction,
     aiNotConfigured,
+    aiSupportsVision,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,

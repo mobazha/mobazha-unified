@@ -2,11 +2,11 @@
 
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { useI18n, type DisplayOrder } from '@mobazha/core';
+import { useI18n, type DisplayOrder, isDirectPaymentOrder } from '@mobazha/core';
 import type { Order as CoreOrder, Product } from '@mobazha/core';
 import { PaymentCard } from '@/components/Order';
 import { RwaAssetDetail } from '@/components/RwaToken';
-import { getBlockExplorerUrl } from '@/components/Order/utils';
+import { getOrderTransactionExplorerUrl } from '@/components/Order/utils';
 
 export interface OrderPaymentCardProps {
   displayOrder: DisplayOrder & {
@@ -69,11 +69,7 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
             </div>
             <button
               onClick={() => {
-                const url = getBlockExplorerUrl(
-                  order.paymentTx!,
-                  order.currency || '',
-                  order.chainId
-                );
+                const url = getOrderTransactionExplorerUrl(order.paymentTx!, order);
                 if (url) window.open(url, '_blank');
               }}
               className="text-xs text-primary hover:underline"
@@ -84,12 +80,15 @@ export const OrderPaymentCard = memo(function OrderPaymentCard({
           <PaymentCard
             amount={order.total}
             currency={order.currency}
+            paymentCoin={order.paymentCoin}
+            pricingAmount={order.pricingAmount}
+            pricingCurrency={order.pricingCurrency}
             txHash={order.paymentTx}
             confirmations={order.txConfirmations}
             chainId={order.chainId}
             timestamp={order.timeline.find(e => e.status === 'paid')?.timestamp}
             title={t('order.paid')}
-            description={!order.moderator ? t('order.directPaymentDesc') : undefined}
+            description={isDirectPaymentOrder(order) ? t('order.directPaymentDesc') : undefined}
             showDivider={true}
           />
         </>
@@ -151,11 +150,7 @@ function RwaPaymentLockedCard({
           {order.paymentTx && (
             <button
               onClick={() => {
-                const url = getBlockExplorerUrl(
-                  order.paymentTx!,
-                  order.currency || '',
-                  order.chainId
-                );
+                const url = getOrderTransactionExplorerUrl(order.paymentTx!, order);
                 if (url) window.open(url, '_blank');
               }}
               className={`text-xs hover:underline ${textColor}`}
@@ -309,19 +304,25 @@ function FiatPaymentCard({ order }: { order: DisplayOrder }) {
       ? 'text-warning'
       : order.status === 'disputed'
         ? 'text-error'
-        : 'text-success';
+        : order.status === 'decided'
+          ? 'text-info'
+          : 'text-success';
   const statusBadgeColor =
     order.status === 'refunded'
       ? 'bg-warning'
       : order.status === 'disputed'
         ? 'bg-error'
-        : 'bg-success';
+        : order.status === 'decided'
+          ? 'bg-info'
+          : 'bg-success';
   const statusText =
     order.status === 'refunded'
       ? t('order.fiatPayment.refunded')
       : order.status === 'disputed'
         ? t('order.fiatPayment.disputed')
-        : t('order.fiatPayment.paid');
+        : order.status === 'decided'
+          ? t('order.fiatPayment.rulingPending')
+          : t('order.fiatPayment.paid');
 
   return (
     <div className="bg-gradient-to-r from-primary/5 to-primary/5 border border-primary/15 rounded-lg p-4 mb-4">

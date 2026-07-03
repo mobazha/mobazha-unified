@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useI18n, useChatStore, useUserStore, matrixClient } from '@mobazha/core';
+import { useI18n, useChatStore, useUserStore, matrixClient, isFullPeerID } from '@mobazha/core';
 import { searchProfiles, type SearchedUser } from '@mobazha/core/services/api/products';
 import {
   Search,
@@ -24,12 +24,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 
-const PEER_ID_PATTERN = /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{44,50})$/;
 const MATRIX_PROFILE_REQUEST_TIMEOUT_MS = 3500;
-
-function isValidPeerID(id: string): boolean {
-  return PEER_ID_PATTERN.test(id);
-}
 
 function isValidMatrixUserID(id: string): boolean {
   if (!id || !id.startsWith('@')) return false;
@@ -140,7 +135,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({ open, onOpenChange
   const memberSearchSeqRef = useRef(0);
 
   const trimmed = query.trim();
-  const isPeerID = isValidPeerID(trimmed);
+  const isPeerID = isFullPeerID(trimmed);
   const isMatrixUserID = isValidMatrixUserID(trimmed);
   const isMatrixLikeInput = trimmed.startsWith('@') && trimmed.includes(':');
   const canSubmitDirect = isPeerID || isMatrixUserID;

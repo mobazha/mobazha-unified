@@ -36,6 +36,204 @@ export enum MarketplaceRole {
   MEMBER = 'member',
 }
 
+export type MarketplaceLifecycleStatus = 'draft' | 'published' | 'suspended' | 'archived';
+export type MarketplaceBuyerAccessMode = 'open';
+export type MarketplaceSellerReviewMode = 'auto' | 'manual';
+export type MarketplaceCatalogMode = 'open' | 'curated';
+export type MarketplaceDiscoverability = 'public' | 'unlisted';
+export type MarketplaceSellerEntryMode = 'operator_invited' | 'seller_self_serve';
+export type MarketplaceStoreStatus =
+  | 'invited'
+  | 'applied'
+  | 'accepted'
+  | 'approved'
+  | 'rejected'
+  | 'suspended'
+  | 'left';
+
+export interface MarketplaceDomain {
+  host: string;
+  kind: 'subdomain' | 'custom';
+  verificationStatus: 'pending' | 'verified';
+  verificationName?: string;
+  verificationValue?: string;
+  verifiedAt?: string;
+  isPrimary: boolean;
+}
+
+export type MarketplaceCustomDomainVerifyResult =
+  | 'verified'
+  | 'pending'
+  | 'record_not_found'
+  | 'lookup_failed'
+  | 'challenge_unavailable';
+
+export interface VerifyMarketplaceCustomDomainResponse {
+  domain: MarketplaceDomain;
+  verified: boolean;
+  result: MarketplaceCustomDomainVerifyResult;
+}
+
+export interface NativeMarketplace {
+  id: string;
+  name: string;
+  slug: string;
+  status: MarketplaceLifecycleStatus;
+  draftRevision: number;
+  publishedRevision: number;
+  hasUnpublishedChanges: boolean;
+  publishedAt?: string;
+  description?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  ownerUserID: string;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
+  catalogMode: MarketplaceCatalogMode;
+  discoverability: MarketplaceDiscoverability;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  vertical: string;
+  catalogQuery?: string;
+  theme?: Record<string, unknown>;
+  attribution?: string;
+  plan: string;
+  domains: MarketplaceDomain[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNativeMarketplaceRequest {
+  name: string;
+  vertical?: string;
+  slug?: string;
+  description?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  buyerAccessMode?: MarketplaceBuyerAccessMode;
+  sellerReviewMode?: MarketplaceSellerReviewMode;
+  catalogMode?: MarketplaceCatalogMode;
+  discoverability?: MarketplaceDiscoverability;
+  domain?: string;
+  subdomain?: string;
+  catalogQuery?: string;
+  theme?: Record<string, unknown>;
+  attribution?: string;
+  sellerEntryMode?: MarketplaceSellerEntryMode;
+}
+
+export type UpdateNativeMarketplaceRequest = Partial<CreateNativeMarketplaceRequest>;
+
+export interface MarketplaceStoreMembership {
+  id: number;
+  tenantID: string;
+  marketplaceID: string;
+  userID?: string;
+  peerID: string;
+  status: MarketplaceStoreStatus;
+  unreadReviewCount: number;
+  decisionReason?: string;
+  isVisible: boolean;
+  productGroupIDs: number[];
+  productGroups: MarketplaceSellerProductGroup[];
+  invitedAt?: string;
+  appliedAt?: string;
+  acceptedAt?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MarketplaceSellerProductGroup {
+  id: number;
+  name: string;
+  description?: string;
+  itemCount: number;
+}
+
+export interface InviteMarketplaceSellerRequest {
+  peerID: string;
+}
+
+export interface UpdateMarketplaceSellerRequest {
+  status?: Extract<MarketplaceStoreStatus, 'approved' | 'rejected' | 'suspended'>;
+  /** Request body field; response uses `isVisible` on MarketplaceStoreMembership. */
+  visible?: boolean;
+  reason?: string;
+}
+
+export interface MarketplaceMembershipMarketplaceSummary {
+  id: string;
+  name: string;
+  slug: string;
+  status: MarketplaceLifecycleStatus;
+  description?: string;
+  logoURL?: string;
+}
+
+export interface MyMarketplaceMembershipEntry {
+  membership: MarketplaceStoreMembership;
+  marketplace: MarketplaceMembershipMarketplaceSummary;
+}
+
+export interface MarketplaceSellerReviewEvent {
+  id: number;
+  marketplaceID: string;
+  marketplaceStoreID: number;
+  peerID: string;
+  actorID: string;
+  previousStatus: MarketplaceStoreStatus;
+  status: MarketplaceStoreStatus;
+  reason?: string;
+  readAt?: string;
+  createdAt: string;
+}
+
+export interface MarketplaceCurationFeaturedItem {
+  type: 'seller' | 'listing' | string;
+  peerID?: string;
+  slug?: string;
+  sortOrder: number;
+}
+
+export interface MarketplaceCurationBrand {
+  name: string;
+  tagline?: string;
+  logo?: string;
+  banner?: string;
+  theme?: Record<string, unknown>;
+}
+
+export interface MarketplaceCurationConfig {
+  id: string;
+  vertical: string;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
+  catalogMode: MarketplaceCatalogMode;
+  discoverability: MarketplaceDiscoverability;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  catalogQuery?: string;
+  allowedPeers: string[];
+  sellers: string[];
+  featured: MarketplaceCurationFeaturedItem[];
+  brand: MarketplaceCurationBrand;
+  taxonomy: Array<Record<string, string>>;
+  policy: Record<string, string>;
+  attribution: {
+    utmSource: string;
+    marketplaceId: string;
+  };
+  subdomain?: string;
+  domain?: string;
+}
+
+export interface MarketplaceShareLink {
+  url: string;
+  qrText: string;
+  domain?: string;
+  subdomain?: string;
+}
+
 // 集市信息
 export interface Marketplace {
   id: string;
@@ -259,6 +457,214 @@ export interface MarketplaceListResponse {
   hasMore: boolean;
 }
 
+// 真实群组社区市场公开投影（来自 mobazha_hosting group-marketplace v1）
+export interface PublicGroupMarketplace {
+  publicID: string;
+  slug?: string;
+  platform: 'telegram' | 'discord' | string;
+  /** Marketplace vertical preset (e.g. general, collectible, collectibles). */
+  vertical?: string;
+  name: string;
+  publicDescription?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  sellerCount: number;
+  productCount: number;
+  joinMode: 'group_member' | string;
+  visibility: 'active' | string;
+  isFeatured: boolean;
+  sortOrder: number;
+  updatedAt?: string;
+}
+
+export interface PublicGroupMarketplaceListResponse {
+  groups: PublicGroupMarketplace[];
+  count: number;
+}
+
+export interface PublicMarketplaceListingRef {
+  slug: string;
+  peerID: string;
+}
+
+export interface PublicMarketplaceProductGroup {
+  id: number;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  itemCount: number;
+}
+
+export interface PublicMarketplaceSeller {
+  peerID: string;
+  productGroups: PublicMarketplaceProductGroup[];
+  updatedAt?: string;
+  /** Legacy group marketplace projection */
+  sellerID?: number;
+  sortOrder?: number;
+}
+
+export interface PublicMarketplaceBanner {
+  slug: string;
+  peerID: string;
+  sortOrder: number;
+}
+
+export interface PublicMarketplaceListings {
+  listings: PublicMarketplaceListingRef[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPage: number;
+}
+
+export interface PublicGroupMarketplaceDetail {
+  marketplace: PublicGroupMarketplace;
+  sellers: PublicMarketplaceSeller[];
+  featured: PublicMarketplaceSeller[];
+  banners: PublicMarketplaceBanner[];
+  listings: PublicMarketplaceListings;
+}
+
+/** Native MaaS public marketplace directory item (GET /platform/v1/public-marketplaces). */
+export interface PublicNativeMarketplace {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logoURL?: string;
+  bannerURL?: string;
+  publicURL: string;
+  buyerAccessMode: MarketplaceBuyerAccessMode;
+  sellerReviewMode: MarketplaceSellerReviewMode;
+  catalogMode: MarketplaceCatalogMode;
+  discoverability: MarketplaceDiscoverability;
+  sellerEntryMode: MarketplaceSellerEntryMode;
+  vertical: string;
+  sellerCount: number;
+  productCount: number;
+  updatedAt?: string;
+}
+
+export interface PublicNativeMarketplaceListParams {
+  q?: string;
+  vertical?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PublicNativeMarketplaceListResponse {
+  marketplaces: PublicNativeMarketplace[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPage: number;
+}
+
+export interface PublicMarketplaceFeaturedItem {
+  type: string;
+  peerID?: string;
+  slug?: string;
+  sortOrder: number;
+}
+
+export interface PublicNativeMarketplaceDetail {
+  marketplace: PublicNativeMarketplace;
+  sellers: PublicMarketplaceSeller[];
+  featured: PublicMarketplaceFeaturedItem[];
+  banners: PublicMarketplaceBanner[];
+  listings: PublicMarketplaceListings;
+}
+
+export type MarketplaceCurationKind = 'seller' | 'listing' | 'banner';
+
+export interface PublicNativeMarketplaceListing {
+  slug: string;
+  title?: string;
+  peerID?: string;
+  vendorName?: string;
+}
+
+export interface MarketplaceCurationItem {
+  id: number;
+  kind: MarketplaceCurationKind;
+  peerID?: string;
+  listingSlug?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MarketplaceCurationCandidates {
+  sellers: Array<{ peerID: string }>;
+  listings: PublicNativeMarketplaceListing[];
+  query?: string;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPage: number;
+}
+
+export interface MarketplaceCurationCandidatesParams {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateMarketplaceCurationItemRequest {
+  kind: MarketplaceCurationKind;
+  peerID?: string;
+  listingSlug?: string;
+}
+
+export interface ReorderMarketplaceCurationRequest {
+  kind: MarketplaceCurationKind;
+  itemIDs: number[];
+}
+
+export interface UpdateMarketplaceCurationItemRequest {
+  isActive: boolean;
+}
+
+/** Current store's native MaaS seller application (GET/POST seller-applications). */
+export interface NativeMarketplaceSellerApplication {
+  hasApplication: boolean;
+  membership?: MarketplaceStoreMembership;
+  productGroupIDs: number[];
+  autoApproved: boolean;
+}
+
+export type MarketplaceAttributionEventType = 'impression' | 'listing_click' | 'checkout_handoff';
+
+export interface SubmitMarketplaceAttributionEventRequest {
+  eventID: string;
+  journeyID: string;
+  eventType: MarketplaceAttributionEventType;
+  listingSlug?: string;
+  peerID?: string;
+  source?: string;
+  medium?: string;
+  campaign?: string;
+  referrerHost?: string;
+}
+
+export interface SubmitMarketplaceAttributionEventResponse {
+  accepted: boolean;
+  duplicate: boolean;
+}
+
+export interface MarketplaceAttributionSummary {
+  from: string;
+  to: string;
+  impressions: number;
+  listingClicks: number;
+  checkoutHandoffs: number;
+  listingClickRate: number | null;
+  checkoutHandoffRate: number | null;
+  hasData: boolean;
+}
+
 // 商品列表参数
 export interface MarketplaceProductListParams {
   marketplaceId: string;
@@ -285,10 +691,9 @@ export interface MarketplaceMemberListParams {
 }
 
 // 创建集市请求
-export interface CreateMarketplaceRequest {
-  name: string;
-  slug: string;
-  description: string;
+export interface CreateMarketplaceRequest extends CreateNativeMarketplaceRequest {
+  slug?: string;
+  description?: string;
   shortDescription?: string;
   logo?: string;
   banner?: string;
@@ -298,8 +703,7 @@ export interface CreateMarketplaceRequest {
 }
 
 // 更新集市请求
-export interface UpdateMarketplaceRequest {
-  name?: string;
+export interface UpdateMarketplaceRequest extends UpdateNativeMarketplaceRequest {
   description?: string;
   shortDescription?: string;
   logo?: string;
@@ -313,7 +717,7 @@ export interface UpdateMarketplaceRequest {
 export interface SellerApplicationRequest {
   marketplaceId: string;
   message?: string;
-  sellerProfile: Partial<SellerProfile>;
+  sellerProfile?: Partial<SellerProfile>;
 }
 
 // 商品上架请求

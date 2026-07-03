@@ -1,21 +1,14 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import { getCanonicalSiteUrl, getSiteUrl, isNamedStorefrontRequest } from '@/lib/siteUrl';
 
 import { SSR_API_BASE } from '@/lib/ssrApiBase';
+import { profilePlainTextExcerpt, type SsrProfileData } from '@/lib/ssrProfile';
 
 const API_BASE = SSR_API_BASE;
 const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-interface ProfileData {
-  peerID?: string;
-  name?: string;
-  handle?: string;
-  about?: string;
-  avatarHashes?: { medium?: string; small?: string; original?: string };
-  headerHashes?: { medium?: string; original?: string };
-  stats?: { listingCount?: number; followerCount?: number };
-}
+type ProfileData = SsrProfileData;
 
 interface StorefrontData {
   theme?: { primaryColor?: string };
@@ -100,21 +93,20 @@ export async function generateMetadata({
   const heroMeta = extractHeroMeta(storefront);
   const name = profile.name || profile.handle || peerId.slice(0, 12);
   const title = heroMeta.title || `${name}'s Store`;
-  const description =
-    heroMeta.description ||
-    (profile.about ? profile.about.slice(0, 160) : `Browse products from ${name} on Mobazha`);
+  const description = profilePlainTextExcerpt(profile, {
+    heroDescription: heroMeta.description,
+    peerId,
+  });
 
   // Canonical & OG URL always point at the main store host (MS2a.3).
   // Named storefront subdomains share the underlying profile, so we
   // consolidate SEO signals onto the canonical store URL.
   const canonicalUrl = `${canonicalSiteUrl}/store/${peerId}`;
-  const themeColor = storefront?.theme?.primaryColor;
   const ogImageUrl = `${canonicalSiteUrl}/store/${peerId}/opengraph-image`;
 
   return {
     title,
     description,
-    ...(themeColor && { themeColor }),
     alternates: { canonical: canonicalUrl },
     // Named storefronts: noindex to avoid duplicate-content with the main
     // store, follow links so internal navigation signals still propagate.
@@ -135,6 +127,18 @@ export async function generateMetadata({
   };
 }
 
+export async function generateViewport({
+  params,
+}: {
+  params: Promise<{ peerId: string }>;
+}): Promise<Viewport> {
+  const { peerId } = await params;
+  const storefront = await fetchStorefrontConfig(peerId);
+  const themeColor = storefront?.theme?.primaryColor;
+
+  return themeColor ? { themeColor } : {};
+}
+
 function buildOrganizationLd(profile: ProfileData | null, peerId: string, siteUrl: string) {
   if (!profile) return null;
   const name = profile.name || profile.handle || peerId.slice(0, 12);
@@ -143,13 +147,16 @@ function buildOrganizationLd(profile: ProfileData | null, peerId: string, siteUr
     peerId
   );
 
+  const orgDescription = profilePlainTextExcerpt(profile, { peerId, maxLength: 200 });
+  const hasProfileText = !!(profile.shortDescription?.trim() || profile.about?.trim());
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
     url: `${siteUrl}/store/${peerId}`,
     ...(avatarUrl && { logo: avatarUrl }),
-    ...(profile.about && { description: profile.about.slice(0, 200) }),
+    ...(hasProfileText && { description: orgDescription }),
   };
 }
 

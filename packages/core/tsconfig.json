@@ -18,8 +18,7 @@
     "utils/**/*",
     "providers/**/*",
     "config/**/*",
-    "edition/**/*",
     "index.ts"
   ],
-  "exclude": ["node_modules", "dist", "__tests__", "providers/AppKitProvider.tsx"]
+  "exclude": ["node_modules", "dist", "__tests__"]
 }

@@ -7,6 +7,11 @@ import { Moderator } from './types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useI18n, getImageUrl } from '@mobazha/core';
+import {
+  formatModeratorFee,
+  getModeratorDisplayName,
+  isModeratorVerified,
+} from '@/components/Moderators/moderatorDisplay';
 
 export interface ModeratorCardProps {
   moderator: Moderator;
@@ -27,31 +32,15 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
 }) => {
   const { t } = useI18n();
 
-  // 获取头像 URL
+  const displayName = getModeratorDisplayName(moderator);
+  const feeDisplay = formatModeratorFee(moderator) ?? '';
+  const verified = isModeratorVerified(moderator);
+
   const avatarUrl = moderator.avatarHashes?.small
     ? getImageUrl(moderator.avatarHashes.small)
     : undefined;
 
-  // 计算费率显示
-  const feeDisplay = React.useMemo(() => {
-    const { fee } = moderator || {};
-    if (!fee) return '';
-
-    if (fee.feeType === 'percentage' && fee.percentage !== undefined) {
-      return `${fee.percentage}%`;
-    } else if (fee.feeType === 'fixed' && fee.fixedFee) {
-      return `${fee.fixedFee.amount} ${fee.fixedFee.currency}`;
-    } else if (fee.feeType === 'percentage_plus_fixed') {
-      const parts = [];
-      if (fee.percentage !== undefined) parts.push(`${fee.percentage}%`);
-      if (fee.fixedFee) parts.push(`${fee.fixedFee.amount} ${fee.fixedFee.currency}`);
-      return parts.join(' + ');
-    }
-    return '';
-  }, [moderator]);
-
   if (compact) {
-    // 紧凑模式 - 用于结算页面摘要显示
     return (
       <button
         type="button"
@@ -67,16 +56,16 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
         )}
       >
         <Avatar className="w-10 h-10">
-          <AvatarImage src={avatarUrl} alt={moderator.name} />
+          <AvatarImage src={avatarUrl} alt={displayName} />
           <AvatarFallback className="bg-primary/10 text-primary">
-            {moderator.name?.[0] || 'M'}
+            {displayName[0] || 'M'}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="font-medium text-foreground truncate">{moderator.name}</span>
-            {moderator.verifiedMod && <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+            <span className="font-medium text-foreground truncate">{displayName}</span>
+            {verified && <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
           </div>
           <span className="text-xs text-muted-foreground">
             {t('payment.moderatorFee')}: {feeDisplay}
@@ -92,7 +81,6 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
     );
   }
 
-  // 完整卡片模式 - 用于仲裁员选择列表
   return (
     <button
       type="button"
@@ -109,26 +97,24 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
         className
       )}
     >
-      {/* 选中指示器 */}
       {selected && (
         <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
           <Check className="w-3 h-3 text-primary-foreground" />
         </div>
       )}
 
-      {/* 头部：头像和基本信息 */}
       <div className="flex items-start gap-3">
         <Avatar className="w-12 h-12">
-          <AvatarImage src={avatarUrl} alt={moderator.name} />
+          <AvatarImage src={avatarUrl} alt={displayName} />
           <AvatarFallback className="bg-primary/10 text-primary text-lg">
-            {moderator.name?.[0] || 'M'}
+            {displayName[0] || 'M'}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-semibold text-foreground">{moderator.name}</span>
-            {moderator.verifiedMod && (
+            <span className="font-semibold text-foreground">{displayName}</span>
+            {verified && (
               <Badge variant="secondary" className="bg-primary/10 text-primary text-xs h-5 gap-0.5">
                 <Shield className="w-3 h-3" />
                 {t('payment.verified')}
@@ -149,12 +135,10 @@ export const ModeratorCard: React.FC<ModeratorCardProps> = ({
         </div>
       </div>
 
-      {/* 描述 */}
       {moderator.description && (
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">{moderator.description}</p>
       )}
 
-      {/* 底部：费率和语言 */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
         <div className="flex items-center gap-1">
           <span className="text-xs text-muted-foreground">{t('payment.fee')}:</span>

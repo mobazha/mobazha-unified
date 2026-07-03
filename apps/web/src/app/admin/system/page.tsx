@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@mobazha/core';
-import { isBasicAuthMode, isStandaloneMode } from '@mobazha/core/config/env';
+import { isBasicAuthMode, isStandaloneMode, isSovereignMode } from '@mobazha/core/config/env';
 import {
   getSystemHealth,
+  getPaymentRPCStatus,
   getNetworkConfig,
   updateNetworkConfig,
   runDoctor,
@@ -15,9 +16,9 @@ import {
   getUpdateConfig,
   updateUpdateConfig,
   type SystemHealthResponse,
+  type PaymentRPCStatusResponse,
   type NetworkConfigResponse,
   type DoctorSummary,
-  type UpdateInfo,
   type UpdateConfigResponse,
 } from '@mobazha/core/services/api/system';
 import {
@@ -70,6 +71,8 @@ function formatMB(mb: number): string {
 
 export default function SystemPage() {
   const { t } = useI18n();
+  const isSovereign = isSovereignMode();
+  const supportsAdvancedSystemConfig = isStandaloneMode() && !isSovereign;
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +95,8 @@ export default function SystemPage() {
   const [updateConfig, setUpdateConfig] = useState<UpdateConfigResponse | null>(null);
   const [updateConfigSaving, setUpdateConfigSaving] = useState(false);
   const [showUpdateSettings, setShowUpdateSettings] = useState(false);
+
+  const [rpcStatus, setRpcStatus] = useState<PaymentRPCStatusResponse | null>(null);
 
   const isAdmin = isBasicAuthMode() || isStandaloneMode();
 
@@ -136,16 +141,39 @@ export default function SystemPage() {
     }
   }, []);
 
+  const fetchRpcStatus = useCallback(async () => {
+    if (!isSovereign) return;
+    try {
+      setRpcStatus(await getPaymentRPCStatus());
+    } catch {
+      setRpcStatus(null);
+    }
+  }, [isSovereign]);
+
   useEffect(() => {
     if (isAdmin) {
       fetchHealth();
-      fetchNetworkConfig();
-      fetchDomainConfig();
-      fetchUpdateConfig();
+      if (supportsAdvancedSystemConfig) {
+        fetchNetworkConfig();
+        fetchDomainConfig();
+        fetchUpdateConfig();
+      }
+      if (isSovereign) {
+        fetchRpcStatus();
+      }
       const interval = setInterval(fetchHealth, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAdmin, fetchHealth, fetchNetworkConfig, fetchDomainConfig, fetchUpdateConfig]);
+  }, [
+    isAdmin,
+    supportsAdvancedSystemConfig,
+    isSovereign,
+    fetchHealth,
+    fetchNetworkConfig,
+    fetchDomainConfig,
+    fetchUpdateConfig,
+    fetchRpcStatus,
+  ]);
 
   const handleApplyNetwork = async () => {
     setNetworkSaving(true);
@@ -287,7 +315,18 @@ export default function SystemPage() {
     );
   }
 
-  const sys = health!.system;
+  const sys = health!.system ?? {
+    goVersion: '',
+    os: '',
+    arch: '',
+    numCPU: 0,
+    numGoroutine: 0,
+    memAllocMB: 0,
+    memSysMB: 0,
+    diskTotalGB: 0,
+    diskFreeGB: 0,
+    diskUsedPercent: 0,
+  };
   const diskUsedGB = sys.diskTotalGB - sys.diskFreeGB;
   const storePort = networkConfig?.gatewayPort || 5102;
 
@@ -578,8 +617,51 @@ export default function SystemPage() {
         </div>
       )}
 
-      {/* Domain Settings (standalone only) */}
-      {isStandaloneMode() && (
+      {/* RPC Connection Status (Sovereign only) */}
+      {isSovereign && rpcStatus && (
+        <div className="border border-border rounded-lg p-5">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            {t('system.rpc.title', { defaultValue: 'Payment RPC Status' })}
+          </h2>
+          <div className="space-y-3">
+            {Object.entries(rpcStatus).map(([id, status]) => (
+              <div key={id} className="flex items-center gap-3">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${status.connected ? 'bg-green-500' : 'bg-destructive'}`}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground">{id}</div>
+                  <div className="text-xs text-muted-foreground font-mono truncate">
+                    {status.endpoint || 'Not configured'}
+                  </div>
+                  {status.blockHeight != null && (
+                    <div className="text-xs text-muted-foreground">
+                      Block: {status.blockHeight.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+                <span
+                  className={`text-xs font-medium ${status.connected ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}
+                >
+                  {status.connected
+                    ? t('system.rpc.connected', { defaultValue: 'Connected' })
+                    : t('system.rpc.disconnected', { defaultValue: 'Disconnected' })}
+                </span>
+              </div>
+            ))}
+            {Object.keys(rpcStatus).length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                {t('system.rpc.noneConfigured', {
+                  defaultValue: 'No payment RPC configured. Go to Settings → Payments to continue.',
+                })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Domain Settings (standalone only, hidden in Sovereign) */}
+      {supportsAdvancedSystemConfig && (
         <div id="domain" className="border border-border rounded-lg p-5">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
             {t('system.domain.title', { defaultValue: 'Custom Domain' })}

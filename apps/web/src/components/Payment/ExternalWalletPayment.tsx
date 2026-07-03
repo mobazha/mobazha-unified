@@ -16,11 +16,27 @@ export interface ExternalWalletPaymentInfo {
   paymentAddress: string;
   paymentURI?: string;
   amount: string;
+  amountIsDecimal?: boolean;
   coin: string;
   decimals?: number;
   qrCodeData?: string;
   expiresAt?: string;
   orderID: string;
+  observedPayments?: ExternalWalletObservedPayment[];
+  observedAmount?: string;
+  requiredAmount?: string;
+  remainingAmount?: string;
+}
+
+export interface ExternalWalletObservedPayment {
+  id: string;
+  txHash?: string;
+  hasChainTxHash?: boolean;
+  eventIndex?: number;
+  amount: string;
+  status: string;
+  confirmations?: number;
+  observedAt?: string;
 }
 
 interface ExternalWalletPaymentProps {
@@ -39,12 +55,37 @@ function formatCryptoAmount(rawAmount: string, decimals: number): string {
   return formatted.replace(/\.?0+$/, '') || '0';
 }
 
+function formatDecimalAmount(rawAmount: string): string {
+  const bn = new BigNumber(rawAmount);
+  if (!bn.isFinite() || bn.isNaN() || bn.isZero()) return '0';
+  return bn.toFixed().replace(/\.?0+$/, '') || '0';
+}
+
 function getReadableCoinName(coin: string): string {
   const chain = getChainById(coin);
   if (chain?.name) return chain.name;
   const upper = coin.toUpperCase();
   if (upper.startsWith('CRYPTO:')) return '';
   return upper;
+}
+
+function shortHash(value: string | undefined): string {
+  if (!value) return '';
+  if (value.length <= 16) return value;
+  return `${value.slice(0, 8)}...${value.slice(-6)}`;
+}
+
+function observationStatusLabel(status: string, t: (key: string) => string): string {
+  switch (status.trim().toLowerCase()) {
+    case 'pending':
+      return t('payment.observationStatus.pending');
+    case 'confirmed':
+      return t('payment.observationStatus.confirmed');
+    case 'reverted':
+      return t('payment.observationStatus.reverted');
+    default:
+      return t('payment.observationStatus.unknown');
+  }
 }
 
 function useCountdown(expiresAt: string | undefined) {
@@ -112,9 +153,13 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
 
   const qrValue = paymentInfo.qrCodeData || paymentInfo.paymentURI || paymentInfo.paymentAddress;
   const decimals = paymentInfo.decimals ?? getCurrencyDecimals(paymentInfo.coin);
-  const displayAmount = formatCryptoAmount(paymentInfo.amount, decimals);
+  const displayAmount = paymentInfo.amountIsDecimal
+    ? formatDecimalAmount(paymentInfo.amount)
+    : formatCryptoAmount(paymentInfo.amount, decimals);
 
   const coinSymbol = tokenId?.toUpperCase() || getReadableCoinName(paymentInfo.coin) || '';
+  const observedPayments = paymentInfo.observedPayments || [];
+  const hasObservedTransfer = observedPayments.length > 0;
 
   if (isExpired) {
     return (
@@ -245,8 +290,46 @@ export const ExternalWalletPayment: React.FC<ExternalWalletPaymentProps> = ({
           {/* Status hint */}
           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg w-full">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
-            <p className="text-xs text-muted-foreground">{t('payment.waitingForPayment')}</p>
+            <p className="text-xs text-muted-foreground">
+              {hasObservedTransfer
+                ? t('payment.paymentDetectedHint')
+                : t('payment.waitingForPayment')}
+            </p>
           </div>
+
+          {observedPayments.length > 0 && (
+            <div className="w-full rounded-lg border border-border bg-background">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
+                <p className="text-xs font-medium text-foreground">
+                  {t('payment.observedPayments')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {paymentInfo.observedAmount || '0'} /{' '}
+                  {paymentInfo.requiredAmount || displayAmount} {coinSymbol}
+                </p>
+              </div>
+              <div className="divide-y divide-border">
+                {observedPayments.map(payment => (
+                  <div key={`${payment.id}-${payment.eventIndex ?? 0}`} className="px-3 py-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-foreground">
+                        {payment.amount} {coinSymbol}
+                      </span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                        {observationStatusLabel(payment.status, t)}
+                      </span>
+                    </div>
+                    {payment.txHash && payment.hasChainTxHash !== false && (
+                      <code className="mt-1 block text-xs text-muted-foreground">
+                        {shortHash(payment.txHash)}
+                        {typeof payment.eventIndex === 'number' ? `:${payment.eventIndex}` : ''}
+                      </code>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>

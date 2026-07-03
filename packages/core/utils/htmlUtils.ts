@@ -3,7 +3,7 @@
  * 使用 DOMPurify 安全地处理 HTML 内容
  */
 
-import DOMPurify from 'isomorphic-dompurify';
+import createDOMPurify from 'dompurify';
 import type { Config } from 'dompurify';
 
 // 基础标签：用于商品描述、用户简介等一般 HTML 内容
@@ -54,14 +54,31 @@ const RICH_HTML_CONFIG: Config = {
   ADD_ATTR: ['target', 'rel'],
 };
 
-// 添加钩子为链接添加安全属性
-if (typeof window !== 'undefined') {
-  DOMPurify.addHook('afterSanitizeAttributes', node => {
-    if (node.tagName === 'A') {
-      node.setAttribute('target', '_blank');
-      node.setAttribute('rel', 'noopener noreferrer nofollow');
-    }
-  });
+let browserDOMPurify: ReturnType<typeof createDOMPurify> | null = null;
+
+function getBrowserDOMPurify(): ReturnType<typeof createDOMPurify> | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  if (!browserDOMPurify) {
+    browserDOMPurify = createDOMPurify(window);
+    browserDOMPurify.addHook('afterSanitizeAttributes', node => {
+      if (node.tagName === 'A') {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer nofollow');
+      }
+    });
+  }
+  return browserDOMPurify;
+}
+
+function escapeHtml(html: string): string {
+  return html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**
@@ -88,7 +105,8 @@ export function decodeHtmlEntities(text: string): string {
  * 使用 DOMPurify 只允许基本的格式化标签，移除危险的标签和属性
  */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+  const DOMPurify = getBrowserDOMPurify();
+  return DOMPurify ? DOMPurify.sanitize(html, SANITIZE_CONFIG) : escapeHtml(html);
 }
 
 /**
@@ -96,7 +114,8 @@ export function sanitizeHtml(html: string): string {
  * 允许更多标签（img、table、s 等），用于 Store Section 富文本编辑器内容
  */
 export function sanitizeRichHtml(html: string): string {
-  return DOMPurify.sanitize(html, RICH_HTML_CONFIG);
+  const DOMPurify = getBrowserDOMPurify();
+  return DOMPurify ? DOMPurify.sanitize(html, RICH_HTML_CONFIG) : escapeHtml(html);
 }
 
 /**
@@ -104,6 +123,9 @@ export function sanitizeRichHtml(html: string): string {
  * 适用于不需要显示 HTML 格式的场景（如简短描述）
  */
 export function stripHtmlTags(html: string): string {
-  // 使用 DOMPurify 移除所有标签
-  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
+  const DOMPurify = getBrowserDOMPurify();
+  if (DOMPurify) {
+    return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
+  }
+  return decodeHtmlEntities(html.replace(/<[^>]*>/g, ''));
 }

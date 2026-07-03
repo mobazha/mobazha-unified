@@ -8,6 +8,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAndSetup } from './fixtures/auth';
+import { setupMockAuth } from './fixtures/mock-auth';
 import {
   seedVisualTestData,
   injectCartData,
@@ -21,6 +22,8 @@ import {
   mockPreferencesAPI,
   mockSearchAPI,
   mockProductDetailAPI,
+  mockProductImportWorkbenchAPI,
+  MOCK_PRODUCT_IMPORT_RUN_ID,
 } from './fixtures/mock-api-routes';
 
 let seededData: SeededVisualData | null = null;
@@ -204,7 +207,7 @@ test.describe('Desktop Visual - Authenticated Main', () => {
   test.beforeAll(async ({ request }) => {
     try {
       seededData = await seedVisualTestData(request);
-      console.log(`Seeded ${seededData.listings.length} listings for desktop visual tests`);
+      console.warn(`Seeded ${seededData.listings.length} listings for desktop visual tests`);
     } catch (e) {
       console.warn('Failed to seed visual data:', e);
     }
@@ -248,7 +251,7 @@ test.describe('Desktop Visual - Authenticated Main', () => {
   test('authed: orders-sales (mocked)', async ({ page }) => {
     await ensureAuthenticated(page);
     await mockOrdersAPI(page);
-    await page.goto('/orders?tab=sales');
+    await page.goto('/orders?role=sales');
     await waitForDOMStable(page);
     await expect(page).toHaveScreenshot('desktop-authed-orders-sales.png', { fullPage: true });
   });
@@ -311,7 +314,7 @@ test.describe('Desktop Visual - Authenticated Main', () => {
     await ensureAuthenticated(page);
     await mockProductDetailAPI(page);
     await page.goto(
-      '/product/wireless-headphones?peer=QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P'
+      '/product/wireless-headphones?peerID=QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P'
     );
     await waitForDOMStable(page);
     await expect(page).toHaveScreenshot('desktop-authed-product-detail.png', { fullPage: true });
@@ -361,7 +364,7 @@ test.describe('Desktop Visual - Authenticated Settings', () => {
 test.describe('Desktop Visual - Authenticated Admin', () => {
   test('authed: moderator-cases', async ({ page }) => {
     await ensureAuthenticated(page);
-    await navigateAndVerify(page, '/moderation/cases');
+    await navigateAndVerify(page, '/cases');
     await expect(page).toHaveScreenshot('desktop-authed-moderator-cases.png', { fullPage: true });
   });
 
@@ -375,6 +378,27 @@ test.describe('Desktop Visual - Authenticated Admin', () => {
     await ensureAuthenticated(page);
     await navigateAndVerify(page, '/admin/products');
     await expect(page).toHaveScreenshot('desktop-authed-admin-products.png', { fullPage: true });
+  });
+
+  test('authed: admin-product-import-workbench (mocked)', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await setupMockAuth(page);
+    await mockProductImportWorkbenchAPI(page);
+    await navigateAndVerify(page, `/admin/products/import/${MOCK_PRODUCT_IMPORT_RUN_ID}`);
+    await expect(page.getByTestId('product-import-workbench')).toBeVisible();
+    await expect(page.getByTestId('import-source-preview').first()).toBeVisible();
+    await expect(page).toHaveScreenshot('desktop-authed-admin-product-import-workbench.png', {
+      fullPage: true,
+    });
+    await expect(page.getByTestId('product-import-workbench-main')).toHaveScreenshot(
+      'desktop-authed-admin-product-import-workbench-main.png'
+    );
+    const assistantToggle = page.getByTestId('import-assistant-toggle');
+    await expect(assistantToggle).toHaveAttribute('aria-expanded', 'false');
+    await assistantToggle.click();
+    await expect(assistantToggle).toHaveAttribute('aria-expanded', 'true');
+    await assistantToggle.click();
+    await expect(assistantToggle).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('authed: admin-orders', async ({ page }) => {

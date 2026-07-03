@@ -19,6 +19,7 @@ import type { Order } from '../types/order';
 import type { UserProfile } from '../types/user';
 import type { Wallet, Transaction, FeeLevel, SendTransactionRequest } from '../types/wallet';
 import type { CryptoType } from '../types/common';
+import { filterListingsByScopeTag } from '../utils/storeRelatedListings';
 
 // ============ Product Data Service ============
 
@@ -57,13 +58,33 @@ export const productDataService = {
   },
 
   /**
+   * Related listings for product detail "More from this store".
+   * Filters out cross-vendor catalog bleed; mock mode stamps vendorPeerID for demo UX.
+   */
+  async getStoreRelatedListings(
+    peerID: string,
+    options: productsApi.StoreRelatedListingsOptions = {}
+  ): Promise<ProductListItem[]> {
+    if (isMockMode()) {
+      const items = await mockServices.products.getStoreListings(peerID);
+      const stamped = items.map(item => ({ ...item, vendorPeerID: peerID }));
+      const limit = options.limit ?? 12;
+      const scoped = filterListingsByScopeTag(stamped, options.scopeTag);
+      return scoped.filter(item => item.slug !== options.excludeSlug).slice(0, limit);
+    }
+    return productsApi.getStoreRelatedListings(peerID, options);
+  },
+
+  /**
    * 获取我的商品列表
    */
-  async getMyListings(): Promise<ProductListItem[]> {
+  async getMyListings(
+    options: productsApi.GetListingIndexOptions = {}
+  ): Promise<ProductListItem[]> {
     if (isMockMode()) {
       return mockServices.products.getMyListings();
     }
-    return await productsApi.getListingIndex();
+    return await productsApi.getListingIndex(options);
   },
 
   /**
@@ -75,6 +96,22 @@ export const productDataService = {
     }
     const result = await productsApi.getPublicListing(slug, peerID);
     return result.listing;
+  },
+
+  /**
+   * Fetch a public product with offline status — used by buyer product detail page.
+   * Unlike getProduct(), this preserves the isOffline flag from the API layer.
+   */
+  async getPublicProduct(
+    slug: string,
+    peerID?: string
+  ): Promise<{ product: Product | null; isOffline: boolean }> {
+    if (isMockMode()) {
+      const product = await mockServices.products.getProduct(slug);
+      return { product, isOffline: false };
+    }
+    const result = await productsApi.getPublicListing(slug, peerID);
+    return { product: result.listing, isOffline: result.isOffline };
   },
 
   /**
@@ -124,11 +161,11 @@ export const productDataService = {
   /**
    * 获取热门商品列表（SaaS 首页）
    */
-  async getPopularProducts(): Promise<ProductListItem[]> {
+  async getPopularProducts(limit = 8): Promise<ProductListItem[]> {
     if (isMockMode()) {
       return mockServices.products.getTrendingProducts();
     }
-    return await productsApi.fetchFeaturedListings();
+    return await productsApi.fetchFeaturedListings(limit);
   },
 
   /**
@@ -239,16 +276,21 @@ export const orderDataService = {
   /**
    * 发货（卖家）
    */
-  async fulfillOrder(params: {
+  async shipOrder(params: {
     orderID: string;
-    physicalDelivery?: { shipper: string; trackingNumber: string };
-    digitalDelivery?: { url?: string; password?: string };
-    note?: string;
+    receivingAccountID?: number;
+    shipments: Array<{
+      physicalDelivery?: { shipper: string; trackingNumber: string };
+      digitalDelivery?: { url?: string; password?: string };
+      cryptocurrencyDelivery?: { transactionID: string };
+      note?: string;
+      itemIndex?: number;
+    }>;
   }) {
     if (isMockMode()) {
-      return mockServices.orders.fulfillOrder(params.orderID);
+      return mockServices.orders.shipOrder(params.orderID);
     }
-    return await ordersApi.fulfillOrder(params);
+    return await ordersApi.shipOrder(params);
   },
 
   /**
@@ -316,25 +358,13 @@ export const orderDataService = {
     return await ordersApi.openDispute(orderId, claim, evidenceHashes);
   },
 
-  /**
-   * 获取支付指令
-   * @param params.orderId 订单 ID
-   * @param params.coin 支付币种
-   * @param params.amount 支付金额（最小单位，可选）
-   * @param params.payerAddress 付款人地址（可选）
-   * @param params.moderator 仲裁人 peerID（可选）
-   */
-  async getPaymentInstructions(params: {
+  async createPaymentSession(params: {
     orderId: string;
-    coin: string;
-    amount?: number;
-    payerAddress?: string;
+    paymentCoin: string;
     moderator?: string;
+    vendorPeerID?: string;
   }) {
-    if (isMockMode()) {
-      return mockServices.orders.getPaymentInstructions(params.orderId, params.coin);
-    }
-    return await ordersApi.getPaymentInstructions(params);
+    return await ordersApi.createOrderPaymentSession(params);
   },
 };
 
@@ -738,8 +768,13 @@ export interface SearchFilters {
   type?: string;
   productType?: string;
   rating?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  currency?: string;
   shipping?: string;
   nsfw?: boolean;
+  browse?: 'discover' | 'all';
+  peerIDs?: string[];
 }
 
 // 搜索返回的用户类型（与 productsApi.SearchedUser 对齐）
@@ -859,7 +894,7 @@ export const searchDataService = {
           })
         : { products: [], total: 0, hasMore: false },
       type !== 'products'
-        ? productsApi.searchProfiles({ query, page: 0, pageSize: 20 })
+        ? productsApi.searchProfiles({ query, page: 0, pageSize: 20, peerIDs: filters.peerIDs })
         : { users: [], total: 0, hasMore: false },
     ]);
 
@@ -887,6 +922,9 @@ export const searchDataService = {
     page: number;
     pageSize: number;
     hasMore: boolean;
+    vendorCount?: number;
+    catalogTotal?: number;
+    browseMode?: 'discover' | 'all';
   }> {
     if (isMockMode()) {
       const result = await mockServices.search.search(query, 'products');
@@ -896,6 +934,9 @@ export const searchDataService = {
         page,
         pageSize,
         hasMore: result.hasMore,
+        vendorCount: undefined,
+        catalogTotal: undefined,
+        browseMode: filters.browse,
       };
     }
 
@@ -914,7 +955,8 @@ export const searchDataService = {
   async searchUsers(
     query: string,
     page = 0,
-    pageSize = 20
+    pageSize = 20,
+    filters: Pick<SearchFilters, 'peerIDs'> = {}
   ): Promise<{
     users: SearchUser[];
     total: number;
@@ -938,6 +980,7 @@ export const searchDataService = {
       query,
       page,
       pageSize,
+      peerIDs: filters.peerIDs,
     });
   },
 };

@@ -8,14 +8,26 @@
  * ```
  */
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useOrder } from './useOrders';
 import { useUserStore } from '../stores/userStore';
 import { transformCoreOrder } from '../utils/transforms/orderTransform';
+import { applyPaymentSessionToDisplayOrder } from '../utils/transforms/paymentSessionDisplay';
+import {
+  buyerNeedsRefundAddress,
+  resolveAccountDefaultRefundAddress,
+  resolveBuyerRefundAddress,
+  shouldShowRefundDestination,
+} from '../utils/buyerRefundAddress';
+import { loadRefundReceivingPreferencesSafe } from '../utils/refundReceivingPreferences';
 import { fetchProfileWithCache } from '../services/profileCache';
 import { getImageUrl } from '../services/api/config';
+import { ordersApi } from '../services/api/orders';
 import type { Order as CoreOrder } from '../types/order';
+import type { SettlementActionSnapshot } from '../types/order';
 import type { DisplayOrder } from '../types/orderDisplay';
+import type { PaymentSession } from '../types/paymentSession';
 
 /**
  * useOrderDetail Hook 返回值
@@ -25,6 +37,20 @@ export interface UseOrderDetailReturn {
   displayOrder: DisplayOrder | null;
   /** 原始 API 订单数据 */
   coreOrder: CoreOrder | null;
+  /** 最新的结算动作快照（如果存在） */
+  latestSettlementAction: SettlementActionSnapshot | null;
+  /** Unified payment session when available */
+  paymentSession: PaymentSession | null | undefined;
+  /** Buyer-declared crypto refund address, if any */
+  buyerRefundAddress: string;
+  /** Prefill for refund input: order address, else account default */
+  buyerRefundAddressDraft: string;
+  /** Buyer must set refund address before cancel / refund / dispute */
+  buyerNeedsRefundAddress: boolean;
+  /** Show read-only refund destination card on order detail */
+  showRefundDestination: boolean;
+  /** False while the payment session query is still loading */
+  paymentSessionKnown: boolean;
   /** 是否正在加载 */
   isLoading: boolean;
   /** 错误信息 */
@@ -77,6 +103,53 @@ interface ProfileEnhancement {
   moderatorLocation?: string;
 }
 
+const FINALIZED_STATES = new Set([
+  'COMPLETED',
+  'PAYMENT_FINALIZED',
+  'SHIPPED',
+  'PARTIALLY_SHIPPED',
+]);
+const CANCELLED_STATES = new Set(['CANCELED', 'CANCELLED', 'REFUNDED', 'DECLINED']);
+
+function settlementActionName(action: SettlementActionSnapshot): string {
+  return (action.settlementAction || action.action || '').toLowerCase();
+}
+
+function isConfirmedSettlementAction(action: SettlementActionSnapshot): boolean {
+  return (action.state || '').toLowerCase() === 'confirmed';
+}
+
+export function selectPrimarySettlementAction(
+  order: CoreOrder | null | undefined
+): SettlementActionSnapshot | null {
+  const actions = order?.settlementActions || [];
+  if (actions.length === 0) return null;
+
+  const nonSetupActions = actions.filter(action => settlementActionName(action) !== 'safe_deploy');
+  const candidates = nonSetupActions.length > 0 ? nonSetupActions : actions;
+  const state = order?.state || '';
+
+  if (CANCELLED_STATES.has(state)) {
+    return (
+      candidates.find(action => {
+        const name = settlementActionName(action);
+        return isConfirmedSettlementAction(action) && (name === 'cancel' || name === 'refund');
+      }) || candidates[0]
+    );
+  }
+
+  if (FINALIZED_STATES.has(state)) {
+    return (
+      candidates.find(action => {
+        const name = settlementActionName(action);
+        return isConfirmedSettlementAction(action) && (name === 'confirm' || name === 'complete');
+      }) || candidates[0]
+    );
+  }
+
+  return candidates[0];
+}
+
 export function useOrderDetail(
   orderId: string,
   viewingContext?: 'sale' | 'purchase'
@@ -87,6 +160,18 @@ export function useOrderDetail(
 
   // 使用 useOrder hook 获取订单数据
   const { order: coreOrder, isLoading, error, refetch } = useOrder(orderId);
+  const latestSettlementAction = selectPrimarySettlementAction(coreOrder);
+  const {
+    data: paymentSession,
+    refetch: refetchPaymentSession,
+    isLoading: isPaymentSessionLoading,
+  } = useQuery({
+    queryKey: ['order-payment-session', orderId],
+    queryFn: () => ordersApi.getOrderPaymentSession(orderId),
+    enabled: !!orderId,
+    staleTime: 30 * 1000,
+    retry: false,
+  });
 
   // 用于存储异步获取的 profile 增强信息
   const [profileEnhancement, setProfileEnhancement] = useState<ProfileEnhancement>({});
@@ -173,7 +258,7 @@ export function useOrderDetail(
   const displayOrder = useMemo(() => {
     if (!baseDisplayOrder) return null;
 
-    const order = { ...baseDisplayOrder };
+    const order = applyPaymentSessionToDisplayOrder({ ...baseDisplayOrder }, paymentSession);
 
     // 应用 profile 增强
     if (order.vendor && (profileEnhancement.vendorName || profileEnhancement.vendorAvatar)) {
@@ -207,13 +292,85 @@ export function useOrderDetail(
     }
 
     return order;
-  }, [baseDisplayOrder, profileEnhancement]);
+  }, [baseDisplayOrder, paymentSession, profileEnhancement]);
+
+  const refetchAll = useCallback(() => {
+    void refetch();
+    void refetchPaymentSession();
+  }, [refetch, refetchPaymentSession]);
+
+  const buyerRefundAddress = useMemo(
+    () => resolveBuyerRefundAddress(coreOrder, paymentSession),
+    [coreOrder, paymentSession]
+  );
+
+  const paymentCoin =
+    displayOrder?.paymentCoin?.trim() ||
+    coreOrder?.contract?.paymentSent?.coin?.trim() ||
+    paymentSession?.paymentCoin?.trim() ||
+    '';
+
+  const [loadedAccountDefaultRefundAddress, setLoadedAccountDefaultRefundAddress] = useState('');
+
+  const paymentSessionKnown = !isPaymentSessionLoading;
+
+  const needsBuyerRefundAddress = useMemo(
+    () =>
+      buyerNeedsRefundAddress({
+        displayOrder,
+        coreOrder,
+        paymentSession,
+        paymentSessionKnown,
+      }),
+    [displayOrder, coreOrder, paymentSession, paymentSessionKnown]
+  );
+
+  const shouldLoadAccountDefaultRefund =
+    needsBuyerRefundAddress && !buyerRefundAddress && Boolean(paymentCoin);
+
+  useEffect(() => {
+    if (!shouldLoadAccountDefaultRefund) return;
+
+    let cancelled = false;
+    void loadRefundReceivingPreferencesSafe().then(prefs => {
+      if (cancelled) return;
+      setLoadedAccountDefaultRefundAddress(resolveAccountDefaultRefundAddress(prefs, paymentCoin));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldLoadAccountDefaultRefund, paymentCoin]);
+
+  const accountDefaultRefundAddress = shouldLoadAccountDefaultRefund
+    ? loadedAccountDefaultRefundAddress
+    : '';
+
+  const buyerRefundAddressDraft = buyerRefundAddress || accountDefaultRefundAddress;
+
+  const showRefundDestination = useMemo(
+    () =>
+      shouldShowRefundDestination({
+        displayOrder,
+        coreOrder,
+        paymentSession,
+        paymentSessionKnown,
+      }),
+    [displayOrder, coreOrder, paymentSession, paymentSessionKnown]
+  );
 
   return {
     displayOrder,
     coreOrder,
-    isLoading,
+    latestSettlementAction,
+    paymentSession,
+    buyerRefundAddress,
+    buyerRefundAddressDraft,
+    buyerNeedsRefundAddress: needsBuyerRefundAddress,
+    showRefundDestination,
+    paymentSessionKnown,
+    isLoading: isLoading || isPaymentSessionLoading,
     error,
-    refetch,
+    refetch: refetchAll,
   };
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ProductDetail } from './ProductDetail';
+import { ProductDetailDesktop } from './ProductDetailDesktop';
 import { ConnectingModal } from './ConnectingModal';
 import { productDataService, profileApi, getImageUrl, useI18n } from '@mobazha/core';
 
@@ -263,7 +263,7 @@ export function ProductDetailModal({ open, onOpenChange, slug, peerID }: Product
 
         {/* 商品详情内容 */}
         <div className="overflow-y-auto max-h-[calc(90vh-1rem)] scroll-smooth">
-          <ProductDetail slug={slug} peerID={peerID} isModal={true} onClose={handleClose} />
+          <ProductDetailDesktop slug={slug} peerID={peerID} isModal={true} onClose={handleClose} />
         </div>
       </DialogContent>
     </Dialog>

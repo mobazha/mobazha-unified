@@ -76,6 +76,7 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ vars.SAAS_API_BASE_URL }}
             NEXT_PUBLIC_CASDOOR_URL=${{ vars.SAAS_CASDOOR_URL }}
             NEXT_PUBLIC_CASDOOR_CLIENT_ID=${{ vars.SAAS_CASDOOR_CLIENT_ID }}
+            NEXT_PUBLIC_STORE_SUBDOMAIN_BASE=mobazha.org
 
   # ============================================================
   # Build: Standalone image

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import { useI18n, useCurrency, getGatewayUrl } from '@mobazha/core';
+import { useI18n, useCurrency, getImageUrl } from '@mobazha/core';
 import type { ListingFormData } from '@mobazha/core';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -44,7 +44,7 @@ export function PreviewStep({
 
   const firstImage = formData.images[0];
   const imageHash = firstImage?.medium || firstImage?.small || firstImage?.original;
-  const imageUrl = imageHash ? `${getGatewayUrl()}/media/images/${imageHash}` : null;
+  const imageUrl = imageHash ? getImageUrl(imageHash) || null : null;
 
   const canPublish = hasImages && hasTitle && hasPrice;
 

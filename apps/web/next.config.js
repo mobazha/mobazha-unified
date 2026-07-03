@@ -7,6 +7,16 @@ const nextConfig = {
 
   transpilePackages: ['@mobazha/ui', '@mobazha/core'],
 
+  // Keep bigint-buffer external so its `bindings` lookup still resolves from
+  // the package directory. Fast deploy scripts replace the traced local native
+  // artifact with a Linux/amd64 Alpine build before packaging.
+  serverExternalPackages: ['bigint-buffer'],
+  outputFileTracingIncludes: {
+    '/*': [
+      '../../node_modules/.pnpm/bigint-buffer@*/node_modules/bigint-buffer/build/Release/bigint_buffer.node',
+    ],
+  },
+
   // 禁用开发指示器（左下角的 "N" 图标）
   devIndicators: false,
 
@@ -41,6 +51,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'matrix.mobazha.org',
+      },
+      // Fulfillment provider CDNs (supply chain imports)
+      {
+        protocol: 'https',
+        hostname: '*.printful.com',
       },
     ],
     // 支持的图片格式
@@ -77,6 +92,18 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'no-referrer-when-downgrade' },
         ],
+      },
+      {
+        source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        source: '/runtime-config.js',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        source: '/manifest.json',
+        headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate' }],
       },
       {
         source: '/((?!embed|_next/static|icons).*)',

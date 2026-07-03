@@ -109,6 +109,12 @@ export function getGuestStatusConfig(t: TranslateFn): Record<string, StatusDispl
       icon: CircleDollarSign,
       description: t('guestOrder.stateAwaitingPaymentDesc'),
     },
+    PAYMENT_DETECTED: {
+      label: t('guestOrder.statePendingConfirmation'),
+      color: 'bg-info/15 text-info',
+      icon: Timer,
+      description: t('guestOrder.statePendingConfirmationDesc'),
+    },
     PENDING_CONFIRMATION: {
       label: t('guestOrder.statePendingConfirmation'),
       color: 'bg-info/15 text-info',
@@ -127,11 +133,18 @@ export function getGuestStatusConfig(t: TranslateFn): Record<string, StatusDispl
       icon: RefreshCw,
       description: t('guestOrder.stateProcessingDesc'),
     },
-    FULFILLED: {
-      label: t('guestOrder.stateFulfilled'),
+    SHIPPED: {
+      label: t('guestOrder.stateShipped'),
       color: 'bg-primary/15 text-primary',
       icon: Package,
-      description: t('guestOrder.stateFulfilledDesc'),
+      description: t('guestOrder.stateShippedDesc'),
+    },
+    /** Legacy API string — same display as SHIPPED */
+    FULFILLED: {
+      label: t('guestOrder.stateShipped'),
+      color: 'bg-primary/15 text-primary',
+      icon: Package,
+      description: t('guestOrder.stateShippedDesc'),
     },
     COMPLETED: {
       label: t('guestOrder.stateCompleted'),
@@ -158,10 +171,32 @@ const UNKNOWN_COLOR = 'bg-muted text-muted-foreground';
 
 export function resolveStatusDisplay(
   state: string,
-  config: Record<string, StatusDisplayConfig>,
+  config: Record<string, StatusDisplayConfig>
 ): StatusDisplayConfig {
-  return config[state] ?? {
-    label: state.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase()),
-    color: UNKNOWN_COLOR,
-  };
+  return (
+    config[state] ?? {
+      label: state.replace(/_/g, ' ').replace(/\b\w/g, s => s.toUpperCase()),
+      color: UNKNOWN_COLOR,
+    }
+  );
+}
+
+function guestStatusOutlineClass(color: string): string {
+  if (color.includes('text-warning')) return `${color} border border-warning/30`;
+  if (color.includes('text-success')) return `${color} border border-success/30`;
+  if (color.includes('text-primary')) return `${color} border border-primary/30`;
+  if (color.includes('text-error')) return `${color} border border-error/30`;
+  if (color.includes('text-info')) return `${color} border border-info/30`;
+  return `${color} border border-border`;
+}
+
+/** Shared guest-order state label — reuses buyer-facing `guestOrder.state*` i18n keys. */
+export function formatGuestStateLabel(state: string, t: TranslateFn): string {
+  return resolveStatusDisplay(state, getGuestStatusConfig(t)).label;
+}
+
+/** Badge classes aligned with `getGuestStatusConfig` color tokens. */
+export function guestStateBadgeClass(state: string, t: TranslateFn): string {
+  const { color } = resolveStatusDisplay(state, getGuestStatusConfig(t));
+  return guestStatusOutlineClass(color);
 }

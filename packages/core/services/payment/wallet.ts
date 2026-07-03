@@ -28,7 +28,7 @@ interface EthereumProvider {
 
 // 默认配置
 const DEFAULT_CONFIG: WalletServiceConfig = {
-  projectId: '', // WalletConnect Project ID - 需要用户配置
+  projectId: '', // Optional external connector project ID.
   supportedChains: [ChainId.ETHEREUM, ChainId.BSC, ChainId.POLYGON, ChainId.ARBITRUM],
   defaultChain: ChainId.ETHEREUM,
   autoConnect: true,

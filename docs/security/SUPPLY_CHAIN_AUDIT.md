@@ -1,39 +1,68 @@
-# Community Edition Supply-Chain Audit
+# Supply-Chain Audit
 
-Audit date: 2026-06-28
+Audit date: 2026-07-01
 
-This audit covers the exact dependency graph resolved from `pnpm-lock.yaml` with pnpm 9.15.4. It is a source-release gate; redistributors of built applications must also preserve the notices and license texts required by the dependencies actually included in their artifacts.
+This audit covers the exact production dependency graph resolved from
+`pnpm-lock.yaml` with pnpm 9.15.4. It is a source-release gate; distributors of
+built applications must also preserve notices and license texts required by the
+dependencies included in their artifacts.
 
 ## Result
 
-- 955 installed package instances were classified into 24 license expressions.
-- Two packages reported `Unknown` package metadata. Their shipped license files were reviewed and recorded in `config/editions/license-conclusions.json`:
+- `pnpm licenses list --prod --json` reports 352 installed production paths,
+  325 package/license records and 19 license expressions.
+- Two packages report `Unknown` package metadata. Their shipped license files
+  are reviewed in `config/editions/license-conclusions.json`:
   - `eyes@0.1.8`: MIT
   - `text-encoding-utf-8@1.0.2`: Unlicense
-- Reown AppKit 1.8.15 and WalletConnect 2.23.0 packages were removed from the Community Edition dependency graph because their shipped Community License terms are outside the intended open-source dependency boundary.
-- The historical AppKit provider source remains for reference but is excluded from the Community Edition TypeScript and production import graphs.
-- Next.js was raised to 16.2.6 and React Router to 7.15.0. Targeted pnpm overrides pin vulnerable `ws` 7.x/8.x transitive paths to 7.5.11/8.21.0 without widening unrelated peer ranges.
-- `pnpm audit --prod --audit-level high` passes with no High or Critical findings. Remaining Low/Moderate findings must continue to be reviewed during routine dependency updates.
+- Reown AppKit and WalletConnect packages are absent from the dependency graph.
+  The frontend uses browser-injected provider standards instead.
+- The resolved security baseline is Next.js 16.2.9, React Router 7.18.0,
+  Vite 7.3.6, Vitest 3.2.6, Rollup 4.59.0 and `ws` 7.5.11/8.21.0.
+- `pnpm audit --prod --audit-level=high` reports no High or Critical
+  production advisory. The complete development graph also reports no High or
+  Critical advisory after applying exact patched-version overrides; its
+  remaining findings are 5 Low and 24 Moderate.
 
-No unresolved dependency-license metadata remains after applying the two exact-version conclusions above.
+No unresolved dependency-license metadata remains after applying the recorded
+exact-version conclusions.
+
+## Connector license boundary
+
+Reown AppKit 1.8.15 was evaluated and intentionally excluded from the public
+core. Its package is distributed under the Reown Community License Agreement,
+which includes network-use, attribution, redistribution and commercial-threshold
+conditions rather than an OSI open-source license. A future connector may be
+offered as a separately reviewed optional plugin; it must not silently enter the
+MPL core dependency or production bundle.
 
 ## Copyleft and choice-of-license dependencies
 
-- `@img/sharp-libvips-darwin-arm64` declares LGPL-3.0-or-later. It is a platform package used by the image tooling stack; binary redistributors must retain its notices and comply with the applicable LGPL terms.
-- `rpc-websockets@9.3.2` declares LGPL-3.0-only and is retained through dormant Solana compatibility dependencies. It is not registered by Community Edition payment providers or executors.
-- Packages declaring a permissive alternative, such as `MIT OR GPL-3.0-or-later`, `BSD-3-Clause OR GPL-2.0`, or `MPL-2.0 OR Apache-2.0`, are consumed under the applicable permissive alternative.
-- MPL-2.0 dependencies remain under their own file-level terms and are compatible with this repository's MPL-2.0 source release.
+- `@img/sharp-libvips-darwin-arm64` declares LGPL-3.0-or-later. Binary
+  distributors must retain its notices and comply with the applicable LGPL terms.
+- `openpgp@6.3.0` declares LGPL-3.0-or-later and is dynamically loaded for
+  end-to-end encrypted address payloads.
+- `rpc-websockets@9.3.2` declares LGPL-3.0-only and is retained through Solana
+  compatibility dependencies.
+- Release archives and container images include `THIRD_PARTY_NOTICES.md` plus
+  the resolved dependency license texts under `third-party-licenses/`.
+- Packages declaring a permissive alternative are consumed under the applicable
+  permissive alternative.
+- MPL-2.0 dependencies remain under their own file-level terms and are compatible
+  with this repository's MPL-2.0 source release.
 
 ## Reproduction
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm licenses list --json
-pnpm typecheck
-pnpm --filter @mobazha/core test
-pnpm --filter @mobazha/web build
-pnpm --filter @mobazha/web build:next
-pnpm audit --prod --audit-level high
+corepack pnpm install --frozen-lockfile
+corepack pnpm licenses list --prod --json
+corepack pnpm typecheck
+corepack pnpm --filter @mobazha/core test
+corepack pnpm --filter @mobazha/web build
+corepack pnpm --filter @mobazha/web build:next
+corepack pnpm audit --prod --audit-level=high
+corepack pnpm audit --audit-level=high
 ```
 
-Production bundle checks must additionally confirm that external wallet initializers, non-UTXO payment executors, and fiat checkout SDK initializers are absent from Community Edition output.
+Production bundle checks must additionally confirm that unapproved wallet SDKs
+and provider-specific private settlement implementations are absent.

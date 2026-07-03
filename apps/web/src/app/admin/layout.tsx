@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
 import { AuthGuard } from '@/components';
 import { AdminSidebar, AdminHeader } from '@/components/admin';
 import { AdminMobileBottomTabs } from '@/components/admin/AdminMobileBottomTabs';
-import { AIChatPanel } from '@/components/AIChatPanel';
+import { AdminFloatingChat } from '@/components/admin/AdminFloatingChat';
 import { StorePausedBanner } from '@/components/store/StorePausedBanner';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { isStandalone, useUserStore, useUserContext } from '@mobazha/core';
 import { usePlatform } from '@mobazha/ui/hooks';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
+import { RuntimeCapabilityBoundary } from '@/components/RuntimeCapabilityBoundary';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -26,7 +27,9 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
     <div className="fixed inset-0 z-30 flex bg-background overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex shrink-0">
-        <AdminSidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+        <Suspense fallback={null}>
+          <AdminSidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+        </Suspense>
       </aside>
 
       {/* Main content area */}
@@ -44,15 +47,17 @@ function AdminLayoutShell({ children }: AdminLayoutProps) {
       </div>
 
       {/* Mobile bottom tab bar */}
-      <AdminMobileBottomTabs />
+      <Suspense fallback={null}>
+        <AdminMobileBottomTabs />
+      </Suspense>
 
       {/* AI Assistant floating panel */}
-      <AIChatPanel />
+      <AdminFloatingChat />
     </div>
   );
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   const standaloneMode = useMemo(() => isStandalone(), []);
   const { isAuthenticated, isLoading: authLoading } = useUserStore();
 
@@ -102,5 +107,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <AuthGuard>
       <AdminLayoutShell>{children}</AdminLayoutShell>
     </AuthGuard>
+  );
+}
+
+export default function AdminLayout(props: AdminLayoutProps) {
+  return (
+    <RuntimeCapabilityBoundary capability="commerce.storeAdmin">
+      <AdminLayoutContent {...props} />
+    </RuntimeCapabilityBoundary>
   );
 }

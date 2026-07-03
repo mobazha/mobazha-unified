@@ -35,11 +35,11 @@ const PERIOD_OPTIONS: { value: Period; labelKey: string }[] = [
 
 const STATUS_COLORS: Record<string, string> = {
   COMPLETED: 'var(--color-chart-1)',
-  FULFILLED: 'var(--color-chart-2)',
+  SHIPPED: 'var(--color-chart-2)',
   PAYMENT_FINALIZED: 'var(--color-chart-3)',
   AWAITING_PAYMENT: 'var(--color-chart-4)',
   AWAITING_PAYMENT_VERIFICATION: 'var(--color-chart-4)',
-  AWAITING_FULFILLMENT: 'var(--color-chart-5)',
+  AWAITING_SHIPMENT: 'var(--color-chart-5)',
   PENDING: 'var(--color-muted-foreground)',
   CANCELED: 'var(--color-destructive)',
   DECLINED: 'var(--color-destructive)',

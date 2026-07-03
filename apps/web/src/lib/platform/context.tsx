@@ -98,6 +98,10 @@ export function PlatformProvider({ children, forceChannel }: PlatformProviderPro
         showConfirm: wa?.showConfirm,
         showAlert: wa?.showAlert,
         openTelegramLink: wa?.openTelegramLink,
+        showScanQrPopup: wa?.showScanQrPopup,
+        closeScanQrPopup: wa?.closeScanQrPopup,
+        onEvent: wa?.onEvent,
+        offEvent: wa?.offEvent,
       };
       try {
         return createTelegramAdapter(sdkLike);

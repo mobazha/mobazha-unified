@@ -1,5 +1,12 @@
 import type { OrderListItem, ProfileDisplayInfo } from '@mobazha/core';
-import { getImageUrl, fromMinimalUnit } from '@mobazha/core';
+import {
+  fromMinimalUnit,
+  formatPrice,
+  getImageUrl,
+  orderListItemThumbnailDisplayUrl,
+} from '@mobazha/core';
+import { resolveTokenIdForDisplay } from '@mobazha/core/data/tokens';
+import type { GuestOrderSummary } from '@mobazha/core/services/api/guestCheckout';
 import type { Order } from '@/components/Order/OrderCard';
 
 type OrderType = 'purchases' | 'sales';
@@ -10,9 +17,9 @@ export function mapOrderState(state: string): Order['status'] {
     AWAITING_PAYMENT_VERIFICATION: 'pending',
     AWAITING_PAYMENT: 'awaiting_payment',
     AWAITING_PICKUP: 'processing',
-    AWAITING_FULFILLMENT: 'processing',
-    PARTIALLY_FULFILLED: 'processing',
-    FULFILLED: 'shipped',
+    AWAITING_SHIPMENT: 'processing',
+    PARTIALLY_SHIPPED: 'processing',
+    SHIPPED: 'shipped',
     COMPLETED: 'completed',
     CANCELED: 'cancelled',
     DECLINED: 'cancelled',
@@ -36,26 +43,13 @@ function getPriceCurrency(total: OrderListItem['total']): string {
   );
 }
 
-function getThumbnailUrl(thumbnail: OrderListItem['thumbnail']): string {
-  if (!thumbnail) return '';
-  if (typeof thumbnail === 'string') return getImageUrl(thumbnail) || '';
-  const hash =
-    thumbnail.medium ||
-    thumbnail.small ||
-    thumbnail.tiny ||
-    thumbnail.large ||
-    thumbnail.original ||
-    '';
-  return getImageUrl(hash) || '';
-}
-
 export function transformOrderListItem(
   item: OrderListItem,
   orderType: OrderType,
   profileMap: Map<string, ProfileDisplayInfo>,
   labels: { seller: string; buyer: string }
 ): Order {
-  const imageUrl = getThumbnailUrl(item.thumbnail);
+  const imageUrl = orderListItemThumbnailDisplayUrl(item);
   const itemAny = item as unknown as Record<string, unknown>;
   const orderId = item.orderID || (itemAny.orderId as string) || '';
   const vendorId = item.vendorID || (itemAny.vendorId as string) || '';
@@ -89,7 +83,14 @@ export function transformOrderListItem(
     orderId,
     status: mapOrderState(item.state || 'PENDING'),
     rawState: item.state || 'PENDING',
+    isModerated: item.moderated,
     paymentCoin: item.paymentCoin,
+    paymentEscrowType: item.paymentEscrowType,
+    settlementAction: item.settlementAction,
+    settlementActionId: item.settlementActionId,
+    settlementState: item.settlementState,
+    settlementTxHash: item.settlementTxHash,
+    contractType: item.contractType,
     items: [
       {
         id: orderId,
@@ -133,6 +134,41 @@ export function ordersToExportRows(orders: Order[]): ExportableOrder[] {
     status: o.rawState || o.status,
     paymentCoin: o.paymentCoin || '',
   }));
+}
+
+export function getGuestPaymentCoin(order: { paymentCoin: string }): string {
+  return resolveTokenIdForDisplay(order.paymentCoin);
+}
+
+export function getGuestPaymentAmountValue(order: {
+  paymentAmount: string;
+  paymentCoin: string;
+}): string {
+  return String(fromMinimalUnit(order.paymentAmount, getGuestPaymentCoin(order)));
+}
+
+export function formatGuestPaymentAmount(order: {
+  paymentAmount: string;
+  paymentCoin: string;
+}): string {
+  const paymentCoin = getGuestPaymentCoin(order);
+  return formatPrice(fromMinimalUnit(order.paymentAmount, paymentCoin), paymentCoin, {
+    showSymbol: true,
+    showCode: true,
+  });
+}
+
+export function guestOrderToExportRow(order: GuestOrderSummary): ExportableOrder {
+  return {
+    orderId: order.orderToken,
+    date: order.createdAt,
+    title: order.items[0]?.listingTitle || '',
+    buyer: order.contactEmail || 'Guest checkout',
+    total: getGuestPaymentAmountValue(order),
+    currency: getGuestPaymentCoin(order),
+    status: order.state,
+    paymentCoin: getGuestPaymentCoin(order),
+  };
 }
 
 export function exportToCSV(rows: ExportableOrder[], filename: string): void {
@@ -195,8 +231,8 @@ export type StatusFilter =
 export const STATUS_FILTER_TO_STATES: Record<StatusFilter, string[] | null> = {
   all: null,
   pending: ['PENDING', 'AWAITING_PAYMENT', 'AWAITING_PAYMENT_VERIFICATION'],
-  processing: ['AWAITING_FULFILLMENT', 'AWAITING_PICKUP', 'PARTIALLY_FULFILLED'],
-  shipped: ['FULFILLED'],
+  processing: ['AWAITING_SHIPMENT', 'AWAITING_PICKUP', 'PARTIALLY_SHIPPED'],
+  shipped: ['SHIPPED'],
   completed: ['COMPLETED', 'PAYMENT_FINALIZED', 'RESOLVED'],
   disputed: ['DISPUTED', 'DECIDED', 'DISPUTE_EXPIRED'],
   cancelled: ['CANCELED', 'DECLINED', 'REFUNDED'],

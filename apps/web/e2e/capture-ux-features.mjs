@@ -111,12 +111,12 @@ function makeOrder(id, slug, title, price, imgId, state, timestamp, overrides, i
 const ORDERS = {
   AWAITING_PAYMENT: makeOrder('QmAwaitPay001', 'gaming-mouse', 'Gaming Mouse RGB Pro', 5999, 96, 'AWAITING_PAYMENT', HOUR_AGO),
   PENDING: makeOrder('QmPending001', 'wireless-headphones', 'Wireless Noise-Cancelling Headphones', 8999, 3, 'PENDING', HOUR_AGO),
-  AWAITING_FULFILLMENT: makeOrder('QmAwaitFul001', 'leather-backpack', 'Handcrafted Leather Backpack', 17500, 119, 'AWAITING_FULFILLMENT', DAY_AGO,
+  AWAITING_SHIPMENT: makeOrder('QmAwaitFul001', 'leather-backpack', 'Handcrafted Leather Backpack', 17500, 119, 'AWAITING_SHIPMENT', DAY_AGO,
     { orderConfirmation: { timestamp: HOUR_AGO } },
     [{ name: 'Color', value: 'Vintage Brown' }, { name: 'Size', value: 'Large' }]),
-  FULFILLED: makeOrder('QmFulfill001', 'organic-coffee', 'Organic Coffee Beans — Ethiopia', 2200, 63, 'FULFILLED', THREE_DAYS_AGO,
+  SHIPPED: makeOrder('QmFulfill001', 'organic-coffee', 'Organic Coffee Beans — Ethiopia', 2200, 63, 'SHIPPED', THREE_DAYS_AGO,
     { orderConfirmation: { timestamp: THREE_DAYS_AGO },
-      orderFulfillments: [{ timestamp: DAY_AGO, physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX9876543210' }] }] }),
+      orderShipments: [{ timestamp: DAY_AGO, shipments: [{ physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX9876543210' } }] }] }),
   COMPLETED: makeOrder('QmComplete001', 'design-kit', 'UI/UX Design Kit — 500+ Components', 4900, 24, 'COMPLETED', TWO_WEEKS_AGO,
     { orderConfirmation: { timestamp: TWO_WEEKS_AGO },
       orderFulfillments: [{ timestamp: WEEK_AGO }],
@@ -214,7 +214,7 @@ async function screenshot(page, name) {
 async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
   const { ctx, page } = await newPage(browser, viewport);
   await page.route('**/v1/orders/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(order) }));
-  await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?type=purchase${urlSuffix}`);
+  await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?role=purchase${urlSuffix}`);
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(4000);
   return { ctx, page };
@@ -237,7 +237,7 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
       r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ purchases }) });
     });
     await page.route('**/v1/profiles/batch*', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({}) }));
-    await page.goto(`${BASE_URL}/orders?tab=purchases`);
+    await page.goto(`${BASE_URL}/orders`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(4000);
     results.push(await screenshot(page, `ux12-continue-payment-${label}`));
@@ -266,7 +266,7 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
   }
 
   // ━━━ 3. All Order Lifecycle States — Desktop + Mobile ━━━━━━━━━━━━━━
-  const lifecycleStates = ['AWAITING_PAYMENT', 'PENDING', 'AWAITING_FULFILLMENT', 'FULFILLED', 'COMPLETED', 'DISPUTED', 'REFUNDED', 'CANCELED', 'PAYMENT_FINALIZED'];
+  const lifecycleStates = ['AWAITING_PAYMENT', 'PENDING', 'AWAITING_SHIPMENT', 'SHIPPED', 'COMPLETED', 'DISPUTED', 'REFUNDED', 'CANCELED', 'PAYMENT_FINALIZED'];
   console.log('\nOrder lifecycle states (desktop)');
   for (const state of lifecycleStates) {
     const order = ORDERS[state];
@@ -306,10 +306,10 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
       await ctx.close();
       return;
     }
-    console.log('  ⚠ Review button not found on PAYMENT_FINALIZED — trying FULFILLED order');
+    console.log('  ⚠ Review button not found on PAYMENT_FINALIZED — trying SHIPPED order');
     await ctx.close();
 
-    const { ctx: ctx2, page: page2 } = await mockOrderAndOpen(browser, { width: 1280, height: 900 }, ORDERS.FULFILLED);
+    const { ctx: ctx2, page: page2 } = await mockOrderAndOpen(browser, { width: 1280, height: 900 }, ORDERS.SHIPPED);
     const fallbackBtn = page2.locator('button:has-text("Confirm Receipt"), button:has-text("Complete Order"), button:has-text("Complete")').first();
     const fallbackVisible = await fallbackBtn.isVisible().catch(() => false);
     if (fallbackVisible) {
@@ -332,7 +332,7 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
       if (req.method() !== 'GET') return r.fallback();
       r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ purchases: [] }) });
     });
-    await page.goto(`${BASE_URL}/orders?tab=purchases`);
+    await page.goto(`${BASE_URL}/orders`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
@@ -426,15 +426,15 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
     await page.route('**/v1/profiles', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(sellerProfile) }));
     await page.route('**/platform/v1/accounts/me', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData({ id: 'seller1', name: 'TechStore', properties: { peerID: MOCK_VENDOR_PEER_ID } }) }));
     await page.route('**/v1/orders/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: wrapData(order) }));
-    await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?type=sale`);
+    await page.goto(`${BASE_URL}/orders/${order.contract.OrderID}?role=sale`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(4000);
     return { ctx, page };
   }
 
-  // Seller: AWAITING_FULFILLMENT → should show Packing Slip button
+  // Seller: AWAITING_SHIPMENT → should show Packing Slip button
   {
-    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_FULFILLMENT);
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_SHIPMENT);
     results.push(await screenshot(page, 'seller-awaiting_fulfillment-desktop'));
     await ctx.close();
   }
@@ -446,10 +446,10 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
     await ctx.close();
   }
 
-  // Seller: AWAITING_FULFILLMENT → open Packing Slip dialog
+  // Seller: AWAITING_SHIPMENT → open Packing Slip dialog
   console.log('\nPacking Slip dialog (with variant options)');
   {
-    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_FULFILLMENT);
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 1280, height: 900 }, ORDERS.AWAITING_SHIPMENT);
     const slipBtn = page.locator('text=Packing Slip').first();
     if (await slipBtn.isVisible()) {
       await slipBtn.click();
@@ -459,10 +459,10 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
     await ctx.close();
   }
 
-  // Seller: AWAITING_FULFILLMENT — Mobile + More Menu open (Packing Slip button)
+  // Seller: AWAITING_SHIPMENT — Mobile + More Menu open (Packing Slip button)
   console.log('\nSeller mobile — more menu with Packing Slip');
   {
-    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 390, height: 844 }, ORDERS.AWAITING_FULFILLMENT);
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 390, height: 844 }, ORDERS.AWAITING_SHIPMENT);
     results.push(await screenshot(page, 'seller-awaiting_fulfillment-mobile'));
     const moreBtn = page.locator('header button:last-child, button[aria-label*="more"], button:has(svg.lucide-more-vertical), button:has(svg.lucide-ellipsis-vertical)').first();
     const moreVisible = await moreBtn.isVisible().catch(() => false);
@@ -494,10 +494,10 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
     await ctx.close();
   }
 
-  // Seller: AWAITING_FULFILLMENT — Mobile Packing Slip dialog open
+  // Seller: AWAITING_SHIPMENT — Mobile Packing Slip dialog open
   console.log('\nSeller mobile — Packing Slip dialog');
   {
-    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 390, height: 844 }, ORDERS.AWAITING_FULFILLMENT);
+    const { ctx, page } = await mockOrderAsSellerAndOpen(browser, { width: 390, height: 844 }, ORDERS.AWAITING_SHIPMENT);
     // Open more menu then click Packing Slip
     const moreBtn = page.locator('header button:last-child, button[aria-label*="more"], button:has(svg.lucide-more-vertical), button:has(svg.lucide-ellipsis-vertical)').first();
     let menuOpened = false;
@@ -533,16 +533,16 @@ async function mockOrderAndOpen(browser, viewport, order, urlSuffix = '') {
     await ctx.close();
   }
 
-  // Buyer: FULFILLED with moderator → should show "Having a problem?"
+  // Buyer: SHIPPED with moderator → should show "Having a problem?"
   console.log('\nModerated order — dispute text link');
   {
     const MOCK_MODERATOR_PEER_ID = 'QmModerator123456789abcdef';
-    const moderatedFulfilled = makeOrder('QmModFul001', 'organic-coffee', 'Organic Coffee Beans — Ethiopia', 2200, 63, 'FULFILLED', THREE_DAYS_AGO,
+    const moderatedShipped = makeOrder('QmModFul001', 'organic-coffee', 'Organic Coffee Beans — Ethiopia', 2200, 63, 'SHIPPED', THREE_DAYS_AGO,
       { orderConfirmation: { timestamp: THREE_DAYS_AGO },
-        orderFulfillments: [{ timestamp: DAY_AGO, physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX9876543210' }] }],
+        orderShipments: [{ timestamp: DAY_AGO, shipments: [{ physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX9876543210' } }] }],
         paymentSent: { moderator: MOCK_MODERATOR_PEER_ID, coin: 'ETH', amount: 2200, method: 'MODERATED' },
       });
-    const { ctx, page } = await mockOrderAndOpen(browser, { width: 1280, height: 900 }, moderatedFulfilled);
+    const { ctx, page } = await mockOrderAndOpen(browser, { width: 1280, height: 900 }, moderatedShipped);
     results.push(await screenshot(page, 'moderated-fulfilled-buyer-desktop'));
     await ctx.close();
   }

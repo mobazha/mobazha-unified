@@ -29,6 +29,8 @@ export type {
   ShareCapability,
   ShareOptions,
   ShareResult,
+  ScanQRCapability,
+  ScanQRResult,
 } from './types';
 
 export { PlatformProvider, useCapabilities, createAdapterForChannel } from './context';
@@ -38,5 +40,6 @@ export { useBackAction } from './hooks/useBackAction';
 export { useConfirm } from './hooks/useConfirm';
 export { useHaptic } from './hooks/useHaptic';
 export { useShare } from './hooks/useShare';
+export { useScanQR } from './hooks/useScanQR';
 
 export { BackActionStack } from './backStack';

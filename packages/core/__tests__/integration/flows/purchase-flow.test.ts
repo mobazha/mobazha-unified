@@ -175,15 +175,18 @@ describe.skipIf(!isIntegrationTestEnabled())('Purchase Flow E2E Tests', () => {
       }
 
       try {
-        const result = await ordersApi.fulfillOrder({
+        const result = await ordersApi.shipOrder({
           orderID: orderId,
-          physicalDelivery: [
+          shipments: [
             {
-              shipper: 'TestShipper',
-              trackingNumber: 'TEST123456',
+              itemIndex: 0,
+              physicalDelivery: {
+                shipper: 'TestShipper',
+                trackingNumber: 'TEST123456',
+              },
+              note: 'E2E Test shipment',
             },
           ],
-          note: 'E2E Test shipment',
         });
         expect(result.success).toBe(true);
         console.log(`📦 Order fulfilled: ${orderId}`);

@@ -3,14 +3,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/layouts';
+import { Loader2 } from 'lucide-react';
 import {
   useI18n,
   getOrderActions,
   getPrimaryAction,
   getSecondaryActions,
   getActionButtonConfig,
-  getTimeRemaining,
   isOrderExpired,
+  getShipActionLabelKey,
+  getCompleteActionLabelKey,
+  getShippedStatusLabelKey,
   type OrderAction,
   type UserRole,
   type OrderState,
@@ -21,14 +24,26 @@ export interface OrderFooterProps {
   userRole: UserRole;
   timestamp: string;
   isModerated?: boolean;
-  isFulfilled?: boolean;
+  isShipped?: boolean;
   paymentMethod?: string;
+  fundsReleasedAtConfirmation?: boolean;
   totalAmount?: string;
   currency?: string;
   paymentCoin?: string;
   hasRated?: boolean;
   inAfterSaleWindow?: boolean;
+  hasAfterSaleDispute?: boolean;
+  contractType?: string;
+  hasPreconfiguredDigitalAssets?: boolean;
+  digitalDeliveryStatus?: string | null;
+  canSyncDigitalDelivery?: boolean;
+  canRetryDigitalDelivery?: boolean;
+  manualDigitalFallbackAllowed?: boolean;
+  isTransitioning?: boolean;
   onAction: (action: OrderAction) => void;
+  onOpenDiscussion?: () => void;
+  /** Hide "under review" footer when moderator ruling awaits acceptance */
+  disputeRulingPendingAcceptance?: boolean;
   className?: string;
 }
 
@@ -41,17 +56,52 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   userRole,
   timestamp,
   isModerated = false,
-  isFulfilled = false,
+  isShipped = false,
   paymentMethod,
+  fundsReleasedAtConfirmation = false,
   totalAmount,
   currency,
   paymentCoin,
   hasRated,
   inAfterSaleWindow = false,
+  hasAfterSaleDispute = false,
+  contractType,
+  hasPreconfiguredDigitalAssets = false,
+  digitalDeliveryStatus,
+  canSyncDigitalDelivery = false,
+  canRetryDigitalDelivery = false,
+  manualDigitalFallbackAllowed = false,
+  isTransitioning = false,
   onAction,
+  onOpenDiscussion,
+  disputeRulingPendingAcceptance = false,
   className = '',
 }) => {
   const { t } = useI18n();
+
+  if (orderState === 'DISPUTED' && onOpenDiscussion && !disputeRulingPendingAcceptance) {
+    return (
+      <div
+        className={`fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50 safe-area-inset-bottom ${className}`}
+      >
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+          <HStack justify="between" align="center" className="max-w-screen-xl mx-auto gap-3">
+            <span className="text-xs sm:text-sm font-medium text-warning truncate">
+              {t('order.footer.disputeReviewing')}
+            </span>
+            <Button
+              size="sm"
+              onClick={onOpenDiscussion}
+              className="h-11 sm:h-10 rounded-full font-semibold"
+              data-testid="order-footer-open-discussion"
+            >
+              {t('order.actions.openDiscussion')}
+            </Button>
+          </HStack>
+        </div>
+      </div>
+    );
+  }
 
   // 检查是否过期
   const expired = isOrderExpired(timestamp);
@@ -59,20 +109,23 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
   // 获取可用操作
   const actions = getOrderActions(orderState, userRole, {
     isModerated,
-    isFulfilled,
+    isShipped,
     isExpired: expired,
     paymentMethod,
     hasRated,
     inAfterSaleWindow,
+    hasAfterSaleDispute,
+    fundsReleasedAtConfirmation,
   });
+  const visibleActions = actions.filter(action => action !== 'Dispute');
 
-  // 没有可用操作时不显示
-  if (actions.length === 0) {
+  // 没有可用操作时：如果正在过渡则显示过渡条，否则不显示
+  if (visibleActions.length === 0 && !isTransitioning) {
     return null;
   }
 
-  const primaryAction = getPrimaryAction(actions);
-  const secondaryActions = getSecondaryActions(actions);
+  const primaryAction = getPrimaryAction(visibleActions);
+  const secondaryActions = getSecondaryActions(visibleActions);
 
   // 获取操作标签（支持国际化）
   const getActionLabel = (action: OrderAction): string => {
@@ -81,11 +134,17 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       Cancel: t('order.actions.cancel'),
       Dispute: t('order.actions.dispute'),
       AfterSaleDispute: t('order.actions.reportIssue'),
-      Complete: t('order.actions.complete'),
+      Complete: t(getCompleteActionLabelKey(contractType)),
       WriteReview: t('order.actions.writeReview'),
       Accept: t('order.actions.accept'),
       Decline: t('order.actions.decline'),
-      Fulfill: t('order.actions.fulfill'),
+      Ship: t(
+        getShipActionLabelKey(contractType, {
+          canSyncDigitalDelivery,
+          canRetryDigitalDelivery,
+          manualDigitalFallbackAllowed,
+        })
+      ),
       Refund: t('order.actions.refund'),
       Claim: t('order.actions.claim'),
       AcceptPayout: t('order.actions.acceptPayout'),
@@ -93,36 +152,7 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
     return labelMap[action] || action;
   };
 
-  // 渲染争议状态倒计时
-  const renderDisputeCountdown = () => {
-    if (orderState === 'DISPUTED') {
-      const remaining = getTimeRemaining(timestamp);
-      return (
-        <div
-          className="flex items-center gap-1.5 text-warning"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="text-sm font-medium">{remaining}</span>
-        </div>
-      );
-    }
-    return null;
-  };
+  const renderDisputeCountdown = () => null;
 
   // 渲染价格信息（仅在 AWAITING_PAYMENT 状态显示）
   const renderPriceInfo = () => {
@@ -141,7 +171,14 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
 
   // 渲染操作按钮
   const renderActionButton = (action: OrderAction, isPrimary: boolean) => {
-    const config = getActionButtonConfig(action, userRole);
+    const config = getActionButtonConfig(action, userRole, {
+      contractType,
+      hasPreconfiguredDigitalAssets,
+      digitalDeliveryStatus,
+      canSyncDigitalDelivery,
+      canRetryDigitalDelivery,
+      manualDigitalFallbackAllowed,
+    });
 
     // 按钮变体映射
     const variantMap: Record<
@@ -154,8 +191,11 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       outline: 'outline',
     };
 
+    const shouldUsePrimaryStyle =
+      isPrimary && action !== 'Dispute' && action !== 'AfterSaleDispute';
+
     // 主要操作按钮 - 醒目的样式
-    if (isPrimary) {
+    if (shouldUsePrimaryStyle) {
       return (
         <Button
           key={action}
@@ -202,9 +242,9 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       AWAITING_PAYMENT: 'order.statusLabels.awaitingPayment',
       AWAITING_PAYMENT_VERIFICATION: 'order.statusLabels.awaitingPaymentVerification',
       AWAITING_PICKUP: 'order.statusLabels.awaitingPickup',
-      AWAITING_FULFILLMENT: 'order.statusLabels.processing',
-      PARTIALLY_FULFILLED: 'order.statusLabels.partialShipped',
-      FULFILLED: 'order.statusLabels.shipped',
+      AWAITING_SHIPMENT: 'order.statusLabels.processing',
+      PARTIALLY_SHIPPED: 'order.statusLabels.partialShipped',
+      SHIPPED: 'order.statusLabels.shipped',
       COMPLETED: 'order.statusLabels.completed',
       CANCELED: 'order.statusLabels.cancelled',
       DECLINED: 'order.stages.declined',
@@ -216,12 +256,33 @@ export const OrderFooter: React.FC<OrderFooterProps> = ({
       PROCESSING_ERROR: 'order.statusLabels.error',
     };
 
+    if (state === 'SHIPPED') {
+      return t(getShippedStatusLabelKey(contractType));
+    }
     const key = statusKeys[state];
     if (key) return t(key);
     return formatStatus(state);
   };
 
   const statusLabel = getStatusLabel(orderState);
+
+  // Transitioning state: show a processing indicator instead of action buttons
+  if (isTransitioning) {
+    return (
+      <div
+        className={`fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg z-50 safe-area-inset-bottom ${className}`}
+      >
+        <div className="px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+          <HStack justify="center" align="center" className="max-w-screen-xl mx-auto gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">
+              {t('order.actions.updatingStatus')}
+            </span>
+          </HStack>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

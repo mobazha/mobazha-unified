@@ -95,7 +95,7 @@ export default function KeyManagementPage() {
   const [showRevokeDialog, setShowRevokeDialog] = useState<string | null>(null);
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
 
-  const masterKey = '';
+  const masterKey = 'test-only-key';
 
   const handleCopyKey = () => {
     navigator.clipboard.writeText(masterKey);

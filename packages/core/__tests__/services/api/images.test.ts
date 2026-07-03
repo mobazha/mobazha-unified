@@ -28,6 +28,28 @@ describe('Images API', () => {
     });
   });
 
+  describe('imageFromUploadResponse', () => {
+    it('maps /v1/media/images { hash } to Image with all sizes set to CID', () => {
+      const img = imagesApi.imageFromUploadResponse({
+        name: 'evidence.png',
+        hash: 'QmEvidenceCid123',
+      });
+      expect(img?.small).toBe('QmEvidenceCid123');
+      expect(img?.original).toBe('QmEvidenceCid123');
+    });
+
+    it('passes through full Image from product-images', () => {
+      const img = imagesApi.imageFromUploadResponse({
+        tiny: 'QmT',
+        small: 'QmS',
+        medium: 'QmM',
+        large: 'QmL',
+        original: 'QmO',
+      });
+      expect(img?.small).toBe('QmS');
+    });
+  });
+
   describe('fileToBase64', () => {
     it('should be a function that returns a Promise', () => {
       // 创建一个简单的 mock File

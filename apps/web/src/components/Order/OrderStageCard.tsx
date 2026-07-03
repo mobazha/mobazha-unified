@@ -1,18 +1,29 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getBlockExplorerUrl, copyToClipboard } from './utils';
 import { Card } from '@/components/ui/card';
-import { Check, Package, CheckCircle, Copy, ExternalLink } from 'lucide-react';
+import {
+  Check,
+  Package,
+  CheckCircle,
+  Copy,
+  ExternalLink,
+  ShieldCheck,
+  CircleDollarSign,
+  RotateCcw,
+  XCircle,
+} from 'lucide-react';
 import {
   useI18n,
-  useCurrency,
   getChainFromCoin,
   getChainByEVMId,
   getTrackingUrl,
+  resolveTokenIdForDisplay,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
+import { CrossCurrencyAmountBlock } from './CrossCurrencyAmountBlock';
 
 export interface OrderStageCardProps {
   /** 阶段标题 */
@@ -56,6 +67,7 @@ function formatDateTime(dateString: string, locale: string = 'en'): string {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
     });
   } catch {
     return dateString;
@@ -115,8 +127,10 @@ export const OrderStageCard = memo(function OrderStageCard({
 export interface PaymentCardProps {
   /** 支付金额（加密货币） */
   amount: string;
-  /** 支付币种（加密货币，如 ETH） */
+  /** 支付币种展示标签（如 ETH） */
   currency: string;
+  /** 原始支付币种（canonical coin / token id），用于图标与 explorer 推断 */
+  paymentCoin?: string;
   /** 原始定价金额（法币，如 "0.60"） */
   pricingAmount?: string;
   /** 原始定价币种（法币，如 "USD"） */
@@ -135,6 +149,7 @@ export interface PaymentCardProps {
 export const PaymentCard = memo(function PaymentCard({
   amount,
   currency,
+  paymentCoin,
   pricingAmount,
   pricingCurrency,
   txHash,
@@ -148,10 +163,6 @@ export const PaymentCard = memo(function PaymentCard({
   showDivider = true,
 }: PaymentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
-  const { formatPrice: formatCurrencyPrice } = useCurrency();
-
-  // 判断是否有原始定价信息（与支付币种不同时显示）
-  const showPricingInfo = pricingAmount && pricingCurrency && pricingCurrency !== currency;
 
   // 格式化交易 hash（显示前后各 6 位）
   const formatTxHash = (hash: string) => {
@@ -159,7 +170,10 @@ export const PaymentCard = memo(function PaymentCard({
     return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
   };
 
-  const txUrl = txHash ? getBlockExplorerUrl(txHash, currency, chainId) || blockchainUrl || '' : '';
+  const txUrl =
+    txHash && paymentCoin
+      ? getBlockExplorerUrl(txHash, paymentCoin, chainId) || blockchainUrl || ''
+      : blockchainUrl || '';
 
   return (
     <OrderStageCard
@@ -174,13 +188,15 @@ export const PaymentCard = memo(function PaymentCard({
           {(() => {
             // 优先使用 EVM chainId 获取链，否则从币种名推断
             const chainFromEVM = chainId ? getChainByEVMId(chainId)?.id : null;
-            const chainFromCurrency = getChainFromCoin(currency);
+            const chainFromCurrency = getChainFromCoin(paymentCoin || currency);
             const chainSymbol = chainFromEVM || chainFromCurrency || null;
             // 只有当代币不是原生代币时才显示链徽章（如 ETHUSDT 显示 ETH 徽章，但 ETH 本身不需要）
-            const showBadge = !!chainSymbol && currency.toUpperCase() !== chainSymbol.toUpperCase();
+            const displayTokenId = resolveTokenIdForDisplay(paymentCoin || currency);
+            const showBadge =
+              !!chainSymbol && displayTokenId.toUpperCase() !== chainSymbol.toUpperCase();
             return (
               <TokenIcon
-                token={currency}
+                token={displayTokenId}
                 size={28}
                 className="flex-shrink-0"
                 showChainBadge={showBadge}
@@ -191,28 +207,21 @@ export const PaymentCard = memo(function PaymentCard({
 
           {/* 支付信息 */}
           <div className="flex-1 min-w-0">
-            {/* 原始定价（法币） */}
-            {showPricingInfo && (
-              <p className="text-sm sm:text-base font-semibold text-foreground">
-                {formatCurrencyPrice(pricingAmount, pricingCurrency)}
-              </p>
-            )}
-            {/* 实际支付（加密货币） */}
-            <p
-              className={cn(
-                'text-foreground flex items-center gap-1',
-                showPricingInfo
-                  ? 'text-xs sm:text-sm text-muted-foreground'
-                  : 'text-sm sm:text-base font-semibold'
-              )}
-            >
-              {showPricingInfo ? `≈ ${amount} ${currency}` : `${amount} ${currency}`}
-              {confirmations !== undefined && confirmations > 0 && (
-                <span className="text-xs text-muted-foreground ml-1">
-                  ({confirmations} confirms)
-                </span>
-              )}
-            </p>
+            <CrossCurrencyAmountBlock
+              amount={amount}
+              currency={currency}
+              paymentCoin={paymentCoin}
+              pricingAmount={pricingAmount}
+              pricingCurrency={pricingCurrency}
+              variant="payment-card"
+              suffix={
+                confirmations !== undefined && confirmations > 0 ? (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({confirmations} confirms)
+                  </span>
+                ) : undefined
+              }
+            />
             {/* 交易 hash */}
             {txHash && (
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -323,7 +332,7 @@ export const OrderRatingCard = memo(function OrderRatingCard({
  * - SERVICE: 显示服务已交付
  * - DIGITAL_GOOD: 显示数字商品已交付
  */
-export interface FulfillmentCardProps {
+export interface ShipmentCardProps {
   timestamp?: string;
   shipper?: string;
   trackingNumber?: string;
@@ -333,7 +342,7 @@ export interface FulfillmentCardProps {
   className?: string;
 }
 
-export const FulfillmentCard = memo(function FulfillmentCard({
+export const ShipmentCard = memo(function ShipmentCard({
   timestamp,
   shipper,
   trackingNumber,
@@ -341,7 +350,7 @@ export const FulfillmentCard = memo(function FulfillmentCard({
   contractType,
   className,
   showDivider = true,
-}: FulfillmentCardProps & { showDivider?: boolean }) {
+}: ShipmentCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
 
@@ -350,10 +359,10 @@ export const FulfillmentCard = memo(function FulfillmentCard({
 
   const title = isPhysicalGood ? t('order.stages.fulfilled') : t('order.stages.delivered');
   const statusText = isPhysicalGood
-    ? t('order.fulfillment.packageShipped')
+    ? t('order.shipment.packageShipped')
     : isService
-      ? t('order.fulfillment.serviceDelivered')
-      : t('order.fulfillment.digitalDelivered');
+      ? t('order.shipment.serviceDelivered')
+      : t('order.shipment.digitalDelivered');
 
   const trackingUrl = isPhysicalGood ? getTrackingUrl(shipper, trackingNumber) : undefined;
 
@@ -387,13 +396,13 @@ export const FulfillmentCard = memo(function FulfillmentCard({
             <p className="text-sm font-medium text-foreground">{statusText}</p>
             {isPhysicalGood && shipper && (
               <p className="text-xs text-muted-foreground">
-                {t('order.fulfillment.carrier')}: {shipper}
+                {t('order.shipment.carrier')}: {shipper}
               </p>
             )}
             {isPhysicalGood && trackingNumber && (
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-xs text-muted-foreground">
-                  {t('order.fulfillment.trackingNumber')}:
+                  {t('order.shipment.trackingNumber')}:
                 </span>
                 {trackingUrl ? (
                   <a
@@ -473,6 +482,33 @@ export const AcceptedCard = memo(function AcceptedCard({
   );
 });
 
+/** 时间线事件卡标题图标（与 AcceptedCard / ShipmentCard 对齐） */
+export type OrderCompleteStageVariant =
+  | 'escrowed'
+  | 'released'
+  | 'complete'
+  | 'refund'
+  | 'cancelled'
+  | 'declined';
+
+function orderCompleteHeaderIcon(variant?: OrderCompleteStageVariant): React.ReactNode {
+  const className = 'w-4 h-4';
+  switch (variant) {
+    case 'escrowed':
+      return <ShieldCheck className={className} />;
+    case 'released':
+      return <CircleDollarSign className={className} />;
+    case 'refund':
+      return <RotateCcw className={className} />;
+    case 'cancelled':
+    case 'declined':
+      return <XCircle className={className} />;
+    case 'complete':
+    default:
+      return <CheckCircle className={className} />;
+  }
+}
+
 /**
  * 订单完成卡片 - 紧凑版
  */
@@ -480,9 +516,18 @@ export interface OrderCompleteCardProps {
   timestamp?: string;
   amount?: string;
   currency?: string;
+  paymentCoin?: string;
+  pricingAmount?: string;
+  pricingCurrency?: string;
+  amountLabel?: string;
+  breakdownLines?: Array<{ label: string; amount: string }>;
   txHash?: string;
   txUrl?: string;
+  txLabel?: string;
+  title?: string;
   description?: string;
+  /** 标题行左侧图标；未传时按 variant 选择，与 ShipmentCard / AcceptedCard 一致 */
+  stageVariant?: OrderCompleteStageVariant;
   className?: string;
 }
 
@@ -490,57 +535,132 @@ export const OrderCompleteCard = memo(function OrderCompleteCard({
   timestamp,
   amount,
   currency,
+  paymentCoin,
+  pricingAmount,
+  pricingCurrency,
+  amountLabel,
+  breakdownLines,
   txHash,
   txUrl,
+  txLabel,
+  title,
   description,
+  stageVariant,
   className,
   showDivider = true,
 }: OrderCompleteCardProps & { showDivider?: boolean }) {
   const { t } = useI18n();
+  const [copiedTx, setCopiedTx] = useState(false);
 
   const formatTxHash = (hash: string) => {
     if (hash.length <= 16) return hash;
     return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
   };
 
+  const handleCopyTx = useCallback(async () => {
+    if (!txHash) return;
+    const ok = await copyToClipboard(txHash);
+    if (!ok) return;
+    setCopiedTx(true);
+    window.setTimeout(() => setCopiedTx(false), 1600);
+  }, [txHash]);
+
+  const resolvedVariant =
+    stageVariant ||
+    (title === t('order.stages.escrowed')
+      ? 'escrowed'
+      : title === t('order.stages.released')
+        ? 'released'
+        : title === t('order.timeline.refunded')
+          ? 'refund'
+          : title === t('order.timeline.orderDeclined')
+            ? 'declined'
+            : title === t('order.timeline.orderCancelled')
+              ? 'cancelled'
+              : 'complete');
+
   return (
     <OrderStageCard
-      title={t('order.stages.complete')}
+      title={title || t('order.stages.complete')}
       timestamp={timestamp}
+      icon={orderCompleteHeaderIcon(resolvedVariant)}
       className={className}
       showDivider={showDivider}
     >
-      <Card className="p-2.5 bg-muted/30">
-        <div className="flex items-center gap-2">
+      <Card className="p-3 bg-muted/30">
+        <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             {amount && currency && (
-              <p className="text-sm sm:text-base font-semibold text-foreground">
-                {amount} {currency}
-              </p>
+              <div className="space-y-0.5">
+                {amountLabel && (
+                  <p className="text-xs font-medium text-muted-foreground">{amountLabel}</p>
+                )}
+                <CrossCurrencyAmountBlock
+                  amount={amount}
+                  currency={currency}
+                  paymentCoin={paymentCoin}
+                  pricingAmount={pricingAmount}
+                  pricingCurrency={pricingCurrency}
+                  variant="timeline"
+                />
+              </div>
             )}
             <p className="text-xs text-muted-foreground">
               {description || t('order.fundsReleased')}
             </p>
-            {txHash && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {txUrl ? (
-                  <a
-                    href={txUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-mono text-primary hover:underline"
-                    title={txHash}
+            {!!breakdownLines?.length && (
+              <div className="mt-2 pt-2 border-t border-border/40 flex flex-wrap gap-x-4 gap-y-1.5">
+                {breakdownLines.map(line => (
+                  <div
+                    key={`${line.label}-${line.amount}`}
+                    className="inline-flex max-w-full items-baseline gap-2 text-xs text-muted-foreground"
                   >
-                    {formatTxHash(txHash)}
-                  </a>
-                ) : (
-                  <span className="text-xs font-mono text-muted-foreground" title={txHash}>
-                    {formatTxHash(txHash)}
-                  </span>
+                    <span className="shrink-0">{line.label}</span>
+                    <span className="font-medium text-foreground/80 tabular-nums break-all">
+                      {line.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {txHash && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {txLabel && (
+                  <span className="text-xs font-medium text-muted-foreground">{txLabel}</span>
                 )}
+                <div className="inline-flex items-center gap-1.5 rounded-md bg-background/70 px-2 py-1 ring-1 ring-border/70">
+                  {txUrl ? (
+                    <a
+                      href={txUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-mono text-primary hover:underline"
+                      title={txHash}
+                    >
+                      {formatTxHash(txHash)}
+                    </a>
+                  ) : (
+                    <span className="text-xs font-mono text-muted-foreground" title={txHash}>
+                      {formatTxHash(txHash)}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    onClick={handleCopyTx}
+                    title={copiedTx ? t('common.copied') : t('common.copy')}
+                    aria-label={copiedTx ? t('common.copied') : t('common.copy')}
+                  >
+                    {copiedTx ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -1,31 +1,89 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header, Footer, MobilePageHeader } from '@/components';
 import { Container, HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n, useCurrency } from '@mobazha/core';
+import { useI18n, useCurrency, ordersApi, toMinimalUnit, buildProductHref } from '@mobazha/core';
 import { CheckoutProgressBar } from '@/components/Checkout/CheckoutProgressBar';
 import { ShareButton } from '@/components/Share';
 import { ShieldCheck, Bell, FileSearch } from 'lucide-react';
 
+function buildFiatPaymentCoin(providerID: string, currency: string): string {
+  const provider = (providerID || '').trim().toLowerCase();
+  const resolvedCurrency = (currency || '').trim().toUpperCase() || 'USD';
+  if (!provider) {
+    throw new Error('fiat provider is required');
+  }
+  return `fiat:${provider}:${resolvedCurrency}`;
+}
+
 function ConfirmationContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { renderPairedPrice } = useCurrency();
 
   const orderID = searchParams.get('orderID') || '';
+  const redirectStatus = searchParams.get('redirect_status');
+  const stripePaymentIntent = searchParams.get('payment_intent') || '';
+  const urlPaymentID = searchParams.get('paymentID') || '';
   const title = searchParams.get('title') || '';
   const totalRaw = searchParams.get('total') || '';
   const currency = searchParams.get('currency') || 'USD';
+  const fiatProviderRaw = searchParams.get('fiatProvider') || '';
+  const fiatAmountRaw = searchParams.get('fiatAmount') || '';
   const vendorName = searchParams.get('vendorName') || '';
+  const vendorPeerID = searchParams.get('vendorPeerID') || '';
   const slug = searchParams.get('slug') || '';
   const totalAmount = totalRaw ? parseFloat(totalRaw) : 0;
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const productShareUrl = slug ? `${siteUrl}/product/${slug}` : '';
+  const productShareUrl = slug ? buildProductHref(slug, vendorPeerID, { baseUrl: siteUrl }) : '';
+  const submitAttemptedRef = useRef(false);
+
+  useEffect(() => {
+    if (submitAttemptedRef.current) return;
+    if (redirectStatus !== 'succeeded' || !orderID) return;
+    submitAttemptedRef.current = true;
+
+    const providerID = (fiatProviderRaw || (stripePaymentIntent ? 'stripe' : '')).toLowerCase();
+    const transactionID = stripePaymentIntent || urlPaymentID;
+    if (!providerID || !transactionID) return;
+
+    const amountFromUrl = Number(fiatAmountRaw);
+    const amount =
+      Number.isFinite(amountFromUrl) && amountFromUrl > 0
+        ? Math.floor(amountFromUrl)
+        : totalAmount > 0
+          ? toMinimalUnit(totalAmount, currency)
+          : 0;
+    if (amount <= 0) return;
+
+    void ordersApi
+      .submitPayment({
+        orderID,
+        transactionID,
+        coin: buildFiatPaymentCoin(providerID, currency),
+        amount: String(amount),
+        timestamp: new Date().toISOString(),
+        method: 5, // FIAT
+      })
+      .catch(err => {
+        console.warn('[CheckoutConfirmation] submitPayment fallback failed:', err);
+      });
+  }, [
+    currency,
+    fiatAmountRaw,
+    fiatProviderRaw,
+    orderID,
+    redirectStatus,
+    stripePaymentIntent,
+    totalAmount,
+    urlPaymentID,
+  ]);
 
   return (
     <div className="min-h-screen bg-background" data-testid="order-confirmation-page">
@@ -39,6 +97,7 @@ function ConfirmationContent() {
           <Card className="max-w-lg mx-auto">
             <CardContent className="p-6 sm:p-8">
               <VStack gap="lg" align="center" className="text-center">
+                {/* Success icon */}
                 <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center">
                   <svg
                     className="w-8 h-8 text-success"
@@ -64,6 +123,7 @@ function ConfirmationContent() {
                   </p>
                 </div>
 
+                {/* Order summary */}
                 <div className="w-full bg-muted/50 rounded-lg p-4 text-left space-y-2">
                   {orderID && (
                     <HStack justify="between">
@@ -99,6 +159,7 @@ function ConfirmationContent() {
                   )}
                 </div>
 
+                {/* Next steps */}
                 <div className="w-full space-y-3 text-left">
                   <h3 className="text-sm font-semibold text-foreground">
                     {t('checkout.nextStepsTitle')}
@@ -117,13 +178,17 @@ function ConfirmationContent() {
                   </div>
                 </div>
 
+                {/* Actions */}
                 <VStack gap="sm" className="w-full">
                   {orderID && (
-                    <Link href={`/orders/${orderID}`} className="w-full">
-                      <Button size="lg" className="w-full" data-testid="view-order-btn">
-                        {t('checkout.viewOrder')}
-                      </Button>
-                    </Link>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      data-testid="view-order-btn"
+                      onClick={() => router.push(`/orders/${encodeURIComponent(orderID)}`)}
+                    >
+                      {t('checkout.viewOrder')}
+                    </Button>
                   )}
                   <Link href="/" className="w-full">
                     <Button variant="outline" size="lg" className="w-full">

@@ -6,13 +6,23 @@ import { ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './skeleton';
 
-interface ProductImageProps {
+/** How product media fills its frame. Prefer `contain` so the full image stays visible. */
+export type ProductImageFit = 'contain' | 'cover';
+
+const fitClassName: Record<ProductImageFit, string> = {
+  contain: 'object-contain',
+  cover: 'object-cover',
+};
+
+export interface ProductImageProps {
   src?: string | null;
   alt: string;
   fill?: boolean;
   width?: number;
   height?: number;
   sizes?: string;
+  /** Defaults to `contain` so cards letterbox on a muted canvas instead of cropping. */
+  fit?: ProductImageFit;
   className?: string;
   containerClassName?: string;
   iconSize?: 'sm' | 'md' | 'lg';
@@ -32,20 +42,28 @@ export function ProductImage({
   width,
   height,
   sizes,
+  fit = 'contain',
   className,
   containerClassName,
   iconSize = 'md',
   priority = false,
 }: ProductImageProps) {
+  const objectFitClass = fitClassName[fit];
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(src ? 'loading' : 'error');
 
   const handleLoad = useCallback(() => setStatus('loaded'), []);
   const handleError = useCallback(() => setStatus('error'), []);
 
-  // Gateway-served images (relative /v1/ paths) must bypass Next.js image
-  // optimization: in production standalone mode the Node server cannot reach
-  // the gateway through the relative URL (Nginx sits outside the container).
+  // Bypass Next.js image optimization for:
+  // - Gateway-served images (/v1/ paths): standalone Node can't reach gateway
+  // - External URLs: third-party CDNs (e.g. Printful) may not be in remotePatterns
   const isGatewayImage = !!src && src.startsWith('/v1/');
+  const isExternalUrl =
+    !!src &&
+    (src.startsWith('http://') || src.startsWith('https://')) &&
+    !src.includes('.mobazha.com') &&
+    !src.includes('.mobazha.org');
+  const shouldBypassOptimization = isGatewayImage || isExternalUrl;
 
   if (!src || status === 'error') {
     return (
@@ -70,8 +88,8 @@ export function ProductImage({
           fill
           sizes={sizes}
           priority={priority}
-          unoptimized={isGatewayImage}
-          className={cn('object-cover', status === 'loading' && 'opacity-0', className)}
+          unoptimized={shouldBypassOptimization}
+          className={cn(objectFitClass, status === 'loading' && 'opacity-0', className)}
           onLoad={handleLoad}
           onError={handleError}
         />
@@ -82,7 +100,8 @@ export function ProductImage({
           width={width}
           height={height}
           className={cn(
-            'w-full h-full object-cover',
+            'w-full h-full',
+            objectFitClass,
             status === 'loading' && 'opacity-0',
             className
           )}

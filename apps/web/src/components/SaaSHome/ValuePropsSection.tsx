@@ -3,7 +3,7 @@
 import React from 'react';
 import { Shield, Database, Coins, Zap } from 'lucide-react';
 import { Container } from '@/components/layouts';
-import { useI18n, EDITION_I18N_KEYS } from '@mobazha/core';
+import { useI18n } from '@mobazha/core';
 
 const VALUE_PROPS = [
   { icon: Shield, key: 'buyerProtection' as const },
@@ -33,9 +33,7 @@ export const ValuePropsSection: React.FC = React.memo(() => {
                   {t(`saasHome.valueProps.${key}.title`)}
                 </h3>
                 <p className="text-muted-foreground text-[10px] leading-snug mt-0.5 line-clamp-2">
-                  {key === 'cryptoNative'
-                    ? t(EDITION_I18N_KEYS.cryptoNativeDescription)
-                    : t(`saasHome.valueProps.${key}.description`)}
+                  {t(`saasHome.valueProps.${key}.description`)}
                 </p>
               </div>
             </div>
@@ -56,9 +54,7 @@ export const ValuePropsSection: React.FC = React.memo(() => {
                 {t(`saasHome.valueProps.${key}.title`)}
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                {key === 'cryptoNative'
-                  ? t(EDITION_I18N_KEYS.cryptoNativeDescription)
-                  : t(`saasHome.valueProps.${key}.description`)}
+                {t(`saasHome.valueProps.${key}.description`)}
               </p>
             </div>
           ))}

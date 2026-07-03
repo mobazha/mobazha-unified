@@ -1,7 +1,13 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { useI18n, useUserStore, getImageUrl, EDITION_I18N_KEYS } from '@mobazha/core';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import {
+  useI18n,
+  useUserStore,
+  getImageUrl,
+  getAdminStorePaymentsPath,
+  useFiatPaymentVisible,
+} from '@mobazha/core';
 import { completeInitialSetup } from '@mobazha/core/services/api/system';
 import { saveToken, getStoredToken } from '@mobazha/core/services/auth/token';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
@@ -31,6 +37,7 @@ import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import CountryCurrencySelector from './CountryCurrencySelector';
 import type { SetupCompletedSteps } from '@mobazha/core/services/api/system';
+import { isSovereignMode } from '@mobazha/core/config/env';
 
 const TOTAL_STEPS = 4;
 
@@ -128,6 +135,7 @@ export default function StandaloneSetupWizard({
   const { t } = useI18n();
   const { toast } = useToast();
   const { profile, updateSettings } = useUserStore();
+  const fiatVisible = useFiatPaymentVisible();
 
   const hasTokenOnMount = useMemo(() => !!getStoredToken(), []);
 
@@ -153,12 +161,22 @@ export default function StandaloneSetupWizard({
   const [passwordDone, setPasswordDone] = useState(passwordAlreadySet && !needsLogin);
   const [loginMode, setLoginMode] = useState(needsLogin);
 
+  useEffect(() => {
+    setStep(initialStep);
+    if (passwordAlreadySet) {
+      setPasswordDone(!needsLogin);
+      setLoginMode(needsLogin);
+    }
+  }, [initialStep, passwordAlreadySet, needsLogin]);
+
   // Step 2: Profile
   const [storeName, setStoreName] = useState(profile?.name || '');
   const [shortDescription, setShortDescription] = useState(profile?.shortDescription || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>(
+    isSovereignMode() ? 'unlisted' : 'public'
+  );
 
   // Step 3: Location & Currency
   const [country, setCountry] = useState('');
@@ -585,70 +603,74 @@ export default function StandaloneSetupWizard({
             </div>
           </div>
 
-          {/* Store Visibility */}
-          <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
-            <h3 className="text-xs sm:text-sm font-medium text-foreground">
-              {t('admin.onboarding.storeVisibility')}
-            </h3>
-            <div className="space-y-2">
-              {[
-                {
-                  value: 'public' as const,
-                  icon: Globe,
-                  titleKey: 'settings.visibility.public',
-                  descKey: 'settings.visibility.publicDesc',
-                },
-                {
-                  value: 'unlisted' as const,
-                  icon: Link2,
-                  titleKey: 'settings.visibility.unlisted',
-                  descKey: 'settings.visibility.unlistedDesc',
-                },
-                {
-                  value: 'private' as const,
-                  icon: Lock,
-                  titleKey: 'settings.visibility.private',
-                  descKey: 'settings.visibility.privateDesc',
-                },
-              ].map(opt => {
-                const Icon = opt.icon;
-                const selected = visibility === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    disabled={saving}
-                    onClick={() => setVisibility(opt.value)}
-                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-muted-foreground/30'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                        selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+          {/* Store Visibility — hidden for Sovereign (always unlisted) */}
+          {!isSovereignMode() && (
+            <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">
+                {t('admin.onboarding.storeVisibility')}
+              </h3>
+              <div className="space-y-2">
+                {[
+                  {
+                    value: 'public' as const,
+                    icon: Globe,
+                    titleKey: 'settings.visibility.public',
+                    descKey: 'settings.visibility.publicDesc',
+                  },
+                  {
+                    value: 'unlisted' as const,
+                    icon: Link2,
+                    titleKey: 'settings.visibility.unlisted',
+                    descKey: 'settings.visibility.unlistedDesc',
+                  },
+                  {
+                    value: 'private' as const,
+                    icon: Lock,
+                    titleKey: 'settings.visibility.private',
+                    descKey: 'settings.visibility.privateDesc',
+                  },
+                ].map(opt => {
+                  const Icon = opt.icon;
+                  const selected = visibility === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={saving}
+                      onClick={() => setVisibility(opt.value)}
+                      className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/30'
                       }`}
                     >
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{t(opt.titleKey)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
-                    </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                        selected ? 'border-primary' : 'border-muted-foreground/40'
-                      }`}
-                    >
-                      {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </div>
-                  </button>
-                );
-              })}
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                          selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <Icon className="w-4.5 h-4.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{t(opt.titleKey)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                          selected ? 'border-primary' : 'border-muted-foreground/40'
+                        }`}
+                      >
+                        {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.onboarding.visibilityNote')}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
-          </div>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             <button
@@ -685,11 +707,17 @@ export default function StandaloneSetupWizard({
             </div>
             <div>
               <h2 className="text-lg font-semibold">
-                {t('standalone.setup.regionTitle') || 'Location & Currency'}
+                {isSovereignMode()
+                  ? t('sovereign.setup.regionTitle', { defaultValue: 'Location' })
+                  : t('standalone.setup.regionTitle') || 'Location & Currency'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {t('standalone.setup.regionDesc') ||
-                  'Set your country and preferred display currency'}
+                {isSovereignMode()
+                  ? t('sovereign.setup.regionDesc', {
+                      defaultValue: 'Set your country for shipping calculations',
+                    })
+                  : t('standalone.setup.regionDesc') ||
+                    'Set your country and preferred display currency'}
               </p>
             </div>
           </div>
@@ -699,6 +727,7 @@ export default function StandaloneSetupWizard({
             currency={currency}
             onCountryChange={setCountry}
             onCurrencyChange={setCurrency}
+            hideCurrency={isSovereignMode()}
           />
 
           <div className="flex items-center justify-between pt-2">
@@ -746,7 +775,7 @@ export default function StandaloneSetupWizard({
 
           <div className="space-y-3 text-left">
             <button
-              onClick={() => handleFinish('/admin/settings/payments')}
+              onClick={() => handleFinish(getAdminStorePaymentsPath())}
               className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent transition-colors group"
             >
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
@@ -757,30 +786,50 @@ export default function StandaloneSetupWizard({
                   {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
                 </p>
                 <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {t(EDITION_I18N_KEYS.setupPaymentsDesc)}
+                  {fiatVisible
+                    ? t('admin.onboarding.setupPaymentsDesc') ||
+                      'Add crypto wallets, connect Stripe or PayPal'
+                    : t('admin.onboarding.setupPaymentsDescCryptoOnly') ||
+                      'Add crypto receiving addresses for your store'}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
             </button>
 
-            <button
-              onClick={() => handleFinish('/admin/storefront')}
-              className="w-full flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left hover:bg-primary/10 transition-colors group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                <Palette className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
+            {!isSovereignMode() && (
+              <button
+                onClick={() => handleFinish('/admin/storefront')}
+                className="w-full flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left hover:bg-primary/10 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <Palette className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('admin.onboarding.designWithAi') || 'Design your store with AI'}
+                  </p>
+                  <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
+                    {t('admin.onboarding.designWithAiDesc') ||
+                      'Customize branding, colors, and layout with AI assistance'}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
+              </button>
+            )}
+
+            {isSovereignMode() && (
+              <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 text-left">
                 <p className="text-sm font-medium text-foreground">
-                  {t('admin.onboarding.designWithAi') || 'Design your store with AI'}
+                  {t('sovereign.privacyHint', { defaultValue: 'Privacy Notice' })}
                 </p>
-                <p className="text-xs text-muted-foreground group-hover:text-foreground/70 mt-0.5 transition-colors">
-                  {t('admin.onboarding.designWithAiDesc') ||
-                    'Customize branding, colors, and layout with AI assistance'}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('sovereign.privacyHintDesc', {
+                    defaultValue:
+                      'Your store makes zero external network requests. For maximum privacy, access it via a Tor .onion address or I2P eepsite. Configure payment endpoints in Settings → Payments.',
+                  })}
                 </p>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground/70 shrink-0 transition-colors" />
-            </button>
+            )}
           </div>
 
           <button

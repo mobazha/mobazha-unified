@@ -3,6 +3,9 @@
  * 用于前端展示的订单数据结构，与 API 类型（order.ts）分离
  */
 
+import type { PaymentProgress } from './order';
+import type { PaymentSessionProductMode, PaymentSessionSettlementMode } from './paymentSession';
+
 /**
  * 订单项 - 用于展示
  */
@@ -15,6 +18,38 @@ export interface DisplayOrderItem {
   currency: string;
   /** Variant selections chosen by buyer (e.g. Color: Red, Size: L) */
   options?: Array<{ name: string; value: string }>;
+}
+
+export interface DisplayOrderPricingBreakdown {
+  subtotal: string;
+  shipping: string;
+  discounts: string;
+  taxes: string;
+  total: string;
+  currency: string;
+}
+
+export interface DisplayOrderSettlementBreakdownLine {
+  type: string;
+  amount: string;
+  address?: string;
+}
+
+export interface DisplayOrderSettlementBreakdown {
+  source?: string;
+  currency?: string;
+  escrowedAmount?: string;
+  sellerAmount?: string;
+  sellerAddress?: string;
+  buyerAmount?: string;
+  buyerAddress?: string;
+  moderatorAmount?: string;
+  moderatorAddress?: string;
+  platformAmount?: string;
+  platformAddress?: string;
+  transactionFee?: string;
+  txHash?: string;
+  lines?: DisplayOrderSettlementBreakdownLine[];
 }
 
 /**
@@ -55,6 +90,39 @@ export interface DisplayTimelineEvent {
 }
 
 /**
+ * 交付详情 - 用于展示卖家已经提交的物流/数字内容/链上交付信息
+ */
+export interface DisplayShipmentInfo {
+  type: 'physical' | 'digital' | 'cryptocurrency';
+  timestamp: string;
+  itemIndex?: number;
+  shipper?: string;
+  trackingNumber?: string;
+  fileUrl?: string;
+  password?: string;
+  transactionID?: string;
+  note?: string;
+}
+
+/** 订单取消/拒绝场景（由 orderTransform 从后端 state + contract 推导） */
+export type CancellationKind =
+  | 'payment_timeout'
+  | 'payment_verification_timeout'
+  | 'seller_decline'
+  | 'cancelled_paid'
+  | 'cancelled_unpaid'
+  | 'unknown';
+
+export interface CancellationContext {
+  kind: CancellationKind;
+  wasFunded: boolean;
+  /** 用户填写的拒绝/取消原因，或系统 reason 码 */
+  reason?: string;
+  /** Managed cancel / 链上退款 settlement 已 confirmed */
+  refundConfirmed?: boolean;
+}
+
+/**
  * 订单争议信息 - 用于展示
  */
 export interface DisplayDispute {
@@ -64,6 +132,24 @@ export interface DisplayDispute {
   status: 'open' | 'in_progress' | 'resolved';
   initiator: 'buyer' | 'seller';
   resolution?: 'buyer' | 'seller' | 'split';
+  /** Moderator-written ruling explanation (contract.disputeClose.verdict) */
+  resolutionText?: string;
+  /** Buyer share of escrow payout (0–100), derived from releaseInfo amounts */
+  buyerPayoutPercent?: number;
+  /** Seller share of escrow payout (0–100), derived from releaseInfo amounts */
+  vendorPayoutPercent?: number;
+  /** Formatted buyer payout amount from disputeClose.releaseInfo */
+  buyerPayoutAmount?: string;
+  /** Formatted seller payout amount from disputeClose.releaseInfo */
+  vendorPayoutAmount?: string;
+  /** Formatted moderator fee amount from disputeClose.releaseInfo */
+  moderatorPayoutAmount?: string;
+  /** When the dispute was opened (from contract.disputeOpen.timestamp) */
+  openedAt?: string;
+  /** When the dispute was closed (from contract.disputeClose.timestamp) */
+  resolvedAt?: string;
+  /** When a party accepted the ruling (from contract.disputeAccept.timestamp) */
+  acceptedAt?: string;
   evidenceHashes?: string[];
 }
 
@@ -92,6 +178,7 @@ export type DisplayOrderStatus =
   | 'delivered'
   | 'completed'
   | 'disputed'
+  | 'decided'
   | 'refunded'
   | 'cancelled'
   | 'split_resolved';
@@ -120,16 +207,28 @@ export interface DisplayOrder {
   items: DisplayOrderItem[];
   /** 订单总金额（支付币种格式化后的值） */
   total: string;
-  /** 货币类型（支付币种） */
+  /** 支付币种展示标签（如 BCH、ETH）；由 paymentCoin 推导，仅用于 UI 格式化 */
   currency: string;
   /** 原始定价金额（格式化后，如 "0.60"） */
   pricingAmount?: string;
   /** 原始定价币种（如 "USD"） */
   pricingCurrency?: string;
-  /** 支付币种（用于订单操作，如 "ETH"） */
+  /** Backend-derived pricing breakdown, formatted in pricing currency. */
+  pricingBreakdown?: DisplayOrderPricingBreakdown;
+  /** Backend-derived settlement payout / fee breakdown, formatted in settlement currency. */
+  settlementBreakdown?: DisplayOrderSettlementBreakdown;
+  /** 实际支付资产 canonical ID（链识别、explorer、decimals 的唯一输入） */
   paymentCoin?: string;
   /** 实际支付金额（格式化后，如 "0.0002"） */
   paymentAmount?: string;
+  /** Unified payment session settlement mode when available */
+  paymentSettlementMode?: PaymentSessionSettlementMode;
+  /** Unified payment session product mode when available */
+  paymentProductMode?: PaymentSessionProductMode;
+  /** True when the order uses moderated buyer protection. */
+  isModerated?: boolean;
+  /** Opaque backend settlement type from the payment session. */
+  paymentEscrowType?: string;
   /** 创建时间 */
   createdAt: string;
   /** 取消时间（仅 cancelled 状态） */
@@ -182,6 +281,8 @@ export interface DisplayOrder {
   alternateContactInfo?: string;
   /** 发货商 */
   shipper?: string;
+  /** 卖家提交的交付详情（物流、数字下载、链上交易等） */
+  shipments?: DisplayShipmentInfo[];
   /** 商品类型：PHYSICAL_GOOD | SERVICE | DIGITAL_GOOD */
   contractType?: string;
   /** 订单时间线 */
@@ -200,6 +301,12 @@ export interface DisplayOrder {
   paymentVerificationFailureReason?: string;
   /** 支付验证失败标记（用于状态卡展示） */
   paymentVerificationFailed?: boolean;
+  /**
+   * 部分到账进度（来自后端 paymentState.progress）。仅在加密货币支付且后端
+   * 已观测到至少一笔事件时存在。即使订单已
+   * verified，后端仍会刷新此字段以反映 late deposit。
+   */
+  paymentProgress?: PaymentProgress;
   /** RWA 支付锁定信息（仅用于托管模式） */
   paymentLocked?: DisplayPaymentLocked;
   /** 争议信息（平台内部仲裁，由 Moderator 管理） */
@@ -208,8 +315,14 @@ export interface DisplayOrder {
   fiatDispute?: DisplayFiatDispute;
   /** Whether the buyer has already submitted a rating for this order */
   hasRated?: boolean;
+  /** Buyer rating submitted with order completion */
+  buyerRating?: DisplayOrderRating;
+  /** True when funds were released during seller confirmation, not buyer completion */
+  fundsReleasedAtConfirmation?: boolean;
 
-  /** 取消/退款原因（来自 orderCancel.reason 或 refund.memo） */
+  /** 取消/拒绝语义（DECLINED vs CANCELED、是否已付款等） */
+  cancellation?: CancellationContext;
+  /** 取消/退款原因（来自 orderDecline / orderCancel.reason / refund.memo） */
   cancelReason?: string;
   /** 法币支付信息（仅当 paymentMethod === FIAT 时存在） */
   fiatPayment?: DisplayFiatPayment;
@@ -217,6 +330,16 @@ export interface DisplayOrder {
   protection?: DisplayOrderProtection;
   /** 售后争议（应用层，资金已释放后的投诉） */
   afterSaleDispute?: DisplayAfterSaleDispute;
+}
+
+export interface DisplayOrderRating {
+  slug?: string;
+  overall: number;
+  review?: string;
+  anonymous?: boolean;
+  imageHashes?: string[];
+  imageUrls?: string[];
+  timestamp?: string;
 }
 
 /**

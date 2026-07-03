@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ChatList } from '@/components/Chat/ChatList';
 import { ChatMessages } from '@/components/Chat/ChatMessages';
+import { ChatInboxTabs } from '@/components/Chat/ChatInboxTabs';
 import { NewChatDialog } from '@/components/ChatDrawer/NewChatDialog';
 import { RoomSettingsPanel } from '@/components/ChatDrawer/RoomSettingsPanel';
 import { VerificationDialog } from '@/components/ChatDrawer/VerificationDialog';
@@ -11,7 +13,14 @@ import { Button } from '@/components/ui/button';
 import { useChatViewLogic } from '@/components/ChatDrawer/hooks/useChatViewLogic';
 import { useTGMiniApp } from '@/components/TGMiniAppProvider';
 import { MobilePageHeader } from '@/components/MobilePageHeader';
-import { matrixClient, useChatStore, useUserStore, isMatrixEnabled } from '@mobazha/core';
+import {
+  matrixClient,
+  useChatStore,
+  useUserStore,
+  isMatrixEnabled,
+  buildOrderDetailHref,
+} from '@mobazha/core';
+import { getStatusLabel } from '@/components/Order/cards/orderProgressUtils';
 
 /**
  * Mobile-first full-page chat view.
@@ -21,6 +30,9 @@ import { matrixClient, useChatStore, useUserStore, isMatrixEnabled } from '@moba
  * The Telegram BackButton is wired to navigate back from room → list → previous page.
  */
 export default function ChatPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useUserStore();
   const matrixConnected = useChatStore(state => state.isConnected);
   // Re-derive userId when connection state changes (matrixConnected is the signal).
@@ -65,6 +77,7 @@ export default function ChatPage() {
     currentTypingUsers,
     memberNameMap,
     currentRoomPresentation,
+    currentOrderThread,
     isCreatingRoom,
     showRoomSettings,
     userCard,
@@ -96,6 +109,32 @@ export default function ChatPage() {
     handleVerificationCancel,
     resetVerification,
   } = logic;
+
+  const orderThreadHeader = useMemo(() => {
+    if (!currentOrderThread) return undefined;
+    const isOnSameOrderDiscussion =
+      pathname === `/orders/${currentOrderThread.orderId}` &&
+      searchParams.get('tab') === 'discussion';
+    return {
+      orderId: currentOrderThread.orderId,
+      productTitle: currentOrderThread.productTitle || currentRoomPresentation?.title,
+      statusLabel: currentOrderThread.orderState
+        ? getStatusLabel(currentOrderThread.orderState, t, currentOrderThread.contractType)
+        : undefined,
+      counterpartLabel: currentOrderThread.counterpartName,
+      onViewOrder: isOnSameOrderDiscussion
+        ? undefined
+        : () => {
+            router.push(
+              buildOrderDetailHref(
+                currentOrderThread.orderId,
+                currentOrderThread.viewType,
+                'discussion'
+              )
+            );
+          },
+    };
+  }, [currentOrderThread, currentRoomPresentation?.title, pathname, router, searchParams, t]);
 
   // ---- TG BackButton: override when viewing a room ----
   const { isAvailable: tgAvailable, backButton: tgBackButton } = useTGMiniApp();
@@ -229,6 +268,7 @@ export default function ChatPage() {
             onBack={handleBack}
             onRoomSettings={handleRoomSettings}
             onAvatarClick={handleAvatarClick}
+            orderThread={orderThreadHeader}
           />
         </div>
         {showRoomSettings && (
@@ -311,23 +351,26 @@ export default function ChatPage() {
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden">
-          <ChatList
-            rooms={displayRooms}
-            invites={displayInvites}
-            activeRoomId={currentRoomId || undefined}
-            isLoading={isInitializing}
-            isConnected={isConnected}
-            searchQuery={searchQuery}
-            embedded
-            onSearchChange={setSearchQuery}
-            onRoomSelect={handleRoomSelect}
-            onInviteSelect={handleInviteSelect}
-            onNewChat={handleNewChat}
-            onShareChatId={handleShareChatId}
-            onAcceptInvite={handleAcceptInvite}
-            onRejectInvite={handleRejectInvite}
-          />
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <ChatInboxTabs />
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ChatList
+              rooms={displayRooms}
+              invites={displayInvites}
+              activeRoomId={currentRoomId || undefined}
+              isLoading={isInitializing}
+              isConnected={isConnected}
+              searchQuery={searchQuery}
+              embedded
+              onSearchChange={setSearchQuery}
+              onRoomSelect={handleRoomSelect}
+              onInviteSelect={handleInviteSelect}
+              onNewChat={handleNewChat}
+              onShareChatId={handleShareChatId}
+              onAcceptInvite={handleAcceptInvite}
+              onRejectInvite={handleRejectInvite}
+            />
+          </div>
         </div>
       </div>
 

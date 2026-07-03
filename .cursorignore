@@ -1,0 +1,24 @@
+# === 依赖目录（体积 1GB+）===
+node_modules/
+.pnpm-store/
+
+# === 构建产物 ===
+.next/
+apps/web/dist/
+apps/extension/dist/
+apps/*/dist/
+**/.turbo/
+**/.cache/
+**/out/
+
+# === Lock 文件（体积大，内容无意义）===
+pnpm-lock.yaml
+**/package-lock.json
+
+# === 大型 i18n 源文件（用 Grep 代替整文件读取）===
+# 注意：en.ts 很重要但太大，AI 应用 Grep 精准查找而非整文件 Read
+# packages/core/i18n/locales/en.ts
+
+# === 类型声明自动生成文件 ===
+**/*.d.ts.map
+**/*.tsbuildinfo

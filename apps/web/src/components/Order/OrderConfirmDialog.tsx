@@ -13,13 +13,7 @@ import {
 } from '@/components/ui';
 import { useI18n } from '@mobazha/core';
 
-export type OrderConfirmType =
-  | 'decline'
-  | 'cancel'
-  | 'refund'
-  | 'claim'
-  | 'acceptPayout'
-  | 'complete';
+export type OrderConfirmType = 'decline' | 'cancel' | 'refund' | 'claim' | 'complete';
 
 export interface OrderConfirmDialogProps {
   open: boolean;
@@ -31,7 +25,7 @@ export interface OrderConfirmDialogProps {
 
 /**
  * 通用订单确认对话框组件
- * 用于接受、拒绝、取消、退款、领取资金、接受裁决等操作的确认
+ * 用于接受、拒绝、取消、退款、领取资金等操作的确认
  */
 export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
   open,
@@ -74,11 +68,6 @@ export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
       descriptionKey: 'order.dialogs.claimPayment.description',
       confirmKey: 'order.actions.claim',
     },
-    acceptPayout: {
-      titleKey: 'order.dialogs.acceptPayout.title',
-      descriptionKey: 'order.dialogs.acceptPayout.description',
-      confirmKey: 'order.actions.acceptPayout',
-    },
     complete: {
       titleKey: 'order.dialogs.completeOrder.title',
       descriptionKey: 'order.dialogs.completeOrder.description',
@@ -88,8 +77,16 @@ export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
 
   const config = dialogConfig[type];
 
+  const confirmLabel = isLoading ? t('common.processing') : t(config.confirmKey);
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={open}
+      onOpenChange={nextOpen => {
+        if (isLoading && !nextOpen) return;
+        onOpenChange(nextOpen);
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t(config.titleKey)}</AlertDialogTitle>
@@ -98,7 +95,10 @@ export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={event => {
+              event.preventDefault();
+              if (!isLoading) onConfirm();
+            }}
             disabled={isLoading}
             className={
               config.isDestructive
@@ -106,7 +106,7 @@ export const OrderConfirmDialog: React.FC<OrderConfirmDialogProps> = ({
                 : undefined
             }
           >
-            {isLoading ? t('common.processing') : t(config.confirmKey)}
+            {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

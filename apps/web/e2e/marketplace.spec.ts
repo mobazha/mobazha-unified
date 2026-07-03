@@ -4,9 +4,73 @@
  */
 
 import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { setupMockAuth } from './fixtures/mock-auth';
+import { mockMarketplaceOperatorAPI, MOCK_PEER_ID } from './fixtures/mock-api-routes';
+
+const NOW = new Date().toISOString();
+
+const PUBLIC_MARKETPLACE = {
+  id: 'mp1',
+  name: 'Crypto Collectibles',
+  slug: 'mp1',
+  description: 'Curated collectibles marketplace',
+  logoURL: '',
+  bannerURL: '',
+  publicURL: '',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
+  catalogMode: 'curated',
+  discoverability: 'public',
+  sellerEntryMode: 'seller_self_serve',
+  vertical: 'collectibles',
+  sellerCount: 1,
+  productCount: 2,
+  updatedAt: NOW,
+};
+
+function wrapData<T>(data: T): string {
+  return JSON.stringify({ data });
+}
+
+async function mockPublicMarketplacePages(page: Page) {
+  await page.route('**/platform/v1/public-marketplaces/mp1**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        marketplace: PUBLIC_MARKETPLACE,
+        sellers: [{ peerID: MOCK_PEER_ID, productGroups: [], updatedAt: NOW }],
+        featured: [],
+        banners: [],
+        listings: { listings: [], total: 0, page: 1, pageSize: 24, totalPage: 0 },
+      }),
+    });
+  });
+
+  await page.route('**/platform/v1/public-marketplaces**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    if (route.request().url().includes('/platform/v1/public-marketplaces/')) {
+      return route.fallback();
+    }
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        marketplaces: [PUBLIC_MARKETPLACE],
+        total: 1,
+        page: 1,
+        pageSize: 100,
+        totalPage: 1,
+      }),
+    });
+  });
+}
 
 test.describe('Marketplace List Page', () => {
   test.beforeEach(async ({ page }) => {
+    await mockPublicMarketplacePages(page);
     await page.goto('/marketplace');
   });
 
@@ -17,14 +81,10 @@ test.describe('Marketplace List Page', () => {
 
   test('should show marketplace cards', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    // Check for marketplace cards or empty state
-    const content = page.locator('main');
-    await expect(content).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Crypto Collectibles' })).toBeVisible();
   });
 
   test('should have search functionality', async ({ page }) => {
-    // Use specific marketplace search input
     const searchInput = page.getByPlaceholder('Search marketplaces');
 
     if (await searchInput.isVisible()) {
@@ -35,22 +95,15 @@ test.describe('Marketplace List Page', () => {
 
   test('should navigate to marketplace detail', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    // Look for marketplace cards that link to detail pages
-    const marketplaceCard = page
-      .locator('[data-testid="marketplace-card"], .marketplace-card, article')
-      .first();
-
-    if (await marketplaceCard.isVisible()) {
-      await marketplaceCard.click();
-      await page.waitForURL(/\/marketplace\/\w+/, { timeout: 5000 }).catch(() => {});
-    }
-    // Test passes regardless - depends on mock data
+    await page.getByRole('link', { name: 'Crypto Collectibles' }).click();
+    await expect(page).toHaveURL(/\/marketplace\/mp1$/);
+    await expect(page.getByRole('heading', { name: 'Crypto Collectibles' })).toBeVisible();
   });
 });
 
 test.describe('Marketplace Detail Page', () => {
   test.beforeEach(async ({ page }) => {
+    await mockPublicMarketplacePages(page);
     await page.goto('/marketplace/mp1');
   });
 
@@ -64,140 +117,86 @@ test.describe('Marketplace Detail Page', () => {
   test('should show marketplace stats', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
 
-    // Look for member count, product count, etc.
     const stats = page.getByText(/member|product|seller/i);
-    expect(await stats.count()).toBeGreaterThanOrEqual(0);
+    await expect(stats.first()).toBeVisible();
   });
 
   test('should display products tab', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    // Look for products section or tab
-    const productsSection = page.locator(
-      '[data-testid="products"], .products-grid, [role="tabpanel"]'
-    );
-
-    if (await productsSection.isVisible()) {
-      await expect(productsSection).toBeVisible();
-    }
+    await expect(page.locator('#collectible-marketplace-listings')).toBeVisible();
   });
 
   test('should show join button for non-members', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
-
-    // Look for join marketplace button
-    const joinButton = page.locator('button').filter({ hasText: /join|加入/i });
-
-    if (await joinButton.count()) {
-      await expect(joinButton.first()).toBeVisible();
-    }
+    await expect(page.getByTestId('marketplace-apply-to-sell')).toBeVisible();
   });
 
   test('should show seller application option', async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
 
-    // Look for become seller option
     const sellerButton = page.locator('button, a').filter({ hasText: /sell|卖家|apply/i });
 
-    expect(await sellerButton.count()).toBeGreaterThanOrEqual(0);
+    await expect(sellerButton.first()).toBeVisible();
   });
 });
 
-test.describe('Marketplace Admin', () => {
-  test('should access admin panel for owners', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin');
-    await page.waitForLoadState('domcontentloaded');
-
-    // Protected route: should redirect to login or show admin panel
-    const content = page.locator('main, body');
-    await expect(content.first()).toBeVisible();
+test.describe('Marketplace Operator Console', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupMockAuth(page);
+    await mockMarketplaceOperatorAPI(page);
   });
 
-  test('should display seller applications page', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/applications');
+  test('should list operator marketplaces', async ({ page }) => {
+    await page.goto('/operator/marketplaces');
     await page.waitForLoadState('domcontentloaded');
 
-    // Protected route — may redirect to login if unauthenticated
-    if (page.url().includes('/login')) {
-      test.skip();
-      return;
-    }
-
-    const heading = page.locator('h1');
-    await expect(heading).toContainText(/Seller Applications|Applications/i);
+    await expect(page.getByTestId('operator-marketplaces-page')).toBeVisible();
+    await expect(page.getByText('Crypto Collectibles')).toBeVisible();
   });
 
-  test('should show pending applications filter', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/applications');
+  test('should show operator marketplace detail and seller memberships', async ({ page }) => {
+    await page.goto('/operator/marketplaces/mp1');
     await page.waitForLoadState('domcontentloaded');
 
-    if (page.url().includes('/login')) {
-      test.skip();
-      return;
-    }
+    await expect(page.getByTestId('operator-marketplace-detail')).toBeVisible();
+    await expect(page.getByText('Crypto Collectibles')).toBeVisible();
+    await expect(
+      page
+        .getByTestId('operator-membership-row')
+        .filter({ has: page.getByText(/^(approved|已批准)$/i) })
+    ).toBeVisible();
+  });
+});
 
-    const pendingFilter = page.locator('button').filter({ hasText: /Pending/i });
-    const approvedFilter = page.locator('button').filter({ hasText: /Approved/i });
-
-    await expect(pendingFilter).toBeVisible();
-    await expect(approvedFilter).toBeVisible();
+test.describe('Store Marketplace Invitations', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupMockAuth(page);
+    await mockMarketplaceOperatorAPI(page);
   });
 
-  test('should show approve/review buttons for applications', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/applications');
+  test('should display pending marketplace invitation inbox', async ({ page }) => {
+    await page.goto('/admin/settings/marketplace-memberships');
     await page.waitForLoadState('domcontentloaded');
 
-    if (page.url().includes('/login')) {
-      test.skip();
-      return;
-    }
-
-    const approveButton = page.locator('button').filter({ hasText: /Approve/i });
-    const reviewButton = page.locator('button').filter({ hasText: /Review/i });
-
-    expect(await approveButton.count()).toBeGreaterThanOrEqual(0);
-    expect(await reviewButton.count()).toBeGreaterThanOrEqual(0);
+    await expect(page.getByTestId('marketplace-memberships-page')).toBeVisible();
+    await expect(page.getByText('Crypto Collectibles')).toBeVisible();
+    await expect(page.getByTestId('accept-marketplace-invite-mp1')).toBeVisible();
   });
 
-  test('should display product approvals page', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/products');
+  test('should accept a marketplace invitation', async ({ page }) => {
+    await page.goto('/admin/settings/marketplace-memberships');
     await page.waitForLoadState('domcontentloaded');
 
-    if (page.url().includes('/login')) {
-      test.skip();
-      return;
-    }
+    const [acceptRequest] = await Promise.all([
+      page.waitForRequest(
+        req =>
+          req.method() === 'POST' &&
+          req.url().includes('/marketplaces/mp1/sellers/') &&
+          req.url().endsWith('/accept')
+      ),
+      page.getByTestId('accept-marketplace-invite-mp1').click(),
+    ]);
 
-    const heading = page.locator('h1');
-    await expect(heading).toContainText(/Product Approvals|Products/i);
-  });
-
-  test('should show product review filters', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/products');
-    await page.waitForLoadState('domcontentloaded');
-
-    if (page.url().includes('/login')) {
-      test.skip();
-      return;
-    }
-
-    const pendingFilter = page.locator('button').filter({ hasText: /Pending/i });
-    const flaggedFilter = page.locator('button').filter({ hasText: /Flagged/i });
-
-    await expect(pendingFilter).toBeVisible();
-    await expect(flaggedFilter).toBeVisible();
-  });
-
-  test('should show product cards with review actions', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/products');
-    await page.waitForLoadState('domcontentloaded');
-
-    if (page.url().includes('/login')) {
-      test.skip();
-      return;
-    }
-
-    const approveButton = page.locator('button').filter({ hasText: /Approve/i });
-    expect(await approveButton.count()).toBeGreaterThanOrEqual(0);
+    expect(acceptRequest.url()).toContain(encodeURIComponent(MOCK_PEER_ID));
   });
 });

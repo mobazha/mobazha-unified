@@ -4,9 +4,17 @@
 
 import { withMockFallback } from './mode';
 import { getI18n } from '../../i18n/i18n';
-import { NODE_API } from '../../config/apiPaths';
-import { authPost, authSafeGet } from './helpers';
-
+import { HOSTING_API, NODE_API } from '../../config/apiPaths';
+import { authPost, authSafeGet, hostingGet, hostingPost } from './helpers';
+import {
+  readStringField,
+  resolveCaseID,
+  resolveNotificationID,
+  resolveOrderID,
+  resolveOrderOrCaseID,
+  resolvePeerID,
+} from '../../utils/normalizeIds';
+import { sanitizeProductTitle } from '../../utils/notificationDisplay';
 // 后端返回的原始通知记录格式
 interface BackendNotificationRecord {
   timestamp: string;
@@ -20,6 +28,7 @@ interface BackendNotificationRecord {
     orderId?: string;
     peerID?: string;
     peerId?: string;
+    caseID?: string;
     caseId?: string;
     txid?: string;
     slug?: string;
@@ -68,14 +77,18 @@ interface BackendNotificationRecord {
 }
 
 // 通知过滤器类型
-export type NotificationFilter = 'all' | 'orders' | 'followers';
+export type NotificationFilter = 'all' | 'orders' | 'followers' | 'transactions' | 'system';
 
 // 过滤器到后端类型的映射（使用 dot-separated 格式）
 export const NOTIFICATION_FILTER_TYPES: Record<NotificationFilter, string> = {
   all: '',
   orders:
-    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.fulfilled,order.completed,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
+    'order.created,order.payment_received,order.funded,order.confirmed,order.declined,order.cancelled,order.refunded,order.shipped,order.completed,order.rated,order.vendor_finalized,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,payment.locked,payment.expired,payment.cancelled',
   followers: 'social.follow,social.moderator_add,social.moderator_remove',
+  transactions:
+    'order.funded,order.payment_received,order.refunded,order.vendor_finalized,payment.locked,payment.expired,payment.cancelled',
+  system:
+    'order.stale_warning,order.expired,order.declined,order.cancelled,dispute.opened,dispute.closed,dispute.accepted,dispute.case_open,dispute.case_update,social.moderator_add,social.moderator_remove',
 };
 
 interface BackendNotificationsResponse {
@@ -84,19 +97,60 @@ interface BackendNotificationsResponse {
   notifications: BackendNotificationRecord[];
 }
 
+export type NotificationSource = 'node' | 'marketplace-review';
+
+export type MarketplaceReviewStatus = 'approved' | 'rejected' | 'suspended';
+
+export interface MarketplaceReviewNotificationMeta {
+  eventID: number;
+  marketplaceID: string;
+  marketplaceName?: string;
+  marketplaceSlug?: string;
+  marketplaceStoreID: number;
+  peerID: string;
+  actorID: string;
+  previousStatus: string;
+  status: string;
+  reason?: string;
+}
+
+interface BackendMarketplaceReviewEvent {
+  id: number;
+  marketplaceID: string;
+  marketplaceName?: string;
+  marketplaceSlug?: string;
+  marketplaceStoreID: number;
+  peerID: string;
+  actorID: string;
+  previousStatus: string;
+  status: string;
+  reason?: string;
+  readAt?: string;
+  createdAt: string;
+}
+
+interface BackendMarketplaceReviewEventsResponse {
+  events: BackendMarketplaceReviewEvent[];
+  total: number;
+  unread: number;
+  hasMore: boolean;
+  nextBeforeID?: number;
+}
+
 // 前端使用的通知项格式
 export interface Notification {
   id: string;
+  source: NotificationSource;
   type: string; // dot-separated 格式
   title: string;
   message: string;
   read: boolean;
   timestamp: string;
   data?: {
-    orderId?: string;
+    orderID?: string;
     peerID?: string;
     txid?: string;
-    caseId?: string;
+    caseID?: string;
     slug?: string;
     thumbnail?: {
       tiny?: string;
@@ -119,20 +173,21 @@ export interface Notification {
     };
     vendorName?: string;
     vendorAvatar?: string;
-    vendorId?: string;
+    vendorID?: string;
     buyerName?: string;
     buyerAvatar?: string;
-    buyerId?: string;
+    buyerID?: string;
     disputerName?: string;
     disputerAvatar?: string;
-    disputerId?: string;
+    disputerID?: string;
     disputeeName?: string;
     disputeeAvatar?: string;
-    disputeeId?: string;
+    disputeeID?: string;
     otherPartyName?: string;
     otherPartyAvatar?: string;
     moderatorName?: string;
     moderatorAvatar?: string;
+    marketplaceReview?: MarketplaceReviewNotificationMeta;
   };
 }
 
@@ -144,40 +199,51 @@ export interface NotificationsResult {
   lastOffsetId?: string;
 }
 
+export interface MarketplaceReviewEventsResult {
+  notifications: Notification[];
+  total: number;
+  unread: number;
+  hasMore: boolean;
+  nextBeforeID?: number;
+}
+
 const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
+    source: 'node',
     type: 'order.created',
     title: 'New Order',
     message: 'Buyer placed an order',
     read: false,
     timestamp: new Date(Date.now() - 3600000).toISOString(),
     data: {
-      orderId: 'QmOrder001',
+      orderID: 'QmOrder001',
       productTitle: 'Vintage T-Shirt',
       price: { amount: 2500, currencyCode: 'USD' },
       buyerName: 'alice_buyer',
-      buyerId: 'QmBuyer001',
+      buyerID: 'QmBuyer001',
       thumbnail: { tiny: '', small: '' },
     },
   },
   {
     id: 'notif-2',
+    source: 'node',
     type: 'order.funded',
     title: 'Payment Received',
     message: 'Order has been funded',
     read: false,
     timestamp: new Date(Date.now() - 7200000).toISOString(),
     data: {
-      orderId: 'QmOrder002',
+      orderID: 'QmOrder002',
       productTitle: 'Handmade Bracelet',
       price: { amount: 1500, currencyCode: 'USD' },
       buyerName: 'bob_shop',
-      buyerId: 'QmBuyer002',
+      buyerID: 'QmBuyer002',
     },
   },
   {
     id: 'notif-3',
+    source: 'node',
     type: 'social.follow',
     title: 'New Follower',
     message: 'Alice Chen started following you',
@@ -191,6 +257,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-4',
+    source: 'node',
     type: 'social.follow',
     title: 'New Follower',
     message: 'TechGear Store started following you',
@@ -203,16 +270,17 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-5',
+    source: 'node',
     type: 'dispute.opened',
     title: 'Dispute Opened',
     message: 'A dispute has been opened',
     read: false,
     timestamp: new Date(Date.now() - 259200000).toISOString(),
     data: {
-      orderId: 'QmOrder003',
-      caseId: 'QmCase001',
+      orderID: 'QmOrder003',
+      caseID: 'QmCase001',
       disputerName: 'unhappy_buyer',
-      disputerId: 'QmDisputer001',
+      disputerID: 'QmDisputer001',
     },
   },
 ];
@@ -237,10 +305,12 @@ function generateNotificationTitle(
       return t('notifications.titles.orderCancelled');
     case 'order.refunded':
       return t('notifications.titles.refundReceived');
-    case 'order.fulfilled':
-      return t('notifications.titles.orderFulfilled');
+    case 'order.shipped':
+      return t('notifications.titles.orderShipped');
     case 'order.completed':
       return t('notifications.titles.orderCompleted');
+    case 'order.rated':
+      return t('notifications.titles.orderRated');
     case 'order.vendor_finalized':
       return t('notifications.titles.paymentFinalized');
     case 'dispute.opened':
@@ -280,11 +350,11 @@ function generateNotificationMessage(
   notification: BackendNotificationRecord['notification']
 ): string {
   const { t } = getI18n();
-  const orderId = notification.orderID || notification.orderId || '';
+  const orderId = resolveOrderOrCaseID(notification);
   const buyerName =
     notification.buyerName ?? (notification as { buyerHandle?: string }).buyerHandle ?? '';
   const shortOrderId = orderId ? orderId.slice(0, 8) : '';
-  const productTitle = notification.title || '';
+  const productTitle = sanitizeProductTitle(notification.title);
 
   switch (type) {
     case 'order.created':
@@ -312,7 +382,7 @@ function generateNotificationMessage(
       return orderId
         ? t('notifications.messages.refundReceivedWithId', { orderId: shortOrderId })
         : t('notifications.messages.refundReceivedNoId');
-    case 'order.fulfilled':
+    case 'order.shipped':
       return orderId
         ? t('notifications.messages.orderShippedWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderShippedNoId');
@@ -320,6 +390,10 @@ function generateNotificationMessage(
       return orderId
         ? t('notifications.messages.orderCompleteWithId', { orderId: shortOrderId })
         : t('notifications.messages.orderCompleteNoId');
+    case 'order.rated':
+      return orderId
+        ? t('notifications.messages.orderRatedWithId', { orderId: shortOrderId })
+        : t('notifications.messages.orderRatedNoId');
     case 'order.vendor_finalized':
       return orderId
         ? t('notifications.messages.paymentFinalizedWithId', { orderId: shortOrderId })
@@ -393,6 +467,85 @@ function generateNotificationMessage(
   }
 }
 
+function normalizeMarketplaceReviewStatus(status: string): MarketplaceReviewStatus | null {
+  if (status === 'approved' || status === 'rejected' || status === 'suspended') {
+    return status;
+  }
+  return null;
+}
+
+function getMarketplaceReviewTitle(status: string): string {
+  const { t } = getI18n();
+  const normalizedStatus = normalizeMarketplaceReviewStatus(status);
+  switch (normalizedStatus) {
+    case 'approved':
+      return t('notifications.marketplaceReview.titles.approved');
+    case 'rejected':
+      return t('notifications.marketplaceReview.titles.rejected');
+    case 'suspended':
+      return t('notifications.marketplaceReview.titles.suspended');
+    default:
+      return t('notifications.marketplaceReview.titles.updated');
+  }
+}
+
+function getMarketplaceReviewMessage(
+  event: BackendMarketplaceReviewEvent,
+  fallbackMarketplaceName: string
+): string {
+  const { t } = getI18n();
+  const normalizedStatus = normalizeMarketplaceReviewStatus(event.status);
+  const params = {
+    marketplace: event.marketplaceName || fallbackMarketplaceName,
+    reason: event.reason || '',
+  };
+
+  switch (normalizedStatus) {
+    case 'approved':
+      return t('notifications.marketplaceReview.messages.approved', params);
+    case 'rejected':
+      return event.reason
+        ? t('notifications.marketplaceReview.messages.rejectedWithReason', params)
+        : t('notifications.marketplaceReview.messages.rejected', params);
+    case 'suspended':
+      return event.reason
+        ? t('notifications.marketplaceReview.messages.suspendedWithReason', params)
+        : t('notifications.marketplaceReview.messages.suspended', params);
+    default:
+      return t('notifications.marketplaceReview.messages.updated', params);
+  }
+}
+
+export function mapMarketplaceReviewEventToNotification(
+  event: BackendMarketplaceReviewEvent
+): Notification {
+  const { t } = getI18n();
+  const fallbackMarketplaceName = t('notifications.marketplaceReview.fallbackMarketplace');
+  return {
+    id: `marketplace-review:${event.marketplaceID}:${event.id}`,
+    source: 'marketplace-review',
+    type: 'marketplace.seller_review',
+    title: getMarketplaceReviewTitle(event.status),
+    message: getMarketplaceReviewMessage(event, fallbackMarketplaceName),
+    read: Boolean(event.readAt),
+    timestamp: event.createdAt,
+    data: {
+      marketplaceReview: {
+        eventID: event.id,
+        marketplaceID: event.marketplaceID,
+        marketplaceName: event.marketplaceName,
+        marketplaceSlug: event.marketplaceSlug,
+        marketplaceStoreID: event.marketplaceStoreID,
+        peerID: event.peerID,
+        actorID: event.actorID,
+        previousStatus: event.previousStatus,
+        status: event.status,
+        reason: event.reason,
+      },
+    },
+  };
+}
+
 export async function getNotifications(
   options: {
     limit?: number;
@@ -421,42 +574,44 @@ export async function getNotifications(
     const notifications = (response.notifications || []).map(
       (record: BackendNotificationRecord, index: number): Notification => {
         const notif = record.notification || {};
-        // 确保 ID 唯一：优先使用后端 notificationID（大小写两种），兜底 type-timestamp-index
+        const notifRecord = notif as Record<string, unknown>;
+        const orderID = resolveOrderID(notifRecord);
+        const caseID = resolveCaseID(notifRecord);
+        const orderOrCaseID = resolveOrderOrCaseID(notifRecord);
         const uniqueId =
-          notif.notificationID ||
-          notif.notificationId ||
-          `${record.type}-${record.timestamp}-${index}`;
+          resolveNotificationID(notifRecord) || `${record.type}-${record.timestamp}-${index}`;
         return {
           id: uniqueId,
+          source: 'node',
           type: record.type,
           title: generateNotificationTitle(record.type, notif),
           message: generateNotificationMessage(record.type, notif),
           read: record.read,
           timestamp: record.timestamp,
           data: {
-            orderId: notif.orderID || notif.orderId,
-            peerID: notif.peerID || notif.peerId,
+            orderID: orderID || orderOrCaseID || undefined,
+            peerID: resolvePeerID(notifRecord) || undefined,
             txid: notif.txid,
-            caseId: notif.caseId,
+            caseID: caseID || orderOrCaseID || undefined,
             slug: notif.slug,
             thumbnail: notif.thumbnail,
             avatarHashes: notif.avatarHashes,
-            productTitle: notif.title,
+            productTitle: sanitizeProductTitle(notif.title),
             price: notif.price,
             vendorName: notif.vendorName ?? (notif as { vendorHandle?: string }).vendorHandle,
             vendorAvatar: notif.vendorAvatar,
-            vendorId: notif.vendorId || notif.vendorID,
+            vendorID: readStringField(notifRecord, 'vendorID', 'vendorId') || undefined,
             buyerName: notif.buyerName ?? (notif as { buyerHandle?: string }).buyerHandle,
             buyerAvatar: notif.buyerAvatar,
-            buyerId: notif.buyerId || notif.buyerID,
+            buyerID: readStringField(notifRecord, 'buyerID', 'buyerId') || undefined,
             disputerName:
               notif.disputerName ?? (notif as { disputerHandle?: string }).disputerHandle,
             disputerAvatar: notif.disputerAvatar,
-            disputerId: notif.disputerID,
+            disputerID: readStringField(notifRecord, 'disputerID', 'disputerId') || undefined,
             disputeeName:
               notif.disputeeName ?? (notif as { disputeeHandle?: string }).disputeeHandle,
             disputeeAvatar: notif.disputeeAvatar,
-            disputeeId: notif.disputeeID,
+            disputeeID: readStringField(notifRecord, 'disputeeID', 'disputeeId') || undefined,
             otherPartyName:
               notif.otherPartyName ?? (notif as { otherPartyHandle?: string }).otherPartyHandle,
             otherPartyAvatar: notif.otherPartyAvatar,
@@ -489,6 +644,26 @@ export async function getNotifications(
       );
     } else if (filter === 'followers') {
       filtered = mockNotifications.filter(n => n.type.startsWith('social.'));
+    } else if (filter === 'transactions') {
+      filtered = mockNotifications.filter(
+        n =>
+          n.type.startsWith('payment.') ||
+          [
+            'order.funded',
+            'order.payment_received',
+            'order.refunded',
+            'order.vendor_finalized',
+          ].includes(n.type)
+      );
+    } else if (filter === 'system') {
+      filtered = mockNotifications.filter(
+        n =>
+          n.type.startsWith('dispute.') ||
+          ['order.stale_warning', 'order.expired', 'order.declined', 'order.cancelled'].includes(
+            n.type
+          ) ||
+          n.type.startsWith('social.moderator')
+      );
     }
     return {
       notifications: filtered,
@@ -505,6 +680,81 @@ export async function getNotifications(
 export async function getNotificationsList(limit = 20, offsetId = ''): Promise<Notification[]> {
   const result = await getNotifications({ limit, offsetId });
   return result.notifications;
+}
+
+export async function getMarketplaceReviewEvents(
+  options: { limit?: number; beforeID?: number } = {}
+): Promise<MarketplaceReviewEventsResult> {
+  const { limit = 20, beforeID } = options;
+
+  const realFn = async () => {
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    if (typeof beforeID === 'number') {
+      params.append('beforeID', String(beforeID));
+    }
+
+    const response = await hostingGet<BackendMarketplaceReviewEventsResponse>(
+      `${HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS}?${params.toString()}`
+    );
+
+    return {
+      notifications: (response.events || []).map(mapMarketplaceReviewEventToNotification),
+      total: response.total || 0,
+      unread: response.unread || 0,
+      hasMore: Boolean(response.hasMore),
+      nextBeforeID: response.nextBeforeID,
+    };
+  };
+
+  const mockFn = async () => ({
+    notifications: [] as Notification[],
+    total: 0,
+    unread: 0,
+    hasMore: false,
+    nextBeforeID: undefined,
+  });
+
+  return withMockFallback(realFn, mockFn, HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS);
+}
+
+export async function markMarketplaceReviewEventAsRead(
+  marketplaceID: string,
+  eventID: number
+): Promise<{ success: boolean }> {
+  const realFn = async () => {
+    await hostingPost<{ success?: boolean }>(
+      HOSTING_API.MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ(marketplaceID, eventID),
+      {}
+    );
+    return { success: true };
+  };
+  const mockFn = async () => ({ success: true });
+  return withMockFallback(
+    realFn,
+    mockFn,
+    HOSTING_API.MARKETPLACE_MEMBERSHIP_REVIEW_EVENT_READ(marketplaceID, eventID)
+  );
+}
+
+export async function markAllMarketplaceReviewEventsAsRead(): Promise<{
+  success: boolean;
+  updated?: number;
+  unread?: number;
+}> {
+  const realFn = async () => {
+    const response = await hostingPost<{ updated: number; unread: number }>(
+      HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL,
+      {}
+    );
+    return { success: true, updated: response.updated, unread: response.unread };
+  };
+  const mockFn = async () => ({ success: true, updated: 0, unread: 0 });
+  return withMockFallback(
+    realFn,
+    mockFn,
+    HOSTING_API.MARKETPLACE_MEMBERSHIPS_REVIEW_EVENTS_READ_ALL
+  );
 }
 
 export async function getUnreadNotificationCount(): Promise<number> {
@@ -573,28 +823,71 @@ export async function markAllNotificationsAsRead(
 }
 
 export async function batchNotifications(
-  action: 'read' | 'delete',
+  action: 'markAsRead' | 'delete',
   notificationIds: string[]
-): Promise<{ success: boolean }> {
-  return authPost(NODE_API.NOTIFICATIONS_BATCH, { action, ids: notificationIds });
+): Promise<{ success: boolean; count?: number }> {
+  const realFn = async () => {
+    return authPost<{ success: boolean; count: number }>(NODE_API.NOTIFICATIONS_BATCH, {
+      action,
+      ids: notificationIds,
+    });
+  };
+
+  const mockFn = async () => {
+    if (action === 'delete') {
+      notificationIds.forEach(id => {
+        const index = mockNotifications.findIndex(n => n.id === id);
+        if (index >= 0) mockNotifications.splice(index, 1);
+      });
+    } else {
+      notificationIds.forEach(id => {
+        const notification = mockNotifications.find(n => n.id === id);
+        if (notification) notification.read = true;
+      });
+    }
+    return { success: true, count: notificationIds.length };
+  };
+
+  return withMockFallback(realFn, mockFn, '/notifications/batch');
 }
 
+export async function deleteNotification(notificationId: string): Promise<{ success: boolean }> {
+  const result = await batchNotifications('delete', [notificationId]);
+  return { success: result.success };
+}
+
+const GUEST_ORDER_TOKEN_PREFIX = 'gst_';
+
 export function getNotificationRoute(notification: Notification): string | null {
-  const { type, data } = notification;
+  const { source, type, data } = notification;
+  if (source === 'marketplace-review') {
+    const marketplaceSlug = data?.marketplaceReview?.marketplaceSlug;
+    if (marketplaceSlug) {
+      return `/marketplace/${marketplaceSlug}/sell`;
+    }
+    return '/marketplaces';
+  }
+
+  const orderOrCaseId = resolveOrderOrCaseID(data);
 
   if (type.startsWith('order.') || type.startsWith('payment.')) {
-    if (data?.orderId) {
-      return `/orders/${data.orderId}`;
+    if (orderOrCaseId) {
+      if (orderOrCaseId.startsWith(GUEST_ORDER_TOKEN_PREFIX)) {
+        const params = new URLSearchParams({
+          source: 'guest',
+          guestOrder: orderOrCaseId,
+        });
+        return `/admin/orders?${params.toString()}`;
+      }
+      return `/orders/${orderOrCaseId}`;
     }
   }
 
   if (type.startsWith('dispute.')) {
-    if (data?.orderId) {
-      return `/orders/${data.orderId}?tab=dispute`;
+    if (!orderOrCaseId) {
+      return null;
     }
-    if (data?.caseId) {
-      return `/moderation/cases/${data.caseId}`;
-    }
+    return `/orders/${orderOrCaseId}?tab=dispute`;
   }
 
   if (type.startsWith('social.')) {
@@ -609,10 +902,14 @@ export function getNotificationRoute(notification: Notification): string | null 
 export const notificationsApi = {
   getNotifications,
   getNotificationsList,
+  getMarketplaceReviewEvents,
   getUnreadNotificationCount,
   markNotificationAsRead,
+  markMarketplaceReviewEventAsRead,
   markAllNotificationsAsRead,
+  markAllMarketplaceReviewEventsAsRead,
   batchNotifications,
+  deleteNotification,
   getNotificationRoute,
   NOTIFICATION_FILTER_TYPES,
 };

@@ -1,5 +1,10 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import {
+  resolveListingDisplayPrice,
+  formatListingPriceForSchema,
+} from '@mobazha/core/utils/listingDisplayPrice';
+import { buildEmbedProductHref } from '@mobazha/core/utils/productUrl';
 import { EmbedResizer } from '../../_components/EmbedResizer';
 import { getSiteUrl } from '@/lib/siteUrl';
 
@@ -16,6 +21,7 @@ interface ProductData {
     description?: string;
     images?: Array<{ medium?: string; small?: string; original?: string }>;
     price?: number;
+    skus?: Array<{ price?: string }>;
     priceCurrency?: { code?: string; divisibility?: number };
   };
   vendorID?: { peerID?: string; handle?: string };
@@ -46,20 +52,40 @@ async function fetchProduct(slug: string, peerID: string): Promise<ProductData |
   }
 }
 
-function formatPrice(price: number | undefined, currency?: string, divisibility?: number): string {
-  if (price === undefined) return '';
-  const div = divisibility ?? 2;
-  const val = div > 0 ? price / Math.pow(10, div) : price;
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(val);
-  } catch {
-    return `${val} ${currency || 'USD'}`;
+function formatStandardPrice(standardAmount: string, currency: string): string {
+  const trimmed = standardAmount.trim();
+  if (!trimmed || trimmed === '0') return '';
+  const asNumber = Number(trimmed);
+  if (Number.isFinite(asNumber) && asNumber > 0) {
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 8,
+      }).format(asNumber);
+    } catch {
+      // fall through to string label
+    }
   }
+  return `${trimmed} ${currency}`;
+}
+
+function resolveEmbedDisplayPrice(item: NonNullable<ProductData['item']>): string {
+  const currency = item.priceCurrency?.code?.trim();
+  const divisibility = item.priceCurrency?.divisibility ?? 2;
+  const snapshot = resolveListingDisplayPrice({
+    basePrice: item.price ?? 0,
+    skus: item.skus,
+  });
+  if (snapshot.minAmountString === '0' || !currency) {
+    return currency ? '' : '—';
+  }
+  const formatted = formatStandardPrice(
+    formatListingPriceForSchema(snapshot.minAmountString, divisibility),
+    currency
+  );
+  return snapshot.hasPriceRange ? `From ${formatted}` : formatted;
 }
 
 function stripHtml(html: string): string {
@@ -124,14 +150,12 @@ export default async function EmbedProductPage({
   const firstImage = item.images?.[0];
   const imageUrl = getImageUrl(firstImage?.medium || firstImage?.small || firstImage?.original);
   const title = item.title || slug;
-  const price = formatPrice(item.price, item.priceCurrency?.code, item.priceCurrency?.divisibility);
+  const price = resolveEmbedDisplayPrice(item);
   const description = item.description ? stripHtml(item.description).slice(0, 100) : '';
   const vendorName = vendorID?.handle || '';
   const vendorPeerID = peerID || vendorID?.peerID || '';
 
-  const productUrl = vendorPeerID
-    ? `${siteUrl}/product/${slug}?peerID=${vendorPeerID}&utm_source=embed&utm_medium=iframe&utm_campaign=product_card`
-    : `${siteUrl}/product/${slug}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`;
+  const productUrl = buildEmbedProductHref(slug, vendorPeerID || undefined, siteUrl);
 
   const storeUrl = vendorPeerID
     ? `${siteUrl}/store/${vendorPeerID}?utm_source=embed&utm_medium=iframe&utm_campaign=product_card`

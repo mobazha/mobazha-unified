@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ThemeMode, ThemeName, ThemeConfig, Theme, ThemeColors } from './types';
 import { themes } from './themes';
+import { getBrandConfig } from '../config/env';
 
 const THEME_STORAGE_KEY = 'mobazha-theme';
 const MODE_STORAGE_KEY = 'mobazha-theme-mode';
@@ -54,6 +55,68 @@ function colorsToCssVars(colors: ThemeColors): Record<string, string> {
   return vars;
 }
 
+function parseHex(hex: string): [number, number, number] | null {
+  const m = hex.replace('#', '');
+  if (m.length !== 6) return null;
+  return [parseInt(m.slice(0, 2), 16), parseInt(m.slice(2, 4), 16), parseInt(m.slice(4, 6), 16)];
+}
+
+function toHex(r: number, g: number, b: number): string {
+  return (
+    '#' +
+    [r, g, b]
+      .map(c =>
+        Math.max(0, Math.min(255, Math.round(c)))
+          .toString(16)
+          .padStart(2, '0')
+      )
+      .join('')
+  );
+}
+
+function mixColor(hex: string, target: string, ratio: number): string {
+  const c = parseHex(hex),
+    t = parseHex(target);
+  if (!c || !t) return hex;
+  return toHex(
+    c[0] + (t[0] - c[0]) * ratio,
+    c[1] + (t[1] - c[1]) * ratio,
+    c[2] + (t[2] - c[2]) * ratio
+  );
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const c = parseHex(hex);
+  if (!c) return hex;
+  return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alpha})`;
+}
+
+/**
+ * Build CSS variable overrides from brand config.
+ * Takes the base theme mode to produce correct light/dark derivations.
+ */
+function brandColorOverrides(mode: 'light' | 'dark'): Record<string, string> | null {
+  const brand = getBrandConfig();
+  if (!brand?.primaryColor) return null;
+
+  const p = brand.primaryColor;
+  const white = '#FFFFFF',
+    black = '#000000';
+  const isLight = mode === 'light';
+
+  const overrides: Record<string, string> = {
+    '--color-primary': p,
+    '--color-primaryLight': mixColor(p, white, 0.3),
+    '--color-primaryDark': mixColor(p, black, 0.25),
+    '--color-accent': brand.accentColor || p,
+  };
+
+  const glow = hexToRgba(p, isLight ? 0.2 : 0.35);
+  overrides['--color-glow'] = glow;
+
+  return overrides;
+}
+
 /**
  * 应用主题到 DOM
  *
@@ -80,6 +143,13 @@ function applyThemeToDOM(themeName: ThemeName, mode: 'light' | 'dark', colors: T
   Object.entries(cssVars).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
+
+  const brandOverrides = brandColorOverrides(mode);
+  if (brandOverrides) {
+    Object.entries(brandOverrides).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
+    });
+  }
 
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) {

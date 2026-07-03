@@ -103,7 +103,7 @@ const authedCheckoutPages: Array<{ name: string; path: string; description: stri
 ];
 
 const authedModeratorPages: Array<{ name: string; path: string; description: string }> = [
-  { name: '50-moderation-cases', path: '/moderation/cases', description: '仲裁案例列表' },
+  { name: '50-cases', path: '/cases', description: '争议案件列表' },
 ];
 
 test.describe('UX Audit - Authenticated Core Pages', () => {
@@ -154,7 +154,7 @@ const settingsPages: Array<{ name: string; path: string; description: string }> 
   { name: '62-settings-account', path: '/settings/account', description: '账户设置' },
   { name: '63-settings-page-profile', path: '/settings/page-profile', description: '页面资料' },
   { name: '64-settings-addresses', path: '/settings/addresses', description: '地址管理' },
-  { name: '65-settings-receiving', path: '/settings/receiving', description: '收款设置' },
+  { name: '65-settings-refunds', path: '/settings/refunds', description: '默认退款收款地址' },
   { name: '66-settings-privacy', path: '/settings/privacy', description: '隐私设置' },
   { name: '67-settings-keys', path: '/settings/keys', description: '密钥管理' },
   {
@@ -278,22 +278,22 @@ test.describe('UX Audit - Dynamic Pages (Store/Product/Order)', () => {
     await takeFullScreenshot(page, '95-marketplace-sell');
   });
 
-  test('[96-marketplace-admin] 集市管理', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin', { waitUntil: 'domcontentloaded' });
+  test('[96-marketplace-operator] Marketplace 运营台', async ({ page }) => {
+    await page.goto('/operator/marketplaces', { waitUntil: 'domcontentloaded' });
     await waitForPageStable(page);
-    await takeFullScreenshot(page, '96-marketplace-admin');
+    await takeFullScreenshot(page, '96-marketplace-operator');
   });
 
-  test('[97-marketplace-admin-products] 集市管理 - 产品', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/products', { waitUntil: 'domcontentloaded' });
+  test('[97-marketplace-operator-detail] Marketplace 运营详情', async ({ page }) => {
+    await page.goto('/operator/marketplaces/mp1', { waitUntil: 'domcontentloaded' });
     await waitForPageStable(page);
-    await takeFullScreenshot(page, '97-marketplace-admin-products');
+    await takeFullScreenshot(page, '97-marketplace-operator-detail');
   });
 
-  test('[98-marketplace-admin-applications] 集市管理 - 申请', async ({ page }) => {
-    await page.goto('/marketplace/mp1/admin/applications', { waitUntil: 'domcontentloaded' });
+  test('[98-marketplace-store-invitations] 店铺 Marketplace 邀请', async ({ page }) => {
+    await page.goto('/admin/settings/marketplace-memberships', { waitUntil: 'domcontentloaded' });
     await waitForPageStable(page);
-    await takeFullScreenshot(page, '98-marketplace-admin-applications');
+    await takeFullScreenshot(page, '98-marketplace-store-invitations');
   });
 
   test('[99-wallet-btc] 钱包 BTC 页面', async ({ page }) => {

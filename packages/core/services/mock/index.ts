@@ -224,7 +224,7 @@ export const mockOrderService = {
     return { success: true };
   },
 
-  async fulfillOrder(_orderId: string): Promise<{ success: boolean }> {
+  async shipOrder(_orderId: string): Promise<{ success: boolean }> {
     await delay(500);
     return { success: true };
   },
@@ -252,14 +252,6 @@ export const mockOrderService = {
   async openDispute(_orderId: string): Promise<{ success: boolean }> {
     await delay(500);
     return { success: true };
-  },
-
-  async getPaymentInstructions(_orderId: string, _coin: string) {
-    await delay();
-    return {
-      address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-      amount: 0.001,
-    };
   },
 };
 

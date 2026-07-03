@@ -2,11 +2,40 @@
  * 订单 API 服务
  */
 
-import type { Order, OrderListItem } from '../../types';
+import type { Order, OrderListItem, PaymentSession } from '../../types';
+import type {
+  CheckoutSupplyQuoteResponse,
+  QuoteCheckoutSupplyRequest,
+} from '../../types/supplyAvailability';
 import { withMockFallback, mockDelay, getApiMode } from './mode';
-import { NODE_API } from '../../config/apiPaths';
+import { NODE_API, type SettlementActionKind } from '../../config/apiPaths';
 import { authGet, authPost, authSafeGet } from './helpers';
+import { ApiError } from './client';
+import { caseDetailToOrder } from '../../utils/transforms/caseToOrder';
 import { mustCanonicalCoin, mustAssetIdFromTokenId } from '../../data/tokens';
+import { orderUsesMonitoredBackendSettlement } from '../../utils/orderSettlement';
+import { minimalAmountAsNumber } from '../../utils/transforms/priceTransform';
+import {
+  buildCollectiblePurchaseItemPayload,
+  type CollectiblePurchaseFields,
+} from '../../collectibles/metadata';
+
+async function orderWrite<T>(
+  realFn: () => Promise<T>,
+  mockFn: () => Promise<T>,
+  endpoint: string
+): Promise<T> {
+  if (getApiMode() === 'mock') {
+    await mockDelay();
+    return mockFn();
+  }
+  try {
+    return await realFn();
+  } catch (error) {
+    console.error(`[ordersApi] Real write failed for ${endpoint}:`, error);
+    throw error;
+  }
+}
 
 // ========== 订单类型定义 ==========
 
@@ -106,7 +135,7 @@ const mockOrders: OrderListItem[] = [
     vendorID: 'QmVendor123',
     vendorName: 'TechGear Store',
     buyerID: 'QmBuyer001',
-    state: 'AWAITING_FULFILLMENT',
+    state: 'AWAITING_SHIPMENT',
     read: true,
     paymentCoin: 'ETH',
     coinType: 'ETH',
@@ -126,12 +155,16 @@ const mockOrders: OrderListItem[] = [
     vendorID: 'QmVendor456',
     vendorName: 'WearTech',
     buyerID: 'QmBuyer001',
-    state: 'FULFILLED',
+    state: 'SHIPPED',
     read: false,
-    paymentCoin: 'BTC',
-    coinType: 'BTC',
+    paymentCoin: 'ETH',
+    coinType: 'ETH',
     moderated: true,
     unreadChatMessages: 2,
+    settlementAction: 'complete',
+    settlementActionId: 'settlement-action-complete-002',
+    settlementState: 'submitted',
+    settlementTxHash: '0x7d4f4e2f3a1e4b90c8f21938d6fd97cf14cb1db28a62df7df3fd7ab9d0be4202',
   },
   {
     orderID: 'QmOrderMock003',
@@ -221,11 +254,25 @@ export async function getSales(limit = '', offsetId = ''): Promise<OrderListItem
 /**
  * 获取订单详情
  */
-export async function getOrderDetails(orderId: string): Promise<Order | null> {
+export async function getOrderDetails(
+  orderId: string,
+  options?: { vendorPeerID?: string }
+): Promise<Order | null> {
+  const vendorPeerID = options?.vendorPeerID?.trim();
+  const storeHeaders = vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined;
+
   const realFn = async () => {
     try {
-      return await authGet<Order>(NODE_API.ORDER(orderId));
-    } catch {
+      return await authGet<Order>(NODE_API.ORDER(orderId), storeHeaders);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        try {
+          const casePayload = await authGet<Record<string, unknown>>(NODE_API.CASE(orderId));
+          return caseDetailToOrder(casePayload);
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   };
@@ -234,6 +281,20 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     await mockDelay();
     const orderItem = mockOrders.find(o => o.orderID === orderId);
     if (!orderItem) return null;
+    const settlementActions = orderItem.settlementState
+      ? [
+          {
+            actionId: orderItem.settlementActionId || `settlement-action-${orderItem.orderID}`,
+            action: orderItem.settlementAction || 'complete',
+            settlementAction: orderItem.settlementAction || 'complete',
+            state: orderItem.settlementState,
+            txHash: orderItem.settlementTxHash,
+            relayTaskId: `relay-task-${orderItem.orderID.toLowerCase()}`,
+            confirmations: orderItem.settlementState === 'confirmed' ? 12 : 0,
+            updatedAt: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+          },
+        ]
+      : undefined;
 
     // 构建完整的订单详情（符合 Order 接口）
     const mockOrder: Order = {
@@ -244,7 +305,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
           },
           timestamp: orderItem.timestamp,
           pricingCoin: orderItem.paymentCoin,
-          amount: orderItem.total.amount,
+          amount: minimalAmountAsNumber(orderItem.total.amount),
           items: [
             {
               listingHash: 'Qm' + Math.random().toString(36).slice(2, 48),
@@ -275,8 +336,12 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
                 item: {
                   title: orderItem.title,
                   description: 'Mock product description',
-                  price: orderItem.total.amount,
-                  images: [orderItem.thumbnail],
+                  price: minimalAmountAsNumber(orderItem.total.amount),
+                  images: [
+                    typeof orderItem.thumbnail === 'string'
+                      ? createMockImage(orderItem.thumbnail)
+                      : orderItem.thumbnail,
+                  ],
                   productType: '',
                   tags: [],
                   grams: 0,
@@ -291,11 +356,12 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
         },
         paymentSent: {
           method: orderItem.moderated ? 'MODERATED' : 'DIRECT',
-          amount: orderItem.total.amount,
+          amount: minimalAmountAsNumber(orderItem.total.amount),
           coin: orderItem.paymentCoin,
         },
       },
       state: orderItem.state,
+      settlementActions,
       read: orderItem.read,
       funded:
         orderItem.state !== 'PENDING' &&
@@ -304,7 +370,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       unreadChatMessages: orderItem.unreadChatMessages || 0,
       paymentAddressTransactions: [],
       protection: (() => {
-        if (orderItem.state === 'FULFILLED') {
+        if (orderItem.state === 'SHIPPED') {
           return {
             stage: 'PROTECTION_PERIOD',
             daysRemaining: 8,
@@ -314,7 +380,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
             afterSaleWindowDays: 7,
           };
         }
-        if (orderItem.state === 'AWAITING_FULFILLMENT') {
+        if (orderItem.state === 'AWAITING_SHIPMENT') {
           return {
             stage: 'ESCROWED',
             daysRemaining: 0,
@@ -342,6 +408,116 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   return withMockFallback(realFn, mockFn, `/orders/${orderId}`);
 }
 
+export async function getOrderPaymentSession(
+  orderId: string,
+  options?: { vendorPeerID?: string }
+): Promise<PaymentSession | null> {
+  const vendorPeerID = options?.vendorPeerID?.trim();
+  const storeHeaders = vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined;
+
+  try {
+    return await authGet<PaymentSession>(NODE_API.ORDER_PAYMENT_SESSION(orderId), storeHeaders);
+  } catch (err) {
+    // 404 = no session yet (order detail may treat as absent). Network/5xx must propagate
+    // so payment readiness polling can show a retryable error, not seller-receipt waiting.
+    if (err instanceof ApiError && err.status === 404) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+export interface CreateOrderPaymentSessionData {
+  orderId: string;
+  paymentCoin: string;
+  vendorPeerID?: string;
+  refundAddress?: string;
+  payFromCustodial?: boolean;
+  buyerPeerID?: string;
+  payerAddress?: string;
+  moderator?: string;
+  fiatAmountCents?: number;
+  fiatDescription?: string;
+  fiatReturnURL?: string;
+  fiatCancelURL?: string;
+}
+
+export async function createOrderPaymentSession(
+  payload: CreateOrderPaymentSessionData
+): Promise<PaymentSession> {
+  const realFn = async () => {
+    const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
+    const vendorPeerID = payload.vendorPeerID?.trim();
+    return authPost<PaymentSession>(
+      NODE_API.ORDER_PAYMENT_SESSION(payload.orderId),
+      {
+        paymentCoin,
+        ...(payload.refundAddress ? { refundAddress: payload.refundAddress } : {}),
+        ...(payload.payFromCustodial ? { payFromCustodial: true } : {}),
+        ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
+        ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
+        ...(payload.moderator ? { moderator: payload.moderator } : {}),
+        ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
+        ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
+        ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
+        ...(payload.fiatCancelURL ? { fiatCancelURL: payload.fiatCancelURL } : {}),
+      },
+      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+    );
+  };
+
+  const mockFn = async (): Promise<PaymentSession> => {
+    await mockDelay();
+    const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
+    return {
+      sessionID: `ps_${payload.orderId}`,
+      orderID: payload.orderId,
+      paymentCoin,
+      settlementMode: 'address_monitored',
+      productMode: payload.moderator ? 'moderated' : 'cancelable',
+      status: 'awaiting_funds',
+      expectedAmount: '0.015',
+      expiresAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      fundingTarget: {
+        type: 'address',
+        address: 'bc1qmockpaymentaddress0000000000000000000000',
+        assetID: paymentCoin,
+        amount: '0.015',
+      },
+      paymentProgress: {
+        observedAmount: '0',
+        requiredAmount: '0.015',
+        remainingAmount: '0.015',
+        observationCount: 0,
+        fundingState: 'awaiting_funds',
+      },
+    };
+  };
+
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderId}/payment-session`);
+}
+
+export interface SetOrderRefundAddressData {
+  orderId: string;
+  refundAddress: string;
+  paymentCoin?: string;
+  vendorPeerID?: string;
+}
+
+export async function setOrderRefundAddress(
+  payload: SetOrderRefundAddressData
+): Promise<{ orderID: string; refundAddress: string; paymentCoin: string }> {
+  const vendorPeerID = payload.vendorPeerID?.trim();
+  return authPost<{ orderID: string; refundAddress: string; paymentCoin: string }>(
+    NODE_API.ORDER_REFUND_ADDRESS(payload.orderId),
+    {
+      refundAddress: payload.refundAddress.trim(),
+      ...(payload.paymentCoin ? { paymentCoin: payload.paymentCoin } : {}),
+    },
+    vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+  );
+}
+
 // ========== 订单创建 API ==========
 
 /**
@@ -352,19 +528,23 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
 export interface CreateOrderData {
   vendorId?: string;
   discountCodes?: string[];
-  items: Array<{
-    listingHash: string;
-    quantity: number;
-    options?: Array<{
-      name: string;
-      value: string;
-    }>;
-    shipping?: {
-      name: string;
-      service: string;
-    };
-    memo?: string;
-  }>;
+  items: Array<
+    {
+      listingHash: string;
+      quantity: number;
+      options?: Array<{
+        name: string;
+        value: string;
+      }>;
+      shipping?: {
+        name: string;
+        service: string;
+        zoneId?: string;
+        rateId?: string;
+      };
+      memo?: string;
+    } & CollectiblePurchaseFields
+  >;
   // 地址信息（仅物理商品需要）
   address?: {
     name: string; // 收件人姓名 -> shipTo
@@ -376,6 +556,7 @@ export interface CreateOrderData {
     addressNotes?: string;
   };
   pricingCoin?: string; // 定价币种
+  refundAddress?: string; // 买家显式声明的退款钱包地址（托管/交易所付款或无法自动解析时填写）
   moderator?: string; // 仲裁人 ID
 }
 
@@ -392,18 +573,6 @@ export interface CreateOrderResult {
       divisibility: number;
     };
   };
-}
-
-/**
- * 支付指令响应
- */
-export interface PaymentInstructionsResult {
-  paymentAddress: string;
-  amount: string;
-  buyerAddress?: string;
-  vendorAddress?: string;
-  moderatorAddress?: string;
-  chainId?: number;
 }
 
 /**
@@ -450,6 +619,7 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
       ...(item.options && item.options.length > 0 ? { options: item.options } : {}),
       ...(item.shipping ? { shipping: item.shipping } : {}),
       ...(item.memo ? { memo: item.memo } : {}),
+      ...buildCollectiblePurchaseItemPayload(item),
     })),
   };
 
@@ -461,6 +631,11 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
   // 添加 pricingCoin（如果有）
   if (restData.pricingCoin) {
     apiData.pricingCoin = restData.pricingCoin;
+  }
+
+  // 添加显式退款钱包地址（法币订单后端会忽略）
+  if (restData.refundAddress) {
+    apiData.refundAddress = restData.refundAddress;
   }
 
   // 添加 moderator（如果有）
@@ -481,7 +656,11 @@ export async function createOrder(data: CreateOrderData): Promise<CreateOrderRes
     }
   }
 
-  return authPost<CreateOrderResult>(NODE_API.ORDERS, apiData);
+  return authPost<CreateOrderResult>(
+    NODE_API.ORDERS,
+    apiData,
+    _vendorId?.trim() ? { 'X-Store-PeerID': _vendorId.trim() } : undefined
+  );
 }
 
 /**
@@ -559,6 +738,38 @@ export async function getCheckoutBreakdown(data: PurchaseData): Promise<OrderEst
   return withMockFallback(realFn, mockFn, '/orders/checkout-breakdown');
 }
 
+/** Advisory supply preflight for authenticated checkout — does not hold inventory. */
+export async function quoteCheckoutSupply(
+  data: QuoteCheckoutSupplyRequest,
+  options?: { vendorPeerID?: string }
+): Promise<CheckoutSupplyQuoteResponse> {
+  const realFn = async () => {
+    const vendorPeerID = options?.vendorPeerID?.trim();
+    return authPost<CheckoutSupplyQuoteResponse>(
+      NODE_API.ORDERS_SUPPLY_QUOTE,
+      data,
+      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+    );
+  };
+
+  const mockFn = async () => {
+    await mockDelay();
+    return {
+      items: data.items.map(item => ({
+        listingSlug: item.listingSlug,
+        quantity: item.quantity,
+        status: 'unknown' as const,
+        available: false,
+        reason: 'supply_availability_disabled',
+      })),
+      canSell: true,
+      reason: 'supply_availability_disabled',
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, '/orders/supply-quote');
+}
+
 // ========== 订单状态操作 API ==========
 
 /**
@@ -580,28 +791,150 @@ export async function confirmOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
-      order.state = payload.decline ? 'DECLINED' : 'AWAITING_FULFILLMENT';
+      order.state = payload.decline ? 'DECLINED' : 'AWAITING_SHIPMENT';
     }
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/confirm`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/confirm`);
+}
+
+export interface SettlementActionResponse {
+  mode?: string;
+  actionId?: string;
+  escrowAddr?: string;
+  txHash?: string;
+  paymentChain?: string;
+  paymentCoin?: string;
+}
+
+export async function executeSettlementAction(payload: {
+  orderID: string;
+  action: SettlementActionKind;
+  payoutAddress?: string;
+}): Promise<SettlementActionResponse> {
+  const realFn = async () => {
+    return authPost<SettlementActionResponse>(
+      NODE_API.ORDER_SETTLEMENT_ACTION(payload.orderID, payload.action),
+      { payoutAddress: payload.payoutAddress }
+    );
+  };
+
+  const mockFn = async (): Promise<SettlementActionResponse> => {
+    await mockDelay();
+    return {
+      mode: 'completed',
+      actionId: `mock-${payload.action}-${payload.orderID}`,
+    };
+  };
+
+  return orderWrite(
+    realFn,
+    mockFn,
+    `/orders/${payload.orderID}/settlement-actions/${payload.action}`
+  );
+}
+
+export interface SettlementActionStatusResponse {
+  actionId?: string;
+  state?: string;
+  txHash?: string;
+  confirmations?: number;
+  lastError?: string;
+  relayTaskId?: string;
+  orderId?: string;
+  settlementAction?: string;
+  paymentChain?: string;
+  paymentCoin?: string;
+}
+
+export async function getSettlementActionStatus(payload: {
+  orderID: string;
+  action: SettlementActionKind;
+  actionId: string;
+}): Promise<SettlementActionStatusResponse> {
+  return authGet<SettlementActionStatusResponse>(
+    NODE_API.ORDER_SETTLEMENT_ACTION_STATUS(payload.orderID, payload.action, payload.actionId)
+  );
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableSettlementStatusError(err: unknown): boolean {
+  if (err instanceof ApiError) {
+    const status = err.status;
+    if (status === 404 || status === 429 || status === 503) {
+      return true;
+    }
+    return status != null && status >= 500;
+  }
+  return true;
+}
+
+/** Poll settlement status until a tx hash is available. */
+export async function awaitSettlementActionTxHash(payload: {
+  orderID: string;
+  action: SettlementActionKind;
+  actionId: string;
+  intervalMs?: number;
+  timeoutMs?: number;
+}): Promise<SettlementActionResponse> {
+  const intervalMs = payload.intervalMs ?? 2000;
+  const timeoutMs = payload.timeoutMs ?? 120_000;
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    try {
+      const status = await getSettlementActionStatus({
+        orderID: payload.orderID,
+        action: payload.action,
+        actionId: payload.actionId,
+      });
+      const state = (status.state || '').trim().toLowerCase();
+      if (status.txHash) {
+        return {
+          mode: 'submitted',
+          actionId: payload.actionId,
+          txHash: status.txHash,
+          paymentChain: status.paymentChain,
+          paymentCoin: status.paymentCoin,
+        };
+      }
+      if (state === 'failed' || state === 'abandoned' || state === 'error') {
+        throw new Error(status.lastError || 'Settlement action failed');
+      }
+    } catch (err) {
+      if (isRetryableSettlementStatusError(err)) {
+        await sleep(intervalMs);
+        continue;
+      }
+      throw err;
+    }
+    await sleep(intervalMs);
+  }
+
+  throw new Error('Timed out waiting for settlement transaction');
 }
 
 /**
  * 发货（卖家）
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
-export async function fulfillOrder(payload: {
+export async function shipOrder(payload: {
   orderID: string;
-  physicalDelivery?: { shipper: string; trackingNumber: string };
-  digitalDelivery?: { url?: string; password?: string };
-  note?: string;
-  itemIndex?: number;
   receivingAccountID?: number;
+  shipments: Array<{
+    physicalDelivery?: { shipper: string; trackingNumber: string };
+    digitalDelivery?: { url?: string; password?: string };
+    cryptocurrencyDelivery?: { transactionID: string };
+    note?: string;
+    itemIndex?: number;
+  }>;
 }): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    await authPost<Record<string, unknown>>(NODE_API.ORDER_FULFILL(payload.orderID), payload);
+    await authPost<Record<string, unknown>>(NODE_API.ORDER_SHIP(payload.orderID), payload);
     return { success: true };
   };
 
@@ -609,12 +942,12 @@ export async function fulfillOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderID);
     if (order) {
-      order.state = 'FULFILLED';
+      order.state = 'SHIPPED';
     }
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/fulfill`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/ship`);
 }
 
 /**
@@ -646,7 +979,7 @@ export async function completeOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/complete`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/complete`);
 }
 
 /**
@@ -676,156 +1009,6 @@ export async function rateOrder(payload: {
 }
 
 /**
- * 通用订单指令响应类型
- * 用于所有需要获取链上交易指令的操作（confirm/reject/cancel/refund/complete）
- */
-export interface OrderInstructionsResponse {
-  /** 支付链类型（如 ETHEREUM, SOLANA, BTC 等） */
-  paymentChain?: string;
-  /** 是否需要链上交易 */
-  hasInstructions: boolean;
-  /** 链上交易指令（EVM 或 Solana 格式） */
-  instructions?: {
-    to: string;
-    data: string;
-    value?: string;
-  };
-}
-
-/**
- * 完成订单的链上交易指令响应类型
- * @deprecated 请使用 OrderInstructionsResponse
- */
-export interface CompleteInstructionsResponse {
-  /** 支付链类型（如 ETHEREUM, SOLANA 等） */
-  paymentChain?: string;
-  /** 是否需要链上交易 */
-  hasInstructions: boolean;
-  /** 链上交易指令（EVM 或 Solana 格式） */
-  instructions?: unknown;
-}
-
-/**
- * 获取完成订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.initiatorAddress - 发起者钱包地址
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getCompleteInstructions(params: {
-  orderID: string;
-  initiatorAddress: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_COMPLETE(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/complete`);
-}
-
-/**
- * 获取确认/拒绝订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.decline - 是否拒绝订单（false=接受，true=拒绝）
- * @param params.initiatorAddress - 发起者钱包地址
- * @param params.payoutAddress - 卖家收款地址（接受订单时使用）
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getConfirmInstructions(params: {
-  orderID: string;
-  decline: boolean;
-  initiatorAddress: string;
-  payoutAddress?: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_CONFIRM(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/confirm`);
-}
-
-/**
- * 获取取消订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.initiatorAddress - 发起者钱包地址
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getCancelInstructions(params: {
-  orderID: string;
-  initiatorAddress: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_CANCEL(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/cancel`);
-}
-
-/**
- * 获取退款订单的链上交易指令
- * 用于 EVM/Solana 等需要钱包签名的支付方式
- *
- * @param params.orderID - 订单 ID
- * @param params.initiatorAddress - 发起者钱包地址
- * @returns 指令响应，包含是否需要链上交易以及交易指令
- */
-export async function getRefundInstructions(params: {
-  orderID: string;
-  initiatorAddress: string;
-}): Promise<OrderInstructionsResponse> {
-  const realFn = async () => {
-    return authPost<OrderInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_REFUND(params.orderID),
-      params
-    );
-  };
-
-  const mockFn = async (): Promise<OrderInstructionsResponse> => {
-    await mockDelay();
-    return {
-      hasInstructions: false,
-    };
-  };
-
-  return withMockFallback(realFn, mockFn, `/orders/${params.orderID}/instructions/refund`);
-}
-
-/**
  * 取消订单
  * 注意：后端成功时返回空对象 {}，因此 HTTP 200 即表示成功
  */
@@ -847,7 +1030,7 @@ export async function cancelOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/cancel`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/cancel`);
 }
 
 /**
@@ -867,7 +1050,7 @@ export async function extendProtection(
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${orderID}/extend-protection`);
+  return orderWrite(realFn, mockFn, `/orders/${orderID}/extend-protection`);
 }
 
 /**
@@ -892,7 +1075,7 @@ export async function refundOrder(payload: {
     return { success: true };
   };
 
-  return withMockFallback(realFn, mockFn, `/orders/${payload.orderID}/refund`);
+  return orderWrite(realFn, mockFn, `/orders/${payload.orderID}/refund`);
 }
 
 // ========== 支付相关 API ==========
@@ -901,8 +1084,7 @@ export async function refundOrder(payload: {
  * 提交支付数据
  * 用于通知后端支付已完成
  *
- * 注意：推荐直接使用后端 getPaymentInstructions 返回的 paymentData，
- * 只添加 transactionID 和 timestamp 字段（与移动端保持一致）
+ * 旧支付指令路径已退役；新支付入口使用 PaymentSession。
  */
 export interface SubmitPaymentData {
   orderID: string;
@@ -992,7 +1174,7 @@ export async function fundOrder(payload: {
     await mockDelay();
     const order = mockOrders.find(o => o.orderID === payload.orderId);
     if (order) {
-      order.state = 'AWAITING_FULFILLMENT';
+      order.state = 'AWAITING_SHIPMENT';
     }
     return {
       success: true,
@@ -1001,122 +1183,6 @@ export async function fundOrder(payload: {
   };
 
   return withMockFallback(realFn, mockFn, `/orders/${payload.orderId}/spend`);
-}
-
-/**
- * 支付指令响应类型
- *
- * 后端返回的完整数据结构，用于 EVM 链的智能合约支付
- */
-export interface PaymentInstructionsResponse {
-  // 交易指令（合约调用）
-  instructions?: {
-    to: string; // 合约地址
-    data: string; // 合约调用数据（ABI 编码）
-    value: string; // ETH 值（通常为 "0"）
-  };
-  // 支付数据（元数据）
-  paymentData?: {
-    orderID: string;
-    transactionID?: string;
-    coin: string;
-    method: number;
-    contractAddress: string; // 托管合约地址
-    payerAddress?: string;
-    moderator?: string;
-    moderatorAddress?: string;
-    amount: string; // 支付金额（最小单位，字符串避免精度丢失）
-    fromID?: string;
-    toAddress?: string;
-    toID?: string;
-    script?: string;
-    unlockHours?: number;
-    paymentTokenAddress?: string; // ERC20 代币地址
-    timestamp?: string;
-  };
-  // 托管账户地址
-  escrowAccount?: string;
-  // 外部钱包支付（UTXO 链: BTC/LTC/BCH/ZEC）
-  paymentType?: string;
-  paymentAddress?: string;
-  paymentURI?: string;
-  coin?: string;
-  chainType?: string;
-  qrCodeData?: string;
-  scriptHash?: string;
-  script?: string;
-  moderator?: string;
-  unlockHours?: number;
-  expiresAt?: string;
-  // 兼容旧字段
-  address?: string;
-  amount?: string;
-  buyerAddress?: string;
-  vendorAddress?: string;
-  // 错误字段
-  error?: string;
-}
-
-/**
- * 获取支付指令
- *
- * 注意：后端 API 期望的参数名是 orderID 和 coinType（大写）
- * 为了与前端代码风格保持一致，这里接受 orderId 和 coin，
- * 然后在内部转换为后端期望的格式
- */
-export async function getPaymentInstructions(requestData: {
-  orderId: string;
-  coin: string;
-  payerAddress?: string; // 付款人地址
-  moderator?: string; // 仲裁人 peerID
-}): Promise<PaymentInstructionsResponse> {
-  const realFn = async () => {
-    const canonicalCoin = resolveCanonicalPaymentCoin(requestData.coin);
-    const backendRequestData: Record<string, unknown> = {
-      orderID: requestData.orderId,
-      coinType: canonicalCoin,
-    };
-    if (requestData.payerAddress) {
-      backendRequestData.payerAddress = requestData.payerAddress;
-    }
-    if (requestData.moderator) {
-      backendRequestData.moderator = requestData.moderator;
-    }
-    return authPost<PaymentInstructionsResponse>(
-      NODE_API.ORDER_INSTRUCTIONS_PAYMENT(requestData.orderId),
-      backendRequestData
-    );
-  };
-
-  const mockFn = async () => {
-    await mockDelay();
-    const canonicalCoin = resolveCanonicalPaymentCoin(requestData.coin);
-    const mockContractAddress = '0x' + Math.random().toString(16).slice(2, 42);
-    const mockEscrowAccount = '0x' + Math.random().toString(16).slice(2, 66);
-    return {
-      instructions: {
-        to: mockContractAddress,
-        data: '0x57bced76' + '0'.repeat(256),
-        value: '0',
-      },
-      paymentData: {
-        orderID: requestData.orderId,
-        coin: canonicalCoin,
-        method: 1,
-        contractAddress: mockContractAddress,
-        amount: '1500',
-        unlockHours: 720,
-        paymentTokenAddress: '0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
-      },
-      escrowAccount: mockEscrowAccount,
-    };
-  };
-
-  const mode = getApiMode();
-  if (mode === 'mock') {
-    return mockFn();
-  }
-  return realFn();
 }
 
 /**
@@ -1175,10 +1241,18 @@ export async function openDispute(
  * 接受争议裁决
  */
 export async function acceptDispute(
-  orderId: string
+  orderId: string,
+  txID?: string
 ): Promise<{ success: boolean; error?: string }> {
   const realFn = async () => {
-    return authPost<{ success: boolean; error?: string }>(NODE_API.DISPUTE_RELEASE(orderId), {});
+    const response = await authPost<{ success?: boolean; error?: string }>(
+      NODE_API.DISPUTE_RELEASE(orderId),
+      { txID: txID || '' }
+    );
+    return {
+      success: response.success !== false,
+      error: response.error,
+    };
   };
 
   const mockFn = async () => {
@@ -1191,6 +1265,65 @@ export async function acceptDispute(
   };
 
   return withMockFallback(realFn, mockFn, '/dispute/release');
+}
+
+/** Context for moderated backend-submitted dispute payout acceptance. */
+export interface AcceptDisputeSettlementContext {
+  paymentCoin?: string;
+  isModerated?: boolean;
+  escrowType?: string;
+}
+
+/** Run dispute-release settlement action and poll until a tx hash is available. */
+export async function executeDisputeReleaseSettlementAction(
+  orderID: string
+): Promise<SettlementActionResponse> {
+  const settlement = await executeSettlementAction({
+    orderID,
+    action: 'dispute-release',
+  });
+  if (settlement.mode === 'submitted' && settlement.actionId && !settlement.txHash) {
+    return awaitSettlementActionTxHash({
+      orderID,
+      action: 'dispute-release',
+      actionId: settlement.actionId,
+    });
+  }
+  return settlement;
+}
+
+export interface AcceptDisputeWithSettlementOptions {
+  /** Called after backend settlement (and tx poll) completes, before acceptDispute. */
+  onSettlementComplete?: (txHash?: string) => void;
+}
+
+/**
+ * Accept a dispute ruling: settlement-action (when applicable) → poll tx hash → release.
+ * Single entry point for order detail, list hooks, and disputes API.
+ */
+export async function acceptDisputeWithSettlement(
+  orderID: string,
+  context?: AcceptDisputeSettlementContext,
+  options?: AcceptDisputeWithSettlementOptions
+): Promise<{ success: boolean; error?: string; txHash?: string }> {
+  const attemptBackendSettlement = orderUsesMonitoredBackendSettlement({
+    isModerated: context?.isModerated,
+    escrowType: context?.escrowType,
+    paymentCoin: context?.paymentCoin,
+  });
+
+  let txHash: string | undefined;
+  if (attemptBackendSettlement) {
+    const resolved = await executeDisputeReleaseSettlementAction(orderID);
+    txHash = resolved.txHash;
+    options?.onSettlementComplete?.(txHash);
+  }
+
+  const result = await acceptDispute(orderID, txHash);
+  return {
+    ...result,
+    txHash,
+  };
 }
 
 /**
@@ -1275,36 +1408,34 @@ export const ordersApi = {
   getPurchases,
   getSales,
   getOrderDetails,
+  getOrderPaymentSession,
 
   // 创建
   createOrder,
   purchaseListing,
   estimateOrderTotal,
   getCheckoutBreakdown,
+  quoteCheckoutSupply,
 
   // 状态操作
   confirmOrder,
-  fulfillOrder,
+  executeSettlementAction,
+  shipOrder,
   completeOrder,
   cancelOrder,
   extendProtection,
   refundOrder,
 
-  // 操作指令（用于获取链上交易指令）
-  getConfirmInstructions,
-  getCancelInstructions,
-  getRefundInstructions,
-  getCompleteInstructions,
-
   // 支付
+  createOrderPaymentSession,
   submitPayment,
   fundOrder,
-  getPaymentInstructions,
   getPaymentRemaining,
 
   // 争议
   openDispute,
   acceptDispute,
+  acceptDisputeWithSettlement,
   claimPayment,
 
   // 其他

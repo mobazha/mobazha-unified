@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header, Footer } from '@/components';
 import { Container } from '@/components/layouts';
@@ -10,21 +10,38 @@ import { Skeleton } from '@/components/ui/skeleton-compat';
 import { Copy, Printer } from 'lucide-react';
 import {
   useI18n,
-  isOrderFulfilled,
+  isOrderShipped,
   ordersApi,
   disputesApi,
+  useFeature,
+  useChatStore,
+  formatUserName,
+  isDisputeRulingAvailable,
+  isActiveCryptoDisputeStatus,
+  shouldShowDisputeArchiveCard,
+  resolveDigitalEntitlementDisputePhase,
   type OrderAction,
   type UserRole as CoreUserRole,
 } from '@mobazha/core';
 import { useOrderDetailPage } from '@/hooks/useOrderDetailPage';
+import { useOrderChat } from '@/hooks/useOrderChat';
+import { useModeratorDisputeResolution } from '@/hooks/useModeratorDisputeResolution';
+import { ModeratorDisputeRulingDialog } from '@/components/Order/ModeratorDisputeRulingDialog';
 import { useToast } from '@/components/ui/use-toast';
 import {
   OrderFooter,
   OrderChat,
+  OrderChatContextStrip,
   AcceptOrderDialog,
-  FulfillOrderDialog,
+  ShipOrderDialog,
   OrderConfirmDialog,
+  OrderRating,
   WriteReviewDialog,
+  ConfirmReceiptDialog,
+  AcceptPayoutDialog,
+  SellerDigitalDeliveryStatus,
+  OrderShipment,
+  getDigitalDeliveryTimestamp,
   type OrderConfirmType,
 } from '@/components/Order';
 import { FiatRefundDialog } from './FiatRefundDialog';
@@ -41,6 +58,13 @@ import {
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
+  OrderSettlementCard,
+  OrderCreatedAtMeta,
+  DisputeSummaryCard,
+  DisputeHistoryCard,
+  DisputeOverviewCard,
+  DisputeResolutionBar,
+  DisputeEvidencePanel,
   getStatusLabel,
 } from '@/components/Order/cards';
 import {
@@ -49,16 +73,35 @@ import {
 } from '@/components/Order/cards/OrderProtectionStatus';
 import { RatingInviteBanner } from '@/components/Order/cards/RatingInviteBanner';
 import { AfterSaleDisputeCard } from '@/components/Order/cards/AfterSaleDisputeCard';
+import { FulfillmentStatusCard } from '@/components/Order/cards/FulfillmentStatusCard';
+import { CollectiblePrimarySaleCard } from '@/components/Order/cards/CollectiblePrimarySaleCard';
+import { OrderRefundAddressBanner } from '@/components/Order/cards/OrderRefundAddressBanner';
+import { OrderRefundDestinationCard } from '@/components/Order/cards/OrderRefundDestinationCard';
+import { BuyerDigitalAssetsSection } from '@/components/Order/BuyerDigitalAssetsSection';
+import { orderDetailPath } from '@/lib/ordersNavigation';
 
 export interface OrderDetailDesktopProps {
   orderId: string;
   viewingContext?: 'sale' | 'purchase';
+  listBackPath?: string;
+  focusDispute?: boolean;
+  initialTab?: 'summary' | 'discussion' | 'dispute' | 'evidence';
 }
 
-export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDesktopProps) {
+export function OrderDetailDesktop({
+  orderId,
+  viewingContext,
+  listBackPath = '/orders',
+  focusDispute = false,
+  initialTab = 'summary',
+}: OrderDetailDesktopProps) {
   const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
+  const supplyChainEnabled = useFeature('supplyChainEnabled');
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const chatDrawerOpen = useChatStore(state => state.drawerOpen);
+  const closeChatDrawer = useChatStore(state => state.closeDrawer);
 
   const {
     displayOrder,
@@ -66,46 +109,233 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
     isLoading,
     error,
     refetch,
+    latestSettlementAction,
     currentUserPeerID,
-    chatParticipants,
     isActionLoading,
+    isTransitioning,
+    completePhase,
+    acceptPayoutPhase,
+    isModeratedOrder,
     executeConfirmAction,
+    showAcceptPayoutDialog,
+    openAcceptPayoutDialog,
+    closeAcceptPayoutDialog,
+    confirmAcceptPayout,
+    showConfirmReceiptDialog,
+    openConfirmReceiptDialog,
+    closeConfirmReceiptDialog,
+    confirmReceipt,
     showReviewDialog,
+    openReviewDialog,
     reviewProductTitle,
-    submitReviewAndComplete,
-    skipReviewAndComplete,
+    submitRating,
     closeReviewDialog,
     copyOrderId,
     copyContract,
-    chatMessages,
-    sendMessage,
+    buyerRefundAddress,
+    buyerRefundAddressDraft,
+    buyerNeedsRefundAddress,
+    showRefundDestination,
+    isSavingRefundAddress,
+    saveBuyerRefundAddress,
+    ensureBuyerRefundAddress,
+    notifyOrderActionError,
     acceptOrderProps,
-    fulfillOrderProps,
+    shipOrderProps,
+    sellerDigitalDelivery,
   } = useOrderDetailPage(orderId, viewingContext);
 
   // --- UI-only state ---
   const [confirmDialog, setConfirmDialog] = useState<OrderConfirmType | null>(null);
   const [showFiatRefundDialog, setShowFiatRefundDialog] = useState(false);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
-  const [showFulfillDialog, setShowFulfillDialog] = useState(false);
+  const [showShipDialog, setShowShipDialog] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [isAfterSaleDispute, setIsAfterSaleDispute] = useState(false);
   const [isDisputeLoading, setIsDisputeLoading] = useState(false);
   const [showPackingSlip, setShowPackingSlip] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'contract'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'discussion' | 'dispute' | 'evidence'>(
+    initialTab
+  );
+  const disputeSectionRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isSheetOpen,
+    isResolving,
+    isOpeningSheet,
+    draft: rulingDraft,
+    activePreset,
+    validationErrors: rulingValidationErrors,
+    vendorNotConfirmed,
+    constraints: rulingConstraints,
+    openRulingSheet,
+    applyPreset,
+    closeSheet,
+    setBuyerPercentage,
+    setVendorPercentage,
+    setResolution,
+    submitRuling,
+  } = useModeratorDisputeResolution(orderId, refetch);
+
+  const moderatorRulingBuyerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.buyer?.name, peerID: displayOrder?.buyer?.peerID },
+        { fallback: t('order.buyer') }
+      ),
+    [displayOrder?.buyer, t]
+  );
+  const moderatorRulingSellerLabel = useMemo(
+    () =>
+      formatUserName(
+        { name: displayOrder?.vendor?.name, peerID: displayOrder?.vendor?.peerID },
+        { fallback: t('order.seller') }
+      ),
+    [displayOrder?.vendor, t]
+  );
+
+  const orderChat = useOrderChat({
+    orderId,
+    displayOrder,
+    currentUserPeerID,
+    isActive: activeTab === 'discussion',
+  });
+
+  // Derived flag: moderator viewing a disputed order → switch to dedicated moderator view
+  const isModeratorDisputeView =
+    !!displayOrder && displayOrder.userRole === 'moderator' && !!displayOrder.dispute;
+
+  const orderViewType = useMemo((): 'sale' | 'purchase' => {
+    if (viewingContext === 'sale') return 'sale';
+    if (viewingContext === 'purchase') return 'purchase';
+    if (displayOrder?.userRole === 'seller') return 'sale';
+    return 'purchase';
+  }, [viewingContext, displayOrder?.userRole]);
+
+  const syncTabToUrl = useCallback(
+    (tab: 'summary' | 'discussion' | 'dispute' | 'evidence') => {
+      const detailRole = orderViewType === 'sale' ? 'sale' : 'purchase';
+      const fromShell =
+        listBackPath.startsWith('/admin/orders') && detailRole === 'purchase' ? 'admin' : undefined;
+      router.replace(
+        orderDetailPath(orderId, detailRole, {
+          fromShell,
+          tab: tab !== 'summary' ? tab : undefined,
+        }),
+        { scroll: false }
+      );
+    },
+    [orderId, orderViewType, listBackPath, router]
+  );
+
+  const handleTabChange = useCallback(
+    (tab: 'summary' | 'discussion' | 'dispute' | 'evidence') => {
+      setActiveTab(tab);
+      syncTabToUrl(tab);
+    },
+    [syncTabToUrl]
+  );
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, orderId]);
+
+  // Order discussion is the embedded workspace — keep global drawer on the inbox list.
+  useEffect(() => {
+    if (activeTab !== 'discussion') return;
+    const store = useChatStore.getState();
+    if (chatDrawerOpen) {
+      closeChatDrawer();
+    } else if (store.currentRoomId) {
+      store.setCurrentRoom(null);
+    }
+  }, [activeTab, chatDrawerOpen, closeChatDrawer]);
+
+  useEffect(() => {
+    if (!focusDispute || !displayOrder) return;
+    // For moderators with a dispute, focus the dedicated dispute tab
+    if (isModeratorDisputeView) {
+      handleTabChange('dispute');
+    } else {
+      handleTabChange('summary');
+      const timer = window.setTimeout(() => {
+        disputeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 350);
+      return () => window.clearTimeout(timer);
+    }
+  }, [focusDispute, displayOrder, isModeratorDisputeView, handleTabChange]);
 
   // --- Computed ---
   const statusLabel = useMemo(() => {
     if (!displayOrder) return '';
-    return getStatusLabel(displayOrder.status, t);
+    return getStatusLabel(displayOrder.status, t, displayOrder.contractType);
   }, [displayOrder, t]);
 
   const isPrePayment = useMemo(() => displayOrder?.status === 'awaiting_payment', [displayOrder]);
+
+  const canOpenModeratedDispute = useMemo(
+    () =>
+      !!displayOrder &&
+      isModeratedOrder &&
+      !displayOrder.dispute &&
+      ((displayOrder.userRole === 'buyer' &&
+        ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
+        (displayOrder.userRole === 'seller' &&
+          ['shipped', 'delivered'].includes(displayOrder.status))),
+    [displayOrder, isModeratedOrder]
+  );
 
   const protectionStage = useMemo<OrderProtectionStatusProps['stage'] | null>(() => {
     if (!displayOrder?.protection) return null;
     return displayOrder.protection.stage as OrderProtectionStatusProps['stage'];
   }, [displayOrder]);
+
+  const hasActiveCryptoDispute = useMemo(
+    () => !!displayOrder?.dispute && isActiveCryptoDisputeStatus(displayOrder.status),
+    [displayOrder]
+  );
+
+  const showDisputeArchive = useMemo(
+    () =>
+      displayOrder
+        ? shouldShowDisputeArchiveCard(displayOrder.dispute, displayOrder.status)
+        : false,
+    [displayOrder]
+  );
+
+  const disputeRulingPendingAcceptance = useMemo(
+    () => (displayOrder?.dispute ? isDisputeRulingAvailable(displayOrder.dispute) : false),
+    [displayOrder?.dispute]
+  );
+
+  const digitalEntitlementDisputePhase = useMemo(
+    () =>
+      displayOrder
+        ? resolveDigitalEntitlementDisputePhase(displayOrder.status, displayOrder.dispute)
+        : 'none',
+    [displayOrder]
+  );
+
+  const moderatorTabs = useMemo((): Array<'dispute' | 'discussion' | 'evidence'> => {
+    const base: Array<'dispute' | 'discussion' | 'evidence'> = ['dispute', 'discussion'];
+    if ((displayOrder?.dispute?.evidenceHashes?.length ?? 0) > 0) {
+      base.push('evidence');
+    }
+    return base;
+  }, [displayOrder?.dispute?.evidenceHashes]);
+
+  useEffect(() => {
+    if (!displayOrder) return;
+    if (isModeratorDisputeView) {
+      if (!moderatorTabs.includes(activeTab as 'dispute' | 'discussion' | 'evidence')) {
+        handleTabChange('dispute');
+      }
+      return;
+    }
+    if (activeTab === 'dispute' || activeTab === 'evidence') {
+      handleTabChange('summary');
+    }
+  }, [activeTab, displayOrder, handleTabChange, isModeratorDisputeView, moderatorTabs]);
 
   const handleExtendProtection = useCallback(async () => {
     try {
@@ -126,6 +356,23 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   );
 
   const hasAfterSaleDispute = !!displayOrder?.afterSaleDispute;
+  const shouldBlockAutoRefund = useMemo(() => {
+    if (displayOrder?.fundsReleasedAtConfirmation) return true;
+    const settlementState = (latestSettlementAction?.state || '').trim().toLowerCase();
+    const settlementAction = (
+      latestSettlementAction?.settlementAction ||
+      latestSettlementAction?.action ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
+    return (
+      settlementState === 'confirmed' &&
+      (settlementAction === 'cancel' ||
+        settlementAction === 'confirm' ||
+        settlementAction === 'release')
+    );
+  }, [displayOrder?.fundsReleasedAtConfirmation, latestSettlementAction]);
 
   // --- OrderFooter action handler ---
   const handleOrderAction = useCallback(
@@ -135,10 +382,11 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           router.push(`/payment?orderID=${orderId}`);
           break;
         case 'Cancel':
+          if (!ensureBuyerRefundAddress()) break;
           setConfirmDialog('cancel');
           break;
         case 'Complete':
-          executeConfirmAction('complete');
+          openConfirmReceiptDialog();
           break;
         case 'Accept':
           setShowAcceptDialog(true);
@@ -146,13 +394,60 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         case 'Decline':
           setConfirmDialog('decline');
           break;
-        case 'Fulfill':
-          setShowFulfillDialog(true);
+        case 'Ship':
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.isLoading) {
+            toast({
+              title: t('order.digitalDelivery.checking'),
+            });
+            break;
+          }
+          if (
+            sellerDigitalDelivery.isDigitalOrder &&
+            !sellerDigitalDelivery.status &&
+            sellerDigitalDelivery.error
+          ) {
+            toast({
+              title: t('order.digitalDelivery.syncFailed'),
+              description: sellerDigitalDelivery.error,
+              variant: 'destructive',
+            });
+            break;
+          }
+          if (sellerDigitalDelivery.canSyncDelivery) {
+            void sellerDigitalDelivery.syncDelivery();
+            break;
+          }
+          if (sellerDigitalDelivery.canRetryDelivery) {
+            void sellerDigitalDelivery.retryDelivery();
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder && sellerDigitalDelivery.manualFallbackAllowed) {
+            setShowShipDialog(true);
+            break;
+          }
+          if (sellerDigitalDelivery.isDigitalOrder) {
+            sellerDigitalDelivery.refreshStatus();
+            toast({
+              title: t('order.digitalDelivery.pendingTitle'),
+              description: t('order.digitalDelivery.pendingDesc'),
+            });
+            break;
+          }
+          setShowShipDialog(true);
           break;
         case 'Refund':
+          if (shouldBlockAutoRefund) {
+            toast({
+              title: t('order.actions.manualRefundRequired'),
+              description: t('order.actions.manualRefundRequiredDesc'),
+              variant: 'destructive',
+            });
+            break;
+          }
           if (displayOrder?.fiatPayment) {
             setShowFiatRefundDialog(true);
           } else {
+            if (!ensureBuyerRefundAddress()) break;
             setConfirmDialog('refund');
           }
           break;
@@ -160,9 +455,10 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setConfirmDialog('claim');
           break;
         case 'AcceptPayout':
-          setConfirmDialog('acceptPayout');
+          openAcceptPayoutDialog();
           break;
         case 'Dispute':
+          if (!ensureBuyerRefundAddress()) break;
           setIsAfterSaleDispute(false);
           setShowDisputeModal(true);
           break;
@@ -171,11 +467,23 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
           setShowDisputeModal(true);
           break;
         case 'WriteReview':
-          executeConfirmAction('complete');
+          openReviewDialog();
           break;
       }
     },
-    [router, orderId, executeConfirmAction, displayOrder]
+    [
+      router,
+      orderId,
+      openConfirmReceiptDialog,
+      openReviewDialog,
+      displayOrder,
+      sellerDigitalDelivery,
+      shouldBlockAutoRefund,
+      openAcceptPayoutDialog,
+      ensureBuyerRefundAddress,
+      t,
+      toast,
+    ]
   );
 
   const handleFiatRefund = useCallback(
@@ -187,14 +495,18 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
   );
 
   const handleConfirmAction = useCallback(async () => {
-    if (!confirmDialog) return;
+    if (!confirmDialog || isActionLoading) return;
     const actionType = confirmDialog;
-    setConfirmDialog(null);
-    await executeConfirmAction(actionType);
-  }, [confirmDialog, executeConfirmAction]);
+    const succeeded = await executeConfirmAction(actionType);
+    if (succeeded) {
+      setConfirmDialog(null);
+    }
+  }, [confirmDialog, executeConfirmAction, isActionLoading]);
 
   const handleDisputeSubmit = useCallback(
     async (claim: string, evidenceHashes?: string[]) => {
+      if (!isAfterSaleDispute && !ensureBuyerRefundAddress()) return;
+
       setIsDisputeLoading(true);
       try {
         await ordersApi.openDispute(orderId, claim, evidenceHashes);
@@ -205,16 +517,20 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         });
         setTimeout(() => refetch(), 500);
       } catch (error) {
-        toast({
-          title: t('order.actions.error'),
-          description: (error as Error).message,
-          variant: 'destructive',
-        });
+        notifyOrderActionError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setIsDisputeLoading(false);
       }
     },
-    [orderId, refetch, t, toast]
+    [
+      orderId,
+      refetch,
+      t,
+      toast,
+      isAfterSaleDispute,
+      ensureBuyerRefundAddress,
+      notifyOrderActionError,
+    ]
   );
 
   const handleAfterSaleDisputeSubmit = useCallback(
@@ -313,7 +629,7 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               {t('order.orderNotFound')}
             </h2>
             <p className="text-muted-foreground mb-4">{t('order.orderNotFoundMessage')}</p>
-            <Button onClick={() => router.push('/orders')}>{t('order.backToOrders')}</Button>
+            <Button onClick={() => router.push(listBackPath)}>{t('order.backToOrders')}</Button>
           </Card>
         </Container>
         <Footer />
@@ -327,10 +643,12 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
 
       <main className="py-8">
         <Container size="xl">
-          {/* Back button */}
+          {/* Back button — conditional label/destination for moderator dispute view */}
           <button
-            onClick={() => router.back()}
-            aria-label={t('order.backToOrders')}
+            onClick={() =>
+              isModeratorDisputeView ? router.push('/cases') : router.push(listBackPath)
+            }
+            aria-label={isModeratorDisputeView ? t('order.backToCases') : t('order.backToOrders')}
             className="group flex items-center gap-2 text-muted-foreground hover:text-primary mb-4 text-sm transition-colors"
           >
             <div className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -343,15 +661,19 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                 />
               </svg>
             </div>
-            {t('order.backToOrders')}
+            {isModeratorDisputeView ? t('order.backToCases') : t('order.backToOrders')}
           </button>
 
           {/* Main content card */}
-          <Card className="mb-6 p-6 border border-border/60 shadow-sm overflow-hidden">
-            {/* Order ID */}
+          <Card
+            className={`mb-6 border border-border/60 shadow-sm overflow-hidden ${
+              activeTab === 'discussion' ? 'p-6 flex flex-col min-h-[calc(100vh-10rem)]' : 'p-6'
+            }`}
+          >
+            {/* Order / Case ID */}
             <div className="flex items-start gap-2 mb-3">
               <h1 className="text-sm font-medium text-muted-foreground flex-shrink-0">
-                {t('order.orderIdLabel')}
+                {isModeratorDisputeView ? t('moderation.caseIdLabel') : t('order.orderIdLabel')}
               </h1>
               <span
                 className="text-sm font-mono text-foreground leading-relaxed"
@@ -379,24 +701,34 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               )}
             </div>
 
-            {/* Tab navigation */}
+            <OrderCreatedAtMeta createdAt={displayOrder.createdAt} className="mb-3" />
+
+            {/* Tab navigation — switches between moderator view and standard view */}
             <div className="border-b border-border mb-4">
               <div className="flex gap-6" role="tablist" aria-label={t('order.tabs.label')}>
-                {(['summary', 'discussion', 'contract'] as const).map(tab => (
+                {(isModeratorDisputeView
+                  ? moderatorTabs
+                  : (['summary', 'discussion'] as const)
+                ).map(tab => (
                   <button
                     key={tab}
                     role="tab"
                     aria-selected={activeTab === tab}
                     aria-controls={`tabpanel-${tab}`}
                     id={`tab-${tab}`}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-2.5 text-sm font-medium transition-colors relative ${
+                    onClick={() => handleTabChange(tab)}
+                    className={`pb-2.5 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
                       activeTab === tab
                         ? 'text-primary'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {t(`order.tabs.${tab}`)}
+                    {t(`order.tabs.${tab}`, { fallback: tab })}
+                    {tab === 'discussion' && orderChat.unreadCount > 0 && (
+                      <span className="px-1.5 py-0.5 min-w-[1.25rem] text-center bg-error text-white text-[10px] font-semibold rounded-full tabular-nums">
+                        {orderChat.unreadCount > 99 ? '99+' : orderChat.unreadCount}
+                      </span>
+                    )}
                     {activeTab === tab && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                     )}
@@ -405,11 +737,131 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
               </div>
             </div>
 
-            {/* Tab content */}
-            {activeTab === 'summary' && (
+            {/* ─── MODERATOR DISPUTE TAB ─── */}
+            {isModeratorDisputeView && activeTab === 'dispute' && (
+              <div
+                role="tabpanel"
+                id="tabpanel-dispute"
+                aria-labelledby="tab-dispute"
+                className="space-y-4"
+              >
+                <DisputeOverviewCard displayOrder={displayOrder} />
+
+                {/* Collapsible order context */}
+                <details className="group rounded-xl border border-border/60 overflow-hidden">
+                  <summary className="flex items-center justify-between px-4 py-3 bg-muted/30 cursor-pointer select-none text-sm font-medium text-foreground list-none">
+                    {t('order.orderSummary')}
+                    <svg
+                      className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </summary>
+                  <div className="p-4 space-y-4">
+                    <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+                    <OrderPaymentCard displayOrder={displayOrder} coreOrder={coreOrder} />
+                    <OrderTimelineCard
+                      displayOrder={displayOrder}
+                      coreOrder={coreOrder}
+                      settlementAction={latestSettlementAction}
+                    />
+                  </div>
+                </details>
+
+                {/* Resolution action bar — inline on desktop */}
+                <DisputeResolutionBar
+                  dispute={displayOrder.dispute!}
+                  onOpenRuling={openRulingSheet}
+                  isResolving={isResolving}
+                  isOpeningSheet={isOpeningSheet}
+                  variant="inline"
+                />
+              </div>
+            )}
+
+            {/* ─── EVIDENCE TAB (moderator only) ─── */}
+            {isModeratorDisputeView && activeTab === 'evidence' && displayOrder.dispute && (
+              <div role="tabpanel" id="tabpanel-evidence" aria-labelledby="tab-evidence">
+                <DisputeEvidencePanel
+                  dispute={displayOrder.dispute}
+                  onOpenDiscussion={() => handleTabChange('discussion')}
+                />
+              </div>
+            )}
+
+            {/* ─── DISCUSSION TAB (shared by both views) ─── */}
+            {activeTab === 'discussion' && (
+              <div
+                role="tabpanel"
+                id="tabpanel-discussion"
+                aria-labelledby="tab-discussion"
+                className="-mx-6 -mb-6 flex flex-1 min-h-[calc(100vh-14rem)]"
+              >
+                <aside className="hidden lg:flex w-72 shrink-0 border-r border-border/60">
+                  <OrderChatContextStrip
+                    displayOrder={displayOrder}
+                    onBackToSummary={() => handleTabChange('summary')}
+                    className="w-full"
+                  />
+                </aside>
+                <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+                  <OrderChat
+                    orderId={orderId}
+                    layout="embedded"
+                    className="flex-1 min-h-0 h-full rounded-none border-0 border-t border-border/60"
+                    {...orderChat}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ─── STANDARD BUYER/SELLER VIEW ─── */}
+            {!isModeratorDisputeView && activeTab === 'summary' && (
               <div role="tabpanel" id="tabpanel-summary" aria-labelledby="tab-summary">
-                {/* Status context card — gives users clear next-step guidance */}
-                <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                {hasActiveCryptoDispute ? (
+                  <DisputeSummaryCard
+                    displayOrder={displayOrder}
+                    onOpenDiscussion={() => handleTabChange('discussion')}
+                    className="mb-4"
+                  />
+                ) : (
+                  <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                )}
+
+                {buyerNeedsRefundAddress && (
+                  <OrderRefundAddressBanner
+                    initialAddress={buyerRefundAddressDraft}
+                    isSaving={isSavingRefundAddress}
+                    onSave={async (address, options) => {
+                      await saveBuyerRefundAddress(address, options);
+                    }}
+                    className="mb-4"
+                  />
+                )}
+
+                {showRefundDestination && (
+                  <OrderRefundDestinationCard address={buyerRefundAddress} className="mb-4" />
+                )}
+
+                {!(
+                  displayOrder.userRole === 'buyer' && displayOrder.status === 'awaiting_payment'
+                ) && (
+                  <OrderSettlementCard
+                    settlementAction={latestSettlementAction}
+                    paymentCoin={displayOrder.paymentCoin}
+                    chainId={displayOrder.chainId}
+                    cancellation={displayOrder.cancellation}
+                    className="mb-4"
+                  />
+                )}
 
                 {protectionStage && displayOrder.protection && (
                   <OrderProtectionStatus
@@ -423,14 +875,19 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                       displayOrder.userRole === 'moderator' ? 'buyer' : displayOrder.userRole
                     }
                     protectionLevel={displayOrder.protection.protectionLevel}
+                    isModerated={isModeratedOrder}
+                    moderatorName={displayOrder.moderator?.name}
+                    canOpenDispute={canOpenModeratedDispute}
+                    onOpenDispute={() => handleOrderAction('Dispute')}
                     onExtendProtection={handleExtendProtection}
+                    disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
                     className="mb-4"
                   />
                 )}
 
                 {showRatingInvite && (
                   <RatingInviteBanner
-                    onWriteReview={() => executeConfirmAction('complete')}
+                    onWriteReview={openReviewDialog}
                     onReportIssue={
                       displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'
                         ? () => {
@@ -444,20 +901,79 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   />
                 )}
 
+                {displayOrder.buyerRating && (
+                  <OrderRating
+                    rating={displayOrder.buyerRating}
+                    reviewer={
+                      displayOrder.buyer?.peerID
+                        ? {
+                            peerID: displayOrder.buyer.peerID,
+                            name: displayOrder.buyer.name,
+                            avatar: displayOrder.buyer.avatar,
+                          }
+                        : undefined
+                    }
+                    timestamp={displayOrder.buyerRating.timestamp}
+                    className="mb-4"
+                  />
+                )}
+
                 {displayOrder.afterSaleDispute && (
                   <AfterSaleDisputeCard
                     dispute={displayOrder.afterSaleDispute}
                     userRole={displayOrder.userRole}
                     onMessageCounterparty={() => {
-                      document
-                        .querySelector<HTMLTextAreaElement>('[data-testid="chat-input"]')
-                        ?.focus();
+                      handleTabChange('discussion');
+                      orderChat.focusComposer();
                     }}
                     className="mb-4"
                   />
                 )}
 
                 <OrderProductCard displayOrder={displayOrder} className="mb-4" />
+
+                {displayOrder.userRole === 'seller' && (
+                  <SellerDigitalDeliveryStatus
+                    {...sellerDigitalDelivery}
+                    orderInDispute={hasActiveCryptoDispute}
+                    orderStatus={displayOrder.status}
+                    disputePhase={digitalEntitlementDisputePhase}
+                    canSyncDelivery={
+                      coreOrder?.state === 'AWAITING_SHIPMENT' &&
+                      sellerDigitalDelivery.canSyncDelivery
+                    }
+                    onSyncDelivery={sellerDigitalDelivery.syncDelivery}
+                    onRetryDelivery={sellerDigitalDelivery.retryDelivery}
+                    onManageListing={slug =>
+                      window.open(`/listing/edit/${slug}?from=orders`, '_blank')
+                    }
+                    orderId={orderId}
+                    listingSlugs={sellerDigitalDelivery.listingSlugs}
+                    className="mb-4"
+                  />
+                )}
+
+                {displayOrder.userRole === 'buyer' && (
+                  <BuyerDigitalAssetsSection
+                    orderId={orderId}
+                    sellerPeerID={displayOrder.vendor.peerID}
+                    deliveredAt={getDigitalDeliveryTimestamp(displayOrder.shipments, orderId)}
+                    disputePhase={digitalEntitlementDisputePhase}
+                    disputeResolution={displayOrder.dispute?.resolution}
+                    buyerPayoutPercent={displayOrder.dispute?.buyerPayoutPercent}
+                    className="mb-4"
+                  />
+                )}
+
+                {displayOrder.shipments && displayOrder.shipments.length > 0 && (
+                  <OrderShipment
+                    shipments={displayOrder.shipments}
+                    orderId={orderId}
+                    userRole={displayOrder.userRole}
+                    className="mb-4"
+                  />
+                )}
+
                 <OrderSummaryCard
                   displayOrder={displayOrder}
                   statusLabel={statusLabel}
@@ -472,17 +988,32 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   />
                 )}
 
-                {/* Active crypto dispute banner (only when dispute exists) */}
-                {displayOrder.dispute && (
-                  <OrderDisputeBanner
-                    displayOrder={displayOrder}
-                    onOpenDispute={() => handleOrderAction('Dispute')}
-                  />
-                )}
+                {/* Active crypto dispute banner (only for buyer/seller; moderator sees DisputeOverviewCard) */}
+                <div ref={disputeSectionRef}>
+                  {displayOrder.dispute &&
+                    displayOrder.userRole !== 'moderator' &&
+                    showDisputeArchive && (
+                      <DisputeHistoryCard
+                        displayOrder={displayOrder}
+                        onOpenDiscussion={() => handleTabChange('discussion')}
+                        className="mb-4"
+                      />
+                    )}
+                  {displayOrder.dispute &&
+                    displayOrder.userRole !== 'moderator' &&
+                    !hasActiveCryptoDispute &&
+                    !showDisputeArchive && (
+                      <OrderDisputeBanner
+                        displayOrder={displayOrder}
+                        onOpenDispute={() => handleOrderAction('Dispute')}
+                      />
+                    )}
+                </div>
 
                 <OrderTimelineCard
                   displayOrder={displayOrder}
                   coreOrder={coreOrder}
+                  settlementAction={latestSettlementAction}
                   className="mb-4"
                 />
 
@@ -491,8 +1022,18 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   coreOrder={coreOrder}
                   className="mb-4"
                 />
+                <CollectiblePrimarySaleCard
+                  orderId={orderId}
+                  coreOrder={coreOrder}
+                  enabled={collectiblesHubEnabled}
+                  className="mb-4"
+                />
                 <OrderMemoCard displayOrder={displayOrder} className="mb-4" />
                 <OrderShippingCard displayOrder={displayOrder} />
+
+                {supplyChainEnabled && displayOrder.userRole === 'seller' && (
+                  <FulfillmentStatusCard orderId={orderId} className="mb-4" />
+                )}
 
                 {/* Participants — inline within the card for cohesive layout */}
                 <OrderCounterpartyCard
@@ -501,80 +1042,104 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
                   className="mt-4"
                 />
 
+                {/* Advanced: raw contract JSON (power users) */}
+                <details className="group mt-4 rounded-xl border border-border/60 overflow-hidden">
+                  <summary className="flex items-center justify-between px-4 py-3 bg-muted/30 cursor-pointer select-none text-sm font-medium text-muted-foreground list-none">
+                    {t('order.contract.advancedTitle')}
+                    <svg
+                      className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </summary>
+                  <div className="p-4 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      {t('order.contract.description')}
+                    </p>
+                    <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all p-4 bg-muted/20 rounded-lg max-h-80 overflow-y-auto">
+                      {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
+                    </pre>
+                    <Button onClick={copyContract} variant="outline" size="sm" className="gap-2">
+                      <Copy className="w-3.5 h-3.5" />
+                      {t('order.actions.copyToClipboard')}
+                    </Button>
+                  </div>
+                </details>
+
                 {/* Subtle dispute entry — replaces the aggressive full-width button */}
-                {!displayOrder.dispute &&
-                  !!displayOrder.moderator &&
-                  ((displayOrder.userRole === 'buyer' &&
-                    ['paid', 'processing', 'shipped', 'delivered'].includes(displayOrder.status)) ||
-                    (displayOrder.userRole === 'seller' &&
-                      ['shipped', 'delivered'].includes(displayOrder.status))) && (
-                    <div className="text-center mt-6 mb-2">
-                      <button
-                        onClick={() => handleOrderAction('Dispute')}
-                        className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
-                        data-testid="order-detail-open-dispute"
-                      >
-                        {t('order.dispute.haveProblem')}
-                      </button>
-                    </div>
-                  )}
-              </div>
-            )}
-
-            {activeTab === 'discussion' && (
-              <div role="tabpanel" id="tabpanel-discussion" aria-labelledby="tab-discussion">
-                <OrderChat
-                  orderId={orderId}
-                  participants={chatParticipants}
-                  messages={chatMessages}
-                  currentUserId={currentUserPeerID || ''}
-                  onSendMessage={sendMessage}
-                  className="h-[calc(100vh-400px)] min-h-[400px]"
-                />
-              </div>
-            )}
-
-            {activeTab === 'contract' && (
-              <div role="tabpanel" id="tabpanel-contract" aria-labelledby="tab-contract">
-                <pre className="text-[12px] leading-[18px] font-mono text-foreground whitespace-pre-wrap break-all p-4 bg-muted/20 rounded-lg">
-                  {coreOrder ? JSON.stringify(coreOrder, null, 2) : t('common.noData')}
-                </pre>
-                <Button onClick={copyContract} variant="outline" size="sm" className="mt-3 gap-2">
-                  <Copy className="w-3.5 h-3.5" />
-                  {t('order.actions.copyToClipboard')}
-                </Button>
+                {!displayOrder.protection && canOpenModeratedDispute && (
+                  <div className="text-center mt-6 mb-2">
+                    <button
+                      onClick={() => handleOrderAction('Dispute')}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                      data-testid="order-detail-open-dispute"
+                    >
+                      {t('order.dispute.haveProblem')}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </Card>
 
-          {/* Spacer for fixed footer */}
-          <div className="h-16" />
+          {/* Spacer for fixed footer — not needed in discussion fullscreen mode */}
+          {activeTab !== 'discussion' && <div className="h-16" />}
         </Container>
       </main>
 
-      {/* Fixed action footer — hidden when RatingInviteBanner takes over */}
-      {!showRatingInvite && (
-        <OrderFooter
-          orderState={coreOrder?.state || 'PENDING'}
-          userRole={displayOrder.userRole as CoreUserRole}
-          timestamp={displayOrder.createdAt}
-          isModerated={!!displayOrder.moderator}
-          isFulfilled={coreOrder ? isOrderFulfilled(coreOrder) : false}
-          paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
-          totalAmount={displayOrder.total}
-          currency={displayOrder.currency}
-          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
-          hasRated={displayOrder.hasRated}
-          inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
-          onAction={handleOrderAction}
-        />
-      )}
+      {/* Fixed action footer — hidden for moderator dispute view and when RatingInviteBanner takes over */}
+      {!showRatingInvite &&
+        !showReviewDialog &&
+        !showConfirmReceiptDialog &&
+        !showAcceptPayoutDialog &&
+        !isModeratorDisputeView &&
+        activeTab !== 'discussion' && (
+          <OrderFooter
+            orderState={coreOrder?.state || 'PENDING'}
+            userRole={displayOrder.userRole as CoreUserRole}
+            timestamp={displayOrder.createdAt}
+            isModerated={isModeratedOrder}
+            isShipped={coreOrder ? isOrderShipped(coreOrder) : false}
+            paymentMethod={coreOrder?.contract?.paymentSent?.method?.toString()}
+            fundsReleasedAtConfirmation={shouldBlockAutoRefund}
+            totalAmount={displayOrder.total}
+            currency={displayOrder.currency}
+            paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+            hasRated={displayOrder.hasRated}
+            inAfterSaleWindow={displayOrder.protection?.stage === 'AFTER_SALE_WINDOW'}
+            hasAfterSaleDispute={hasAfterSaleDispute}
+            contractType={shipOrderProps.contractType}
+            hasPreconfiguredDigitalAssets={sellerDigitalDelivery.hasPreconfiguredAssets}
+            digitalDeliveryStatus={sellerDigitalDelivery.status}
+            canSyncDigitalDelivery={sellerDigitalDelivery.canSyncDelivery}
+            canRetryDigitalDelivery={sellerDigitalDelivery.canRetryDelivery}
+            manualDigitalFallbackAllowed={sellerDigitalDelivery.manualFallbackAllowed}
+            isTransitioning={isTransitioning || isActionLoading}
+            onAction={handleOrderAction}
+            disputeRulingPendingAcceptance={disputeRulingPendingAcceptance}
+            onOpenDiscussion={
+              coreOrder?.state === 'DISPUTED' && !disputeRulingPendingAcceptance
+                ? () => handleTabChange('discussion')
+                : undefined
+            }
+          />
+        )}
 
       {/* Dialogs */}
       {confirmDialog && (
         <OrderConfirmDialog
           open={!!confirmDialog}
-          onOpenChange={open => !open && setConfirmDialog(null)}
+          onOpenChange={open => {
+            if (!open && !isActionLoading) setConfirmDialog(null);
+          }}
           type={confirmDialog}
           onConfirm={handleConfirmAction}
           isLoading={isActionLoading}
@@ -598,25 +1163,55 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         orderId={acceptOrderProps.orderId}
         blockchain={acceptOrderProps.blockchain}
         paymentCoin={acceptOrderProps.paymentCoin}
+        paymentEscrowType={acceptOrderProps.paymentEscrowType}
+        paymentProductMode={acceptOrderProps.paymentProductMode}
+        contractType={acceptOrderProps.contractType}
         onSuccess={acceptOrderProps.onSuccess}
       />
 
-      <FulfillOrderDialog
-        open={showFulfillDialog}
-        onOpenChange={setShowFulfillDialog}
-        orderId={fulfillOrderProps.orderId}
-        contractType={fulfillOrderProps.contractType}
-        blockchain={fulfillOrderProps.blockchain}
-        onSuccess={fulfillOrderProps.onSuccess}
+      <ShipOrderDialog
+        open={showShipDialog}
+        onOpenChange={setShowShipDialog}
+        orderId={shipOrderProps.orderId}
+        contractType={shipOrderProps.contractType}
+        blockchain={shipOrderProps.blockchain}
+        itemCount={displayOrder?.items?.length || 1}
+        onSuccess={shipOrderProps.onSuccess}
       />
+
+      <ConfirmReceiptDialog
+        open={showConfirmReceiptDialog}
+        onOpenChange={open => !open && closeConfirmReceiptDialog()}
+        onConfirm={() => void confirmReceipt()}
+        isLoading={isActionLoading}
+        completePhase={completePhase}
+        isModerated={isModeratedOrder}
+        contractType={displayOrder?.contractType}
+      />
+
+      {displayOrder?.dispute && (
+        <AcceptPayoutDialog
+          open={showAcceptPayoutDialog}
+          onOpenChange={open => !open && closeAcceptPayoutDialog()}
+          onConfirm={() => void confirmAcceptPayout()}
+          isLoading={isActionLoading}
+          acceptPayoutPhase={acceptPayoutPhase}
+          isModerated={isModeratedOrder}
+          dispute={displayOrder.dispute}
+          settlementBreakdown={displayOrder.settlementBreakdown}
+          paymentCoin={coreOrder?.contract?.paymentSent?.coin}
+        />
+      )}
 
       <WriteReviewDialog
         open={showReviewDialog}
         productTitle={reviewProductTitle}
-        onSubmit={submitReviewAndComplete}
-        onSkip={skipReviewAndComplete}
+        onSubmit={submitRating}
+        onSkip={closeReviewDialog}
         onClose={closeReviewDialog}
         isSubmitting={isActionLoading}
+        completePhase={completePhase}
+        isRateOnly
       />
 
       <DisputeModal
@@ -634,7 +1229,27 @@ export function OrderDetailDesktop({ orderId, viewingContext }: OrderDetailDeskt
         order={displayOrder}
       />
 
-      <Footer />
+      <ModeratorDisputeRulingDialog
+        open={isSheetOpen}
+        onOpenChange={open => {
+          if (!open) closeSheet();
+        }}
+        draft={rulingDraft}
+        validationErrors={rulingValidationErrors}
+        activePreset={activePreset}
+        vendorNotConfirmed={vendorNotConfirmed}
+        constraints={rulingConstraints}
+        buyerLabel={moderatorRulingBuyerLabel}
+        sellerLabel={moderatorRulingSellerLabel}
+        isSubmitting={isResolving}
+        onApplyPreset={applyPreset}
+        onBuyerPercentageChange={setBuyerPercentage}
+        onVendorPercentageChange={setVendorPercentage}
+        onResolutionChange={setResolution}
+        onSubmit={submitRuling}
+      />
+
+      {activeTab !== 'discussion' && <Footer />}
     </div>
   );
 }

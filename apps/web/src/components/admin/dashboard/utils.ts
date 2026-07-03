@@ -11,9 +11,11 @@ export function getOrderCurrencyCode(order: OrderListItem): string {
   return getPaymentCoinDisplayLabel(raw) || raw;
 }
 
-export function getProductCurrencyCode(product: ProductListItem): string {
+export function getProductCurrencyCode(product: ProductListItem): string | undefined {
   const price = product.price as unknown as Record<string, unknown> | undefined;
-  return (
-    (price?.currencyCode as string) || (price?.currency as Record<string, string>)?.code || 'USD'
-  );
+  const code =
+    (price?.currencyCode as string | undefined) ||
+    (price?.currency as Record<string, string> | undefined)?.code;
+  const trimmed = code?.trim();
+  return trimmed || undefined;
 }

@@ -15,6 +15,9 @@ import { CheckoutProgressBar } from './CheckoutProgressBar';
 import { CheckoutAddressModals } from './CheckoutAddressModals';
 import { DiscountInput } from './DiscountInput';
 import { BuyerProtectionBadge } from '@/components/Trust/BuyerProtectionBadge';
+import { CheckoutContractTypeAlert } from './CheckoutContractTypeAlert';
+import { CollectibleCheckoutHolderWallet } from './CollectibleCheckoutHolderWallet';
+import { SupplyAvailabilityPanel } from '@/components/SupplyAvailability/SupplyAvailabilityPanel';
 import { usePrimaryCTA, useHaptic } from '@/lib/platform';
 import type { UseCheckoutReturn } from './types';
 
@@ -48,8 +51,16 @@ export function CheckoutMobile({ checkout }: Props) {
     handleCreateOrder,
     isSubmitting,
     canSubmit,
-    isRwaToken,
-    rwaTradeMode,
+    hasMixedContractTypes,
+    hasMissingContractType,
+    isRwaCheckoutBlocked,
+    isCollectibleHubNftCheckout,
+    requiresCollectibleHolderWallet,
+    collectibleHolderWallet,
+    isCollectibleHolderWalletReady,
+    isCollectibleHolderWalletWrongNamespace,
+    connectCollectibleHolderWallet,
+    isCollectibleHolderConnecting,
     needsShippingAddress,
     hasAllShippingSelected,
     hasShippingPricingIssue,
@@ -60,6 +71,7 @@ export function CheckoutMobile({ checkout }: Props) {
     isValidatingDiscount,
     handleApplyDiscountCode,
     handleRemoveDiscount,
+    supplyQuote,
   } = checkout;
 
   // MVP-1: platform-abstract primary CTA + haptic (replaces direct
@@ -153,36 +165,59 @@ export function CheckoutMobile({ checkout }: Props) {
         ) : (
           <div className="space-y-4">
             {/* RWA hint */}
-            {isRwaToken && (
-              <Card className="border-primary/20 bg-primary/8">
+            {isRwaCheckoutBlocked && (
+              <Card className="border-warning/30 bg-warning/8">
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-4 h-4 text-primary"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-primary">
-                        {t('checkout.rwaTransaction')}
-                      </h3>
-                      <p className="text-xs text-primary mt-0.5">
-                        {rwaTradeMode === 1
-                          ? t('checkout.rwaConfirmRequiredHint')
-                          : t('checkout.rwaInstantHint')}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-warning">{t('checkout.rwaNotSupported')}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {isCollectibleHubNftCheckout && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="space-y-3 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    {t('collectibles.checkout.hubPrimarySaleTitle')}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{t('collectibles.trustNote')}</p>
+                  {checkoutItems.some(item => item.hubSlotID || item.certNumber || item.nftMint) ? (
+                    <dl className="grid grid-cols-1 gap-2 border-t border-primary/10 pt-3 text-sm">
+                      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {t('collectibles.checkout.metadataTitle')}
+                      </div>
+                      {checkoutItems.map(item => (
+                        <React.Fragment key={item.id}>
+                          {item.certNumber ? (
+                            <div>
+                              <dt className="text-muted-foreground">
+                                {t('collectibles.primarySale.certNumber')}
+                              </dt>
+                              <dd className="break-all font-medium text-foreground">
+                                {item.certNumber}
+                              </dd>
+                            </div>
+                          ) : null}
+                          {item.hubSlotID ? (
+                            <div>
+                              <dt className="text-muted-foreground">{t('collectibles.hubSlot')}</dt>
+                              <dd className="break-all font-mono text-xs text-foreground">
+                                {item.hubSlotID}
+                              </dd>
+                            </div>
+                          ) : null}
+                        </React.Fragment>
+                      ))}
+                    </dl>
+                  ) : null}
+                  <CollectibleCheckoutHolderWallet
+                    requiresHolderWallet={requiresCollectibleHolderWallet}
+                    holderWallet={collectibleHolderWallet}
+                    isReady={isCollectibleHolderWalletReady}
+                    isWrongNamespace={isCollectibleHolderWalletWrongNamespace}
+                    isConnecting={isCollectibleHolderConnecting}
+                    onConnect={connectCollectibleHolderWallet}
+                    compact
+                  />
                 </CardContent>
               </Card>
             )}
@@ -442,6 +477,25 @@ export function CheckoutMobile({ checkout }: Props) {
                     </HStack>
                   )}
                 </div>
+
+                <CheckoutContractTypeAlert
+                  hasMixedContractTypes={hasMixedContractTypes}
+                  hasMissingContractType={hasMissingContractType}
+                />
+
+                {supplyQuote.showPanel && (
+                  <SupplyAvailabilityPanel
+                    displayItems={checkoutItems.map(item => ({
+                      listingSlug: item.listingSlug,
+                      title: item.title,
+                    }))}
+                    quote={supplyQuote.quote}
+                    loading={supplyQuote.loading}
+                    error={supplyQuote.error}
+                    className="mt-3"
+                    testIdPrefix="checkout-supply-quote"
+                  />
+                )}
 
                 <BuyerProtectionBadge
                   variant="inline"

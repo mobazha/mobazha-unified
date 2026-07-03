@@ -18,7 +18,7 @@ export type OrderAction =
   | 'WriteReview' // 写评价
   | 'Accept' // 卖家接受订单
   | 'Decline' // 卖家拒绝订单
-  | 'Fulfill' // 卖家发货
+  | 'Ship' // 卖家发货
   | 'Refund' // 卖家退款
   | 'Claim' // 卖家领取超时资金
   | 'AcceptPayout'; // 接受争议裁决
@@ -69,27 +69,27 @@ const ORDER_STATUS_CONFIG: Record<OrderState, OrderStatusConfig> = {
     description: 'Waiting for pickup',
     actions: {
       buyer: ['Dispute'],
-      seller: ['Fulfill'],
+      seller: ['Ship'],
     },
   },
-  AWAITING_FULFILLMENT: {
-    label: 'Awaiting Fulfillment',
-    description: 'Waiting to be fulfilled',
+  AWAITING_SHIPMENT: {
+    label: 'Awaiting Shipment',
+    description: 'Waiting to be shipped',
     actions: {
       buyer: ['Dispute'],
-      seller: ['Refund', 'Fulfill'],
+      seller: ['Refund', 'Ship'],
     },
   },
-  PARTIALLY_FULFILLED: {
-    label: 'Partially Fulfilled',
-    description: 'Order partially fulfilled',
+  PARTIALLY_SHIPPED: {
+    label: 'Partially Shipped',
+    description: 'Order partially shipped',
     actions: {
       buyer: ['Dispute'],
-      seller: ['Fulfill'],
+      seller: ['Ship'],
     },
   },
-  FULFILLED: {
-    label: 'Fulfilled',
+  SHIPPED: {
+    label: 'Shipped',
     description: 'Item shipped, file sent, in transit, etc',
     actions: {
       buyer: ['Dispute', 'Complete'],
@@ -288,11 +288,12 @@ export function getOrderStatusInfo(state: OrderState): { label: string; descript
 /**
  * 检查订单是否已发货
  */
-export function isOrderFulfilled(orderDetails: {
-  contract?: { orderFulfillments?: unknown[] };
+export function isOrderShipped(orderDetails: {
+  contract?: { orderShipments?: unknown[]; orderFulfillments?: unknown[] };
 }): boolean {
-  const fulfillments = orderDetails?.contract?.orderFulfillments;
-  return Array.isArray(fulfillments) && fulfillments.length > 0;
+  const vc = orderDetails?.contract?.orderShipments;
+  const legacy = orderDetails?.contract?.orderFulfillments;
+  return (Array.isArray(vc) && vc.length > 0) || (Array.isArray(legacy) && legacy.length > 0);
 }
 
 /**
@@ -328,20 +329,23 @@ export function getOrderActions(
   role: UserRole,
   options: {
     isModerated?: boolean;
-    isFulfilled?: boolean;
+    isShipped?: boolean;
     isExpired?: boolean;
-    paymentMethod?: string;
+    paymentMethod?: string | number;
     hasRated?: boolean;
     inAfterSaleWindow?: boolean;
+    hasAfterSaleDispute?: boolean;
+    fundsReleasedAtConfirmation?: boolean;
   } = {}
 ): OrderAction[] {
   const {
     isModerated = false,
-    isFulfilled = false,
+    isShipped = false,
     isExpired = false,
-    paymentMethod,
     hasRated = false,
     inAfterSaleWindow = false,
+    hasAfterSaleDispute = false,
+    fundsReleasedAtConfirmation = false,
   } = options;
 
   const config = ORDER_STATUS_CONFIG[state];
@@ -364,12 +368,12 @@ export function getOrderActions(
       if (!isModerated) return false;
 
       // 买家：超时后不能发起争议
-      if (role === 'buyer' && isExpired && ['AWAITING_FULFILLMENT', 'FULFILLED'].includes(state)) {
+      if (role === 'buyer' && isExpired && ['AWAITING_SHIPMENT', 'SHIPPED'].includes(state)) {
         return false;
       }
 
       // 卖家：只有发货后才能发起争议
-      if (role === 'seller' && !isFulfilled) {
+      if (role === 'seller' && !isShipped) {
         return false;
       }
     }
@@ -379,8 +383,8 @@ export function getOrderActions(
       return false;
     }
 
-    // Refund 操作：CANCELABLE 支付方式下不能自动退款
-    if (action === 'Refund' && paymentMethod === 'CANCELABLE') {
+    // Refund 操作：只要资金已经在确认阶段释放，就不能再自动退款
+    if (action === 'Refund' && fundsReleasedAtConfirmation) {
       return false;
     }
 
@@ -396,13 +400,14 @@ export function getOrderActions(
   if (
     role === 'buyer' &&
     inAfterSaleWindow &&
+    !hasAfterSaleDispute &&
     (state === 'COMPLETED' || state === 'PAYMENT_FINALIZED')
   ) {
     actions.push('AfterSaleDispute');
   }
 
   // 特殊情况：卖家在发货后超时可以领取资金
-  if (role === 'seller' && state === 'FULFILLED' && isExpired && isFulfilled) {
+  if (role === 'seller' && state === 'SHIPPED' && isExpired && isShipped) {
     // 将 Dispute 替换为 Claim
     const disputeIndex = actions.indexOf('Dispute');
     if (disputeIndex !== -1) {
@@ -423,7 +428,7 @@ export function getPrimaryAction(actions: OrderAction[]): OrderAction | null {
     'Pay',
     'Complete',
     'Accept',
-    'Fulfill',
+    'Ship',
     'AcceptPayout',
     'WriteReview',
   ];
@@ -461,7 +466,26 @@ export interface ActionButtonConfig {
 /**
  * 获取操作按钮配置
  */
-export function getActionButtonConfig(action: OrderAction, _role: UserRole): ActionButtonConfig {
+export function getActionButtonConfig(
+  action: OrderAction,
+  _role: UserRole,
+  options: {
+    contractType?: string;
+    hasPreconfiguredDigitalAssets?: boolean;
+    digitalDeliveryStatus?: string | null;
+    canSyncDigitalDelivery?: boolean;
+    canRetryDigitalDelivery?: boolean;
+    manualDigitalFallbackAllowed?: boolean;
+  } = {}
+): ActionButtonConfig {
+  const isDigital = options.contractType === 'DIGITAL_GOOD';
+  const digitalShipLabel = options.canSyncDigitalDelivery
+    ? 'Sync delivery'
+    : options.canRetryDigitalDelivery
+      ? 'Deliver downloads'
+      : options.manualDigitalFallbackAllowed
+        ? 'Deliver access'
+        : 'Delivery pending';
   const configs: Record<OrderAction, ActionButtonConfig> = {
     Pay: {
       label: 'Pay Now',
@@ -509,10 +533,10 @@ export function getActionButtonConfig(action: OrderAction, _role: UserRole): Act
       confirmTitle: 'Decline Order',
       confirmMessage: 'Are you sure you want to decline this order?',
     },
-    Fulfill: {
-      label: 'Ship Order',
+    Ship: {
+      label: isDigital ? digitalShipLabel : 'Ship Order',
       variant: 'primary',
-      icon: 'package',
+      icon: isDigital ? 'download' : 'package',
     },
     Refund: {
       label: 'Refund',
@@ -561,9 +585,9 @@ export function getOrderStatusColor(state: OrderState): {
     },
     PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
     AWAITING_PICKUP: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
-    AWAITING_FULFILLMENT: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
-    PARTIALLY_FULFILLED: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
-    FULFILLED: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
+    AWAITING_SHIPMENT: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
+    PARTIALLY_SHIPPED: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
+    SHIPPED: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
     COMPLETED: { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300' },
     CANCELED: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },
     DECLINED: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },

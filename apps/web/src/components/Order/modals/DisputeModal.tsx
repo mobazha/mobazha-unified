@@ -20,12 +20,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { AlertTriangle, ImagePlus, X, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, ImagePlus, X, Loader2 } from 'lucide-react';
 import { useI18n } from '@mobazha/core';
 import { imagesApi } from '@mobazha/core';
 
 const MAX_EVIDENCE_IMAGES = 5;
 const MAX_FILE_SIZE_MB = 10;
+
+/** @internal Exported for unit tests */
+export function partitionEvidenceFiles(
+  files: readonly File[],
+  existingCount: number,
+  maxImages: number = MAX_EVIDENCE_IMAGES,
+  maxSizeMb: number = MAX_FILE_SIZE_MB
+): { accepted: File[]; rejectedCount: number } {
+  const slotAvailable = Math.max(0, maxImages - existingCount);
+  const withinSlot = files.slice(0, slotAvailable);
+  const overflowCount = Math.max(0, files.length - slotAvailable);
+  const maxBytes = maxSizeMb * 1024 * 1024;
+  const accepted: File[] = [];
+  let invalidCount = 0;
+
+  for (const file of withinSlot) {
+    if (file.size > maxBytes || !file.type.startsWith('image/')) {
+      invalidCount++;
+    } else {
+      accepted.push(file);
+    }
+  }
+
+  return { accepted, rejectedCount: invalidCount + overflowCount };
+}
 
 const AFTER_SALE_REASONS = [
   { value: 'NOT_RECEIVED', labelKey: 'order.dispute.reason.notReceived' },
@@ -34,12 +59,21 @@ const AFTER_SALE_REASONS = [
   { value: 'OTHER', labelKey: 'order.dispute.reason.other' },
 ] as const;
 
+const EVIDENCE_THUMB_CLASS = 'relative w-20 h-20 rounded-lg overflow-visible shrink-0';
+
 interface EvidenceImage {
   file: File;
   preview: string;
   hash?: string;
   uploading: boolean;
   error?: string;
+}
+
+function evidenceThumbBorderClass(img: EvidenceImage): string {
+  if (img.error) return 'ring-2 ring-destructive/60 border-destructive/40';
+  if (img.uploading) return 'ring-2 ring-primary/40 border-primary/30';
+  if (img.hash) return 'border-border';
+  return 'border-border';
 }
 
 export interface DisputeModalProps {
@@ -65,6 +99,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
   const [validationError, setValidationError] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [images, setImages] = useState<EvidenceImage[]>([]);
+  const [fileSelectError, setFileSelectError] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,6 +108,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
     setSelectedReason('');
     setValidationError('');
     setShowConfirm(false);
+    setFileSelectError('');
     setImages(prev => {
       prev.forEach(img => URL.revokeObjectURL(img.preview));
       return [];
@@ -84,8 +120,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
     onClose();
   }, [onClose, resetState]);
 
-  const uploadFile = useCallback(async (file: File): Promise<EvidenceImage> => {
-    const preview = URL.createObjectURL(file);
+  const uploadFile = useCallback(async (file: File, preview: string): Promise<EvidenceImage> => {
     const entry: EvidenceImage = { file, preview, uploading: true };
 
     try {
@@ -94,8 +129,9 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
         filename: `evidence_${Date.now()}`,
         image: base64,
       });
-      if (result?.small) {
-        return { ...entry, hash: result.small, uploading: false };
+      const cid = result?.small || result?.original;
+      if (cid) {
+        return { ...entry, hash: cid, uploading: false };
       }
       return { ...entry, uploading: false, error: 'Upload failed' };
     } catch {
@@ -108,27 +144,31 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
       const files = Array.from(e.target.files || []);
       if (fileInputRef.current) fileInputRef.current.value = '';
 
-      const available = MAX_EVIDENCE_IMAGES - images.length;
-      const toAdd = files.slice(0, available).filter(f => {
-        if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) return false;
-        if (!f.type.startsWith('image/')) return false;
-        return true;
-      });
+      const { accepted: toAdd, rejectedCount } = partitionEvidenceFiles(files, images.length);
+      if (rejectedCount > 0) {
+        setFileSelectError(
+          t('order.dispute.evidenceFileRejected', {
+            maxSizeMb: MAX_FILE_SIZE_MB,
+            maxImages: MAX_EVIDENCE_IMAGES,
+          })
+        );
+      } else {
+        setFileSelectError('');
+      }
+      if (toAdd.length === 0) return;
 
       const placeholders: EvidenceImage[] = toAdd.map(f => ({
         file: f,
         preview: URL.createObjectURL(f),
         uploading: true,
       }));
+      const previewKeys = new Set(placeholders.map(p => p.preview));
       setImages(prev => [...prev, ...placeholders]);
 
-      const uploaded = await Promise.all(toAdd.map(uploadFile));
-      setImages(prev => {
-        const existing = prev.filter(img => !placeholders.some(p => p.preview === img.preview));
-        return [...existing, ...uploaded];
-      });
+      const uploaded = await Promise.all(placeholders.map(p => uploadFile(p.file, p.preview)));
+      setImages(prev => [...prev.filter(img => !previewKeys.has(img.preview)), ...uploaded]);
     },
-    [images.length, uploadFile]
+    [images.length, uploadFile, t]
   );
 
   const handleRemoveImage = useCallback((index: number) => {
@@ -137,6 +177,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
       if (removed) URL.revokeObjectURL(removed.preview);
       return prev.filter((_, i) => i !== index);
     });
+    setFileSelectError('');
   }, []);
 
   const handleSubmitClick = useCallback(() => {
@@ -173,6 +214,7 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
   }, []);
 
   const anyUploading = images.some(img => img.uploading);
+  const failedUploadCount = images.filter(img => !img.uploading && !img.hash).length;
 
   return (
     <>
@@ -233,7 +275,17 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
             )}
 
             <div>
+              <label
+                htmlFor="dispute-claim"
+                className="text-sm font-medium text-foreground mb-2 block"
+              >
+                {t('order.dispute.claimLabel')}
+                <span className="text-destructive ml-0.5" aria-hidden>
+                  *
+                </span>
+              </label>
               <textarea
+                id="dispute-claim"
                 ref={textareaRef}
                 value={claim}
                 onChange={handleClaimChange}
@@ -261,37 +313,62 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
             {/* Evidence images (on-chain disputes only) */}
             {!isAfterSale && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  {t('order.dispute.evidence', { fallback: 'Evidence (optional)' })}
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  {t('order.dispute.evidence')}
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {images.map((img, idx) => (
-                    <div
-                      key={img.preview}
-                      className="relative w-16 h-16 rounded-lg overflow-hidden border border-border group"
-                    >
-                      <img
-                        src={img.preview}
-                        alt={`Evidence ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {img.uploading && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <Loader2 className="w-4 h-4 text-white animate-spin" />
-                        </div>
-                      )}
-                      {img.error && (
-                        <div className="absolute inset-0 bg-destructive/40 flex items-center justify-center">
-                          <X className="w-4 h-4 text-white" />
-                        </div>
-                      )}
+                    <div key={img.preview} className={EVIDENCE_THUMB_CLASS}>
+                      <div
+                        className={`relative w-full h-full rounded-lg overflow-hidden border bg-muted/30 ${evidenceThumbBorderClass(img)}`}
+                      >
+                        <img
+                          src={img.preview}
+                          alt={t('order.dispute.evidenceImageAlt', { index: idx + 1 })}
+                          className="w-full h-full object-cover"
+                        />
+                        {img.uploading ? (
+                          <span
+                            role="status"
+                            aria-label={t('order.dispute.evidenceUploadingStatus')}
+                            className="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-background/95 shadow-sm ring-1 ring-border"
+                          >
+                            <Loader2
+                              className="h-3.5 w-3.5 animate-spin text-primary"
+                              aria-hidden
+                            />
+                          </span>
+                        ) : null}
+                        {!img.uploading && img.hash ? (
+                          <span
+                            role="status"
+                            aria-label={t('order.dispute.evidenceUploaded')}
+                            className="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-success shadow-sm"
+                          >
+                            <Check
+                              className="h-3.5 w-3.5 text-white"
+                              strokeWidth={2.5}
+                              aria-hidden
+                            />
+                          </span>
+                        ) : null}
+                        {!img.uploading && img.error ? (
+                          <span
+                            role="status"
+                            aria-label={t('order.dispute.evidenceUploadItemFailed')}
+                            className="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive shadow-sm"
+                          >
+                            <X className="h-3.5 w-3.5 text-white" strokeWidth={2.5} aria-hidden />
+                          </span>
+                        ) : null}
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(idx)}
-                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label={`Remove image ${idx + 1}`}
+                        className="absolute -top-2 -right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:border-destructive/40 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={t('order.dispute.removeEvidence', { index: idx + 1 })}
                       >
-                        <X className="w-3 h-3 text-white" />
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
@@ -299,10 +376,8 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-                      aria-label={t('order.dispute.addEvidence', {
-                        fallback: 'Add evidence image',
-                      })}
+                      className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shrink-0"
+                      aria-label={t('order.dispute.addEvidence')}
                     >
                       <ImagePlus className="w-5 h-5" />
                     </button>
@@ -316,11 +391,30 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="text-xs text-muted-foreground mt-2">
                   {t('order.dispute.evidenceHint', {
-                    fallback: `Up to ${MAX_EVIDENCE_IMAGES} images, ${MAX_FILE_SIZE_MB}MB each`,
+                    maxImages: MAX_EVIDENCE_IMAGES,
+                    maxSizeMb: MAX_FILE_SIZE_MB,
                   })}
                 </p>
+                {anyUploading ? (
+                  <p className="text-xs text-muted-foreground mt-1" aria-live="polite">
+                    {t('order.dispute.evidenceUploading', {
+                      done: images.filter(img => img.hash).length,
+                      total: images.length,
+                    })}
+                  </p>
+                ) : null}
+                {fileSelectError ? (
+                  <p className="text-xs text-destructive mt-1.5" role="alert">
+                    {fileSelectError}
+                  </p>
+                ) : null}
+                {failedUploadCount > 0 ? (
+                  <p className="text-xs text-destructive mt-1.5" role="alert">
+                    {t('order.dispute.evidenceUploadFailed')}
+                  </p>
+                ) : null}
               </div>
             )}
 
@@ -335,7 +429,15 @@ export const DisputeModal: React.FC<DisputeModalProps> = ({
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-0">
+            {anyUploading ? (
+              <p
+                className="text-xs text-muted-foreground w-full sm:mr-auto sm:order-first"
+                aria-live="polite"
+              >
+                {t('order.dispute.waitForEvidenceUpload')}
+              </p>
+            ) : null}
             <Button variant="ghost" onClick={handleClose} disabled={isLoading}>
               {t('common.cancel')}
             </Button>

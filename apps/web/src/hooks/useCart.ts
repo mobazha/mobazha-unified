@@ -25,10 +25,16 @@ export function buildCheckoutUrl(cartItems: CartItem[], vendorPeerID: string): s
       peerID: item.listing.vendorPeerID,
       quantity: item.quantity.toString(),
     });
+    if (item.options && item.options.length > 0) {
+      params.set('options', item.options.map(option => `${option.name}:${option.value}`).join(','));
+    }
     return `/checkout?${params.toString()}`;
   }
-  const slugs = cartItems.map(i => i.listing.slug).join(',');
-  return `/checkout?vendorPeerID=${encodeURIComponent(vendorPeerID)}&slugs=${encodeURIComponent(slugs)}`;
+  const params = new URLSearchParams({
+    vendorPeerID,
+    slugs: cartItems.map(item => item.listing.slug).join(','),
+  });
+  return `/checkout?${params.toString()}`;
 }
 
 export function useCart() {
@@ -56,13 +62,13 @@ export function useCart() {
         };
       }
       map[key].items.push(item);
-      map[key].subtotal += item.listing.price.amount * item.quantity;
+      map[key].subtotal += Number(item.listing.price.amount) * item.quantity;
     });
     return Object.values(map);
   }, [items]);
 
   const totalAmount = useMemo(
-    () => items.reduce((sum, item) => sum + item.listing.price.amount * item.quantity, 0),
+    () => items.reduce((sum, item) => sum + Number(item.listing.price.amount) * item.quantity, 0),
     [items]
   );
 

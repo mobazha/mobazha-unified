@@ -72,9 +72,10 @@ export async function loadOlderMessages(
 export async function sendMessage(
   roomId: string,
   content: string,
-  userId: string | null
+  userId: string | null,
+  externalLocalId?: string
 ): Promise<MatrixMessage | null> {
-  const localId = nextLocalId();
+  const localId = externalLocalId || nextLocalId();
   const optimistic: MatrixMessage = {
     id: localId,
     localId,

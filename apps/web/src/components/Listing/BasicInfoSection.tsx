@@ -2,7 +2,14 @@
 
 import React, { useCallback } from 'react';
 import type { ContractType, ProductCondition, WeightUnit, DimensionUnit } from '@mobazha/core';
-import { useI18n, calculateDiscountPercent, STANDARD_PRODUCT_TYPES } from '@mobazha/core';
+import {
+  useI18n,
+  calculateDiscountPercent,
+  STANDARD_PRODUCT_TYPES,
+  useRuntimeConfig,
+  useFiatPaymentVisible,
+  projectRuntimeCryptoPaymentMethods,
+} from '@mobazha/core';
 import { AiAssistButton } from './AiAssistant';
 import {
   Select,
@@ -31,6 +38,8 @@ interface BasicInfoSectionProps {
   onShortDescriptionChange?: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onPriceChange: (value: string) => void;
+  onPriceFocus?: () => void;
+  onPriceBlur?: (value: string) => void;
   onCompareAtPriceChange?: (value: string) => void;
   onCurrencyChange: (value: string) => void;
   onConditionChange?: (value: ProductCondition) => void;
@@ -67,15 +76,12 @@ interface BasicInfoSectionProps {
   aiLoadingAction?: string | null;
 }
 
-const currencies = [
+const FIAT_CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
   { value: 'CNY', label: 'CNY (¥)' },
   { value: 'EUR', label: 'EUR (€)' },
   { value: 'GBP', label: 'GBP (£)' },
   { value: 'JPY', label: 'JPY (¥)' },
-  { value: 'BTC', label: 'BTC (₿)' },
-  { value: 'ETH', label: 'ETH (Ξ)' },
-  { value: 'USDT', label: 'USDT' },
 ];
 
 const conditions: { value: ProductCondition; labelKey: string }[] = [
@@ -103,6 +109,8 @@ export function BasicInfoSection({
   onShortDescriptionChange,
   onDescriptionChange,
   onPriceChange,
+  onPriceFocus,
+  onPriceBlur,
   onCompareAtPriceChange,
   onCurrencyChange,
   onConditionChange,
@@ -130,6 +138,19 @@ export function BasicInfoSection({
   aiLoadingAction,
 }: BasicInfoSectionProps) {
   const { t } = useI18n();
+  const runtimeConfig = useRuntimeConfig();
+  const fiatVisible = useFiatPaymentVisible();
+  const currencies = React.useMemo(() => {
+    const projected = projectRuntimeCryptoPaymentMethods(runtimeConfig).map(method => ({
+      value: method.id,
+      label: `${method.id} (${method.name})`,
+    }));
+    const available = [...(fiatVisible ? FIAT_CURRENCIES : []), ...projected];
+    if (pricingCurrency && !available.some(currency => currency.value === pricingCurrency)) {
+      available.push({ value: pricingCurrency, label: pricingCurrency });
+    }
+    return available;
+  }, [fiatVisible, pricingCurrency, runtimeConfig]);
 
   const isPhysicalGood = contractType === 'PHYSICAL_GOOD';
   const showCondition = isPhysicalGood;
@@ -154,6 +175,7 @@ export function BasicInfoSection({
       BTC: '₿',
       ETH: 'Ξ',
       USDT: '$',
+      LTC: 'Ł',
     };
     return symbols[pricingCurrency] || pricingCurrency;
   }, [pricingCurrency]);
@@ -288,6 +310,8 @@ export function BasicInfoSection({
                   min="0"
                   value={price}
                   onChange={e => onPriceChange(e.target.value)}
+                  onFocus={onPriceFocus}
+                  onBlur={e => onPriceBlur?.(e.target.value)}
                   className={inputInnerClass}
                   placeholder="0.00"
                 />

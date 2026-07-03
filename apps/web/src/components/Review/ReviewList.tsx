@@ -2,11 +2,12 @@
 
 import React, { useMemo, useState } from 'react';
 import type { ProductRating, RatingIndex } from '@mobazha/core';
-import { useI18n } from '@mobazha/core';
+import { getImageUrl, useI18n } from '@mobazha/core';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HStack, VStack } from '@/components/layouts';
 import { Button } from '@/components/ui/button';
+import { ReviewImageGallery } from './ReviewImageGallery';
 
 export interface ReviewListProps {
   ratings: ProductRating[];
@@ -173,6 +174,14 @@ export function ReviewList({
                     <StarDisplay value={r.overall} />
                   </div>
                   {r.review && <p className="text-sm text-foreground mt-1">{r.review}</p>}
+                  {r.imageHashes && r.imageHashes.length > 0 && (
+                    <ReviewImageGallery
+                      imageUrls={r.imageHashes.map(hash => getImageUrl(hash) || '').filter(Boolean)}
+                      altPrefix={`${displayName(r)} review image`}
+                      className="pt-1"
+                      size="sm"
+                    />
+                  )}
                 </VStack>
               </HStack>
             </article>

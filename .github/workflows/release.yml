@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  PNPM_VERSION: 9.0.0
+  PNPM_VERSION: 9.15.4
   NODE_VERSION: 20
 
 permissions:
@@ -73,14 +73,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter @mobazha/web build:next
         env:
           NEXT_PUBLIC_USE_MOCK_DATA: false
 
+      - name: Collect third-party licenses
+        run: ./scripts/collect-third-party-licenses.sh third-party-licenses
+
       - name: Create archive
-        run: |
-          cd apps/web
-          tar -czvf ../../${{ matrix.artifact_name }}-${{ github.ref_name }}.tar.gz .next public package.json
+        run: >-
+          tar -czvf ${{ matrix.artifact_name }}-${{ github.ref_name }}.tar.gz
+          apps/web/.next apps/web/public apps/web/package.json
+          LICENSE NOTICE THIRD_PARTY_NOTICES.md third-party-licenses
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
@@ -131,7 +135,7 @@ jobs:
     needs: [release, build-artifacts]
     environment:
       name: production
-      url: https://mobazha.com
+      url: https://mobazha.org
     steps:
       - name: Checkout
         uses: actions/checkout@v4

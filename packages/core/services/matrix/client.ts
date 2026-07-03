@@ -18,13 +18,7 @@ import * as msgModule from './messages';
 import * as roomModule from './rooms';
 import * as verificationModule from './verification';
 import { setupChatEventListeners } from './event-listeners';
-
-function looksLikePeerID(value?: string): boolean {
-  if (!value) return false;
-  const v = value.trim();
-  if (!v) return false;
-  return /^(Qm[1-9A-HJ-NP-Za-km-z]{44}|12D3Koo[1-9A-HJ-NP-Za-km-z]{20,})$/.test(v);
-}
+import { isFullPeerID } from '../../utils/identity';
 
 class MatrixClientService {
   private _isInitialized = false;
@@ -159,8 +153,17 @@ class MatrixClientService {
     return this._isConnected;
   }
 
+  /** True when REST chat API is initialized (send/get messages work). */
+  isServiceReady(): boolean {
+    return this._isInitialized && this._userId != null;
+  }
+
   getUserId(): string | null {
     return this._userId;
+  }
+
+  getServerName(): string | null {
+    return this._serverName;
   }
 
   getDeviceId(): string | null {
@@ -191,8 +194,12 @@ class MatrixClientService {
     return msgModule.loadOlderMessages(roomId, limit, this._processedMessageIds);
   }
 
-  async sendMessage(roomId: string, content: string): Promise<MatrixMessage | null> {
-    const result = await msgModule.sendMessage(roomId, content, this._userId);
+  async sendMessage(
+    roomId: string,
+    content: string,
+    externalLocalId?: string
+  ): Promise<MatrixMessage | null> {
+    const result = await msgModule.sendMessage(roomId, content, this._userId, externalLocalId);
     if (result?.id) this._processedMessageIds.add(result.id);
     return result;
   }
@@ -292,11 +299,11 @@ class MatrixClientService {
 
   async createDirectRoom(userId: string, displayNameOrPeerID?: string): Promise<string | null> {
     const userIdOrPeerID = userId?.trim();
-    if (looksLikePeerID(userIdOrPeerID)) {
+    if (isFullPeerID(userIdOrPeerID)) {
       return roomModule.createDirectRoom('', userIdOrPeerID);
     }
 
-    const inferredPeerID = looksLikePeerID(displayNameOrPeerID)
+    const inferredPeerID = isFullPeerID(displayNameOrPeerID)
       ? displayNameOrPeerID?.trim()
       : undefined;
     if (inferredPeerID) {
@@ -332,9 +339,14 @@ class MatrixClientService {
   async createOrderRoom(
     orderId: string,
     participants: string[],
-    orderInfo?: { title?: string; vendorId?: string; buyerId?: string }
+    orderInfo?: { title?: string; vendorId?: string; buyerId?: string; orderState?: string }
   ): Promise<string | null> {
-    return roomModule.createOrderRoom(orderId, participants, orderInfo);
+    const memberIDs = this.toInviteMatrixUserIds(participants);
+    if (memberIDs.length === 0) {
+      console.warn('[Chat] createOrderRoom skipped: no valid invite targets');
+      return null;
+    }
+    return roomModule.createOrderRoom(orderId, memberIDs, orderInfo);
   }
 
   async getOrderRoom(orderId: string): Promise<MatrixRoom | null> {
@@ -350,14 +362,6 @@ class MatrixClientService {
 
   async getStoreRoom(storeId: string): Promise<MatrixRoom | null> {
     return roomModule.getStoreRoom(storeId);
-  }
-
-  async createModeratorRoom(
-    orderId: string,
-    moderatorId: string,
-    participants: string[]
-  ): Promise<string | null> {
-    return roomModule.createModeratorRoom(orderId, moderatorId, participants);
   }
 
   async createGroupRoom(
@@ -381,6 +385,31 @@ class MatrixClientService {
 
   isMobazhaUser(userId: string): boolean {
     return roomModule.isMobazhaUser(userId);
+  }
+
+  private toInviteMatrixUserIds(participants: string[]): string[] {
+    const seen = new Set<string>();
+    const ownPeerID = this._currentPeerID?.trim();
+    const ownUserID = this._userId?.trim();
+    const serverName = this._serverName?.trim();
+
+    for (const raw of participants) {
+      const value = raw?.trim();
+      if (!value || value === ownPeerID || value === ownUserID) continue;
+
+      let userID: string | null = null;
+      if (value.startsWith('@')) {
+        userID = value;
+      } else if (isFullPeerID(value) && serverName) {
+        userID = `@peer_${value.toLowerCase()}:${serverName}`;
+      }
+
+      if (userID && userID !== ownUserID) {
+        seen.add(userID);
+      }
+    }
+
+    return Array.from(seen);
   }
 
   // ============= Profile =============

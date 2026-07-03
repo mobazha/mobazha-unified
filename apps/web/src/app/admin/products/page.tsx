@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useI18n, useCurrency, getImageUrl } from '@mobazha/core';
+import {
+  useI18n,
+  useCurrency,
+  getImageUrl,
+  useFeature,
+  productNeedsSupplyAttention,
+  isBulkRestockEligible,
+  isBulkImportKeysEligible,
+  buildProductHref,
+  listingDisplayPriceFromListItem,
+  formatListingDisplayPriceLabel,
+} from '@mobazha/core';
 import { productDataService } from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import {
@@ -16,9 +27,15 @@ import {
   Grid3X3,
   List,
   Loader2,
+  Compass,
+  ChevronDown,
+  Download,
+  PackagePlus,
+  KeyRound,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,17 +52,41 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { usePlatform } from '@mobazha/ui/hooks';
+import { useProductLicensePoolHints } from '@/hooks/useProductLicensePoolHints';
+import { useSellerSupplySummaries } from '@/hooks/useSellerSupplySummaries';
+import { useSyncedListingProviders } from '@/hooks/useSyncedListingProviders';
+import {
+  ProductAvailabilityCell,
+  ProductSupplyModeBadge,
+} from '@/components/admin/ProductSupplyDisplay';
+import { BulkRestockDialog } from '@/components/admin/BulkRestockDialog';
+import { BulkImportLicenseKeysDialog } from '@/components/admin/BulkImportLicenseKeysDialog';
 
 type ViewMode = 'table' | 'grid';
 type StatusFilter = 'all' | 'active' | 'draft';
+type SupplyFilter = 'all' | 'needs_attention';
 
 interface ProductActionsProps {
   slug: string;
+  peerID?: string;
+  canRestock?: boolean;
+  canImportKeys?: boolean;
+  onRestock?: () => void;
+  onImportKeys?: () => void;
   onRequestDelete: (slug: string) => void;
   deleting: boolean;
 }
 
-function ProductActions({ slug, onRequestDelete, deleting }: ProductActionsProps) {
+function ProductActions({
+  slug,
+  peerID,
+  canRestock,
+  canImportKeys,
+  onRestock,
+  onImportKeys,
+  onRequestDelete,
+  deleting,
+}: ProductActionsProps) {
   const { t } = useI18n();
   const router = useRouter();
 
@@ -56,13 +97,23 @@ function ProductActions({ slug, onRequestDelete, deleting }: ProductActionsProps
           <MoreHorizontal className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={() => window.open(`/product/${slug}`, '_blank')}>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem onClick={() => window.open(buildProductHref(slug, peerID), '_blank')}>
           <Eye className="mr-2 h-4 w-4" /> {t('admin.products.preview')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push(`/listing/edit/${slug}?from=admin`)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('admin.products.edit')}
         </DropdownMenuItem>
+        {canRestock && onRestock && (
+          <DropdownMenuItem onClick={onRestock}>
+            <PackagePlus className="mr-2 h-4 w-4" /> {t('admin.products.actionRestock')}
+          </DropdownMenuItem>
+        )}
+        {canImportKeys && onImportKeys && (
+          <DropdownMenuItem onClick={onImportKeys}>
+            <KeyRound className="mr-2 h-4 w-4" /> {t('admin.products.actionImportKeys')}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => router.push(`/listing/new?duplicate=${slug}&from=admin`)}>
           <Copy className="mr-2 h-4 w-4" /> {t('admin.products.duplicate')}
         </DropdownMenuItem>
@@ -85,21 +136,48 @@ export default function AdminProductsPage() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { isEmbeddedApp } = usePlatform();
+  const searchParams = useSearchParams();
+  const supplyAvailabilityEnabled = useFeature('supplyAvailabilityEnabled');
+  const supplyChainEnabled = useFeature('supplyChainEnabled');
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getProvider } = useSyncedListingProviders();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [supplyFilter, setSupplyFilter] = useState<SupplyFilter>(() =>
+    searchParams.get('supply') === 'needs_attention' ? 'needs_attention' : 'all'
+  );
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [supplyRefreshVersion, setSupplyRefreshVersion] = useState(0);
+  const { getHint: getLicenseHint } = useProductLicensePoolHints(
+    products,
+    supplyRefreshVersion,
+    supplyAvailabilityEnabled
+  );
+  const { getSummary: getSupplySummary, loading: supplySummaryLoading } = useSellerSupplySummaries(
+    products,
+    supplyRefreshVersion,
+    supplyAvailabilityEnabled
+  );
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<
     { type: 'single'; slug: string } | { type: 'bulk' } | null
   >(null);
+  const [restockTargets, setRestockTargets] = useState<Array<{
+    slug: string;
+    title: string;
+  }> | null>(null);
+  const [importTargets, setImportTargets] = useState<Array<{ slug: string; title: string }> | null>(
+    null
+  );
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await productDataService.getMyListings();
+      const data = await productDataService.getMyListings({
+        includeSupplySummary: supplyAvailabilityEnabled,
+      });
       setProducts(data);
     } catch (err) {
       console.error('Failed to fetch products:', err);
@@ -111,13 +189,27 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [t, toast]);
+  }, [supplyAvailabilityEnabled, t, toast]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
   const getEffectiveStatus = useCallback((p: ProductListItem) => p.status ?? 'published', []);
+
+  const supplyContextFor = useCallback(
+    (product: ProductListItem) => {
+      const summary = getSupplySummary(product.slug);
+      return {
+        product,
+        syncedProvider: getProvider(product.slug),
+        licenseHint: getLicenseHint(product.slug),
+        summary,
+        summaryLoading: supplyAvailabilityEnabled && supplySummaryLoading && !summary,
+      };
+    },
+    [getProvider, getLicenseHint, getSupplySummary, supplyAvailabilityEnabled, supplySummaryLoading]
+  );
 
   const filtered = useMemo(() => {
     let result = products;
@@ -126,6 +218,9 @@ export default function AdminProductsPage() {
     } else if (statusFilter === 'draft') {
       result = result.filter(p => getEffectiveStatus(p) === 'draft');
     }
+    if (supplyAvailabilityEnabled && supplyFilter === 'needs_attention') {
+      result = result.filter(p => productNeedsSupplyAttention(supplyContextFor(p)));
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -133,7 +228,70 @@ export default function AdminProductsPage() {
       );
     }
     return result;
-  }, [products, searchQuery, statusFilter, getEffectiveStatus]);
+  }, [
+    products,
+    searchQuery,
+    statusFilter,
+    supplyFilter,
+    supplyAvailabilityEnabled,
+    getEffectiveStatus,
+    supplyContextFor,
+  ]);
+
+  const needsAttentionCount = useMemo(
+    () =>
+      supplyAvailabilityEnabled
+        ? products.filter(p => productNeedsSupplyAttention(supplyContextFor(p))).length
+        : 0,
+    [products, supplyContextFor, supplyAvailabilityEnabled]
+  );
+
+  const selectedProducts = useMemo(
+    () => products.filter(p => selectedSlugs.has(p.slug)),
+    [products, selectedSlugs]
+  );
+
+  const bulkRestockTargets = useMemo(
+    () =>
+      supplyAvailabilityEnabled
+        ? selectedProducts
+            .filter(p => isBulkRestockEligible(supplyContextFor(p)))
+            .map(p => ({ slug: p.slug, title: p.title }))
+        : [],
+    [selectedProducts, supplyContextFor, supplyAvailabilityEnabled]
+  );
+
+  const bulkImportTargets = useMemo(
+    () =>
+      supplyAvailabilityEnabled
+        ? selectedProducts
+            .filter(p => isBulkImportKeysEligible(supplyContextFor(p)))
+            .map(p => ({ slug: p.slug, title: p.title }))
+        : [],
+    [selectedProducts, supplyContextFor, supplyAvailabilityEnabled]
+  );
+
+  const handleSupplyDataRefresh = useCallback(async () => {
+    await fetchProducts();
+    setSupplyRefreshVersion(v => v + 1);
+  }, [fetchProducts]);
+
+  const productActionProps = useCallback(
+    (product: ProductListItem) => {
+      const ctx = supplyContextFor(product);
+      return {
+        slug: product.slug,
+        peerID: product.vendorPeerID,
+        canRestock: supplyAvailabilityEnabled && isBulkRestockEligible(ctx),
+        canImportKeys: supplyAvailabilityEnabled && isBulkImportKeysEligible(ctx),
+        onRestock: () => setRestockTargets([{ slug: product.slug, title: product.title }]),
+        onImportKeys: () => setImportTargets([{ slug: product.slug, title: product.title }]),
+        onRequestDelete: (slug: string) => setDeleteTarget({ type: 'single', slug }),
+        deleting: deletingSlug === product.slug,
+      };
+    },
+    [supplyContextFor, supplyAvailabilityEnabled, deletingSlug]
+  );
 
   const statusCounts = useMemo(() => {
     const active = products.filter(p => getEffectiveStatus(p) === 'published').length;
@@ -226,15 +384,39 @@ export default function AdminProductsPage() {
     }
   };
 
-  function renderPrice(price: {
-    amount?: number;
-    currency?: { code?: string; divisibility?: number };
-    currencyCode?: string;
-  }): string {
-    if (!price.amount) return '—';
-    const code = price.currency?.code || price.currencyCode || 'USD';
-    const standardAmount = fromMinimalUnit(price.amount, code);
-    return formatPrice(standardAmount, code);
+  function renderAdminProductPrice(product: ProductListItem) {
+    const code = product.price.currency?.code;
+    const divisibility = product.price.currency?.divisibility ?? 2;
+    const display = listingDisplayPriceFromListItem(product);
+    const storefront = formatListingDisplayPriceLabel(
+      display,
+      (amount, currency) => formatPrice(fromMinimalUnit(amount, currency), currency),
+      code,
+      divisibility,
+      t
+    );
+
+    if (!product.basePrice || display.baseAmount === display.minAmount) {
+      return <span>{storefront}</span>;
+    }
+
+    const baseCode = product.basePrice.currency?.code || code;
+    if (!baseCode?.trim()) {
+      return <span>{storefront}</span>;
+    }
+    const base = formatPrice(
+      fromMinimalUnit(product.basePrice.amount ?? display.baseAmount, baseCode),
+      baseCode
+    );
+
+    return (
+      <span className="inline-flex flex-col">
+        <span>{t('admin.products.priceStorefront', { price: storefront })}</span>
+        <span className="text-xs text-muted-foreground font-normal">
+          {t('admin.products.priceBase', { price: base })}
+        </span>
+      </span>
+    );
   }
 
   function contractTypeLabel(type?: string): string {
@@ -256,25 +438,25 @@ export default function AdminProductsPage() {
     switch (status) {
       case 'published':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success/15 text-success">
             {t('admin.products.statusActive')}
           </span>
         );
       case 'draft':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warning/15 text-warning">
             {t('admin.products.statusDraft')}
           </span>
         );
       case 'private':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
             {t('admin.products.statusPrivate')}
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success/15 text-success">
             {t('admin.products.statusActive')}
           </span>
         );
@@ -291,6 +473,27 @@ export default function AdminProductsPage() {
 
   return (
     <div data-testid="admin-products">
+      <BulkRestockDialog
+        open={restockTargets !== null}
+        onOpenChange={open => {
+          if (!open) setRestockTargets(null);
+        }}
+        targets={restockTargets ?? []}
+        onComplete={() => {
+          void handleSupplyDataRefresh();
+        }}
+      />
+      <BulkImportLicenseKeysDialog
+        open={importTargets !== null}
+        onOpenChange={open => {
+          if (!open) setImportTargets(null);
+        }}
+        targets={importTargets ?? []}
+        onComplete={() => {
+          void handleSupplyDataRefresh();
+        }}
+      />
+
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={open => {
@@ -328,12 +531,53 @@ export default function AdminProductsPage() {
           </p>
         )}
         {products.length > 0 && (
-          <Link href="/listing/new?from=admin" className={isEmbeddedApp ? '' : 'hidden md:block'}>
-            <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
-              <Plus className="w-4 h-4" />
-              {t('admin.products.addProduct')}
-            </Button>
-          </Link>
+          <div className={isEmbeddedApp ? '' : 'hidden md:block'}>
+            {supplyChainEnabled ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
+                    <Plus className="w-4 h-4" />
+                    {t('admin.products.addProduct')}
+                    <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/listing/new?from=admin" className="flex items-center">
+                      <Plus className="mr-2 h-4 w-4" />
+                      {t('admin.products.createNew')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/sourcing/catalog" className="flex items-center">
+                      <Compass className="mr-2 h-4 w-4" />
+                      {t('admin.products.sourceFromProvider')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/products/import-gumroad" className="flex items-center">
+                      <Download className="mr-2 h-4 w-4" />
+                      {t('admin.products.importFromGumroad')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/products/import" className="flex items-center">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {t('admin.products.smartImport')}
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/listing/new?from=admin">
+                <Button className="gap-2" size={isEmbeddedApp ? 'sm' : 'default'}>
+                  <Plus className="w-4 h-4" />
+                  {t('admin.products.addProduct')}
+                </Button>
+              </Link>
+            )}
+          </div>
         )}
       </div>
 
@@ -363,6 +607,35 @@ export default function AdminProductsPage() {
         })}
       </div>
 
+      {supplyAvailabilityEnabled && (
+        <div className={`flex gap-1 ${isEmbeddedApp ? 'mb-2' : 'mb-4'} flex-wrap`}>
+          {(['all', 'needs_attention'] as SupplyFilter[]).map(filter => {
+            const active = supplyFilter === filter;
+            const count = filter === 'needs_attention' ? needsAttentionCount : null;
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setSupplyFilter(filter)}
+                className={cn(
+                  'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                  active
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                )}
+              >
+                {filter === 'all'
+                  ? t('admin.products.filterAll')
+                  : t('admin.products.filterNeedsAttention')}
+                {count !== null && count > 0 && (
+                  <span className="ml-1 text-muted-foreground">({count})</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className={`flex flex-col sm:flex-row gap-3 ${isEmbeddedApp ? 'mb-3' : 'mb-6'}`}>
         <div className="relative flex-1">
@@ -374,7 +647,23 @@ export default function AdminProductsPage() {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
+          {selectedSlugs.size > 0 && bulkRestockTargets.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRestockTargets(bulkRestockTargets)}
+            >
+              <PackagePlus className="w-4 h-4 mr-1" />
+              {t('admin.products.bulkRestockSelected', { count: bulkRestockTargets.length })}
+            </Button>
+          )}
+          {selectedSlugs.size > 0 && bulkImportTargets.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setImportTargets(bulkImportTargets)}>
+              <KeyRound className="w-4 h-4 mr-1" />
+              {t('admin.products.bulkImportSelected', { count: bulkImportTargets.length })}
+            </Button>
+          )}
           {selectedSlugs.size > 0 && (
             <Button
               variant="destructive"
@@ -443,31 +732,15 @@ export default function AdminProductsPage() {
                   <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-sm font-semibold text-primary">
-                      {renderPrice(product.price)}
+                      {renderAdminProductPrice(product)}
                     </span>
                     {statusBadge(product.status)}
-                    {product.quantity !== undefined && product.quantity !== null && (
-                      <span
-                        className={cn(
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                          product.quantity === 0
-                            ? 'bg-destructive/15 text-destructive'
-                            : product.quantity <= 5
-                              ? 'bg-warning/15 text-warning'
-                              : 'bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {product.quantity === 0 ? t('admin.products.outOfStock') : product.quantity}
-                      </span>
-                    )}
+                    <ProductSupplyModeBadge {...supplyContextFor(product)} />
+                    <ProductAvailabilityCell {...supplyContextFor(product)} />
                   </div>
                 </div>
               </Link>
-              <ProductActions
-                slug={product.slug}
-                onRequestDelete={slug => setDeleteTarget({ type: 'single', slug })}
-                deleting={deletingSlug === product.slug}
-              />
+              <ProductActions {...productActionProps(product)} />
             </div>
           ))}
         </div>
@@ -490,12 +763,22 @@ export default function AdminProductsPage() {
               : t('admin.products.emptyDescription')}
           </p>
           {!searchQuery && products.length === 0 && (
-            <Link href="/listing/new?from=admin">
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                {t('admin.products.addFirstProduct')}
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/listing/new?from=admin">
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  {t('admin.products.addFirstProduct')}
+                </Button>
+              </Link>
+              {supplyChainEnabled && (
+                <Link href="/admin/sourcing/catalog">
+                  <Button variant="outline" className="gap-2">
+                    <Compass className="w-4 h-4" />
+                    {t('admin.products.sourceFromProvider')}
+                  </Button>
+                </Link>
+              )}
+            </div>
           )}
         </div>
       ) : viewMode === 'table' ? (
@@ -520,8 +803,8 @@ export default function AdminProductsPage() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
                     {t('admin.products.colType')}
                   </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground w-20">
-                    {t('admin.products.colStock')}
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground w-32">
+                    {t('admin.products.colAvailability')}
                   </th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t('admin.products.colPrice')}
@@ -557,7 +840,10 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      {statusBadge(product.status)}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {statusBadge(product.status)}
+                        <ProductSupplyModeBadge {...supplyContextFor(product)} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -565,29 +851,13 @@ export default function AdminProductsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {(() => {
-                        const q = product.quantity;
-                        if (q === undefined || q === null)
-                          return <span className="text-muted-foreground">—</span>;
-                        if (q === 0)
-                          return (
-                            <span className="text-destructive font-medium">
-                              {t('admin.products.outOfStock')}
-                            </span>
-                          );
-                        if (q <= 5) return <span className="text-warning font-medium">{q}</span>;
-                        return <span className="text-foreground">{q}</span>;
-                      })()}
+                      <ProductAvailabilityCell {...supplyContextFor(product)} />
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-foreground">
-                      {renderPrice(product.price)}
+                      {renderAdminProductPrice(product)}
                     </td>
                     <td className="px-4 py-3">
-                      <ProductActions
-                        slug={product.slug}
-                        onRequestDelete={slug => setDeleteTarget({ type: 'single', slug })}
-                        deleting={deletingSlug === product.slug}
-                      />
+                      <ProductActions {...productActionProps(product)} />
                     </td>
                   </tr>
                 ))}
@@ -609,11 +879,7 @@ export default function AdminProductsPage() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2 transition-opacity opacity-0 group-hover:opacity-100">
-                  <ProductActions
-                    slug={product.slug}
-                    onRequestDelete={slug => setDeleteTarget({ type: 'single', slug })}
-                    deleting={deletingSlug === product.slug}
-                  />
+                  <ProductActions {...productActionProps(product)} />
                 </div>
                 <div className="absolute top-2 left-2">
                   <Checkbox
@@ -627,23 +893,11 @@ export default function AdminProductsPage() {
                 <p className="font-medium text-sm text-foreground truncate">{product.title}</p>
                 <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
                   <span className="text-sm font-semibold text-primary">
-                    {renderPrice(product.price)}
+                    {renderAdminProductPrice(product)}
                   </span>
                   {statusBadge(product.status)}
-                  {product.quantity !== undefined && product.quantity !== null && (
-                    <span
-                      className={cn(
-                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                        product.quantity === 0
-                          ? 'bg-destructive/15 text-destructive'
-                          : product.quantity <= 5
-                            ? 'bg-warning/15 text-warning'
-                            : 'bg-muted text-muted-foreground'
-                      )}
-                    >
-                      {product.quantity === 0 ? t('admin.products.outOfStock') : product.quantity}
-                    </span>
-                  )}
+                  <ProductSupplyModeBadge {...supplyContextFor(product)} />
+                  <ProductAvailabilityCell {...supplyContextFor(product)} />
                 </div>
               </div>
             </div>

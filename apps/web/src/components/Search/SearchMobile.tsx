@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { BottomSheet, BottomSheetItem } from '@/components/ui/bottom-sheet';
 import { useSearch } from '@/hooks/useSearch';
 import type { DisplayProduct, SearchUser } from '@/hooks/useSearch';
+import { buildProductHref } from '@mobazha/core';
 
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -98,7 +99,7 @@ export function SearchMobile() {
       </div>
 
       {/* No Query: Recent Searches + Categories */}
-      {!search.queryParam && (
+      {!search.queryParam && !search.searchQuery.trim() && (
         <div className="px-4 py-4">
           {/* Recent Searches */}
           {search.recentSearches.length > 0 && (
@@ -164,7 +165,7 @@ export function SearchMobile() {
       )}
 
       {/* Search Results */}
-      {search.queryParam && (
+      {(search.queryParam || search.searchQuery.trim()) && (
         <div className="flex flex-col">
           {/* Tabs */}
           <div className="sticky top-[68px] z-10 bg-background border-b border-border">
@@ -177,7 +178,7 @@ export function SearchMobile() {
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                {search.t('searchExtended.products')} ({search.productsTotal})
+                {search.productsTabLabel}
               </button>
               <button
                 onClick={() => search.setActiveTab('users')}
@@ -194,6 +195,38 @@ export function SearchMobile() {
 
           {/* Sort + Type Bar */}
           {search.activeTab === 'listings' && <SortTypeBar search={search} />}
+
+          {search.activeTab === 'listings' && search.isBrowseAllCatalog && (
+            <div className="mx-3 mt-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+              <p className="mb-1">
+                {search.browseMode === 'discover'
+                  ? search.t('searchExtended.discoverHint')
+                  : search.t('searchExtended.browseAllActive', {
+                      count: search.productsCatalogTotal,
+                    })}
+              </p>
+              {search.browseMode === 'discover' &&
+              search.productsCatalogTotal > search.productsTotal ? (
+                <button
+                  type="button"
+                  className="text-primary font-medium"
+                  onClick={() => search.setBrowseMode('all')}
+                >
+                  {search.t('searchExtended.browseAllProducts', {
+                    count: search.productsCatalogTotal,
+                  })}
+                </button>
+              ) : search.browseMode === 'all' ? (
+                <button
+                  type="button"
+                  className="text-primary font-medium"
+                  onClick={() => search.setBrowseMode('discover')}
+                >
+                  {search.t('searchExtended.backToDiscover')}
+                </button>
+              ) : null}
+            </div>
+          )}
 
           {/* Product Grid / User List */}
           <div className="px-3 py-3 pb-24">
@@ -242,12 +275,14 @@ function ProductResults({ search }: { search: ReturnType<typeof useSearch> }) {
         {search.products.map((product: DisplayProduct) => (
           <Link
             key={product.id}
-            href={`/product/${product.slug}${product.vendor.peerID ? `?peerID=${product.vendor.peerID}` : ''}`}
+            href={buildProductHref(product.slug, product.vendor.peerID)}
+            onClick={() => search.trackMarketplaceListingClick(product)}
           >
             <ProductCard
               title={product.title}
               imageUrl={product.image}
               price={product.price}
+              priceFrom={product.priceFrom}
               currency={product.currency}
               divisibility={product.divisibility}
               vendorName={product.vendor.name}
@@ -385,18 +420,37 @@ function UserResults({ search }: { search: ReturnType<typeof useSearch> }) {
 function SortTypeBar({ search }: { search: ReturnType<typeof useSearch> }) {
   const [showSort, setShowSort] = useState(false);
   const [showType, setShowType] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+  const [showPrice, setShowPrice] = useState(false);
+  const [priceMinInput, setPriceMinInput] = useState('');
+  const [priceMaxInput, setPriceMaxInput] = useState('');
+
+  const openPriceSheet = () => {
+    setPriceMinInput(search.priceMin || '');
+    setPriceMaxInput(search.priceMax || '');
+    setShowPrice(true);
+  };
 
   const currentSort = search.sortOptions.find(o => o.value === search.sortBy);
   const currentType = search.typeOptions?.find(
     (c: { value: string }) => c.value === search.listingType
   );
+  const ratingOptions = [
+    { value: 'all', label: search.t('filter.anyRating') },
+    { value: '4', label: search.t('filter.stars', { count: 4 }) },
+    { value: '3', label: search.t('filter.stars', { count: 3 }) },
+    { value: '2', label: search.t('filter.stars', { count: 2 }) },
+  ];
+  const currentRating = ratingOptions.find(
+    o => o.value === (search.minRating ? String(search.minRating) : 'all')
+  );
 
   return (
     <>
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-border overflow-x-auto">
         <button
           onClick={() => setShowSort(true)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground active:bg-muted/70 transition-colors"
+          className="flex items-center gap-1.5 px-4 min-h-[44px] shrink-0 rounded-full text-sm font-medium bg-muted text-muted-foreground active:bg-muted/70 transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -412,7 +466,7 @@ function SortTypeBar({ search }: { search: ReturnType<typeof useSearch> }) {
         {search.typeOptions && search.typeOptions.length > 0 && (
           <button
             onClick={() => setShowType(true)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors active:bg-muted/70 ${
+            className={`flex items-center gap-1.5 px-4 min-h-[44px] shrink-0 rounded-full text-sm font-medium transition-colors active:bg-muted/70 ${
               search.listingType !== 'all'
                 ? 'bg-primary/10 text-primary'
                 : 'bg-muted text-muted-foreground'
@@ -427,6 +481,35 @@ function SortTypeBar({ search }: { search: ReturnType<typeof useSearch> }) {
               />
             </svg>
             {currentType?.label || search.t('marketplace.allTypes', { defaultValue: 'All Types' })}
+          </button>
+        )}
+
+        <button
+          onClick={() => setShowRating(true)}
+          className={`flex items-center gap-1.5 px-4 min-h-[44px] shrink-0 rounded-full text-sm font-medium transition-colors active:bg-muted/70 ${
+            search.minRating ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+          }`}
+        >
+          <span className="text-warning">★</span>
+          {currentRating?.label || search.t('filter.rating')}
+        </button>
+
+        <button
+          onClick={openPriceSheet}
+          className={`flex items-center gap-1.5 px-4 min-h-[44px] shrink-0 rounded-full text-sm font-medium transition-colors active:bg-muted/70 ${
+            search.hasPriceFilter ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+          }`}
+        >
+          {search.t('filter.priceRange')}
+        </button>
+
+        {search.hasActiveFilters && (
+          <button
+            type="button"
+            onClick={search.clearAllFilters}
+            className="flex items-center gap-1.5 px-4 min-h-[44px] shrink-0 rounded-full text-sm font-medium text-primary bg-primary/10 active:bg-primary/20 transition-colors"
+          >
+            {search.t('filter.resetFilters')}
           </button>
         )}
       </div>
@@ -468,6 +551,82 @@ function SortTypeBar({ search }: { search: ReturnType<typeof useSearch> }) {
               }}
             />
           ))}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={showRating}
+        onClose={() => setShowRating(false)}
+        title={search.t('filter.rating')}
+      >
+        <div className="py-1">
+          {ratingOptions.map(opt => (
+            <BottomSheetItem
+              key={opt.value}
+              title={opt.label}
+              selected={(search.minRating ? String(search.minRating) : 'all') === opt.value}
+              onClick={() => {
+                search.setMinRating(opt.value);
+                setShowRating(false);
+              }}
+            />
+          ))}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={showPrice}
+        onClose={() => setShowPrice(false)}
+        title={search.t('filter.priceRange')}
+      >
+        <div className="px-4 pb-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            {search.priceCurrencySymbol} {search.priceCurrency}
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              step="any"
+              placeholder={search.t('filter.min')}
+              value={priceMinInput}
+              onChange={e => setPriceMinInput(e.target.value)}
+              className="flex-1 h-11 px-3 rounded-lg border border-border bg-background text-sm"
+            />
+            <span className="text-muted-foreground">—</span>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              placeholder={search.t('filter.max')}
+              value={priceMaxInput}
+              onChange={e => setPriceMaxInput(e.target.value)}
+              className="flex-1 h-11 px-3 rounded-lg border border-border bg-background text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setPriceMinInput('');
+                setPriceMaxInput('');
+                search.setPriceRange('', '');
+                setShowPrice(false);
+              }}
+            >
+              {search.t('filter.clearFilters')}
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                search.setPriceRange(priceMinInput, priceMaxInput);
+                setShowPrice(false);
+              }}
+            >
+              {search.t('common.apply')}
+            </Button>
+          </div>
         </div>
       </BottomSheet>
     </>

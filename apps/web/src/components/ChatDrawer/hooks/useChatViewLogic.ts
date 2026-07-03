@@ -10,8 +10,11 @@ import {
   getMemberPresentation,
   getMessageSenderPresentation,
   getRoomPresentation,
+  getOrderThreadContext,
+  isOrderThreadRoom,
   matrixClient,
   useI18n,
+  useUserStore,
 } from '@mobazha/core';
 import type { MatrixRoom, MatrixMessage } from '@mobazha/core';
 import { useToast } from '@/components/ui';
@@ -19,7 +22,6 @@ import type { VerificationPhase } from '../VerificationDialog';
 import { useChatEffects } from './useChatEffects';
 import type { ChatRoom } from '@/components/Chat/ChatList';
 import type { Message } from '@/components/Chat/ChatMessages';
-
 // ---------------------------------------------------------------------------
 // Data converters (shared between ChatDrawer and mobile page)
 // ---------------------------------------------------------------------------
@@ -30,6 +32,7 @@ export function toDisplayRoom(
   defaultName: string
 ): ChatRoom {
   const presentation = getRoomPresentation(room, currentUserId, defaultName);
+  const orderThread = isOrderThreadRoom(room) ? getOrderThreadContext(room, currentUserId) : null;
   return {
     id: room.roomId,
     name: presentation.title,
@@ -48,6 +51,10 @@ export function toDisplayRoom(
     isEncrypted: room.isEncrypted,
     isDirect: room.isDirect,
     roomType: room.roomType,
+    orderId: orderThread?.orderId ?? room.orderId ?? room.metadata?.orderId,
+    orderState: orderThread?.orderState,
+    orderContractType: orderThread?.contractType,
+    orderSubtitle: orderThread?.counterpartName,
     isExternal: presentation.isExternal,
     isVerified: false,
     isInvite: room.membership === 'invite',
@@ -175,6 +182,7 @@ export function useChatViewLogic(params: UseChatViewLogicParams) {
   const typingUsers = useChatStore(state => state.typingUsers);
   const searchQuery = useChatStore(state => state.searchQuery);
   const setSearchQuery = useChatStore(state => state.setSearchQuery);
+  const inboxTab = useChatStore(state => state.activeTab);
   const totalUnread = useChatStore(selectTotalUnreadCount);
   const pendingPeerID = useChatStore(selectPendingPeerID);
   const pendingMatrixUserID = useChatStore(selectPendingMatrixUserID);
@@ -190,6 +198,7 @@ export function useChatViewLogic(params: UseChatViewLogicParams) {
   const hasMoreMessages = useChatStore(state => state.hasMoreMessages);
   const updateRoom = useChatStore(state => state.updateRoom);
   const effectiveCurrentUserId = matrixClient.getUserId() || currentUserId;
+  const currentPeerID = useUserStore(state => state.profile?.peerID);
 
   // ---- Side-effects ----
   useChatEffects({
@@ -238,10 +247,34 @@ export function useChatViewLogic(params: UseChatViewLogicParams) {
     return getRoomPresentation(currentRoom, effectiveCurrentUserId, defaultRoomName);
   }, [currentRoom, effectiveCurrentUserId, defaultRoomName]);
 
+  const currentOrderThread = useMemo(() => {
+    if (!currentRoom) return null;
+    return getOrderThreadContext(currentRoom, effectiveCurrentUserId, currentPeerID);
+  }, [currentRoom, effectiveCurrentUserId, currentPeerID]);
+
+  const filteredMatrixRooms = useMemo(() => {
+    let list = rooms;
+    if (inboxTab !== 'all') {
+      list = list.filter(room => {
+        switch (inboxTab) {
+          case 'direct':
+            return room.isDirect && !isOrderThreadRoom(room);
+          case 'groups':
+            return room.roomType === 'group' || room.roomType === 'community';
+          case 'orders':
+            return isOrderThreadRoom(room);
+          default:
+            return true;
+        }
+      });
+    }
+    return list;
+  }, [rooms, inboxTab]);
+
   const displayRooms = useMemo(() => {
-    const sorted = [...rooms].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    const sorted = [...filteredMatrixRooms].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     return sorted.map(room => toDisplayRoom(room, effectiveCurrentUserId, defaultRoomName));
-  }, [rooms, effectiveCurrentUserId, defaultRoomName]);
+  }, [filteredMatrixRooms, effectiveCurrentUserId, defaultRoomName]);
 
   const displayInvites = useMemo(() => {
     return invites.map(room => toDisplayRoom(room, effectiveCurrentUserId, defaultRoomName));
@@ -431,7 +464,11 @@ export function useChatViewLogic(params: UseChatViewLogicParams) {
       const update = useChatStore.getState().updateMessage;
       update(currentRoomId, messageId, { status: 'sending' as const });
       try {
-        const result = await matrixClient.sendMessage(currentRoomId, failedMsg.content);
+        const result = await matrixClient.sendMessage(
+          currentRoomId,
+          failedMsg.content,
+          failedMsg.localId || messageId
+        );
         if (result) update(currentRoomId, messageId, { id: result.id, status: 'sent' as const });
         else update(currentRoomId, messageId, { status: 'failed' as const });
       } catch {
@@ -635,6 +672,8 @@ export function useChatViewLogic(params: UseChatViewLogicParams) {
     currentTypingUsers,
     memberNameMap,
     currentRoomPresentation,
+    currentOrderThread,
+    inboxTab,
 
     // Local UI state
     isCreatingRoom,

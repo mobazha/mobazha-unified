@@ -2,11 +2,16 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Header, Footer } from '@/components';
 import { MobilePageHeader } from '@/components/MobilePageHeader/MobilePageHeader';
 import { Container } from '@/components/layouts';
-import { useI18n } from '@mobazha/core';
-import { MessageCircle, FileText, ExternalLink, ChevronRight } from 'lucide-react';
+import {
+  EXCHANGE_USDT_PAYMENT_HELP_PATH,
+  useI18n,
+  isExchangeUsdtPaymentGuideLocale,
+} from '@mobazha/core';
+import { MessageCircle, FileText, ExternalLink, ChevronRight, Wallet } from 'lucide-react';
 
 interface SupportItemProps {
   icon: React.ReactNode;
@@ -42,12 +47,13 @@ function SupportItem({ icon, title, description, href, external }: SupportItemPr
     );
   }
 
-  return content;
+  return <Link href={href}>{content}</Link>;
 }
 
 export default function SupportPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
+  const showExchangeUsdtHelp = isExchangeUsdtPaymentGuideLocale(locale);
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,11 +65,19 @@ export default function SupportPage() {
           <h1 className="text-2xl font-bold hidden lg:block mb-6">{t('me.support')}</h1>
 
           <div className="bg-card rounded-lg border overflow-hidden">
+            {showExchangeUsdtHelp && (
+              <SupportItem
+                icon={<Wallet className="w-5 h-5" />}
+                title={t('support.exchangeUsdtPayment')}
+                description={t('support.exchangeUsdtPaymentDesc')}
+                href={EXCHANGE_USDT_PAYMENT_HELP_PATH}
+              />
+            )}
             <SupportItem
               icon={<FileText className="w-5 h-5" />}
               title={t('support.documentation')}
               description={t('support.documentationDesc')}
-              href="https://mobazha.com"
+              href="https://mobazha.org"
               external
             />
             <SupportItem

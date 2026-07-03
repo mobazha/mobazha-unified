@@ -125,16 +125,21 @@ function getOrderNotificationDisplay(
         : i18n.t('notifications.order.youRefundedOrder');
       break;
 
-    case 'order.fulfilled':
+    case 'order.shipped':
       name = isBuyer ? vendorName : '';
       text = isBuyer
-        ? i18n.t('notifications.order.fulfilledYourOrder')
-        : i18n.t('notifications.order.youFulfilledOrder');
+        ? i18n.t('notifications.order.shippedYourOrder')
+        : i18n.t('notifications.order.youShippedOrder');
       break;
 
     case 'order.completed':
       name = buyerName;
       text = i18n.t('notifications.order.completedOrder');
+      break;
+
+    case 'order.rated':
+      name = buyerName;
+      text = i18n.t('notifications.order.ratedOrder');
       break;
 
     case 'order.vendor_finalized':
@@ -389,8 +394,9 @@ class NotificationService {
     'order.declined',
     'order.cancelled',
     'order.refunded',
-    'order.fulfilled',
+    'order.shipped',
     'order.completed',
+    'order.rated',
     'order.vendor_finalized',
     'dispute.opened',
     'dispute.closed',

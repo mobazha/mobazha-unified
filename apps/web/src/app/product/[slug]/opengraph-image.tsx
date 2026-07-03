@@ -1,49 +1,16 @@
 import { ImageResponse } from 'next/og';
+import { fetchSsrProduct, getSsrProductMediaUrl } from '@/lib/ssrProduct';
+import { getRequestSearchParam } from '@/lib/requestUrl';
 
-export const runtime = 'edge';
 export const alt = 'Product on Mobazha';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-import { SSR_API_BASE } from '@/lib/ssrApiBase';
-
-const API_BASE = SSR_API_BASE;
-const MEDIA_CDN = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
-interface ProductData {
-  slug: string;
-  item?: {
-    title?: string;
-    images?: Array<{ medium?: string; small?: string; original?: string }>;
-    price?: number;
-    priceCurrency?: { code?: string };
-  };
-  vendorID?: { peerID?: string; handle?: string };
-  metadata?: { pricingCurrency?: { code?: string } };
-}
-
-function getImageUrl(hash?: string): string | undefined {
-  if (!hash) return undefined;
-  if (MEDIA_CDN) return `${MEDIA_CDN}/${hash}`;
-  return `${API_BASE}/v1/media/images/${hash}`;
-}
-
-async function fetchProduct(slug: string): Promise<ProductData | null> {
-  try {
-    const res = await fetch(`${API_BASE}/v1/listings/${slug}`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.listing || data || null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await fetchProduct(slug);
+  // opengraph-image only receives params (not searchParams); peerID comes from proxy header.
+  const peerID = await getRequestSearchParam('peerID');
+  const product = await fetchSsrProduct(slug, peerID);
 
   const title = product?.item?.title || 'Product';
   const currency =
@@ -52,7 +19,8 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const priceText = price !== undefined && currency ? `${price} ${currency}` : '';
   const vendorName = product?.vendorID?.handle || '';
   const firstImage = product?.item?.images?.[0];
-  const imageUrl = getImageUrl(firstImage?.medium || firstImage?.original);
+  const imageUrl = getSsrProductMediaUrl(firstImage?.medium || firstImage?.original);
+  const isDigital = product?.metadata?.contractType === 'DIGITAL_GOOD';
 
   return new ImageResponse(
     <div
@@ -62,9 +30,32 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         display: 'flex',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         padding: '48px',
+        position: 'relative',
       }}
     >
-      {/* Product image */}
+      {isDigital && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '32px',
+            right: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            borderRadius: '999px',
+            background: 'rgba(56, 189, 248, 0.15)',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
+            color: '#7dd3fc',
+            fontSize: '18px',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Digital
+        </div>
+      )}
       {imageUrl && (
         <div
           style={{
@@ -90,7 +81,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
       )}
 
-      {/* Text content */}
       <div
         style={{
           display: 'flex',
@@ -140,7 +130,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           </div>
         )}
 
-        {/* Branding */}
         <div
           style={{
             display: 'flex',

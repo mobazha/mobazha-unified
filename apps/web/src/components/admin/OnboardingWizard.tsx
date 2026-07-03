@@ -9,8 +9,10 @@ import {
   isStandalone,
   getImageUrl,
   useReceivingAccounts,
-  EDITION_I18N_KEYS,
+  getAdminStorePaymentsPath,
+  useFiatPaymentVisible,
 } from '@mobazha/core';
+import { isSovereignMode } from '@mobazha/core/config/env';
 import type { UserProfile } from '@mobazha/core';
 import { uploadAvatar } from '@mobazha/core/services/api/images';
 import { createProfile as apiCreateProfile } from '@mobazha/core/services/api/profile';
@@ -153,14 +155,19 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, updateProfile, updateSettings } = useUserStore();
+  const fiatVisible = useFiatPaymentVisible();
 
   const standaloneMode = useMemo(() => isStandalone(), []);
+  const isSovereign = useMemo(() => isSovereignMode(), []);
 
   const { data: receivingAccounts } = useReceivingAccounts();
+
   const hasPayment = useMemo(
     () => Array.isArray(receivingAccounts) && receivingAccounts.some(a => a.isActive !== false),
     [receivingAccounts]
   );
+
+  const paymentsSetupPath = getAdminStorePaymentsPath();
 
   const TOTAL_STEPS = 4;
   const profileAlreadyComplete = useMemo(() => isProfileComplete(profile), [profile]);
@@ -189,7 +196,9 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [country, setCountry] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>(
+    isSovereign ? 'unlisted' : 'public'
+  );
 
   const stepLabels = [
     t('admin.onboarding.step1Label') || 'Store',
@@ -475,73 +484,78 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               onCountryChange={setCountry}
               onCurrencyChange={setCurrency}
               disabled={saving}
+              hideCurrency={isSovereign}
             />
           </div>
 
-          {/* Store Visibility */}
-          <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
-            <h3 className="text-xs sm:text-sm font-medium text-foreground">
-              {t('admin.onboarding.storeVisibility')}
-            </h3>
-            <div className="space-y-2">
-              {[
-                {
-                  value: 'public' as const,
-                  icon: Globe,
-                  titleKey: 'settings.visibility.public',
-                  descKey: 'settings.visibility.publicDesc',
-                },
-                {
-                  value: 'unlisted' as const,
-                  icon: Link2,
-                  titleKey: 'settings.visibility.unlisted',
-                  descKey: 'settings.visibility.unlistedDesc',
-                },
-                {
-                  value: 'private' as const,
-                  icon: Lock,
-                  titleKey: 'settings.visibility.private',
-                  descKey: 'settings.visibility.privateDesc',
-                },
-              ].map(opt => {
-                const Icon = opt.icon;
-                const selected = visibility === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    disabled={saving}
-                    onClick={() => setVisibility(opt.value)}
-                    className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-muted-foreground/30'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                        selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+          {/* Store Visibility — hidden for Sovereign (always unlisted) */}
+          {!isSovereign && (
+            <div className="border-t pt-3 sm:pt-4 space-y-2 sm:space-y-3">
+              <h3 className="text-xs sm:text-sm font-medium text-foreground">
+                {t('admin.onboarding.storeVisibility')}
+              </h3>
+              <div className="space-y-2">
+                {[
+                  {
+                    value: 'public' as const,
+                    icon: Globe,
+                    titleKey: 'settings.visibility.public',
+                    descKey: 'settings.visibility.publicDesc',
+                  },
+                  {
+                    value: 'unlisted' as const,
+                    icon: Link2,
+                    titleKey: 'settings.visibility.unlisted',
+                    descKey: 'settings.visibility.unlistedDesc',
+                  },
+                  {
+                    value: 'private' as const,
+                    icon: Lock,
+                    titleKey: 'settings.visibility.private',
+                    descKey: 'settings.visibility.privateDesc',
+                  },
+                ].map(opt => {
+                  const Icon = opt.icon;
+                  const selected = visibility === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={saving}
+                      onClick={() => setVisibility(opt.value)}
+                      className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-colors text-left w-full disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/30'
                       }`}
                     >
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{t(opt.titleKey)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
-                    </div>
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                        selected ? 'border-primary' : 'border-muted-foreground/40'
-                      }`}
-                    >
-                      {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </div>
-                  </button>
-                );
-              })}
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                          selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <Icon className="w-4.5 h-4.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{t(opt.titleKey)}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t(opt.descKey)}</p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                          selected ? 'border-primary' : 'border-muted-foreground/40'
+                        }`}
+                      >
+                        {selected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('admin.onboarding.visibilityNote')}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">{t('admin.onboarding.visibilityNote')}</p>
-          </div>
+          )}
 
           <div className="flex items-center justify-between pt-1 sm:pt-2">
             <button
@@ -604,7 +618,9 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
               },
               {
                 icon: <Coins className="w-5 h-5 text-primary" />,
-                text: t(EDITION_I18N_KEYS.featurePricing) || 'Bitcoin-family crypto pricing',
+                text: isSovereignMode()
+                  ? t('admin.onboarding.featureCryptoPricing') || 'Crypto pricing'
+                  : t('admin.onboarding.featurePricing') || 'Crypto & fiat pricing',
               },
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
@@ -679,7 +695,7 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
           )}
 
           <Link
-            href="/admin/settings/payments"
+            href={paymentsSetupPath}
             className="w-full flex items-center gap-4 rounded-xl border p-4 text-left hover:bg-accent/50 transition-colors group"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -690,7 +706,9 @@ export default function OnboardingWizard({ onComplete, onSkip }: OnboardingWizar
                 {t('admin.onboarding.setupPayments') || 'Set up payment methods'}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {t(EDITION_I18N_KEYS.setupPaymentsDesc)}
+                {fiatVisible
+                  ? t('admin.onboarding.setupPaymentsDesc')
+                  : t('admin.onboarding.setupPaymentsDescCryptoOnly')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

@@ -7,14 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AvatarCompat as Avatar } from '@/components/ui/avatar-compat';
 import { Skeleton } from '@/components/ui/skeleton-compat';
+import { ImageLightbox } from '@/components/ui/image-lightbox';
+import { ImageThumbnails } from '@/components/ui/image-thumbnails';
 import { cn } from '@/lib/utils';
 import {
   getImageUrl,
   decodeHtmlEntities,
   sanitizeHtml,
+  stripHtmlTags,
   getTokenIdFromPaymentCoin,
+  filterVisibleAcceptedCurrencies,
 } from '@mobazha/core';
-import type { Product } from '@mobazha/core';
+import type { Product, ProductSku } from '@mobazha/core';
 import { Heart, AlertTriangle } from 'lucide-react';
 import { VerifiedModeratorBadge } from './VerifiedModeratorBadge';
 import { BuyerProtectionBanner } from './BuyerProtectionBanner';
@@ -28,6 +32,10 @@ import { ReviewList } from '@/components/Review';
 import { StarRating } from '@/components/ui/star-rating';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { VariantSelector } from './VariantSelector';
+import { UniquePieceBadge } from './UniquePieceBadge';
+import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
+import { ArtListingSpecsTable } from './ArtListingSpecsTable';
+import { CollectibleTitleListingPanel } from './CollectibleTitleListingPanel';
 
 export interface ProductDetailProps {
   slug: string;
@@ -37,6 +45,12 @@ export interface ProductDetailProps {
   onMessage?: () => void;
   onCart?: () => void;
   onProductLoaded?: (product: Product | null) => void;
+  onPurchaseStateChange?: (state: {
+    quantity: number;
+    hasVariants: boolean;
+    selectedOptions: Record<string, string>;
+    selectedSku: ProductSku | null;
+  }) => void;
   isWishlist?: boolean;
   onToggleWishlist?: () => void;
 }
@@ -47,6 +61,7 @@ export function ProductDetailDesktop({
   isModal = false,
   onClose,
   onProductLoaded,
+  onPurchaseStateChange,
   isWishlist = false,
   onToggleWishlist,
 }: ProductDetailProps) {
@@ -60,6 +75,7 @@ export function ProductDetailDesktop({
     ratingsLoading,
     error,
     imageUrls,
+    usesDemoCardArt,
     priceInfo,
     compareAtPrice,
     stock,
@@ -72,12 +88,21 @@ export function ProductDetailDesktop({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    relatedListingsScopeTag,
     category,
+    isRwaToken,
+    isCollectibleTitleListing,
+    collectibleListingMeta,
+    collectibleTitleNetworkLabel,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isUniquePiece,
+    authenticityCertificateUrl,
+    artListingSpecs,
     hasVariants,
     selectedOptions,
+    selectedSku,
     unavailableVariants,
     handleSelectOption,
     quantity,
@@ -95,10 +120,23 @@ export function ProductDetailDesktop({
     t,
     renderPairedPrice,
     router,
+    isOffline,
   } = useProductDetail({ slug, peerID, isModal, onClose, onProductLoaded });
 
+  React.useEffect(() => {
+    onPurchaseStateChange?.({
+      quantity,
+      hasVariants,
+      selectedOptions,
+      selectedSku,
+    });
+  }, [onPurchaseStateChange, quantity, hasVariants, selectedOptions, selectedSku]);
+
   const displayAcceptedCurrencies = React.useMemo(
-    () => acceptedCurrencies.map(coin => getTokenIdFromPaymentCoin(coin) || coin),
+    () =>
+      filterVisibleAcceptedCurrencies(acceptedCurrencies).map(
+        coin => getTokenIdFromPaymentCoin(coin) || coin
+      ),
     [acceptedCurrencies]
   );
 
@@ -121,6 +159,11 @@ export function ProductDetailDesktop({
 
   // 错误状态
   if (error || !product) {
+    const offlineMessage = isOffline
+      ? t('product.storeOffline', {
+          defaultValue: 'This store is currently offline. Please try again later.',
+        })
+      : null;
     return (
       <div
         className={`flex items-center justify-center ${isModal ? 'min-h-[300px]' : 'min-h-[60vh]'}`}
@@ -136,10 +179,16 @@ export function ProductDetailDesktop({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              d={
+                isOffline
+                  ? 'M18.364 5.636a9 9 0 11-12.728 12.728 9 9 0 0112.728-12.728M12 9v4m0 4h.01'
+                  : 'M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              }
             />
           </svg>
-          <p className="text-muted-foreground mb-4">{error || t('product.notFound')}</p>
+          <p className="text-muted-foreground mb-4">
+            {offlineMessage || error || t('product.notFound')}
+          </p>
           {isModal ? (
             <Button onClick={onClose}>{t('common.close')}</Button>
           ) : (
@@ -152,8 +201,36 @@ export function ProductDetailDesktop({
     );
   }
 
+  const purchaseDisabled =
+    isOffline || stock === 0 || (!__SOVEREIGN__ && !paymentAvailable) || isRwaToken;
+  const showBuyNow = !purchaseDisabled;
+
   return (
     <div className={isModal ? 'overflow-y-auto max-h-[85vh]' : ''} data-testid="product-detail">
+      {/* Offline banner */}
+      {isOffline && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
+          <svg
+            className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            {t('product.offlineBanner', {
+              defaultValue:
+                'This seller is currently offline. You can browse the listing but purchasing is unavailable until they come back online.',
+            })}
+          </p>
+        </div>
+      )}
       {/* Cart success toast */}
       {cartSuccess && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -194,19 +271,21 @@ export function ProductDetailDesktop({
                 </span>
               </div>
             </Link>
-            <HStack gap="xs" className="flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-11 px-3 text-xs sm:h-9"
-                onClick={() => openChatWithVendor()}
-              >
-                {t('profile.message')}
-              </Button>
-              <Button variant="outline" size="sm" className="h-11 px-3 text-xs sm:h-9">
-                {t('profile.follow')}
-              </Button>
-            </HStack>
+            {!__SOVEREIGN__ && (
+              <HStack gap="xs" className="flex-shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 px-3 text-xs sm:h-9"
+                  onClick={() => openChatWithVendor()}
+                >
+                  {t('profile.message')}
+                </Button>
+                <Button variant="outline" size="sm" className="h-11 px-3 text-xs sm:h-9">
+                  {t('profile.follow')}
+                </Button>
+              </HStack>
+            )}
           </div>
         </div>
       )}
@@ -255,7 +334,7 @@ export function ProductDetailDesktop({
                   <img
                     src={imageUrls[selectedImage] || imageUrls[0]}
                     alt={product.item.title}
-                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal ? 'object-contain' : 'object-cover'}`}
+                    className={`w-full h-full transition-transform group-hover:scale-105 ${isModal || usesDemoCardArt ? 'object-contain' : 'object-cover'}`}
                   />
                   {/* 放大提示 */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -293,27 +372,19 @@ export function ProductDetailDesktop({
             {/* Thumbnails & View Photos */}
             <div className="flex items-center gap-2 sm:gap-3">
               {imageUrls.length > 1 && (
-                <div className="flex gap-2 sm:gap-3 overflow-x-auto flex-1">
-                  {imageUrls.slice(0, isModal ? 4 : imageUrls.length).map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      aria-label={`View image ${index + 1}`}
-                      data-testid={`product-detail-thumbnail-${index}`}
-                      className={`flex-shrink-0 ${isModal ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-md sm:rounded-lg overflow-hidden border-2 transition-all touch-feedback ${
-                        selectedImage === index
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-transparent hover:border-border'
-                      }`}
-                    >
-                      <img
-                        src={image}
-                        alt={`${product.item.title} - Image ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
+                <ImageThumbnails
+                  imageUrls={imageUrls}
+                  activeIndex={selectedImage}
+                  onSelect={setSelectedImage}
+                  altPrefix={`${product.item.title} image`}
+                  className="flex-1 gap-2 sm:gap-3"
+                  itemClassName={cn(
+                    'touch-feedback rounded-md sm:rounded-lg',
+                    isModal ? 'h-14 w-14' : 'h-16 w-16 sm:h-20 sm:w-20'
+                  )}
+                  dataTestIdPrefix="product-detail-thumbnail"
+                  maxVisible={isModal ? 4 : undefined}
+                />
               )}
               {/* 查看图片链接 */}
               {imageUrls.length > 0 && (
@@ -357,6 +428,16 @@ export function ProductDetailDesktop({
                   {averageRating.toFixed(1)} ({ratingCount} {t('product.reviews')})
                 </span>
               </HStack>
+              {product.item.shortDescription?.trim() && (
+                <p
+                  className={cn(
+                    'text-muted-foreground leading-snug',
+                    isModal ? 'text-xs mt-1.5 line-clamp-2' : 'text-sm mt-2 line-clamp-3'
+                  )}
+                >
+                  {stripHtmlTags(product.item.shortDescription)}
+                </p>
+              )}
             </div>
 
             {/* Price */}
@@ -381,7 +462,29 @@ export function ProductDetailDesktop({
               )}
             </div>
 
-            <BuyerProtectionBadge variant="inline" className="mt-1" />
+            {(isUniquePiece || authenticityCertificateUrl) && (
+              <div className={cn('flex flex-col', isModal ? 'gap-2' : 'gap-2.5')}>
+                {isUniquePiece && <UniquePieceBadge compact={isModal} />}
+                {authenticityCertificateUrl && (
+                  <AuthenticityCertificateCard
+                    certificateUrl={authenticityCertificateUrl}
+                    compact={isModal}
+                  />
+                )}
+              </div>
+            )}
+
+            {isCollectibleTitleListing && collectibleListingMeta ? (
+              <CollectibleTitleListingPanel
+                meta={collectibleListingMeta}
+                titleNetworkLabel={collectibleTitleNetworkLabel}
+                compact={isModal}
+              />
+            ) : null}
+
+            {!__SOVEREIGN__ && !isCollectibleTitleListing && (
+              <BuyerProtectionBadge variant="inline" className="mt-1" />
+            )}
 
             {/* Applicable discounts */}
             {applicableDiscounts.length > 0 && (
@@ -428,8 +531,8 @@ export function ProductDetailDesktop({
               </div>
             )}
 
-            {/* Shipping - 仅对实物商品显示 */}
-            {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+            {/* Shipping - physical goods only; not collectible digital-title listings */}
+            {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
               <div
                 className={cn(
                   'flex items-center gap-2 flex-wrap',
@@ -528,8 +631,8 @@ export function ProductDetailDesktop({
               )}
             </div>
 
-            {/* RWA 资产详情 - 仅对 RWA_TOKEN 类型商品显示 */}
-            {product.metadata?.contractType === 'RWA_TOKEN' && (
+            {/* RWA asset detail — legacy EVM flow only */}
+            {product.metadata?.contractType === 'RWA_TOKEN' && !isCollectibleTitleListing && (
               <RwaAssetDetail
                 product={product}
                 compact={isModal}
@@ -572,10 +675,12 @@ export function ProductDetailDesktop({
             )}
 
             {/* Verified Moderator Badge */}
-            <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />
+            {!__SOVEREIGN__ && <VerifiedModeratorBadge moderatorPeerIDs={product.moderators} />}
 
             {/* Buyer Protection */}
-            {!isOwnProduct && <BuyerProtectionBanner />}
+            {!isOwnProduct && !__SOVEREIGN__ && !isCollectibleTitleListing && (
+              <BuyerProtectionBanner />
+            )}
 
             {/* Desktop action card: seller actions vs buyer purchase */}
             {isOwnProduct ? (
@@ -663,7 +768,7 @@ export function ProductDetailDesktop({
                   (stock === 0 || !paymentAvailable) && 'border-destructive/30 bg-destructive/5'
                 )}
               >
-                {!paymentAvailable && stock > 0 && (
+                {!paymentAvailable && stock > 0 && !isRwaToken && (
                   <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
                     <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
                     <div>
@@ -674,6 +779,12 @@ export function ProductDetailDesktop({
                         {t('payment.paymentUnavailableDesc')}
                       </p>
                     </div>
+                  </div>
+                )}
+                {isRwaToken && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+                    <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted-foreground">{t('payment.rwaNotSupported')}</p>
                   </div>
                 )}
                 {stock === 0 && (
@@ -698,125 +809,158 @@ export function ProductDetailDesktop({
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {t('product.quantity')}
-                  </span>
-                  <HStack gap="sm" align="center">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Decrease quantity"
-                      data-testid="product-detail-qty-decrease"
-                      className={cn(
-                        'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 || !paymentAvailable
-                          ? 'opacity-50 cursor-not-allowed bg-muted'
-                          : 'hover:bg-muted'
-                      )}
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      max={stock}
-                      value={quantity}
-                      disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Quantity"
-                      data-testid="product-detail-qty-input"
-                      onChange={e => {
-                        const val = parseInt(e.target.value, 10);
-                        if (!isNaN(val) && val >= 1) {
-                          setQuantity(Math.min(stock, val));
-                        }
-                      }}
-                      onKeyDown={e => {
-                        if (stock === 0) return;
-                        if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setQuantity(prev => Math.min(stock, prev + 1));
-                        } else if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setQuantity(prev => Math.max(1, prev - 1));
-                        }
-                      }}
-                      className={cn(
-                        'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-                        stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
-                      )}
-                    />
-                    <button
-                      onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                      disabled={stock === 0 || !paymentAvailable}
-                      aria-label="Increase quantity"
-                      data-testid="product-detail-qty-increase"
-                      className={cn(
-                        'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
-                        stock === 0 || !paymentAvailable
-                          ? 'opacity-50 cursor-not-allowed bg-muted'
-                          : 'hover:bg-muted'
-                      )}
-                    >
-                      +
-                    </button>
-                  </HStack>
+                  {!isCollectibleTitleListing ? (
+                    <>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {t('product.quantity')}
+                      </span>
+                      <HStack gap="sm" align="center">
+                        <button
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          disabled={stock === 0 || !paymentAvailable}
+                          aria-label={t('cart.decreaseQuantity')}
+                          data-testid="product-detail-qty-decrease"
+                          className={cn(
+                            'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                            stock === 0 || !paymentAvailable
+                              ? 'opacity-50 cursor-not-allowed bg-muted'
+                              : 'hover:bg-muted'
+                          )}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max={stock}
+                          value={quantity}
+                          disabled={stock === 0 || !paymentAvailable}
+                          aria-label={t('cart.quantity')}
+                          data-testid="product-detail-qty-input"
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1) {
+                              setQuantity(Math.min(stock, val));
+                            }
+                          }}
+                          onKeyDown={e => {
+                            if (stock === 0) return;
+                            if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              setQuantity(prev => Math.min(stock, prev + 1));
+                            } else if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              setQuantity(prev => Math.max(1, prev - 1));
+                            }
+                          }}
+                          className={cn(
+                            'w-14 h-8 text-center font-medium text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+                            stock === 0 && 'opacity-50 cursor-not-allowed bg-muted'
+                          )}
+                        />
+                        <button
+                          onClick={() => setQuantity(Math.min(stock, quantity + 1))}
+                          disabled={stock === 0 || !paymentAvailable}
+                          aria-label={t('cart.increaseQuantity')}
+                          data-testid="product-detail-qty-increase"
+                          className={cn(
+                            'w-10 h-10 rounded-lg border border-border flex items-center justify-center touch-feedback transition-colors',
+                            stock === 0 || !paymentAvailable
+                              ? 'opacity-50 cursor-not-allowed bg-muted'
+                              : 'hover:bg-muted'
+                          )}
+                        >
+                          +
+                        </button>
+                      </HStack>
+                    </>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {t('product.collectibleTitle.purchaseTitle')}
+                    </span>
+                  )}
                 </div>
 
-                {stock > 0 && (
+                {stock > 0 && !isCollectibleTitleListing && (
                   <span className="text-xs text-muted-foreground">
                     {stock} {t('product.inStock')}
                   </span>
                 )}
 
                 <VStack gap="xs">
-                  <Button
-                    size="default"
-                    className={cn(
-                      'w-full touch-feedback',
-                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
-                    )}
-                    onClick={handleAddToCart}
-                    disabled={stock === 0 || !paymentAvailable}
-                    data-testid="product-detail-add-to-cart"
-                  >
-                    {cartSuccess ? (
-                      <span className="flex items-center gap-2">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                  {isCollectibleTitleListing ? (
+                    <Button
+                      size="default"
+                      className={cn(
+                        'w-full touch-feedback',
+                        purchaseDisabled && 'opacity-50 cursor-not-allowed'
+                      )}
+                      onClick={handleBuyNow}
+                      disabled={purchaseDisabled}
+                      data-testid="product-detail-purchase-title"
+                    >
+                      {isOffline
+                        ? t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                        : !paymentAvailable
+                          ? t('payment.paymentUnavailable')
+                          : stock === 0
+                            ? t('product.outOfStock')
+                            : t('product.collectibleTitle.purchaseTitle')}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        size="default"
+                        className={cn(
+                          'w-full touch-feedback',
+                          purchaseDisabled && 'opacity-50 cursor-not-allowed'
+                        )}
+                        onClick={handleAddToCart}
+                        disabled={purchaseDisabled}
+                        data-testid="product-detail-add-to-cart"
+                      >
+                        {cartSuccess ? (
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            {t('product.addedToCart')}
+                          </span>
+                        ) : isOffline ? (
+                          t('product.sellerOffline', { defaultValue: 'Seller Offline' })
+                        ) : !paymentAvailable ? (
+                          t('payment.paymentUnavailable')
+                        ) : isRwaToken ? (
+                          t('payment.rwaNotSupported')
+                        ) : stock === 0 ? (
+                          t('product.outOfStock')
+                        ) : (
+                          t('product.addToCart')
+                        )}
+                      </Button>
+                      {showBuyNow && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="w-full touch-feedback"
+                          onClick={handleBuyNow}
+                          data-testid="product-detail-buy-now"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        {t('product.addedToCart')}
-                      </span>
-                    ) : !paymentAvailable ? (
-                      t('payment.paymentUnavailable')
-                    ) : stock === 0 ? (
-                      t('product.outOfStock')
-                    ) : (
-                      t('product.addToCart')
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="default"
-                    className={cn(
-                      'w-full touch-feedback',
-                      (stock === 0 || !paymentAvailable) && 'opacity-50 cursor-not-allowed'
-                    )}
-                    onClick={handleBuyNow}
-                    disabled={stock === 0 || !paymentAvailable}
-                    data-testid="product-detail-buy-now"
-                  >
-                    {t('product.buyNow')}
-                  </Button>
+                          {t('product.buyNow')}
+                        </Button>
+                      )}
+                    </>
+                  )}
                   {onToggleWishlist && (
                     <Button
                       variant="ghost"
@@ -897,6 +1041,13 @@ export function ProductDetailDesktop({
         >
           {/* Description */}
           <div className={isModal ? '' : 'lg:col-span-2'}>
+            {artListingSpecs.length > 0 && (
+              <ArtListingSpecsTable
+                specs={artListingSpecs}
+                compact={isModal}
+                className={cn(isModal ? 'mb-3' : 'mb-4')}
+              />
+            )}
             <Card className={cn('p-4', !isModal && 'sm:p-6')}>
               <h2
                 className={cn(
@@ -917,8 +1068,8 @@ export function ProductDetailDesktop({
               />
             </Card>
 
-            {/* Shipping Options - 仅对实物商品显示 */}
-            {product.metadata?.contractType === 'PHYSICAL_GOOD' && (
+            {/* Shipping Options - physical goods only */}
+            {product.metadata?.contractType === 'PHYSICAL_GOOD' && !isCollectibleTitleListing && (
               <ShippingOptionsSection shippingProfile={product.shippingProfile} />
             )}
           </div>
@@ -966,6 +1117,7 @@ export function ProductDetailDesktop({
               vendorPeerID={vendorPeerID}
               vendorName={vendor?.name}
               currentSlug={product.slug}
+              scopeTag={relatedListingsScopeTag}
               maxItems={isModal ? 4 : 6}
               compact={isModal}
             />
@@ -976,139 +1128,17 @@ export function ProductDetailDesktop({
       {/* 移动端底部操作栏占位空间 */}
       <div className="h-20 lg:hidden" />
 
-      {/* 图片预览模态框 */}
-      {isImagePreviewOpen && imageUrls.length > 0 && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-          onClick={() => setIsImagePreviewOpen(false)}
-          onKeyDown={e => {
-            if (e.key === 'Escape') {
-              setIsImagePreviewOpen(false);
-            } else if (e.key === 'ArrowLeft') {
-              setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-            } else if (e.key === 'ArrowRight') {
-              setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-            }
-          }}
-          tabIndex={0}
-          ref={el => el?.focus()}
-        >
-          {/* 关闭按钮 */}
-          <button
-            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
-            onClick={() => setIsImagePreviewOpen(false)}
-            aria-label="Close image preview"
-            data-testid="product-detail-preview-close"
-          >
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-
-          {/* 图片计数 */}
-          <div className="absolute top-4 left-4 text-white/80 text-sm">
-            {selectedImage + 1} / {imageUrls.length}
-          </div>
-
-          {/* 主图片 */}
-          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img
-              src={imageUrls[selectedImage]}
-              alt={product.item.title}
-              className="max-w-full max-h-[85vh] object-contain"
-            />
-          </div>
-
-          {/* 左右切换按钮 */}
-          {imageUrls.length > 1 && (
-            <>
-              <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-                }}
-                aria-label="Previous image"
-                data-testid="product-detail-preview-prev"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                onClick={e => {
-                  e.stopPropagation();
-                  setSelectedImage(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-                }}
-                aria-label="Next image"
-                data-testid="product-detail-preview-next"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </>
-          )}
-
-          {/* 底部缩略图 */}
-          {imageUrls.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 rounded-lg p-2">
-              {imageUrls.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={e => {
-                    e.stopPropagation();
-                    setSelectedImage(index);
-                  }}
-                  aria-label={`View image ${index + 1}`}
-                  className={`w-12 h-12 rounded overflow-hidden border-2 transition-all ${
-                    selectedImage === index
-                      ? 'border-white'
-                      : 'border-transparent opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.item.title} - Thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <ImageLightbox
+        imageUrls={imageUrls}
+        open={isImagePreviewOpen}
+        selectedIndex={selectedImage}
+        onSelectIndex={setSelectedImage}
+        onOpenChange={setIsImagePreviewOpen}
+        variant="product"
+        altPrefix={product.item.title}
+        ariaLabel="Product image preview"
+        testIdPrefix="product-detail-preview"
+      />
     </div>
   );
 }

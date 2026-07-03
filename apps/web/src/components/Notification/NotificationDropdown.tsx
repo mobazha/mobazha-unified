@@ -19,12 +19,15 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
 import {
   useNotifications,
   useUnreadNotificationCount,
   useI18n,
   useCurrency,
   getNotificationRoute,
+  groupNotificationsForDisplay,
+  formatNotificationCounterparty,
 } from '@mobazha/core';
 import type { Notification } from '@mobazha/core';
 import { cn } from '@/lib/utils';
@@ -32,8 +35,23 @@ import { cn } from '@/lib/utils';
 /**
  * 获取通知图标
  */
-function getNotificationIcon(type: string) {
+function getNotificationIcon(notification: Notification) {
+  const { type, source, data } = notification;
   const iconClass = 'h-4 w-4';
+
+  if (source === 'marketplace-review') {
+    const status = data?.marketplaceReview?.status;
+    if (status === 'approved') {
+      return <CheckCircle className={cn(iconClass, 'text-success')} />;
+    }
+    if (status === 'rejected') {
+      return <XCircle className={cn(iconClass, 'text-error')} />;
+    }
+    if (status === 'suspended') {
+      return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
+    }
+    return <Bell className={cn(iconClass, 'text-muted-foreground')} />;
+  }
 
   switch (type) {
     case 'order.created':
@@ -44,6 +62,7 @@ function getNotificationIcon(type: string) {
       return <CreditCard className={cn(iconClass, 'text-primary')} />;
     case 'order.confirmed':
     case 'order.completed':
+    case 'order.rated':
       return <CheckCircle className={cn(iconClass, 'text-success')} />;
     case 'order.declined':
     case 'order.cancelled':
@@ -53,7 +72,7 @@ function getNotificationIcon(type: string) {
       return <XCircle className={cn(iconClass, 'text-error')} />;
     case 'order.stale_warning':
       return <AlertTriangle className={cn(iconClass, 'text-warning')} />;
-    case 'order.fulfilled':
+    case 'order.shipped':
       return <Package className={cn(iconClass, 'text-primary')} />;
     case 'dispute.opened':
     case 'dispute.case_open':
@@ -92,15 +111,6 @@ function formatTimeAgo(
 }
 
 /**
- * 截断 Peer ID
- */
-function truncatePeerId(peerId?: string): string {
-  if (!peerId) return '';
-  if (peerId.length <= 12) return peerId;
-  return `${peerId.slice(0, 12)}...`;
-}
-
-/**
  * 通知项组件（增强版）
  */
 function NotificationItem({
@@ -115,9 +125,10 @@ function NotificationItem({
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const { renderPairedPrice } = useCurrency();
-  const icon = getNotificationIcon(notification.type);
+  const icon = getNotificationIcon(notification);
   const route = getNotificationRoute(notification);
   const { data, read, timestamp, type, message } = notification;
+  const counterpartyLabel = formatNotificationCounterparty(data, t);
 
   const isOrderType = type.startsWith('order.') || type.startsWith('payment.');
 
@@ -152,14 +163,11 @@ function NotificationItem({
             read ? 'text-text-secondary' : 'text-text-primary font-medium'
           )}
         >
-          {isFollowType && (data?.buyerName || data?.peerID) && (
-            <span className="text-primary font-medium">
-              {data.buyerName || truncatePeerId(data.peerID)}{' '}
-            </span>
+          {isFollowType && counterpartyLabel && (
+            <span className="text-primary font-medium">{counterpartyLabel} </span>
           )}
           {message}
         </p>
-
         {/* 订单商品预览 */}
         {isOrderType && data?.productTitle && (
           <div className="flex items-center gap-2 mt-1.5">
@@ -250,11 +258,18 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
   );
 
   const handleMarkAllAsRead = useCallback(async () => {
-    await markAllAsRead();
-  }, [markAllAsRead]);
+    const result = await markAllAsRead();
+    if (!result.success) {
+      toast({
+        title: t('common.error'),
+        description: result.error ?? t('notifications.markAllReadFailed'),
+        variant: 'destructive',
+      });
+    }
+  }, [markAllAsRead, t]);
 
-  // 只显示最近 10 条通知
-  const recentNotifications = apiNotifications.slice(0, 10);
+  // 聚合后显示最近条目（下拉只做摘要）
+  const displayItems = groupNotificationsForDisplay(apiNotifications).slice(0, 10);
   const hasUnread = unreadCount > 0;
 
   return (
@@ -302,11 +317,11 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
         {/* Notification List */}
         <ScrollArea className="h-[400px]">
-          {isLoading && recentNotifications.length === 0 ? (
+          {isLoading && displayItems.length === 0 ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : recentNotifications.length === 0 ? (
+          ) : displayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <Bell className="h-10 w-10 text-text-tertiary mb-3" />
               <p className="text-text-secondary font-medium">
@@ -316,15 +331,43 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
             </div>
           ) : (
             <div className="p-2">
-              {recentNotifications.map(notification => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={handleMarkAsRead}
-                  onClick={() => setOpen(false)}
-                  t={t}
-                />
-              ))}
+              {displayItems.map(item => {
+                if (item.kind === 'order-group') {
+                  const groupRead = !item.hasUnread;
+                  return (
+                    <NotificationItem
+                      key={item.id}
+                      notification={{
+                        ...item.latest,
+                        read: groupRead,
+                        message: t('notifications.orderGroup.summary', {
+                          count: item.items.length,
+                          latest: item.latest.message,
+                        }),
+                      }}
+                      onMarkAsRead={() => {
+                        item.items
+                          .filter(n => !n.read)
+                          .forEach(n => {
+                            void handleMarkAsRead(n.id);
+                          });
+                      }}
+                      onClick={() => setOpen(false)}
+                      t={t}
+                    />
+                  );
+                }
+
+                return (
+                  <NotificationItem
+                    key={item.notification.id}
+                    notification={item.notification}
+                    onMarkAsRead={handleMarkAsRead}
+                    onClick={() => setOpen(false)}
+                    t={t}
+                  />
+                );
+              })}
             </div>
           )}
         </ScrollArea>

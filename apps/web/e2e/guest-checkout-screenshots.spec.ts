@@ -12,9 +12,10 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
+import { runtimeConfigScript } from './fixtures/runtime-config';
 
 const OUT = 'test-results/screenshots/guest-checkout';
-const MOCK_ORDER_TOKEN = 'mock';
+const MOCK_ORDER_TOKEN = 'gst_test_order';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -32,7 +33,7 @@ const MOCK_GUEST_ORDER_RESPONSE = {
   items: [
     {
       listingHash: 'QmTestHash123',
-      title: 'Premium Wireless Headphones',
+      listingTitle: 'Premium Wireless Headphones',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -43,7 +44,7 @@ const MOCK_GUEST_ORDER_STATUS = {
   ...MOCK_GUEST_ORDER_RESPONSE,
   state: 'AWAITING_PAYMENT',
   confirmations: 0,
-  requiredConfirmations: 12,
+  requiredConfs: 12,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -87,11 +88,14 @@ async function mockAppShell(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body:
-          'window.__RUNTIME_CONFIG__ = { ' +
-          'features: { guestCheckout: { effective: true, overridable: [] } }, ' +
-          'guestCheckoutEnabled: true ' +
-          '};',
+        body: runtimeConfigScript({
+          deployment: 'standalone',
+          guestCheckout: true,
+          paymentMethods: [
+            { id: 'BTC', kind: 'crypto', flow: 'address-transfer' },
+            { id: 'ETH', kind: 'crypto', flow: 'address-transfer' },
+          ],
+        }),
       })
   );
   await page.route(
@@ -328,9 +332,9 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
 
   test('06 — Pending confirmation', async ({ page }) => {
     await mockAppShell(page);
-    await mockGuestAPIs(page, 'PENDING_CONFIRMATION', {
+    await mockGuestAPIs(page, 'PAYMENT_DETECTED', {
       confirmations: 3,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       txHash: '0xabc123def456789012345678901234567890abcdef1234567890abcdef123456',
     });
 
@@ -344,7 +348,7 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
     await mockAppShell(page);
     await mockGuestAPIs(page, 'FUNDED', {
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       txHash: '0xabc123def456789012345678901234567890abcdef1234567890abcdef123456',
     });
 
@@ -356,9 +360,9 @@ test.describe('Guest Checkout Screenshots — Order Status', () => {
 
   test('08 — Fulfilled (tracking)', async ({ page }) => {
     await mockAppShell(page);
-    await mockGuestAPIs(page, 'FULFILLED', {
+    await mockGuestAPIs(page, 'SHIPPED', {
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       trackingNumber: 'UPS1234567890',
       carrier: 'UPS',
     });
@@ -405,8 +409,10 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+    await page.goto('/admin/payments');
+    const guestSection = page.locator('[data-testid="admin-guest-checkout"]');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible({
       timeout: 15000,
     });
     await page.waitForTimeout(800);
@@ -418,8 +424,10 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+    await page.goto('/admin/payments');
+    const guestSection = page.locator('[data-testid="admin-guest-checkout"]');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible({
       timeout: 15000,
     });
     await page.waitForTimeout(500);
@@ -434,8 +442,10 @@ test.describe('Guest Checkout Screenshots — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
-    await expect(page.locator('[data-testid="admin-guest-checkout"]')).toBeVisible({
+    await page.goto('/admin/payments');
+    const guestSection = page.locator('[data-testid="admin-guest-checkout"]');
+    await guestSection.scrollIntoViewIfNeeded();
+    await expect(guestSection).toBeVisible({
       timeout: 15000,
     });
     await page.waitForTimeout(500);

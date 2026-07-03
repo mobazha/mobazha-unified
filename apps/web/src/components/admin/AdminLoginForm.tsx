@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { useUserStore, getEnvConfig, useI18n, acquireSaaSToken } from '@mobazha/core';
 import { MobazhaLogo } from '@/components/ui/MobazhaLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher';
@@ -26,7 +25,6 @@ interface AdminLoginFormProps {
  * admin ownership (claims.Id == ownerUserID).
  */
 export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps) {
-  const router = useRouter();
   const { login, loginWithToken, isLoading, error } = useUserStore();
   const { t } = useI18n();
 
@@ -47,9 +45,8 @@ export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps
     }
 
     const success = await login({ username: presetUsername, password });
-    if (success) {
-      router.refresh();
-    }
+    if (!success) return;
+    // userStore auth update re-renders AdminLayout; avoid router.refresh() (full reload on Vite).
   };
 
   const handleSocialLogin = async () => {
@@ -62,9 +59,7 @@ export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps
         return;
       }
       const success = await loginWithToken(result.token);
-      if (success) {
-        router.refresh();
-      } else {
+      if (!success) {
         setLocalError(
           t('login.socialLoginNotAdmin', {
             defaultValue: 'This account does not have admin access to this store.',
@@ -82,18 +77,13 @@ export function AdminLoginForm({ casdoorAvailable = false }: AdminLoginFormProps
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[var(--hero-gradient-from)] via-[var(--hero-gradient-via)] to-[var(--hero-gradient-to)]">
-      {/* Top bar with language switcher */}
-      <div className="flex justify-end p-4">
-        <LanguageSwitcher
-          compact
-          className="[&>button]:bg-white/10 [&>button]:text-white [&>button]:hover:bg-white/20"
-        />
-      </div>
-
       {/* Centered login card */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-16">
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <div className="px-6 py-8 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+          <div className="px-6 py-6 bg-black/30 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10">
+            <div className="flex justify-end mb-4">
+              <LanguageSwitcher className="[&>button]:bg-white/10 [&>button]:text-white [&>button]:hover:bg-white/20 [&>button]:border [&>button]:border-white/15 [&>button]:shadow-sm" />
+            </div>
             {/* Logo & Store name */}
             <div className="text-center mb-6">
               <MobazhaLogo size={48} className="text-white mx-auto mb-3" />

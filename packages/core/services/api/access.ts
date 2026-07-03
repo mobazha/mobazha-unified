@@ -592,14 +592,12 @@ export async function reviewAccessRequest(
 export async function checkStoreAccess(
   storePeerID: string,
   requestorPeerID: string,
-  groupPlatform?: string,
-  groupChatID?: string
+  marketplaceID?: string
 ): Promise<StoreAccessCheckResult> {
   let url = `${getHostingUrl()}${HOSTING_API.STORE_ACCESS_CHECK}?storePeerID=${storePeerID}&requestorPeerID=${requestorPeerID}`;
 
-  // 添加群组上下文参数（如果有）
-  if (groupPlatform && groupChatID) {
-    url += `&groupPlatform=${encodeURIComponent(groupPlatform)}&groupChatID=${encodeURIComponent(groupChatID)}`;
+  if (marketplaceID) {
+    url += `&marketplaceID=${encodeURIComponent(marketplaceID)}`;
   }
 
   const response = await fetch(url, {
@@ -735,7 +733,7 @@ export async function getGroupListings(
   });
 
   const response = await fetch(
-    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_LISTINGS(platform, chatId)}?${queryParams}`,
+    `${getHostingUrl()}${HOSTING_API.COMMUNITY_MARKETPLACE_PLATFORM_LISTINGS(platform, chatId)}?${queryParams}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -761,7 +759,7 @@ export async function getGroupSellers(
   if (filters.userID) queryParams.set('userID', filters.userID);
 
   const response = await fetch(
-    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLERS(platform, chatId)}?${queryParams}`,
+    `${getHostingUrl()}${HOSTING_API.COMMUNITY_MARKETPLACE_PLATFORM_SELLERS(platform, chatId)}?${queryParams}`,
     {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -789,7 +787,7 @@ export async function applyAsSeller(
   data: ApplyAsSellerRequest
 ): Promise<GroupSeller> {
   const response = await fetch(
-    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLERS_APPLY(platform, chatId)}`,
+    `${getHostingUrl()}${HOSTING_API.COMMUNITY_MARKETPLACE_PLATFORM_SELLERS_APPLY(platform, chatId)}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -813,7 +811,7 @@ export async function reviewSeller(
   data: ReviewSellerRequest
 ): Promise<GroupSeller> {
   const response = await fetch(
-    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_SELLER_REVIEW(platform, chatId, String(sellerId))}`,
+    `${getHostingUrl()}${HOSTING_API.COMMUNITY_MARKETPLACE_PLATFORM_SELLER_REVIEW(platform, chatId, String(sellerId))}`,
     {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -836,7 +834,7 @@ export async function checkGroupAdmin(
   platformUserID: string
 ): Promise<{ isAdmin: boolean }> {
   const response = await fetch(
-    `${getHostingUrl()}${HOSTING_API.GROUP_MARKETPLACE_CHECK_ADMIN(platform, chatId)}`,
+    `${getHostingUrl()}${HOSTING_API.COMMUNITY_MARKETPLACE_PLATFORM_CHECK_ADMIN(platform, chatId)}`,
     {
       method: 'POST',
       headers: getAuthHeaders(),

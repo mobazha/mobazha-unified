@@ -30,6 +30,7 @@ interface CountryCurrencySelectorProps {
   onCurrencyChange: (currency: string) => void;
   disabled?: boolean;
   autoLinkCurrency?: boolean;
+  hideCurrency?: boolean;
 }
 
 export default function CountryCurrencySelector({
@@ -39,6 +40,7 @@ export default function CountryCurrencySelector({
   onCurrencyChange,
   disabled = false,
   autoLinkCurrency = true,
+  hideCurrency = false,
 }: CountryCurrencySelectorProps) {
   const { t, locale } = useI18n();
   const userOverrodeCurrency = useRef(false);
@@ -83,7 +85,7 @@ export default function CountryCurrencySelector({
   }, []);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className={hideCurrency ? '' : 'grid grid-cols-2 gap-3'}>
       <div className="space-y-1.5 sm:space-y-2">
         <Label className="text-xs sm:text-sm font-medium text-foreground">
           {t('onboarding.country')}
@@ -114,35 +116,37 @@ export default function CountryCurrencySelector({
         </Select>
       </div>
 
-      <div className="space-y-1.5 sm:space-y-2">
-        <Label className="text-xs sm:text-sm font-medium text-foreground">
-          {t('onboarding.currency') || 'Display Currency'}
-        </Label>
-        <Select value={currency} onValueChange={handleCurrencyChange} disabled={disabled}>
-          <SelectTrigger className="w-full" data-testid="currency-select">
-            <SelectValue placeholder={t('onboarding.currencyPlaceholder') || 'Select'} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>{t('onboarding.popularCurrencies') || 'Popular'}</SelectLabel>
-              {popularCurrencies.map(c => (
-                <SelectItem key={c.code} value={c.code}>
-                  {currencyLabel(c)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-            <SelectSeparator />
-            <SelectGroup>
-              <SelectLabel>{t('onboarding.fiatCurrencies') || 'Fiat'}</SelectLabel>
-              {otherFiatCurrencies.map(c => (
-                <SelectItem key={c.code} value={c.code}>
-                  {currencyLabel(c)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
+      {!hideCurrency && (
+        <div className="space-y-1.5 sm:space-y-2">
+          <Label className="text-xs sm:text-sm font-medium text-foreground">
+            {t('onboarding.currency') || 'Display Currency'}
+          </Label>
+          <Select value={currency} onValueChange={handleCurrencyChange} disabled={disabled}>
+            <SelectTrigger className="w-full" data-testid="currency-select">
+              <SelectValue placeholder={t('onboarding.currencyPlaceholder') || 'Select'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>{t('onboarding.popularCurrencies') || 'Popular'}</SelectLabel>
+                {popularCurrencies.map(c => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {currencyLabel(c)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>{t('onboarding.fiatCurrencies') || 'Fiat'}</SelectLabel>
+                {otherFiatCurrencies.map(c => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {currencyLabel(c)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }

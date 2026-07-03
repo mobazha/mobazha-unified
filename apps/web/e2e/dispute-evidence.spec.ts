@@ -86,8 +86,8 @@ test.describe('Dispute Evidence — Upload Modal', () => {
   async function setupOrderForDispute(page: Page) {
     await setupMockAuth(page);
 
-    // Use a FULFILLED order (buyer can open dispute on it)
-    await mockOrderDetailByState(page, 'FULFILLED');
+    // Use a SHIPPED order (buyer can open dispute on it)
+    await mockOrderDetailByState(page, 'SHIPPED');
     await mockImageRoutes(page);
     await page.goto('/orders/QmFulfilled001?type=purchase');
     await page.waitForLoadState('domcontentloaded');

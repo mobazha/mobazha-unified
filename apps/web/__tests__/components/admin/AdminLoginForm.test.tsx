@@ -5,11 +5,6 @@ import React from 'react';
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 const mockLogin = vi.fn();
-const mockRefresh = vi.fn();
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: mockRefresh }),
-}));
 
 vi.mock('next/link', () => ({
   default: ({
@@ -56,7 +51,6 @@ import { AdminLoginForm } from '../../../src/components/admin/AdminLoginForm';
 describe('AdminLoginForm', () => {
   beforeEach(() => {
     mockLogin.mockReset();
-    mockRefresh.mockReset();
   });
 
   it('renders password input and submit button', () => {
@@ -109,7 +103,7 @@ describe('AdminLoginForm', () => {
     });
   });
 
-  it('calls router.refresh() on successful login', async () => {
+  it('does not call router.refresh on successful login (auth state re-renders layout)', async () => {
     mockLogin.mockResolvedValue(true);
     render(<AdminLoginForm />);
 
@@ -118,7 +112,7 @@ describe('AdminLoginForm', () => {
     fireEvent.click(screen.getByTestId('admin-login-submit'));
 
     await waitFor(() => {
-      expect(mockRefresh).toHaveBeenCalled();
+      expect(mockLogin).toHaveBeenCalled();
     });
   });
 
@@ -133,7 +127,6 @@ describe('AdminLoginForm', () => {
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalled();
     });
-    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it('password input has correct attributes', () => {

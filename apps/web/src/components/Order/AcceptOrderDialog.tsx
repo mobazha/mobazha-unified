@@ -11,7 +11,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui';
-import { useI18n, ordersApi, useOrderAction } from '@mobazha/core';
+import {
+  useI18n,
+  ordersApi,
+  useOrderAction,
+  orderUsesCancelableBackendSettlement,
+  getAcceptSuccessDescKey,
+  getAcceptDialogDescriptionKey,
+} from '@mobazha/core';
 import { useToast } from '@/components/ui/use-toast';
 import type { ReceivingAccount } from '@mobazha/core/services/api/wallet';
 import { ReceivingAccountSelector } from './ReceivingAccountSelector';
@@ -24,6 +31,11 @@ export interface AcceptOrderDialogProps {
   blockchain?: string;
   /** 支付币种，用于判断是否需要钱包签名。法币格式: "fiat:paypal:USD" */
   paymentCoin?: string;
+  /** Opaque backend settlement type. */
+  paymentEscrowType?: string;
+  /** direct / cancelable / moderated */
+  paymentProductMode?: string;
+  contractType?: string;
   onSuccess?: () => void;
 }
 
@@ -39,6 +51,9 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
   orderId,
   blockchain,
   paymentCoin,
+  paymentEscrowType,
+  paymentProductMode,
+  contractType,
   onSuccess,
 }) => {
   const { t } = useI18n();
@@ -70,14 +85,17 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
 
     try {
       await execute({
-        paymentCoin: isFiatPayment ? undefined : paymentCoin,
-        getInstructions: initiatorAddress =>
-          ordersApi.getConfirmInstructions({
+        executeBackendSettlementAction: () =>
+          ordersApi.executeSettlementAction({
             orderID: orderId,
-            decline: false,
-            initiatorAddress,
+            action: 'confirm',
             payoutAddress,
           }),
+        attemptBackendSettlementAction: orderUsesCancelableBackendSettlement({
+          paymentProductMode,
+          escrowType: paymentEscrowType,
+          paymentCoin,
+        }),
         executeAction: txID =>
           ordersApi.confirmOrder({
             orderID: orderId,
@@ -88,13 +106,11 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
         onSuccess: () => {
           toast({
             title: t('order.actions.acceptSuccess'),
-            description: t('order.actions.acceptSuccessDesc'),
+            description: t(getAcceptSuccessDescKey(contractType)),
           });
           selectedAccountRef.current = null;
           onOpenChange(false);
-          setTimeout(() => {
-            onSuccess?.();
-          }, 500);
+          onSuccess?.();
         },
         onError: error => {
           toast({
@@ -107,7 +123,19 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
     } catch {
       // Error is already handled in onError callback
     }
-  }, [orderId, paymentCoin, isFiatPayment, onOpenChange, onSuccess, t, toast, execute]);
+  }, [
+    orderId,
+    paymentCoin,
+    paymentEscrowType,
+    paymentProductMode,
+    contractType,
+    isFiatPayment,
+    onOpenChange,
+    onSuccess,
+    t,
+    toast,
+    execute,
+  ]);
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
@@ -125,7 +153,7 @@ export const AcceptOrderDialog: React.FC<AcceptOrderDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>{t('order.accept.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            {isFiatPayment ? t('order.accept.fiatDescription') : t('order.accept.description')}
+            {t(getAcceptDialogDescriptionKey(isFiatPayment, contractType))}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

@@ -1,5 +1,11 @@
 import type { Address as FrontendAddress } from '@/components/Address';
-import type { UserProfile, DisplayAddress, Address as CoreAddress } from '@mobazha/core';
+import type {
+  UserProfile,
+  DisplayAddress,
+  Address as CoreAddress,
+  OrderItemOption,
+} from '@mobazha/core';
+import type { UseCheckoutSupplyQuoteReturn } from '@mobazha/core/hooks/useCheckoutSupplyQuote';
 import type { AppliedDiscount } from '@mobazha/core/utils/discountUtils';
 import type { ApplicableDiscount } from '@mobazha/core/services/api/discounts';
 
@@ -24,6 +30,7 @@ export interface CheckoutShippingRate {
 /** Resolved checkout item with all data needed for order creation */
 export interface CheckoutItem {
   id: string;
+  listingSlug: string;
   title: string;
   price: number;
   currency: string;
@@ -33,6 +40,7 @@ export interface CheckoutItem {
     name: string;
     peerID: string;
   };
+  options?: OrderItemOption[];
   listingHash?: string;
   contractType?: string;
   rwaTradeMode?: number;
@@ -40,6 +48,15 @@ export interface CheckoutItem {
   cryptoListingCurrencyCode?: string;
   shippingZones?: CheckoutShippingZone[];
   taxAmount?: number;
+  /** Hub+NFT primary sale (Solana collectible) */
+  isCollectibleHubNft?: boolean;
+  /** Source-custody listing with locked authoritative metadata */
+  isAuthoritativeCollectibleTitle?: boolean;
+  hubLocation?: string;
+  fulfillment?: string;
+  hubSlotID?: string;
+  nftMint?: string;
+  certNumber?: string;
 }
 
 /** Per-item shipping selection */
@@ -96,6 +113,8 @@ export interface UseCheckoutReturn {
   handleCreateOrder: () => Promise<void>;
   isSubmitting: boolean;
   canSubmit: boolean;
+  hasMixedContractTypes: boolean;
+  hasMissingContractType: boolean;
 
   appliedDiscounts: AppliedDiscount[];
   applicableDiscounts: ApplicableDiscount[];
@@ -105,9 +124,18 @@ export interface UseCheckoutReturn {
   handleRemoveDiscount: (id: string) => void;
 
   isRwaToken: boolean;
+  isRwaCheckoutBlocked: boolean;
+  isCollectibleHubNftCheckout: boolean;
+  requiresCollectibleHolderWallet: boolean;
+  collectibleHolderWallet: string | null;
+  isCollectibleHolderWalletReady: boolean;
+  isCollectibleHolderWalletWrongNamespace: boolean;
+  connectCollectibleHolderWallet: () => void;
+  isCollectibleHolderConnecting: boolean;
   rwaTradeMode: number | undefined;
   needsShippingAddress: boolean;
   hasAllShippingSelected: boolean;
   hasShippingPricingIssue: boolean;
   hasFreeShippingSelection: boolean;
+  supplyQuote: UseCheckoutSupplyQuoteReturn;
 }

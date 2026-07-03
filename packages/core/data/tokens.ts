@@ -3,6 +3,8 @@
  * 统一的代币和链配置，与移动端和桌面端保持一致
  */
 
+import { getChainTypeAliases, getEvmChainFamily, getEvmNativeSymbol } from './chainMetadata';
+
 /**
  * Token 配置接口
  */
@@ -99,7 +101,7 @@ export const TOKENS: TokenConfig[] = [
   },
   {
     id: 'ETHUSDT',
-    assetId: 'crypto:eip155:1:erc20:0xF36BFeE8fd7F1950c0129714Faf6d1e1F94a66AA',
+    assetId: 'crypto:eip155:1:erc20:0xdAC17F958D2ee523a2206206994597C13D831ec7',
     token: 'USDT',
     chain: 'ETH',
     type: 'ERC20',
@@ -139,7 +141,7 @@ export const TOKENS: TokenConfig[] = [
     chain: 'BSC',
     type: 'BEP20',
     isNative: false,
-    decimals: 6,
+    decimals: 18,
   },
   {
     id: 'BSCUSDC',
@@ -148,7 +150,7 @@ export const TOKENS: TokenConfig[] = [
     chain: 'BSC',
     type: 'BEP20',
     isNative: false,
-    decimals: 6,
+    decimals: 18,
   },
   {
     id: 'BUSD',
@@ -218,6 +220,96 @@ export const TOKENS: TokenConfig[] = [
     type: 'Polygon',
     isNative: false,
     decimals: 6,
+  },
+  {
+    id: 'ARBETH',
+    assetId: 'crypto:eip155:42161:native',
+    token: 'ETH',
+    chain: 'ARBITRUM',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'ARBUSDT',
+    assetId: 'crypto:eip155:42161:erc20:0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+    token: 'USDT',
+    chain: 'ARBITRUM',
+    type: 'Arbitrum',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'ARBUSDC',
+    assetId: 'crypto:eip155:42161:erc20:0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+    token: 'USDC',
+    chain: 'ARBITRUM',
+    type: 'Arbitrum',
+    isNative: false,
+    decimals: 6,
+  },
+  {
+    id: 'OPETH',
+    assetId: 'crypto:eip155:10:native',
+    token: 'ETH',
+    chain: 'OP',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'AVAX',
+    assetId: 'crypto:eip155:43114:native',
+    token: 'AVAX',
+    chain: 'AVAX',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'XDAI',
+    assetId: 'crypto:eip155:100:native',
+    token: 'xDAI',
+    chain: 'GNOSIS',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'CELO',
+    assetId: 'crypto:eip155:42220:native',
+    token: 'CELO',
+    chain: 'CELO',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'MNT',
+    assetId: 'crypto:eip155:5000:native',
+    token: 'MNT',
+    chain: 'MANTLE',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'ZKSETH',
+    assetId: 'crypto:eip155:324:native',
+    token: 'ETH',
+    chain: 'ZKSYNC',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'SCRETH',
+    assetId: 'crypto:eip155:534352:native',
+    token: 'ETH',
+    chain: 'SCROLL',
+    isNative: true,
+    decimals: 18,
+  },
+  {
+    id: 'LINETH',
+    assetId: 'crypto:eip155:59144:native',
+    token: 'ETH',
+    chain: 'LINEA',
+    isNative: true,
+    decimals: 18,
   },
   {
     id: 'SOL',
@@ -304,6 +396,19 @@ export function isCanonicalPaymentCoin(coin: string): boolean {
   return false;
 }
 
+export function isPaymentCoinEnabled(coin: string): boolean {
+  const trimmed = (coin || '').trim();
+  if (!trimmed) return true;
+
+  if (isRetiredPaymentChain(trimmed)) {
+    return false;
+  }
+
+  const token = TOKENS_BY_ID.get(trimmed.toUpperCase());
+  const canonical = token?.assetId ?? trimmed;
+  return !canonical.toLowerCase().startsWith('crypto:zcash:');
+}
+
 export function mustCanonicalCoin(coin: string): string {
   const trimmed = (coin || '').trim();
   if (!trimmed) {
@@ -326,6 +431,36 @@ export function mustAssetIdFromTokenId(tokenId: string): string {
     throw new Error(`unknown token id: ${tokenId}`);
   }
   return assetID;
+}
+
+/**
+ * Best-effort normalization to canonical payment asset id (crypto:* /
+ * fiat:provider:CURRENCY). Mirrors mobazha3.0 TryNormalizePaymentCoin for ingress
+ * lookups. Returns undefined when ambiguous — unlike mustCanonicalCoin which throws.
+ */
+export function tryNormalizePaymentCoinToAssetId(raw: string): string | undefined {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return undefined;
+
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('fiat:')) {
+    const parts = trimmed.split(':');
+    if (parts.length !== 3) return undefined;
+    const provider = parts[1]?.trim();
+    const currency = parts[2]?.trim();
+    if (!provider || !currency) return undefined;
+    return `fiat:${provider.toLowerCase()}:${currency.toUpperCase()}`;
+  }
+
+  if (lower.startsWith('crypto:')) {
+    const match = TOKENS.find(token => token.assetId.toLowerCase() === lower);
+    if (match) return match.assetId;
+    return parseCanonicalPaymentCoin(trimmed) ? trimmed : undefined;
+  }
+
+  const tokenId = getTokenIdFromPaymentCoin(trimmed);
+  if (!tokenId) return undefined;
+  return assetIdFromTokenId(tokenId);
 }
 
 /**
@@ -366,6 +501,14 @@ export function getTokenIdFromPaymentCoin(coin: string): string | undefined {
   const upper = trimmed.toUpperCase();
   if (TOKENS_BY_ID.has(upper)) {
     return upper;
+  }
+
+  const chain = CHAINS.find(c => c.id.toUpperCase() === upper && c.type === 'blockchain');
+  if (chain) {
+    const nativeToken = TOKENS.find(t => t.chain.toUpperCase() === upper && t.isNative);
+    if (nativeToken) {
+      return nativeToken.id.toUpperCase();
+    }
   }
 
   if (!isCanonicalPaymentCoin(trimmed)) {
@@ -457,6 +600,7 @@ export const CHAINS: PaymentChainConfig[] = [
     color: '#f4b728',
     type: 'blockchain',
     isExternalWallet: true,
+    disabled: true,
   },
   {
     id: 'ETH',
@@ -504,12 +648,93 @@ export const CHAINS: PaymentChainConfig[] = [
     evmChainId: 137,
   },
   {
+    id: 'ARBITRUM',
+    name: 'Arbitrum',
+    iconCode: 'ARBITRUM',
+    color: '#28a0f0',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 42161,
+  },
+  {
+    id: 'OP',
+    name: 'Optimism',
+    iconCode: 'OP',
+    color: '#ff0420',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 10,
+  },
+  {
+    id: 'AVAX',
+    name: 'Avalanche',
+    iconCode: 'AVAX',
+    color: '#e84142',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 43114,
+  },
+  {
+    id: 'GNOSIS',
+    name: 'Gnosis Chain',
+    iconCode: 'GNOSIS',
+    color: '#04795b',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 100,
+  },
+  {
+    id: 'CELO',
+    name: 'Celo',
+    iconCode: 'CELO',
+    color: '#35d07f',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 42220,
+  },
+  {
+    id: 'MANTLE',
+    name: 'Mantle',
+    iconCode: 'MANTLE',
+    color: '#000000',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 5000,
+  },
+  {
+    id: 'ZKSYNC',
+    name: 'zkSync Era',
+    iconCode: 'ZKSYNC',
+    color: '#8c8dfc',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 324,
+  },
+  {
+    id: 'SCROLL',
+    name: 'Scroll',
+    iconCode: 'SCROLL',
+    color: '#eecb8b',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 534352,
+  },
+  {
+    id: 'LINEA',
+    name: 'Linea',
+    iconCode: 'LINEA',
+    color: '#121212',
+    addressPrefix: '0x',
+    type: 'blockchain',
+    evmChainId: 59144,
+  },
+  {
     id: 'SOL',
     name: 'Solana',
     iconCode: 'SOL',
     color: '#9945ff',
     type: 'blockchain',
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: 'TRON',
@@ -606,6 +831,15 @@ export function getSupportedChains(): PaymentChainConfig[] {
 export const UTXO_CHAINS = ['BTC', 'LTC', 'BCH', 'ZEC'] as const;
 
 /**
+ * Backend/iWallet payment coin symbols that differ from CHAINS.id.
+ * Mirrors guest checkout CHAIN_ID_TO_PAYMENT_COIN (inverse mapping).
+ */
+export const PAYMENT_COIN_TO_CHAIN_ID: Record<string, string> = {
+  ARB: 'ARBITRUM',
+  TRX: 'TRON',
+};
+
+/**
  * 根据代币 ID 或链 ID 获取链类型
  * 支持输入：
  * - 链 ID: 'ETH', 'BTC', 'SOL'
@@ -631,6 +865,11 @@ export function getChainFromCoin(coinOrChain?: string): string {
   const chainConfig = CHAINS.find(c => c.id.toUpperCase() === upper);
   if (chainConfig) {
     return upper;
+  }
+
+  const aliasedChainId = PAYMENT_COIN_TO_CHAIN_ID[upper];
+  if (aliasedChainId) {
+    return aliasedChainId;
   }
 
   // 尝试解析 canonical coin（crypto:...）
@@ -664,6 +903,79 @@ export function getChainFromCoin(coinOrChain?: string): string {
   // 无法识别的代币/链，打印警告并返回空字符串
   console.warn(`[getChainFromCoin] Unknown coin/chain: ${coinOrChain}`);
   return '';
+}
+
+/**
+ * Returns compatible receiving-account chainType aliases for a payment coin or chain.
+ *
+ * The result is intended for UI/account matching where backend data may store
+ * chainType as either a canonical chain ID (ETH/BTC/SOL/TRON) or a lowercase alias.
+ *
+ * Rules:
+ * - paymentCoin takes priority over blockchain hints
+ * - fiat returns the provider-scoped chainType (fiat:stripe / fiat:paypal) when possible
+ * - unknown paymentCoin fails closed with an empty list
+ */
+export function getCompatibleChainTypes(paymentCoin?: string, blockchain?: string): string[] {
+  if (paymentCoin) {
+    const lower = paymentCoin.toLowerCase();
+    if (lower.startsWith('fiat:')) {
+      const provider = lower.split(':')[1];
+      if (provider) return [`fiat:${provider}`];
+      return ['fiat'];
+    }
+
+    const parsed = parseCanonicalPaymentCoin(paymentCoin);
+    if (parsed) {
+      if (parsed.namespace === 'eip155') {
+        const evmChainID = Number(parsed.chainRef);
+        const chain = Number.isFinite(evmChainID) ? getChainByEVMId(evmChainID)?.id : undefined;
+        return chain ? getChainTypeAliases(chain) : getChainTypeAliases('ETH');
+      }
+
+      if (parsed.namespace === 'bip122') {
+        const chain = BIP122_CHAIN_REF_TO_CHAIN[parsed.chainRef];
+        return chain ? getChainTypeAliases(chain) : [];
+      }
+
+      if (parsed.namespace === 'solana') {
+        return getChainTypeAliases('SOL');
+      }
+
+      if (parsed.namespace === 'tron') {
+        return getChainTypeAliases('TRON');
+      }
+
+      if (parsed.namespace === 'bitcoincash') {
+        return getChainTypeAliases('BCH');
+      }
+
+      if (parsed.namespace === 'zcash') {
+        return getChainTypeAliases('ZEC');
+      }
+
+      return [];
+    }
+
+    const chain = getChainFromCoin(paymentCoin);
+    if (!chain) {
+      return [];
+    }
+
+    return getChainTypeAliases(chain);
+  }
+
+  if (blockchain) {
+    const chain = getChainFromCoin(blockchain);
+    if (!chain) {
+      const lower = blockchain.toLowerCase();
+      return lower ? [lower] : [];
+    }
+
+    return getChainTypeAliases(chain);
+  }
+
+  return [];
 }
 
 /**
@@ -718,6 +1030,23 @@ export function isSolanaChain(coinOrChain?: string): boolean {
 }
 
 /**
+ * 判断是否为法币支付币种。
+ */
+export function isFiatPaymentCoin(coinOrChain?: string): boolean {
+  return !!coinOrChain && coinOrChain.trim().toLowerCase().startsWith('fiat:');
+}
+
+/**
+ * 判断订单动作是否支持先调用后端 settlement action 面。
+ * 具体是否需要链上结算由后端按订单 method/state 决定；前端只选择
+ * 已迁移到新动作入口的链，不再获取旧 instructions 并签名。
+ */
+export function supportsBackendSettlementActionSurface(coinOrChain?: string): boolean {
+  if (isFiatPaymentCoin(coinOrChain)) return false;
+  return isUTXOChain(coinOrChain) || isEVMChain(coinOrChain) || isSolanaChain(coinOrChain);
+}
+
+/**
  * 判断是否为 TRON 链
  *
  * @param coinOrChain 代币 ID 或链 ID
@@ -728,6 +1057,13 @@ export function isTRONChain(coinOrChain?: string): boolean {
 
   const chain = getChainFromCoin(coinOrChain);
   return chain === 'TRON';
+}
+
+/**
+ * Chains that no longer accept new payment setup (aligned with backend IsRetiredPaymentChain).
+ */
+export function isRetiredPaymentChain(coinOrChain?: string): boolean {
+  return isTRONChain(coinOrChain);
 }
 
 /**
@@ -746,8 +1082,8 @@ export function requiresWalletSignature(coinOrChain?: string): boolean {
     return false;
   }
 
-  // EVM, Solana, TRON 链需要签名
-  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain) || isTRONChain(coinOrChain);
+  // EVM and Solana chains need frontend signing; retired chains are excluded.
+  return isEVMChain(coinOrChain) || isSolanaChain(coinOrChain);
 }
 
 /**
@@ -762,7 +1098,17 @@ export function getEVMChainId(chainId: string): number | undefined {
  * 根据 EVM chainId 获取链配置
  */
 export function getChainByEVMId(evmChainId: number): PaymentChainConfig | undefined {
-  return CHAINS.find(c => c.evmChainId === evmChainId);
+  const configuredChain = CHAINS.find(c => c.evmChainId === evmChainId);
+  if (configuredChain) {
+    return configuredChain;
+  }
+
+  const fallbackChainId = getEvmChainFamily(evmChainId);
+  return fallbackChainId ? getChainById(fallbackChainId) : undefined;
+}
+
+function getNativeSymbolByEVMChainId(evmChainId: number): string | undefined {
+  return getEvmNativeSymbol(evmChainId);
 }
 
 /**
@@ -784,9 +1130,15 @@ export function getPaymentCoinDisplayLabel(coin: string): string {
     if (parsed.namespace === 'eip155') {
       const evmChainID = Number(parsed.chainRef);
       if (!Number.isNaN(evmChainID)) {
+        const nativeSymbol = getNativeSymbolByEVMChainId(evmChainID);
+        if (parsed.standard === 'native' && nativeSymbol) {
+          return nativeSymbol;
+        }
         const chain = getChainByEVMId(evmChainID);
         if (chain) {
-          return parsed.standard === 'native' ? chain.name : coin;
+          return parsed.standard === 'native'
+            ? chain.name
+            : `${parsed.standard.toUpperCase()} on ${chain.name}`;
         }
       }
     }
@@ -816,7 +1168,17 @@ export function getPaymentCoinDisplayLabel(coin: string): string {
 export function resolveTokenIdForDisplay(coin: string): string {
   if (!coin) return '';
   const tokenId = getTokenIdFromPaymentCoin(coin);
-  return tokenId || coin;
+  if (tokenId) return tokenId;
+
+  const parsed = parseCanonicalPaymentCoin(coin);
+  if (parsed?.namespace === 'eip155' && parsed.standard === 'native') {
+    const evmChainID = Number(parsed.chainRef);
+    if (!Number.isNaN(evmChainID)) {
+      return getNativeSymbolByEVMChainId(evmChainID) || coin;
+    }
+  }
+
+  return coin;
 }
 
 /**
@@ -832,7 +1194,7 @@ export function resolveTokenIdForDisplay(coin: string): string {
  * - 0.00024567 → 0.0002457 (4位有效数字)
  * - 0.000001234 → 0.00000123 (3位有效数字，受 maxDecimals 限制)
  */
-function getSmartDecimals(
+export function getSmartDecimals(
   amount: number,
   desiredDecimals: number,
   maxDecimals = 8,
@@ -867,6 +1229,29 @@ function getSmartDecimals(
  * @param tokenId 代币 ID
  * @param displayDecimals 显示的小数位数（默认根据代币类型自动判断，会智能扩展以显示非零值）
  */
+/**
+ * 格式化标准单位的加密货币金额（API / transform 已转换为标准单位时使用）
+ * 参考 Binance/OKX：小额显示 3–4 位有效数字，非零金额绝不四舍五入为 0
+ */
+export function formatStandardCryptoAmount(
+  amount: number | string,
+  currencyOrTokenId: string
+): string {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (!Number.isFinite(numAmount) || numAmount === 0) return '0';
+
+  const decimals =
+    getTokenDecimals(currencyOrTokenId) || getTokenByPaymentCoin(currencyOrTokenId)?.decimals || 8;
+  const baseDisplay = decimals >= 6 ? 2 : Math.min(decimals, 8);
+  const smartDisplay = getSmartDecimals(numAmount, baseDisplay, decimals);
+
+  let formatted = numAmount.toFixed(smartDisplay);
+  if (formatted.includes('.')) {
+    formatted = formatted.replace(/0+$/, '').replace(/\.$/, '');
+  }
+  return formatted;
+}
+
 export function formatTokenAmount(
   amount: number | string,
   tokenId: string,

@@ -8,14 +8,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // 导入全局样式
 import './app/globals.css';
+import '@/lib/initPublicEnv';
 
 // 导入 Provider 组件
-import { AuthProvider, MobileNav, ChatSystem, PWAInstall } from '@/components';
+import { AuthProvider, MobileNav, PWAInstall } from '@/components';
+import { ChatSystem } from '@/components/ChatSystem';
 import { OuterProviders } from '@/components/OuterProviders';
 import { StorefrontProvider } from '@/components/StorefrontProvider';
+import { MarketplaceProvider } from '@/components/MarketplaceProvider';
 import { TGBackButtonManager } from '@/components/TGMiniAppProvider';
 import { Toaster } from '@/components/ui';
 import { ProductModalProvider, PaymentSelectorProvider } from '@/hooks';
+import { RouteChunkErrorFallback } from '@/components/RouteChunkErrorFallback';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,19 +79,24 @@ function AppLayout() {
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    errorElement: <RouteChunkErrorFallback />,
     children: routes,
   },
 ]);
 
 // 应用根组件 — OuterProviders 与 layout.tsx 共享同一组件，保证 Provider 树一致
 function App() {
+  const appTree = (
+    <StorefrontProvider peerID={null}>
+      <MarketplaceProvider>
+        <RouterProvider router={router} />
+      </MarketplaceProvider>
+    </StorefrontProvider>
+  );
+
   return (
     <QueryClientProvider client={queryClient}>
-      <OuterProviders>
-        <StorefrontProvider peerID={null}>
-          <RouterProvider router={router} />
-        </StorefrontProvider>
-      </OuterProviders>
+      <OuterProviders>{appTree}</OuterProviders>
     </QueryClientProvider>
   );
 }

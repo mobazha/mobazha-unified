@@ -3,16 +3,20 @@
  * 支付配置 - 代币、链、支付方式
  */
 
-import { TOKENS as CORE_TOKENS } from '@mobazha/core';
+import {
+  TOKENS as CORE_TOKENS,
+  CHAINS as CORE_CHAINS,
+  isPaymentCoinEnabled,
+} from '@mobazha/core/data/tokens';
 import { TokenConfig, ChainConfig, FiatMethodConfig } from './types';
 
 // 代币配置统一复用 core 注册表，避免 web 侧手写表漂移。
 export const TOKENS: TokenConfig[] = CORE_TOKENS.map(token => ({
   ...token,
-  disabled: token.disabled ?? false,
+  disabled: token.disabled ?? !isPaymentCoinEnabled(token.assetId),
 }));
 
-// 链配置
+// 链配置统一复用 core 注册表，避免 web 侧链名/链 ID 与 token 注册表漂移。
 export const CHAINS: ChainConfig[] = [
   {
     id: 'all',
@@ -21,110 +25,17 @@ export const CHAINS: ChainConfig[] = [
     color: '#6b7280',
     type: 'filter',
   },
-  {
-    id: 'BTC',
-    name: 'Bitcoin',
-    iconCode: 'BTC',
-    color: '#f7931a',
-    type: 'blockchain',
-    addressPrefix: '',
-    isExternalWallet: true,
-    comingSoon: false,
-  },
-  {
-    id: 'LTC',
-    name: 'Litecoin',
-    iconCode: 'LTC',
-    color: '#bfbbbb',
-    type: 'blockchain',
-    addressPrefix: '',
-    isExternalWallet: true,
-    comingSoon: false,
-  },
-  {
-    id: 'BCH',
-    name: 'Bitcoin Cash',
-    iconCode: 'BCH',
-    color: '#8dc351',
-    type: 'blockchain',
-    addressPrefix: '',
-    isExternalWallet: true,
-    comingSoon: false,
-  },
-  {
-    id: 'ZEC',
-    name: 'Zcash',
-    iconCode: 'ZEC',
-    color: '#f4b728',
-    type: 'blockchain',
-    addressPrefix: '',
-    isExternalWallet: true,
-    comingSoon: false,
-  },
-  {
-    id: 'BASE',
-    name: 'Base',
-    iconCode: 'BASE',
-    color: '#0070ba',
-    type: 'blockchain',
-    addressPrefix: '0x',
-    comingSoon: false,
-  },
-  {
-    id: 'BSC',
-    name: 'BSC',
-    iconCode: 'BSC',
-    color: '#f3ba2f',
-    type: 'blockchain',
-    addressPrefix: '0x',
-    comingSoon: false,
-  },
-  {
-    id: 'ETH',
-    name: 'Ethereum',
-    iconCode: 'ETH',
-    color: '#627eea',
-    type: 'blockchain',
-    addressPrefix: '0x',
-    comingSoon: false,
-  },
-  {
-    id: 'SOL',
-    name: 'Solana',
-    iconCode: 'SOL',
-    color: '#9945ff',
-    type: 'blockchain',
-    addressPrefix: '',
-    comingSoon: false,
-  },
-  {
-    id: 'MATIC',
-    name: 'Polygon',
-    iconCode: 'MATIC',
-    color: '#8247e5',
-    type: 'blockchain',
-    addressPrefix: '0x',
-    comingSoon: false,
-  },
-  {
-    id: 'CFX',
-    name: 'Conflux',
-    iconCode: 'CFX',
-    color: '#1e3a8a',
-    type: 'blockchain',
-    addressPrefix: '0x',
-    comingSoon: false,
-  },
-  {
-    id: 'TRON',
-    name: 'TRON',
-    iconCode: 'TRON',
-    color: '#eb0029',
-    type: 'blockchain',
-    addressPrefix: 'T',
-    isExternalWallet: true,
-    comingSoon: false,
-  },
+  ...CORE_CHAINS.filter(chain => chain.type === 'blockchain').map(chain => ({
+    id: chain.id,
+    name: chain.name,
+    iconCode: chain.iconCode,
+    color: chain.color ?? '#6b7280',
+    type: 'blockchain' as const,
+    addressPrefix: chain.addressPrefix ?? '',
+    isExternalWallet: chain.isExternalWallet,
+    comingSoon: chain.comingSoon ?? false,
+    disabled: chain.disabled ?? false,
+  })),
 ];
 
 // 法币支付方式 — UI metadata only; availability determined by backend

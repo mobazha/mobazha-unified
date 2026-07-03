@@ -2,7 +2,13 @@
 
 import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useUserStore, useCartStore, useMatrixInit } from '@mobazha/core';
+import {
+  useUserStore,
+  useCartStore,
+  useMatrixInit,
+  isStandalone,
+  usePlatformFeatureFlagsHydration,
+} from '@mobazha/core';
 import {
   hasOAuthCallback,
   getOAuthParams,
@@ -16,11 +22,12 @@ import {
   storefrontContextService,
   standaloneStoresApi,
   resolveStoreShortCode,
+  buildStorefrontAuthRedirect,
   extractStorefrontReturn,
   buildTelegramMiniAppStoreContextFromWindow,
 } from '@mobazha/core';
-import { useTGMiniApp } from './TGMiniAppProvider/TGMiniAppProvider';
-import { useDiscordActivity } from './DiscordActivityProvider/DiscordActivityProvider';
+import { useTGMiniApp } from '@/components/TGMiniAppProvider';
+import { useDiscordActivity } from '@/components/DiscordActivityProvider';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -90,6 +97,10 @@ export function AuthProvider({
   const hasRestoredSession = useRef(hasHashToken);
   const hashTokenHandled = useRef(false);
 
+  // Synchronous guard for OAuth processing — survives React Strict Mode
+  // double-invocation where useState updates are deferred.
+  const oauthProcessingRef = useRef(false);
+
   // 登出时重置 hasRestoredSession，确保重新登录时能正确恢复会话。
   // 但不在 hash token 待处理期间重置，防止 restoreSession 竞态。
   useEffect(() => {
@@ -98,11 +109,14 @@ export function AuthProvider({
     }
   }, [isAuthenticated, hasHashToken]);
 
-  // 初始化 Matrix（在用户登录后自动连接）
+  // 初始化 Matrix（在用户登录后自动连接；Sovereign 模式下完全禁用）
   useMatrixInit({
-    enabled: true,
-    autoConnect: true,
+    enabled: !__SOVEREIGN__,
+    autoConnect: !__SOVEREIGN__,
   });
+
+  // SaaS: hydrate platform feature flags for all routes (not only /admin).
+  usePlatformFeatureFlagsHydration(isInitialized);
 
   // Sync local cart to backend when user logs in (anonymous → authenticated).
   // Uses undefined sentinel to skip the initial auth transition (session restore).
@@ -270,22 +284,26 @@ export function AuthProvider({
   }, [router, hasHashToken]);
 
   // 处理 OAuth 回调（在任何页面都可能发生）
+  // Uses oauthProcessingRef (synchronous) to prevent React Strict Mode
+  // double-invocation from consuming the authorization code twice.
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      if (hasOAuthCallback() && !isProcessingOAuth) {
+      if (hasOAuthCallback() && !oauthProcessingRef.current) {
+        oauthProcessingRef.current = true;
         setIsProcessingOAuth(true);
+
         const { code, state } = getOAuthParams();
+        clearOAuthParams();
 
         if (code && state) {
-          const [, sfReturnOrigin] = extractStorefrontReturn(state);
+          const [, sfReturnUrl] = extractStorefrontReturn(state);
 
           const success = await loginWithOAuth(code, state);
-          clearOAuthParams();
 
-          if (success && sfReturnOrigin) {
+          if (success && sfReturnUrl) {
             const token = useUserStore.getState().token;
             if (token) {
-              window.location.href = `${sfReturnOrigin}/#_auth_token=${encodeURIComponent(token)}`;
+              window.location.href = buildStorefrontAuthRedirect(sfReturnUrl, token);
               return;
             }
           }
@@ -302,6 +320,7 @@ export function AuthProvider({
             }
           }
         }
+        oauthProcessingRef.current = false;
         setIsProcessingOAuth(false);
         setIsInitialized(true);
       }
@@ -342,9 +361,14 @@ export function AuthProvider({
   useEffect(() => {
     if (!isInitialized || isProcessingOAuth) return;
 
+    // Standalone / Sovereign: admin setup lives inside /admin (StandaloneSetupWizard).
+    // Never redirect to /onboarding — that route only exists for SaaS Casdoor flows.
+    const standaloneOrSovereign =
+      typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? true : isStandalone();
+
     // 如果已认证且在登录页（且没有 OAuth 参数），重定向到目标页面
     if (isAuthenticated && pathname === '/login' && !hasOAuthCallback()) {
-      if (needsOnboarding) {
+      if (needsOnboarding && !standaloneOrSovereign) {
         router.push('/onboarding');
       } else {
         const redirectPath = getRedirectPath(searchParams);
@@ -352,8 +376,14 @@ export function AuthProvider({
       }
     }
 
-    // 如果已认证、需要 onboarding 且不在 onboarding 页面，重定向
-    if (isAuthenticated && needsOnboarding && pathname !== '/onboarding' && pathname !== '/login') {
+    // 如果已认证、需要 onboarding 且不在 onboarding 页面，重定向（仅 SaaS 模式）
+    if (
+      isAuthenticated &&
+      needsOnboarding &&
+      !standaloneOrSovereign &&
+      pathname !== '/onboarding' &&
+      pathname !== '/login'
+    ) {
       router.push('/onboarding');
     }
   }, [

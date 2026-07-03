@@ -19,6 +19,7 @@ import { productsApi } from '../services/api';
 import { mergeSkus } from '../utils/variantUtils';
 import { toMinimalUnit } from '../services/currencyService';
 import { mustAssetIdFromTokenId, mustCanonicalCoin } from '../data/tokens';
+import { getCurrencyDecimals } from '../data/currencies';
 
 const DEFAULT_RWA_ACCEPTED_CURRENCIES = [mustAssetIdFromTokenId('ETHUSDT')];
 const DEFAULT_LISTING_ACCEPTED_CURRENCIES = [
@@ -75,6 +76,8 @@ export interface ListingFormData {
   minQuantity?: number;
   maxQuantity?: number;
   acceptedCurrencies?: string[];
+  /** Source-deposit listing mode — locks authoritative collectible metadata. */
+  sourceDepositID?: string;
 
   // 媒体
   images: Image[];
@@ -394,7 +397,8 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         if (!formData.blockchain) {
           newErrors.blockchain = 'Blockchain is required';
         }
-        if (!formData.cryptoListingCurrencyCode) {
+        const isSourceCustodyListing = Boolean(formData.sourceDepositID?.trim());
+        if (!isSourceCustodyListing && !formData.cryptoListingCurrencyCode) {
           newErrors.cryptoListingCurrencyCode = 'Token selection is required';
         }
         if (!formData.acceptedCurrencies || formData.acceptedCurrencies.length === 0) {
@@ -446,7 +450,7 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
         expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         pricingCurrency: {
           code: formData.pricingCurrency,
-          divisibility: 2,
+          divisibility: getCurrencyDecimals(formData.pricingCurrency),
         },
         acceptedCurrencies: canonicalizeAcceptedCurrencies(
           formData.acceptedCurrencies,
@@ -538,7 +542,9 @@ export function useListingForm(initialData?: Partial<ListingFormData>) {
     // RWA Token 特定字段
     if (formData.contractType === 'RWA_TOKEN') {
       (data.item as Record<string, unknown>).blockchain = formData.blockchain;
-      (data.item as Record<string, unknown>).tokenAddress = formData.tokenAddress;
+      if (formData.tokenAddress?.trim()) {
+        (data.item as Record<string, unknown>).tokenAddress = formData.tokenAddress.trim();
+      }
       (data.item as Record<string, unknown>).tokenStandard = formData.tokenStandard || 'RWA';
       (data.item as Record<string, unknown>).cryptoListingCurrencyCode =
         formData.cryptoListingCurrencyCode;

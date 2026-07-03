@@ -10,7 +10,11 @@ export default function AdminPoliciesSettingsPage() {
 
   return (
     <div data-testid="admin-settings-policies">
-      <SettingsPageHeader title={t('settingsExtended.storePolicies')} backHref="/admin/settings" />
+      <SettingsPageHeader
+        title={t('settingsExtended.storePolicies')}
+        description={t('settingsExtended.storePoliciesDesc')}
+        backHref="/admin/settings"
+      />
       <StorePoliciesContent />
     </div>
   );

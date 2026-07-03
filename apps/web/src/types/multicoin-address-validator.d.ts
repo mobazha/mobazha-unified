@@ -1,10 +1,23 @@
-declare module 'multicoin-address-validator' {
-  type NetworkType = 'prod' | 'testnet' | 'both';
+interface AddressValidatorModule {
+  isValidAddress(address: string, config?: unknown, options?: unknown): boolean;
+}
 
-  interface WalletAddressValidator {
-    validate(address: string, currencyNameOrSymbol: string, networkType?: NetworkType): boolean;
-  }
+declare module 'multicoin-address-validator/src/bitcoin_validator' {
+  const validator: AddressValidatorModule;
+  export default validator;
+}
 
-  const WAValidator: WalletAddressValidator;
-  export default WAValidator;
+declare module 'multicoin-address-validator/src/bch_validator' {
+  const validator: AddressValidatorModule;
+  export default validator;
+}
+
+declare module 'multicoin-address-validator/src/base58_validator' {
+  const validator: AddressValidatorModule;
+  export default validator;
+}
+
+declare module 'multicoin-address-validator/src/tron_validator' {
+  const validator: AddressValidatorModule;
+  export default validator;
 }

@@ -18,7 +18,15 @@ import {
   type ProductContractType,
   type RwaTradeMode,
 } from '@/components/ProductCard';
-import { useI18n, productDataService, getImageUrl, useVerifiedModerators } from '@mobazha/core';
+import {
+  useI18n,
+  productDataService,
+  getImageUrl,
+  useVerifiedModerators,
+  compareMinimalAmountStrings,
+  productCardPriceFieldsFromListItem,
+  buildProductHref,
+} from '@mobazha/core';
 import type { ProductListItem } from '@mobazha/core';
 import { Package, Coins, Search, X } from 'lucide-react';
 import { useProductModal } from '@/hooks';
@@ -129,10 +137,20 @@ export const RwaTab: React.FC<RwaTabProps> = ({
     // 排序
     switch (filter.sortBy) {
       case 'price-asc':
-        result.sort((a, b) => (Number(a.price?.amount) || 0) - (Number(b.price?.amount) || 0));
+        result.sort((a, b) =>
+          compareMinimalAmountStrings(
+            productCardPriceFieldsFromListItem(a).price,
+            productCardPriceFieldsFromListItem(b).price
+          )
+        );
         break;
       case 'price-desc':
-        result.sort((a, b) => (Number(b.price?.amount) || 0) - (Number(a.price?.amount) || 0));
+        result.sort((a, b) =>
+          compareMinimalAmountStrings(
+            productCardPriceFieldsFromListItem(b).price,
+            productCardPriceFieldsFromListItem(a).price
+          )
+        );
         break;
       case 'newest':
       default:
@@ -294,37 +312,41 @@ export const RwaTab: React.FC<RwaTabProps> = ({
         {/* RWA 商品列表 */}
         {filteredProducts.length > 0 && (
           <Grid cols={3} colsMobile={2} colsTablet={3} gap="md">
-            {filteredProducts.map((product, index) => (
-              <Link
-                key={`${product.slug}-${index}`}
-                href={`/product/${product.slug}?peerID=${peerId}`}
-                onClick={e => {
-                  // 桌面端使用弹框
-                  if (!isMobile) {
-                    e.preventDefault();
-                    openProduct(product.slug, peerId);
-                  }
-                }}
-              >
-                <ProductCard
-                  title={product.title}
-                  imageUrl={getImageUrl(product.thumbnail?.medium)}
-                  price={Number(product.price?.amount || 0)}
-                  currency={product.price?.currency?.code}
-                  divisibility={product.price?.currency?.divisibility}
-                  // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
-                  vendorPeerID={peerId}
-                  rating={product.averageRating}
-                  reviewCount={product.ratingCount}
-                  freeShipping={product.freeShipping && product.freeShipping.length > 0}
-                  contractType={product.contractType as ProductContractType}
-                  tokenStandard={product.tokenStandard}
-                  rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
-                  hasVerifiedModerator={hasVerifiedMod(product.moderators)}
-                  isOwnListing={isOwnStore}
-                />
-              </Link>
-            ))}
+            {filteredProducts.map((product, index) => {
+              const priceFields = productCardPriceFieldsFromListItem(product);
+              return (
+                <Link
+                  key={`${product.slug}-${index}`}
+                  href={buildProductHref(product.slug, peerId)}
+                  onClick={e => {
+                    // 桌面端使用弹框
+                    if (!isMobile) {
+                      e.preventDefault();
+                      openProduct(product.slug, peerId);
+                    }
+                  }}
+                >
+                  <ProductCard
+                    title={product.title}
+                    imageUrl={getImageUrl(product.thumbnail?.medium)}
+                    price={priceFields.price}
+                    currency={priceFields.currencyCode}
+                    divisibility={priceFields.divisibility}
+                    priceFrom={priceFields.priceFrom}
+                    // 在店铺页面内不显示店名和头像（已经在店铺里了，无需重复显示）
+                    vendorPeerID={peerId}
+                    rating={product.averageRating}
+                    reviewCount={product.ratingCount}
+                    freeShipping={product.freeShipping && product.freeShipping.length > 0}
+                    contractType={product.contractType as ProductContractType}
+                    tokenStandard={product.tokenStandard}
+                    rwaTradeMode={product.rwaTradeMode as RwaTradeMode}
+                    hasVerifiedModerator={hasVerifiedMod(product.moderators)}
+                    isOwnListing={isOwnStore}
+                  />
+                </Link>
+              );
+            })}
           </Grid>
         )}
       </div>

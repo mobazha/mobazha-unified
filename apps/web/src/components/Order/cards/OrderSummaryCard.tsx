@@ -17,48 +17,48 @@ export const OrderSummaryCard = memo(function OrderSummaryCard({
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
 
-  const hasShipping = !!order.shippingAmount;
+  const breakdown = order.pricingBreakdown;
+  const summaryCurrency = breakdown?.currency || order.pricingCurrency;
+  const subtotal = breakdown?.subtotal || order.items[0]?.price || '0';
+  const shipping = breakdown?.shipping || order.shippingAmount;
+  const total = breakdown?.total || order.pricingAmount || order.total;
+  const formatSummaryAmount = (amount?: string) =>
+    summaryCurrency && amount ? formatCurrencyPrice(amount, summaryCurrency) : amount || '';
+  const hasBreakdown = !!breakdown || !!shipping;
+  const rowClass = 'flex items-center justify-between gap-4';
+  const labelClass = 'text-xs text-muted-foreground';
+  const valueClass = 'text-sm font-medium text-foreground tabular-nums text-right';
 
   return (
-    <div className={`p-3 bg-muted/30 rounded-lg border border-border/50 ${className ?? ''}`}>
-      <div className="flex items-center justify-between mb-2">
+    <div className={`p-3.5 bg-muted/30 rounded-lg border border-border/50 ${className ?? ''}`}>
+      <div className="flex items-center justify-between gap-3 mb-3">
         <span className="text-sm font-semibold text-foreground">{t('order.summary')}</span>
-        <span className="text-xs px-2 py-0.5 rounded-full border border-border/60 text-foreground bg-background/60">
+        <span className="text-xs px-2 py-0.5 rounded-full border border-border/60 text-foreground bg-background/70">
           {statusLabel}
         </span>
       </div>
 
-      {hasShipping ? (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">{t('order.subtotal')}</div>
-            <div className="text-xs text-foreground">
-              {order.pricingCurrency
-                ? formatCurrencyPrice(order.items[0]?.price || '0', order.pricingCurrency)
-                : order.items[0]?.price || ''}
-            </div>
+      {hasBreakdown ? (
+        <div className="space-y-2">
+          <div className={rowClass}>
+            <div className={labelClass}>{t('order.subtotal')}</div>
+            <div className={valueClass}>{formatSummaryAmount(subtotal)}</div>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">{t('order.shippingFee')}</div>
-            <div className="text-xs text-foreground">
-              {order.pricingCurrency
-                ? formatCurrencyPrice(order.shippingAmount!, order.pricingCurrency)
-                : order.shippingAmount}
-            </div>
+          <div className={rowClass}>
+            <div className={labelClass}>{t('order.shippingFee')}</div>
+            <div className={valueClass}>{formatSummaryAmount(shipping || '0')}</div>
           </div>
-          <div className="flex items-end justify-between pt-1 border-t border-border/30">
-            <div className="text-xs text-muted-foreground">{t('order.total')}</div>
-            <p className="text-sm font-semibold text-foreground">
-              {order.pricingCurrency
-                ? formatCurrencyPrice(order.pricingAmount || order.total, order.pricingCurrency)
-                : order.pricingAmount || order.total}
+          <div className="flex items-end justify-between gap-4 mt-2 px-3 py-2 rounded-md bg-background/55 border border-border/40">
+            <div className="text-xs font-medium text-foreground">{t('order.total')}</div>
+            <p className="text-base font-semibold text-foreground tabular-nums text-right">
+              {formatSummaryAmount(total)}
             </p>
           </div>
         </div>
       ) : (
-        <div className="flex items-end justify-between">
-          <div className="text-xs text-muted-foreground">{t('order.total')}</div>
-          <p className="text-sm font-semibold text-foreground">
+        <div className="flex items-end justify-between gap-4 px-3 py-2 rounded-md bg-background/55 border border-border/40">
+          <div className="text-xs font-medium text-foreground">{t('order.total')}</div>
+          <p className="text-base font-semibold text-foreground tabular-nums text-right">
             {order.pricingCurrency
               ? formatCurrencyPrice(order.pricingAmount || order.total, order.pricingCurrency)
               : order.pricingAmount || order.total}

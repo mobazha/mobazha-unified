@@ -49,7 +49,7 @@ export interface WalletInfo {
   address: string;
   chainId: ChainId;
   balance: string;
-  provider: string; // MetaMask, WalletConnect, etc.
+  provider: string; // Injected wallet provider name.
 }
 
 // 钱包连接事件
@@ -183,7 +183,7 @@ export const SUPPORTED_STABLECOINS: Record<ChainId, TokenInfo[]> = {
   ],
   [ChainId.POLYGON]: [
     {
-      address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+      address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
       symbol: 'USDC',
       name: 'USD Coin',
       decimals: 6,
@@ -226,7 +226,7 @@ export const SUPPORTED_STABLECOINS: Record<ChainId, TokenInfo[]> = {
 
 // 钱包服务配置
 export interface WalletServiceConfig {
-  projectId: string; // WalletConnect Project ID
+  projectId: string; // Optional external connector project ID.
   supportedChains: ChainId[];
   defaultChain: ChainId;
   autoConnect: boolean;

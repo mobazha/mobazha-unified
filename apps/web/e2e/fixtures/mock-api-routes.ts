@@ -9,6 +9,7 @@
  *   - Error (4xx/5xx): { error: { code: string, message: string } }
  */
 
+import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { mustAssetIdFromTokenId } from '@mobazha/core/data';
 
@@ -16,11 +17,7 @@ function wrapData<T>(data: T): string {
   return JSON.stringify({ data });
 }
 
-function wrapError(code: string, message: string): string {
-  return JSON.stringify({ error: { code, message } });
-}
-
-const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
+export const MOCK_PEER_ID = 'QmY8tRnCzUf45FnPLMvFi35R5bYjCEiCKbgEN39xnScj8P';
 const MOCK_BUYER_PEER_ID = 'QmBuyerPeer1234567890abcdefghijk';
 const NOW = new Date().toISOString();
 const DAY_AGO = new Date(Date.now() - 86400000).toISOString();
@@ -45,7 +42,7 @@ const mockPurchases = [
     total: { amount: 8999, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: DAY_AGO,
-    state: 'FULFILLED',
+    state: 'SHIPPED',
     vendorID: MOCK_PEER_ID,
     buyerID: MOCK_BUYER_PEER_ID,
     paymentCoin: 'ETH',
@@ -77,7 +74,7 @@ const mockPurchases = [
     total: { amount: 24500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 1,
     timestamp: NOW,
-    state: 'AWAITING_FULFILLMENT',
+    state: 'AWAITING_SHIPMENT',
     vendorID: MOCK_PEER_ID,
     buyerID: MOCK_BUYER_PEER_ID,
     paymentCoin: 'ETH',
@@ -96,7 +93,7 @@ const mockSales = [
     total: { amount: 5500, currency: { code: 'USD', divisibility: 2 } },
     quantity: 2,
     timestamp: DAY_AGO,
-    state: 'AWAITING_FULFILLMENT',
+    state: 'AWAITING_SHIPMENT',
     vendorID: MOCK_PEER_ID,
     buyerID: MOCK_BUYER_PEER_ID,
     paymentCoin: 'ETH',
@@ -156,7 +153,7 @@ const mockNotifications = [
   {
     timestamp: WEEK_AGO,
     read: true,
-    type: 'order.fulfilled',
+    type: 'order.shipped',
     notification: {
       notificationId: 'notif-004',
       orderId: 'QmOrder001',
@@ -363,10 +360,14 @@ const mockOrderDetail = {
     orderConfirmation: {
       timestamp: DAY_AGO,
     },
-    orderFulfillments: [
+    orderShipments: [
       {
         timestamp: DAY_AGO,
-        physicalDelivery: [{ shipper: 'FedEx', trackingNumber: 'FX1234567890' }],
+        shipments: [
+          {
+            physicalDelivery: { shipper: 'FedEx', trackingNumber: 'FX1234567890' },
+          },
+        ],
       },
     ],
     vendorListings: [
@@ -383,7 +384,7 @@ const mockOrderDetail = {
       },
     ],
   },
-  state: 'FULFILLED',
+  state: 'SHIPPED',
   read: true,
   funded: true,
   paymentAddressTransactions: [
@@ -398,6 +399,127 @@ const mockOrderDetail = {
     afterSaleWindowDays: 7,
   },
 };
+
+const mockOperatorMarketplace = {
+  id: 'mp1',
+  name: 'Crypto Collectibles',
+  slug: 'crypto-collectibles',
+  status: 'published',
+  description: 'Curated collectibles marketplace',
+  ownerUserID: 'owner-1',
+  buyerAccessMode: 'open',
+  sellerReviewMode: 'manual',
+  catalogMode: 'curated',
+  discoverability: 'public',
+  sellerEntryMode: 'operator_invited',
+  vertical: 'collectibles',
+  plan: 'free',
+  domains: [
+    {
+      host: 'crypto.example.test',
+      kind: 'subdomain',
+      verificationStatus: 'verified',
+      isPrimary: true,
+    },
+  ],
+  createdAt: NOW,
+  updatedAt: NOW,
+};
+
+const mockMarketplaceSellerMembership = {
+  id: 1,
+  tenantID: 'tenant-visual',
+  marketplaceID: 'mp1',
+  userID: 'user-visual',
+  peerID: MOCK_PEER_ID,
+  status: 'invited',
+  unreadReviewCount: 0,
+  isVisible: false,
+  productGroupIDs: [],
+  productGroups: [],
+  invitedAt: DAY_AGO,
+};
+
+const mockMarketplaceMembershipEntry = {
+  membership: mockMarketplaceSellerMembership,
+  marketplace: {
+    id: mockOperatorMarketplace.id,
+    name: mockOperatorMarketplace.name,
+    slug: mockOperatorMarketplace.slug,
+    status: mockOperatorMarketplace.status,
+    description: mockOperatorMarketplace.description,
+  },
+};
+
+/**
+ * Mock native marketplace operator + store invitation APIs.
+ */
+export async function mockMarketplaceOperatorAPI(page: Page): Promise<void> {
+  await page.route('**/platform/v1/marketplaces/mine', (route, request) => {
+    if (request.method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([mockOperatorMarketplace]),
+    });
+  });
+
+  await page.route('**/platform/v1/marketplaces/mp1', (route, request) => {
+    if (request.method() === 'GET') {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapData(mockOperatorMarketplace),
+      });
+      return;
+    }
+    return route.fallback();
+  });
+
+  await page.route('**/platform/v1/marketplaces/mp1/sellers', (route, request) => {
+    if (request.method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([
+        mockMarketplaceSellerMembership,
+        {
+          ...mockMarketplaceSellerMembership,
+          id: 2,
+          peerID: 'QmApprovedSeller1',
+          status: 'approved',
+          isVisible: true,
+          acceptedAt: DAY_AGO,
+        },
+      ]),
+    });
+  });
+
+  await page.route('**/platform/v1/marketplace-memberships/mine', (route, request) => {
+    if (request.method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([mockMarketplaceMembershipEntry]),
+    });
+  });
+
+  await page.route(
+    `**/platform/v1/marketplaces/mp1/sellers/${encodeURIComponent(MOCK_PEER_ID)}/accept`,
+    (route, request) => {
+      if (request.method() !== 'POST') return route.fallback();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: wrapData({
+          ...mockMarketplaceSellerMembership,
+          status: 'accepted',
+          acceptedAt: NOW,
+        }),
+      });
+    }
+  );
+}
 
 /**
  * Set up route mocking for orders pages.
@@ -1143,3 +1265,208 @@ export async function mockAllAPIs(page: Page): Promise<void> {
   await mockImageRoutes(page);
   await mockFiatProvidersAPI(page);
 }
+
+const MOCK_PRODUCT_IMPORT_RUN_ID = 'run_visual_import_1';
+
+const mockProductImportWorkbench = {
+  skillRun: {
+    id: MOCK_PRODUCT_IMPORT_RUN_ID,
+    skillId: 'product.import',
+    status: 'waiting_for_review',
+    startedAt: DAY_AGO,
+    updatedAt: NOW,
+  },
+  sources: [
+    {
+      artifactId: 'art_src_visual',
+      sourceName: 'midnight-waves-cover.jpg',
+      contentType: 'image/jpeg',
+      status: 'ready',
+      hasPreview: true,
+    },
+  ],
+  rows: [
+    {
+      proposalArtifactId: 'art_prop_visual_1',
+      sourceName: 'midnight-waves-cover.jpg',
+      rowNumber: 1,
+      status: 'needs_review',
+      draft: {
+        title: 'Linen Tote Bag',
+        description: 'Handwoven linen tote with interior pocket.',
+      },
+      updatedAt: NOW,
+    },
+    {
+      proposalArtifactId: 'art_prop_visual_2',
+      sourceName: 'midnight-waves-cover.jpg',
+      rowNumber: 2,
+      status: 'needs_review',
+      draft: {
+        title: 'Ceramic Mug Set',
+        price: { amountMinor: 2800, currencyCode: 'USD', divisibility: 2 },
+        inventory: { quantity: 50 },
+      },
+      approval: {
+        id: 'approval_visual_pending',
+        status: 'pending',
+        action: 'create_listing',
+        requestHash: 'hash_visual_pending',
+      },
+      updatedAt: NOW,
+    },
+    {
+      proposalArtifactId: 'art_prop_visual_3',
+      sourceName: 'midnight-waves-cover.jpg',
+      rowNumber: 3,
+      status: 'needs_review',
+      draft: {
+        title: 'Wool Throw Blanket',
+        price: { amountMinor: 8900, currencyCode: 'USD', divisibility: 2 },
+        inventory: { quantity: 12 },
+      },
+      approval: {
+        id: 'approval_visual_approved',
+        status: 'approved',
+        action: 'create_listing',
+        requestHash: 'hash_visual_approved',
+      },
+      updatedAt: NOW,
+    },
+  ],
+  validationReports: [
+    {
+      artifactId: 'art_val_visual',
+      sourceName: 'midnight-waves-cover.jpg',
+      status: 'ready',
+      data: {
+        code: 'image_review',
+        message: 'Review AI-extracted image details before publishing.',
+      },
+    },
+  ],
+  counts: { source: 1, proposal: 3, validation: 1 },
+  summary: {
+    noApprovalCount: 1,
+    pendingApprovalCount: 1,
+    approvedCount: 1,
+    applyingCount: 0,
+    appliedCount: 0,
+    rejectedCount: 0,
+    applyFailedCount: 0,
+    reviewableCount: 3,
+    skippedCount: 0,
+    actionableCount: 3,
+  },
+  page: { offset: 0, totalRows: 3, returnedRows: 3 },
+};
+
+/**
+ * Mock product import workbench + minimal AI endpoints for visual tests.
+ */
+export async function mockProductImportWorkbenchAPI(page: Page): Promise<void> {
+  await page.route('**/v1/agent/artifacts/art_src_visual/content', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      path: path.resolve('public/icons/icon-512x512.png'),
+    });
+  });
+
+  await page.route('**/v1/ai/status**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ available: true, provider: 'mock', model: 'mock-model' }),
+    });
+  });
+
+  await page.route('**/v1/agent/chat/sessions**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData([]),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/workbench**', route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData(mockProductImportWorkbench),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/advance**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        skillRun: mockProductImportWorkbench.skillRun,
+        workbench: mockProductImportWorkbench,
+        counts: {
+          sourceCount: 1,
+          candidateCount: 0,
+          proposalCount: 3,
+          validationCount: 1,
+          pendingAIExtractionCount: 0,
+          createdProposalCount: 0,
+          createdValidationCount: 0,
+        },
+        nextActions: [],
+        skipped: [],
+      }),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/approvals**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({
+        approvals: [
+          {
+            id: 'approval_visual_created',
+            tenant_id: 'tenant_visual',
+            tool_call_id: 'artifact:art_prop_visual_1',
+            skill_id: 'product.import',
+            action: 'listings_create',
+            summary: 'Create listing from product import proposal',
+            request_hash: 'hash_visual_created',
+            status: 'pending',
+          },
+        ],
+        created: 1,
+        reused: 0,
+        skipped: [],
+        page: { totalProposals: 3, selected: 1 },
+      }),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/approval-decisions**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ processed: 1, skipped: [], items: [], page: { selected: 1 } }),
+    });
+  });
+
+  await page.route('**/v1/agent/product-import/runs/*/approval-applications**', route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: wrapData({ processed: 1, skipped: [], items: [], page: { selected: 1 } }),
+    });
+  });
+}
+
+export { MOCK_PRODUCT_IMPORT_RUN_ID };

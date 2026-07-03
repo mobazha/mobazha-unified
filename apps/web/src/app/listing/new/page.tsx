@@ -39,10 +39,18 @@ import {
   useListingForm,
   useI18n,
   useCurrency,
-  getGatewayUrl,
+  getImageUrl,
   productDataService,
   convertProductToFormData,
   DEFAULT_LOCAL_CURRENCY,
+  useUserStore,
+  buildProductHref,
+  initialFormData,
+  mustAssetIdFromTokenId,
+  parseSourceDepositListingSearchParams,
+  buildSourceDepositListingFormPrefill,
+  getSourceDepositLockedTags,
+  type SourceDepositListingPrefillInput,
 } from '@mobazha/core';
 import type { ContractType, Image, ShippingProfile, ListingFormData } from '@mobazha/core';
 
@@ -51,17 +59,21 @@ import {
   BasicInfoSection,
   MediaSection,
   RwaTokenFields,
+  SourceCustodyListingFields,
   PhysicalGoodFields,
   VariantOptionEditor,
   VariantInventoryTable,
-  DigitalFileSection,
+  InventoryPolicyField,
   ProcessingTimeSelect,
   AiImageGeneratePanel,
   AiAssistButton,
   AiSetupPrompt,
   useListingAiIntegration,
   MobileListingWizard,
+  BasePriceSyncDialog,
+  ListingPriceHierarchyBanner,
 } from '@/components/Listing';
+import { useListingPriceChange } from '@/hooks/useListingPriceChange';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -126,6 +138,7 @@ function CreateListingContent() {
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { profile: currentUserProfile } = useUserStore();
   const { toast } = useToast();
 
   // URL 参数
@@ -134,6 +147,16 @@ function CreateListingContent() {
   const fromOnboarding = fromParam === 'onboarding';
   const fromAdmin = fromParam === 'admin';
   const returnToDashboard = fromOnboarding || fromAdmin;
+
+  const sourceDepositPrefillInput = useMemo(
+    (): SourceDepositListingPrefillInput | null => parseSourceDepositListingSearchParams(searchParams),
+    [searchParams]
+  );
+  const isSourceDepositListingMode = sourceDepositPrefillInput !== null;
+  const sourceDepositLockedTags = useMemo(
+    () => (sourceDepositPrefillInput ? getSourceDepositLockedTags(sourceDepositPrefillInput) : []),
+    [sourceDepositPrefillInput]
+  );
 
   // 克隆数据加载状态
   const [cloneData, setCloneData] = useState<Partial<ListingFormData> | null>(null);
@@ -173,7 +196,22 @@ function CreateListingContent() {
   }, [cloneSlug, loadCloneData]);
 
   // 初始表单数据
-  const initialData = useMemo(() => cloneData || undefined, [cloneData]);
+  const initialData = useMemo(() => {
+    if (cloneData) return cloneData;
+    if (!sourceDepositPrefillInput) return undefined;
+
+    const prefill = buildSourceDepositListingFormPrefill(sourceDepositPrefillInput);
+    return {
+      ...prefill,
+      acceptedCurrencies: [mustAssetIdFromTokenId('ETH')],
+      skus: [
+        {
+          ...initialFormData.skus[0],
+          quantity: 1,
+        },
+      ],
+    };
+  }, [cloneData, sourceDepositPrefillInput]);
 
   // 使用 useListingForm hook
   const {
@@ -209,6 +247,7 @@ function CreateListingContent() {
   const {
     aiLoadingAction,
     aiNotConfigured,
+    aiSupportsVision,
     aiImageUrls,
     handleAiImproveTitle,
     handleAiPolishDescription,
@@ -245,6 +284,23 @@ function CreateListingContent() {
     }
   }, []);
 
+  const {
+    pendingSync,
+    setPendingSync,
+    handlePriceInput,
+    handlePriceFocus,
+    handlePriceBlur,
+    applyBaseOnly,
+    applyToAllVariants,
+    reviewVariants,
+  } = useListingPriceChange({
+    price: formData.price,
+    skus: formData.skus,
+    onPriceChange: value => updateField('price', value),
+    onSkusChange: updateSkus,
+    onReviewVariants: () => scrollToSection('variants'),
+  });
+
   // 标签规范化函数（小写、空格转连字符、去除 #）
   const normalizeTag = useCallback((input: string) => {
     return input
@@ -259,14 +315,15 @@ function CreateListingContent() {
   // 标签变化处理（通过 addTag/removeTag 保持与 useListingForm 同步）
   const handleTagsChange = useCallback(
     (newTags: string[]) => {
-      // 找出新增的标签
-      const added = newTags.filter(t => !formData.tags.includes(t));
-      // 找出被移除的标签
-      const removed = formData.tags.filter(t => !newTags.includes(t));
+      const mergedTags = isSourceDepositListingMode
+        ? [...new Set([...sourceDepositLockedTags, ...newTags])]
+        : newTags;
+      const added = mergedTags.filter(t => !formData.tags.includes(t));
+      const removed = formData.tags.filter(t => !mergedTags.includes(t));
       added.forEach(t => addTag(t));
       removed.forEach(t => removeTag(t));
     },
-    [formData.tags, addTag, removeTag]
+    [formData.tags, addTag, removeTag, isSourceDepositListingMode, sourceDepositLockedTags]
   );
 
   // 处理图片变化
@@ -306,6 +363,19 @@ function CreateListingContent() {
     async (e?: React.FormEvent) => {
       e?.preventDefault();
 
+      // Phase 1.0: digital products require a draft first so the seller can
+      // attach files / links / license keys via the edit page (which has a
+      // listingSlug). Direct publish from /listing/new would create an empty
+      // shell with no deliverables.
+      if (formData.contractType === 'DIGITAL_GOOD') {
+        toast({
+          title: t('listing.digital.saveFirstTitle'),
+          description: t('listing.digital.publishBlockedToast'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
       if (!validate()) {
         toast({
           title: t('common.error'),
@@ -336,7 +406,7 @@ function CreateListingContent() {
         }
       }
     },
-    [validate, submit, toast, t, router, returnToDashboard]
+    [validate, submit, toast, t, router, returnToDashboard, formData.contractType]
   );
 
   // 保存草稿
@@ -354,15 +424,15 @@ function CreateListingContent() {
         title: t('common.success'),
         description: t('listing.draftSaved'),
       });
-      router.push(returnToDashboard ? '/admin' : '/settings/store');
+      router.push(returnToDashboard ? '/admin' : '/admin/products');
     }
   }, [submitDraft, toast, t, router, returnToDashboard]);
 
-  // 获取图片URL用于预览
+  // 获取图片URL用于预览（支持外部 CDN URL 和内部 hash）
   const getPreviewImageUrl = useCallback((image: Image) => {
     const hash = image.small || image.medium || image.original;
     if (!hash) return '';
-    return `${getGatewayUrl()}/media/images/${hash}`;
+    return getImageUrl(hash) || '';
   }, []);
 
   // ─── 加载状态 ─────────────────────────────────
@@ -392,7 +462,7 @@ function CreateListingContent() {
           <Container>
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-destructive mb-4">{loadError}</p>
-              <Link href="/settings/store">
+              <Link href="/admin/products">
                 <Button variant="outline">{t('common.back')}</Button>
               </Link>
             </div>
@@ -422,6 +492,9 @@ function CreateListingContent() {
           onSubmit={handleSubmit}
           onSaveDraft={handleSaveDraft}
           onCancel={() => (returnToDashboard ? router.push('/admin') : router.back())}
+          onPriceChange={handlePriceInput}
+          onPriceFocus={handlePriceFocus}
+          onPriceBlur={handlePriceBlur}
           aiLoadingAction={aiLoadingAction}
           onAiImproveTitle={handleAiImproveTitle}
           onAiPolishDescription={handleAiPolishDescription}
@@ -429,6 +502,7 @@ function CreateListingContent() {
           aiImageUrls={aiImageUrls}
           aiNotConfigured={aiNotConfigured}
           onAiApplyAll={handleAiApplyAll}
+          sourceDepositPrefillInput={sourceDepositPrefillInput}
         />
         <Dialog open={!!publishSuccessSlug} onOpenChange={() => setPublishSuccessSlug(null)}>
           <DialogContent className="sm:max-w-md">
@@ -440,7 +514,9 @@ function CreateListingContent() {
             <div className="flex flex-col gap-3 mt-4">
               <Button
                 onClick={() => {
-                  router.push(`/product/${publishSuccessSlug}`);
+                  if (publishSuccessSlug) {
+                    router.push(buildProductHref(publishSuccessSlug, currentUserProfile?.peerID));
+                  }
                   setPublishSuccessSlug(null);
                 }}
                 className="w-full"
@@ -476,6 +552,17 @@ function CreateListingContent() {
             </div>
           </DialogContent>
         </Dialog>
+        <BasePriceSyncDialog
+          open={!!pendingSync}
+          variantCount={pendingSync?.variantCount ?? 0}
+          newPrice={pendingSync?.newPrice ?? ''}
+          onApplyAll={applyToAllVariants}
+          onKeepVariants={applyBaseOnly}
+          onReviewVariants={reviewVariants}
+          onOpenChange={open => {
+            if (!open) setPendingSync(null);
+          }}
+        />
       </>
     );
   }
@@ -491,7 +578,7 @@ function CreateListingContent() {
           <div className="flex items-center justify-between mb-4 lg:mb-6">
             <div className="flex items-center gap-2 lg:gap-3">
               <Link
-                href={returnToDashboard ? '/admin' : '/settings/store'}
+                href={returnToDashboard ? '/admin' : '/admin/products'}
                 className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -532,8 +619,13 @@ function CreateListingContent() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || formData.contractType === 'DIGITAL_GOOD'}
                 data-testid="listing-form-publish"
+                title={
+                  formData.contractType === 'DIGITAL_GOOD'
+                    ? t('listing.digital.publishBlockedToast')
+                    : undefined
+                }
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -612,23 +704,41 @@ function CreateListingContent() {
             {/* 主内容区域 */}
             <div className="lg:col-span-10 space-y-6">
               {/* 商品类型选择 */}
-              <Card
-                className="p-6"
-                ref={el => {
-                  sectionRefs.current.general = el;
-                }}
-              >
-                <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {t('listing.productType')}
-                </h2>
-                <ProductTypeSelector
-                  value={formData.contractType}
-                  onChange={changeContractType}
-                  disabled={isSubmitting}
-                  data-testid="listing-form-type-selector"
-                />
-              </Card>
+              {isSourceDepositListingMode ? (
+                <Card className="border-primary/20 bg-primary/5 p-6">
+                  <h2 className="mb-2 text-lg font-semibold text-foreground">
+                    {t('listing.productType')}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {t('listing.sourceDeposit.lockedTypeHint')}
+                  </p>
+                </Card>
+              ) : (
+                <Card
+                  className="p-6"
+                  ref={el => {
+                    sectionRefs.current.general = el;
+                  }}
+                >
+                  <h2 className="text-lg font-semibold text-foreground mb-4">
+                    {t('listing.productType')}
+                  </h2>
+                  <ProductTypeSelector
+                    value={formData.contractType}
+                    onChange={changeContractType}
+                    disabled={isSubmitting}
+                    data-testid="listing-form-type-selector"
+                  />
+                </Card>
+              )}
 
+              {formData.contractType !== 'RWA_TOKEN' && (
+                <ListingPriceHierarchyBanner
+                  basePrice={formData.price}
+                  pricingCurrency={formData.pricingCurrency}
+                  skus={formData.skus}
+                />
+              )}
               {/* 基础信息 - 非 RWA Token */}
               {formData.contractType !== 'RWA_TOKEN' && (
                 <BasicInfoSection
@@ -646,7 +756,9 @@ function CreateListingContent() {
                   onTitleChange={v => updateField('title', v)}
                   onShortDescriptionChange={v => updateField('shortDescription', v)}
                   onDescriptionChange={v => updateField('description', v)}
-                  onPriceChange={v => updateField('price', v)}
+                  onPriceChange={handlePriceInput}
+                  onPriceFocus={handlePriceFocus}
+                  onPriceBlur={handlePriceBlur}
                   onCompareAtPriceChange={v => updateField('compareAtPrice', v)}
                   onCurrencyChange={v => updateField('pricingCurrency', v)}
                   onConditionChange={v => updateField('condition', v)}
@@ -679,7 +791,55 @@ function CreateListingContent() {
               )}
 
               {/* RWA Token 专用字段 */}
-              {formData.contractType === 'RWA_TOKEN' && (
+              {formData.contractType === 'RWA_TOKEN' && sourceDepositPrefillInput ? (
+                <>
+                  <Card className="p-6">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
+                      {t('listing.basicInfo')}
+                    </h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.title')} <span className="text-destructive">*</span>
+                        </label>
+                        <Input
+                          value={formData.title}
+                          onChange={e => updateField('title', e.target.value)}
+                          placeholder={t('listing.titlePlaceholder')}
+                          maxLength={140}
+                          className={errors.title ? 'border-destructive' : ''}
+                        />
+                        {errors.title && (
+                          <p className="text-destructive text-sm mt-1">{errors.title}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                          {t('listing.description')}
+                        </label>
+                        <textarea
+                          value={formData.description}
+                          onChange={e => updateField('description', e.target.value)}
+                          rows={4}
+                          className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                          placeholder={t('listing.descriptionPlaceholder')}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <SourceCustodyListingFields
+                    prefill={sourceDepositPrefillInput}
+                    price={formData.price}
+                    pricingCurrency={formData.pricingCurrency}
+                    acceptedCurrencies={formData.acceptedCurrencies || []}
+                    onPriceChange={handlePriceInput}
+                    onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
+                    onAcceptedCurrenciesChange={v => updateField('acceptedCurrencies', v)}
+                    errors={errors}
+                  />
+                </>
+              ) : formData.contractType === 'RWA_TOKEN' ? (
                 <>
                   <Card className="p-6">
                     <h2 className="text-lg font-semibold text-foreground mb-4">
@@ -730,7 +890,7 @@ function CreateListingContent() {
                     onCryptoListingCurrencyCodeChange={v =>
                       updateField('cryptoListingCurrencyCode', v)
                     }
-                    onPriceChange={v => updateField('price', v)}
+                    onPriceChange={handlePriceInput}
                     onPricingCurrencyChange={v => updateField('pricingCurrency', v)}
                     onMinQuantityChange={v => updateField('minQuantity', v)}
                     onMaxQuantityChange={v => updateField('maxQuantity', v)}
@@ -738,7 +898,7 @@ function CreateListingContent() {
                     errors={errors}
                   />
                 </>
-              )}
+              ) : null}
 
               {/* 图片/视频上传 */}
               <div
@@ -760,8 +920,8 @@ function CreateListingContent() {
               {/* AI 未配置引导 */}
               {aiNotConfigured && <AiSetupPrompt />}
 
-              {/* AI 从图片生成 */}
-              {aiImageUrls.length > 0 && !aiNotConfigured && (
+              {/* AI 从图片生成 — 仅当模型支持视觉时显示 */}
+              {aiImageUrls.length > 0 && !aiNotConfigured && aiSupportsVision && (
                 <AiImageGeneratePanel
                   imageUrls={aiImageUrls}
                   contractType={formData.contractType}
@@ -864,22 +1024,40 @@ function CreateListingContent() {
                       className="mt-6"
                     />
                   )}
+
+                  <InventoryPolicyField
+                    className="mt-6 pt-6 border-t border-border"
+                    value={formData.inventoryPolicy}
+                    onChange={val => updateField('inventoryPolicy', val)}
+                  />
                 </Card>
               )}
 
-              {/* 数字商品文件 - 仅数字商品 */}
+              {/* 数字商品 — 在新建页只展示流程提示，资产挂载发生在编辑页 (Phase 1.0)。
+                  在没有 listingSlug 之前，DigitalAssetsManagerSection 无法挂载真实资产，
+                  避免发布"空壳"商品。*/}
               {formData.contractType === 'DIGITAL_GOOD' && (
-                <div
+                <Card
+                  className="p-6"
                   ref={el => {
                     sectionRefs.current.files = el;
                   }}
                 >
-                  <DigitalFileSection
-                    files={formData.digitalFiles}
-                    onFilesChange={files => updateField('digitalFiles', files)}
-                    errors={errors}
-                  />
-                </div>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">
+                    {t('listing.digital.title')}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {t('listing.digital.description')}
+                  </p>
+                  <div
+                    className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-foreground"
+                    role="note"
+                    data-testid="listing-digital-save-first-hint"
+                  >
+                    <p className="font-medium mb-1">{t('listing.digital.saveFirstTitle')}</p>
+                    <p className="text-muted-foreground">{t('listing.digital.saveFirst')}</p>
+                  </div>
+                </Card>
               )}
 
               {/* 其他设置 - 处理时间 */}
@@ -906,39 +1084,6 @@ function CreateListingContent() {
                         {t('listing.processingTimeHelper')}
                       </p>
                     </div>
-                    {/* 库存策略 */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium text-foreground">
-                          {t('listing.inventoryPolicy.label')}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {t('listing.inventoryPolicy.helper')}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={formData.inventoryPolicy === 'continue'}
-                        onClick={() =>
-                          updateField(
-                            'inventoryPolicy',
-                            formData.inventoryPolicy === 'continue' ? 'deny' : 'continue'
-                          )
-                        }
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          formData.inventoryPolicy === 'continue' ? 'bg-primary' : 'bg-muted'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            formData.inventoryPolicy === 'continue'
-                              ? 'translate-x-6'
-                              : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
                   </Card>
                 )}
 
@@ -948,6 +1093,17 @@ function CreateListingContent() {
           </div>
         </Container>
       </main>
+      <BasePriceSyncDialog
+        open={!!pendingSync}
+        variantCount={pendingSync?.variantCount ?? 0}
+        newPrice={pendingSync?.newPrice ?? ''}
+        onApplyAll={applyToAllVariants}
+        onKeepVariants={applyBaseOnly}
+        onReviewVariants={reviewVariants}
+        onOpenChange={open => {
+          if (!open) setPendingSync(null);
+        }}
+      />
       <Footer />
 
       {/* Publish Success Dialog */}
@@ -961,7 +1117,9 @@ function CreateListingContent() {
           <div className="flex flex-col gap-3 mt-4">
             <Button
               onClick={() => {
-                router.push(`/product/${publishSuccessSlug}`);
+                if (publishSuccessSlug) {
+                  router.push(buildProductHref(publishSuccessSlug, currentUserProfile?.peerID));
+                }
                 setPublishSuccessSlug(null);
               }}
               className="w-full"

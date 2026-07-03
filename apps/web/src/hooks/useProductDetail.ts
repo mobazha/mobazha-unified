@@ -16,7 +16,29 @@ import {
   discountsApi,
   useChatStore,
   usePaymentMethods,
+  buildProductHref,
+  extractAuthenticityCertificateUrl,
+  isUniquePieceListing,
+  parseArtListingSpecs,
+  ART_LISTING_UNIQUE_EDITION,
+  isCollectibleHubNftListing,
+  hasAuthoritativeCollectibleTitleMetadata,
+  parseCollectibleListingMetadata,
+  resolveCollectibleTitleNetworkLabel,
+  filterPublicProductDisplayTags,
+  resolveRelatedListingsScopeTag,
+  useFeature,
+  getTokenById,
+  useMarketplaceContext,
+  useNativeMarketplaceAttribution,
+  type ArtListingSpecRow,
 } from '@mobazha/core';
+import {
+  isCollectibleDemoCardImageUrl,
+  resolveCollectibleListingImageUrl,
+} from '@mobazha/core/curation/collectibleMarketplace';
+import { useGuestCartStore } from '@mobazha/core/stores';
+import { isSovereignMode } from '@mobazha/core/config/env';
 import { useHaptic } from '@/lib/platform';
 import type {
   Product,
@@ -28,16 +50,14 @@ import type {
   OrderItemOption,
 } from '@mobazha/core';
 import { getAllZones as getAllShippingZones } from '@mobazha/core';
-import {
-  getProductWithDedup,
-  getProfileWithDedup,
-  getRatingsWithDedup,
-} from '@/utils/requestDedup';
+import { getProfileWithDedup, getRatingsWithDedup } from '@/utils/requestDedup';
 
 // --- Pure helpers ---
 
 export function getStockQuantity(product: Product): number {
   if (!product.item.skus || product.item.skus.length === 0) return 999;
+  const hasUnlimited = product.item.skus.some(sku => Number(sku.quantity) < 0);
+  if (hasUnlimited) return 999;
   return product.item.skus.reduce((sum, sku) => sum + (Number(sku.quantity) || 0), 0);
 }
 
@@ -78,11 +98,13 @@ export interface UseProductDetailReturn {
 
   // Loading & error
   isLoading: boolean;
+  isOffline: boolean;
   ratingsLoading: boolean;
   error: string | null;
 
   // Derived
   imageUrls: string[];
+  usesDemoCardArt: boolean;
   priceInfo: { price: number; currency: string; formattedPrice: string; pairedPrice: string };
   compareAtPrice: number | null;
   stock: number;
@@ -95,10 +117,18 @@ export interface UseProductDetailReturn {
   vendorPeerID: string | undefined;
   acceptedCurrencies: string[];
   tags: string[];
+  relatedListingsScopeTag: string | undefined;
   category: string;
+  isRwaToken: boolean;
+  isCollectibleTitleListing: boolean;
+  collectibleListingMeta: ReturnType<typeof parseCollectibleListingMetadata> | null;
+  collectibleTitleNetworkLabel: string | undefined;
   rwaTradeMode: string | undefined;
   rwaEscrowTimeoutSeconds: number;
   paymentAvailable: boolean;
+  isUniquePiece: boolean;
+  authenticityCertificateUrl: string | null;
+  artListingSpecs: ArtListingSpecRow[];
 
   // Variant selection
   hasVariants: boolean;
@@ -140,6 +170,9 @@ export function useProductDetail({
   const { t } = useI18n();
   const router = useRouter();
   const { formatPrice, renderPairedPrice } = useCurrency();
+  const { isSubMarket, config: marketplaceConfig } = useMarketplaceContext();
+  const marketplaceID = marketplaceConfig?.attribution?.marketplaceId || marketplaceConfig?.id;
+  const { trackCheckoutHandoff } = useNativeMarketplaceAttribution(marketplaceID);
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -214,6 +247,8 @@ export function useProductDetail({
     };
   }, [product]);
 
+  const [isOffline, setIsOffline] = useState(false);
+
   // Product fetch
   useEffect(() => {
     const requestKey = `${slug}-${peerID || ''}`;
@@ -225,13 +260,25 @@ export function useProductDetail({
       if (!slug) return;
       setIsLoading(true);
       setError(null);
+      setIsOffline(false);
 
       try {
-        const productData = await getProductWithDedup(slug, peerID, () =>
-          productDataService.getProduct(slug, peerID)
-        );
+        const result = await productDataService.getPublicProduct(slug, peerID);
 
         if (isCancelled) return;
+        if (result.isOffline) {
+          setIsOffline(true);
+          if (result.product) {
+            loadedDataRef.current = requestKey;
+            setProduct(result.product);
+            onProductLoadedRef.current?.(result.product);
+          } else {
+            onProductLoadedRef.current?.(null);
+          }
+          setIsLoading(false);
+          return;
+        }
+        const productData = result.product;
         if (!productData) {
           setError(t('product.notFound'));
           setIsLoading(false);
@@ -324,11 +371,22 @@ export function useProductDetail({
 
   // Derived values
   const imageUrls = useMemo(() => {
-    if (!product?.item?.images) return [];
-    return product.item.images
-      .map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
-      .filter((url): url is string => !!url);
-  }, [product]);
+    const fromListing =
+      product?.item?.images
+        ?.map(img => getImageUrl(img.medium) || getImageUrl(img.large) || getImageUrl(img.original))
+        .map(url => resolveCollectibleListingImageUrl(slug, url))
+        .filter((url): url is string => !!url) ?? [];
+
+    if (fromListing.length > 0) return fromListing;
+
+    const fallback = resolveCollectibleListingImageUrl(slug, undefined);
+    return fallback ? [fallback] : [];
+  }, [product, slug]);
+
+  const usesDemoCardArt = useMemo(
+    () => imageUrls.some(url => isCollectibleDemoCardImageUrl(url)),
+    [imageUrls]
+  );
 
   const priceInfo = useMemo(() => {
     if (!product)
@@ -352,18 +410,65 @@ export function useProductDetail({
   const freeShipping = product ? hasFreeShipping(product) : false;
   const estimatedDelivery = product ? getEstimatedDelivery(product) : null;
   const vendorPeerID = product?.vendorID?.peerID;
-  const acceptedCurrencies = product?.metadata?.acceptedCurrencies || [];
-  const tags = product?.item.tags || [];
+  // Direct-payment distributions resolve the actual payment asset during guest checkout.
+  // Display the listing's authoritative pricing currency instead of stale accepted defaults.
+  const acceptedCurrencies = isSovereignMode()
+    ? product?.metadata?.pricingCurrency?.code
+      ? [product.metadata.pricingCurrency.code]
+      : []
+    : product?.metadata?.acceptedCurrencies || [];
+  const rawTags = useMemo(() => product?.item.tags || [], [product?.item.tags]);
+  const tags = useMemo(() => filterPublicProductDisplayTags(rawTags), [rawTags]);
+  const relatedListingsScopeTag = useMemo(() => resolveRelatedListingsScopeTag(rawTags), [rawTags]);
   const category = product?.item.productType || '';
+  const isUniquePiece = useMemo(
+    () => isUniquePieceListing(product?.item.tags),
+    [product?.item.tags]
+  );
+  const authenticityCertificateUrl = useMemo(
+    () => extractAuthenticityCertificateUrl(product?.item.description),
+    [product?.item.description]
+  );
+  const artListingSpecs = useMemo(() => {
+    const specs = parseArtListingSpecs(product?.item.description);
+    if (isUniquePiece && !specs.some(row => row.key === 'edition') && specs.length > 0) {
+      return [...specs, { key: 'edition' as const, value: ART_LISTING_UNIQUE_EDITION }];
+    }
+    return specs;
+  }, [product?.item.description, isUniquePiece]);
 
   const {
     crypto: vendorCrypto,
     activeFiat: vendorActiveFiat,
     isLoading: paymentMethodsLoading,
   } = usePaymentMethods(vendorPeerID);
+  const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
+  const isCollectibleHubNft = product ? isCollectibleHubNftListing(product) : false;
+  const isCollectibleTitleListing =
+    collectiblesHubEnabled && hasAuthoritativeCollectibleTitleMetadata(product);
+  const collectibleListingMeta = useMemo(
+    () => (product && isCollectibleTitleListing ? parseCollectibleListingMetadata(product) : null),
+    [product, isCollectibleTitleListing]
+  );
+  const collectibleTitleNetworkLabel = useMemo(
+    () =>
+      isCollectibleTitleListing
+        ? resolveCollectibleTitleNetworkLabel(product?.item?.blockchain)
+        : undefined,
+    [isCollectibleTitleListing, product?.item?.blockchain]
+  );
+
+  useEffect(() => {
+    if (isCollectibleTitleListing) {
+      setQuantity(1);
+    }
+  }, [isCollectibleTitleListing, product?.slug]);
   const paymentAvailable =
     paymentMethodsLoading || vendorCrypto.length > 0 || vendorActiveFiat.length > 0;
 
+  const isRwaToken =
+    product?.metadata?.contractType === 'RWA_TOKEN' &&
+    !(collectiblesHubEnabled && isCollectibleHubNft);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rwaTradeMode = (product?.metadata as any)?.rwaTradeMode;
   const rwaEscrowTimeoutSeconds =
@@ -491,10 +596,12 @@ export function useProductDetail({
 
   // Actions
   const addCartItem = useCartStore(state => state.addItem);
+  const addGuestCartItem = useGuestCartStore(state => state.addItem);
   const openCartDrawer = useCartDrawerStore(state => state.open);
 
   const handleAddToCart = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (isRwaToken || isCollectibleTitleListing) return;
 
     const thumbnail = selectedSku?.images?.[0] ??
       product.item?.images?.[0] ?? {
@@ -539,15 +646,72 @@ export function useProductDetail({
     selectedOptions,
     openCartDrawer,
     haptic,
+    isRwaToken,
+    isCollectibleTitleListing,
   ]);
 
   const handleBuyNow = useCallback(() => {
     if (!product || !product.vendorID?.peerID) return;
+    if (product.metadata?.contractType === 'RWA_TOKEN' && !isCollectibleTitleListing) return;
+
+    const checkoutQuantity = isCollectibleTitleListing ? 1 : quantity;
+
+    if (isSubMarket && marketplaceID) {
+      trackCheckoutHandoff({
+        listingSlug: product.slug,
+        peerID: product.vendorID.peerID,
+      });
+    }
+
+    // Sovereign mode: add to guest cart and navigate to guest checkout
+    if (isSovereignMode()) {
+      const rawProduct = product as unknown as Record<string, unknown>;
+      const thumbnail = selectedSku?.images?.[0] ??
+        product.item?.images?.[0] ?? {
+          tiny: '',
+          small: '',
+          medium: '',
+          large: '',
+          original: '',
+        };
+      const currency =
+        product.metadata?.pricingCurrency?.code ||
+        product.metadata?.acceptedCurrencies?.[0] ||
+        'BTC';
+      const divisibility =
+        product.metadata?.pricingCurrency?.divisibility ?? getTokenById(currency)?.decimals ?? 8;
+      const options =
+        hasVariants && Object.keys(selectedOptions).length > 0
+          ? Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
+          : undefined;
+      const listingHash =
+        typeof rawProduct.hash === 'string'
+          ? rawProduct.hash
+          : typeof rawProduct.cid === 'string'
+            ? rawProduct.cid
+            : '';
+
+      addGuestCartItem({
+        slug: product.slug,
+        listingHash,
+        quantity: checkoutQuantity,
+        options,
+        title: product.item?.title || product.slug,
+        price: { amount: effectivePrice, currency, divisibility },
+        thumbnail: thumbnail.small || thumbnail.tiny || thumbnail.medium || '',
+        vendorPeerID: product.vendorID.peerID,
+        contractType: product.metadata.contractType,
+      });
+
+      if (isModal && onClose) onClose();
+      router.push('/guest-checkout');
+      return;
+    }
 
     const checkoutParams = new URLSearchParams({
       slug: product.slug,
       peerID: product.vendorID.peerID,
-      quantity: quantity.toString(),
+      quantity: checkoutQuantity.toString(),
     });
 
     if (hasVariants && Object.keys(selectedOptions).length > 0) {
@@ -561,11 +725,28 @@ export function useProductDetail({
 
     if (isModal && onClose) onClose();
     router.push(`/checkout?${checkoutParams.toString()}`);
-  }, [product, quantity, hasVariants, selectedOptions, isModal, onClose, router]);
+  }, [
+    isSubMarket,
+    marketplaceID,
+    product,
+    quantity,
+    effectivePrice,
+    selectedSku,
+    hasVariants,
+    selectedOptions,
+    isModal,
+    onClose,
+    router,
+    addGuestCartItem,
+    isCollectibleTitleListing,
+    trackCheckoutHandoff,
+  ]);
 
   const handleCopyLink = useCallback(async () => {
     if (!product) return;
-    const url = `${window.location.origin}/product/${product.slug}`;
+    const url = buildProductHref(product.slug, peerID || product.vendorID?.peerID, {
+      baseUrl: window.location.origin,
+    });
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -580,7 +761,7 @@ export function useProductDetail({
     }
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
-  }, [product]);
+  }, [product, peerID]);
 
   return {
     product,
@@ -590,9 +771,11 @@ export function useProductDetail({
     applicableDiscounts,
     rwaChainData,
     isLoading,
+    isOffline,
     ratingsLoading,
     error,
     imageUrls,
+    usesDemoCardArt,
     priceInfo: effectivePriceInfo,
     compareAtPrice,
     stock: effectiveStock,
@@ -605,10 +788,18 @@ export function useProductDetail({
     vendorPeerID,
     acceptedCurrencies,
     tags,
+    relatedListingsScopeTag,
     category,
     rwaTradeMode,
     rwaEscrowTimeoutSeconds,
     paymentAvailable,
+    isUniquePiece,
+    authenticityCertificateUrl,
+    artListingSpecs,
+    isRwaToken,
+    isCollectibleTitleListing,
+    collectibleListingMeta,
+    collectibleTitleNetworkLabel,
     hasVariants,
     selectedOptions,
     selectedSku,

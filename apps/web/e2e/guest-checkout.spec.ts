@@ -7,7 +7,7 @@
  * Routes under test:
  *   /guest-checkout       — multi-step guest checkout wizard
  *   /guest-order/:token   — token-based order status page
- *   /admin/settings/guest-checkout — seller toggle + coin config
+ *   /admin/payments — seller toggle + coin config
  *
  * Run:
  *   npx playwright test guest-checkout.spec.ts --project=chromium --reporter=list
@@ -15,10 +15,11 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { setupMockAuth } from './fixtures/mock-auth';
+import { runtimeConfigScript } from './fixtures/runtime-config';
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_ORDER_TOKEN = 'mock';
+const MOCK_ORDER_TOKEN = 'gst_test_order';
 
 // Note: paymentAmount is in minimal units (wei for ETH, satoshi for BTC), per backend contract.
 // See pkg/models/guest_order.go + internal/core/guest_order_app_service.go convertToPaymentCoin().
@@ -33,7 +34,9 @@ const MOCK_GUEST_ORDER_RESPONSE = {
   items: [
     {
       listingHash: 'QmTestHash123',
-      title: 'Premium Wireless Headphones',
+      listingTitle: 'Premium Wireless Headphones',
+      listingSlug: 'premium-wireless-headphones',
+      sellerPeerID: '12D3KooWTestPeerID',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -49,12 +52,14 @@ const MOCK_GUEST_ORDER_STATUS = {
   priceCurrency: 'USD',
   priceDivisibility: 2,
   confirmations: 0,
-  requiredConfirmations: 12,
+  requiredConfs: 12,
   expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
   items: [
     {
       listingHash: 'QmTestHash123',
-      title: 'Premium Wireless Headphones',
+      listingTitle: 'Premium Wireless Headphones',
+      listingSlug: 'premium-wireless-headphones',
+      sellerPeerID: '12D3KooWTestPeerID',
       quantity: 1,
       unitPrice: '9900',
     },
@@ -81,7 +86,7 @@ const MOCK_GUEST_ORDERS_LIST = [
     updatedAt: new Date().toISOString(),
   },
   {
-    orderToken: 'mock',
+    orderToken: 'gst_test_order_2',
     state: 'FUNDED',
     paymentCoin: 'BTC',
     paymentAmount: '45000', // 0.00045 BTC in satoshi
@@ -89,7 +94,9 @@ const MOCK_GUEST_ORDERS_LIST = [
     items: [
       {
         listingHash: 'QmTestHash456',
-        title: 'Vintage Camera',
+        listingTitle: 'Vintage Camera',
+        listingSlug: 'vintage-camera',
+        sellerPeerID: '12D3KooWTestPeerID',
         quantity: 1,
         unitPrice: '24500',
       },
@@ -103,7 +110,7 @@ const MOCK_GUEST_ORDERS_LIST = [
 
 /**
  * Match only API requests (pathname starts with /v1/).
- * This avoids intercepting page navigations like /admin/settings/guest-checkout.
+ * This avoids intercepting page navigations like /admin/payments.
  */
 function isV1Api(url: URL, suffix: string): boolean {
   return url.pathname.startsWith('/v1/') && url.pathname.includes(suffix);
@@ -135,17 +142,17 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
     }
   );
 
-  // Guest order detail / fulfill / complete (path with token segment after /guest/orders/)
+  // Guest order detail / ship / complete (path with token segment after /guest/orders/)
   await page.route(
     url => isV1Api(url, '/guest/orders/'),
     async (route, request) => {
       const path = request.url();
-      if (path.includes('/fulfill') || path.includes('/complete')) {
+      if (path.includes('/ship') || path.includes('/complete')) {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            data: { ...MOCK_GUEST_ORDER_STATUS, state: 'FULFILLED' },
+            data: { ...MOCK_GUEST_ORDER_STATUS, state: 'SHIPPED' },
           }),
         });
       }
@@ -157,7 +164,7 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
     }
   );
 
-  // Guest checkout settings — only match /v1/settings/guest-checkout, NOT /admin/settings/guest-checkout
+  // Guest checkout settings — only match /v1/settings/guest-checkout, NOT /admin/payments
   await page.route(
     url => isV1Api(url, '/settings/guest-checkout'),
     async (route, request) => {
@@ -192,11 +199,14 @@ async function mockGuestCheckoutAPIs(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body:
-          `window.__RUNTIME_CONFIG__ = { ` +
-          `features: { guestCheckout: { effective: true, overridable: [] } }, ` +
-          `guestCheckoutEnabled: true ` +
-          `};`,
+        body: runtimeConfigScript({
+          deployment: 'standalone',
+          guestCheckout: true,
+          paymentMethods: [
+            { id: 'BTC', kind: 'crypto', flow: 'address-transfer' },
+            { id: 'ETH', kind: 'crypto', flow: 'address-transfer' },
+          ],
+        }),
       })
   );
 }
@@ -236,11 +246,14 @@ async function mockAppShellAPIs(page: Page): Promise<void> {
       route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body:
-          `window.__RUNTIME_CONFIG__ = { ` +
-          `features: { guestCheckout: { effective: true, overridable: [] } }, ` +
-          `guestCheckoutEnabled: true ` +
-          `};`,
+        body: runtimeConfigScript({
+          deployment: 'standalone',
+          guestCheckout: true,
+          paymentMethods: [
+            { id: 'BTC', kind: 'crypto', flow: 'address-transfer' },
+            { id: 'ETH', kind: 'crypto', flow: 'address-transfer' },
+          ],
+        }),
       })
   );
 
@@ -428,13 +441,14 @@ test.describe('Guest Checkout — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     // Wait for settings API to resolve
     await page.waitForTimeout(3000);
 
     const settingsPage = page.locator('[data-testid="admin-guest-checkout"]').first();
+    await settingsPage.scrollIntoViewIfNeeded();
     await expect(settingsPage).toBeVisible({ timeout: 15000 });
 
     await page.screenshot({
@@ -447,10 +461,11 @@ test.describe('Guest Checkout — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     const settingsPage = page.locator('[data-testid="admin-guest-checkout"]').first();
+    await settingsPage.scrollIntoViewIfNeeded();
     await expect(settingsPage).toBeVisible({ timeout: 15000 });
 
     const toggle = page.getByRole('switch').first();
@@ -481,10 +496,11 @@ test.describe('Guest Checkout — Seller Admin', () => {
     await setupMockAuth(page);
     await mockGuestCheckoutAPIs(page);
 
-    await page.goto('/admin/settings/guest-checkout');
+    await page.goto('/admin/payments');
     await page.waitForLoadState('domcontentloaded');
 
     const settingsPage = page.locator('[data-testid="admin-guest-checkout"]').first();
+    await settingsPage.scrollIntoViewIfNeeded();
     await expect(settingsPage).toBeVisible({ timeout: 15000 });
 
     const saveBtn = page.getByRole('button', { name: /save|保存/i }).first();
@@ -558,7 +574,7 @@ test.describe('Guest Checkout — Edge Cases', () => {
     await mockGuestOrderStatus(page, {
       state: 'FUNDED',
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       txHash: '0xabc123def456789012345678901234567890abcdef1234567890abcdef123456',
     });
 
@@ -578,12 +594,12 @@ test.describe('Guest Checkout — Edge Cases', () => {
     });
   });
 
-  test('guest order status with fulfilled state shows tracking info', async ({ page }) => {
+  test('guest order status with shipped state shows tracking info', async ({ page }) => {
     await mockAppShellAPIs(page);
     await mockGuestOrderStatus(page, {
-      state: 'FULFILLED',
+      state: 'SHIPPED',
       confirmations: 12,
-      requiredConfirmations: 12,
+      requiredConfs: 12,
       trackingNumber: 'UPS1234567890',
       carrier: 'UPS',
     });
@@ -600,7 +616,7 @@ test.describe('Guest Checkout — Edge Cases', () => {
     expect(hasContent).toBe(true);
 
     await page.screenshot({
-      path: 'test-results/guest-edge-fulfilled-tracking.png',
+      path: 'test-results/guest-edge-shipped-tracking.png',
       fullPage: true,
     });
   });

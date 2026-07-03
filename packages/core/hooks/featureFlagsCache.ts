@@ -28,27 +28,43 @@ export function getCachedFeatureFlags(): FeatureFlags | null {
 }
 
 /**
- * Convert a flat FeatureFlags boolean map (from the login API) into the
- * structured FeatureSnapshot shape that `featureFlags.initialize` expects.
- * This bridges the legacy per-key boolean API with the unified system.
+ * Merge server-driven flags into the current unified snapshot (runtime-config
+ * baseline + prior overlays). Server values win per key so SaaS toggles stay
+ * authoritative without wiping unrelated runtime-config entries.
  */
-function bridgeToUnifiedFeatureFlags(flags: FeatureFlags | null): void {
-  if (!flags) return;
-  const snapshot: FeatureSnapshot = {};
+function bridgeToUnifiedFeatureFlags(flags: FeatureFlags): void {
+  const current = featureFlags.snapshot();
+  const merged: FeatureSnapshot = {};
+
+  for (const [key, entry] of Object.entries(current)) {
+    merged[key] = {
+      effective: entry.effective,
+      overridable: [...entry.overridable],
+    };
+  }
+
   for (const [key, value] of Object.entries(flags)) {
     if (typeof value === 'boolean') {
-      snapshot[key] = { effective: value, overridable: [] };
+      merged[key] = {
+        effective: value,
+        overridable: merged[key]?.overridable ?? [],
+      };
     }
   }
-  if (Object.keys(snapshot).length > 0) {
-    featureFlags.initialize(snapshot);
+
+  if (Object.keys(merged).length > 0) {
+    featureFlags.initialize(merged);
   }
 }
 
 /** Replace the cache and notify all subscribers. */
 export function setCachedFeatureFlags(next: FeatureFlags | null): void {
   cachedFlags = next;
-  bridgeToUnifiedFeatureFlags(next);
+  if (next) {
+    bridgeToUnifiedFeatureFlags(next);
+  } else {
+    featureFlags.initializeFromRuntimeConfig();
+  }
   for (const sub of subscribers) {
     sub(cachedFlags);
   }

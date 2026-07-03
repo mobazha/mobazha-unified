@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { useListingForm, aiService, AiServiceError, getGatewayUrl, useI18n } from '@mobazha/core';
+import {
+  useListingForm,
+  aiService,
+  AiServiceError,
+  getAbsoluteImageUrl,
+  useI18n,
+} from '@mobazha/core';
 import type { AiGenerateResponse, ContractType, Image } from '@mobazha/core';
 
 export type QuickCreateStep = 'photos' | 'review' | 'publish';
@@ -32,7 +38,7 @@ export function useQuickCreate() {
       .map((img: Image) => {
         const hash = img.medium || img.small || img.original;
         if (!hash) return '';
-        return `${getGatewayUrl()}/media/images/${hash}`;
+        return getAbsoluteImageUrl(hash) || '';
       })
       .filter(Boolean);
   }, [images]);

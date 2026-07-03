@@ -20,7 +20,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const CADDY_BASE = 'http://localhost:8443';
-const NODE_PASS = process.env.E2E_NODE_PASSWORD || '';
+const NODE_PASS = process.env.E2E_NODE_PASSWORD || 'e2e-standalone-pass';
 const CASDOOR_URL = process.env.E2E_CASDOOR_URL || 'http://localhost:18000';
 const TEST_USERNAME = process.env.E2E_TEST_USERNAME || 'testuser1';
 const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || '123';
