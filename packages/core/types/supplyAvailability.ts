@@ -1,5 +1,5 @@
 /**
- * Buyer-safe supply availability types aligned with mobazha3.0/pkg/contracts.
+ * Buyer-safe supply availability types aligned with mobazha/pkg/contracts.
  * Intentionally omits provider identifiers and internal supplyKind routing.
  */
 

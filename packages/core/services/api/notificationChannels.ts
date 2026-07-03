@@ -2,7 +2,7 @@
  * Notification Channels API
  *
  * CRUD operations for external notification channels (Telegram, Discord, etc.)
- * Backend: mobazha3.0/internal/api/notification_channel_handlers.go
+ * Backend: mobazha/internal/api/notification_channel_handlers.go
  */
 
 import { authGet, authPost, authPut, authDel } from './helpers';

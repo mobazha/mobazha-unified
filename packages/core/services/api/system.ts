@@ -1,8 +1,8 @@
 /**
  * System API — standalone setup + admin dashboard
  *
- * Backend: mobazha3.0/internal/api/standalone_setup_handler.go
- *          mobazha3.0/internal/api/system_admin_handlers.go
+ * Backend: mobazha/internal/api/standalone_setup_handler.go
+ *          mobazha/internal/api/system_admin_handlers.go
  */
 
 import { publicGet, publicPost, nodeAuthGet, nodeAuthPost, nodeAuthPut } from './helpers';

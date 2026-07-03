@@ -191,11 +191,12 @@ const request = {
 
 ### X-Store-PeerID Header
 
-Mini App 管理独立站时，自动注入 `X-Store-PeerID: {peerID}` header。
-SaaS 收到后通过 cross-store proxy middleware 路由到目标独立站。
+Mini App 管理独立站时，自动注入 `X-Store-PeerID: {peerID}` header。SaaS 收到后通过 cross-store proxy
+middleware 路由到目标独立站。
 
 ## Debugging Tips
 
-1. **Check backend expected structure**: Look at `mobazha3.0/pkg/models/*.go` type definitions
-2. **API error `json: cannot unmarshal...`**: Type mismatch — check if field should be string/number/object
+1. **Check backend expected structure**: Look at `mobazha/pkg/models/*.go` type definitions
+2. **API error `json: cannot unmarshal...`**: Type mismatch — check if field should be
+   string/number/object
 3. **Get listing CID**: Call `/v1/listings/index/{peerID}`, match by slug to find `cid`

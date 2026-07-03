@@ -435,7 +435,7 @@ export function mustAssetIdFromTokenId(tokenId: string): string {
 
 /**
  * Best-effort normalization to canonical payment asset id (crypto:* /
- * fiat:provider:CURRENCY). Mirrors mobazha3.0 TryNormalizePaymentCoin for ingress
+ * fiat:provider:CURRENCY). Mirrors mobazha TryNormalizePaymentCoin for ingress
  * lookups. Returns undefined when ambiguous — unlike mustCanonicalCoin which throws.
  */
 export function tryNormalizePaymentCoinToAssetId(raw: string): string | undefined {

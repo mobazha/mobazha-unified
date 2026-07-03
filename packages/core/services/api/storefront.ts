@@ -2,7 +2,7 @@
  * Storefront Config API — PG-201
  *
  * Store branding configuration CRUD.
- * Backend: mobazha3.0/internal/api/storefront_handlers.go
+ * Backend: mobazha/internal/api/storefront_handlers.go
  */
 
 import { authGet, authPut, publicGet } from './helpers';

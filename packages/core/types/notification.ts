@@ -1,7 +1,7 @@
 /**
  * 通知类型定义
  *
- * 与后端 mobazha3.0/pkg/events/registry.go 对齐
+ * 与后端 mobazha/pkg/events/registry.go 对齐
  * 使用 dot-separated 命名格式：{category}.{action}
  */
 

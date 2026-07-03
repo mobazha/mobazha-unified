@@ -9,7 +9,7 @@
 | 仓库 | 主分支路径 | Worktree 路径 | 分支名 |
 |------|-----------|--------------|--------|
 | mobazha_hosting | `~/go/src/github.com/mobazha/mobazha_hosting` | `~/go/src/github.com/mobazha/mobazha_hosting-pm2` | `feat/pm2-guest-checkout` |
-| mobazha3.0 | `~/go/src/github.com/mobazha/mobazha3.0` | `~/go/src/github.com/mobazha/mobazha3.0-pm2` | `feat/pm2-guest-checkout` |
+| mobazha | `~/go/src/github.com/mobazha/mobazha` | `~/go/src/github.com/mobazha/mobazha-pm2` | `feat/pm2-guest-checkout` |
 | mobazha-unified | `~/dev/openbazaar/mobazha-unified` | `~/dev/openbazaar/mobazha-unified-pm2` | `feat/pm2-guest-checkout` |
 
 ## 检查清单
@@ -24,19 +24,19 @@
 
 ```bash
 # ❌ 禁止：在主分支路径下修改 PM-2 相关文件
-cd ~/go/src/github.com/mobazha/mobazha3.0
+cd ~/go/src/github.com/mobazha/mobazha
 vim internal/core/guest_order_app_service.go
 
 # ✅ 正确：在 worktree 路径下修改
-cd ~/go/src/github.com/mobazha/mobazha3.0-pm2
+cd ~/go/src/github.com/mobazha/mobazha-pm2
 vim internal/core/guest_order_app_service.go
 ```
 
 ## 编译与测试命令（使用 worktree 路径）
 
 ```bash
-# 编译 mobazha3.0
-bash -c 'source ~/.gvm/scripts/gvm && gvm use go1.26.1 && cd ~/go/src/github.com/mobazha/mobazha3.0-pm2 && CGO_ENABLED=1 go build -tags goolm ./...'
+# 编译 mobazha
+bash -c 'source ~/.gvm/scripts/gvm && gvm use go1.26.1 && cd ~/go/src/github.com/mobazha/mobazha-pm2 && CGO_ENABLED=1 go build -tags goolm ./...'
 
 # 编译 hosting
 bash -c 'source ~/.gvm/scripts/gvm && gvm use go1.26.1 && cd ~/go/src/github.com/mobazha/mobazha_hosting-pm2 && CGO_ENABLED=1 go build -tags goolm -o /tmp/hosting .'

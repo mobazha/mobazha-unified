@@ -33,7 +33,7 @@ function readBody(req: IncomingMessage): Promise<string> {
 
 /**
  * Serves `/runtime-config.js` in dev when `NEXT_PUBLIC_ENV_MODE=standalone`, matching
- * mobazha3.0 embedded `internal/embedded/frontend/server.go` so the web app bootstrap
+ * mobazha embedded `internal/embedded/frontend/server.go` so the web app bootstrap
  * can apply runtime config and set `auth.mode` + API base URLs before React mounts.
  * Without this, Vite returns 404 for the script in index.html and the app can fall back to
  * SaaS homepage even when the shell passes standalone env vars.

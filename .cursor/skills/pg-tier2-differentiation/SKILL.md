@@ -1,13 +1,15 @@
 ---
 name: pg-tier2-differentiation
-description: 'Tier 2 差异化竞争力执行指南（PG-201~PG-206）。AI Store Builder、品牌化、AI 客服、收藏。触发词："差异化", "AI Store Builder", "Tier 2", "PG-201"~"PG-206", "AI 客服".'
+description:
+  'Tier 2 差异化竞争力执行指南（PG-201~PG-206）。AI Store Builder、品牌化、AI
+  客服、收藏。触发词："差异化", "AI Store Builder", "Tier 2", "PG-201"~"PG-206", "AI 客服".'
 ---
 
 # Tier 2: 差异化竞争力执行指南
 
-> **目标**：构建 Shopify 做不到的能力，形成 Web3 Shopify 的竞争壁垒。
-> **触发词**："差异化"、"AI Store Builder"、"Tier 2"、"PG-201"~"PG-206"
-> **前置条件**：Tier 0 全部完成 + Tier 1 PG-101（AdminLayout）+ PG-110（AI 基础设施）完成
+> **目标**：构建 Shopify 做不到的能力，形成 Web3 Shopify 的竞争壁垒。 **触发词**："差异化"、"AI
+> Store Builder"、"Tier 2"、"PG-201"~"PG-206" **前置条件**：Tier 0 全部完成 + Tier 1
+> PG-101（AdminLayout）+ PG-110（AI 基础设施）完成
 
 ## PG-201: 店铺品牌化（Section-based）
 
@@ -116,7 +118,7 @@ export type StoreSection =
 
 2. **后端存储**：`NodeSettings` key-value（key=`store_config`）
 
-3. **API 端点**（mobazha3.0，3 个新 handler）：
+3. **API 端点**（mobazha，3 个新 handler）：
 
 | Method | Route                              | Auth        | 说明                                         |
 | ------ | ---------------------------------- | ----------- | -------------------------------------------- |

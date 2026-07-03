@@ -5,7 +5,7 @@
  * Captures: anonymous browsing, seller login, admin dashboard.
  *
  * Prerequisites:
- *   - Docker E2E stack running (make up in mobazha3.0/tests/e2e/docker/)
+ *   - Docker E2E stack running (make up in mobazha/tests/e2e/docker/)
  *   - Standalone frontend: pnpm dev --mode standalone --port 3002
  *   - Seed data: profile + listings created via API
  *

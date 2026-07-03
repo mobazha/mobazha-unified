@@ -2,7 +2,7 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 /**
- * Order-side collectible metadata — mirrors mobazha3.0/pkg/models/collectibles_metadata.go
+ * Order-side collectible metadata — mirrors mobazha/pkg/models/collectibles_metadata.go
  */
 
 import { COLLECTIBLE_FULFILLMENT_NFT } from './metadata';

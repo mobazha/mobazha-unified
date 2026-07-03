@@ -1,6 +1,10 @@
 ---
 name: security-guide
-description: Comprehensive security development guide for Mobazha decentralized marketplace covering XSS prevention, Web3 transaction safety, key management, and input validation. Use when working with user input, wallet operations, transactions, or security-sensitive features, "安全", "XSS", "注入", "钱包安全", "合约安全", "密钥管理".
+description:
+  Comprehensive security development guide for Mobazha decentralized marketplace covering XSS
+  prevention, Web3 transaction safety, key management, and input validation. Use when working with
+  user input, wallet operations, transactions, or security-sensitive features, "安全", "XSS",
+  "注入", "钱包安全", "合约安全", "密钥管理".
 ---
 
 # 安全开发指南
@@ -182,7 +186,7 @@ await walletApi.restoreWallet(mnemonic); // 立即使用，不存储
 
 ## 六、后端安全（Go / Solidity）
 
-### 6.1 Go 后端安全（mobazha_hosting / mobazha3.0 / mobazha.info）
+### 6.1 Go 后端安全（mobazha_hosting / mobazha / mobazha.info）
 
 ```go
 // ❌ SQL 注入风险

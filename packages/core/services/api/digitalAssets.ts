@@ -6,7 +6,7 @@
  * 2. License validation — public, per-store, feature-flag gated
  * 3. Seller asset management — authenticated (Bearer token)
  *
- * Backend handlers: mobazha3.0/internal/api/huma_digital_asset_handlers.go
+ * Backend handlers: mobazha/internal/api/huma_digital_asset_handlers.go
  *
  * NOTE: client.ts auto-unwraps `{"data": ...}` envelopes — callers receive
  * the inner payload directly.
@@ -344,7 +344,7 @@ function parseUploadResponse(text: string): DigitalAssetInfo {
     throw new Error('Malformed JSON in upload response');
   }
   // Backend always wraps successful 2xx responses in `{"data": ...}` (see
-  // `pkg/response.Created` in mobazha3.0). `client.ts` normally unwraps
+  // `pkg/response.Created` in mobazha). `client.ts` normally unwraps
   // this envelope for us, but XHR bypasses that pipeline so we replicate
   // the unwrap here. Reject anything that doesn't fit the contract rather
   // than silently passing the raw body through — that hid bugs in the past

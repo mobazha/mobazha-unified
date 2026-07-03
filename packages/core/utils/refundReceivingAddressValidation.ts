@@ -1,6 +1,6 @@
 /**
  * Client-side validation for buyer default refund receiving addresses.
- * Mirrors backend permissiveness in mobazha3.0/pkg/paymentaddress.
+ * Mirrors backend permissiveness in mobazha/pkg/paymentaddress.
  */
 
 import {

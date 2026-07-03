@@ -1,6 +1,10 @@
 ---
 name: web3-guide
-description: Guide for Web3/blockchain development in Mobazha including wallet connection (Reown AppKit), ethers.js v6 patterns, Escrow smart contracts, multi-chain support, and RWA tokenization. Use when working with wallets, transactions, smart contracts, or blockchain features, "Web3", "钱包", "合约", "Escrow", "区块链", "交易", "RWA".
+description:
+  Guide for Web3/blockchain development in Mobazha including wallet connection (Reown AppKit),
+  ethers.js v6 patterns, Escrow smart contracts, multi-chain support, and RWA tokenization. Use when
+  working with wallets, transactions, smart contracts, or blockchain features, "Web3", "钱包",
+  "合约", "Escrow", "区块链", "交易", "RWA".
 ---
 
 # Web3 开发指南
@@ -19,9 +23,8 @@ Mobazha 去中心化市场的区块链开发规范。
 
 ## 支持的网络
 
-**EVM 主网**：Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche
-**EVM 测试网**：Sepolia, BSC Testnet, Mumbai, Arbitrum Sepolia, Optimism Sepolia, Fuji
-**Solana**：Mainnet, Devnet
+**EVM 主网**：Ethereum, BSC, Polygon, Arbitrum, Optimism, Avalanche **EVM 测试网**：Sepolia, BSC
+Testnet, Mumbai, Arbitrum Sepolia, Optimism Sepolia, Fuji **Solana**：Mainnet, Devnet
 
 ## 钱包连接模式
 
@@ -236,18 +239,18 @@ const balance = await contract.balanceOf(ownerAddress, tokenId);
 
 ### Go Binding 生成
 
-mobazha3.0 通过 `abigen` 生成 Go binding 与合约交互：
+mobazha 通过 `abigen` 生成 Go binding 与合约交互：
 
 ```bash
 # 从 ABI 生成 Go binding
 abigen --abi=MobazhaEscrow.abi --pkg=escrow --out=escrow.go
 
-# Go binding 位置: mobazha3.0/pkg/contracts/
+# Go binding 位置: mobazha/pkg/contracts/
 ```
 
 ### Go 后端合约交互
 
-mobazha3.0 中的合约调用模式：
+mobazha 中的合约调用模式：
 
 ```go
 // pkg/contracts/ — Go binding 文件
@@ -257,5 +260,6 @@ mobazha3.0 中的合约调用模式：
 
 ## 相关功能文档
 
-- **[钱包集成](../../docs/features/wallet-integration.md)** — useWallet Hook 完整 API、AppKit 配置、Escrow 合约、支持的链列表
+- **[钱包集成](../../docs/features/wallet-integration.md)** — useWallet
+  Hook 完整 API、AppKit 配置、Escrow 合约、支持的链列表
 - **bsc-smart-contracts** 各合约目录下的 README.md — 合约详细说明

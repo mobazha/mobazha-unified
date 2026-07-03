@@ -2,7 +2,7 @@
  * AI Settings API
  *
  * Manage AI provider configuration (provider, API key, model, enabled).
- * Backend: mobazha3.0/internal/api/ai_handlers.go
+ * Backend: mobazha/internal/api/ai_handlers.go
  */
 
 import { nodeAuthGet, nodeAuthPut, nodeAuthPost } from './helpers';

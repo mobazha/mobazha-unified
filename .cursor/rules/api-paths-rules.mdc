@@ -20,7 +20,7 @@ globs:
 
 | 常量组 | 后端服务 | URL 拼接 | 前缀 |
 |---|---|---|---|
-| `NODE_API` | mobazha3.0 | `getGatewayUrl()` + path | `/v1/` 前缀由 URL 提供 |
+| `NODE_API` | mobazha | `getGatewayUrl()` + path | `/v1/` 前缀由 URL 提供 |
 | `HOSTING_API` | mobazha_hosting | 绝对路径，含 `/platform/` | `/platform/v1/` |
 | `SEARCH_API` | mobazha.info | `getSearchUrl()` + path | 目标 `/search/v1/` |
 

@@ -4,11 +4,11 @@
 #
 # Env vars for backend worktree paths (override for CI or non-standard layouts):
 #   SPEC_HOSTING_PATH  — mobazha_hosting repo root
-#   SPEC_NODE_PATH     — mobazha3.0 repo root
+#   SPEC_NODE_PATH     — mobazha repo root
 #   SPEC_SEARCH_PATH   — mobazha.info repo root
 
 SPEC_HOSTING_PATH ?= /Users/mingfeng/go/src/github.com/mobazha/mobazha_hosting-arch
-SPEC_NODE_PATH    ?= /Users/mingfeng/go/src/github.com/mobazha/mobazha3.0-arch
+SPEC_NODE_PATH    ?= /Users/mingfeng/go/src/github.com/mobazha/mobazha-arch
 SPEC_SEARCH_PATH  ?= /Users/mingfeng/go/src/github.com/mobazha/mobazha.info
 
 GVM_ACTIVATE = source ~/.gvm/scripts/gvm && gvm use go1.26.1

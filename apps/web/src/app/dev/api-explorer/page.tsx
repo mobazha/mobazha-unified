@@ -64,7 +64,7 @@ const ENDPOINTS: EndpointDef[] = [
     typeSafe: true,
   },
 
-  // Node API (/v1) — proxied to mobazha3.0
+  // Node API (/v1) — proxied to mobazha
   {
     id: 'profiles',
     label: 'GET /v1/profiles',

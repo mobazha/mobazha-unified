@@ -2,7 +2,7 @@
  * Webhooks API
  *
  * CRUD operations for webhook endpoints + delivery history.
- * Backend: mobazha3.0/internal/api/webhook_handlers.go
+ * Backend: mobazha/internal/api/webhook_handlers.go
  */
 
 import { authGet, authPost, authDel, authRequest } from './helpers';

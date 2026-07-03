@@ -2,7 +2,7 @@
  * Type-safe API client powered by openapi-fetch + OpenAPI-generated types.
  *
  * Three client factories, one per backend service:
- *   - createNodeClient()    → mobazha3.0 node API  (/v1/*)
+ *   - createNodeClient()    → mobazha node API  (/v1/*)
  *   - createHostingClient() → mobazha_hosting API   (/api/*)
  *   - createSearchClient()  → mobazha.info search   (/info/api/*)
  *

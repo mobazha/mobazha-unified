@@ -8,7 +8,7 @@ services and self-hosted Mobazha nodes, adapting the interface to the capabiliti
 connected backend.
 
 [Try Mobazha](https://app.mobazha.org/) ·
-[Run a self-hosted node](https://github.com/mobazha/mobazha3.0) ·
+[Run a self-hosted node](https://github.com/mobazha/mobazha) ·
 [Architecture](./docs/architecture/RUNTIME_CAPABILITIES.md) · [Contributing](./CONTRIBUTING.md)
 
 > **Status:** This project is a release candidate. APIs, packaging, and deployment instructions may
@@ -31,7 +31,7 @@ setting up infrastructure.
 
 ### Self-hosted node
 
-Run the open-source [Mobazha node](https://github.com/mobazha/mobazha3.0) on your own infrastructure
+Run the open-source [Mobazha node](https://github.com/mobazha/mobazha) on your own infrastructure
 when you want to control the deployment, data, domain, and available integrations. The node provides
 the backend and can serve its embedded Web UI after startup.
 
@@ -90,7 +90,7 @@ corepack pnpm dev:vite
 ```
 
 The development server is available at `http://127.0.0.1:3000` by default. Build and start the
-[Mobazha node](https://github.com/mobazha/mobazha3.0#build-from-source) first if you do not already
+[Mobazha node](https://github.com/mobazha/mobazha#build-from-source) first if you do not already
 have a compatible backend.
 
 ### Common commands

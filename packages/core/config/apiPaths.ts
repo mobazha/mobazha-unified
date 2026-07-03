@@ -20,9 +20,9 @@ import { NODE_API_PATHS, HOSTING_API_PATHS, SEARCH_API_PATHS } from './apiPaths.
 export type SettlementActionKind = 'confirm' | 'cancel' | 'complete' | 'dispute-release';
 
 // ============================================================
-// 节点 API（mobazha3.0，经 hosting 反向代理）
+// 节点 API（mobazha，经 hosting 反向代理）
 // 与 getGatewayUrl() 拼接（getGatewayUrl 已含 /v1 前缀）
-// 后端注册：mobazha3.0/internal/api/gateway.go → newV1Router()
+// 后端注册：mobazha/internal/api/gateway.go → newV1Router()
 // ============================================================
 export const NODE_API = {
   ...NODE_API_PATHS,

@@ -4,7 +4,7 @@ info:
   description: |
     Mobazha SaaS Hosting platform API. This API provides:
     - **Hosting-native endpoints** (`/api/...`): Authentication, group marketplace, encryption, relay, etc.
-    - **Node proxy endpoints** (`/v1/...`): Proxied to underlying mobazha3.0 node instances (orders, listings, profiles, etc.)
+    - **Node proxy endpoints** (`/v1/...`): Proxied to underlying mobazha node instances (orders, listings, profiles, etc.)
 
     ## Authentication
     Most endpoints require a JWT token obtained via `/api/signin` or platform-specific sign-in endpoints.
@@ -58,17 +58,17 @@ tags:
   - name: Stripe
     description: Stripe payment integration
   - name: Node - Orders
-    description: 'Order lifecycle (proxied to mobazha3.0 node)'
+    description: 'Order lifecycle (proxied to mobazha node)'
   - name: Node - Listings
-    description: 'Listing management (proxied to mobazha3.0 node)'
+    description: 'Listing management (proxied to mobazha node)'
   - name: Node - Profiles
-    description: 'Profile management (proxied to mobazha3.0 node)'
+    description: 'Profile management (proxied to mobazha node)'
   - name: Node - Wallet
-    description: 'Wallet operations (proxied to mobazha3.0 node)'
+    description: 'Wallet operations (proxied to mobazha node)'
   - name: Node - Chat
-    description: 'P2P chat (proxied to mobazha3.0 node)'
+    description: 'P2P chat (proxied to mobazha node)'
   - name: Node - Media
-    description: 'Image and file operations (proxied to mobazha3.0 node)'
+    description: 'Image and file operations (proxied to mobazha node)'
   - name: Admin
     description: 'Tenant lifecycle management (admin-only)'
 
@@ -451,7 +451,7 @@ components:
     # Node proxy schemas (simplified)
     Order:
       type: object
-      description: Order object from mobazha3.0 node
+      description: Order object from mobazha node
       properties:
         orderId:
           type: string
@@ -463,7 +463,7 @@ components:
 
     Listing:
       type: object
-      description: Listing object from mobazha3.0 node
+      description: Listing object from mobazha node
       properties:
         slug:
           type: string
@@ -472,7 +472,7 @@ components:
 
     Profile:
       type: object
-      description: Profile object from mobazha3.0 node
+      description: Profile object from mobazha node
       properties:
         peerID:
           type: string
@@ -1838,13 +1838,13 @@ paths:
           description: User kicked
 
   # =========================================================================
-  # Node Proxy — Orders (proxied to mobazha3.0)
+  # Node Proxy — Orders (proxied to mobazha)
   # =========================================================================
   /v1/orders/purchase:
     post:
       tags: [Node - Orders]
       summary: Create a new purchase order
-      description: Proxied to mobazha3.0 node
+      description: Proxied to mobazha node
       responses:
         '200':
           description: Order created

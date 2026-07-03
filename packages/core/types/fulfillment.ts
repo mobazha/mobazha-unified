@@ -160,7 +160,7 @@ export type FulfillmentStatus =
 
 /**
  * Why a fulfillment order is in a non-terminal failed state.
- * Mirrors backend `contracts.FailureReason` (mobazha3.0).
+ * Mirrors backend `contracts.FailureReason` (mobazha).
  *
  * - retryable_provider_error  → automatic retry will be attempted
  * - validation_failed         → bad request to provider, will not retry

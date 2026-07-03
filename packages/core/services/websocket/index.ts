@@ -54,7 +54,7 @@ function encodeWebSocketTokenProtocol(token: string): string {
 }
 
 /**
- * Direct mobazha3.0 node connections (standalone/sovereign seller, local dev)
+ * Direct mobazha node connections (standalone/sovereign seller, local dev)
  * authenticate via ?token= because Basic Auth uses ?token=basic:... and the
  * node historically did not read Sec-WebSocket-Protocol. SaaS hosting resolves
  * auth from the protocol header instead.
