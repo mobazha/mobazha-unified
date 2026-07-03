@@ -1,14 +1,49 @@
-# Reviewed public contract addresses and non-secret browser storage identifiers.
-#
-# These fingerprints are scoped to the exact candidate commits, paths, rules,
-# and lines. They do not suppress other values or future changes at these paths.
+# Reviewed findings in the canonical public history ending at d19586cc0.
+# Fingerprints are scoped to exact commits, paths, rules, and lines so future
+# values at the same paths are still scanned.
+
+# Non-secret browser storage identifiers and deterministic test fixtures.
 bcd94a420dd3b753370419632ececefa9ef57af1:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:31
-bcd94a420dd3b753370419632ececefa9ef57af1:packages/core/hooks/usePayment.ts:generic-api-key:110
-bcd94a420dd3b753370419632ececefa9ef57af1:packages/core/hooks/usePayment.ts:generic-api-key:117
-f449759c8ba413f91406d79f1685943b85edb6a2:packages/core/services/api/orders.ts:generic-api-key:925
+1e10d56be7dcdf8710d06ccda6a795da4fc91217:apps/web/e2e/guest-checkout-screenshots.spec.ts:generic-api-key:17
+d6ead887f3cb071b892048efbf4db3f66e068db7:apps/web/e2e/guest-checkout.spec.ts:generic-api-key:21
+d6ead887f3cb071b892048efbf4db3f66e068db7:apps/web/e2e/guest-checkout.spec.ts:generic-api-key:82
+9a4f73797db6cb57f0896f6e783adeb448c99d8e:apps/web/e2e/standalone-deep.spec.ts:generic-api-key:23
+e3e53eefb2c92074926bdf35bc91a2e432a82657:apps/web/src/app/settings/keys/page.tsx:generic-api-key:98
+44853351f91352c79a642a78837ecfbe7a52c6f4:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
+dfab3d9cd83f66b680f21c8eeffcdbef2abe41a5:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
+f629883dd1a80da88c5381ad28dda69c9720a362:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
+ff7d6c6dec9107c304165ccea8e616c60749fab1:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:17
+
+# Public EVM contract and token addresses used by examples or retired clients.
+42b69d50fd229b02c8c52161267d82a14aca8c36:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
+2f60e0bd7185e84d2e2b129d2b22c97965bc973e:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
+3bdfe6fc221b35f9b866a9a4879705e5ce98936a:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
+9552033a7f92743eb31f20d165a2974be480735d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
+9552033a7f92743eb31f20d165a2974be480735d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
 f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
 f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
+a435944011b9cecdc1f72178c1e69a010b9ba868:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
+a435944011b9cecdc1f72178c1e69a010b9ba868:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
+aed356317d568c3fd16dca4f150de00344bf59ed:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
+aed356317d568c3fd16dca4f150de00344bf59ed:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
+06e7eb397ec17d0a8d2b87cb7cfa9eadc8519f50:packages/core/config/appkit.ts:generic-api-key:69
 ea34403dcb9453a1afae6a613dd8c0ba8bc05935:packages/core/config/appkit.ts:generic-api-key:69
-42b69d50fd229b02c8c52161267d82a14aca8c36:apps/web/src/app/otc/erc3525/[orderId]/page.tsx:generic-api-key:79
+8652de43f5445034818a1ad978d6e2c3150f9c2a:packages/core/config/appkit.ts:generic-api-key:69
+b327288b72f2fc91808522ad9a08223356c0f319:packages/core/config/appkit.ts:generic-api-key:69
+49fd1ba371250673c746c9faf40cea64cdea7737:packages/core/hooks/usePayment.ts:generic-api-key:108
+49fd1ba371250673c746c9faf40cea64cdea7737:packages/core/hooks/usePayment.ts:generic-api-key:115
+bcd94a420dd3b753370419632ececefa9ef57af1:packages/core/hooks/usePayment.ts:generic-api-key:110
+bcd94a420dd3b753370419632ececefa9ef57af1:packages/core/hooks/usePayment.ts:generic-api-key:117
 cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:108
 cafb7c15fc2f8c0db25622947dfafdea8f332ff5:packages/core/hooks/usePayment.ts:generic-api-key:115
+cc9f7fa2754e984002183cc760562c377a3d899b:packages/core/hooks/usePayment.ts:generic-api-key:108
+cc9f7fa2754e984002183cc760562c377a3d899b:packages/core/hooks/usePayment.ts:generic-api-key:115
+0682212d168bd0bf554fe12a7fe836d8e0e1998a:packages/core/services/api/orders.ts:generic-api-key:925
+f449759c8ba413f91406d79f1685943b85edb6a2:packages/core/services/api/orders.ts:generic-api-key:925
+6e459773a54dc3922d9c0479d130a764c6802e74:packages/core/services/api/orders.ts:generic-api-key:925
+86f89c6f87369f6b5978ed66280d3858e1505fcd:packages/core/services/api/orders.ts:generic-api-key:925
+
+# Historical NEXT_PUBLIC Etherscan identifiers embedded in browser clients.
+# These were public rate-limited identifiers, never backend credentials.
+f6a7b228d2f691f9c44106b59ed728a28b4033f2:packages/core/services/rwa/rwaPriceService.ts:generic-api-key:27
+782565fd7d16153ad5a24f2ac3a1b6364204bd09:packages/core/services/rwa/rwaTransactionService.ts:generic-api-key:13
