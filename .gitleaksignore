@@ -2,9 +2,9 @@
 #
 # These fingerprints are scoped to the exact candidate commits, paths, rules,
 # and lines. They do not suppress other values or future changes at these paths.
-4aff5043d95a5dcc26a849b3d3194ce57e9ffd44:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:31
-4aff5043d95a5dcc26a849b3d3194ce57e9ffd44:packages/core/hooks/usePayment.ts:generic-api-key:110
-4aff5043d95a5dcc26a849b3d3194ce57e9ffd44:packages/core/hooks/usePayment.ts:generic-api-key:117
+bcd94a420dd3b753370419632ececefa9ef57af1:apps/web/src/components/SettingsContent/OperatorResponsibilitiesContent.tsx:generic-api-key:31
+bcd94a420dd3b753370419632ececefa9ef57af1:packages/core/hooks/usePayment.ts:generic-api-key:110
+bcd94a420dd3b753370419632ececefa9ef57af1:packages/core/hooks/usePayment.ts:generic-api-key:117
 f449759c8ba413f91406d79f1685943b85edb6a2:packages/core/services/api/orders.ts:generic-api-key:925
 f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:134
 f574625a330f2e6b199c142a3a40a4936601e60d:docs/TOKEN_STANDARD_GUIDE.md:generic-api-key:155
