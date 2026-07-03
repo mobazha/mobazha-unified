@@ -8,17 +8,23 @@ services and self-hosted Mobazha nodes, adapting the interface to the capabiliti
 connected backend.
 
 [Try Mobazha](https://app.mobazha.org/) ·
-[Run a self-hosted node](https://github.com/mobazha/mobazha) ·
-[Architecture](./docs/architecture/RUNTIME_CAPABILITIES.md) · [Contributing](./CONTRIBUTING.md)
+[Product Tour](./docs/product/TOUR.md) ·
+[Run a self-hosted node](https://github.com/mobazha/mobazha/blob/main/docs/getting-started/SELF_HOSTING.md) ·
+[Documentation](./docs/README.md) · [Contributing](./CONTRIBUTING.md)
 
 > **Status:** This project is a release candidate. APIs, packaging, and deployment instructions may
 > change before the first stable release.
+
+[![The Mobazha Official Merch storefront showing a branded store and product listings](./docs/assets/screenshots/mobazha-official-store.jpg)](https://app.mobazha.org/)
+
+_A live storefront powered by Mobazha Unified._
 
 ## What is included
 
 - Buyer-facing storefronts, product discovery, and marketplace experiences
 - Product detail, cart, checkout, and payment-selection flows
 - Seller administration for products, orders, shipping, and store appearance
+- Capability-driven AI assistance and external agent integrations
 - Responsive interfaces for web, mobile, and embedded experiences
 - Shared Vite and Next.js entry points backed by reusable core and UI packages
 
@@ -90,7 +96,7 @@ corepack pnpm dev:vite
 ```
 
 The development server is available at `http://127.0.0.1:3000` by default. Build and start the
-[Mobazha node](https://github.com/mobazha/mobazha#build-from-source) first if you do not already
+[Mobazha node self-hosting guide](https://github.com/mobazha/mobazha/blob/main/docs/getting-started/SELF_HOSTING.md) first if you do not already
 have a compatible backend.
 
 ### Common commands
@@ -114,6 +120,9 @@ Both entry points share the same outer provider tree in
 
 Provider order and runtime-capability behavior must remain equivalent across both entry points.
 
+See [Frontend Development](./docs/getting-started/FRONTEND_DEVELOPMENT.md) and
+[Connect to a Local Node](./docs/getting-started/CONNECT_TO_NODE.md) for the complete setup flow.
+
 ## Project layout
 
 ```text
@@ -124,8 +133,16 @@ mobazha-unified/
 ├── packages/commerce-web/    # Shared commerce feature contracts
 ├── packages/ui/              # Shared UI components
 ├── config/editions/          # Packaging and compatibility profiles
-└── docs/architecture/        # Public architecture contracts
+└── docs/                     # Product, setup, architecture and design documentation
 ```
+
+## Documentation
+
+- [Product tour](./docs/product/TOUR.md)
+- [Frontend architecture overview](./docs/architecture/OVERVIEW.md)
+- [Runtime capability contract](./docs/architecture/RUNTIME_CAPABILITIES.md)
+- [Frontend development](./docs/getting-started/FRONTEND_DEVELOPMENT.md)
+- [Documentation index](./docs/README.md)
 
 ## Security and supply chain
 
