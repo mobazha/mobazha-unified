@@ -255,10 +255,13 @@ export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
 
 // ========== Guest checkout settings / seller APIs ==========
 
-export function getGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
-  return anonymousGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS).then(
-    fromGuestCheckoutSettingsDTO
-  );
+export function getGuestCheckoutSettings(options?: {
+  signal?: AbortSignal;
+}): Promise<GuestCheckoutSettings> {
+  const request = options
+    ? anonymousGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS, options)
+    : anonymousGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS);
+  return request.then(fromGuestCheckoutSettingsDTO);
 }
 
 export function updateGuestCheckoutSettings(

@@ -120,6 +120,7 @@ async function mockMarketplaceHandoff(page: Page) {
         sellerCount: 2,
         productCount: 2,
       },
+      approvedSellerPeerIDs: [APPROVED_PEER_ID],
       sellers: [
         { peerID: APPROVED_PEER_ID, productGroups: [] },
         { peerID: BLOCKED_PEER_ID, productGroups: [] },

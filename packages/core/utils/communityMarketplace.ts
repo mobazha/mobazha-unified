@@ -210,11 +210,15 @@ export function derivePublicMarketplaceCurationRefs(
     pushUniquePeer(fallbackSellerPeerIDs, fallbackSellerSeen, seller.peerID);
   }
 
-  return {
+  const refs = {
     curatedListingRefs,
     curatedSellerPeerIDs,
     bannerListingRefs,
     fallbackListingRefs,
     fallbackSellerPeerIDs,
   };
+
+  return detail.approvedSellerPeerIDs === undefined
+    ? refs
+    : filterPublicMarketplaceCurationRefsByAllowedPeers(refs, detail.approvedSellerPeerIDs);
 }

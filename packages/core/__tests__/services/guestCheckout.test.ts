@@ -143,6 +143,22 @@ describe('guest order mutations', () => {
     );
   });
 
+  it('forwards settings cancellation to the anonymous request boundary', async () => {
+    vi.mocked(anonymousGet).mockResolvedValue({
+      enabled: true,
+      acceptedCoins: 'BTC',
+      availableCoins: 'BTC',
+      paymentTimeout: 30,
+    });
+    const controller = new AbortController();
+
+    await getGuestCheckoutSettings({ signal: controller.signal });
+
+    expect(anonymousGet).toHaveBeenCalledWith('/settings/guest-checkout', {
+      signal: controller.signal,
+    });
+  });
+
   it('refetches status after ship returns 204', async () => {
     vi.mocked(authPut).mockResolvedValue(undefined);
     vi.mocked(anonymousGet).mockResolvedValue(statusDto);

@@ -56,8 +56,18 @@ describe('anonymous API helpers', () => {
     vi.mocked(request).mockResolvedValue({ ok: true });
     const controller = new AbortController();
 
+    await anonymousGet('/settings/guest-checkout', { signal: controller.signal });
     await anonymousPost('/guest/orders', { paymentCoin: 'BTC' }, { signal: controller.signal });
 
+    expect(request).toHaveBeenCalledWith('/v1/settings/guest-checkout', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Store-PeerID': 'store-peer',
+        'X-Storefront-Slug': 'shop',
+      },
+      signal: controller.signal,
+    });
     expect(request).toHaveBeenCalledWith('/v1/guest/orders', {
       method: 'POST',
       body: { paymentCoin: 'BTC' },

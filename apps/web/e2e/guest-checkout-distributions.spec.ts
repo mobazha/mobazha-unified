@@ -74,38 +74,63 @@ async function seedBrowserContext(page: Page, storeContext?: string): Promise<vo
   );
 }
 
-async function installPendingGuestOrderFetch(
+async function installPendingGuestRequestFetch(
   page: Page,
-  options: { failAsTimeout?: boolean } = {}
+  target: 'settings' | 'order'
 ): Promise<void> {
-  await page.addInitScript(({ failAsTimeout }) => {
+  await page.addInitScript(({ target }) => {
     const originalFetch = window.fetch.bind(window);
     window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       const request = input instanceof Request ? input : undefined;
       const rawURL = request?.url ?? (input instanceof URL ? input.href : String(input));
       const url = new URL(rawURL, window.location.origin);
       const method = init?.method ?? request?.method ?? 'GET';
-      if (url.pathname === '/v1/guest/orders' && method.toUpperCase() === 'POST') {
-        window.sessionStorage.setItem('guest-order-request-started', 'true');
+      const isTarget =
+        (target === 'settings' &&
+          url.pathname === '/v1/settings/guest-checkout' &&
+          method.toUpperCase() === 'GET') ||
+        (target === 'order' &&
+          url.pathname === '/v1/guest/orders' &&
+          method.toUpperCase() === 'POST');
+      if (isTarget) {
+        const startedKey = `guest-${target}-request-started-count`;
+        const abortedKey = `guest-${target}-request-aborted-count`;
+        const started = Number(window.sessionStorage.getItem(startedKey) ?? '0');
+        window.sessionStorage.setItem(startedKey, String(started + 1));
         return new Promise((_resolve, reject) => {
           const signal = init?.signal ?? request?.signal;
           const rejectAborted = () => {
-            window.sessionStorage.setItem('guest-order-request-aborted', 'true');
+            const aborted = Number(window.sessionStorage.getItem(abortedKey) ?? '0');
+            window.sessionStorage.setItem(abortedKey, String(aborted + 1));
             reject(new DOMException('Aborted', 'AbortError'));
           };
           if (signal?.aborted) rejectAborted();
           else signal?.addEventListener('abort', rejectAborted, { once: true });
-          if (failAsTimeout) {
-            window.setTimeout(() => {
-              window.sessionStorage.setItem('guest-order-request-timeout-fired', 'true');
-              rejectAborted();
-            }, 50);
-          }
         });
       }
       return originalFetch(input, init);
     };
-  }, options);
+  }, { target });
+}
+
+async function pendingRequestCount(
+  page: Page,
+  target: 'settings' | 'order',
+  state: 'started' | 'aborted'
+): Promise<number> {
+  return page.evaluate(
+    ({ target, state }) =>
+      Number(sessionStorage.getItem(`guest-${target}-request-${state}-count`) ?? '0'),
+    { target, state }
+  );
+}
+
+async function navigateHomeWithinApp(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page).toHaveURL('/');
 }
 
 async function beginGuestOrder(page: Page): Promise<void> {
@@ -241,40 +266,50 @@ test.describe('Guest Checkout distribution matrix', () => {
     test(`${distribution.name} aborts an in-flight order when checkout unmounts`, async ({
       page,
     }) => {
-      await installPendingGuestOrderFetch(page);
+      await installPendingGuestRequestFetch(page, 'order');
       await seedBrowserContext(page, distribution.storeContext);
       const requests = await mockDistributionAPIs(page, distribution);
 
       await beginGuestOrder(page);
-      await expect
-        .poll(() => page.evaluate(() => sessionStorage.getItem('guest-order-request-started')))
-        .toBe('true');
+      await expect.poll(() => pendingRequestCount(page, 'order', 'started')).toBeGreaterThan(0);
+      const abortedBeforeNavigation = await pendingRequestCount(page, 'order', 'aborted');
 
-      await page.locator('header a[href="/"]').first().click();
-      await expect(page).toHaveURL('/');
+      await navigateHomeWithinApp(page);
 
       await expect
-        .poll(() => page.evaluate(() => sessionStorage.getItem('guest-order-request-aborted')))
-        .toBe('true');
+        .poll(() => pendingRequestCount(page, 'order', 'aborted'))
+        .toBeGreaterThan(abortedBeforeNavigation);
       expect(requests.createdOrders()).toBe(0);
     });
 
+    test(`${distribution.name} aborts settings loading when checkout unmounts`, async ({ page }) => {
+      await installPendingGuestRequestFetch(page, 'settings');
+      await seedBrowserContext(page, distribution.storeContext);
+      await mockDistributionAPIs(page, distribution);
+
+      await page.goto('/guest-checkout');
+      await expect.poll(() => pendingRequestCount(page, 'settings', 'started')).toBeGreaterThan(0);
+      const abortedBeforeNavigation = await pendingRequestCount(page, 'settings', 'aborted');
+
+      await navigateHomeWithinApp(page);
+
+      await expect
+        .poll(() => pendingRequestCount(page, 'settings', 'aborted'))
+        .toBeGreaterThan(abortedBeforeNavigation);
+    });
+
     test(`${distribution.name} surfaces an in-flight order timeout`, async ({ page }) => {
-      await installPendingGuestOrderFetch(page, { failAsTimeout: true });
+      test.setTimeout(50_000);
+      await installPendingGuestRequestFetch(page, 'order');
       await seedBrowserContext(page, distribution.storeContext);
       const requests = await mockDistributionAPIs(page, distribution);
 
       await beginGuestOrder(page);
-      await expect
-        .poll(() => page.evaluate(() => sessionStorage.getItem('guest-order-request-started')))
-        .toBe('true');
-      await expect
-        .poll(() =>
-          page.evaluate(() => sessionStorage.getItem('guest-order-request-timeout-fired'))
-        )
-        .toBe('true');
+      await expect.poll(() => pendingRequestCount(page, 'order', 'started')).toBeGreaterThan(0);
 
-      await expect(page.getByRole('heading', { name: /order.*failed/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /order.*failed/i })).toBeVisible({
+        timeout: 35_000,
+      });
       await expect(page.getByText('Request timeout')).toBeVisible();
       expect(requests.createdOrders()).toBe(0);
     });

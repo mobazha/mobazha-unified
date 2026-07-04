@@ -570,6 +570,11 @@ export interface PublicMarketplaceFeaturedItem {
 
 export interface PublicNativeMarketplaceDetail {
   marketplace: PublicNativeMarketplace;
+  /**
+   * Backend-authoritative approved and visible seller boundary for every derived public ref.
+   * Optional while older Hosting versions remain wire-compatible; an explicit empty list fails closed.
+   */
+  approvedSellerPeerIDs?: string[];
   sellers: PublicMarketplaceSeller[];
   featured: PublicMarketplaceFeaturedItem[];
   banners: PublicMarketplaceBanner[];

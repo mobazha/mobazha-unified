@@ -160,8 +160,14 @@ function anonymousHeadersWithContext(): Record<string, string> {
 // Layer 2a: Anonymous buyer — store routing context without credentials
 
 /** Public buyer request that preserves routing context but never sends user/admin credentials. */
-export function anonymousGet<T>(path: string): Promise<T> {
-  return get<T>(`${getGatewayUrl()}${path}`, anonymousHeadersWithContext());
+export function anonymousGet<T>(
+  path: string,
+  options?: Pick<RequestOptions, 'signal' | 'timeout'>
+): Promise<T> {
+  const url = `${getGatewayUrl()}${path}`;
+  const headers = anonymousHeadersWithContext();
+  if (!options) return get<T>(url, headers);
+  return request<T>(url, { ...options, method: 'GET', headers });
 }
 
 /** Public buyer mutation that preserves routing context but never sends user/admin credentials. */

@@ -87,6 +87,49 @@ describe('derivePublicMarketplaceCurationRefs', () => {
     expect(refs.fallbackSellerPeerIDs).toEqual(['QmSellerA']);
   });
 
+  it('applies the backend-authoritative approved seller boundary to every public ref', () => {
+    const detail = buildDetail({
+      approvedSellerPeerIDs: [' QmApproved '],
+      sellers: [
+        { peerID: 'QmApproved', productGroups: [], sortOrder: 1 },
+        { peerID: 'QmBlocked', productGroups: [], sortOrder: 2 },
+      ],
+      featured: [
+        { type: 'listing', peerID: 'QmBlocked', slug: 'blocked', sortOrder: 1 },
+        { type: 'seller', peerID: 'QmApproved', sortOrder: 2 },
+      ],
+      banners: [{ peerID: 'QmBlocked', slug: 'blocked-banner', sortOrder: 1 }],
+      listings: {
+        listings: [
+          { peerID: 'QmApproved', slug: 'approved' },
+          { peerID: 'QmBlocked', slug: 'blocked' },
+        ],
+        total: 2,
+        page: 1,
+        pageSize: 24,
+        totalPage: 1,
+      },
+    });
+
+    expect(derivePublicMarketplaceCurationRefs(detail)).toEqual({
+      curatedListingRefs: [],
+      curatedSellerPeerIDs: ['QmApproved'],
+      bannerListingRefs: [],
+      fallbackListingRefs: [{ peerID: 'QmApproved', slug: 'approved' }],
+      fallbackSellerPeerIDs: ['QmApproved'],
+    });
+
+    expect(
+      derivePublicMarketplaceCurationRefs({ ...detail, approvedSellerPeerIDs: [] })
+    ).toEqual({
+      curatedListingRefs: [],
+      curatedSellerPeerIDs: [],
+      bannerListingRefs: [],
+      fallbackListingRefs: [],
+      fallbackSellerPeerIDs: [],
+    });
+  });
+
   it('fails closed when public projection refs contain unapproved sellers', () => {
     const filtered = filterPublicMarketplaceCurationRefsByAllowedPeers(
       {
