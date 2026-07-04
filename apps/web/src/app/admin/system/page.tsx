@@ -210,8 +210,11 @@ export default function SystemPage() {
       const a = document.createElement('a');
       a.href = url;
       a.download = `mobazha-diag-${new Date().toISOString().slice(0, 10)}.tar.gz`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      // Keep the object URL alive until the browser has consumed the click.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch {
       // silent fail
     } finally {
