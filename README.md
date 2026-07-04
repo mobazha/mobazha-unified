@@ -10,7 +10,8 @@ connected backend.
 [Try Mobazha](https://app.mobazha.org/) ·
 [Run a self-hosted node](https://github.com/mobazha/mobazha) ·
 [Documentation](https://docs.mobazha.org) ·
-[Architecture](./docs/architecture/RUNTIME_CAPABILITIES.md) · [Contributing](./CONTRIBUTING.md)
+[Runtime capabilities](https://docs.mobazha.org/build/runtime-capabilities) ·
+[Public roadmap](https://docs.mobazha.org/project/roadmap) · [Contributing](./CONTRIBUTING.md)
 
 > **Status:** This project is a release candidate. APIs, packaging, and deployment instructions may
 > change before the first stable release.
@@ -59,8 +60,9 @@ Browser-wallet integrations use browser-injected provider standards. The public 
 bundle Reown AppKit or WalletConnect SDK packages, while UTXO checkout remains backend-monitored and
 does not require a browser wallet connector.
 
-See [Runtime capability architecture](./docs/architecture/RUNTIME_CAPABILITIES.md) for the complete
-contract.
+See the canonical [runtime capability guide](https://docs.mobazha.org/build/runtime-capabilities)
+for public semantics and use the versioned configuration types and tests in this repository for
+exact implementation evidence.
 
 ## Development
 

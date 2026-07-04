@@ -1,5 +1,8 @@
 # Mobazha AI UX 体验审查报告
 
+> **Dated evidence:** This audit records observations for its reviewed build.
+> It is not current public product guidance; see <https://docs.mobazha.org>.
+
 > 审查日期: 2026-02-28
 > 审查范围: 90 张视觉基线截图（44 Desktop + 46 Mobile）
 > 审查方法: AI 三层评审（评分卡 + 竞品对标 + 移动专项）

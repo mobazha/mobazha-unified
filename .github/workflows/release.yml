@@ -26,6 +26,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Verify documentation authority boundaries
+        run: node scripts/check-documentation-authority.mjs
+
       - name: Verify release documentation and reviewed source revision
         run: node scripts/check-release-documentation.mjs "${{ github.ref_name }}"
 

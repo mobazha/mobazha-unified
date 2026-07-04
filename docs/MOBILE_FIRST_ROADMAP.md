@@ -1,5 +1,9 @@
 # Phase M — Mobile-First Mini App 改造路线图
 
+> **Implementation-local:** This file tracks Unified execution details, not a
+> public delivery commitment. Canonical public outcomes live at
+> <https://docs.mobazha.org/project/roadmap>.
+
 > **定位**：将 Mobazha 从"桌面端可用、移动端勉强"进化为"移动端原生级体验"，
 > 以 Telegram Mini App 和 Discord Activity 为主要发布形态。
 >

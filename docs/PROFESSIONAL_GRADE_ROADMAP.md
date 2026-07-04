@@ -1,5 +1,9 @@
 # Professional Grade Roadmap — Web3 Shopify 专业水准路线图
 
+> **Implementation-local:** This file tracks Unified execution details, not a
+> public delivery commitment. Canonical public outcomes live at
+> <https://docs.mobazha.org/project/roadmap>.
+
 > **定位**：Mobazha 的目标是成为 Web3 时代的 Shopify。本文档定义从"P2P 交易工具"进化到"专业电商平台"所需的全部工作。
 >
 > **设计自由度**：产品尚未上线，前后端均可根据最佳用户体验重新设计。**先定义理想 UX，再让 API 跟着走**，不受历史 API 约束。

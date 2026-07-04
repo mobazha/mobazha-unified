@@ -1,5 +1,8 @@
 # 移动端体验审核报告
 
+> **Dated evidence:** This audit records observations for its reviewed build.
+> It is not current public product guidance; see <https://docs.mobazha.org>.
+
 > **审核日期**：2026-03-01
 > **审核范围**：mobazha-unified 全部面向买家的 Storefront 页面 + Admin 管理页面
 > **目标平台**：Telegram Mini App、Discord Activity、Mobile Web

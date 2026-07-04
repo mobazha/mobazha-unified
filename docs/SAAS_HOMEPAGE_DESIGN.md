@@ -1,5 +1,9 @@
 # SaaS 首页重设计 — Stores First
 
+> **Implementation-local:** This file is a Unified feature design, not a public
+> delivery commitment. Canonical public outcomes live at
+> <https://docs.mobazha.org/project/roadmap>.
+
 > **任务 ID**: PG-207
 >
 > **定位**：将 SaaS 首页从"假装繁荣的商品市场"转型为"Web3 店铺托管平台展示页"。

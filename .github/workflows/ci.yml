@@ -45,6 +45,9 @@ jobs:
       - name: Check default release boundary
         run: pnpm community:check
 
+      - name: Check documentation authority boundaries
+        run: pnpm docs:authority:check
+
       - name: Run ESLint
         run: pnpm lint
 

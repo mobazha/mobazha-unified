@@ -11,6 +11,7 @@
     "lint": "turbo lint",
     "lint:fix": "turbo lint -- --fix",
     "community:check": "node scripts/check-community-boundary.mjs",
+    "docs:authority:check": "node scripts/check-documentation-authority.mjs",
     "release:docs:check": "node scripts/check-release-documentation.mjs",
     "commerce-kit:consumers": "node scripts/check-commerce-kit-consumers.mjs",
     "typecheck": "turbo typecheck",

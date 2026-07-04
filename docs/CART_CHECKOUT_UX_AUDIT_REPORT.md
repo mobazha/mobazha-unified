@@ -1,5 +1,8 @@
 # Cart & Checkout UX Audit Report — Standalone Store Mobile (375×667)
 
+> **Dated evidence:** This audit records observations for its reviewed build.
+> It is not current public product guidance; see <https://docs.mobazha.org>.
+
 **Date:** 2026-03-08  
 **Audit Scope:** Mobazha standalone store (decentralized e-commerce) in Telegram Mini App mobile mode  
 **Viewport:** 375×667 (iPhone SE)
