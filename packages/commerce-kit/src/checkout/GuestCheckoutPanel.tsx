@@ -6,6 +6,7 @@ import {
 } from '../labels';
 import { CommerceButton, CommerceCard, CommercePageHeader } from '../ui';
 import type { CommerceGuestCheckoutPort } from './contracts';
+import type { CommerceGuestOrderResponse } from './contracts';
 import { useGuestCheckoutWorkflow } from './useGuestCheckoutWorkflow';
 
 const EMPTY_COINS: readonly string[] = [];
@@ -23,6 +24,8 @@ export interface GuestCheckoutPanelProps {
   labels: CommerceLabelResolver;
   title?: string;
   formatError?(error: unknown): string;
+  /** Host-owned handoff after the order is durably created. */
+  onOrderCreated?(order: CommerceGuestOrderResponse): void;
 }
 
 export function GuestCheckoutPanel({
@@ -31,6 +34,7 @@ export function GuestCheckoutPanel({
   labels,
   title = labels(COMMERCE_LABEL_KEYS.checkout.title),
   formatError,
+  onOrderCreated,
 }: GuestCheckoutPanelProps) {
   const paymentMethodId = useId();
   const contactEmailId = useId();
@@ -51,11 +55,12 @@ export function GuestCheckoutPanel({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!selectedCoin || items.length === 0) return;
-    await submitOrder({
+    const result = await submitOrder({
       items: [...items],
       paymentCoin: selectedCoin,
       contactEmail: email || undefined,
     });
+    if (result.ok) onOrderCreated?.(result.order);
   }
 
   if (order) {
