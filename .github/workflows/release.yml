@@ -14,10 +14,26 @@ permissions:
   packages: write
 
 jobs:
+  documentation:
+    name: Verify Release Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify release documentation and reviewed source revision
+        run: node scripts/check-release-documentation.mjs "${{ github.ref_name }}"
+
   # ============ 创建 Release ============
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs: documentation
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
