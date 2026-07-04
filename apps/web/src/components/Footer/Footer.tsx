@@ -19,6 +19,7 @@ import {
   useRuntimeConfig,
 } from '@mobazha/core';
 import { TokenIcon } from '@/components/Payment/TokenIcon';
+import { PUBLIC_DOCS_URLS } from '@/lib/publicLinks';
 
 const FOOTER_FIAT_METHODS: { id: string; name: string; icon: React.ReactNode }[] = [
   {
@@ -127,22 +128,22 @@ export const Footer: React.FC = () => {
     resources: [
       {
         label: t('footer.gettingStarted'),
-        href: 'https://github.com/mobazha/mobazha/wiki',
+        href: PUBLIC_DOCS_URLS.gettingStarted,
         external: true,
       },
       {
         label: t('footer.documentation'),
-        href: 'https://github.com/mobazha/mobazha/wiki',
+        href: PUBLIC_DOCS_URLS.home,
         external: true,
       },
       {
         label: t('footer.api'),
-        href: 'https://github.com/mobazha/mobazha/wiki/API',
+        href: PUBLIC_DOCS_URLS.api,
         external: true,
       },
       {
         label: t('footer.faq'),
-        href: 'https://github.com/mobazha/mobazha/wiki/FAQ',
+        href: PUBLIC_DOCS_URLS.support,
         external: true,
       },
     ],

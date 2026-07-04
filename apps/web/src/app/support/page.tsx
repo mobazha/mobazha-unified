@@ -12,6 +12,7 @@ import {
   isExchangeUsdtPaymentGuideLocale,
 } from '@mobazha/core';
 import { MessageCircle, FileText, ExternalLink, ChevronRight, Wallet } from 'lucide-react';
+import { PUBLIC_COMMUNITY_URLS, PUBLIC_DOCS_URLS } from '@/lib/publicLinks';
 
 interface SupportItemProps {
   icon: React.ReactNode;
@@ -77,14 +78,14 @@ export default function SupportPage() {
               icon={<FileText className="w-5 h-5" />}
               title={t('support.documentation')}
               description={t('support.documentationDesc')}
-              href="https://mobazha.org"
+              href={PUBLIC_DOCS_URLS.home}
               external
             />
             <SupportItem
               icon={<MessageCircle className="w-5 h-5" />}
               title={t('support.community')}
               description={t('support.communityDesc')}
-              href="https://t.me/OpenBazaarGroup"
+              href={PUBLIC_COMMUNITY_URLS.telegram}
               external
             />
           </div>
