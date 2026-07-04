@@ -120,10 +120,27 @@ describe('guest order mutations', () => {
     await createGuestOrder({ items: [], paymentCoin: 'BTC' });
 
     expect(anonymousGet).toHaveBeenCalledWith('/settings/guest-checkout');
-    expect(anonymousPost).toHaveBeenCalledWith('/guest/orders', {
-      items: [],
-      paymentCoin: 'BTC',
-    });
+    expect(anonymousPost).toHaveBeenCalledWith(
+      '/guest/orders',
+      {
+        items: [],
+        paymentCoin: 'BTC',
+      },
+      undefined
+    );
+  });
+
+  it('forwards order cancellation to the anonymous request boundary', async () => {
+    vi.mocked(anonymousPost).mockResolvedValue({ orderToken: 'guest-order' });
+    const controller = new AbortController();
+
+    await createGuestOrder({ items: [], paymentCoin: 'BTC' }, { signal: controller.signal });
+
+    expect(anonymousPost).toHaveBeenCalledWith(
+      '/guest/orders',
+      { items: [], paymentCoin: 'BTC' },
+      { signal: controller.signal }
+    );
   });
 
   it('refetches status after ship returns 204', async () => {

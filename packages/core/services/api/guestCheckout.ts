@@ -233,8 +233,11 @@ export function buyerPortalTokenStorageKey(orderToken: string): string {
   return `mobazha:guest-order:${orderToken}:buyerPortalToken`;
 }
 
-export function createGuestOrder(data: CreateGuestOrderRequest): Promise<GuestOrderResponse> {
-  return anonymousPost(NODE_API.GUEST_ORDERS, data);
+export function createGuestOrder(
+  data: CreateGuestOrderRequest,
+  options?: { signal?: AbortSignal }
+): Promise<GuestOrderResponse> {
+  return anonymousPost(NODE_API.GUEST_ORDERS, data, options);
 }
 
 /** Advisory supply preflight — does not hold inventory. Buyer-safe (no provider IDs). */

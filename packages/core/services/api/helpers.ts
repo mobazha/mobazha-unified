@@ -165,8 +165,15 @@ export function anonymousGet<T>(path: string): Promise<T> {
 }
 
 /** Public buyer mutation that preserves routing context but never sends user/admin credentials. */
-export function anonymousPost<T>(path: string, body?: unknown): Promise<T> {
-  return post<T>(`${getGatewayUrl()}${path}`, body, anonymousHeadersWithContext());
+export function anonymousPost<T>(
+  path: string,
+  body?: unknown,
+  options?: Pick<RequestOptions, 'signal' | 'timeout'>
+): Promise<T> {
+  const url = `${getGatewayUrl()}${path}`;
+  const headers = anonymousHeadersWithContext();
+  if (!options) return post<T>(url, body, headers);
+  return request<T>(url, { ...options, method: 'POST', body, headers });
 }
 
 export function publicSafeGet<T>(

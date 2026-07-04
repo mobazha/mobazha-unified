@@ -26,6 +26,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: unknown;
   timeout?: number;
+  signal?: AbortSignal;
   keepalive?: boolean;
   /** If true, return the raw JSON without unwrapping the data envelope. */
   raw?: boolean;
@@ -98,6 +99,7 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
     headers = {},
     body,
     timeout = 30000,
+    signal: externalSignal,
     keepalive = false,
     raw = false,
     _retried = false,
@@ -105,7 +107,17 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
   } = options;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  let timedOut = false;
+  const abortFromExternal = (): void => controller.abort(externalSignal?.reason);
+  if (externalSignal?.aborted) {
+    abortFromExternal();
+  } else {
+    externalSignal?.addEventListener('abort', abortFromExternal, { once: true });
+  }
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeout);
 
   try {
     const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
@@ -179,16 +191,29 @@ export async function request<T>(url: string, options: RequestOptions = {}): Pro
       throw error;
     }
 
+    if (timedOut) {
+      throw new ApiError('Request timeout', undefined, 'TIMEOUT');
+    }
+    if (externalSignal?.aborted) {
+      throw new ApiError('Request aborted', undefined, 'ABORTED');
+    }
+
+    if (
+      error !== null &&
+      typeof error === 'object' &&
+      Reflect.get(error, 'name') === 'AbortError'
+    ) {
+      throw new ApiError('Request timeout', undefined, 'TIMEOUT');
+    }
+
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw new ApiError('Request timeout', undefined, 'TIMEOUT');
-      }
       throw new ApiError(error.message);
     }
 
     throw new ApiError('Unknown error');
   } finally {
     clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', abortFromExternal);
   }
 }
 

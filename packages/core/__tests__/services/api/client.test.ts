@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { request, onUnauthorized } from '../../../services/api/client';
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -23,6 +23,10 @@ function noContentResponse(): Response {
 
 beforeEach(() => {
   vi.mocked(globalThis.fetch).mockReset();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('client.request — envelope unwrapping', () => {
@@ -107,6 +111,45 @@ describe('client.request — structured error parsing', () => {
       status: 502,
       message: 'Bad Gateway',
     });
+  });
+});
+
+describe('client.request — cancellation and timeout', () => {
+  function pendingFetch(_url: string | URL | Request, init?: RequestInit): Promise<Response> {
+    return new Promise((_resolve, reject) => {
+      const rejectAborted = () => reject(new DOMException('Aborted', 'AbortError'));
+      if (init?.signal?.aborted) rejectAborted();
+      else init?.signal?.addEventListener('abort', rejectAborted, { once: true });
+    });
+  }
+
+  it('distinguishes caller cancellation from timeout', async () => {
+    vi.mocked(globalThis.fetch).mockImplementation(pendingFetch);
+    const caller = new AbortController();
+    const result = request('http://api/cancelled', {
+      signal: caller.signal,
+      timeout: 10_000,
+    });
+    const expectation = expect(result).rejects.toMatchObject({
+      code: 'ABORTED',
+      message: 'Request aborted',
+    });
+
+    caller.abort();
+
+    await expectation;
+  });
+
+  it('keeps internal deadline expiry classified as timeout', async () => {
+    vi.useFakeTimers();
+    vi.mocked(globalThis.fetch).mockImplementation(pendingFetch);
+    const result = request('http://api/slow', { timeout: 25 });
+    const expectation = expect(result).rejects.toMatchObject({
+      code: 'TIMEOUT',
+      message: 'Request timeout',
+    });
+
+    await Promise.all([expectation, vi.advanceTimersByTimeAsync(25)]);
   });
 });
 

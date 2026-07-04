@@ -197,12 +197,12 @@ export default function GuestCheckoutPage() {
 
   const submitOrderAbortRef = useRef(false);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    submitOrderAbortRef.current = false;
+    return () => {
       submitOrderAbortRef.current = true;
-    },
-    []
-  );
+    };
+  }, []);
 
   // Poll order status when in 'awaiting' state. Auto-navigate to the order
   // status page as soon as the payment is detected or confirmed.

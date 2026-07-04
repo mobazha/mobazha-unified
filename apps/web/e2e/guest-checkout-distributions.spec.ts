@@ -74,6 +74,48 @@ async function seedBrowserContext(page: Page, storeContext?: string): Promise<vo
   );
 }
 
+async function installPendingGuestOrderFetch(
+  page: Page,
+  options: { failAsTimeout?: boolean } = {}
+): Promise<void> {
+  await page.addInitScript(({ failAsTimeout }) => {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const request = input instanceof Request ? input : undefined;
+      const rawURL = request?.url ?? (input instanceof URL ? input.href : String(input));
+      const url = new URL(rawURL, window.location.origin);
+      const method = init?.method ?? request?.method ?? 'GET';
+      if (url.pathname === '/v1/guest/orders' && method.toUpperCase() === 'POST') {
+        window.sessionStorage.setItem('guest-order-request-started', 'true');
+        return new Promise((_resolve, reject) => {
+          const signal = init?.signal ?? request?.signal;
+          const rejectAborted = () => {
+            window.sessionStorage.setItem('guest-order-request-aborted', 'true');
+            reject(new DOMException('Aborted', 'AbortError'));
+          };
+          if (signal?.aborted) rejectAborted();
+          else signal?.addEventListener('abort', rejectAborted, { once: true });
+          if (failAsTimeout) {
+            window.setTimeout(() => {
+              window.sessionStorage.setItem('guest-order-request-timeout-fired', 'true');
+              rejectAborted();
+            }, 50);
+          }
+        });
+      }
+      return originalFetch(input, init);
+    };
+  }, options);
+}
+
+async function beginGuestOrder(page: Page): Promise<void> {
+  await page.goto('/guest-checkout');
+  await expect(page.getByText(DIGITAL_ITEM.title).first()).toBeVisible();
+  await page.getByRole('button', { name: /continue to payment/i }).click();
+  await expect(page.getByRole('heading', { name: /choose.*payment/i })).toBeVisible();
+  await page.getByRole('button', { name: /BTC/i }).first().click();
+}
+
 async function mockDistributionAPIs(
   page: Page,
   distribution: DistributionCase
@@ -189,15 +231,52 @@ test.describe('Guest Checkout distribution matrix', () => {
       await seedBrowserContext(page, distribution.storeContext);
       const requests = await mockDistributionAPIs(page, distribution);
 
-      await page.goto('/guest-checkout');
-      await expect(page.getByText(DIGITAL_ITEM.title).first()).toBeVisible();
-      await page.getByRole('button', { name: /continue to payment/i }).click();
-      await expect(page.getByRole('heading', { name: /choose.*payment/i })).toBeVisible();
-      await page.getByRole('button', { name: /BTC/i }).first().click();
+      await beginGuestOrder(page);
 
       await expect(page.getByText(PAYMENT_ADDRESS)).toBeVisible();
       await expect(page.getByTestId('guest-checkout-save-link')).toBeVisible();
       expect(requests.createdOrders()).toBe(1);
+    });
+
+    test(`${distribution.name} aborts an in-flight order when checkout unmounts`, async ({
+      page,
+    }) => {
+      await installPendingGuestOrderFetch(page);
+      await seedBrowserContext(page, distribution.storeContext);
+      const requests = await mockDistributionAPIs(page, distribution);
+
+      await beginGuestOrder(page);
+      await expect
+        .poll(() => page.evaluate(() => sessionStorage.getItem('guest-order-request-started')))
+        .toBe('true');
+
+      await page.locator('header a[href="/"]').first().click();
+      await expect(page).toHaveURL('/');
+
+      await expect
+        .poll(() => page.evaluate(() => sessionStorage.getItem('guest-order-request-aborted')))
+        .toBe('true');
+      expect(requests.createdOrders()).toBe(0);
+    });
+
+    test(`${distribution.name} surfaces an in-flight order timeout`, async ({ page }) => {
+      await installPendingGuestOrderFetch(page, { failAsTimeout: true });
+      await seedBrowserContext(page, distribution.storeContext);
+      const requests = await mockDistributionAPIs(page, distribution);
+
+      await beginGuestOrder(page);
+      await expect
+        .poll(() => page.evaluate(() => sessionStorage.getItem('guest-order-request-started')))
+        .toBe('true');
+      await expect
+        .poll(() =>
+          page.evaluate(() => sessionStorage.getItem('guest-order-request-timeout-fired'))
+        )
+        .toBe('true');
+
+      await expect(page.getByRole('heading', { name: /order.*failed/i })).toBeVisible();
+      await expect(page.getByText('Request timeout')).toBeVisible();
+      expect(requests.createdOrders()).toBe(0);
     });
   }
 });

@@ -26,13 +26,14 @@ vi.mock('../../../services/api/config', () => ({
   })),
 }));
 
-import { get, post } from '../../../services/api/client';
+import { get, post, request } from '../../../services/api/client';
 import { anonymousGet, anonymousPost } from '../../../services/api/helpers';
 
 describe('anonymous API helpers', () => {
   beforeEach(() => {
     vi.mocked(get).mockReset();
     vi.mocked(post).mockReset();
+    vi.mocked(request).mockReset();
   });
 
   it('removes credentials while preserving same-origin store routing context', async () => {
@@ -49,5 +50,23 @@ describe('anonymous API helpers', () => {
     };
     expect(get).toHaveBeenCalledWith('/v1/settings/guest-checkout', expectedHeaders);
     expect(post).toHaveBeenCalledWith('/v1/guest/orders', { paymentCoin: 'BTC' }, expectedHeaders);
+  });
+
+  it('forwards cancellation without reintroducing credentials', async () => {
+    vi.mocked(request).mockResolvedValue({ ok: true });
+    const controller = new AbortController();
+
+    await anonymousPost('/guest/orders', { paymentCoin: 'BTC' }, { signal: controller.signal });
+
+    expect(request).toHaveBeenCalledWith('/v1/guest/orders', {
+      method: 'POST',
+      body: { paymentCoin: 'BTC' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Store-PeerID': 'store-peer',
+        'X-Storefront-Slug': 'shop',
+      },
+      signal: controller.signal,
+    });
   });
 });
