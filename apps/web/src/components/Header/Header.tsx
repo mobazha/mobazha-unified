@@ -34,8 +34,10 @@ import {
   isStandaloneBuyerAuth,
   useUserContext,
   useMarketplaceContext,
-  useRuntimeCapability,
   useRuntimePaymentFlow,
+  isFrontendFeatureEnabled,
+  UNIFIED_FRONTEND_FEATURE,
+  useUnifiedFrontendComposition,
 } from '@mobazha/core';
 import {
   Search,
@@ -64,7 +66,6 @@ export const Header: React.FC = () => {
   const { hasStore, isPureSeller, isPureBuyer } = useUserContext();
   const isModerator = profile?.moderator === true;
   const hideModeration = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
-  const isSovereign = hideModeration;
   const { isEmbeddedApp, shouldUseMobileView } = usePlatform();
   const openChatDrawer = useChatStore(state => state.openDrawer);
   const [peerIdCopied, setPeerIdCopied] = useState(false);
@@ -85,16 +86,22 @@ export const Header: React.FC = () => {
   const setCartOpen = useCartDrawerStore(state => state.setOpen);
   const cartItemCount = useCartStore(state => state.getItemCount());
   const hasExternalWalletPayments = useRuntimePaymentFlow('external-wallet');
-  const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
-  const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
-
   const standaloneMode = useStorefrontMode();
+  const frontendComposition = useUnifiedFrontendComposition({
+    sovereignBuild: hideModeration,
+    channel: isEmbeddedApp ? 'embedded' : 'web',
+    storefrontContext: standaloneMode,
+  });
+  const hasMarketplaceOperator = isFrontendFeatureEnabled(
+    frontendComposition,
+    UNIFIED_FRONTEND_FEATURE.marketplaceOperator
+  );
+  const hasMarketplaceSellerReview = isFrontendFeatureEnabled(
+    frontendComposition,
+    UNIFIED_FRONTEND_FEATURE.marketplaceSellerReview
+  );
   const showMaasUserMenu =
-    isAuthenticated &&
-    isHosted() &&
-    !standaloneMode &&
-    !isSovereign &&
-    (hasMarketplaceOperator || hasMarketplaceSellerReview);
+    isAuthenticated && (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const storefrontProfile = useStorefrontProfile();
   const {
     isSubMarket,

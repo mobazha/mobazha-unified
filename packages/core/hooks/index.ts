@@ -7,6 +7,7 @@
 // 配置相关
 export * from './useConfig';
 export * from './useRuntimeConfig';
+export * from './useUnifiedFrontendComposition';
 
 // 商品相关
 export * from './useProducts';

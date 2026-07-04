@@ -23,7 +23,9 @@ import {
   useUserContext,
   useFeatureFlags,
   useFeature,
-  useRuntimeCapability,
+  isFrontendFeatureEnabled,
+  UNIFIED_FRONTEND_FEATURE,
+  useUnifiedFrontendComposition,
 } from '@mobazha/core';
 import { publicPost } from '@mobazha/core/services/api/helpers';
 import { ApiError } from '@mobazha/core/services/api';
@@ -219,14 +221,20 @@ const InlineSettings: React.FC<{ authenticated: boolean }> = ({ authenticated })
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const standaloneMode = useStorefrontMode();
   const isSovereign = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__;
-  const hasMarketplaceOperator = useRuntimeCapability('marketplace.operator');
-  const hasMarketplaceSellerReview = useRuntimeCapability('marketplace.sellerReview');
-  const showMaasMenu =
-    authenticated &&
-    isHosted() &&
-    !standaloneMode &&
-    !isSovereign &&
-    (hasMarketplaceOperator || hasMarketplaceSellerReview);
+  const frontendComposition = useUnifiedFrontendComposition({
+    sovereignBuild: isSovereign,
+    channel: isEmbedded ? 'embedded' : 'web',
+    storefrontContext: standaloneMode,
+  });
+  const hasMarketplaceOperator = isFrontendFeatureEnabled(
+    frontendComposition,
+    UNIFIED_FRONTEND_FEATURE.marketplaceOperator
+  );
+  const hasMarketplaceSellerReview = isFrontendFeatureEnabled(
+    frontendComposition,
+    UNIFIED_FRONTEND_FEATURE.marketplaceSellerReview
+  );
+  const showMaasMenu = authenticated && (hasMarketplaceOperator || hasMarketplaceSellerReview);
   const showThemeToggle = !isEmbedded;
   const [langOpen, setLangOpen] = useState(false);
 

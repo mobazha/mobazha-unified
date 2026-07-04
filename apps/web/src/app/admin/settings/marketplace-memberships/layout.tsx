@@ -4,12 +4,13 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { RuntimeCapabilityBoundary } from '@/components/RuntimeCapabilityBoundary';
+import { UNIFIED_FRONTEND_FEATURE } from '@mobazha/core';
+import { UnifiedFrontendFeatureBoundary } from '@/components/UnifiedFrontendFeatureBoundary';
 
 export default function AdminMarketplaceMembershipsLayout({ children }: { children: ReactNode }) {
   return (
-    <RuntimeCapabilityBoundary capability="marketplace.sellerReview">
+    <UnifiedFrontendFeatureBoundary feature={UNIFIED_FRONTEND_FEATURE.marketplaceSellerReview}>
       {children}
-    </RuntimeCapabilityBoundary>
+    </UnifiedFrontendFeatureBoundary>
   );
 }

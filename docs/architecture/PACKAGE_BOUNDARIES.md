@@ -68,6 +68,9 @@ semantics when the kit already defines a contract.
 
 ## Frontend product composition
 
+The current implementation inventory, supported profile baseline and incremental resolver rules are
+recorded in [`FRONTEND_PRODUCT_COMPOSITION.md`](./FRONTEND_PRODUCT_COMPOSITION.md).
+
 [`RFC-0003: Composable Frontend Product Model`](https://github.com/mobazha/mobazha-docs/blob/main/rfcs/0003-composable-frontend-product-model.md)
 defines the cross-repository target. Frontend products are compositions across independent
 deployment, root-experience, authentication, presentation-channel, network-policy, branding,
@@ -88,8 +91,8 @@ ultimately project from one resolved composition so their condition sets cannot 
 
 Private distributions may implement compatible composition contracts from their own repositories.
 Their source, product identity, manifest, brand and build entrypoint remain physically absent from
-this public repository. Public features declare neutral requirements such as capability,
-experience, auth, channel or egress support; they never inspect a private product identity.
+this public repository. Public features declare neutral requirements such as capability, experience,
+auth, channel or egress support; they never inspect a private product identity.
 
 `@mobazha/commerce-kit` is one public feature-catalog provider within this model. It is not the
 complete product composer, application shell, router or provider graph. The RFC is Draft and does

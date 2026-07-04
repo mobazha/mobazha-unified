@@ -4,10 +4,13 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { RuntimeCapabilityBoundary } from '@/components/RuntimeCapabilityBoundary';
+import { UNIFIED_FRONTEND_FEATURE } from '@mobazha/core';
+import { UnifiedFrontendFeatureBoundary } from '@/components/UnifiedFrontendFeatureBoundary';
 
 export default function GuestCheckoutLayout({ children }: { children: ReactNode }) {
   return (
-    <RuntimeCapabilityBoundary capability="commerce.checkout">{children}</RuntimeCapabilityBoundary>
+    <UnifiedFrontendFeatureBoundary feature={UNIFIED_FRONTEND_FEATURE.guestCheckout}>
+      {children}
+    </UnifiedFrontendFeatureBoundary>
   );
 }

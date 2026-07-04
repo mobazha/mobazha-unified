@@ -11,7 +11,12 @@ import { Suspense, type ComponentType } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { lazyWithRetry } from './lib/lazyWithRetry';
 import { RuntimeCapabilityBoundary } from './components/RuntimeCapabilityBoundary';
-import type { RuntimeCapabilityKey } from '@mobazha/core';
+import { UnifiedFrontendFeatureBoundary } from './components/UnifiedFrontendFeatureBoundary';
+import {
+  UNIFIED_FRONTEND_FEATURE,
+  type RuntimeCapabilityKey,
+  type UnifiedFrontendFeatureId,
+} from '@mobazha/core';
 
 // 加载中的占位组件
 function PageLoading() {
@@ -52,6 +57,18 @@ function capabilityPage(
   const page = lazyPage(importFn);
   const guarded = (
     <RuntimeCapabilityBoundary capability={capability}>{page}</RuntimeCapabilityBoundary>
+  );
+  return protectedRoute ? <ProtectedRoute>{guarded}</ProtectedRoute> : guarded;
+}
+
+function composedFeaturePage(
+  feature: UnifiedFrontendFeatureId,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
+  protectedRoute = false
+) {
+  const page = lazyPage(importFn);
+  const guarded = (
+    <UnifiedFrontendFeatureBoundary feature={feature}>{page}</UnifiedFrontendFeatureBoundary>
   );
   return protectedRoute ? <ProtectedRoute>{guarded}</ProtectedRoute> : guarded;
 }
@@ -167,7 +184,10 @@ if (!__SOVEREIGN__) {
     // Guest Checkout（公开 — 匿名买家直接加密货币支付）
     {
       path: '/guest-checkout',
-      element: capabilityPage('commerce.checkout', () => import('./app/guest-checkout/page')),
+      element: composedFeaturePage(
+        UNIFIED_FRONTEND_FEATURE.guestCheckout,
+        () => import('./app/guest-checkout/page')
+      ),
     },
     {
       path: '/guest-order/:orderToken',
@@ -216,24 +236,24 @@ if (!__SOVEREIGN__) {
     // Marketplace 运营台与买家市场分离，避免把店铺后台和市场治理混在一起。
     {
       path: '/operator/marketplaces',
-      element: capabilityPage(
-        'marketplace.operator',
+      element: composedFeaturePage(
+        UNIFIED_FRONTEND_FEATURE.marketplaceOperator,
         () => import('./app/operator/marketplaces/page'),
         true
       ),
     },
     {
       path: '/operator/marketplaces/:id',
-      element: capabilityPage(
-        'marketplace.operator',
+      element: composedFeaturePage(
+        UNIFIED_FRONTEND_FEATURE.marketplaceOperator,
         () => import('./app/operator/marketplaces/[id]/page'),
         true
       ),
     },
     {
       path: '/operator/marketplaces/:id/preview',
-      element: capabilityPage(
-        'marketplace.operator',
+      element: composedFeaturePage(
+        UNIFIED_FRONTEND_FEATURE.marketplaceOperator,
         () => import('./app/operator/marketplaces/[id]/preview/page'),
         true
       ),
@@ -352,8 +372,8 @@ if (!__SOVEREIGN__) {
         { path: 'store', element: lazyPage(() => import('./app/settings/store/page')) },
         {
           path: 'marketplace-memberships',
-          element: capabilityPage(
-            'marketplace.sellerReview',
+          element: composedFeaturePage(
+            UNIFIED_FRONTEND_FEATURE.marketplaceSellerReview,
             () => import('./app/settings/marketplace-memberships/page')
           ),
         },
@@ -472,8 +492,8 @@ if (!__SOVEREIGN__) {
         },
         {
           path: 'settings/marketplace-memberships',
-          element: capabilityPage(
-            'marketplace.sellerReview',
+          element: composedFeaturePage(
+            UNIFIED_FRONTEND_FEATURE.marketplaceSellerReview,
             () => import('./app/admin/settings/marketplace-memberships/page')
           ),
         },
@@ -621,7 +641,10 @@ if (__SOVEREIGN__) {
     // Guest Checkout (anonymous crypto payment)
     {
       path: '/guest-checkout',
-      element: capabilityPage('commerce.checkout', () => import('./app/guest-checkout/page')),
+      element: composedFeaturePage(
+        UNIFIED_FRONTEND_FEATURE.guestCheckout,
+        () => import('./app/guest-checkout/page')
+      ),
     },
     {
       path: '/guest-order/:orderToken',

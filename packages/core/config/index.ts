@@ -9,6 +9,8 @@
 export * from './env';
 export * from './runtimeConfig';
 export * from './marketplaceExperience';
+export * from './frontendComposition';
+export * from './unifiedFrontendComposition';
 
 // 导出测试账号配置
 export * from './testAccounts';
