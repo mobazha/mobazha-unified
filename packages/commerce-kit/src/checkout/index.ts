@@ -1,6 +1,4 @@
 export const CHECKOUT_FEATURE_ID = 'commerce.checkout';
-export { GuestCheckoutPanel } from './GuestCheckoutPanel';
-export type { CommerceGuestItem, GuestCheckoutPanelProps } from './GuestCheckoutPanel';
 export { createGuestCheckoutAdapter, normalizeGuestCheckoutSettings } from './contracts';
 export type {
   CommerceGuestCheckoutAdapter,

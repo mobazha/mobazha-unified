@@ -110,6 +110,9 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Verify packed Commerce Kit consumers
+        run: pnpm commerce-kit:consumers
+
       - name: Build Next.js production server
         run: pnpm --filter @mobazha/web build:next
 

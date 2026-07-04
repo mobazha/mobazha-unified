@@ -7,6 +7,7 @@ export default defineConfig({
     'product/index': 'src/product/index.tsx',
     'cart/index': 'src/cart/index.tsx',
     'checkout/index': 'src/checkout/index.ts',
+    'checkout/client': 'src/checkout/client.ts',
     'admin/index': 'src/admin/index.ts',
   },
   format: ['cjs', 'esm'],
@@ -14,7 +15,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   external: ['react'],
-  treeshake: true,
+  treeshake: false,
   splitting: false,
   minify: false,
 });

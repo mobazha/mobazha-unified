@@ -38,6 +38,11 @@
       "import": "./dist/checkout/index.mjs",
       "require": "./dist/checkout/index.js"
     },
+    "./checkout/client": {
+      "types": "./dist/checkout/client.d.ts",
+      "import": "./dist/checkout/client.mjs",
+      "require": "./dist/checkout/client.js"
+    },
     "./admin": {
       "types": "./dist/admin/index.d.ts",
       "import": "./dist/admin/index.mjs",
