@@ -49,8 +49,8 @@ The kit is also not the complete frontend product composer. A product is resolve
 code inclusion, a distribution-owned product profile, authoritative backend capabilities, the
 current experience/channel, authorization and readiness. Feature packages declare neutral
 requirements; they do not branch on a named public or private product. Private distributions can
-compose their own modules through compatible contracts while keeping those modules physically out
-of this repository. See the Draft
+compose their own modules through compatible contracts while keeping those modules physically out of
+this repository. See the Draft
 [Composable Frontend Product Model RFC](https://github.com/mobazha/mobazha-docs/blob/main/rfcs/0003-composable-frontend-product-model.md).
 
 Guest Checkout is the first shared vertical slice. Its public boundary is deliberately layered:
@@ -79,6 +79,12 @@ const guestCheckout = createGuestCheckoutPort(httpClient, {
 The root and `/checkout` exports are server-safe contracts. Interactive React surfaces use explicit
 client entrypoints such as `/checkout/client`, `/product`, `/cart` and `/admin` so packed consumers
 preserve their React Server Component boundary.
+
+Product actions support both a neutral default renderer and host rendering. Rich applications can
+use `CommerceProductActionButtons.renderAction` to retain their own design-system button, responsive
+layout and product-policy wording while Commerce Kit owns the stable `add-to-cart` / `buy-now`
+action identity, disabled state and callback wiring. Entity-specific stock, payment, ownership and
+asset policy remains in the host; those decisions are not global product-composition capabilities.
 
 `createCommerceHttpClient()` applies a 30-second default timeout and sends an `X-Request-ID` unless
 the host already supplied one. Hosts can set a default or per-request `timeoutMs`, pass an

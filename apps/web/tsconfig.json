@@ -24,6 +24,7 @@
       "@mobazha/core": ["../../packages/core/index.ts"],
       "@mobazha/core/*": ["../../packages/core/*"],
       "@mobazha/commerce-kit": ["../../packages/commerce-kit/src/index.ts"],
+      "@mobazha/commerce-kit/product": ["../../packages/commerce-kit/src/product/index.tsx"],
       "@mobazha/commerce-kit/*": [
         "../../packages/commerce-kit/src/*/index.ts",
         "../../packages/commerce-kit/src/*"

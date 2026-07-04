@@ -105,6 +105,13 @@ policy, order-status polling, navigation and presentation beyond the shared surf
 may consume the controller without replacing its page with `GuestCheckoutPanel`; a smaller host may
 use the panel directly with the same port.
 
+Product actions are the second dogfood slice. The public action surface now separates stable action
+identity and callback/disabled wiring from host rendering. Unified consumes it in desktop detail,
+mobile detail and the responsive bottom bar while retaining application-owned buttons, layout,
+localization, inventory, payment and asset policy. This proves the adapter shape without moving the
+full product page or its stores into Commerce Kit. It is still one application implementation, so
+the API remains `0.x` evidence rather than satisfying the two-application promotion rule by itself.
+
 ## Promotion rule
 
 A feature moves from an application into `@mobazha/commerce-kit` only when:

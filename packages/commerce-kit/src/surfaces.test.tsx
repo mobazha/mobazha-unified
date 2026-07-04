@@ -1,7 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { CommerceCartSummary } from './cart';
-import { CommerceProductActions } from './product';
+import { CommerceProductActionButtons, CommerceProductActions } from './product';
 import { CommerceStorefrontShell } from './storefront';
 import { CommerceConfirmDialog } from './ui';
 
@@ -47,6 +48,50 @@ describe('public commerce surfaces', () => {
     expect(product).toContain('commerce.product.buyNow');
     expect(cart).toContain('20 USD');
     expect(cart).toContain('commerce.cart.checkout');
+  });
+
+  it('lets a host render product controls without changing action semantics', () => {
+    const addToCart = vi.fn();
+    const buyNow = vi.fn();
+    const renderAction = vi.fn(
+      ({
+        action,
+        label,
+        disabled,
+      }: Parameters<
+        NonNullable<ComponentProps<typeof CommerceProductActionButtons>['renderAction']>
+      >[0]) => (
+        <button type="button" data-host-action={action} disabled={disabled}>
+          {label}
+        </button>
+      )
+    );
+
+    const markup = renderToStaticMarkup(
+      <CommerceProductActionButtons
+        labels={labels}
+        disabled
+        renderAction={renderAction}
+        onAddToCart={addToCart}
+        onBuyNow={buyNow}
+      />
+    );
+
+    expect(markup).toContain('data-host-action="add-to-cart"');
+    expect(markup).toContain('data-host-action="buy-now"');
+    expect(markup.match(/disabled=""/g)).toHaveLength(2);
+    expect(renderAction).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        action: 'add-to-cart',
+        disabled: true,
+        onAction: addToCart,
+      })
+    );
+    expect(renderAction).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ action: 'buy-now', disabled: true, onAction: buyNow })
+    );
   });
 
   it('renders dialog semantics and blocks actions while busy', () => {

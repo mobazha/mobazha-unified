@@ -16,6 +16,7 @@ import {
 } from '@mobazha/core';
 import type { OrderItemOption, Product, ProductSku } from '@mobazha/core';
 import { useHaptic } from '@/lib/platform';
+import { ProductPurchaseActionButtons } from './ProductPurchaseActionButtons';
 
 export interface ProductBottomBarProps {
   /** 商品数据 */
@@ -60,9 +61,7 @@ export function ProductBottomBar({
   const haptic = useHaptic();
   const collectiblesHubEnabled = useFeature('collectiblesHubEnabled');
   const isCollectibleTitleListing =
-    collectiblesHubEnabled && product
-      ? hasAuthoritativeCollectibleTitleMetadata(product)
-      : false;
+    collectiblesHubEnabled && product ? hasAuthoritativeCollectibleTitleMetadata(product) : false;
   const addCartItem = useCartStore(state => state.addItem);
   const cartItemCount = useCartStore(state => state.getItemCount());
   const openDrawerWithPeer = useChatStore(state => state.openDrawerWithPeer);
@@ -110,7 +109,16 @@ export function ProductBottomBar({
     haptic.impact('light');
     setCartSuccess(true);
     setTimeout(() => setCartSuccess(false), 2000);
-  }, [product, selectedSku, quantity, orderOptions, addCartItem, haptic, isCollectibleTitleListing, isRwaProduct]);
+  }, [
+    product,
+    selectedSku,
+    quantity,
+    orderOptions,
+    addCartItem,
+    haptic,
+    isCollectibleTitleListing,
+    isRwaProduct,
+  ]);
 
   // 立即购买
   const handleBuyNow = useCallback(() => {
@@ -288,16 +296,11 @@ export function ProductBottomBar({
                   : t('product.collectibleTitle.purchaseTitle')}
             </Button>
           ) : (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
-                onClick={handleAddToCart}
-                disabled={purchaseDisabled}
-                data-testid="product-detail-add-to-cart"
-              >
-                {cartSuccess ? (
+            <ProductPurchaseActionButtons
+              disabled={purchaseDisabled}
+              className="flex flex-1 gap-2"
+              addToCartLabel={
+                cartSuccess ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -312,19 +315,23 @@ export function ProductBottomBar({
                   t('payment.paymentUnavailable')
                 ) : (
                   t('product.addToCart')
-                )}
-              </Button>
-
-              <Button
-                size="sm"
-                className="flex-1 rounded-lg h-11 text-sm font-medium touch-feedback"
-                onClick={handleBuyNow}
-                disabled={purchaseDisabled}
-                data-testid="product-detail-buy-now"
-              >
-                {t('product.buyNow')}
-              </Button>
-            </>
+                )
+              }
+              addToCartButtonProps={{
+                variant: 'outline',
+                size: 'sm',
+                className:
+                  'flex-1 rounded-lg h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10',
+                'data-testid': 'product-detail-add-to-cart',
+              }}
+              buyNowButtonProps={{
+                size: 'sm',
+                className: 'flex-1 rounded-lg h-11 text-sm font-medium touch-feedback',
+                'data-testid': 'product-detail-buy-now',
+              }}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+            />
           )}
         </HStack>
       </HStack>

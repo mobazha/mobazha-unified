@@ -8,6 +8,7 @@ import { ProductBottomBar } from '@/components/Product/ProductBottomBar';
 import type { Product } from '@mobazha/core';
 
 const mockPush = vi.fn();
+const mockAddItem = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -22,8 +23,9 @@ vi.mock('@mobazha/core', async importOriginal => {
       locale: 'en' as const,
     }),
     useFeature: () => true,
-    useCartStore: (selector: (state: { getItemCount: () => number }) => unknown) =>
-      selector({ getItemCount: () => 0 }),
+    useCartStore: (
+      selector: (state: { addItem: typeof mockAddItem; getItemCount: () => number }) => unknown
+    ) => selector({ addItem: mockAddItem, getItemCount: () => 0 }),
     useChatStore: (selector: (state: { openDrawerWithPeer: () => void }) => unknown) =>
       selector({ openDrawerWithPeer: vi.fn() }),
     selectUnreadCountByPeerID: () => () => 0,
@@ -61,6 +63,7 @@ const physicalProduct = {
 describe('ProductCollectiblePurchaseActions', () => {
   beforeEach(() => {
     mockPush.mockReset();
+    mockAddItem.mockReset();
   });
 
   it('shows a single purchase-title CTA for authoritative collectible listings', async () => {
@@ -79,11 +82,19 @@ describe('ProductCollectiblePurchaseActions', () => {
     );
   });
 
-  it('keeps add-to-cart and buy-now for ordinary physical goods', () => {
+  it('keeps host-rendered add-to-cart and buy-now actions wired for ordinary goods', async () => {
     render(<ProductBottomBar product={physicalProduct} quantity={2} stock={5} paymentAvailable />);
 
     expect(screen.getByTestId('product-detail-add-to-cart')).toBeInTheDocument();
     expect(screen.getByTestId('product-detail-buy-now')).toBeInTheDocument();
     expect(screen.queryByTestId('product-detail-purchase-title')).not.toBeInTheDocument();
+
+    await fireEvent.click(screen.getByTestId('product-detail-add-to-cart'));
+    expect(mockAddItem).toHaveBeenCalledWith(expect.objectContaining({ quantity: 2 }));
+
+    await fireEvent.click(screen.getByTestId('product-detail-buy-now'));
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining('/checkout?slug=plain-shirt&peerID=QmSeller&quantity=2')
+    );
   });
 });

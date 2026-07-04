@@ -7,6 +7,75 @@ import { CommerceButton, CommerceSlotOutlet } from '../ui';
 
 export const PRODUCT_FEATURE_ID = 'commerce.product';
 
+export type CommerceProductActionId = 'add-to-cart' | 'buy-now';
+
+export interface CommerceProductActionRenderProps {
+  action: CommerceProductActionId;
+  label: ReactNode;
+  disabled: boolean;
+  onAction(): void;
+}
+
+export interface CommerceProductActionButtonsProps {
+  labels: CommerceLabelResolver;
+  addToCartLabel?: ReactNode;
+  buyNowLabel?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+  renderAction?(props: CommerceProductActionRenderProps): ReactNode;
+  onAddToCart(): void;
+  onBuyNow?(): void;
+}
+
+/**
+ * Stable action semantics with a host-rendering escape hatch. Rich products can
+ * preserve their design system and responsive layout without reimplementing
+ * which commerce action is present or how its disabled/click state is wired.
+ */
+export function CommerceProductActionButtons({
+  labels,
+  addToCartLabel = labels(COMMERCE_LABEL_KEYS.product.addToCart),
+  buyNowLabel = labels(COMMERCE_LABEL_KEYS.product.buyNow),
+  disabled = false,
+  className,
+  renderAction,
+  onAddToCart,
+  onBuyNow,
+}: CommerceProductActionButtonsProps) {
+  const renderControl = (props: CommerceProductActionRenderProps): ReactNode => {
+    if (renderAction) return renderAction(props);
+    return (
+      <CommerceButton
+        type="button"
+        variant={props.action === 'buy-now' ? 'secondary' : 'primary'}
+        disabled={props.disabled}
+        onClick={props.onAction}
+      >
+        {props.label}
+      </CommerceButton>
+    );
+  };
+
+  return (
+    <div className={['commerce-product-actions__buttons', className].filter(Boolean).join(' ')}>
+      {renderControl({
+        action: 'add-to-cart',
+        label: addToCartLabel,
+        disabled,
+        onAction: onAddToCart,
+      })}
+      {onBuyNow
+        ? renderControl({
+            action: 'buy-now',
+            label: buyNowLabel,
+            disabled,
+            onAction: onBuyNow,
+          })
+        : null}
+    </div>
+  );
+}
+
 export interface CommerceProductActionsProps {
   price: ReactNode;
   labels: CommerceLabelResolver;
@@ -39,16 +108,14 @@ export function CommerceProductActions({
       {availability ? (
         <div className="commerce-product-actions__availability">{availability}</div>
       ) : null}
-      <div className="commerce-product-actions__buttons">
-        <CommerceButton type="button" disabled={disabled} onClick={onAddToCart}>
-          {addToCartLabel}
-        </CommerceButton>
-        {onBuyNow ? (
-          <CommerceButton type="button" variant="secondary" disabled={disabled} onClick={onBuyNow}>
-            {buyNowLabel}
-          </CommerceButton>
-        ) : null}
-      </div>
+      <CommerceProductActionButtons
+        labels={labels}
+        addToCartLabel={addToCartLabel}
+        buyNowLabel={buyNowLabel}
+        disabled={disabled}
+        onAddToCart={onAddToCart}
+        onBuyNow={onBuyNow}
+      />
       <CommerceSlotOutlet contributions={actionsAfter} />
     </section>
   );

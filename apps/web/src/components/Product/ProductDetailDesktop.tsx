@@ -36,6 +36,7 @@ import { UniquePieceBadge } from './UniquePieceBadge';
 import { AuthenticityCertificateCard } from './AuthenticityCertificateCard';
 import { ArtListingSpecsTable } from './ArtListingSpecsTable';
 import { CollectibleTitleListingPanel } from './CollectibleTitleListingPanel';
+import { ProductPurchaseActionButtons } from './ProductPurchaseActionButtons';
 
 export interface ProductDetailProps {
   slug: string;
@@ -908,18 +909,11 @@ export function ProductDetailDesktop({
                             : t('product.collectibleTitle.purchaseTitle')}
                     </Button>
                   ) : (
-                    <>
-                      <Button
-                        size="default"
-                        className={cn(
-                          'w-full touch-feedback',
-                          purchaseDisabled && 'opacity-50 cursor-not-allowed'
-                        )}
-                        onClick={handleAddToCart}
-                        disabled={purchaseDisabled}
-                        data-testid="product-detail-add-to-cart"
-                      >
-                        {cartSuccess ? (
+                    <ProductPurchaseActionButtons
+                      disabled={purchaseDisabled}
+                      className="flex flex-col gap-1"
+                      addToCartLabel={
+                        cartSuccess ? (
                           <span className="flex items-center gap-2">
                             <svg
                               className="w-5 h-5"
@@ -946,20 +940,25 @@ export function ProductDetailDesktop({
                           t('product.outOfStock')
                         ) : (
                           t('product.addToCart')
-                        )}
-                      </Button>
-                      {showBuyNow && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="w-full touch-feedback"
-                          onClick={handleBuyNow}
-                          data-testid="product-detail-buy-now"
-                        >
-                          {t('product.buyNow')}
-                        </Button>
-                      )}
-                    </>
+                        )
+                      }
+                      addToCartButtonProps={{
+                        size: 'default',
+                        className: cn(
+                          'w-full touch-feedback',
+                          purchaseDisabled && 'opacity-50 cursor-not-allowed'
+                        ),
+                        'data-testid': 'product-detail-add-to-cart',
+                      }}
+                      buyNowButtonProps={{
+                        variant: 'outline',
+                        size: 'default',
+                        className: 'w-full touch-feedback',
+                        'data-testid': 'product-detail-buy-now',
+                      }}
+                      onAddToCart={handleAddToCart}
+                      onBuyNow={showBuyNow ? handleBuyNow : undefined}
+                    />
                   )}
                   {onToggleWishlist && (
                     <Button

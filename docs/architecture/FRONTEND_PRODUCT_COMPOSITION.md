@@ -82,8 +82,12 @@ diagnostics. Important invariants are:
 5. restricted-egress profiles exclude features that require external resources;
 6. diagnostics use neutral feature IDs and never reveal credentials or distribution-local code.
 
-The first version resolves feature eligibility used by routes and navigation. Provider, workflow and
-action contribution types remain unchanged until representative product slices require them.
+The first version resolves feature eligibility used by routes and navigation. Product-action dogfood
+now shares stable action identity and host-rendering contracts, but per-listing inventory, payment
+and asset policy deliberately remains local to the product view. Those entity-scoped decisions must
+not be promoted into the global product resolver. A future action is projected by the resolver only
+when its availability is a profile/build/backend-capability decision shared with another shell
+surface.
 
 ## Migration rule
 
@@ -100,6 +104,8 @@ physical absence of distribution-local source.
 
 ## Next slices
 
-After the baseline proves stable, migrate product actions, cart summary and the smallest reusable
-admin primitives in that order. A public composition package, dynamic provider graph, universal
-manifest, Agent surface protocol or runtime plugin system is not part of this implementation stage.
+Product actions are now dogfooded through a host-rendering adapter without replacing Unified's
+responsive controls. Continue with cart summary and then the smallest reusable admin primitives; the
+product-action API remains provisional until an independent second application proves the same
+boundary. A public composition package, dynamic provider graph, universal manifest, Agent surface
+protocol or runtime plugin system is not part of this implementation stage.

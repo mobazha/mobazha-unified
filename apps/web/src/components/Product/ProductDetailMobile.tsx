@@ -46,6 +46,7 @@ import { SellerTrustBadge } from '@/components/Trust/SellerTrustBadge';
 import { RwaAssetDetail } from '@/components/RwaToken';
 import { ReviewList } from '@/components/Review';
 import { StarRating } from '@/components/ui/star-rating';
+import { ProductPurchaseActionButtons } from './ProductPurchaseActionButtons';
 
 export interface ProductDetailMobileProps {
   slug: string;
@@ -304,7 +305,9 @@ export function ProductDetailMobile({
               {renderPairedPrice(compareAtPrice, priceInfo.currency)}
             </span>
           )}
-          {!__SOVEREIGN__ && !isCollectibleTitleListing && <BuyerProtectionBadge variant="inline" />}
+          {!__SOVEREIGN__ && !isCollectibleTitleListing && (
+            <BuyerProtectionBadge variant="inline" />
+          )}
         </div>
 
         {isCollectibleTitleListing && collectibleListingMeta ? (
@@ -789,17 +792,17 @@ export function ProductDetailMobile({
                         : t('product.collectibleTitle.purchaseTitle')}
                 </Button>
               ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10"
-                    onClick={handleAddToCart}
-                    disabled={purchaseDisabled}
-                    data-testid="product-detail-add-to-cart"
-                  >
-                    {cartSuccess ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <ProductPurchaseActionButtons
+                  disabled={purchaseDisabled}
+                  className="flex flex-1 gap-2"
+                  addToCartLabel={
+                    cartSuccess ? (
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -817,19 +820,23 @@ export function ProductDetailMobile({
                       t('product.outOfStock')
                     ) : (
                       t('product.addToCart')
-                    )}
-                  </Button>
-                  {!purchaseDisabled && (
-                    <Button
-                      size="sm"
-                      className="flex-1 h-11 text-sm font-medium touch-feedback"
-                      onClick={handleBuyNow}
-                      data-testid="product-detail-buy-now"
-                    >
-                      {t('product.buyNow')}
-                    </Button>
-                  )}
-                </>
+                    )
+                  }
+                  addToCartButtonProps={{
+                    variant: 'outline',
+                    size: 'sm',
+                    className:
+                      'flex-1 h-11 text-sm font-medium touch-feedback border-primary text-primary hover:bg-primary/10',
+                    'data-testid': 'product-detail-add-to-cart',
+                  }}
+                  buyNowButtonProps={{
+                    size: 'sm',
+                    className: 'flex-1 h-11 text-sm font-medium touch-feedback',
+                    'data-testid': 'product-detail-buy-now',
+                  }}
+                  onAddToCart={handleAddToCart}
+                  onBuyNow={!purchaseDisabled ? handleBuyNow : undefined}
+                />
               )}
             </div>
           </div>
