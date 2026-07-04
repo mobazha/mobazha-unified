@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import { expect, test, type Page, type Request, type Route } from '@playwright/test';
 import { runtimeConfigScript, type RuntimeConfigFixtureOptions } from './fixtures/runtime-config';
 
