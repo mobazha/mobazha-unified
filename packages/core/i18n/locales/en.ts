@@ -5761,7 +5761,7 @@ export const en: TranslationResource = {
       navAria: 'Collectibles views',
       myCardsConnectPrompt: 'Connect a wallet to see digital titles linked to your address.',
       connectWalletCta: 'Connect wallet',
-      myCardsHoldHint: 'Hold or redeem your cards. Secondary resale is not supported here yet.',
+      myCardsHoldHint: 'Hold, transfer, or redeem digital titles from the card detail page.',
       myCardsEmpty: 'No digital titles match your connected wallet in this catalog.',
       subtitle:
         'Cards with digital titles show custody proof here. Physical cards without on-chain titles are purchased and shipped like ordinary goods.',
@@ -5864,6 +5864,21 @@ export const en: TranslationResource = {
       failedTitle: 'Redemption failed',
       trackingLabel: 'Redemption ID',
       viewTracking: 'View redemption status',
+    },
+    transfer: {
+      title: 'Transfer digital title',
+      description:
+        'Send this programmable NFT to another Solana wallet. This is an on-chain ownership transfer, not an order or sale.',
+      destination: 'Destination Solana wallet',
+      destinationPlaceholder: 'Enter a Solana wallet address',
+      walletMismatch: 'Connect the current holder wallet to transfer this title.',
+      submit: 'Review and transfer',
+      processing: 'Waiting for wallet…',
+      syncNote:
+        'After confirmation, the holder projection updates during the next chain reconciliation.',
+      successTitle: 'Transfer confirmed',
+      successDesc: 'The chain accepted the transfer. Holder data will synchronize shortly.',
+      failedTitle: 'Transfer failed',
     },
     redemptions: {
       title: 'My redemptions',

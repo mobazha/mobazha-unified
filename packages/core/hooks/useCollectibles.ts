@@ -18,6 +18,7 @@ const DEFAULT_PRIMARY_SALE_POLL_MS = 8_000;
 const DEFAULT_REDEMPTION_POLL_MS = 10_000;
 
 export interface CollectibleActions {
+  createCollectibleWalletChallenge: typeof collectibleRequests.createCollectibleWalletChallenge;
   getCollectibleRedemption: typeof collectibleRequests.getCollectibleRedemption;
   listCollectibleHubSlots: typeof collectibleRequests.listCollectibleHubSlots;
   listCollectibleSourceDeposits: typeof collectibleRequests.listCollectibleSourceDeposits;
@@ -40,6 +41,7 @@ export interface CollectibleActions {
   recoverCollectiblePendingMints: typeof collectibleRequests.recoverCollectiblePendingMints;
   bindCollectibleWallet: typeof collectibleRequests.bindCollectibleWallet;
   buildCollectibleBurnTx: typeof collectibleRequests.buildCollectibleBurnTx;
+  buildCollectibleTransferTx: typeof collectibleRequests.buildCollectibleTransferTx;
   createCollectibleRedemption: typeof collectibleRequests.createCollectibleRedemption;
   listMyCollectibleSourceDeposits: typeof collectibleRequests.listMyCollectibleSourceDeposits;
   submitMyCollectibleSourceDeposit: typeof collectibleRequests.submitMyCollectibleSourceDeposit;
@@ -47,6 +49,7 @@ export interface CollectibleActions {
 }
 
 const collectibleActions: CollectibleActions = {
+  createCollectibleWalletChallenge: collectibleRequests.createCollectibleWalletChallenge,
   getCollectibleRedemption: collectibleRequests.getCollectibleRedemption,
   listCollectibleHubSlots: collectibleRequests.listCollectibleHubSlots,
   listCollectibleSourceDeposits: collectibleRequests.listCollectibleSourceDeposits,
@@ -71,6 +74,7 @@ const collectibleActions: CollectibleActions = {
   recoverCollectiblePendingMints: collectibleRequests.recoverCollectiblePendingMints,
   bindCollectibleWallet: collectibleRequests.bindCollectibleWallet,
   buildCollectibleBurnTx: collectibleRequests.buildCollectibleBurnTx,
+  buildCollectibleTransferTx: collectibleRequests.buildCollectibleTransferTx,
   createCollectibleRedemption: collectibleRequests.createCollectibleRedemption,
   listMyCollectibleSourceDeposits: collectibleRequests.listMyCollectibleSourceDeposits,
   submitMyCollectibleSourceDeposit: collectibleRequests.submitMyCollectibleSourceDeposit,

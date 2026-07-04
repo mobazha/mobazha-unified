@@ -24,11 +24,14 @@ import {
   useCollectibleActions,
   getEnvConfig,
   isCollectibleBurnWalletProvider,
+  isCollectibleWalletMessageSigner,
   isCollectiblesPublicCatalogUnavailableError,
   prepareCollectibleShipToPayload,
   resolveCollectibleCatalogDisplay,
   shouldQueryCollectibleRedemptionByMint,
   signCollectibleBurnTransaction,
+  signCollectibleTransferTransaction,
+  signCollectibleWalletChallenge,
   useAppKit,
   useCollectibleNFT,
   useCollectibleRedemptionByMint,
@@ -63,6 +66,8 @@ export default function CollectibleDetailPage() {
     'idle'
   );
   const [redemptionId, setRedemptionId] = useState<string | null>(null);
+  const [transferDestination, setTransferDestination] = useState('');
+  const [transferStep, setTransferStep] = useState<'idle' | 'binding' | 'signing'>('idle');
 
   const holderWallet = address || '';
   const expectedHolderWallet = nft?.hubSlot?.currentHolder?.trim() || '';
@@ -107,14 +112,24 @@ export default function CollectibleDetailPage() {
     if (!nft?.nftMint || !holderWallet) return;
     setRedeemStep('binding');
     try {
+      const walletProvider = getWalletProvider();
+      if (!isCollectibleWalletMessageSigner(walletProvider)) {
+        throw new Error('Solana wallet does not support message signing');
+      }
+      const walletChallenge = await collectibleActions.createCollectibleWalletChallenge({
+        wallet: holderWallet,
+        nftMint: nft.nftMint,
+      });
+      const walletSignature = await signCollectibleWalletChallenge(walletChallenge, walletProvider);
       await collectibleActions.bindCollectibleWallet({
         wallet: holderWallet,
         nftMint: nft.nftMint,
+        challengeID: walletChallenge.challengeID,
+        signature: walletSignature,
       });
 
       setRedeemStep('burning');
       const burnTx = await collectibleActions.buildCollectibleBurnTx(nft.nftMint, holderWallet);
-      const walletProvider = getWalletProvider();
       const burnSignature = await signCollectibleBurnTransaction({
         burnTx,
         walletProvider: isCollectibleBurnWalletProvider(walletProvider)
@@ -150,6 +165,70 @@ export default function CollectibleDetailPage() {
       setRedeemStep('idle');
     }
   }, [getWalletProvider, holderWallet, isDevnetNetwork, nft, refresh, shipTo, t, toast]);
+
+  const handleTransfer = useCallback(async () => {
+    if (!nft?.nftMint || !holderWallet || !transferDestination.trim()) return;
+    setTransferStep('binding');
+    try {
+      const walletProvider = getWalletProvider();
+      if (!isCollectibleWalletMessageSigner(walletProvider)) {
+        throw new Error('Solana wallet does not support message signing');
+      }
+      if (!isCollectibleBurnWalletProvider(walletProvider)) {
+        throw new Error('Solana wallet does not support transaction signing');
+      }
+      const challenge = await collectibleActions.createCollectibleWalletChallenge({
+        wallet: holderWallet,
+        nftMint: nft.nftMint,
+      });
+      await collectibleActions.bindCollectibleWallet({
+        wallet: holderWallet,
+        nftMint: nft.nftMint,
+        challengeID: challenge.challengeID,
+        signature: await signCollectibleWalletChallenge(challenge, walletProvider),
+      });
+      setTransferStep('signing');
+      const transferTx = await collectibleActions.buildCollectibleTransferTx(
+        nft.nftMint,
+        holderWallet,
+        transferDestination.trim()
+      );
+      const signature = await signCollectibleTransferTransaction({
+        transferTx,
+        walletProvider,
+        walletAddress: holderWallet,
+        expectedNFTMint: nft.nftMint,
+        expectedDestination: transferDestination.trim(),
+        isDevnet: isDevnetNetwork,
+      });
+      setTransferDestination('');
+      toast({
+        title: t('collectibles.transfer.successTitle'),
+        description: `${t('collectibles.transfer.successDesc')} ${truncateAddress(signature)}`,
+        variant: 'success',
+      });
+      void refresh();
+    } catch (err) {
+      console.error('[collectibles] transfer failed', err);
+      toast({
+        title: t('collectibles.transfer.failedTitle'),
+        description: err instanceof Error ? err.message : String(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setTransferStep('idle');
+    }
+  }, [
+    collectibleActions,
+    getWalletProvider,
+    holderWallet,
+    isDevnetNetwork,
+    nft,
+    refresh,
+    t,
+    toast,
+    transferDestination,
+  ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -344,62 +423,123 @@ export default function CollectibleDetailPage() {
                       )}
                     </Card>
                   ) : display?.redeemable && !display.credentialActionsBlocked ? (
-                    <Card className="p-5">
-                      <h2 className="text-base font-semibold text-foreground">
-                        {t('collectibles.redeem.title')}
-                      </h2>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {t('collectibles.redeem.description')}
-                      </p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {t('collectibles.redeem.holderOnlyNote')}
-                      </p>
+                    <>
+                      <Card className="p-5" data-testid="collectible-transfer-card">
+                        <h2 className="text-base font-semibold text-foreground">
+                          {t('collectibles.transfer.title')}
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {t('collectibles.transfer.description')}
+                        </p>
+                        <label
+                          htmlFor="collectible-transfer-destination"
+                          className="mt-4 block text-sm font-medium text-foreground"
+                        >
+                          {t('collectibles.transfer.destination')}
+                        </label>
+                        <input
+                          id="collectible-transfer-destination"
+                          value={transferDestination}
+                          onChange={event => setTransferDestination(event.target.value)}
+                          placeholder={t('collectibles.transfer.destinationPlaceholder')}
+                          className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 font-mono text-sm"
+                        />
+                        {!isExpectedHolder && isSolanaWallet ? (
+                          <p className="mt-2 text-sm text-destructive">
+                            {t('collectibles.transfer.walletMismatch')}
+                          </p>
+                        ) : null}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="mt-3 w-full sm:w-auto"
+                          disabled={
+                            !isAuthenticated ||
+                            !isSolanaWallet ||
+                            !isExpectedHolder ||
+                            transferDestination.trim().length < 32 ||
+                            transferStep !== 'idle'
+                          }
+                          onClick={() => void handleTransfer()}
+                        >
+                          {transferStep === 'idle'
+                            ? t('collectibles.transfer.submit')
+                            : t('collectibles.transfer.processing')}
+                        </Button>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {t('collectibles.transfer.syncNote')}
+                        </p>
+                      </Card>
+                      <Card className="p-5">
+                        <h2 className="text-base font-semibold text-foreground">
+                          {t('collectibles.redeem.title')}
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {t('collectibles.redeem.description')}
+                        </p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {t('collectibles.redeem.holderOnlyNote')}
+                        </p>
 
-                      <ol className="mt-4 space-y-4">
-                        <li className="flex gap-3">
-                          {walletStepDone ? (
-                            <CheckCircle2
-                              className="mt-0.5 h-5 w-5 shrink-0 text-primary"
-                              aria-hidden
-                            />
-                          ) : (
-                            <Circle
-                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                              aria-hidden
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground">
-                              {t('collectibles.redeem.stepWallet')}
-                            </p>
-                            {isSolanaWallet ? (
-                              <div className="mt-2 space-y-2">
-                                <p className="font-mono text-sm text-muted-foreground">
-                                  {truncateAddress(holderWallet)}
-                                </p>
-                                {expectedHolderWallet ? (
-                                  <p className="text-xs text-muted-foreground">
-                                    {t('collectibles.redeem.expectedHolder')}:{' '}
-                                    <span className="font-mono">
-                                      {truncateAddress(expectedHolderWallet)}
-                                    </span>
+                        <ol className="mt-4 space-y-4">
+                          <li className="flex gap-3">
+                            {walletStepDone ? (
+                              <CheckCircle2
+                                className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+                                aria-hidden
+                              />
+                            ) : (
+                              <Circle
+                                className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                                aria-hidden
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground">
+                                {t('collectibles.redeem.stepWallet')}
+                              </p>
+                              {isSolanaWallet ? (
+                                <div className="mt-2 space-y-2">
+                                  <p className="font-mono text-sm text-muted-foreground">
+                                    {truncateAddress(holderWallet)}
                                   </p>
-                                ) : null}
-                                {!isExpectedHolder ? (
-                                  <p className="text-sm text-destructive">
-                                    {t('collectibles.redeem.walletMismatch')}
+                                  {expectedHolderWallet ? (
+                                    <p className="text-xs text-muted-foreground">
+                                      {t('collectibles.redeem.expectedHolder')}:{' '}
+                                      <span className="font-mono">
+                                        {truncateAddress(expectedHolderWallet)}
+                                      </span>
+                                    </p>
+                                  ) : null}
+                                  {!isExpectedHolder ? (
+                                    <p className="text-sm text-destructive">
+                                      {t('collectibles.redeem.walletMismatch')}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              ) : isConnected ? (
+                                <div className="mt-2 space-y-2">
+                                  <p className="text-sm text-muted-foreground">
+                                    {t('collectibles.redeem.solanaWalletRequired')}
                                   </p>
-                                ) : null}
-                              </div>
-                            ) : isConnected ? (
-                              <div className="mt-2 space-y-2">
-                                <p className="text-sm text-muted-foreground">
-                                  {t('collectibles.redeem.solanaWalletRequired')}
-                                </p>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => void connectSolana()}
+                                    disabled={isInitializing}
+                                  >
+                                    {isInitializing
+                                      ? t('collectibles.redeem.connecting')
+                                      : t('collectibles.redeem.connectWallet')}
+                                  </Button>
+                                </div>
+                              ) : (
                                 <Button
                                   type="button"
                                   variant="outline"
                                   size="sm"
+                                  className="mt-2"
                                   onClick={() => void connectSolana()}
                                   disabled={isInitializing}
                                 >
@@ -407,105 +547,92 @@ export default function CollectibleDetailPage() {
                                     ? t('collectibles.redeem.connecting')
                                     : t('collectibles.redeem.connectWallet')}
                                 </Button>
-                              </div>
+                              )}
+                            </div>
+                          </li>
+
+                          <li className="flex gap-3">
+                            {walletStepDone ? (
+                              <CheckCircle2
+                                className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+                                aria-hidden
+                              />
                             ) : (
+                              <Circle
+                                className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                                aria-hidden
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground">
+                                {t('collectibles.redeem.stepVerify')}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {t('collectibles.redeem.stepVerifyDesc')}
+                              </p>
+                            </div>
+                          </li>
+
+                          <li className="flex gap-3">
+                            {addressStepDone ? (
+                              <CheckCircle2
+                                className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+                                aria-hidden
+                              />
+                            ) : (
+                              <Circle
+                                className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                                aria-hidden
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <label
+                                htmlFor="collectible-ship-to"
+                                className="text-sm font-medium text-foreground"
+                              >
+                                {t('collectibles.redeem.stepAddress')}
+                              </label>
+                              <Textarea
+                                id="collectible-ship-to"
+                                value={shipTo}
+                                onChange={event => setShipTo(event.target.value)}
+                                placeholder={t('collectibles.redeem.shippingPlaceholder')}
+                                rows={4}
+                                className="mt-2"
+                              />
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {t('collectibles.redeem.shippingPrivacy')}
+                              </p>
+                            </div>
+                          </li>
+
+                          <li className="flex gap-3">
+                            <Circle
+                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground">
+                                {t('collectibles.redeem.stepSubmit')}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {t('collectibles.redeem.stepSubmitDesc')}
+                              </p>
                               <Button
                                 type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-2"
-                                onClick={() => void connectSolana()}
-                                disabled={isInitializing}
+                                className="mt-3 w-full sm:w-auto"
+                                disabled={!canRedeem || redeemStep !== 'idle'}
+                                onClick={() => void handleRedeem()}
                               >
-                                {isInitializing
-                                  ? t('collectibles.redeem.connecting')
-                                  : t('collectibles.redeem.connectWallet')}
+                                {redeemStep === 'idle'
+                                  ? t('collectibles.redeem.submit')
+                                  : t('collectibles.redeem.processing')}
                               </Button>
-                            )}
-                          </div>
-                        </li>
-
-                        <li className="flex gap-3">
-                          {walletStepDone ? (
-                            <CheckCircle2
-                              className="mt-0.5 h-5 w-5 shrink-0 text-primary"
-                              aria-hidden
-                            />
-                          ) : (
-                            <Circle
-                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                              aria-hidden
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground">
-                              {t('collectibles.redeem.stepVerify')}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {t('collectibles.redeem.stepVerifyDesc')}
-                            </p>
-                          </div>
-                        </li>
-
-                        <li className="flex gap-3">
-                          {addressStepDone ? (
-                            <CheckCircle2
-                              className="mt-0.5 h-5 w-5 shrink-0 text-primary"
-                              aria-hidden
-                            />
-                          ) : (
-                            <Circle
-                              className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                              aria-hidden
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <label
-                              htmlFor="collectible-ship-to"
-                              className="text-sm font-medium text-foreground"
-                            >
-                              {t('collectibles.redeem.stepAddress')}
-                            </label>
-                            <Textarea
-                              id="collectible-ship-to"
-                              value={shipTo}
-                              onChange={event => setShipTo(event.target.value)}
-                              placeholder={t('collectibles.redeem.shippingPlaceholder')}
-                              rows={4}
-                              className="mt-2"
-                            />
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {t('collectibles.redeem.shippingPrivacy')}
-                            </p>
-                          </div>
-                        </li>
-
-                        <li className="flex gap-3">
-                          <Circle
-                            className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                            aria-hidden
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground">
-                              {t('collectibles.redeem.stepSubmit')}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {t('collectibles.redeem.stepSubmitDesc')}
-                            </p>
-                            <Button
-                              type="button"
-                              className="mt-3 w-full sm:w-auto"
-                              disabled={!canRedeem || redeemStep !== 'idle'}
-                              onClick={() => void handleRedeem()}
-                            >
-                              {redeemStep === 'idle'
-                                ? t('collectibles.redeem.submit')
-                                : t('collectibles.redeem.processing')}
-                            </Button>
-                          </div>
-                        </li>
-                      </ol>
-                    </Card>
+                            </div>
+                          </li>
+                        </ol>
+                      </Card>
+                    </>
                   ) : null}
 
                   {redemptionId && !isVoidedCredential ? (

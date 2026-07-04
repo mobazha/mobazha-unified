@@ -2574,6 +2574,19 @@ export interface TranslationResource {
       trackingLabel: string;
       viewTracking: string;
     };
+    transfer?: {
+      title: string;
+      description: string;
+      destination: string;
+      destinationPlaceholder: string;
+      walletMismatch: string;
+      submit: string;
+      processing: string;
+      syncNote: string;
+      successTitle: string;
+      successDesc: string;
+      failedTitle: string;
+    };
     redemptions: {
       title: string;
       subtitle: string;

@@ -66,6 +66,73 @@ describe('collectibles API', () => {
     expect(result.hubSlot?.status).toBe('minted');
   });
 
+  it('creates and proves a wallet ownership challenge before binding', async () => {
+    const { createCollectibleWalletChallenge, bindCollectibleWallet } =
+      await import('../../../services/api/collectibles');
+    mockHostingPost
+      .mockResolvedValueOnce({
+        challengeID: 'wallet_challenge_1',
+        tenantID: 'tenant-1',
+        userID: 'user-1',
+        wallet: 'holder-wallet',
+        nftMint: 'mint-1',
+        message: 'Mobazha Collectibles wallet ownership verification',
+        expiresAt: '2026-07-04T12:05:00Z',
+      })
+      .mockResolvedValueOnce({
+        tenantID: 'tenant-1',
+        userID: 'user-1',
+        wallet: 'holder-wallet',
+        chain: 'solana',
+      });
+
+    const challenge = await createCollectibleWalletChallenge({
+      wallet: 'holder-wallet',
+      nftMint: 'mint-1',
+    });
+    await bindCollectibleWallet({
+      wallet: 'holder-wallet',
+      nftMint: 'mint-1',
+      challengeID: challenge.challengeID,
+      signature: 'base64-signature',
+    });
+
+    expect(mockHostingPost).toHaveBeenNthCalledWith(
+      1,
+      '/platform/v1/collectibles/wallets/challenges',
+      { wallet: 'holder-wallet', nftMint: 'mint-1' }
+    );
+    expect(mockHostingPost).toHaveBeenNthCalledWith(2, '/platform/v1/collectibles/wallets', {
+      wallet: 'holder-wallet',
+      nftMint: 'mint-1',
+      challengeID: 'wallet_challenge_1',
+      signature: 'base64-signature',
+    });
+  });
+
+  it('requests an unsigned pNFT secondary transfer transaction', async () => {
+    const { buildCollectibleTransferTx } = await import('../../../services/api/collectibles');
+    mockHostingPost.mockResolvedValueOnce({
+      nftMint: 'mint-1',
+      holder: 'holder-wallet',
+      destination: 'destination-wallet',
+      transaction: 'base64-transaction',
+      message: 'transfer',
+    });
+
+    const result = await buildCollectibleTransferTx(
+      'mint-1',
+      'holder-wallet',
+      'destination-wallet'
+    );
+
+    expect(mockHostingPost).toHaveBeenCalledWith(
+      '/platform/v1/collectibles/nfts/mint-1/transfer-tx',
+      { holder: 'holder-wallet', destination: 'destination-wallet' }
+    );
+    expect(result.transaction).toBe('base64-transaction');
+  });
+
   it('posts pending mint recovery requests to hosting', async () => {
     const { recoverCollectiblePendingMints } = await import('../../../services/api/collectibles');
     mockHostingPost.mockResolvedValueOnce({

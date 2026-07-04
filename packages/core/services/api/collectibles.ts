@@ -6,6 +6,7 @@ import { ApiError } from './client';
 import { hostingGet, hostingPost, hostingPut } from './helpers';
 import type {
   CollectibleBurnTx,
+  CollectibleTransferTx,
   CollectibleHubSlot,
   CollectibleNFT,
   CollectiblePendingMintRecoveryReport,
@@ -127,9 +128,28 @@ export async function getCollectibleNFT(mint: string): Promise<CollectibleNFT> {
   return normalizeCollectibleNFT(result);
 }
 
+export interface CollectibleWalletChallenge {
+  challengeID: string;
+  tenantID: string;
+  userID: string;
+  wallet: string;
+  nftMint: string;
+  message: string;
+  expiresAt: string;
+}
+
+export async function createCollectibleWalletChallenge(body: {
+  wallet: string;
+  nftMint: string;
+}): Promise<CollectibleWalletChallenge> {
+  return hostingPost<CollectibleWalletChallenge>(HOSTING_API.COLLECTIBLES_WALLET_CHALLENGES, body);
+}
+
 export async function bindCollectibleWallet(body: {
   wallet: string;
-  nftMint?: string;
+  nftMint: string;
+  challengeID: string;
+  signature: string;
 }): Promise<{ tenantID?: string; userID?: string; wallet: string; chain?: string }> {
   return hostingPost(HOSTING_API.COLLECTIBLES_WALLETS, body);
 }
@@ -139,6 +159,17 @@ export async function buildCollectibleBurnTx(
   holder: string
 ): Promise<CollectibleBurnTx> {
   return hostingPost<CollectibleBurnTx>(HOSTING_API.COLLECTIBLES_NFT_BURN_TX(mint), { holder });
+}
+
+export async function buildCollectibleTransferTx(
+  mint: string,
+  holder: string,
+  destination: string
+): Promise<CollectibleTransferTx> {
+  return hostingPost<CollectibleTransferTx>(HOSTING_API.COLLECTIBLES_NFT_TRANSFER_TX(mint), {
+    holder,
+    destination,
+  });
 }
 
 export async function createCollectibleRedemption(body: {
@@ -406,8 +437,10 @@ export const collectiblesApi = {
   mintHubSlot: mintCollectibleHubSlot,
   listNFTs: listCollectibleNFTs,
   getNFT: getCollectibleNFT,
+  createWalletChallenge: createCollectibleWalletChallenge,
   bindWallet: bindCollectibleWallet,
   buildBurnTx: buildCollectibleBurnTx,
+  buildTransferTx: buildCollectibleTransferTx,
   createRedemption: createCollectibleRedemption,
   listRedemptions: listCollectibleRedemptions,
   listHubRedemptions: listCollectibleHubRedemptions,

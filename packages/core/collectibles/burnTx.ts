@@ -169,9 +169,9 @@ async function prepareBurnTransaction(
   const bytes = decodeBase64Payload(payload);
 
   try {
-    return VersionedTransaction.deserialize(bytes);
-  } catch {
     return Transaction.from(bytes);
+  } catch {
+    return VersionedTransaction.deserialize(bytes);
   }
 }
 

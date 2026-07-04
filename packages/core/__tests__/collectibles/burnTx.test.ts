@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 fengzie and the respective contributors.
 
-import type { Connection } from '@solana/web3.js';
+import { Transaction, type Connection } from '@solana/web3.js';
 import { describe, expect, it, vi } from 'vitest';
 import {
   deriveMockBurnSignature,
@@ -94,6 +94,35 @@ describe('signCollectibleBurnTransaction', () => {
     expect(connection.getBalance).toHaveBeenCalled();
     expect(connection.simulateTransaction).toHaveBeenCalled();
     expect(walletProvider.signAndSendTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('decodes backend legacy transactions before attempting versioned decoding', async () => {
+    const holder = '4FKqynd2ufgjkmZqMm7i1UDmshXY7XWCyrzaF9QZ9Whn';
+    const legacyTransaction =
+      'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEDMD5/5p7EJh2+BR5vLxS1Whf31ZNfdaccAUFpJD/irvFcwO8PVZCeEeLio4vGRpBpbdn2AjFOqtHlNtUWPf+BSQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAgIAAQA=';
+    const connection = createBurnConnectionMock({
+      balance: MIN_SOL_LAMPORTS_FOR_BURN_FEE,
+    });
+    const walletProvider = {
+      signAndSendTransaction: vi.fn().mockImplementation(async transaction => {
+        expect(transaction).toBeInstanceOf(Transaction);
+        return 'burn-signature';
+      }),
+    };
+
+    await expect(
+      signCollectibleBurnTransaction({
+        burnTx: {
+          nftMint: 'mint-1',
+          holder,
+          transaction: legacyTransaction,
+          message: 'legacy transaction',
+        },
+        walletProvider,
+        walletAddress: holder,
+        connection,
+      })
+    ).resolves.toBe('burn-signature');
   });
 
   it('rejects real burns when fee-payer SOL balance is too low', async () => {

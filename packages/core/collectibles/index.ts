@@ -14,3 +14,5 @@ export * from './explorer';
 export * from './shipTo';
 export * from './sourceDeposit';
 export * from './validity';
+export * from './walletBinding';
+export * from './transferTx';

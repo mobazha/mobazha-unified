@@ -100,6 +100,14 @@ export interface CollectibleBurnTx {
   message: string;
 }
 
+export interface CollectibleTransferTx {
+  nftMint: string;
+  holder: string;
+  destination: string;
+  transaction: string;
+  message: string;
+}
+
 export interface CollectiblesListMeta {
   total: number;
   page: number;
