@@ -65,6 +65,9 @@ contract.
 
 ### Requirements
 
+See [Public package boundaries](./docs/architecture/PACKAGE_BOUNDARIES.md) for
+the ownership and dependency rules of the shared packages.
+
 - Node.js 20 or newer
 - pnpm 9 (the repository pins pnpm 9.15.4)
 - A compatible Mobazha backend
@@ -120,9 +123,9 @@ Provider order and runtime-capability behavior must remain equivalent across bot
 mobazha-unified/
 ├── apps/web/                 # Next.js and Vite web application
 ├── apps/extension/           # Browser extension entry point
-├── packages/core/            # Runtime config, API, payment and domain logic
-├── packages/commerce-web/    # Shared commerce feature contracts
-├── packages/ui/              # Shared UI components
+├── packages/core/            # Internal runtime, API, payment and domain implementation
+├── packages/ui/              # Generic visual and platform foundations
+├── packages/commerce-kit/    # Public commerce contracts and feature surfaces
 ├── config/editions/          # Packaging and compatibility profiles
 └── docs/architecture/        # Public architecture contracts
 ```

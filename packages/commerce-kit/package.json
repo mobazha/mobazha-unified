@@ -1,7 +1,7 @@
 {
-  "name": "@mobazha/commerce-web",
+  "name": "@mobazha/commerce-kit",
   "version": "0.1.0",
-  "description": "Stable frontend feature contracts shared by Mobazha commerce applications",
+  "description": "Public React web commerce feature kit for Mobazha applications",
   "license": "MPL-2.0",
   "sideEffects": false,
   "files": [

@@ -47,7 +47,7 @@ import { HelpPopover } from '@/components/GuestCheckout/HelpPopover';
 import type {
   CommerceGuestOrderRequest,
   CommerceGuestOrderResponse,
-} from '@mobazha/commerce-web/checkout';
+} from '@mobazha/commerce-kit/checkout';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 

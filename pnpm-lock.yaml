@@ -148,9 +148,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.3)
-      '@mobazha/commerce-web':
+      '@mobazha/commerce-kit':
         specifier: workspace:*
-        version: link:../../packages/commerce-web
+        version: link:../../packages/commerce-kit
       '@mobazha/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -336,7 +336,7 @@ importers:
         specifier: ^3.2.6
         version: 3.2.6(@types/debug@4.1.12)(@types/node@22.19.3)(jiti@2.6.1)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(lightningcss@1.30.2)(yaml@2.8.2)
 
-  packages/commerce-web:
+  packages/commerce-kit:
     devDependencies:
       '@types/react':
         specifier: ^19.0.2

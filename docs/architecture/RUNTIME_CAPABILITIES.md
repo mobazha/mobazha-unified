@@ -80,7 +80,7 @@ interface RuntimeConfig {
 | Standalone Store      | standalone | store       | commerce + allowlisted payments              |
 | Hosted Platform       | hosted     | platform    | commerce + marketplace + extended payments   |
 | Dedicated Marketplace | hosted     | marketplace | commerce + marketplace                       |
-| Sovereign             | sovereign  | store       | commerce + isolated runtime + local payments  |
+| Sovereign             | sovereign  | store       | commerce + isolated runtime + local payments |
 
 The default manifest is release metadata and a payment fallback profile. It is
 not a global frontend identity, and business UI must not branch on an edition
@@ -113,3 +113,15 @@ Payment and wallet integrations continue to use stable adapter contracts:
 
 Connector-specific dependencies require independent license and security review
 and remain optional so they do not alter the MPL core boundary.
+
+## Package ownership
+
+Runtime capabilities describe whether behavior is available; package boundaries
+describe who implements and renders it. `@mobazha/core` remains the internal
+application implementation, `@mobazha/ui` owns generic visual foundations, and
+`@mobazha/commerce-kit` owns public commerce contracts, composition descriptors
+and reusable feature surfaces. Application shells materialize routes and connect
+their own adapters, providers, localization and branding.
+
+See [Package boundaries](./PACKAGE_BOUNDARIES.md) for dependency rules and the
+criteria for promoting an application feature into the public kit.

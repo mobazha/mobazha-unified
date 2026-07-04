@@ -1,11 +1,16 @@
-# UI 组件库使用指南
+# UI 组件与公共 Feature Kit 使用指南
 
 ## 概述
 
-项目使用两套 UI 组件库：
+项目区分三类前端复用边界：
 
-1. **`@mobazha/ui`** - 自定义业务组件 (ProductCard, Avatar, Grid 等)
-2. **`@/components/ui`** - shadcn/ui 组件 (Dialog, Select, Toast 等)
+1. **`@/components/ui`** - Unified 应用内的 shadcn/ui 组件（Dialog、Select、Toast 等）。
+2. **`@mobazha/ui`** - 领域无关的视觉与平台基础，当前包含响应式/platform hooks、性能组件和少量通用工具。
+3. **`@mobazha/commerce-kit`** - 可公开发布的 Commerce feature kit，提供 contracts、composition 和可复用的 checkout/cart/product 等垂直切片。
+
+`@mobazha/ui` 不承载 API client、全局 store 或 Commerce workflow；
+`@mobazha/commerce-kit` 不导入 `@mobazha/core` 或任何应用源码。详见
+[`docs/architecture/PACKAGE_BOUNDARIES.md`](../architecture/PACKAGE_BOUNDARIES.md)。
 
 ## shadcn/ui 组件
 
@@ -197,15 +202,19 @@ function MyComponent() {
 - **导航组件**: Tabs, DropdownMenu
 - **展示组件**: Card, Badge, Avatar
 
-### 2. 使用 @mobazha/ui 组件
+### 2. 使用 @mobazha/ui
 
-对于业务特定组件，使用 `@mobazha/ui`：
+仅使用它已经稳定导出的领域无关能力，例如 `usePlatform`、
+`useBreakpoint`、`OptimizedImage`、`VirtualList` 和 `LazyLoad`。应用内仅有一个
+消费者的组件不要为了目录整齐过早上收。
 
-- ProductCard, OrderCard, VendorCard
-- Header, Footer, MobileNav
-- Container, Grid, HStack, VStack
+### 3. 使用 @mobazha/commerce-kit
 
-### 3. 样式合并
+当 storefront、product、cart、checkout 或 seller-admin 垂直切片被两个以上真实应用
+共同消费时，通过 `@mobazha/commerce-kit` 的稳定 subpath 导入。应用仍然
+负责 route 物化、Provider、品牌、i18n 和具体 adapter。
+
+### 4. 样式合并
 
 使用 `cn()` 工具合并类名：
 
@@ -215,7 +224,7 @@ import { cn } from '@/lib/utils';
 <Button className={cn('custom-class', isActive && 'active-class')} />;
 ```
 
-### 4. 暗色模式支持
+### 5. 暗色模式支持
 
 shadcn/ui 组件自动支持暗色模式，使用 CSS 变量：
 

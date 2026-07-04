@@ -23,10 +23,10 @@
       "@mobazha/ui/*": ["../../packages/ui/*"],
       "@mobazha/core": ["../../packages/core/index.ts"],
       "@mobazha/core/*": ["../../packages/core/*"],
-      "@mobazha/commerce-web": ["../../packages/commerce-web/src/index.ts"],
-      "@mobazha/commerce-web/*": [
-        "../../packages/commerce-web/src/*/index.ts",
-        "../../packages/commerce-web/src/*"
+      "@mobazha/commerce-kit": ["../../packages/commerce-kit/src/index.ts"],
+      "@mobazha/commerce-kit/*": [
+        "../../packages/commerce-kit/src/*/index.ts",
+        "../../packages/commerce-kit/src/*"
       ]
     },
     "target": "ES2017"

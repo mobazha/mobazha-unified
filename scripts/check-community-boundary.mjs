@@ -171,7 +171,7 @@ for (const publicRoot of [
   'apps/web/src',
   'apps/web/e2e',
   'packages/core',
-  'packages/commerce-web',
+  'packages/commerce-kit',
 ]) {
   scanSourceTree(join(repoRoot, publicRoot));
 }
