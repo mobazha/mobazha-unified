@@ -86,6 +86,11 @@ layout and product-policy wording while Commerce Kit owns the stable `add-to-car
 action identity, disabled state and callback wiring. Entity-specific stock, payment, ownership and
 asset policy remains in the host; those decisions are not global product-composition capabilities.
 
+Cart summary follows the same pattern. `CommerceCartSummary` remains the neutral card for smaller
+applications, while `CommerceCartSummaryContent.renderSummary` exposes normalized item-count, total,
+checkout-disabled and checkout-action state without imposing a card. Hosts retain seller grouping,
+authentication or registration wording, currency formatting and channel-native CTA adapters.
+
 `createCommerceHttpClient()` applies a 30-second default timeout and sends an `X-Request-ID` unless
 the host already supplied one. Hosts can set a default or per-request `timeoutMs`, pass an
 `AbortSignal`, and branch on `CommerceHttpError.kind` without parsing error messages.

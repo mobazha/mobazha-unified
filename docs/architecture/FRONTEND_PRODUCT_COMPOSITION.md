@@ -104,8 +104,9 @@ physical absence of distribution-local source.
 
 ## Next slices
 
-Product actions are now dogfooded through a host-rendering adapter without replacing Unified's
-responsive controls. Continue with cart summary and then the smallest reusable admin primitives; the
-product-action API remains provisional until an independent second application proves the same
-boundary. A public composition package, dynamic provider graph, universal manifest, Agent surface
-protocol or runtime plugin system is not part of this implementation stage.
+Product actions and cart summary are now dogfooded through host-rendering adapters without replacing
+Unified's responsive controls, seller grouping, authentication policy or channel-native CTA.
+Continue with the smallest reusable admin primitives; these `0.x` APIs remain provisional until
+independent second applications prove the same boundaries. A public composition package, dynamic
+provider graph, universal manifest, Agent surface protocol or runtime plugin system is not part of
+this implementation stage.

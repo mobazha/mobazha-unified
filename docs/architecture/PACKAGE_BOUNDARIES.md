@@ -112,6 +112,12 @@ localization, inventory, payment and asset policy. This proves the adapter shape
 full product page or its stores into Commerce Kit. It is still one application implementation, so
 the API remains `0.x` evidence rather than satisfying the two-application promotion rule by itself.
 
+Cart summary is the next dogfood slice and uses the same boundary. Commerce Kit normalizes summary
+state and the empty/disabled checkout invariant; Unified renders that state in the cart drawer,
+desktop seller-group footer, multi-seller total and mobile fixed bar. Seller grouping,
+authentication or registration routing, currency display and Telegram-native CTA ownership remain in
+the host. The package does not absorb cart storage or checkout navigation policy.
+
 ## Promotion rule
 
 A feature moves from an application into `@mobazha/commerce-kit` only when:

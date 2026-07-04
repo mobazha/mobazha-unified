@@ -16,6 +16,7 @@ import { usePlatform } from '@mobazha/ui/hooks';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Minus, Plus, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
+import { CartSummaryAdapter } from './CartSummaryAdapter';
 
 function SwipeableCartItem({
   item,
@@ -207,23 +208,30 @@ function VendorSection({
       </div>
 
       {/* Vendor subtotal / checkout */}
-      <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between">
-        <div className="text-sm">
-          <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
-          <span className="font-bold text-foreground ml-1.5">
-            {renderPairedPrice(group.subtotal, group.currency)}
-          </span>
-        </div>
-        {!isSingleVendor && (
-          <Button
-            size="sm"
-            className="touch-feedback h-9 px-4 text-sm"
-            onClick={() => onCheckout(group)}
-          >
-            {checkoutLabel}
-          </Button>
+      <CartSummaryAdapter
+        itemCount={group.items.length}
+        total={renderPairedPrice(group.subtotal, group.currency)}
+        checkoutLabel={checkoutLabel}
+        onCheckout={!isSingleVendor ? () => onCheckout(group) : undefined}
+        renderSummary={({ total, checkoutLabel, checkoutDisabled, onCheckout }) => (
+          <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between">
+            <div className="text-sm">
+              <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
+              <span className="font-bold text-foreground ml-1.5">{total}</span>
+            </div>
+            {onCheckout && (
+              <Button
+                size="sm"
+                className="touch-feedback h-9 px-4 text-sm"
+                disabled={checkoutDisabled}
+                onClick={onCheckout}
+              >
+                {checkoutLabel}
+              </Button>
+            )}
+          </div>
         )}
-      </div>
+      />
     </div>
   );
 }
@@ -370,22 +378,29 @@ export function CartMobile() {
           (Telegram MainButton); visible on Web / Discord / Standalone. */}
       {!cta.isNative && (
         <div className="fixed bottom-0 inset-x-0 bg-background border-t border-border px-4 py-2.5 pb-safe z-40">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-muted-foreground">{t('cart.total')}</span>
-              <div className="text-lg font-bold text-primary">
-                {renderPairedPrice(totalAmount, defaultCurrency)}
+          <CartSummaryAdapter
+            itemCount={items.length}
+            total={renderPairedPrice(totalAmount, defaultCurrency)}
+            checkoutLabel={effectiveCheckoutLabel}
+            onCheckout={groups.length === 1 ? () => handleCheckoutWithAuth(groups[0]) : undefined}
+            renderSummary={({ total, checkoutLabel, checkoutDisabled, onCheckout }) => (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-muted-foreground">{t('cart.total')}</span>
+                  <div className="text-lg font-bold text-primary">{total}</div>
+                </div>
+                {onCheckout && (
+                  <Button
+                    className="touch-feedback h-11 px-6 text-[15px] font-medium"
+                    disabled={checkoutDisabled}
+                    onClick={onCheckout}
+                  >
+                    {checkoutLabel}
+                  </Button>
+                )}
               </div>
-            </div>
-            {groups.length === 1 && (
-              <Button
-                className="touch-feedback h-11 px-6 text-[15px] font-medium"
-                onClick={() => handleCheckoutWithAuth(groups[0])}
-              >
-                {effectiveCheckoutLabel}
-              </Button>
             )}
-          </div>
+          />
         </div>
       )}
     </PageTransition>

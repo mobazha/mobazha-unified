@@ -10,6 +10,7 @@ import { buildProductHref } from '@mobazha/core';
 import { useCart } from '@/hooks/useCart';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { ClearCartAlert } from './ClearCartAlert';
+import { CartSummaryAdapter } from './CartSummaryAdapter';
 
 export function CartDesktop() {
   const {
@@ -251,37 +252,48 @@ export function CartDesktop() {
 
                 {/* Vendor checkout footer */}
                 <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-muted/30 border-t border-border">
-                  <HStack justify="between" align="center">
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
-                      <span className="font-bold text-foreground ml-1.5">
-                        {renderPairedPrice(group.subtotal, group.currency)}
-                      </span>
-                    </div>
-                    <Button
-                      size="default"
-                      className="touch-feedback h-10 px-5 text-sm"
-                      onClick={() => handleCheckout(group)}
-                    >
-                      {checkoutLabel}
-                    </Button>
-                  </HStack>
+                  <CartSummaryAdapter
+                    itemCount={group.items.length}
+                    total={renderPairedPrice(group.subtotal, group.currency)}
+                    checkoutLabel={checkoutLabel}
+                    onCheckout={() => handleCheckout(group)}
+                    renderSummary={({ total, checkoutLabel, checkoutDisabled, onCheckout }) => (
+                      <HStack justify="between" align="center">
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">{t('cart.subtotal')}:</span>
+                          <span className="font-bold text-foreground ml-1.5">{total}</span>
+                        </div>
+                        <Button
+                          size="default"
+                          className="touch-feedback h-10 px-5 text-sm"
+                          disabled={checkoutDisabled}
+                          onClick={onCheckout}
+                        >
+                          {checkoutLabel}
+                        </Button>
+                      </HStack>
+                    )}
+                  />
                 </div>
               </Card>
             ))}
           </div>
 
           {groups.length > 1 && (
-            <Card className="mt-4 sm:mt-6 p-4">
-              <HStack justify="between" align="center">
-                <VStack gap="none">
-                  <span className="text-sm text-muted-foreground">{t('cart.total')}</span>
-                  <span className="text-xl font-bold">
-                    {renderPairedPrice(totalAmount, defaultCurrency)}
-                  </span>
-                </VStack>
-              </HStack>
-            </Card>
+            <CartSummaryAdapter
+              itemCount={items.length}
+              total={renderPairedPrice(totalAmount, defaultCurrency)}
+              renderSummary={({ total }) => (
+                <Card className="mt-4 sm:mt-6 p-4">
+                  <HStack justify="between" align="center">
+                    <VStack gap="none">
+                      <span className="text-sm text-muted-foreground">{t('cart.total')}</span>
+                      <span className="text-xl font-bold">{total}</span>
+                    </VStack>
+                  </HStack>
+                </Card>
+              )}
+            />
           )}
 
           <div className="mt-4 sm:mt-6 text-center">

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { CommerceCartSummary } from './cart';
+import { CommerceCartSummary, CommerceCartSummaryContent } from './cart';
 import { CommerceProductActionButtons, CommerceProductActions } from './product';
 import { CommerceStorefrontShell } from './storefront';
 import { CommerceConfirmDialog } from './ui';
@@ -91,6 +91,44 @@ describe('public commerce surfaces', () => {
     expect(renderAction).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({ action: 'buy-now', disabled: true, onAction: buyNow })
+    );
+  });
+
+  it('lets a host render normalized cart summary state without forcing a card', () => {
+    const checkout = vi.fn();
+    const renderSummary = vi.fn(
+      ({
+        itemCount,
+        total,
+        checkoutDisabled,
+      }: Parameters<
+        NonNullable<ComponentProps<typeof CommerceCartSummaryContent>['renderSummary']>
+      >[0]) => (
+        <output data-items={itemCount} data-checkout-disabled={checkoutDisabled}>
+          {total}
+        </output>
+      )
+    );
+
+    const markup = renderToStaticMarkup(
+      <CommerceCartSummaryContent
+        itemCount={0}
+        total="0 USD"
+        labels={labels}
+        renderSummary={renderSummary}
+        onCheckout={checkout}
+      />
+    );
+
+    expect(markup).toContain('data-items="0"');
+    expect(markup).toContain('data-checkout-disabled="true"');
+    expect(renderSummary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemCount: 0,
+        total: '0 USD',
+        checkoutDisabled: true,
+        onCheckout: checkout,
+      })
     );
   });
 

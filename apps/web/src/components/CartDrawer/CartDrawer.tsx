@@ -19,6 +19,7 @@ import { CartItemRow } from '@/components/Cart/CartItemRow';
 import { ClearCartAlert } from '@/components/Cart/ClearCartAlert';
 import { useMiniAppRegister } from '@/hooks/useMiniAppRegister';
 import { buildCheckoutUrl } from '@/hooks/useCart';
+import { CartSummaryAdapter } from '@/components/Cart/CartSummaryAdapter';
 
 interface CartDrawerProps {
   open: boolean;
@@ -168,30 +169,45 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         {/* Footer */}
         {items.length > 0 && (
           <SheetFooter className="px-4 py-3 border-t border-border bg-muted/30">
-            <VStack gap="sm" className="w-full">
-              <HStack className="justify-between">
-                <span className="text-sm text-muted-foreground">{t('cart.subtotal')}</span>
-                <span className="text-lg font-bold">{renderPairedPrice(subtotal, currency)}</span>
-              </HStack>
-              <Button className="w-full" size="lg" onClick={handleCheckout}>
-                {isAuthenticated
+            <CartSummaryAdapter
+              itemCount={items.length}
+              total={renderPairedPrice(subtotal, currency)}
+              checkoutLabel={
+                isAuthenticated
                   ? t('cart.checkout')
                   : isTGMiniApp || isEmbeddedApp
                     ? t('cart.registerToCheckout')
-                    : t('cart.loginToCheckout')}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  router.push('/cart');
-                }}
-              >
-                {t('cart.viewCart')}
-              </Button>
-            </VStack>
+                    : t('cart.loginToCheckout')
+              }
+              onCheckout={handleCheckout}
+              renderSummary={({ total, checkoutLabel, checkoutDisabled, onCheckout }) => (
+                <VStack gap="sm" className="w-full">
+                  <HStack className="justify-between">
+                    <span className="text-sm text-muted-foreground">{t('cart.subtotal')}</span>
+                    <span className="text-lg font-bold">{total}</span>
+                  </HStack>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    disabled={checkoutDisabled}
+                    onClick={onCheckout}
+                  >
+                    {checkoutLabel}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    onClick={() => {
+                      onOpenChange(false);
+                      router.push('/cart');
+                    }}
+                  >
+                    {t('cart.viewCart')}
+                  </Button>
+                </VStack>
+              )}
+            />
           </SheetFooter>
         )}
       </SheetContent>
