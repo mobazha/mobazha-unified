@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 export const PUBLIC_DOCS_URLS = Object.freeze({
   home: 'https://docs.mobazha.org',
   gettingStarted: 'https://docs.mobazha.org/start',
