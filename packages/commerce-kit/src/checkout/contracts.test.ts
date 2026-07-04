@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createGuestCheckoutAdapter, normalizeGuestCheckoutSettings } from './contracts';
+import { createGuestCheckoutPort, normalizeGuestCheckoutSettings } from './contracts';
 
 describe('normalizeGuestCheckoutSettings', () => {
   it('prefers node-computed available coins over configured coins', () => {
@@ -42,8 +42,27 @@ describe('normalizeGuestCheckoutSettings', () => {
     };
     const request = vi.fn(async <T>() => response as T);
 
-    await createGuestCheckoutAdapter({ request }).getSettings();
+    await createGuestCheckoutPort({ request }).getSettings();
 
-    expect(request).toHaveBeenCalledWith('/v1/settings/guest-checkout');
+    expect(request).toHaveBeenCalledWith('/v1/settings/guest-checkout', {
+      signal: undefined,
+    });
+  });
+
+  it('forwards cancellation through the public port', async () => {
+    const request = vi.fn(async <T>() => ({ orderToken: 'order-1' }) as T);
+    const signal = new AbortController().signal;
+
+    await createGuestCheckoutPort({ request }).createOrder(
+      { items: [], paymentCoin: 'ALT' },
+      { signal }
+    );
+
+    expect(request).toHaveBeenCalledWith('/v1/guest/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: [], paymentCoin: 'ALT' }),
+      signal,
+    });
   });
 });

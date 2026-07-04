@@ -26,6 +26,9 @@ export const COMMERCE_LABEL_KEYS = {
     creatingOrder: 'commerce.checkout.creatingOrder',
     createOrder: 'commerce.checkout.createOrder',
     noItems: 'commerce.checkout.noItems',
+    disabled: 'commerce.checkout.disabled',
+    noPaymentMethods: 'commerce.checkout.noPaymentMethods',
+    retry: 'commerce.checkout.retry',
   },
   errors: {
     http: 'commerce.error.http',

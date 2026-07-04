@@ -115,13 +115,20 @@ async function createViteConsumer(directory, tarballPath) {
 import { createRoot } from 'react-dom/client';
 import { CommerceButton } from '@mobazha/commerce-kit/admin';
 import {
+  createGuestCheckoutPort,
   normalizeGuestCheckoutSettings,
   type CommerceGuestOrderRequest,
 } from '@mobazha/commerce-kit/checkout';
-import type { GuestCheckoutPanelProps } from '@mobazha/commerce-kit/checkout/client';
+import {
+  GuestCheckoutPanel,
+  type GuestCheckoutPanelProps,
+} from '@mobazha/commerce-kit/checkout/client';
+import type { CommerceHttpClient } from '@mobazha/commerce-kit';
 
 const request: CommerceGuestOrderRequest = { items: [], paymentCoin: 'BTC' };
 const panelTitle: GuestCheckoutPanelProps['title'] = 'Packed checkout';
+const client: CommerceHttpClient = { request: async <T,>() => ({ data: {} }) as T };
+const port = createGuestCheckoutPort(client);
 const settings = normalizeGuestCheckoutSettings({
   enabled: true,
   acceptedCoins: 'BTC',
@@ -130,9 +137,12 @@ const settings = normalizeGuestCheckoutSettings({
 });
 
 createRoot(document.getElementById('root')!).render(
-  <CommerceButton type="button">
-    {panelTitle}:{settings.availableCoins[0]}:{request.paymentCoin}
-  </CommerceButton>
+  <>
+    <CommerceButton type="button">
+      {panelTitle}:{settings.availableCoins[0]}:{request.paymentCoin}
+    </CommerceButton>
+    <GuestCheckoutPanel port={port} items={[]} labels={key => key} />
+  </>
 );
 `
   );

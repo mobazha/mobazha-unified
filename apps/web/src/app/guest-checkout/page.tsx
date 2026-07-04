@@ -14,11 +14,7 @@ import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
 import {
   buyerPortalTokenStorageKey,
-  getGuestCheckoutSettings,
-  createGuestOrder,
   getGuestOrderStatus,
-  type CreateGuestOrderRequest,
-  type GuestOrderResponse,
 } from '@mobazha/core/services/api/guestCheckout';
 import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
 import { useGuestSupplyQuote } from '@mobazha/core/hooks/useGuestSupplyQuote';
@@ -48,6 +44,8 @@ import type {
   CommerceGuestOrderRequest,
   CommerceGuestOrderResponse,
 } from '@mobazha/commerce-kit/checkout';
+import { useGuestCheckoutWorkflow } from '@mobazha/commerce-kit/checkout/client';
+import { commerceGuestCheckoutPort } from './commerceGuestCheckoutPort';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -63,12 +61,6 @@ const EMPTY_ADDRESS: Address = {
   country: '',
   addressNotes: '',
 };
-
-type PaymentState =
-  | { status: 'idle' }
-  | { status: 'submitting' }
-  | { status: 'awaiting'; data: CommerceGuestOrderResponse }
-  | { status: 'error'; message: string };
 
 function buildAddressPayload(addr: Address): {
   name: string;
@@ -116,7 +108,7 @@ function buildOrderRequest(
   };
 }
 
-function toPaymentInfo(data: GuestOrderResponse, coin: string): ExternalWalletPaymentInfo {
+function toPaymentInfo(data: CommerceGuestOrderResponse, coin: string): ExternalWalletPaymentInfo {
   return {
     paymentAddress: data.paymentAddress,
     amount: data.paymentAmount,
@@ -150,9 +142,8 @@ export default function GuestCheckoutPage() {
   const [encryptedAddress, setEncryptedAddress] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState('');
   const [selectedCoin, setSelectedCoin] = useState<string>('');
-  const [acceptedCoins, setAcceptedCoins] = useState<string[]>([]);
-  const [coinsLoading, setCoinsLoading] = useState(true);
-  const [paymentState, setPaymentState] = useState<PaymentState>({ status: 'idle' });
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const checkoutWorkflow = useGuestCheckoutWorkflow(commerceGuestCheckoutPort);
   const supplyQuote = useGuestSupplyQuote(items, items.length > 0);
 
   // PM-3a: fetch vendor PGP public key for client-side address encryption.
@@ -162,18 +153,13 @@ export default function GuestCheckoutPage() {
     isSovereignMode() && hasPhysicalItems ? getGatewayUrl() : ''
   );
 
-  useEffect(() => {
-    getGuestCheckoutSettings()
-      .then(res => {
-        // Use availableCoins (runtime-filtered by the node) so payment methods
-        // that lack a required runtime capability
-        // are never shown to the buyer.
-        const coins = Array.isArray(res.availableCoins) ? res.availableCoins : [];
-        setAcceptedCoins(sanitizeAcceptedPaymentCoins(coins));
-      })
-      .catch(() => setAcceptedCoins([]))
-      .finally(() => setCoinsLoading(false));
-  }, [items]);
+  const acceptedCoins = useMemo(
+    () => sanitizeAcceptedPaymentCoins(checkoutWorkflow.state.settings?.availableCoins ?? []),
+    [checkoutWorkflow.state.settings?.availableCoins]
+  );
+  const coinsLoading =
+    checkoutWorkflow.state.status === 'idle' ||
+    checkoutWorkflow.state.status === 'loading-settings';
 
   const stepLabels: Record<string, string> = {
     cart: t('guestCheckout.stepCart'),
@@ -221,8 +207,8 @@ export default function GuestCheckoutPage() {
   // Poll order status when in 'awaiting' state. Auto-navigate to the order
   // status page as soon as the payment is detected or confirmed.
   useEffect(() => {
-    if (paymentState.status !== 'awaiting') return;
-    const { orderToken, buyerPortalToken } = paymentState.data;
+    if (checkoutWorkflow.state.status !== 'awaiting-payment') return;
+    const { orderToken, buyerPortalToken } = checkoutWorkflow.state.order;
     let cancelled = false;
     const interval = setInterval(() => {
       if (cancelled) return;
@@ -239,21 +225,15 @@ export default function GuestCheckoutPage() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [paymentState, router]);
+  }, [checkoutWorkflow.state, router]);
 
   const submitGuestOrder = useCallback(
     async (coin: string) => {
       if (hasMissingContractType || hasMixedContractTypes) {
-        setPaymentState({
-          status: 'error',
-          message: hasMixedContractTypes
-            ? t('order.mixedContractTypesBody')
-            : t('order.missingContractTypeBody'),
-        });
         setStep('cart');
         return;
       }
-      setPaymentState({ status: 'submitting' });
+      setSubmissionError(null);
       try {
         // PM-3a: for physical orders, try to encrypt the address client-side
         // before sending. Falls back to plaintext if PGP is not configured.
@@ -272,22 +252,25 @@ export default function GuestCheckoutPage() {
           contactEmail,
           coin
         );
-        const res = await createGuestOrder(req);
+        const result = await checkoutWorkflow.submit(req);
         if (submitOrderAbortRef.current) return;
+        if (!result.ok) {
+          if (!result.aborted) {
+            setSubmissionError(resolveGuestOrderCreationError(result.error, t));
+          }
+          return;
+        }
+        const res = result.order;
         if (res.buyerPortalToken && typeof window !== 'undefined') {
           window.sessionStorage.setItem(
             buyerPortalTokenStorageKey(res.orderToken),
             res.buyerPortalToken
           );
         }
-        setPaymentState({ status: 'awaiting', data: res });
         clearCart();
       } catch (err) {
         if (submitOrderAbortRef.current) return;
-        setPaymentState({
-          status: 'error',
-          message: resolveGuestOrderCreationError(err, t),
-        });
+        setSubmissionError(resolveGuestOrderCreationError(err, t));
       }
     },
     [
@@ -301,6 +284,7 @@ export default function GuestCheckoutPage() {
       clearCart,
       hasMissingContractType,
       hasMixedContractTypes,
+      checkoutWorkflow,
       t,
     ]
   );
@@ -314,6 +298,9 @@ export default function GuestCheckoutPage() {
     setStep('payment');
     void submitGuestOrder(paymentCoin);
   };
+
+  const awaitingOrder =
+    checkoutWorkflow.state.status === 'awaiting-payment' ? checkoutWorkflow.state.order : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -567,34 +554,37 @@ export default function GuestCheckoutPage() {
           {/* Step 4: Payment */}
           {step === 'payment' && (
             <div className="space-y-6">
-              {paymentState.status === 'submitting' && (
+              {checkoutWorkflow.state.status === 'submitting' && (
                 <div className="flex flex-col items-center justify-center py-16 gap-4">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   <p className="text-muted-foreground">{t('guestCheckout.creatingOrder')}</p>
                 </div>
               )}
 
-              {paymentState.status === 'error' && (
-                <div className="space-y-6 text-center py-8">
-                  <div className="text-destructive text-4xl">!</div>
-                  <h2 className="text-lg font-semibold">{t('guestCheckout.orderFailed')}</h2>
-                  <p className="text-muted-foreground">{paymentState.message}</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setPaymentState({ status: 'idle' });
-                      setStep('coin');
-                    }}
-                  >
-                    {t('guestCheckout.goBack')}
-                  </Button>
-                </div>
-              )}
+              {checkoutWorkflow.state.status === 'error' &&
+                checkoutWorkflow.state.operation === 'create-order' &&
+                submissionError && (
+                  <div className="space-y-6 text-center py-8">
+                    <div className="text-destructive text-4xl">!</div>
+                    <h2 className="text-lg font-semibold">{t('guestCheckout.orderFailed')}</h2>
+                    <p className="text-muted-foreground">{submissionError}</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        checkoutWorkflow.resetError();
+                        setSubmissionError(null);
+                        setStep('coin');
+                      }}
+                    >
+                      {t('guestCheckout.goBack')}
+                    </Button>
+                  </div>
+                )}
 
-              {paymentState.status === 'awaiting' && (
+              {awaitingOrder && (
                 <>
                   <ExternalWalletPayment
-                    paymentInfo={toPaymentInfo(paymentState.data, selectedCoin)}
+                    paymentInfo={toPaymentInfo(awaitingOrder, selectedCoin)}
                     tokenId={selectedCoin}
                   />
 
@@ -634,8 +624,8 @@ export default function GuestCheckoutPage() {
 
                   <SaveOrderLinkCard
                     orderUrl={buildGuestOrderUrl(
-                      paymentState.data.orderToken,
-                      paymentState.data.buyerPortalToken,
+                      awaitingOrder.orderToken,
+                      awaitingOrder.buyerPortalToken,
                       true
                     )}
                     title={t('guestCheckout.saveLinkTitle')}
@@ -653,10 +643,7 @@ export default function GuestCheckoutPage() {
                     size="lg"
                     onClick={() =>
                       router.push(
-                        buildGuestOrderUrl(
-                          paymentState.data.orderToken,
-                          paymentState.data.buyerPortalToken
-                        )
+                        buildGuestOrderUrl(awaitingOrder.orderToken, awaitingOrder.buyerPortalToken)
                       )
                     }
                   >

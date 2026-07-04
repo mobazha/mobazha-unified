@@ -66,6 +66,13 @@ Applications own their route tree, provider graph, branding, localization, runti
 concrete adapters. They may narrow behavior for safety, but they must not fork shared workflow
 semantics when the kit already defines a contract.
 
+Guest Checkout is the first proving slice. `CommerceGuestCheckoutPort`, the pure workflow reducer
+and its React hook share settings loading, availability, order submission, retry and payment-handoff
+semantics. Applications still own cart/address input, supply validation, encryption, product payment
+policy, order-status polling, navigation and presentation beyond the shared surface. A richer host
+may consume the controller without replacing its page with `GuestCheckoutPanel`; a smaller host may
+use the panel directly with the same port.
+
 ## Promotion rule
 
 A feature moves from an application into `@mobazha/commerce-kit` only when:

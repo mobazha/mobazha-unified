@@ -45,6 +45,29 @@ Generic visual primitives belong to `@mobazha/ui`; internal API clients, stores 
 application-specific hooks belong to `@mobazha/core`. The kit must not depend on `@mobazha/core`.
 Host applications connect their implementation through explicit ports, props and policies.
 
+Guest Checkout is the first shared vertical slice. Its public boundary is deliberately layered:
+
+```text
+CommerceGuestCheckoutPort -> workflow reducer / React hook -> host-rendered view
+```
+
+The port owns only settings and order creation. Hosts provide their concrete API adapter and retain
+route ownership, cart and address collection, inventory or supply validation, encryption, payment
+policy, order-status polling and navigation. This keeps richer applications from losing behavior
+while allowing smaller applications to use `GuestCheckoutPanel` directly:
+
+```tsx
+import { createGuestCheckoutPort } from '@mobazha/commerce-kit/checkout';
+import { GuestCheckoutPanel } from '@mobazha/commerce-kit/checkout/client';
+
+const guestCheckout = createGuestCheckoutPort(httpClient, {
+  settingsPath: '/settings/guest-checkout',
+  ordersPath: '/guest/orders',
+});
+
+<GuestCheckoutPanel port={guestCheckout} items={items} labels={labels} />;
+```
+
 The root and `/checkout` exports are server-safe contracts. Interactive React surfaces use explicit
 client entrypoints such as `/checkout/client`, `/product`, `/cart` and `/admin` so packed consumers
 preserve their React Server Component boundary.

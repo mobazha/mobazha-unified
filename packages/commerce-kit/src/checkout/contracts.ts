@@ -66,6 +66,10 @@ export interface CommerceGuestOrderResponse {
   items: CommerceGuestOrderItemResponse[];
 }
 
+export interface CommerceGuestCheckoutOperationOptions {
+  signal?: AbortSignal;
+}
+
 function splitCoins(value: string): string[] {
   return value
     .split(',')
@@ -87,27 +91,41 @@ export function normalizeGuestCheckoutSettings(
   };
 }
 
-export interface CommerceGuestCheckoutAdapter {
-  getSettings(): Promise<CommerceGuestCheckoutSettings>;
-  createOrder(request: CommerceGuestOrderRequest): Promise<CommerceGuestOrderResponse>;
+export interface CommerceGuestCheckoutPort {
+  getSettings(
+    options?: CommerceGuestCheckoutOperationOptions
+  ): Promise<CommerceGuestCheckoutSettings>;
+  createOrder(
+    request: CommerceGuestOrderRequest,
+    options?: CommerceGuestCheckoutOperationOptions
+  ): Promise<CommerceGuestOrderResponse>;
 }
 
-export function createGuestCheckoutAdapter(
+/** @deprecated Use CommerceGuestCheckoutPort. */
+export type CommerceGuestCheckoutAdapter = CommerceGuestCheckoutPort;
+
+export function createGuestCheckoutPort(
   client: CommerceHttpClient,
   paths: { settingsPath?: string; ordersPath?: string } = {}
-): CommerceGuestCheckoutAdapter {
+): CommerceGuestCheckoutPort {
   const settingsPath = paths.settingsPath ?? '/v1/settings/guest-checkout';
   const ordersPath = paths.ordersPath ?? '/v1/guest/orders';
   return {
-    getSettings: () =>
+    getSettings: options =>
       client
-        .request<CommerceGuestCheckoutSettingsWire>(settingsPath)
+        .request<CommerceGuestCheckoutSettingsWire>(settingsPath, {
+          signal: options?.signal,
+        })
         .then(normalizeGuestCheckoutSettings),
-    createOrder: request =>
+    createOrder: (request, options) =>
       client.request<CommerceGuestOrderResponse>(ordersPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
+        signal: options?.signal,
       }),
   };
 }
+
+/** @deprecated Use createGuestCheckoutPort. */
+export const createGuestCheckoutAdapter = createGuestCheckoutPort;

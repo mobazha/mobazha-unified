@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
-import type { CommerceHttpClient } from '../http';
+import { useCallback, useId, useState, type FormEvent } from 'react';
 import {
   COMMERCE_LABEL_KEYS,
   resolveCommerceErrorLabel,
   type CommerceLabelResolver,
 } from '../labels';
 import { CommerceButton, CommerceCard, CommercePageHeader } from '../ui';
-import { createGuestCheckoutAdapter, type CommerceGuestOrderResponse } from './contracts';
+import type { CommerceGuestCheckoutPort } from './contracts';
+import { useGuestCheckoutWorkflow } from './useGuestCheckoutWorkflow';
+
+const EMPTY_COINS: readonly string[] = [];
 
 export interface CommerceGuestItem {
   listingSlug: string;
@@ -16,69 +18,44 @@ export interface CommerceGuestItem {
 }
 
 export interface GuestCheckoutPanelProps {
-  client: CommerceHttpClient;
+  port: CommerceGuestCheckoutPort;
   items: readonly CommerceGuestItem[];
   labels: CommerceLabelResolver;
-  settingsPath?: string;
-  ordersPath?: string;
   title?: string;
   formatError?(error: unknown): string;
 }
 
 export function GuestCheckoutPanel({
-  client,
+  port,
   items,
   labels,
-  settingsPath = '/v1/settings/guest-checkout',
-  ordersPath = '/v1/guest/orders',
   title = labels(COMMERCE_LABEL_KEYS.checkout.title),
   formatError,
 }: GuestCheckoutPanelProps) {
   const paymentMethodId = useId();
   const contactEmailId = useId();
-  const [coins, setCoins] = useState<string[]>([]);
   const [coin, setCoin] = useState('');
   const [email, setEmail] = useState('');
-  const [order, setOrder] = useState<CommerceGuestOrderResponse>();
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const { state, reloadSettings, submit: submitOrder } = useGuestCheckoutWorkflow(port);
+  const coins = state.settings?.availableCoins ?? EMPTY_COINS;
+  const selectedCoin = coins.includes(coin) ? coin : coins[0] || '';
+  const busy = state.status === 'submitting';
+  const order = state.status === 'awaiting-payment' ? state.order : undefined;
+  const error = state.status === 'error' ? state.error : undefined;
   const errorLabel = useCallback(
     (next: unknown): string =>
       formatError ? formatError(next) : resolveCommerceErrorLabel(next, labels),
     [formatError, labels]
   );
 
-  useEffect(() => {
-    const checkout = createGuestCheckoutAdapter(client, { settingsPath, ordersPath });
-    void checkout
-      .getSettings()
-      .then(settings => {
-        const available = settings.enabled ? settings.availableCoins : [];
-        setCoins(available);
-        setCoin(current => current || available[0] || '');
-      })
-      .catch(next => setError(errorLabel(next)));
-  }, [client, errorLabel, ordersPath, settingsPath]);
-
-  async function submit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!coin || items.length === 0) return;
-    setBusy(true);
-    setError('');
-    try {
-      const checkout = createGuestCheckoutAdapter(client, { settingsPath, ordersPath });
-      setOrder(
-        await checkout.createOrder({
-          items: [...items],
-          paymentCoin: coin,
-          contactEmail: email || undefined,
-        })
-      );
-    } catch (next) {
-      setError(errorLabel(next));
-    } finally {
-      setBusy(false);
-    }
+    if (!selectedCoin || items.length === 0) return;
+    await submitOrder({
+      items: [...items],
+      paymentCoin: selectedCoin,
+      contactEmail: email || undefined,
+    });
   }
 
   if (order) {
@@ -102,13 +79,42 @@ export function GuestCheckoutPanel({
     );
   }
 
+  if (state.status === 'unavailable') {
+    return (
+      <>
+        <CommercePageHeader title={title} />
+        <CommerceCard role="status">
+          {labels(
+            state.reason === 'disabled'
+              ? COMMERCE_LABEL_KEYS.checkout.disabled
+              : COMMERCE_LABEL_KEYS.checkout.noPaymentMethods
+          )}
+        </CommerceCard>
+      </>
+    );
+  }
+
+  if (state.status === 'error' && state.operation === 'load-settings') {
+    return (
+      <>
+        <CommercePageHeader title={title} />
+        <CommerceCard role="alert">
+          <p>{errorLabel(state.error)}</p>
+          <CommerceButton type="button" onClick={() => void reloadSettings()}>
+            {labels(COMMERCE_LABEL_KEYS.checkout.retry)}
+          </CommerceButton>
+        </CommerceCard>
+      </>
+    );
+  }
+
   return (
     <>
       <CommercePageHeader
         title={title}
         description={labels(COMMERCE_LABEL_KEYS.checkout.description)}
       />
-      <form className="commerce-checkout" aria-busy={busy} onSubmit={submit}>
+      <form className="commerce-checkout" aria-busy={busy} onSubmit={handleSubmit}>
         {items.map(item => (
           <CommerceCard key={`${item.listingHash}:${item.listingSlug}`}>
             <strong>{item.title || item.listingSlug}</strong>
@@ -121,7 +127,7 @@ export function GuestCheckoutPanel({
           {labels(COMMERCE_LABEL_KEYS.checkout.paymentMethod)}
           <select
             id={paymentMethodId}
-            value={coin}
+            value={selectedCoin}
             onChange={event => setCoin(event.target.value)}
             required
             disabled={busy}
@@ -146,7 +152,7 @@ export function GuestCheckoutPanel({
             disabled={busy}
           />
         </label>
-        <CommerceButton type="submit" disabled={busy || !coin || items.length === 0}>
+        <CommerceButton type="submit" disabled={busy || !selectedCoin || items.length === 0}>
           {labels(
             busy
               ? COMMERCE_LABEL_KEYS.checkout.creatingOrder
@@ -155,7 +161,7 @@ export function GuestCheckoutPanel({
         </CommerceButton>
       </form>
       {items.length === 0 ? <p>{labels(COMMERCE_LABEL_KEYS.checkout.noItems)}</p> : null}
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <p role="alert">{errorLabel(error)}</p> : null}
     </>
   );
 }
