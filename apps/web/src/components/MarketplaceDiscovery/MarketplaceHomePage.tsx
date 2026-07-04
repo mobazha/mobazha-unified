@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input-compat';
 import { MarketplaceTrustFooter } from '@/components/CommunityMarketplace';
 import {
   derivePublicMarketplaceCurationRefs,
+  filterPublicMarketplaceCurationRefsByAllowedPeers,
   formatUserName,
   getImageUrl,
   productCardPriceFieldsFromListItem,
@@ -182,10 +183,11 @@ export function MarketplaceHomePage() {
   const [isLoadingStores, setIsLoadingStores] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const publicCurationRefs = useMemo(
-    () => derivePublicMarketplaceCurationRefs(publicDetail),
-    [publicDetail]
-  );
+  const publicCurationRefs = useMemo(() => {
+    const refs = derivePublicMarketplaceCurationRefs(publicDetail);
+    if (config?.catalogMode !== 'curated') return refs;
+    return filterPublicMarketplaceCurationRefsByAllowedPeers(refs, config.allowedPeers ?? []);
+  }, [publicDetail, config?.catalogMode, config?.allowedPeers]);
 
   const curationListingRefs = useMemo<PublicMarketplaceListingRef[]>(() => {
     const seen = new Set<string>();

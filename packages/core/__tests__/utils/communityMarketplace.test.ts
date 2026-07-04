@@ -2,7 +2,10 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import { describe, expect, it } from 'vitest';
-import { derivePublicMarketplaceCurationRefs } from '../../utils/communityMarketplace';
+import {
+  derivePublicMarketplaceCurationRefs,
+  filterPublicMarketplaceCurationRefsByAllowedPeers,
+} from '../../utils/communityMarketplace';
 import type { PublicNativeMarketplaceDetail } from '../../types/marketplace';
 
 function buildDetail(
@@ -82,5 +85,32 @@ describe('derivePublicMarketplaceCurationRefs', () => {
       { peerID: 'QmSellerB', slug: 'beta' },
     ]);
     expect(refs.fallbackSellerPeerIDs).toEqual(['QmSellerA']);
+  });
+
+  it('fails closed when public projection refs contain unapproved sellers', () => {
+    const filtered = filterPublicMarketplaceCurationRefsByAllowedPeers(
+      {
+        curatedListingRefs: [
+          { peerID: 'QmApproved', slug: 'approved' },
+          { peerID: 'QmBlocked', slug: 'blocked' },
+        ],
+        curatedSellerPeerIDs: ['QmApproved', 'QmBlocked'],
+        bannerListingRefs: [{ peerID: 'QmBlocked', slug: 'blocked-banner' }],
+        fallbackListingRefs: [{ peerID: 'QmApproved', slug: 'fallback' }],
+        fallbackSellerPeerIDs: ['QmBlocked'],
+      },
+      [' QmApproved ']
+    );
+
+    expect(filtered).toEqual({
+      curatedListingRefs: [{ peerID: 'QmApproved', slug: 'approved' }],
+      curatedSellerPeerIDs: ['QmApproved'],
+      bannerListingRefs: [],
+      fallbackListingRefs: [{ peerID: 'QmApproved', slug: 'fallback' }],
+      fallbackSellerPeerIDs: [],
+    });
+    expect(
+      filterPublicMarketplaceCurationRefsByAllowedPeers(filtered, []).curatedListingRefs
+    ).toEqual([]);
   });
 });

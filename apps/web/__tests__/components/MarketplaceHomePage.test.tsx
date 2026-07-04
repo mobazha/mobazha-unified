@@ -115,7 +115,7 @@ const curatedMarketplaceConfig = {
   vertical: 'collectibles',
   catalogMode: 'curated' as const,
   catalogQuery: '*',
-  allowedPeers: ['QmSeller'],
+  allowedPeers: ['QmCurated'],
   sellers: [],
   featured: [],
   brand: { name: 'Curated Market' },

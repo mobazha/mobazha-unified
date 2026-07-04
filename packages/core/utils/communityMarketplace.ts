@@ -102,6 +102,23 @@ export interface PublicMarketplaceCurationRefs {
   fallbackSellerPeerIDs: string[];
 }
 
+/** Intersect public projection refs with the runtime-approved seller set. */
+export function filterPublicMarketplaceCurationRefsByAllowedPeers(
+  refs: PublicMarketplaceCurationRefs,
+  allowedPeers: string[]
+): PublicMarketplaceCurationRefs {
+  const allowed = new Set(allowedPeers.map(peerID => peerID.trim()).filter(Boolean));
+  const listingAllowed = (ref: PublicMarketplaceListingRef) => allowed.has(ref.peerID);
+  const sellerAllowed = (peerID: string) => allowed.has(peerID);
+  return {
+    curatedListingRefs: refs.curatedListingRefs.filter(listingAllowed),
+    curatedSellerPeerIDs: refs.curatedSellerPeerIDs.filter(sellerAllowed),
+    bannerListingRefs: refs.bannerListingRefs.filter(listingAllowed),
+    fallbackListingRefs: refs.fallbackListingRefs.filter(listingAllowed),
+    fallbackSellerPeerIDs: refs.fallbackSellerPeerIDs.filter(sellerAllowed),
+  };
+}
+
 function pushUniqueListing(
   target: PublicMarketplaceListingRef[],
   seen: Set<string>,
