@@ -45,6 +45,14 @@ Generic visual primitives belong to `@mobazha/ui`; internal API clients, stores 
 application-specific hooks belong to `@mobazha/core`. The kit must not depend on `@mobazha/core`.
 Host applications connect their implementation through explicit ports, props and policies.
 
+The kit is also not the complete frontend product composer. A product is resolved from build-time
+code inclusion, a distribution-owned product profile, authoritative backend capabilities, the
+current experience/channel, authorization and readiness. Feature packages declare neutral
+requirements; they do not branch on a named public or private product. Private distributions can
+compose their own modules through compatible contracts while keeping those modules physically out
+of this repository. See the Draft
+[Composable Frontend Product Model RFC](https://github.com/mobazha/mobazha-docs/blob/main/rfcs/0003-composable-frontend-product-model.md).
+
 Guest Checkout is the first shared vertical slice. Its public boundary is deliberately layered:
 
 ```text
