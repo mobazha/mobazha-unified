@@ -223,11 +223,11 @@ standaloneTest.describe('Seller View', () => {
   });
 });
 
-// ── 5. Full Checkout Flow (admin login — seller is also buyer in standalone) ─
+// ── 5. Full Checkout Flow (buyer authenticates through SaaS OAuth bridge) ─
 
 standaloneTest.describe('Checkout Flow', () => {
   for (const [type, listing] of Object.entries(LISTINGS)) {
-    standaloneTest(`checkout ${type} good`, async ({ authedPage: page }) => {
+    standaloneTest(`checkout ${type} good`, async ({ buyerPage: page }) => {
       const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
       await page.goto(`/checkout?slug=${listing.slug}&peerID=${peerID}&quantity=1`);
       await page.waitForLoadState('domcontentloaded');
@@ -252,7 +252,7 @@ standaloneTest.describe('Checkout Flow', () => {
     });
   }
 
-  standaloneTest('multi-item checkout', async ({ authedPage: page }) => {
+  standaloneTest('multi-item checkout', async ({ buyerPage: page }) => {
     const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     const slugs = Object.values(LISTINGS)
       .map(l => l.slug)
@@ -270,8 +270,9 @@ standaloneTest.describe('Checkout Flow', () => {
     await page.screenshot({ path: 'test-results/checkout-flow-multi.png', fullPage: true });
   });
 
-  standaloneTest('place order for service → redirect to payment', async ({ authedPage: page }) => {
-    const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
+  standaloneTest('place order for service → redirect to payment', async ({ buyerPage: page, api }) => {
+    const profile = await api.getProfile();
+    const peerID = profile.peerID || PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
     await page.waitForLoadState('domcontentloaded');
 
@@ -310,7 +311,7 @@ standaloneTest.describe('Checkout Flow', () => {
     await expect(mainContent).toBeVisible({ timeout: 15000 });
   });
 
-  standaloneTest('confirmation page renders', async ({ authedPage: page }) => {
+  standaloneTest('confirmation page renders', async ({ buyerPage: page }) => {
     await page.goto(
       '/checkout/confirmation?orderID=test-order&total=99.00&currency=USD&title=Test+Service&vendorName=TestStore'
     );

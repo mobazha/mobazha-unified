@@ -153,7 +153,7 @@ test.describe('Purchase Service Listing', () => {
       const titleText = await productTitle.textContent();
       console.log('Product title:', titleText);
 
-      const buyNowBtn = page.getByTestId('product-detail-buy-now');
+      const buyNowBtn = page.locator('[data-testid="product-detail-buy-now"]:visible').first();
       await expect(buyNowBtn).toBeVisible({ timeout: 10000 });
       await expect(buyNowBtn).toBeEnabled();
       console.log('Buy Now button is visible and enabled');
@@ -173,7 +173,7 @@ test.describe('Purchase Service Listing', () => {
 
       await page.screenshot({ path: 'e2e-screenshots/buyer-checkout-page.png', fullPage: true });
 
-      const submitBtn = page.getByTestId('checkout-submit-btn');
+      const submitBtn = page.locator('[data-testid="checkout-submit-btn"]:visible').first();
       await expect(submitBtn).toBeVisible({ timeout: 30000 });
 
       // SERVICE type: no shipping needed, button should be enabled

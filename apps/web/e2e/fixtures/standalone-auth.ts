@@ -14,6 +14,8 @@ export const STANDALONE_API = process.env.E2E_STANDALONE_API || 'http://localhos
 
 const ADMIN_USER = process.env.E2E_STANDALONE_USER || 'admin';
 const ADMIN_PASS = process.env.E2E_STANDALONE_PASS || '';
+const BUYER_USER = process.env.E2E_BUYER_USERNAME || 'testuser2';
+const BUYER_PASS = process.env.E2E_TEST_PASSWORD || '123';
 
 function basicAuthHeader(user: string, pass: string): string {
   return 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
@@ -143,10 +145,51 @@ export async function performStandaloneLogin(page: Page, password: string): Prom
   await page.waitForLoadState('domcontentloaded');
 }
 
+/**
+ * Authenticate a standalone-store buyer through the real SaaS/Casdoor popup bridge.
+ */
+export async function performStandaloneBuyerLogin(
+  page: Page,
+  username = BUYER_USER,
+  password = BUYER_PASS
+): Promise<void> {
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+
+  const buyerLogin = page.getByTestId('login-standalone-buyer');
+  await buyerLogin.waitFor({ state: 'visible', timeout: 15000 });
+
+  const popupPromise = page.context().waitForEvent('page', { timeout: 30000 });
+  await buyerLogin.click();
+  const popup = await popupPromise;
+  await popup.waitForLoadState('domcontentloaded');
+
+  const usernameInput = popup.locator('input[type="text"], input[name="username"]').first();
+  await usernameInput.waitFor({ state: 'visible', timeout: 30000 });
+  await usernameInput.fill(username);
+  await popup.locator('input[type="password"]').first().fill(password);
+
+  const popupClosed = popup.waitForEvent('close', { timeout: 60000 });
+  await popup.getByRole('button', { name: /sign in|登录|log in/i }).first().click();
+  await popupClosed;
+
+  await page.waitForFunction(
+    () => {
+      const token = window.localStorage.getItem('mobazha_auth_token');
+      return Boolean(token && !token.startsWith('basic:'));
+    },
+    undefined,
+    { timeout: 60000 }
+  );
+  await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 30000 });
+  await page.waitForLoadState('domcontentloaded');
+}
+
 /* eslint-disable react-hooks/rules-of-hooks */
 export const standaloneTest = base.extend<{
   adminPassword: string;
   authedPage: Page;
+  buyerPage: Page;
   api: StandaloneApi;
 }>({
   // eslint-disable-next-line no-empty-pattern
@@ -161,6 +204,11 @@ export const standaloneTest = base.extend<{
 
   authedPage: async ({ page, adminPassword }, use) => {
     await performStandaloneLogin(page, adminPassword);
+    await use(page);
+  },
+
+  buyerPage: async ({ page }, use) => {
+    await performStandaloneBuyerLogin(page);
     await use(page);
   },
 
