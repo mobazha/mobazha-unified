@@ -9,6 +9,7 @@ connected backend.
 
 [Try Mobazha](https://app.mobazha.org/) ·
 [Run a self-hosted node](https://github.com/mobazha/mobazha) ·
+[Documentation](https://docs.mobazha.org) ·
 [Architecture](./docs/architecture/RUNTIME_CAPABILITIES.md) · [Contributing](./CONTRIBUTING.md)
 
 > **Status:** This project is a release candidate. APIs, packaging, and deployment instructions may
