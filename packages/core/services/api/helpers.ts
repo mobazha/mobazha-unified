@@ -9,8 +9,10 @@
  *                        独立站买家 → SaaS，其他 → 本地节点/hosting
  * Layer 1b — nodeAuth*:  需要认证但必须走本地节点的管理端点
  *                        system、wallet-rpc、AI/MCP local admin
- * Layer 2 — public*:    公开店铺数据（始终走本地节点，含群组上下文）
+ * Layer 2 — public*:    公开店铺路由（始终走本地节点，含认证和店铺上下文）
  *                        listings、profiles、ratings、exchange rates
+ * Layer 2a — anonymous*: 匿名买家路由（保留店铺上下文，但强制移除认证）
+ *                        guest checkout settings/order/status
  * Layer 3 — search*:    搜索/发现服务（含群组上下文）
  *                        trending、featured、search results
  */
@@ -147,6 +149,24 @@ export function publicGetWithHeaders<T>(path: string, headers: Record<string, st
 
 export function publicPost<T>(path: string, body?: unknown): Promise<T> {
   return post<T>(`${getGatewayUrl()}${path}`, body, getHeadersWithContext());
+}
+
+function anonymousHeadersWithContext(): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(getHeadersWithContext()).filter(([key]) => key.toLowerCase() !== 'authorization')
+  );
+}
+
+// Layer 2a: Anonymous buyer — store routing context without credentials
+
+/** Public buyer request that preserves routing context but never sends user/admin credentials. */
+export function anonymousGet<T>(path: string): Promise<T> {
+  return get<T>(`${getGatewayUrl()}${path}`, anonymousHeadersWithContext());
+}
+
+/** Public buyer mutation that preserves routing context but never sends user/admin credentials. */
+export function anonymousPost<T>(path: string, body?: unknown): Promise<T> {
+  return post<T>(`${getGatewayUrl()}${path}`, body, anonymousHeadersWithContext());
 }
 
 export function publicSafeGet<T>(

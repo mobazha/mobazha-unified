@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   completeGuestOrder,
+  createGuestOrder,
+  getGuestCheckoutSettings,
   normalizeGuestOrderStatus,
   quoteGuestOrderSupply,
   shipGuestOrder,
@@ -9,11 +11,11 @@ import {
 vi.mock('../../services/api/helpers', () => ({
   authPut: vi.fn(),
   authPost: vi.fn(),
-  publicGet: vi.fn(),
-  publicPost: vi.fn(),
+  anonymousGet: vi.fn(),
+  anonymousPost: vi.fn(),
 }));
 
-import { authPost, authPut, publicGet, publicPost } from '../../services/api/helpers';
+import { anonymousGet, anonymousPost, authPost, authPut } from '../../services/api/helpers';
 
 const statusDto = {
   orderToken: 'tok',
@@ -85,12 +87,12 @@ describe('guest order mutations', () => {
   beforeEach(() => {
     vi.mocked(authPut).mockReset();
     vi.mocked(authPost).mockReset();
-    vi.mocked(publicGet).mockReset();
-    vi.mocked(publicPost).mockReset();
+    vi.mocked(anonymousGet).mockReset();
+    vi.mocked(anonymousPost).mockReset();
   });
 
-  it('posts guest supply quote to public quote endpoint', async () => {
-    vi.mocked(publicPost).mockResolvedValue({
+  it('posts guest supply quote to anonymous quote endpoint', async () => {
+    vi.mocked(anonymousPost).mockResolvedValue({
       canSell: true,
       items: [{ listingSlug: 'item-a', quantity: 1, status: 'available', available: true }],
     });
@@ -99,32 +101,51 @@ describe('guest order mutations', () => {
       items: [{ listingSlug: 'item-a', listingHash: 'hash', quantity: 1 }],
     });
 
-    expect(publicPost).toHaveBeenCalledWith('/guest/orders/quote', {
+    expect(anonymousPost).toHaveBeenCalledWith('/guest/orders/quote', {
       items: [{ listingSlug: 'item-a', listingHash: 'hash', quantity: 1 }],
     });
     expect(result.canSell).toBe(true);
   });
 
+  it('routes settings and order creation through anonymous helpers', async () => {
+    vi.mocked(anonymousGet).mockResolvedValue({
+      enabled: true,
+      acceptedCoins: 'BTC',
+      availableCoins: 'BTC',
+      paymentTimeout: 30,
+    });
+    vi.mocked(anonymousPost).mockResolvedValue({ orderToken: 'guest-order' });
+
+    await getGuestCheckoutSettings();
+    await createGuestOrder({ items: [], paymentCoin: 'BTC' });
+
+    expect(anonymousGet).toHaveBeenCalledWith('/settings/guest-checkout');
+    expect(anonymousPost).toHaveBeenCalledWith('/guest/orders', {
+      items: [],
+      paymentCoin: 'BTC',
+    });
+  });
+
   it('refetches status after ship returns 204', async () => {
     vi.mocked(authPut).mockResolvedValue(undefined);
-    vi.mocked(publicGet).mockResolvedValue(statusDto);
+    vi.mocked(anonymousGet).mockResolvedValue(statusDto);
 
     const result = await shipGuestOrder('tok', { carrier: 'UPS', trackingNumber: '1Z999' });
 
     expect(authPut).toHaveBeenCalledOnce();
-    expect(publicGet).toHaveBeenCalledOnce();
+    expect(anonymousGet).toHaveBeenCalledOnce();
     expect(result.state).toBe('SHIPPED');
     expect(result.carrier).toBe('UPS');
   });
 
   it('refetches status after complete returns 204', async () => {
     vi.mocked(authPost).mockResolvedValue(undefined);
-    vi.mocked(publicGet).mockResolvedValue({ ...statusDto, state: 'COMPLETED' });
+    vi.mocked(anonymousGet).mockResolvedValue({ ...statusDto, state: 'COMPLETED' });
 
     const result = await completeGuestOrder('tok');
 
     expect(authPost).toHaveBeenCalledOnce();
-    expect(publicGet).toHaveBeenCalledOnce();
+    expect(anonymousGet).toHaveBeenCalledOnce();
     expect(result.state).toBe('COMPLETED');
   });
 });

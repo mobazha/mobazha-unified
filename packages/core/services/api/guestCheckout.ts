@@ -1,8 +1,8 @@
 /**
  * Guest Checkout API service
  *
- * Guest endpoints are public (no auth required for buyers).
- * Guest checkout reads are public; writes require seller authentication.
+ * Buyer-facing Guest Checkout endpoints are anonymous. Seller management
+ * mutations are authenticated and must not share the buyer transport path.
  */
 
 import { NODE_API } from '../../config/apiPaths';
@@ -11,7 +11,7 @@ import type {
   QuoteGuestOrderSupplyRequest,
 } from '../../types/supplyAvailability';
 import { getImageUrl } from './config';
-import { publicGet, publicPost, authGet, authPut, authPost, authDel } from './helpers';
+import { anonymousGet, anonymousPost, authGet, authPut, authPost, authDel } from './helpers';
 
 export type {
   GuestOrderSupplyQuoteItem,
@@ -234,18 +234,18 @@ export function buyerPortalTokenStorageKey(orderToken: string): string {
 }
 
 export function createGuestOrder(data: CreateGuestOrderRequest): Promise<GuestOrderResponse> {
-  return publicPost(NODE_API.GUEST_ORDERS, data);
+  return anonymousPost(NODE_API.GUEST_ORDERS, data);
 }
 
 /** Advisory supply preflight — does not hold inventory. Buyer-safe (no provider IDs). */
 export function quoteGuestOrderSupply(
   data: QuoteGuestOrderSupplyRequest
 ): Promise<GuestOrderSupplyQuoteResponse> {
-  return publicPost<GuestOrderSupplyQuoteResponse>(NODE_API.GUEST_ORDERS_QUOTE, data);
+  return anonymousPost<GuestOrderSupplyQuoteResponse>(NODE_API.GUEST_ORDERS_QUOTE, data);
 }
 
 export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
-  return publicGet<GuestOrderStatusDTO>(NODE_API.GUEST_ORDER(token)).then(
+  return anonymousGet<GuestOrderStatusDTO>(NODE_API.GUEST_ORDER(token)).then(
     normalizeGuestOrderStatus
   );
 }
@@ -253,7 +253,7 @@ export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
 // ========== Guest checkout settings / seller APIs ==========
 
 export function getGuestCheckoutSettings(): Promise<GuestCheckoutSettings> {
-  return publicGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS).then(
+  return anonymousGet<GuestCheckoutSettingsDTO>(NODE_API.GUEST_CHECKOUT_SETTINGS).then(
     fromGuestCheckoutSettingsDTO
   );
 }
@@ -334,7 +334,7 @@ export function getAdminGuestOrderDetail(token: string): Promise<GuestOrderAdmin
  */
 export async function getPGPPublicKey(): Promise<string> {
   try {
-    const data = await publicGet<{ publicKey: string }>(NODE_API.SETTINGS_PGP_KEY);
+    const data = await anonymousGet<{ publicKey: string }>(NODE_API.SETTINGS_PGP_KEY);
     return data?.publicKey ?? '';
   } catch {
     return '';
