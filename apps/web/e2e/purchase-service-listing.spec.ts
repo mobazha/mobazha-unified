@@ -17,7 +17,7 @@
  */
 
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
-import { performCasdoorLogin, getPeerID } from './fixtures/auth';
+import { BACKEND_URL, performCasdoorLogin, getPeerID } from './fixtures/auth';
 
 const SELLER_USERNAME = process.env.E2E_SELLER_USERNAME || 'testuser1';
 const BUYER_USERNAME = process.env.E2E_BUYER_USERNAME || 'testuser2';
@@ -58,26 +58,28 @@ test.describe('Purchase Service Listing', () => {
       await performCasdoorLogin(sellerPage, SELLER_USERNAME, TEST_PASSWORD);
       console.log('Seller logged in, URL:', sellerPage.url());
 
-      // Set up response interception BEFORE navigation to capture listing index
-      const listingIndexPromise = sellerPage
-        .waitForResponse(resp => resp.url().includes('/listings/index') && resp.status() === 200, {
-          timeout: 30000,
-        })
-        .catch(() => null);
+      const sellerToken = await sellerPage.evaluate(() =>
+        window.localStorage.getItem('mobazha_auth_token')
+      );
+      expect(sellerToken, 'Seller login must persist a hosting token').toBeTruthy();
 
-      await sellerPage.goto('/listing/new');
-      await sellerPage.waitForLoadState('domcontentloaded');
-
-      const listingIndexResp = await listingIndexPromise;
-      if (listingIndexResp) {
+      const listingIndexResp = await sellerPage.request.get(`${BACKEND_URL}/v1/listings/index`, {
+        headers: { Authorization: `Bearer ${sellerToken}` },
+      });
+      if (listingIndexResp.ok()) {
         try {
-          const listings = await listingIndexResp.json();
+          const responseBody = await listingIndexResp.json();
+          const listings = Array.isArray(responseBody) ? responseBody : responseBody?.data;
           if (Array.isArray(listings) && listings.length > 0) {
             const serviceListing = listings.find(
               (l: { title?: string; contractType?: string }) =>
                 l.title?.includes('E2E Test Service') || l.contractType === 'SERVICE'
             );
-            listingSlug = serviceListing?.slug || listings[0].slug;
+            const seededDigitalListing = listings.find(
+              (l: { slug?: string; contractType?: string }) =>
+                l.slug === 'python-ml-course' || l.contractType === 'DIGITAL_GOOD'
+            );
+            listingSlug = serviceListing?.slug || seededDigitalListing?.slug || listings[0].slug;
             console.log('Found listing slug from API intercept:', listingSlug);
           }
         } catch {
@@ -85,9 +87,11 @@ test.describe('Purchase Service Listing', () => {
         }
       }
 
-      // Fallback: scan page for product links
+      // Fallback: scan the real product-management page for product links.
       if (!listingSlug) {
-        console.log('API intercept missed; scanning page for product links...');
+        console.log('Listing API did not yield a slug; scanning page for product links...');
+        await sellerPage.goto('/admin/products');
+        await sellerPage.waitForLoadState('domcontentloaded');
         const productLinks = await sellerPage.locator('a[href*="/product/"]').all();
         for (const link of productLinks) {
           const href = await link.getAttribute('href');

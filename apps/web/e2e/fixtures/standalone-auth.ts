@@ -129,31 +129,17 @@ export type StandaloneApi = ReturnType<typeof createStandaloneApi>;
  * Perform standalone admin login via the browser.
  */
 export async function performStandaloneLogin(page: Page, password: string): Promise<void> {
-  await page.goto('/login');
+  await page.goto('/admin');
   await page.waitForLoadState('domcontentloaded');
 
-  const usernameInput = page
-    .getByTestId('login-username')
-    .or(page.getByLabel(/username|用户名/i))
-    .or(page.locator('input[placeholder*="Username"]'))
-    .first();
-  await usernameInput.waitFor({ state: 'visible', timeout: 15000 });
-  await usernameInput.fill(ADMIN_USER);
-
-  const passwordInput = page
-    .getByTestId('login-password')
-    .or(page.locator('input[type="password"]'))
-    .first();
+  const passwordInput = page.getByTestId('admin-login-password');
   await passwordInput.waitFor({ state: 'visible', timeout: 5000 });
   await passwordInput.fill(password);
 
-  const loginBtn = page
-    .getByTestId('login-submit')
-    .or(page.getByRole('button', { name: /login|登录|sign in/i }))
-    .first();
+  const loginBtn = page.getByTestId('admin-login-submit');
   await loginBtn.click();
 
-  await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 30000 });
+  await passwordInput.waitFor({ state: 'hidden', timeout: 30000 });
   await page.waitForLoadState('domcontentloaded');
 }
 
