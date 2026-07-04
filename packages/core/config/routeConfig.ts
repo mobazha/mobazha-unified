@@ -76,6 +76,7 @@ export const PRIVATE_ROUTES = [
   '/settings/access-control/product-groups/:groupId',
   '/settings/access-control/product-groups/:groupId/authorization',
   '/settings/access-control/user-groups/:groupId/members',
+  '/settings/product-groups/:groupId',
   '/settings/product-groups/:groupId/authorization',
   '/settings/user-groups/:groupId/members',
 

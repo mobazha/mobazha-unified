@@ -358,6 +358,10 @@ if (!__SOVEREIGN__) {
           element: lazyPage(() => import('./app/settings/product-groups/page')),
         },
         {
+          path: 'product-groups/:groupId',
+          element: lazyPage(() => import('./app/settings/product-groups/[groupId]/page')),
+        },
+        {
           path: 'product-groups/:groupId/authorization',
           element: lazyPage(
             () => import('./app/settings/product-groups/[groupId]/authorization/page')
