@@ -1,4 +1,11 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  type ButtonHTMLAttributes,
+  type HTMLAttributes,
+  type ReactNode,
+} from 'react';
 import type { CommerceSlotContribution } from './contracts';
 
 function classes(...values: Array<string | undefined | false>): string {
@@ -47,9 +54,21 @@ export interface CommerceConfirmDialogProps {
   confirmLabel: ReactNode;
   cancelLabel: ReactNode;
   dangerous?: boolean;
+  busy?: boolean;
+  confirmDisabled?: boolean;
+  closeOnBackdrop?: boolean;
   onConfirm(): void;
   onCancel(): void;
 }
+
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  '[href]',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
 
 export function CommerceConfirmDialog({
   open,
@@ -58,26 +77,101 @@ export function CommerceConfirmDialog({
   confirmLabel,
   cancelLabel,
   dangerous,
+  busy = false,
+  confirmDisabled = false,
+  closeOnBackdrop = true,
   onConfirm,
   onCancel,
 }: CommerceConfirmDialogProps) {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const busyRef = useRef(busy);
+  const onCancelRef = useRef(onCancel);
+
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
+
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  }, [onCancel]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previousFocus =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    const initialFocus = dialog?.querySelector<HTMLElement>('[data-commerce-dialog-initial-focus]');
+    (initialFocus ?? dialog)?.focus();
+
+    function onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape' && !busyRef.current) {
+        event.preventDefault();
+        onCancelRef.current();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusable = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)];
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [open]);
+
   if (!open) return null;
   return (
-    <div className="commerce-dialog-backdrop" role="presentation" onClick={onCancel}>
+    <div
+      className="commerce-dialog-backdrop"
+      role="presentation"
+      onClick={() => {
+        if (closeOnBackdrop && !busy) onCancel();
+      }}
+    >
       <div
+        ref={dialogRef}
         className="commerce-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="commerce-dialog-title"
+        aria-labelledby={titleId}
+        aria-busy={busy}
+        tabIndex={-1}
         onClick={event => event.stopPropagation()}
       >
-        <h2 id="commerce-dialog-title">{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         {children}
         <div className="commerce-dialog__actions">
-          <CommerceButton variant="secondary" onClick={onCancel}>
+          <CommerceButton
+            type="button"
+            variant="secondary"
+            disabled={busy}
+            data-commerce-dialog-initial-focus
+            onClick={onCancel}
+          >
             {cancelLabel}
           </CommerceButton>
-          <CommerceButton variant={dangerous ? 'danger' : 'primary'} onClick={onConfirm}>
+          <CommerceButton
+            type="button"
+            variant={dangerous ? 'danger' : 'primary'}
+            disabled={busy || confirmDisabled}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </CommerceButton>
         </div>

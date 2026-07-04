@@ -2,12 +2,14 @@
 
 import type { ReactNode } from 'react';
 import type { CommerceSlotContribution } from '../contracts';
+import { COMMERCE_LABEL_KEYS, type CommerceLabelResolver } from '../labels';
 import { CommerceButton, CommerceSlotOutlet } from '../ui';
 
 export const PRODUCT_FEATURE_ID = 'commerce.product';
 
 export interface CommerceProductActionsProps {
   price: ReactNode;
+  labels: CommerceLabelResolver;
   availability?: ReactNode;
   addToCartLabel?: ReactNode;
   buyNowLabel?: ReactNode;
@@ -19,16 +21,20 @@ export interface CommerceProductActionsProps {
 
 export function CommerceProductActions({
   price,
+  labels,
   availability,
-  addToCartLabel = 'Add to cart',
-  buyNowLabel = 'Buy now',
+  addToCartLabel = labels(COMMERCE_LABEL_KEYS.product.addToCart),
+  buyNowLabel = labels(COMMERCE_LABEL_KEYS.product.buyNow),
   disabled,
   actionsAfter,
   onAddToCart,
   onBuyNow,
 }: CommerceProductActionsProps) {
   return (
-    <section className="commerce-product-actions" aria-label="Product purchase actions">
+    <section
+      className="commerce-product-actions"
+      aria-label={labels(COMMERCE_LABEL_KEYS.product.actions)}
+    >
       <div className="commerce-product-actions__price">{price}</div>
       {availability ? (
         <div className="commerce-product-actions__availability">{availability}</div>
@@ -49,4 +55,6 @@ export function CommerceProductActions({
 }
 
 export { COMMERCE_SLOTS } from '../slots';
+export { COMMERCE_LABEL_KEYS } from '../labels';
+export type { CommerceLabelKey, CommerceLabelResolver } from '../labels';
 export type { CommerceFeaturePackage, CommerceSlotContribution } from '../contracts';

@@ -1,10 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import type { CommerceHttpClient } from '../http';
-import { CommerceButton, CommerceCard, CommercePageHeader } from '../ui';
 import {
-  createGuestCheckoutAdapter,
-  type CommerceGuestOrderResponse,
-} from './contracts';
+  COMMERCE_LABEL_KEYS,
+  resolveCommerceErrorLabel,
+  type CommerceLabelResolver,
+} from '../labels';
+import { CommerceButton, CommerceCard, CommercePageHeader } from '../ui';
+import { createGuestCheckoutAdapter, type CommerceGuestOrderResponse } from './contracts';
 
 export interface CommerceGuestItem {
   listingSlug: string;
@@ -16,24 +18,35 @@ export interface CommerceGuestItem {
 export interface GuestCheckoutPanelProps {
   client: CommerceHttpClient;
   items: readonly CommerceGuestItem[];
+  labels: CommerceLabelResolver;
   settingsPath?: string;
   ordersPath?: string;
   title?: string;
+  formatError?(error: unknown): string;
 }
 
 export function GuestCheckoutPanel({
   client,
   items,
+  labels,
   settingsPath = '/v1/settings/guest-checkout',
   ordersPath = '/v1/guest/orders',
-  title = 'Guest checkout',
+  title = labels(COMMERCE_LABEL_KEYS.checkout.title),
+  formatError,
 }: GuestCheckoutPanelProps) {
+  const paymentMethodId = useId();
+  const contactEmailId = useId();
   const [coins, setCoins] = useState<string[]>([]);
   const [coin, setCoin] = useState('');
   const [email, setEmail] = useState('');
   const [order, setOrder] = useState<CommerceGuestOrderResponse>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const errorLabel = useCallback(
+    (next: unknown): string =>
+      formatError ? formatError(next) : resolveCommerceErrorLabel(next, labels),
+    [formatError, labels]
+  );
 
   useEffect(() => {
     const checkout = createGuestCheckoutAdapter(client, { settingsPath, ordersPath });
@@ -44,8 +57,8 @@ export function GuestCheckoutPanel({
         setCoins(available);
         setCoin(current => current || available[0] || '');
       })
-      .catch(next => setError(next instanceof Error ? next.message : String(next)));
-  }, [client, ordersPath, settingsPath]);
+      .catch(next => setError(errorLabel(next)));
+  }, [client, errorLabel, ordersPath, settingsPath]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -54,9 +67,15 @@ export function GuestCheckoutPanel({
     setError('');
     try {
       const checkout = createGuestCheckoutAdapter(client, { settingsPath, ordersPath });
-      setOrder(await checkout.createOrder({ items: [...items], paymentCoin: coin, contactEmail: email || undefined }));
+      setOrder(
+        await checkout.createOrder({
+          items: [...items],
+          paymentCoin: coin,
+          contactEmail: email || undefined,
+        })
+      );
     } catch (next) {
-      setError(next instanceof Error ? next.message : String(next));
+      setError(errorLabel(next));
     } finally {
       setBusy(false);
     }
@@ -65,15 +84,19 @@ export function GuestCheckoutPanel({
   if (order) {
     return (
       <>
-        <CommercePageHeader title="Payment requested" />
-        <CommerceCard>
-          <p>Send exactly</p>
+        <CommercePageHeader title={labels(COMMERCE_LABEL_KEYS.checkout.paymentRequested)} />
+        <CommerceCard aria-live="polite">
+          <p>{labels(COMMERCE_LABEL_KEYS.checkout.sendExactly)}</p>
           <strong>
             {order.paymentAmount} {order.paymentCoin}
           </strong>
           <p className="commerce-monospace">{order.paymentAddress}</p>
-          <p>Order: {order.orderToken}</p>
-          <p>Expires: {order.expiresAt}</p>
+          <p>
+            {labels(COMMERCE_LABEL_KEYS.checkout.order)}: {order.orderToken}
+          </p>
+          <p>
+            {labels(COMMERCE_LABEL_KEYS.checkout.expires)}: {order.expiresAt}
+          </p>
         </CommerceCard>
       </>
     );
@@ -81,19 +104,30 @@ export function GuestCheckoutPanel({
 
   return (
     <>
-      <CommercePageHeader title={title} description="No account is required." />
-      <form className="commerce-checkout" onSubmit={submit}>
+      <CommercePageHeader
+        title={title}
+        description={labels(COMMERCE_LABEL_KEYS.checkout.description)}
+      />
+      <form className="commerce-checkout" aria-busy={busy} onSubmit={submit}>
         {items.map(item => (
           <CommerceCard key={`${item.listingHash}:${item.listingSlug}`}>
             <strong>{item.title || item.listingSlug}</strong>
-            <p>Quantity: {item.quantity}</p>
+            <p>
+              {labels(COMMERCE_LABEL_KEYS.checkout.quantity)}: {item.quantity}
+            </p>
           </CommerceCard>
         ))}
-        <label>
-          Payment method
-          <select value={coin} onChange={event => setCoin(event.target.value)} required>
+        <label htmlFor={paymentMethodId}>
+          {labels(COMMERCE_LABEL_KEYS.checkout.paymentMethod)}
+          <select
+            id={paymentMethodId}
+            value={coin}
+            onChange={event => setCoin(event.target.value)}
+            required
+            disabled={busy}
+          >
             <option value="" disabled>
-              Select a payment method
+              {labels(COMMERCE_LABEL_KEYS.checkout.selectPaymentMethod)}
             </option>
             {coins.map(value => (
               <option key={value} value={value}>
@@ -102,15 +136,25 @@ export function GuestCheckoutPanel({
             ))}
           </select>
         </label>
-        <label>
-          Contact email (optional)
-          <input type="email" value={email} onChange={event => setEmail(event.target.value)} />
+        <label htmlFor={contactEmailId}>
+          {labels(COMMERCE_LABEL_KEYS.checkout.contactEmailOptional)}
+          <input
+            id={contactEmailId}
+            type="email"
+            value={email}
+            onChange={event => setEmail(event.target.value)}
+            disabled={busy}
+          />
         </label>
         <CommerceButton type="submit" disabled={busy || !coin || items.length === 0}>
-          {busy ? 'Creating order…' : 'Create order'}
+          {labels(
+            busy
+              ? COMMERCE_LABEL_KEYS.checkout.creatingOrder
+              : COMMERCE_LABEL_KEYS.checkout.createOrder
+          )}
         </CommerceButton>
       </form>
-      {items.length === 0 ? <p>No checkout item was supplied.</p> : null}
+      {items.length === 0 ? <p>{labels(COMMERCE_LABEL_KEYS.checkout.noItems)}</p> : null}
       {error ? <p role="alert">{error}</p> : null}
     </>
   );

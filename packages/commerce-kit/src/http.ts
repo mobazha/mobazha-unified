@@ -26,6 +26,31 @@ export class CommerceHttpError extends Error {
   }
 }
 
+const COMMERCE_HTTP_ERROR_KINDS = new Set<CommerceHttpErrorKind>([
+  'http',
+  'network',
+  'timeout',
+  'aborted',
+  'invalid-response',
+]);
+
+/** Recognize errors across separately bundled package subpath entrypoints. */
+export function isCommerceHttpError(error: unknown): error is CommerceHttpError {
+  if (error instanceof CommerceHttpError) return true;
+  if (!error || typeof error !== 'object' || Reflect.get(error, 'name') !== 'CommerceHttpError') {
+    return false;
+  }
+  const kind = Reflect.get(error, 'kind');
+  const requestId = Reflect.get(error, 'requestId');
+  const status = Reflect.get(error, 'status');
+  return (
+    typeof kind === 'string' &&
+    COMMERCE_HTTP_ERROR_KINDS.has(kind as CommerceHttpErrorKind) &&
+    (requestId === undefined || typeof requestId === 'string') &&
+    (status === undefined || typeof status === 'number')
+  );
+}
+
 export interface CommerceRequestInit extends RequestInit {
   timeoutMs?: number;
   requestId?: string;

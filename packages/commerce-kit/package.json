@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "description": "Public React web commerce feature kit for Mobazha applications",
   "license": "MPL-2.0",
-  "sideEffects": false,
+  "sideEffects": [
+    "./styles.css"
+  ],
   "files": [
     "dist",
+    "styles.css",
     "README.md",
     "LICENSE"
   ],
@@ -18,6 +21,7 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
+    "./styles.css": "./styles.css",
     "./storefront": {
       "types": "./dist/storefront/index.d.ts",
       "import": "./dist/storefront/index.mjs",

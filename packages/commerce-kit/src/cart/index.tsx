@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import type { CommerceSlotContribution } from '../contracts';
+import { COMMERCE_LABEL_KEYS, type CommerceLabelResolver } from '../labels';
 import { CommerceButton, CommerceCard, CommerceSlotOutlet } from '../ui';
 
 export const CART_FEATURE_ID = 'commerce.cart';
@@ -9,6 +10,7 @@ export const CART_FEATURE_ID = 'commerce.cart';
 export interface CommerceCartSummaryProps {
   itemCount: number;
   total: ReactNode;
+  labels: CommerceLabelResolver;
   checkoutLabel?: ReactNode;
   disabled?: boolean;
   summaryAfter?: readonly CommerceSlotContribution[];
@@ -18,20 +20,24 @@ export interface CommerceCartSummaryProps {
 export function CommerceCartSummary({
   itemCount,
   total,
-  checkoutLabel = 'Checkout',
+  labels,
+  checkoutLabel = labels(COMMERCE_LABEL_KEYS.cart.checkout),
   disabled,
   summaryAfter,
   onCheckout,
 }: CommerceCartSummaryProps) {
   return (
-    <CommerceCard className="commerce-cart-summary" aria-label="Cart summary">
+    <CommerceCard
+      className="commerce-cart-summary"
+      aria-label={labels(COMMERCE_LABEL_KEYS.cart.summary)}
+    >
       <dl>
         <div>
-          <dt>Items</dt>
+          <dt>{labels(COMMERCE_LABEL_KEYS.cart.items)}</dt>
           <dd>{itemCount}</dd>
         </div>
         <div>
-          <dt>Total</dt>
+          <dt>{labels(COMMERCE_LABEL_KEYS.cart.total)}</dt>
           <dd>{total}</dd>
         </div>
       </dl>
@@ -44,4 +50,6 @@ export function CommerceCartSummary({
 }
 
 export { COMMERCE_SLOTS } from '../slots';
+export { COMMERCE_LABEL_KEYS } from '../labels';
+export type { CommerceLabelKey, CommerceLabelResolver } from '../labels';
 export type { CommerceFeaturePackage, CommerceSlotContribution } from '../contracts';

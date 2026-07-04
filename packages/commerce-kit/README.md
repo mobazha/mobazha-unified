@@ -19,6 +19,27 @@ Downstream applications consume a versioned package artifact and provide their o
 branding, localization and runtime policy. They must not import `apps/web/src/**` from this
 repository.
 
+Interactive surfaces require a host-owned `CommerceLabelResolver`; the package never selects a
+locale or ships user-visible fallback copy. Import the documented baseline stylesheet once, then
+override its public CSS variables from the application theme:
+
+```tsx
+import '@mobazha/commerce-kit/styles.css';
+import { COMMERCE_LABEL_KEYS, type CommerceLabelResolver } from '@mobazha/commerce-kit';
+
+const labels: CommerceLabelResolver = (key, values) => i18n.t(key, values);
+```
+
+The stable styling contract is the `--commerce-*` custom-property namespace plus the exported
+component class names. Applications may theme those variables, but should not copy the package's
+internal declarations. Confirmation dialogs trap focus, close on Escape, restore the invoking
+element's focus and expose busy/disabled state to assistive technology.
+
+Reviewed extensions bundled with an application may contribute React components through slots.
+Runtime agents are untrusted data producers: they must use host-validated, versioned declarative
+descriptors and artifact references rather than supplying JSX, HTML, scripts or styles. The host
+retains renderer selection, authorization, confirmation, action execution and audit ownership.
+
 `@mobazha/commerce-kit` is a domain feature kit, not a design system and not an application shell.
 Generic visual primitives belong to `@mobazha/ui`; internal API clients, stores and
 application-specific hooks belong to `@mobazha/core`. The kit must not depend on `@mobazha/core`.

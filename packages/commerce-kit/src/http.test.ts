@@ -1,11 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CommerceHttpError, createCommerceHttpClient } from './http';
+import { CommerceHttpError, createCommerceHttpClient, isCommerceHttpError } from './http';
 
 afterEach(() => {
   vi.useRealTimers();
 });
 
 describe('createCommerceHttpClient', () => {
+  it('recognizes typed errors across separately bundled entrypoints', () => {
+    expect(
+      isCommerceHttpError({
+        name: 'CommerceHttpError',
+        kind: 'timeout',
+        message: 'request timed out',
+      })
+    ).toBe(true);
+    expect(isCommerceHttpError({ name: 'CommerceHttpError', kind: 'unexpected' })).toBe(false);
+  });
+
   it('adds authorization and request ID headers and unwraps data envelopes', async () => {
     const fetchImpl: typeof fetch = vi.fn(async (_input, init) => {
       const headers = new Headers(init?.headers);

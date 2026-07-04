@@ -1,0 +1,188 @@
+:root {
+  --commerce-color-background: Canvas;
+  --commerce-color-surface: Canvas;
+  --commerce-color-text: CanvasText;
+  --commerce-color-muted: GrayText;
+  --commerce-color-border: color-mix(in srgb, CanvasText 20%, transparent);
+  --commerce-color-primary: LinkText;
+  --commerce-color-on-primary: Canvas;
+  --commerce-color-danger: #b42318;
+  --commerce-color-on-danger: #fff;
+  --commerce-radius-control: 0.5rem;
+  --commerce-radius-card: 0.75rem;
+  --commerce-space-1: 0.5rem;
+  --commerce-space-2: 0.75rem;
+  --commerce-space-3: 1rem;
+  --commerce-space-4: 1.5rem;
+  --commerce-shadow-dialog: 0 1.5rem 5rem rgb(0 0 0 / 35%);
+  --commerce-focus-ring: 0 0 0 3px
+    color-mix(in srgb, var(--commerce-color-primary) 35%, transparent);
+}
+
+.commerce-button {
+  min-height: 2.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--commerce-radius-control);
+  padding: var(--commerce-space-1) var(--commerce-space-3);
+  cursor: pointer;
+  background: var(--commerce-color-primary);
+  color: var(--commerce-color-on-primary);
+  font: inherit;
+  font-weight: 700;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.commerce-button--secondary {
+  border-color: var(--commerce-color-border);
+  background: var(--commerce-color-surface);
+  color: var(--commerce-color-text);
+}
+
+.commerce-button--danger {
+  background: var(--commerce-color-danger);
+  color: var(--commerce-color-on-danger);
+}
+
+.commerce-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.commerce-button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.commerce-button:focus-visible,
+.commerce-dialog:focus-visible,
+.commerce-checkout :is(input, select):focus-visible {
+  outline: none;
+  box-shadow: var(--commerce-focus-ring);
+}
+
+.commerce-card {
+  border: 1px solid var(--commerce-color-border);
+  border-radius: var(--commerce-radius-card);
+  padding: var(--commerce-space-4);
+  background: var(--commerce-color-surface);
+  color: var(--commerce-color-text);
+}
+
+.commerce-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--commerce-space-3);
+  margin-block-end: var(--commerce-space-4);
+}
+
+.commerce-page-header h1,
+.commerce-page-header p {
+  margin-block: 0;
+}
+
+.commerce-page-header p {
+  margin-block-start: var(--commerce-space-1);
+  color: var(--commerce-color-muted);
+}
+
+.commerce-page-header__actions,
+.commerce-product-actions__buttons,
+.commerce-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--commerce-space-2);
+}
+
+.commerce-storefront__content,
+.commerce-checkout,
+.commerce-cart-summary,
+.commerce-product-actions {
+  display: grid;
+  gap: var(--commerce-space-3);
+}
+
+.commerce-cart-summary dl,
+.commerce-cart-summary dl > div {
+  display: grid;
+  gap: var(--commerce-space-1);
+}
+
+.commerce-cart-summary dl {
+  margin: 0;
+}
+
+.commerce-cart-summary dl > div {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.commerce-cart-summary dd {
+  margin: 0;
+}
+
+.commerce-checkout label {
+  display: grid;
+  gap: var(--commerce-space-1);
+}
+
+.commerce-checkout :is(input, select) {
+  min-height: 2.75rem;
+  width: 100%;
+  border: 1px solid var(--commerce-color-border);
+  border-radius: var(--commerce-radius-control);
+  padding: var(--commerce-space-1) var(--commerce-space-2);
+  background: var(--commerce-color-background);
+  color: var(--commerce-color-text);
+  font: inherit;
+}
+
+.commerce-monospace {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.commerce-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--commerce-space-4);
+  background: rgb(0 0 0 / 72%);
+}
+
+.commerce-dialog {
+  width: min(38.75rem, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid var(--commerce-color-border);
+  border-radius: var(--commerce-radius-card);
+  padding: var(--commerce-space-4);
+  background: var(--commerce-color-surface);
+  color: var(--commerce-color-text);
+  box-shadow: var(--commerce-shadow-dialog);
+}
+
+.commerce-dialog__actions {
+  justify-content: flex-end;
+  margin-block-start: var(--commerce-space-4);
+}
+
+@media (max-width: 40rem) {
+  .commerce-page-header {
+    flex-direction: column;
+  }
+
+  .commerce-card,
+  .commerce-dialog {
+    padding: var(--commerce-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commerce-button {
+    transition: none;
+  }
+}

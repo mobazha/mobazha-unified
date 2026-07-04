@@ -3,7 +3,8 @@
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import process from 'node:process';
+import { fileURLToPath, URL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -110,7 +111,8 @@ async function createViteConsumer(directory, tarballPath) {
   );
   await write(
     join(directory, 'src', 'main.tsx'),
-    `import { createRoot } from 'react-dom/client';
+    `import '@mobazha/commerce-kit/styles.css';
+import { createRoot } from 'react-dom/client';
 import { CommerceButton } from '@mobazha/commerce-kit/admin';
 import {
   normalizeGuestCheckoutSettings,
@@ -194,7 +196,8 @@ async function createNextConsumer(directory, tarballPath) {
   );
   await write(
     join(directory, 'app', 'layout.tsx'),
-    `import type { ReactNode } from 'react';
+    `import '@mobazha/commerce-kit/styles.css';
+import type { ReactNode } from 'react';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return <html><body>{children}</body></html>;
@@ -237,11 +240,11 @@ try {
   await createNextConsumer(nextConsumer, tarballPath);
   await installAndBuild(viteConsumer);
   await installAndBuild(nextConsumer);
-  console.log('commerce-kit packed Vite and Next.js consumers: OK');
+  process.stdout.write('commerce-kit packed Vite and Next.js consumers: OK\n');
 } finally {
   if (process.env.COMMERCE_KIT_CONSUMER_KEEP !== '1') {
     await rm(temporaryRoot, { recursive: true, force: true });
   } else {
-    console.log(`commerce-kit consumer fixtures kept at ${temporaryRoot}`);
+    process.stdout.write(`commerce-kit consumer fixtures kept at ${temporaryRoot}\n`);
   }
 }
