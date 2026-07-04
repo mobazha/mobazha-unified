@@ -8,7 +8,8 @@ The package provides:
 - route, navigation, capability and slot composition contracts;
 - neutral storefront, product-action and cart-summary surfaces;
 - an initial guest-checkout reference surface and shared administration primitives;
-- an authorization-aware HTTP client for application-owned providers.
+- an authorization-aware HTTP client with typed HTTP/network/timeout errors, request cancellation
+  and request-ID propagation.
 
 Applications own their routes, navigation and product-specific providers. A feature package
 contributes descriptors and UI slots guarded by explicit runtime capabilities. This package must
@@ -26,6 +27,10 @@ Host applications connect their implementation through explicit ports, props and
 The root and `/checkout` exports are server-safe contracts. Interactive React surfaces use explicit
 client entrypoints such as `/checkout/client`, `/product`, `/cart` and `/admin` so packed consumers
 preserve their React Server Component boundary.
+
+`createCommerceHttpClient()` applies a 30-second default timeout and sends an `X-Request-ID` unless
+the host already supplied one. Hosts can set a default or per-request `timeoutMs`, pass an
+`AbortSignal`, and branch on `CommerceHttpError.kind` without parsing error messages.
 
 See [Package boundaries](../../docs/architecture/PACKAGE_BOUNDARIES.md) for the authoritative public
 dependency and ownership rules.
