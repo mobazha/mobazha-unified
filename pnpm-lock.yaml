@@ -362,6 +362,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@mobazha/commerce-kit':
+        specifier: workspace:*
+        version: link:../commerce-kit
       '@solana/web3.js':
         specifier: ^1.95.0
         version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -2989,7 +2992,9 @@ packages:
       {
         integrity: sha512-Fgg31wv9QbLDA0SpTOXO3MaxySc4DKGLi8sna4/Utjo4r3ZRPdCt4UQee8BWr+Q5z21yifghREPJGYaEOEIACg==,
       }
-    deprecated: This is a stub types definition. dompurify provides its own type definitions, so you do not need this installed.
+    deprecated:
+      This is a stub types definition. dompurify provides its own type definitions, so you do not
+      need this installed.
 
   '@types/estree-jsx@1.0.5':
     resolution:
@@ -3044,7 +3049,9 @@ packages:
       {
         integrity: sha512-TezXjmf3lj+zQ651r6hPqvSScqBLvyPI9FxdXBqpEwBijNGQ2NXpaFW/7joGzveYkKQUil7iiDHLo6LV71Pc0A==,
       }
-    deprecated: This is a stub types definition. jszip provides its own type definitions, so you do not need this installed.
+    deprecated:
+      This is a stub types definition. jszip provides its own type definitions, so you do not need
+      this installed.
 
   '@types/lodash.transform@4.6.9':
     resolution:
@@ -8881,7 +8888,9 @@ packages:
       {
         integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==,
       }
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+    deprecated:
+      uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For
+      CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   vfile-message@4.0.3:

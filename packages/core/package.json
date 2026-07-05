@@ -46,6 +46,7 @@
     "test:health": "vitest run --testPathPattern 'healthCheck'"
   },
   "dependencies": {
+    "@mobazha/commerce-kit": "workspace:*",
     "@solana/web3.js": "^1.95.0",
     "bignumber.js": "^9.3.1",
     "dompurify": "^3.3.1",

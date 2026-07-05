@@ -834,6 +834,82 @@
         "tags": ["admin"]
       }
     },
+    "/platform/v1/admin/managed-escrow/config": {
+      "get": {
+        "operationId": "admin-get-managed-escrow-config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Managed escrow platform fee configuration (admin)",
+        "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "admin-patch-managed-escrow-config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_AdminPatchManagedEscrowConfigInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success payload (domain-specific)."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Patch Managed escrow platform fee configuration (admin)",
+        "tags": ["admin"]
+      }
+    },
     "/platform/v1/admin/moderators": {
       "get": {
         "operationId": "admin-list-moderators",
@@ -1016,82 +1092,6 @@
           }
         ],
         "summary": "Patch relay operational parameters (admin)",
-        "tags": ["admin"]
-      }
-    },
-    "/platform/v1/admin/managed-escrow/config": {
-      "get": {
-        "operationId": "admin-get-managed-escrow-config",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success payload (domain-specific)."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Managed escrow platform fee configuration (admin)",
-        "tags": ["admin"]
-      },
-      "patch": {
-        "operationId": "admin-patch-managed-escrow-config",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Platform_AdminPatchManagedEscrowConfigInputBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Success payload (domain-specific)."
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Platform_EnvelopeError"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Patch Managed escrow platform fee configuration (admin)",
         "tags": ["admin"]
       }
     },
@@ -5434,6 +5434,266 @@
         "tags": ["group-marketplace"]
       }
     },
+    "/platform/v1/deal-links": {
+      "get": {
+        "operationId": "deal-links-list-mine",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List Deal Links owned by the current seller",
+        "tags": ["deal-links"]
+      },
+      "post": {
+        "operationId": "deal-links-create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_DealLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create a draft Deal Link with its first immutable revision",
+        "tags": ["deal-links"]
+      }
+    },
+    "/platform/v1/deal-links/{id}": {
+      "get": {
+        "operationId": "deal-links-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get a seller-owned Deal Link",
+        "tags": ["deal-links"]
+      },
+      "put": {
+        "operationId": "deal-links-update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_DealLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Append and select a new immutable Deal Link revision",
+        "tags": ["deal-links"]
+      }
+    },
+    "/platform/v1/deal-links/{id}/activate": {
+      "post": {
+        "operationId": "deal-links-activate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Activate a Deal Link",
+        "tags": ["deal-links"]
+      }
+    },
+    "/platform/v1/deal-links/{id}/pause": {
+      "post": {
+        "operationId": "deal-links-pause",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pause a Deal Link",
+        "tags": ["deal-links"]
+      }
+    },
     "/platform/v1/encryption/listings/{peerID}/{slug}/key": {
       "get": {
         "operationId": "encryption-listing-key-get",
@@ -8642,6 +8902,146 @@
         ],
         "summary": "Get the current store's marketplace application",
         "tags": ["marketplaces"]
+      }
+    },
+    "/platform/v1/public/deal-links/{token}": {
+      "get": {
+        "operationId": "public-deal-links-get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get an active Deal Link by public token",
+        "tags": ["deal-links"]
+      }
+    },
+    "/platform/v1/public/deal-links/{token}/accept": {
+      "post": {
+        "operationId": "public-deal-links-accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_DealAcceptanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerOrAPITokenAuth": []
+          }
+        ],
+        "summary": "Create exactly one buyer order from an active Deal Link and Fee Quote",
+        "tags": ["deal-links"]
+      }
+    },
+    "/platform/v1/public/deal-links/{token}/fee-quotes": {
+      "post": {
+        "operationId": "public-deal-link-fee-quotes-create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Create or reuse an immutable server-authored Fee Quote",
+        "tags": ["deal-links"]
       }
     },
     "/platform/v1/relay/execute": {
@@ -20327,7 +20727,7 @@
     },
     "/v1/disputes/{orderID}/instructions/release": {
       "post": {
-        "description": "Compatibility endpoint for client-signed moderated dispute payouts. Safe-backed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.",
+        "description": "Compatibility endpoint for client-signed moderated dispute payouts. backend-managed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.",
         "operationId": "disputes-post-instructions-release",
         "parameters": [
           {
@@ -25947,7 +26347,7 @@
     },
     "/v1/orders/{orderID}/instructions/complete": {
       "post": {
-        "description": "Compatibility endpoint for client-signed moderated completion flows. Safe-backed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.",
+        "description": "Compatibility endpoint for client-signed moderated completion flows. backend-managed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.",
         "operationId": "orders-post-instructions-complete",
         "parameters": [
           {
@@ -26248,7 +26648,7 @@
     },
     "/v1/orders/{orderID}/payment-session": {
       "get": {
-        "description": "Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (persisted monitored-address flows), escrow_v1 (legacy signed escrow flows), and provider_checkout (hosted payment providers).",
+        "description": "Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, backend-managed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).",
         "operationId": "orders-get-payment-session",
         "parameters": [
           {
@@ -26758,7 +27158,7 @@
     },
     "/v1/orders/{orderID}/settlement-actions/{action}": {
       "post": {
-        "description": "Runs backend-submitted settlement for crypto orders (Safe EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.",
+        "description": "Runs backend-submitted settlement for crypto orders (managed EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.",
         "operationId": "orders-post-settlement-action",
         "parameters": [
           {
@@ -26829,7 +27229,7 @@
     },
     "/v1/orders/{orderID}/settlement-actions/{action}/status": {
       "get": {
-        "description": "Returns the latest status for a previously issued backend settlement action. Safe-backed flows expose relay task correlation and confirmations through this endpoint.",
+        "description": "Returns the latest status for a previously issued backend settlement action. backend-managed flows expose relay task correlation and confirmations through this endpoint.",
         "operationId": "orders-get-settlement-action-status",
         "parameters": [
           {
@@ -32204,21 +32604,6 @@
         },
         "type": "object"
       },
-      "Platform_AdminPatchRelayConfigInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "gas_limit_multiplier": {
-            "format": "double",
-            "type": "number"
-          },
-          "max_gas_price": {
-            "format": "int64",
-            "minimum": 0,
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
       "Platform_AdminPatchManagedEscrowConfigInputBody": {
         "additionalProperties": false,
         "properties": {
@@ -32235,6 +32620,21 @@
               "type": "integer"
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "Platform_AdminPatchRelayConfigInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "gas_limit_multiplier": {
+            "format": "double",
+            "type": "number"
+          },
+          "max_gas_price": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "type": "object"
@@ -32525,12 +32925,23 @@
           "currencyCode": {
             "type": "string"
           },
+          "deliveryHolder": {
+            "type": "string"
+          },
           "divisibility": {
             "format": "int64",
             "type": "integer"
           },
           "escrowID": {
             "type": "string"
+          },
+          "extensionID": {
+            "type": "string"
+          },
+          "extensionRevision": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
           },
           "hubSlotID": {
             "type": "string"
@@ -32550,8 +32961,17 @@
           "orderID": {
             "type": "string"
           },
+          "orderStateVersion": {
+            "type": "string"
+          },
+          "orderTenantID": {
+            "type": "string"
+          },
           "paidAt": {
             "format": "date-time",
+            "type": "string"
+          },
+          "paymentEventID": {
             "type": "string"
           },
           "priceAmount": {
@@ -32575,6 +32995,9 @@
           },
           "releasedAt": {
             "format": "date-time",
+            "type": "string"
+          },
+          "reservationID": {
             "type": "string"
           },
           "saleID": {
@@ -32979,6 +33402,80 @@
           }
         },
         "required": ["token", "info"],
+        "type": "object"
+      },
+      "Platform_DealAcceptanceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "addressNotes": {
+            "type": "string"
+          },
+          "alternateContactInfo": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "feeQuoteID": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "refundAddress": {
+            "type": "string"
+          },
+          "shipTo": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": ["feeQuoteID"],
+        "type": "object"
+      },
+      "Platform_DealLinkRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "deliveryType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "priceAmount": {
+            "type": "string"
+          },
+          "priceCurrency": {
+            "type": "string"
+          },
+          "purchaseTemplate": {
+            "$ref": "#/components/schemas/Platform_PurchaseTemplate"
+          },
+          "terms": {},
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "deliveryType",
+          "priceAmount",
+          "priceCurrency",
+          "terms",
+          "purchaseTemplate"
+        ],
         "type": "object"
       },
       "Platform_DiscordCheckBodyBody": {
@@ -33891,6 +34388,44 @@
         "required": ["name", "description", "sortOrder"],
         "type": "object"
       },
+      "Platform_PurchaseOption": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "value"],
+        "type": "object"
+      },
+      "Platform_PurchaseTemplate": {
+        "additionalProperties": false,
+        "properties": {
+          "listingHash": {
+            "type": "string"
+          },
+          "optionalFeatures": {
+            "items": {
+              "type": "string"
+            },
+            "type": ["array", "null"]
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Platform_PurchaseOption"
+            },
+            "type": ["array", "null"]
+          },
+          "quantity": {
+            "type": "string"
+          }
+        },
+        "required": ["listingHash", "quantity", "options", "optionalFeatures"],
+        "type": "object"
+      },
       "Platform_ReconcileReport": {
         "additionalProperties": false,
         "properties": {
@@ -34382,7 +34917,7 @@
             "type": "string"
           }
         },
-        "required": ["storePeerID", "storeName", "visibility"],
+        "required": ["storeName"],
         "type": "object"
       },
       "Platform_StorefrontAccessRule": {

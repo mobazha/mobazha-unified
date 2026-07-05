@@ -23,7 +23,8 @@ downstream application -> ui, commerce-kit
 commerce-kit -> ui                 (target direction for stable primitives)
 commerce-kit -X-> core
 ui -X-> core
-core -X-> ui, commerce-kit
+core -> commerce-kit/composition      (pure resolver contract only)
+core -X-> commerce-kit React surfaces
 ```
 
 `@mobazha/commerce-kit` must remain consumable without Unified application source. It may use stable
@@ -97,6 +98,13 @@ auth, channel or egress support; they never inspect a private product identity.
 `@mobazha/commerce-kit` is one public feature-catalog provider within this model. It is not the
 complete product composer, application shell, router or provider graph. The RFC is Draft and does
 not introduce dynamic plugins, remote React code, Agent surfaces or a plugin marketplace.
+
+The package exposes a deliberately non-React `/composition` entry point so Unified and downstream
+shells execute the same profile, capability, policy and diagnostics rules. The entry point resolves
+only host-supplied inputs; applications still own Runtime Config validation, supported profiles,
+feature catalogs, routing, providers, authorization and materialization. Keeping this small kernel
+inside the existing package avoids a fourth publication unit without turning Commerce Kit into an
+application shell.
 
 Guest Checkout is the first proving slice. `CommerceGuestCheckoutPort`, the pure workflow reducer
 and its React hook share settings loading, availability, order submission, retry and payment-handoff

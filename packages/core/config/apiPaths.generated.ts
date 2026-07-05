@@ -161,6 +161,10 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers/${encodeURIComponent(sellerID)}/review`,
   COMMUNITY_MARKETPLACES_TELEGRAM_VERIFY_MEMBER: (instanceID: string) =>
     `/platform/v1/community-marketplaces/telegram/${encodeURIComponent(instanceID)}/verify-member`,
+  DEAL_LINKS: '/platform/v1/deal-links',
+  DEAL_LINKS_ACTIVATE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/activate`,
+  DEAL_LINKS_BY_ID: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}`,
+  DEAL_LINKS_PAUSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/pause`,
   ENCRYPTION_LISTINGS_KEY: (peerID: string, slug: string) =>
     `/platform/v1/encryption/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}/key`,
   ENCRYPTION_PRODUCT_GROUPS_ROTATE_KEY: (id: string) =>
@@ -251,6 +255,12 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/product-groups/${encodeURIComponent(groupID)}/items`,
   PRODUCT_GROUPS_ITEMS_BY_GROUP_ID_SLUG: (groupID: string, slug: string) =>
     `/platform/v1/product-groups/${encodeURIComponent(groupID)}/items/${encodeURIComponent(slug)}`,
+  PUBLIC_DEAL_LINKS: (token: string) =>
+    `/platform/v1/public/deal-links/${encodeURIComponent(token)}`,
+  PUBLIC_DEAL_LINKS_ACCEPT: (token: string) =>
+    `/platform/v1/public/deal-links/${encodeURIComponent(token)}/accept`,
+  PUBLIC_DEAL_LINKS_FEE_QUOTES: (token: string) =>
+    `/platform/v1/public/deal-links/${encodeURIComponent(token)}/fee-quotes`,
   PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
   PUBLIC_MARKETPLACES_ATTRIBUTION_EVENTS: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,

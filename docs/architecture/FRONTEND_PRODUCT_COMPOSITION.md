@@ -21,9 +21,11 @@ application shell / composition
   -> @mobazha/commerce-kit  public commerce feature provider
 ```
 
-The pure internal resolver lives in `packages/core/config/frontendComposition.ts`; the application
-passes request context, presentation channel and build inclusion into it. Commerce Kit remains a
-feature provider and does not become the complete product composer, router or provider graph.
+The pure resolver contract lives in the non-React `@mobazha/commerce-kit/composition` entry point.
+Unified's `packages/core/config/frontendComposition.ts` is now only a Runtime Config adapter;
+downstream shells provide their own profile and capability adapters to the same kernel. Commerce Kit
+remains a feature provider and does not become the complete product composer, router or provider
+graph.
 
 ## Condition inventory and ownership
 
@@ -67,10 +69,11 @@ until it consumes the same Runtime Config and composition lifecycle.
 
 `resolveFrontendComposition` is pure and receives:
 
-- the validated Runtime Config and its readiness status;
-- presentation channel and request-scoped storefront context;
+- a host-validated runtime readiness status and capabilities-ready flag;
+- a host-owned product profile, including channel and request context;
 - the host-supported profile matrix;
 - the build-included feature catalog.
+- capability and optional host-policy predicates.
 
 It returns `pending`, `ready` or `invalid`, enabled and excluded feature IDs, and structured
 diagnostics. Important invariants are:
@@ -105,8 +108,8 @@ physical absence of distribution-local source.
 ## Next slices
 
 Product actions and cart summary are now dogfooded through host-rendering adapters without replacing
-Unified's responsive controls, seller grouping, authentication policy or channel-native CTA.
-Continue with the smallest reusable admin primitives; these `0.x` APIs remain provisional until
-independent second applications prove the same boundaries. A public composition package, dynamic
-provider graph, universal manifest, Agent surface protocol or runtime plugin system is not part of
-this implementation stage.
+Unified's responsive controls, seller grouping, authentication policy or channel-native CTA. The
+first downstream sovereign shell now consumes the same composition kernel, so the next evidence-led
+slice is the shared Guest Order wire/state lifecycle rather than a speculative admin package. A
+separate composition package, dynamic provider graph, universal manifest, Agent surface protocol or
+runtime plugin system is not part of this implementation stage.

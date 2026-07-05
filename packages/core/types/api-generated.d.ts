@@ -315,6 +315,24 @@ export interface paths {
     patch: operations['admin-patch-fiat-provider'];
     trace?: never;
   };
+  '/platform/v1/admin/managed-escrow/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Managed escrow platform fee configuration (admin) */
+    get: operations['admin-get-managed-escrow-config'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Patch Managed escrow platform fee configuration (admin) */
+    patch: operations['admin-patch-managed-escrow-config'];
+    trace?: never;
+  };
   '/platform/v1/admin/moderators': {
     parameters: {
       query?: never;
@@ -366,24 +384,6 @@ export interface paths {
     head?: never;
     /** Patch relay operational parameters (admin) */
     patch: operations['admin-patch-relay-config'];
-    trace?: never;
-  };
-  '/platform/v1/admin/managed-escrow/config': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Managed escrow platform fee configuration (admin) */
-    get: operations['admin-get-managed-escrow-config'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Patch Managed escrow platform fee configuration (admin) */
-    patch: operations['admin-patch-managed-escrow-config'];
     trace?: never;
   };
   '/platform/v1/admin/services': {
@@ -1781,6 +1781,76 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/deal-links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Deal Links owned by the current seller */
+    get: operations['deal-links-list-mine'];
+    put?: never;
+    /** Create a draft Deal Link with its first immutable revision */
+    post: operations['deal-links-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-links/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a seller-owned Deal Link */
+    get: operations['deal-links-get'];
+    /** Append and select a new immutable Deal Link revision */
+    put: operations['deal-links-update'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-links/{id}/activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Activate a Deal Link */
+    post: operations['deal-links-activate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-links/{id}/pause': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Pause a Deal Link */
+    post: operations['deal-links-pause'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/encryption/listings/{peerID}/{slug}/key': {
     parameters: {
       query?: never;
@@ -2808,6 +2878,57 @@ export interface paths {
     post?: never;
     /** Withdraw the current store's pending marketplace application */
     delete: operations['public-marketplace-seller-applications-withdraw'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public/deal-links/{token}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get an active Deal Link by public token */
+    get: operations['public-deal-links-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public/deal-links/{token}/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create exactly one buyer order from an active Deal Link and Fee Quote */
+    post: operations['public-deal-links-accept'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public/deal-links/{token}/fee-quotes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create or reuse an immutable server-authored Fee Quote */
+    post: operations['public-deal-link-fee-quotes-create'];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -6165,7 +6286,7 @@ export interface paths {
     put?: never;
     /**
      * Legacy dispute release instructions
-     * @description Compatibility endpoint for client-signed moderated dispute payouts. Safe-backed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.
+     * @description Compatibility endpoint for client-signed moderated dispute payouts. backend-managed moderated dispute resolution stays on the backend close/release path and should not use this instructions contract as its primary entrypoint.
      */
     post: operations['disputes-post-instructions-release'];
     delete?: never;
@@ -7826,7 +7947,7 @@ export interface paths {
     put?: never;
     /**
      * Legacy completion payout instructions
-     * @description Compatibility endpoint for client-signed moderated completion flows. Safe-backed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.
+     * @description Compatibility endpoint for client-signed moderated completion flows. backend-managed moderated completion stays on the backend-owned completion path and does not use this instructions contract as its primary entrypoint.
      */
     post: operations['orders-post-instructions-complete'];
     delete?: never;
@@ -7912,7 +8033,7 @@ export interface paths {
     };
     /**
      * Unified payment session view for an order
-     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (persisted monitored-address flows), escrow_v1 (legacy signed escrow flows), and provider_checkout (hosted payment providers).
+     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, backend-managed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).
      */
     get: operations['orders-get-payment-session'];
     put?: never;
@@ -8063,7 +8184,7 @@ export interface paths {
     put?: never;
     /**
      * Execute backend settlement action
-     * @description Runs backend-submitted settlement for crypto orders (Safe EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.
+     * @description Runs backend-submitted settlement for crypto orders (managed EVM, Solana Anchor, UTXO sync). Supported actions: confirm, cancel, seller-decline-refund, complete, dispute-release. Client-signed legacy chains use instruction endpoints. Fiat orders return 400. Optional body: payoutAddress.
      */
     post: operations['orders-post-settlement-action'];
     delete?: never;
@@ -8081,7 +8202,7 @@ export interface paths {
     };
     /**
      * Read unified settlement action status
-     * @description Returns the latest status for a previously issued backend settlement action. Safe-backed flows expose relay task correlation and confirmations through this endpoint.
+     * @description Returns the latest status for a previously issued backend settlement action. backend-managed flows expose relay task correlation and confirmations through this endpoint.
      */
     get: operations['orders-get-settlement-action-status'];
     put?: never;
@@ -9525,12 +9646,6 @@ export interface components {
       secret_key?: string;
       webhook_secret?: string;
     };
-    Platform_AdminPatchRelayConfigInputBody: {
-      /** Format: double */
-      gas_limit_multiplier?: number;
-      /** Format: int64 */
-      max_gas_price?: number;
-    };
     Platform_AdminPatchManagedEscrowConfigInputBody: {
       platform_addrs?: {
         [key: string]: string;
@@ -9538,6 +9653,12 @@ export interface components {
       release_fee_usd_cents?: {
         [key: string]: number;
       };
+    };
+    Platform_AdminPatchRelayConfigInputBody: {
+      /** Format: double */
+      gas_limit_multiplier?: number;
+      /** Format: int64 */
+      max_gas_price?: number;
     };
     Platform_AdminPatchServiceTogglesInputBody: {
       cross_store_enabled?: boolean;
@@ -9634,17 +9755,24 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
       currencyCode?: string;
+      deliveryHolder?: string;
       /** Format: int64 */
       divisibility: number;
       escrowID?: string;
+      extensionID?: string;
+      /** Format: int64 */
+      extensionRevision?: number;
       hubSlotID: string;
       hubSlotStatus?: string;
       idempotencyKey?: string;
       lastMintError?: string;
       nftMint?: string;
       orderID?: string;
+      orderStateVersion?: string;
+      orderTenantID?: string;
       /** Format: date-time */
       paidAt?: string;
+      paymentEventID?: string;
       priceAmount?: string;
       releaseActionID?: string;
       releaseError?: string;
@@ -9654,6 +9782,7 @@ export interface components {
       releaseTxHash?: string;
       /** Format: date-time */
       releasedAt?: string;
+      reservationID?: string;
       saleID: string;
       sellerPeerID?: string;
       tenantID: string;
@@ -9786,6 +9915,29 @@ export interface components {
       info: components['schemas']['Platform_TokenSummary'];
       /** @description Raw API token. Visible exactly once; treat as a secret. */
       token: string;
+    };
+    Platform_DealAcceptanceRequest: {
+      address?: string;
+      addressNotes?: string;
+      alternateContactInfo?: string;
+      city?: string;
+      countryCode?: string;
+      feeQuoteID: string;
+      postalCode?: string;
+      refundAddress?: string;
+      shipTo?: string;
+      state?: string;
+    };
+    Platform_DealLinkRequest: {
+      deliveryType: string;
+      description?: string;
+      /** Format: date-time */
+      expiresAt?: string;
+      priceAmount: string;
+      priceCurrency: string;
+      purchaseTemplate: components['schemas']['Platform_PurchaseTemplate'];
+      terms: unknown;
+      title: string;
     };
     Platform_DiscordCheckBodyBody: {
       access_token: string;
@@ -10089,6 +10241,16 @@ export interface components {
       /** Format: int64 */
       sortOrder: number;
     };
+    Platform_PurchaseOption: {
+      name: string;
+      value: string;
+    };
+    Platform_PurchaseTemplate: {
+      listingHash: string;
+      optionalFeatures: string[] | null;
+      options: components['schemas']['Platform_PurchaseOption'][] | null;
+      quantity: string;
+    };
     Platform_ReconcileReport: {
       /** Format: int64 */
       activeNFTCount: number;
@@ -10249,8 +10411,8 @@ export interface components {
     };
     Platform_StoreSpaceCreateRequest: {
       storeName: string;
-      storePeerID: string;
-      visibility: string;
+      storePeerID?: string;
+      visibility?: string;
     };
     Platform_StorefrontAccessRule: {
       required_tags?: string[] | null;
@@ -11658,6 +11820,68 @@ export interface operations {
       };
     };
   };
+  'admin-get-managed-escrow-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-patch-managed-escrow-config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_AdminPatchManagedEscrowConfigInputBody'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'admin-list-moderators': {
     parameters: {
       query?: never;
@@ -11798,68 +12022,6 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'admin-get-managed-escrow-config': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Platform_EnvelopeError'];
-        };
-      };
-    };
-  };
-  'admin-patch-managed-escrow-config': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Platform_AdminPatchManagedEscrowConfigInputBody'];
-      };
-    };
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
       };
       /** @description Error */
       default: {
@@ -14777,6 +14939,196 @@ export interface operations {
       };
     };
   };
+  'deal-links-list-mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_DealLinkRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_DealLinkRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-links-pause': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'encryption-listing-key-get': {
     parameters: {
       query?: never;
@@ -16975,6 +17327,105 @@ export interface operations {
       header?: never;
       path: {
         identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-deal-links-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-deal-links-accept': {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_DealAcceptanceRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-deal-link-fee-quotes-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
       };
       cookie?: never;
     };

@@ -22,6 +22,11 @@
       "require": "./dist/index.js"
     },
     "./styles.css": "./styles.css",
+    "./composition": {
+      "types": "./dist/composition.d.ts",
+      "import": "./dist/composition.mjs",
+      "require": "./dist/composition.js"
+    },
     "./storefront": {
       "types": "./dist/storefront/index.d.ts",
       "import": "./dist/storefront/index.mjs",

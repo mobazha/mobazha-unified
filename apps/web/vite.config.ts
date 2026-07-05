@@ -5,24 +5,26 @@ import path from 'path';
 import { writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'http';
 
-/**
- * Strip WWW-Authenticate header from proxy responses so the browser
- * doesn't show its native Basic Auth dialog. The frontend handles
- * 401 responses programmatically via its own login UI.
- */
-function withStripWwwAuth(opts: ProxyOptions): ProxyOptions {
+interface BrowserProxyPolicy {
+  /** Reproduce the same-origin reverse proxy used by packaged deployments. */
+  rewriteOriginToTarget?: boolean;
+}
+
+/** Apply explicit browser-facing behavior to one development proxy route. */
+function withBrowserProxyPolicy(opts: ProxyOptions, policy: BrowserProxyPolicy = {}): ProxyOptions {
   return {
     ...opts,
     configure: (proxy, _options) => {
-      proxy.on('proxyReq', (proxyReq, req) => {
-        // Browsers keep the Vite dev-server Origin when a request is proxied.
-        // Standalone nodes correctly reject that as a CSRF mismatch, so make
-        // the dev proxy preserve the same-origin semantics used by Caddy in
-        // packaged deployments.
-        if (req.headers.origin && typeof opts.target === 'string') {
-          proxyReq.setHeader('Origin', new URL(opts.target).origin);
-        }
-      });
+      if (policy.rewriteOriginToTarget)
+        proxy.on('proxyReq', (proxyReq, req) => {
+          // Browsers keep the Vite dev-server Origin when a request is proxied.
+          // Standalone nodes correctly reject that as a CSRF mismatch, so make
+          // the dev proxy preserve the same-origin semantics used by Caddy in
+          // packaged deployments.
+          if (req.headers.origin && typeof opts.target === 'string') {
+            proxyReq.setHeader('Origin', new URL(opts.target).origin);
+          }
+        });
       proxy.on('proxyRes', proxyRes => {
         delete proxyRes.headers['www-authenticate'];
       });
@@ -621,10 +623,13 @@ export default defineConfig(({ mode }) => {
         },
       }),
       proxy: {
-        '/v1': withStripWwwAuth({
-          target: apiBase,
-          changeOrigin: true,
-        }),
+        '/v1': withBrowserProxyPolicy(
+          {
+            target: apiBase,
+            changeOrigin: true,
+          },
+          { rewriteOriginToTarget: true }
+        ),
         '/ws': {
           target: apiBase,
           changeOrigin: true,
@@ -636,17 +641,20 @@ export default defineConfig(({ mode }) => {
           ws: true,
           rewrite: (path: string) => path.replace(/^\/buyer-api/, ''),
         },
-        '/info': withStripWwwAuth({
+        '/info': withBrowserProxyPolicy({
           target: env.NEXT_PUBLIC_INFO_API_URL || apiBase,
           changeOrigin: true,
           rewrite: env.NEXT_PUBLIC_INFO_API_URL
             ? (p: string) => p.replace(/^\/info/, '')
             : undefined,
         }),
-        '/platform': withStripWwwAuth({
-          target: apiBase,
-          changeOrigin: true,
-        }),
+        '/platform': withBrowserProxyPolicy(
+          {
+            target: apiBase,
+            changeOrigin: true,
+          },
+          { rewriteOriginToTarget: true }
+        ),
       },
     },
     // 优化依赖预构建

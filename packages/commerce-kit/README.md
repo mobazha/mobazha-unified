@@ -6,6 +6,7 @@ checkout and seller-admin experiences.
 The package provides:
 
 - route, navigation, capability and slot composition contracts;
+- a non-React `/composition` kernel shared by application-specific Runtime Config adapters;
 - neutral storefront, product-action and cart-summary surfaces;
 - an initial guest-checkout reference surface and shared administration primitives;
 - an authorization-aware HTTP client with typed HTTP/network/timeout errors, request cancellation
@@ -52,6 +53,11 @@ requirements; they do not branch on a named public or private product. Private d
 compose their own modules through compatible contracts while keeping those modules physically out of
 this repository. See the Draft
 [Composable Frontend Product Model RFC](https://github.com/mobazha/mobazha-docs/blob/main/rfcs/0003-composable-frontend-product-model.md).
+
+Applications that need the shared resolver import `@mobazha/commerce-kit/composition`. They still
+own the supported profile matrix, feature catalog, capability and policy predicates, Router and
+Provider graph; the kernel only returns a deterministic `pending | ready | invalid` projection and
+structured diagnostics.
 
 Guest Checkout is the first shared vertical slice. Its public boundary is deliberately layered:
 
