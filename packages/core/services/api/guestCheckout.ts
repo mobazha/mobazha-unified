@@ -210,14 +210,14 @@ export function normalizeGuestOrderState(state: string | number | undefined | nu
   return typeof state === 'string' ? state : String(state);
 }
 
-type GuestOrderStatusDTO = Omit<GuestOrderStatus, 'state' | 'carrier'> & {
+export type GuestOrderStatusWire = Omit<GuestOrderStatus, 'state' | 'carrier'> & {
   state?: string | number;
   carrier?: string;
   shippingCarrier?: string;
 };
 
 /** Map public guest-order status payload to UI-friendly shape. */
-export function normalizeGuestOrderStatus(raw: GuestOrderStatusDTO): GuestOrderStatus {
+export function normalizeGuestOrderStatus(raw: GuestOrderStatusWire): GuestOrderStatus {
   const carrier = raw.carrier?.trim() || raw.shippingCarrier?.trim() || undefined;
   return {
     ...raw,
@@ -247,10 +247,19 @@ export function quoteGuestOrderSupply(
   return anonymousPost<GuestOrderSupplyQuoteResponse>(NODE_API.GUEST_ORDERS_QUOTE, data);
 }
 
-export function getGuestOrderStatus(token: string): Promise<GuestOrderStatus> {
-  return anonymousGet<GuestOrderStatusDTO>(NODE_API.GUEST_ORDER(token)).then(
-    normalizeGuestOrderStatus
-  );
+export function getGuestOrderStatus(
+  token: string,
+  options?: { signal?: AbortSignal }
+): Promise<GuestOrderStatus> {
+  return getGuestOrderStatusWire(token, options).then(normalizeGuestOrderStatus);
+}
+
+/** Raw public wire payload for application adapters that own normalization. */
+export function getGuestOrderStatusWire(
+  token: string,
+  options?: { signal?: AbortSignal }
+): Promise<GuestOrderStatusWire> {
+  return anonymousGet<GuestOrderStatusWire>(NODE_API.GUEST_ORDER(token), options);
 }
 
 // ========== Guest checkout settings / seller APIs ==========

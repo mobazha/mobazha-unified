@@ -22,6 +22,29 @@ export type {
   CommerceGuestCheckoutWorkflowEvent,
   CommerceGuestCheckoutWorkflowState,
 } from './workflow';
+export {
+  createGuestOrderStatusPort,
+  normalizeCommerceGuestOrderState,
+  normalizeCommerceGuestOrderStatus,
+} from './guestOrderStatus';
+export type {
+  CommerceGuestOrderStatus,
+  CommerceGuestOrderStatusItem,
+  CommerceGuestOrderStatusOperationOptions,
+  CommerceGuestOrderStatusPort,
+  CommerceGuestOrderStatusPortPaths,
+  CommerceGuestOrderStatusWire,
+} from './guestOrderStatus';
+export {
+  INITIAL_COMMERCE_GUEST_ORDER_STATE,
+  commerceGuestOrderFromLifecycle,
+  commerceGuestOrderLifecycleReducer,
+  shouldPollCommerceGuestOrder,
+} from './guestOrderLifecycle';
+export type {
+  CommerceGuestOrderLifecycleEvent,
+  CommerceGuestOrderLifecycleState,
+} from './guestOrderLifecycle';
 export { COMMERCE_SLOTS } from '../slots';
 export type {
   CommerceFeaturePackage,

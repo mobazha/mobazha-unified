@@ -109,7 +109,12 @@ physical absence of distribution-local source.
 
 Product actions and cart summary are now dogfooded through host-rendering adapters without replacing
 Unified's responsive controls, seller grouping, authentication policy or channel-native CTA. The
-first downstream sovereign shell now consumes the same composition kernel, so the next evidence-led
-slice is the shared Guest Order wire/state lifecycle rather than a speculative admin package. A
-separate composition package, dynamic provider graph, universal manifest, Agent surface protocol or
-runtime plugin system is not part of this implementation stage.
+first downstream sovereign shell now also consumes the same Guest Order response normalization and
+status lifecycle as Unified. The shared layer covers a public port, wire normalization, cancellable
+refresh, stale-order preservation and terminal-state polling; both shells retain their own buyer
+portal UI, route, recovery-token policy and product services.
+
+No further slice is promoted merely to keep the package roadmap busy. The next extraction requires a
+second real application with equivalent request/state/error semantics. A separate composition
+package, dynamic provider graph, universal manifest, Agent surface protocol or runtime plugin system
+is not part of this implementation stage.

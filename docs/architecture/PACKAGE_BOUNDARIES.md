@@ -109,9 +109,16 @@ application shell.
 Guest Checkout is the first proving slice. `CommerceGuestCheckoutPort`, the pure workflow reducer
 and its React hook share settings loading, availability, order submission, retry and payment-handoff
 semantics. Applications still own cart/address input, supply validation, encryption, product payment
-policy, order-status polling, navigation and presentation beyond the shared surface. A richer host
-may consume the controller without replacing its page with `GuestCheckoutPanel`; a smaller host may
-use the panel directly with the same port.
+policy, navigation and presentation beyond the shared surface. A richer host may consume the
+controller without replacing its page with `GuestCheckoutPanel`; a smaller host may use the panel
+directly with the same port.
+
+Guest Order status is the first slice promoted only after two real product shells showed equivalent
+wire and lifecycle behavior. `CommerceGuestOrderStatusPort` normalizes the public response;
+`useGuestOrderStatus` provides cancellable refresh, stale-order preservation and terminal-state
+polling rules. Unified and the downstream sovereign shell still own route topology, copy, recovery
+token handling, payment widgets, digital-delivery authorization and product styling. Commerce Kit
+does not own a universal buyer-order page.
 
 Product actions are the second dogfood slice. The public action surface now separates stable action
 identity and callback/disabled wiring from host rendering. Unified consumes it in desktop detail,

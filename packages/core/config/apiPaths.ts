@@ -322,11 +322,11 @@ export const NODE_API = {
   // --- Guest Checkout (anonymous direct-payment orders) ---
   GUEST_ORDERS: '/guest/orders',
   GUEST_ORDERS_QUOTE: '/guest/orders/quote',
-  GUEST_ORDER: (token: string) => `/guest/orders/${token}`,
-  GUEST_ORDER_SHIP: (token: string) => `/guest/orders/${token}/ship`,
-  GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${token}/complete`,
+  GUEST_ORDER: (token: string) => `/guest/orders/${encodeURIComponent(token)}`,
+  GUEST_ORDER_SHIP: (token: string) => `/guest/orders/${encodeURIComponent(token)}/ship`,
+  GUEST_ORDER_COMPLETE: (token: string) => `/guest/orders/${encodeURIComponent(token)}/complete`,
   // PM-3a: Admin-only full order detail (includes shipping address ciphertext)
-  GUEST_ORDER_ADMIN_DETAIL: (token: string) => `/guest/orders/${token}/detail`,
+  GUEST_ORDER_ADMIN_DETAIL: (token: string) => `/guest/orders/${encodeURIComponent(token)}/detail`,
   GUEST_CHECKOUT_SETTINGS: '/settings/guest-checkout',
 
   /** Edition capability manifest (safe fallback when absent) */

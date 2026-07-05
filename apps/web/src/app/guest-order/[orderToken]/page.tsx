@@ -15,9 +15,11 @@ import {
 import { Header } from '@/components';
 import {
   buyerPortalTokenStorageKey,
-  getGuestOrderStatus,
   type GuestOrderStatus,
 } from '@mobazha/core/services/api/guestCheckout';
+import { commerceGuestOrderFromLifecycle } from '@mobazha/commerce-kit/checkout';
+import { useGuestOrderStatus } from '@mobazha/commerce-kit/checkout/client';
+import { commerceGuestOrderStatusPort } from '@/lib/commerce/guestPorts';
 import {
   ExternalWalletPayment,
   type ExternalWalletPaymentInfo,
@@ -92,13 +94,20 @@ export default function GuestOrderPage() {
   const params = useParams<{ orderToken: string }>();
   const orderToken = typeof params?.orderToken === 'string' ? params.orderToken : undefined;
   const { t } = useI18n();
-  const [order, setOrder] = useState<GuestOrderStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const guestOrderLifecycle = useGuestOrderStatus(commerceGuestOrderStatusPort, orderToken);
+  const order = commerceGuestOrderFromLifecycle(guestOrderLifecycle.state, orderToken);
+  const error =
+    guestOrderLifecycle.state.status === 'error' &&
+    guestOrderLifecycle.state.orderToken === orderToken
+      ? guestOrderLifecycle.state.error instanceof Error
+        ? guestOrderLifecycle.state.error.message
+        : t('guestOrder.notFoundTitle')
+      : null;
   const [buyerPortalToken, setBuyerPortalToken] = useState<string | undefined>();
   const [sellerProfile, setSellerProfile] = useState<UserProfile | null>(null);
   const [sellerProfilePeerID, setSellerProfilePeerID] = useState<string | undefined>(undefined);
   const guestStatusCfg = useMemo(() => getGuestStatusConfig(t), [t]);
-  const { orderKind } = useGuestOrderKind(order, { buyerPortalToken });
+  const { orderKind } = useGuestOrderKind(order ?? null, { buyerPortalToken });
 
   // Keep the recovery token out of Referer headers even for legacy query-link
   // visits, then strip it from the visible URL after local recovery.
@@ -142,30 +151,6 @@ export default function GuestOrderPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setBuyerPortalToken(token);
   }, [orderToken]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const poll = () => {
-      if (!orderToken || cancelled) return;
-      getGuestOrderStatus(orderToken)
-        .then(res => {
-          if (!cancelled) {
-            setOrder(res);
-            setError(null);
-          }
-        })
-        .catch(err => {
-          if (!cancelled && !order)
-            setError(err instanceof Error ? err.message : t('guestOrder.notFoundTitle'));
-        });
-    };
-    poll();
-    const interval = setInterval(poll, 15000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [orderToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sellerPeerID = useMemo(() => (order ? resolveSellerPeerID(order) : undefined), [order]);
 

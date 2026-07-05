@@ -65,10 +65,10 @@ Guest Checkout is the first shared vertical slice. Its public boundary is delibe
 CommerceGuestCheckoutPort -> workflow reducer / React hook -> host-rendered view
 ```
 
-The port owns only settings and order creation. Hosts provide their concrete API adapter and retain
-route ownership, cart and address collection, inventory or supply validation, encryption, payment
-policy, order-status polling and navigation. This keeps richer applications from losing behavior
-while allowing smaller applications to use `GuestCheckoutPanel` directly:
+The checkout port owns only settings and order creation. Hosts provide their concrete API adapter
+and retain route ownership, cart and address collection, inventory or supply validation, encryption,
+payment policy and navigation. This keeps richer applications from losing behavior while allowing
+smaller applications to use `GuestCheckoutPanel` directly:
 
 ```tsx
 import { createGuestCheckoutPort } from '@mobazha/commerce-kit/checkout';
@@ -81,6 +81,19 @@ const guestCheckout = createGuestCheckoutPort(httpClient, {
 
 <GuestCheckoutPanel port={guestCheckout} items={items} labels={labels} />;
 ```
+
+The buyer-status continuation is a second bounded contract, not a shared page:
+
+```text
+CommerceGuestOrderStatusPort -> normalized wire state -> cancellable polling lifecycle
+                             -> host-rendered buyer portal
+```
+
+`useGuestOrderStatus` preserves the last usable order across transient refresh failures, forwards
+request cancellation and stops polling at `COMPLETED`, `EXPIRED` and `CANCELLED`. Unified and the
+downstream sovereign shell consume this lifecycle while retaining their own route, recovery-token
+storage, copy, payment presentation, digital delivery, tracking and branding. Non-React consumers
+can use the exported reducer and `shouldPollCommerceGuestOrder` directly.
 
 The root and `/checkout` exports are server-safe contracts. Interactive React surfaces use explicit
 client entrypoints such as `/checkout/client`, `/product`, `/cart` and `/admin` so packed consumers

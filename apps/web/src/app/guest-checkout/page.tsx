@@ -12,10 +12,7 @@ import {
 } from '@mobazha/core';
 import { useGuestCartStore, type GuestCartItem } from '@mobazha/core/stores';
 import { renderPairedPrice } from '@mobazha/core/services/currencyService';
-import {
-  buyerPortalTokenStorageKey,
-  getGuestOrderStatus,
-} from '@mobazha/core/services/api/guestCheckout';
+import { buyerPortalTokenStorageKey } from '@mobazha/core/services/api/guestCheckout';
 import { resolveGuestOrderCreationError } from '@mobazha/core/utils/guestSupplyQuote';
 import { useGuestSupplyQuote } from '@mobazha/core/hooks/useGuestSupplyQuote';
 import { isSovereignMode } from '@mobazha/core/config/env';
@@ -44,8 +41,12 @@ import type {
   CommerceGuestOrderRequest,
   CommerceGuestOrderResponse,
 } from '@mobazha/commerce-kit/checkout';
-import { useGuestCheckoutWorkflow } from '@mobazha/commerce-kit/checkout/client';
-import { commerceGuestCheckoutPort } from './commerceGuestCheckoutPort';
+import { commerceGuestOrderFromLifecycle } from '@mobazha/commerce-kit/checkout';
+import {
+  useGuestCheckoutWorkflow,
+  useGuestOrderStatus,
+} from '@mobazha/commerce-kit/checkout/client';
+import { commerceGuestCheckoutPort, commerceGuestOrderStatusPort } from '@/lib/commerce/guestPorts';
 
 type Step = 'cart' | 'shipping' | 'coin' | 'payment';
 
@@ -144,6 +145,17 @@ export default function GuestCheckoutPage() {
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const checkoutWorkflow = useGuestCheckoutWorkflow(commerceGuestCheckoutPort);
+  const pendingOrder =
+    checkoutWorkflow.state.status === 'awaiting-payment' ? checkoutWorkflow.state.order : undefined;
+  const guestOrderLifecycle = useGuestOrderStatus(
+    commerceGuestOrderStatusPort,
+    pendingOrder?.orderToken,
+    { pollIntervalMs: 10_000 }
+  );
+  const trackedGuestOrder = commerceGuestOrderFromLifecycle(
+    guestOrderLifecycle.state,
+    pendingOrder?.orderToken
+  );
   const supplyQuote = useGuestSupplyQuote(items, items.length > 0);
 
   // PM-3a: fetch vendor PGP public key for client-side address encryption.
@@ -204,28 +216,12 @@ export default function GuestCheckoutPage() {
     };
   }, []);
 
-  // Poll order status when in 'awaiting' state. Auto-navigate to the order
-  // status page as soon as the payment is detected or confirmed.
+  // Auto-navigate once the shared status lifecycle observes payment.
   useEffect(() => {
-    if (checkoutWorkflow.state.status !== 'awaiting-payment') return;
-    const { orderToken, buyerPortalToken } = checkoutWorkflow.state.order;
-    let cancelled = false;
-    const interval = setInterval(() => {
-      if (cancelled) return;
-      getGuestOrderStatus(orderToken)
-        .then(res => {
-          if (cancelled) return;
-          if (res.state !== 'AWAITING_PAYMENT') {
-            router.push(buildGuestOrderUrl(orderToken, buyerPortalToken));
-          }
-        })
-        .catch(() => {});
-    }, 10000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [checkoutWorkflow.state, router]);
+    if (!pendingOrder || !trackedGuestOrder || trackedGuestOrder.state === 'AWAITING_PAYMENT')
+      return;
+    router.push(buildGuestOrderUrl(pendingOrder.orderToken, pendingOrder.buyerPortalToken));
+  }, [pendingOrder, router, trackedGuestOrder]);
 
   const submitGuestOrder = useCallback(
     async (coin: string) => {

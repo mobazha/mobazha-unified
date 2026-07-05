@@ -3,6 +3,7 @@ import {
   completeGuestOrder,
   createGuestOrder,
   getGuestCheckoutSettings,
+  getGuestOrderStatusWire,
   normalizeGuestOrderStatus,
   quoteGuestOrderSupply,
   shipGuestOrder,
@@ -157,6 +158,18 @@ describe('guest order mutations', () => {
     expect(anonymousGet).toHaveBeenCalledWith('/settings/guest-checkout', {
       signal: controller.signal,
     });
+  });
+
+  it('forwards public status cancellation without applying app presentation policy', async () => {
+    vi.mocked(anonymousGet).mockResolvedValue(statusDto);
+    const controller = new AbortController();
+
+    const result = await getGuestOrderStatusWire('order/token', { signal: controller.signal });
+
+    expect(anonymousGet).toHaveBeenCalledWith('/guest/orders/order%2Ftoken', {
+      signal: controller.signal,
+    });
+    expect(result).toBe(statusDto);
   });
 
   it('refetches status after ship returns 204', async () => {
