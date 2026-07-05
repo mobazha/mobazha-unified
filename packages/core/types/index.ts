@@ -523,6 +523,10 @@ export type {
   PublicDealPromotionLink,
   StoredDealAttributionClaim,
 } from './dealPromotion';
+export type {
+  DealCommissionStatement,
+  DealCommissionStatementAudience,
+} from './dealCommissionStatement';
 
 export type { SellerDealLink } from './sellerDealLink';
 

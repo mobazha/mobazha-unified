@@ -425,6 +425,10 @@ export const HOSTING_API = {
   PUBLIC_DEAL_PROMOTION_LINKS_CLAIMS: (token: string) =>
     `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}/claims`,
 
+  // --- Deal Link provisional commission statements (read-only evidence) ---
+  DEAL_COMMISSION_STATEMENTS_SELLER: '/platform/v1/deal-commission-statements/seller',
+  DEAL_COMMISSION_STATEMENTS_PROMOTER: '/platform/v1/deal-commission-statements/promoter',
+
   // --- Auth ---
   AUTH_SIGNIN: '/platform/v1/auth/signin',
   AUTH_TELEGRAM_SIGNIN: '/platform/v1/auth/telegram/signin',

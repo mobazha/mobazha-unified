@@ -27,6 +27,7 @@ export * from './useDealLinkCheckout';
 export * from './useDealPromotionPrograms';
 export * from './useDealPromotionLink';
 export * from './useDealAttributionClaim';
+export * from './useDealCommissionStatements';
 
 // 用户资料相关
 export * from './useProfile';

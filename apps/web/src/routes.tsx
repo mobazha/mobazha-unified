@@ -202,6 +202,10 @@ if (!__SOVEREIGN__) {
       element: lazyPage(() => import('./app/promo/[token]/page')),
     },
     {
+      path: '/promote/commissions',
+      element: lazyPage(() => import('./app/promote/commissions/page')),
+    },
+    {
       path: '/promote/:programId',
       element: lazyPage(() => import('./app/promote/[programId]/page')),
     },
@@ -674,6 +678,10 @@ if (__SOVEREIGN__) {
     {
       path: '/promo/:token',
       element: lazyPage(() => import('./app/promo/[token]/page')),
+    },
+    {
+      path: '/promote/commissions',
+      element: lazyPage(() => import('./app/promote/commissions/page')),
     },
     {
       path: '/promote/:programId',

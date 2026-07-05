@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { ProvisionalCommissionStatementsPanel } from '@/components/DealCommission/ProvisionalCommissionStatementsPanel';
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'success' | 'warning'> =
   {
@@ -372,6 +373,8 @@ export default function AdminDealLinksPage() {
           })}
         </CardContent>
       </Card>
+
+      <ProvisionalCommissionStatementsPanel audience="seller" />
     </div>
   );
 }

@@ -282,6 +282,18 @@ export {
   issueDealAttributionClaim,
 } from './dealPromotion';
 
+// Deal Link provisional commission statements (read-only evidence)
+export * as dealCommissionStatementApi from './dealCommissionStatement';
+export type {
+  DealCommissionStatement,
+  DealCommissionStatementAudience,
+} from '../../types/dealCommissionStatement';
+export {
+  listDealCommissionStatements,
+  listSellerDealCommissionStatements,
+  listPromoterDealCommissionStatements,
+} from './dealCommissionStatement';
+
 // Seller Deal Link API (authenticated hosting endpoints)
 export * as sellerDealLinkApi from './sellerDealLink';
 export type { SellerDealLink } from '../../types/sellerDealLink';

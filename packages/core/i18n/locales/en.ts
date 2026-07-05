@@ -9666,6 +9666,62 @@ export const en: TranslationResource = {
     attributionWindow: 'Attribution window',
     windowDaysValue: '{{count}} days',
     currency: 'Deal currency',
+    commissionsLinkTitle: 'Provisional commission observations',
+    commissionsLinkBody:
+      'Review attributed commission evidence recorded for your promotions. This is not a balance or payout schedule.',
+    commissionsLinkCta: 'View commission observations',
+    commissionsAuthRequired:
+      'Sign in to view provisional commission observations for your promotions.',
+  },
+
+  dealCommissionStatements: {
+    sellerTitle: 'Provisional seller-funded commissions',
+    sellerSubtitle:
+      'Observations of commission amounts your store may owe under active promotion programs.',
+    promoterTitle: 'Provisional attributed commissions',
+    promoterSubtitle: 'Observations of commission amounts attributed to your promotion activity.',
+    promoterPageTitle: 'Commission observations',
+    promoterPageSubtitle:
+      'Read-only evidence from Deal Link attribution. Not earnings, balances, or payout promises.',
+    disclosureTitle: 'Evidence only — not a payable balance',
+    disclosureBody:
+      'These entries record what Mobazha observed from attributed orders. They do not create withdrawable funds.',
+    notPayableNotice: 'Every entry is marked not payable. No automatic settlement is offered.',
+    manualReviewOnlyNotice:
+      'Settlement mode is manual review only. Mobazha may review evidence after the earliest review date, but review is never guaranteed.',
+    manualReviewOnlyTitle: 'Manual review only',
+    sellerEvidenceBody:
+      'You declared seller-funded commission budgets. This observation does not authorize payout or withdrawal.',
+    promoterEvidenceBody:
+      'This observation reflects attribution evidence only. Acceptance or recording does not guarantee payment.',
+    notPayableBadge: 'Not payable',
+    loading: 'Loading commission observations…',
+    loadFailed: 'Could not load commission observations.',
+    retry: 'Try again',
+    refresh: 'Refresh',
+    empty: 'No provisional commission observations yet.',
+    entryTitle: 'Order {{orderRef}}',
+    observedAt: 'Observed {{date}}',
+    proposedCommission: 'Proposed commission',
+    commissionBase: 'Commission base',
+    commissionRate: 'Rate',
+    commissionRateValue: '{{percent}}%',
+    settlementMode: 'Settlement',
+    settlementManualReview: 'Manual review only',
+    fundingSource: 'Declared funding source',
+    fundingSellerManualBudget: 'Seller-funded manual budget',
+    fundingUnknown: 'Seller-declared funding source',
+    reviewNotBefore: 'Earliest review eligibility',
+    reviewNotBeforeHint:
+      'Earliest date evidence may become eligible for review — not a payout date.',
+    reviewNotBeforeUnavailable: 'Not set',
+    programRef: 'Program',
+    dealLinkRef: 'Deal Link',
+    statusObserved: 'Observed',
+    statusPendingReview: 'Pending review',
+    statusUnknown: '{{status}}',
+    missingCurrency: 'Currency unavailable',
+    invalidAmount: 'Amount unavailable',
   },
 };
 

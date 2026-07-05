@@ -5,9 +5,10 @@
 
 import React, { useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Copy, Loader2, Share2 } from 'lucide-react';
+import { Copy, Loader2, Share2, ScrollText } from 'lucide-react';
 import {
   buildDealPromotionEntryHref,
+  buildPromoterCommissionsHref,
   formatAttributionWindowDays,
   formatCommissionRateFromBPS,
   setLoginRedirectPath,
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { copyToClipboard } from '@/lib/clipboard';
+import Link from 'next/link';
 
 export default function PromoteProgramPage() {
   const params = useParams<{ programId: string }>();
@@ -182,6 +184,21 @@ export default function PromoteProgramPage() {
               </div>
             </>
           ) : null}
+        </CardContent>
+      </Card>
+
+      <Card data-testid="promote-commissions-link-card">
+        <CardHeader>
+          <CardTitle className="text-base">{t('promote.commissionsLinkTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">{t('promote.commissionsLinkBody')}</p>
+          <Button type="button" variant="outline" className="min-h-11" asChild>
+            <Link href={buildPromoterCommissionsHref()} data-testid="promote-commissions-link">
+              <ScrollText className="mr-2 h-4 w-4" aria-hidden="true" />
+              {t('promote.commissionsLinkCta')}
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

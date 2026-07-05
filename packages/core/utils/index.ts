@@ -84,6 +84,7 @@ export * from './guestOrderKind';
 export * from './guestSupplyQuote';
 export * from './dealLink';
 export * from './dealPromotion';
+export * from './dealCommissionStatement';
 export * from './sellerDealLink';
 export * from './paymentSelectionQuote';
 export * from './productSupplyDisplay';

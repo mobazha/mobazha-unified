@@ -5818,6 +5818,53 @@ export interface TranslationResource {
     attributionWindow?: string;
     windowDaysValue?: string;
     currency?: string;
+    commissionsLinkTitle?: string;
+    commissionsLinkBody?: string;
+    commissionsLinkCta?: string;
+    commissionsAuthRequired?: string;
+  };
+
+  dealCommissionStatements?: {
+    sellerTitle?: string;
+    sellerSubtitle?: string;
+    promoterTitle?: string;
+    promoterSubtitle?: string;
+    promoterPageTitle?: string;
+    promoterPageSubtitle?: string;
+    disclosureTitle?: string;
+    disclosureBody?: string;
+    notPayableNotice?: string;
+    manualReviewOnlyNotice?: string;
+    manualReviewOnlyTitle?: string;
+    sellerEvidenceBody?: string;
+    promoterEvidenceBody?: string;
+    notPayableBadge?: string;
+    loading?: string;
+    loadFailed?: string;
+    retry?: string;
+    refresh?: string;
+    empty?: string;
+    entryTitle?: string;
+    observedAt?: string;
+    proposedCommission?: string;
+    commissionBase?: string;
+    commissionRate?: string;
+    commissionRateValue?: string;
+    settlementMode?: string;
+    settlementManualReview?: string;
+    fundingSource?: string;
+    fundingSellerManualBudget?: string;
+    fundingUnknown?: string;
+    reviewNotBefore?: string;
+    reviewNotBeforeHint?: string;
+    reviewNotBeforeUnavailable?: string;
+    programRef?: string;
+    dealLinkRef?: string;
+    statusObserved?: string;
+    statusPendingReview?: string;
+    statusUnknown?: string;
+    missingCurrency?: string;
+    invalidAmount?: string;
   };
 
   // Digital asset shared labels (Supply Chain Phase 1.0)
