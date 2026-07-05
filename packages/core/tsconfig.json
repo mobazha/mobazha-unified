@@ -2,12 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "../",
     "baseUrl": ".",
     "incremental": false,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@mobazha/commerce-kit": ["../commerce-kit/src/index.ts"],
+      "@mobazha/commerce-kit/*": ["../commerce-kit/src/*"]
     }
   },
   "include": [

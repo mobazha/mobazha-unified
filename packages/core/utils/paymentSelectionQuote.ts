@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 import type { Order } from '../types/order';
 import type { PaymentSelectionQuote } from '../types/paymentSelectionQuote';
 import type { PaymentSession } from '../types/paymentSession';

@@ -1,6 +1,14 @@
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@mobazha/commerce-kit/composition': fileURLToPath(
+        new URL('../commerce-kit/src/composition.ts', import.meta.url)
+      ),
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

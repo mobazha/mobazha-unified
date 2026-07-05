@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 fengzie and the respective contributors.
+
 // @vitest-environment jsdom
 
 import { describe, expect, it, beforeEach } from 'vitest';
