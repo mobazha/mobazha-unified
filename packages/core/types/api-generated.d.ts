@@ -246,6 +246,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/admin/deal-commission-entries/{id}/review-eligibility': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Evaluate a provisional Deal commission against authoritative order and risk evidence */
+    post: operations['admin-deal-commission-eligibility-review'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/admin/exchange-rates/config': {
     parameters: {
       query?: never;
@@ -10139,6 +10156,20 @@ export interface components {
       shipTo?: string;
       state?: string;
     };
+    Platform_DealCommissionEligibilityReviewRequest: {
+      /**
+       * @description Required operator finding for related-account risk
+       * @enum {string}
+       */
+      relatedAccountCheck: 'clear' | 'related_account';
+      /** @description Optional audit note; do not include secrets */
+      reviewNote?: string;
+      /**
+       * @description Required operator finding for test-order risk
+       * @enum {string}
+       */
+      testOrderCheck: 'clear' | 'test_order';
+    };
     Platform_DealLinkRequest: {
       deliveryType: string;
       description?: string;
@@ -11871,6 +11902,43 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-deal-commission-eligibility-review': {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_DealCommissionEligibilityReviewRequest'];
+      };
+    };
     responses: {
       /** @description OK */
       200: {

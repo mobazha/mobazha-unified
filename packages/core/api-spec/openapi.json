@@ -641,6 +641,68 @@
         "tags": ["admin"]
       }
     },
+    "/platform/v1/admin/deal-commission-entries/{id}/review-eligibility": {
+      "post": {
+        "operationId": "admin-deal-commission-eligibility-review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Platform_DealCommissionEligibilityReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Evaluate a provisional Deal commission against authoritative order and risk evidence",
+        "tags": ["deal-attribution"]
+      }
+    },
     "/platform/v1/admin/exchange-rates/config": {
       "get": {
         "operationId": "admin-get-exchange-rate-config",
@@ -35050,6 +35112,28 @@
           }
         },
         "required": ["feeQuoteID"],
+        "type": "object"
+      },
+      "Platform_DealCommissionEligibilityReviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "relatedAccountCheck": {
+            "description": "Required operator finding for related-account risk",
+            "enum": ["clear", "related_account"],
+            "type": "string"
+          },
+          "reviewNote": {
+            "description": "Optional audit note; do not include secrets",
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "testOrderCheck": {
+            "description": "Required operator finding for test-order risk",
+            "enum": ["clear", "test_order"],
+            "type": "string"
+          }
+        },
+        "required": ["testOrderCheck", "relatedAccountCheck"],
         "type": "object"
       },
       "Platform_DealLinkRequest": {
