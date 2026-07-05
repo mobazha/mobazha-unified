@@ -21,6 +21,7 @@ export const HOSTING_API_PATHS = {
   ACCOUNTS_UNLINK: '/platform/v1/accounts/unlink',
   ADMIN_AI_CONFIG: '/platform/v1/admin/ai/config',
   ADMIN_CONFIG: '/platform/v1/admin/config',
+  ADMIN_DEAL_COMMISSION_ENTRIES: '/platform/v1/admin/deal-commission-entries',
   ADMIN_DEAL_COMMISSION_ENTRIES_REVIEW_ELIGIBILITY: (id: string) =>
     `/platform/v1/admin/deal-commission-entries/${encodeURIComponent(id)}/review-eligibility`,
   ADMIN_EXCHANGE_RATES_CONFIG: '/platform/v1/admin/exchange-rates/config',

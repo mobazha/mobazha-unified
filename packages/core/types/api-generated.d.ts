@@ -246,6 +246,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/admin/deal-commission-entries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List provisional Deal commissions awaiting operator review */
+    get: operations['admin-deal-commission-entries-list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/admin/deal-commission-entries/{id}/review-eligibility': {
     parameters: {
       query?: never;
@@ -11897,6 +11914,44 @@ export interface operations {
   'admin-get-config': {
     parameters: {
       query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'admin-deal-commission-entries-list': {
+    parameters: {
+      query?: {
+        /** @description Queue status; defaults to observed. */
+        status?: 'observed' | 'pending_review' | 'disputed' | 'reversed' | 'all';
+        /** @description Review hold state; defaults to all. */
+        readiness?: 'all' | 'ready' | 'holding';
+        /** @description Page size (default 50, max 100). */
+        limit?: number;
+        /** @description Pagination offset. */
+        offset?: number;
+      };
       header?: never;
       path?: never;
       cookie?: never;

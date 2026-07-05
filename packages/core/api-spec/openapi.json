@@ -641,6 +641,86 @@
         "tags": ["admin"]
       }
     },
+    "/platform/v1/admin/deal-commission-entries": {
+      "get": {
+        "operationId": "admin-deal-commission-entries-list",
+        "parameters": [
+          {
+            "description": "Queue status; defaults to observed.",
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "description": "Queue status; defaults to observed.",
+              "enum": ["observed", "pending_review", "disputed", "reversed", "all"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Review hold state; defaults to all.",
+            "explode": false,
+            "in": "query",
+            "name": "readiness",
+            "schema": {
+              "description": "Review hold state; defaults to all.",
+              "enum": ["all", "ready", "holding"],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size (default 50, max 100).",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "description": "Page size (default 50, max 100).",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination offset.",
+            "explode": false,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "description": "Pagination offset.",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Success envelope inner data."
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Platform_EnvelopeError"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List provisional Deal commissions awaiting operator review",
+        "tags": ["deal-attribution"]
+      }
+    },
     "/platform/v1/admin/deal-commission-entries/{id}/review-eligibility": {
       "post": {
         "operationId": "admin-deal-commission-eligibility-review",
