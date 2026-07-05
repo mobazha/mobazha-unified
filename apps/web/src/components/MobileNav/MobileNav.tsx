@@ -201,6 +201,7 @@ const HIDE_NAV_PATTERNS = [
   /^\/checkout/, // 结账页面（有自己的底部支付栏）
   /^\/payment/, // 支付页面（有自己的底部支付栏）
   /^\/product\/[^/]+$/, // 商品详情页（有自己的底部操作栏）
+  /^\/deal\/[^/]+$/, // Deal Link 页面（有自己的底部 CTA）
   /^\/listing\//, // 商品创建/编辑页面（有自己的底部步骤栏）
   /^\/admin(\/|$)/, // 管理后台（有自己的底部 Tab）
 ];
@@ -220,7 +221,8 @@ export const MobileNav: React.FC = () => {
 
   const userAvatarUrl = getImageUrl(profile?.avatarHashes?.small);
 
-  const baseItems = typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? sovereignNavItems : navItems;
+  const baseItems =
+    typeof __SOVEREIGN__ !== 'undefined' && __SOVEREIGN__ ? sovereignNavItems : navItems;
   const filteredNavItems = baseItems.filter(item => {
     if (!isAuthenticated) {
       return !AUTH_REQUIRED_LABEL_KEYS.includes(item.labelKey);

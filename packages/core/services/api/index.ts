@@ -252,6 +252,16 @@ export { resolveStoreShortCode } from './salesChannels';
 // Guest Checkout API
 export * as guestCheckoutApi from './guestCheckout';
 
+// Deal Link API (buyer-facing public hosting endpoints)
+export * as dealLinkApi from './dealLink';
+export type {
+  PublicDealLink,
+  DealLinkFeeQuote,
+  DealLinkAcceptanceRequest,
+  DealLinkAcceptanceResult,
+} from '../../types/dealLink';
+export { getPublicDealLink, createDealLinkFeeQuote, acceptPublicDealLink } from './dealLink';
+
 // Store payment policy API
 export * as paymentPolicyApi from './paymentPolicy';
 export type { StorePaymentPolicy, UtxoConfirmationPolicy } from './paymentPolicy';

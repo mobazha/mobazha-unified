@@ -39,6 +39,9 @@ export const PUBLIC_ROUTES = [
   // Collectibles Hub（目录与凭证详情公开；redemptions/redeem/ops 受保护）
   '/collectibles',
   '/collectibles/:mint',
+
+  // Deal Link（公开浏览，接受时才需要登录）
+  '/deal/:token',
 ] as const;
 
 /**

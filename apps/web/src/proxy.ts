@@ -144,6 +144,14 @@ function isPublicRoute(pathname: string): boolean {
     }
   }
 
+  // 特殊处理 /deal/:token（公开 Deal Link 浏览）
+  if (pathname.startsWith('/deal/')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 2 && segments[0] === 'deal') {
+      return true;
+    }
+  }
+
   return false;
 }
 

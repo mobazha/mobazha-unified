@@ -5685,6 +5685,55 @@ export interface TranslationResource {
   // Sovereign-specific shared labels.
   sovereign?: TranslationSection;
 
+  dealLink?: {
+    pageEyebrow?: string;
+    loading?: string;
+    notFoundTitle?: string;
+    notFoundDescription?: string;
+    expiredTitle?: string;
+    expiredDescription?: string;
+    inactiveTitle?: string;
+    inactiveDescription?: string;
+    errorTitle?: string;
+    errorDescription?: string;
+    networkErrorTitle?: string;
+    networkErrorDescription?: string;
+    quoteErrorTitle?: string;
+    quoteErrorDescription?: string;
+    retry?: string;
+    sellerFallback?: string;
+    termsTitle?: string;
+    acceptanceWindow?: string;
+    protectionWindow?: string;
+    windowDays?: string;
+    windowUnavailable?: string;
+    termsDefault?: string;
+    deliverables?: string;
+    refundTerms?: string;
+    refund?: Record<string, string | undefined>;
+    feeBreakdownTitle?: string;
+    feeBreakdownHint?: string;
+    feeLine?: {
+      itemOrServiceAmount?: string;
+      buyerServiceCharge?: string;
+      paymentOrNetworkCost?: string;
+      taxOrExternalCost?: string;
+      discount?: string;
+    };
+    buyerTotal?: string;
+    quoteExpiryLabel?: string;
+    countdownExpired?: string;
+    countdownValue?: string;
+    paymentNeutralTitle?: string;
+    paymentNeutralBody?: string;
+    acceptCta?: string;
+    accepting?: string;
+    acceptFailed?: string;
+    authRequiredHint?: string;
+    sameCurrencyNotice?: string;
+    deliveryType?: Record<string, string | undefined>;
+  };
+
   // Digital asset shared labels (Supply Chain Phase 1.0)
   digital?: TranslationSection;
 }

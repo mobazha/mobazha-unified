@@ -21,6 +21,7 @@ export * from './useGuestDigitalDelivery';
 export * from './useGuestOrderKind';
 export * from './useGuestSupplyQuote';
 export * from './useCheckoutSupplyQuote';
+export * from './useDealLinkCheckout';
 
 // 用户资料相关
 export * from './useProfile';

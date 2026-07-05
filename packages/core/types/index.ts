@@ -497,6 +497,19 @@ export type {
   MarketplaceAttributionSummary,
 } from './marketplace';
 
+export type {
+  DealLinkAcceptanceRequest,
+  DealLinkAcceptanceResult,
+  DealLinkDeliveryType,
+  DealLinkFeeQuote,
+  DealLinkPageErrorKind,
+  DealLinkPurchaseOption,
+  DealLinkPurchaseTemplate,
+  DealLinkStatus,
+  DealLinkTerms,
+  PublicDealLink,
+} from './dealLink';
+
 // Digital asset types (Supply Chain Phase 1.0 — Core MVP)
 export type {
   DigitalAssetType,

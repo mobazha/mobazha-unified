@@ -193,6 +193,10 @@ if (!__SOVEREIGN__) {
       path: '/guest-order/:orderToken',
       element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
     },
+    {
+      path: '/deal/:token',
+      element: lazyPage(() => import('./app/deal/[token]/page')),
+    },
 
     // 结账流程
     {
@@ -653,6 +657,10 @@ if (__SOVEREIGN__) {
     {
       path: '/guest-order/:orderToken',
       element: lazyPage(() => import('./app/guest-order/[orderToken]/page')),
+    },
+    {
+      path: '/deal/:token',
+      element: lazyPage(() => import('./app/deal/[token]/page')),
     },
 
     // Track Order (buyer entry point)
