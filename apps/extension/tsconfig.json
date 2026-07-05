@@ -17,6 +17,13 @@
       "@/*": ["../web/src/*"],
       "@mobazha/core": ["../../packages/core/index.ts"],
       "@mobazha/core/*": ["../../packages/core/*"],
+      "@mobazha/commerce-kit": ["../../packages/commerce-kit/src/index.ts"],
+      "@mobazha/commerce-kit/cart": ["../../packages/commerce-kit/src/cart/index.tsx"],
+      "@mobazha/commerce-kit/product": ["../../packages/commerce-kit/src/product/index.tsx"],
+      "@mobazha/commerce-kit/*": [
+        "../../packages/commerce-kit/src/*/index.ts",
+        "../../packages/commerce-kit/src/*"
+      ],
       "@mobazha/ui": ["../../packages/ui/index.ts"],
       "@mobazha/ui/*": ["../../packages/ui/*"],
       "next/link": ["../web/src/compat/link.tsx"],
