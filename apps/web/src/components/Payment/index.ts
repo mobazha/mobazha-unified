@@ -29,4 +29,5 @@ export { TronGasHint } from './TronGasHint';
 export { ExternalWalletPayment } from './ExternalWalletPayment';
 export type { ExternalWalletPaymentInfo } from './ExternalWalletPayment';
 export { PaymentRefundSection } from './PaymentRefundSection';
+export { PaymentSelectionQuoteReview } from './PaymentSelectionQuoteReview';
 export { ConfirmationProgress } from './ConfirmationProgress';

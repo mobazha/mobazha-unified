@@ -14,6 +14,7 @@ export {
 export type { ParsedDisputeCloseDetails } from './orderTransform';
 export type { CancellationSourceContract, CancellationSourceData } from './orderTransform';
 export { applyPaymentSessionToDisplayOrder, isDirectPaymentOrder } from './paymentSessionDisplay';
+export { paymentSessionToFiatSession } from './paymentSessionFiat';
 export type { DirectPaymentOrderSignals } from './paymentSessionDisplay';
 export { formatMinimalUnitAmountString, formatMinimalUnitExactAmountString } from './minimalUnit';
 export { caseDetailToOrder } from './caseToOrder';

@@ -83,6 +83,7 @@ export * from './guestOrderKind';
 // Guest checkout supply availability quote helpers
 export * from './guestSupplyQuote';
 export * from './dealLink';
+export * from './paymentSelectionQuote';
 export * from './productSupplyDisplay';
 export * from './bulkProductSupplyActions';
 

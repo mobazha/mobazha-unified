@@ -502,6 +502,11 @@ export interface OrderOpen {
   alternateContactInfo?: string;
   // 定价币种
   pricingCoin?: string;
+  // Deal Link acceptance linkage (present on Deal-backed orders)
+  feeQuoteID?: string;
+  dealLinkID?: string;
+  dealRevision?: number;
+  termsHash?: string;
   // 金额
   amount?: number;
   // 商品列表（包含签名）

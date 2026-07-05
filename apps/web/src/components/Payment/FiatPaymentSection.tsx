@@ -3,8 +3,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useI18n, useFiatPayment } from '@mobazha/core';
-import type { FiatProviderID, CreateFiatPaymentParams } from '@mobazha/core';
+import { useI18n, useFiatPayment, useQuotedFiatPayment } from '@mobazha/core';
+import type {
+  FiatProviderID,
+  CreateFiatPaymentParams,
+  CreateQuotedFiatPaymentSessionParams,
+} from '@mobazha/core';
 import { StripePaymentForm } from './StripePaymentForm';
 import type { FiatPaymentSuccessResult } from './StripePaymentForm';
 import { PayPalPaymentForm } from './PayPalPaymentForm';
@@ -22,6 +26,11 @@ export interface FiatPaymentSectionProps {
   onPaymentError?: (message: string) => void;
   /** When false, defers provider session creation until seller receipt is ready. */
   canCreateSession?: boolean;
+  /** Deal-backed orders: provision via POST /orders/{id}/payment-session with quote id. */
+  dealPaymentSessionRequest?: Omit<
+    CreateQuotedFiatPaymentSessionParams,
+    'orderId' | 'vendorPeerID'
+  >;
   disabled?: boolean;
   className?: string;
 }
@@ -38,11 +47,22 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
   onPaymentSuccess,
   onPaymentError,
   canCreateSession = true,
+  dealPaymentSessionRequest,
   disabled = false,
   className,
 }) => {
   const { t } = useI18n();
-  const { createSession, session, status, error, reset } = useFiatPayment();
+  const { createSession, session: fiatHookSession, status, error, reset } = useFiatPayment();
+  const {
+    createSession: createQuotedSession,
+    session: dealSession,
+    status: dealSessionStatus,
+    error: dealSessionError,
+    reset: resetQuotedSession,
+  } = useQuotedFiatPayment();
+  const session = dealPaymentSessionRequest ? dealSession : fiatHookSession;
+  const effectiveStatus = dealPaymentSessionRequest ? dealSessionStatus : status;
+  const effectiveError = dealPaymentSessionRequest ? dealSessionError : error;
   const [paymentDone, setPaymentDone] = useState(false);
   const [paymentError, setPaymentError] = useState<string>();
   const createdRef = useRef(false);
@@ -52,6 +72,17 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     if (createdRef.current || !canCreateSession || !orderID || !providerID || !vendorPeerID) {
       return;
     }
+
+    if (dealPaymentSessionRequest) {
+      createdRef.current = true;
+      void createQuotedSession({
+        orderId: orderID,
+        vendorPeerID,
+        ...dealPaymentSessionRequest,
+      });
+      return;
+    }
+
     createdRef.current = true;
     createSession(vendorPeerID, providerID as FiatProviderID, {
       providerID,
@@ -74,6 +105,8 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     createSession,
     canCreateSession,
     retryKey,
+    dealPaymentSessionRequest,
+    createQuotedSession,
   ]);
 
   const handleSuccess = useCallback(
@@ -97,8 +130,9 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     createdRef.current = false;
     setPaymentDone(false);
     setPaymentError(undefined);
+    resetQuotedSession();
     setRetryKey(k => k + 1);
-  }, [reset]);
+  }, [reset, resetQuotedSession]);
 
   if (paymentDone) {
     return (
@@ -110,8 +144,8 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     );
   }
 
-  const displayError = paymentError || error;
-  if (displayError || status === 'failed') {
+  const displayError = paymentError || (effectiveError ? t('fiat.failed') : null);
+  if (displayError || effectiveStatus === 'failed') {
     return (
       <div className={cn('flex flex-col items-center justify-center py-6 gap-3', className)}>
         <AlertCircle className="w-10 h-10 text-destructive" />
@@ -133,7 +167,7 @@ export const FiatPaymentSection: React.FC<FiatPaymentSectionProps> = ({
     );
   }
 
-  if (status === 'pending' && session) {
+  if (effectiveStatus === 'pending' && session) {
     return (
       <div className={className}>
         {providerID === 'stripe' && session.stripe && (

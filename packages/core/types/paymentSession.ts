@@ -64,6 +64,8 @@ export interface PaymentSessionObservation {
 export interface PaymentSession {
   sessionID: string;
   orderID: string;
+  /** Deal payment-selection quote used to derive authoritative amounts. */
+  paymentSelectionQuoteID?: string;
   paymentCoin: string;
   settlementMode: PaymentSessionSettlementMode;
   productMode: PaymentSessionProductMode;

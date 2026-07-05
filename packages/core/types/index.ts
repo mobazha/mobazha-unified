@@ -150,6 +150,8 @@ export type {
   PaymentReadinessStatus,
 } from './paymentSession';
 
+export type { PaymentSelectionQuote } from './paymentSelectionQuote';
+
 // Wallet types
 export type {
   WalletBalance,

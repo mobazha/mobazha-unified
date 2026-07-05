@@ -11,6 +11,7 @@ import {
   FiatPaymentSection,
   ExternalWalletPayment,
   PaymentRefundSection,
+  PaymentSelectionQuoteReview,
 } from '@/components/Payment';
 import type {
   PaymentStep,
@@ -62,6 +63,11 @@ import {
   hasAuthoritativeCollectibleTitleMetadata,
   parseCollectibleListingMetadata,
   normalizeOrderOpenListings,
+  isDealBackedOrder,
+  usePaymentSelectionQuote,
+  buildCanonicalFiatPaymentCoin,
+  resolveCheckoutCanonicalPaymentCoin,
+  isPaymentSelectionQuoteProvisioned,
   type WebSocketMessage,
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
@@ -153,15 +159,6 @@ function formatExternalPaymentAmountForSummary(info: ExternalWalletPaymentInfo):
     return info.amount.replace(/\.?0+$/, '') || '0';
   }
   return formatCryptoAmountForSummary(info.amount, info.decimals ?? 8);
-}
-
-function buildFiatPaymentCoin(providerID: string, currency: string): string {
-  const provider = (providerID || '').trim().toLowerCase();
-  const resolvedCurrency = (currency || '').trim().toUpperCase() || 'USD';
-  if (!provider) {
-    throw new Error('fiat provider is required');
-  }
-  return `fiat:${provider}:${resolvedCurrency}`;
 }
 
 function externalWalletInfoFromSession(
@@ -396,6 +393,53 @@ export default function PaymentPage() {
     return getTokenById(tokenId)?.assetId?.trim() || tokenId;
   }, [visibleTokenId]);
 
+  const isDealBacked = useMemo(() => isDealBackedOrder(rawOrder), [rawOrder]);
+
+  const checkoutCanonicalPaymentCoin = useMemo(
+    () =>
+      resolveCheckoutCanonicalPaymentCoin({
+        tokenAssetId: selectedPaymentCoin || undefined,
+        fiatProviderID: visibleFiatProvider,
+        fiatCurrency: orderDetails?.currency,
+      }),
+    [selectedPaymentCoin, visibleFiatProvider, orderDetails?.currency]
+  );
+
+  const dealQuoteRequired =
+    isDealBacked && Boolean(orderID) && isPaymentOpenState(orderDetails?.status);
+  const paymentSelectionQuoteEnabled = dealQuoteRequired && Boolean(checkoutCanonicalPaymentCoin);
+
+  const {
+    quote: paymentSelectionQuote,
+    loading: paymentSelectionQuoteLoading,
+    error: paymentSelectionQuoteError,
+    expired: paymentSelectionQuoteExpired,
+    retry: retryPaymentSelectionQuote,
+    canUseQuote: canUsePaymentSelectionQuote,
+    paymentSelectionQuoteID: usablePaymentSelectionQuoteID,
+  } = usePaymentSelectionQuote({
+    enabled: paymentSelectionQuoteEnabled,
+    orderID: orderID ?? undefined,
+    paymentCoin: checkoutCanonicalPaymentCoin,
+    vendorPeerID: paymentVendorPeerID,
+    isDealBacked,
+  });
+
+  const paymentSelectionQuoteProvisioned = isPaymentSelectionQuoteProvisioned(
+    paymentSelectionQuote,
+    paymentSession
+  );
+  const paymentSelectionQuoteAuthorizesPayment =
+    canUsePaymentSelectionQuote || paymentSelectionQuoteProvisioned;
+  const paymentSelectionQuoteID = canUsePaymentSelectionQuote
+    ? usablePaymentSelectionQuoteID
+    : paymentSelectionQuoteProvisioned
+      ? paymentSelectionQuote?.id
+      : undefined;
+
+  const dealQuoteBlocksPayment =
+    dealQuoteRequired && (!checkoutCanonicalPaymentCoin || !paymentSelectionQuoteAuthorizesPayment);
+
   // 链类别检测与统一钱包状态
   const chainCategory = selectedPaymentCoin ? resolveChainCategory(selectedPaymentCoin) : null;
   const isRetiredPayment = isRetiredPaymentChain(selectedPaymentCoin);
@@ -487,7 +531,7 @@ export default function PaymentPage() {
   // 切换支付方式时清除外部钱包信息
   useEffect(() => {
     setExternalWalletInfo(null);
-  }, [visibleTokenId]);
+  }, [visibleTokenId, visibleFiatProvider]);
 
   // beforeunload: warn user when payment is in progress
   useEffect(() => {
@@ -1084,6 +1128,15 @@ export default function PaymentPage() {
       return;
     }
 
+    if (dealQuoteBlocksPayment) {
+      toast({
+        title: t('payment.selectionQuote.errorTitle'),
+        description: t('payment.selectionQuote.blockedHint'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setPaymentStep('confirming');
     setPaymentError(undefined);
     setSubmittedTxHash(undefined);
@@ -1101,6 +1154,7 @@ export default function PaymentPage() {
           moderator: moderatorPeerID,
           refundAddress: refundWalletAddress.trim() || undefined,
           payFromCustodial: payFromCustodial || undefined,
+          ...(paymentSelectionQuoteID ? { paymentSelectionQuoteID } : {}),
         });
         setPaymentSession(session);
 
@@ -1167,6 +1221,8 @@ export default function PaymentPage() {
     refundWalletAddress,
     saveRefundAsDefault,
     usesPaymentSessionFlow,
+    paymentSelectionQuoteID,
+    dealQuoteBlocksPayment,
     router,
     t,
     toast,
@@ -1441,28 +1497,89 @@ export default function PaymentPage() {
                         </CardContent>
                       </Card>
 
+                      {isDealBacked && paymentSelectionQuoteEnabled && (
+                        <PaymentSelectionQuoteReview
+                          quote={paymentSelectionQuote}
+                          loading={paymentSelectionQuoteLoading}
+                          error={paymentSelectionQuoteError}
+                          expired={paymentSelectionQuoteExpired}
+                          provisioned={paymentSelectionQuoteProvisioned}
+                          onRequote={() => void retryPaymentSelectionQuote()}
+                          requoteLoading={paymentSelectionQuoteLoading}
+                        />
+                      )}
+
                       {/* Fiat Payment Form (Stripe / PayPal) */}
-                      {visibleFiatProvider && isReadyToPay && (
+                      {visibleFiatProvider && isReadyToPay && !dealQuoteBlocksPayment && (
                         <Card>
                           <CardContent className="p-4 sm:p-6">
                             <FiatPaymentSection
+                              key={`${visibleFiatProvider}:${paymentSelectionQuoteID ?? 'legacy'}`}
                               providerID={visibleFiatProvider}
                               vendorPeerID={orderDetails.vendor.peerID}
                               orderID={orderDetails.orderID}
-                              amount={toMinimalUnit(orderDetails.total, orderDetails.currency)}
-                              currency={orderDetails.currency}
+                              amount={
+                                isDealBacked
+                                  ? 0
+                                  : toMinimalUnit(orderDetails.total, orderDetails.currency)
+                              }
+                              currency={
+                                isDealBacked && paymentSelectionQuote
+                                  ? paymentSelectionQuote.paymentCurrency
+                                  : orderDetails.currency
+                              }
                               description={orderDetails.items[0]?.title}
                               returnUrl={buildConfirmationUrl(orderDetails, {
                                 providerID: visibleFiatProvider,
-                                amount: toMinimalUnit(orderDetails.total, orderDetails.currency),
+                                ...(isDealBacked
+                                  ? {}
+                                  : {
+                                      amount: toMinimalUnit(
+                                        orderDetails.total,
+                                        orderDetails.currency
+                                      ),
+                                    }),
                               })}
-                              canCreateSession={isReadyToPay}
+                              canCreateSession={
+                                isDealBacked
+                                  ? isReadyToPay && paymentSelectionQuoteAuthorizesPayment
+                                  : isReadyToPay
+                              }
+                              dealPaymentSessionRequest={
+                                isDealBacked &&
+                                paymentSelectionQuoteID &&
+                                checkoutCanonicalPaymentCoin
+                                  ? {
+                                      paymentCoin: checkoutCanonicalPaymentCoin,
+                                      paymentSelectionQuoteID,
+                                      fiatDescription: orderDetails.items[0]?.title,
+                                      fiatReturnURL: buildConfirmationUrl(orderDetails, {
+                                        providerID: visibleFiatProvider,
+                                      }),
+                                      fiatCancelURL: buildConfirmationUrl(orderDetails, {
+                                        providerID: visibleFiatProvider,
+                                      }),
+                                    }
+                                  : undefined
+                              }
+                              disabled={dealQuoteBlocksPayment}
                               onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
+                                if (isDealBacked) {
+                                  router.push(
+                                    buildConfirmationUrl(orderDetails, {
+                                      providerID: result.providerID,
+                                    })
+                                  );
+                                  return;
+                                }
                                 try {
                                   const submitResult = await ordersApi.submitPayment({
                                     orderID: orderDetails.orderID,
                                     transactionID: result.transactionID,
-                                    coin: buildFiatPaymentCoin(result.providerID, result.currency),
+                                    coin: buildCanonicalFiatPaymentCoin(
+                                      result.providerID,
+                                      result.currency
+                                    ),
                                     amount: String(result.amount),
                                     timestamp: new Date().toISOString(),
                                     method: 5, // FIAT
@@ -1626,6 +1743,7 @@ export default function PaymentPage() {
                           isProcessing ||
                           paymentExpired ||
                           isPaymentBlocked ||
+                          dealQuoteBlocksPayment ||
                           isRetiredPayment ||
                           !visibleTokenId ||
                           !canProceedToPay ||
@@ -1737,6 +1855,7 @@ export default function PaymentPage() {
           disabled={
             paymentExpired ||
             isPaymentBlocked ||
+            dealQuoteBlocksPayment ||
             isRetiredPayment ||
             !visibleTokenId ||
             !canProceedToPay ||

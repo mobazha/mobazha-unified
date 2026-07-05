@@ -3,6 +3,7 @@
  */
 
 import type { Order, OrderListItem, PaymentSession } from '../../types';
+import type { PaymentSelectionQuote } from '../../types/paymentSelectionQuote';
 import type {
   CheckoutSupplyQuoteResponse,
   QuoteCheckoutSupplyRequest,
@@ -436,10 +437,67 @@ export interface CreateOrderPaymentSessionData {
   buyerPeerID?: string;
   payerAddress?: string;
   moderator?: string;
+  paymentSelectionQuoteID?: string;
   fiatAmountCents?: number;
   fiatDescription?: string;
   fiatReturnURL?: string;
   fiatCancelURL?: string;
+}
+
+export interface CreateOrderPaymentSelectionQuoteData {
+  orderId: string;
+  paymentCoin: string;
+  vendorPeerID?: string;
+}
+
+export async function createOrderPaymentSelectionQuote(
+  payload: CreateOrderPaymentSelectionQuoteData
+): Promise<PaymentSelectionQuote> {
+  const paymentCoin = resolveCanonicalPaymentCoin(payload.paymentCoin);
+  const vendorPeerID = payload.vendorPeerID?.trim();
+
+  const realFn = async () => {
+    return authPost<PaymentSelectionQuote>(
+      NODE_API.ORDER_PAYMENT_SELECTION_QUOTES(payload.orderId),
+      { paymentCoin },
+      vendorPeerID ? { 'X-Store-PeerID': vendorPeerID } : undefined
+    );
+  };
+
+  const mockFn = async (): Promise<PaymentSelectionQuote> => {
+    await mockDelay();
+    const now = Date.now();
+    return {
+      id: `psq_${payload.orderId}_${paymentCoin.replace(/[:]/g, '_')}`,
+      orderID: payload.orderId,
+      feeQuoteID: 'mock-fee-quote',
+      dealLinkID: 'mock-deal-link',
+      dealRevision: 1,
+      termsHash: 'mock-terms-hash',
+      schemaVersion: 1,
+      policyVersion: 'deal-payment-selection-zero-fee-v1',
+      pricingCurrency: 'USD',
+      pricingAmount: '4999',
+      pricingDivisibility: 2,
+      paymentCoin,
+      paymentCurrency: paymentCoin.startsWith('fiat:') ? 'USD' : 'BTC',
+      paymentDivisibility: paymentCoin.startsWith('fiat:') ? 2 : 8,
+      conversionRequired: !paymentCoin.startsWith('fiat:'),
+      exchangeRate: paymentCoin.startsWith('fiat:') ? '100' : '6500000',
+      exchangeRateBase: paymentCoin.startsWith('fiat:') ? 'USD' : 'BTC',
+      exchangeRateQuote: 'USD',
+      exchangeRateQuoteDivisibility: 2,
+      rateSourceUpdatedAt: new Date(now).toISOString(),
+      paymentSubtotal: paymentCoin.startsWith('fiat:') ? '4999' : '100000000',
+      providerOrNetworkCost: '0',
+      platformPaymentCost: '0',
+      buyerPaymentTotal: paymentCoin.startsWith('fiat:') ? '4999' : '100000000',
+      expiresAt: new Date(now + 15 * 60 * 1000).toISOString(),
+      createdAt: new Date(now).toISOString(),
+    };
+  };
+
+  return withMockFallback(realFn, mockFn, `/orders/${payload.orderId}/payment-selection-quotes`);
 }
 
 export async function createOrderPaymentSession(
@@ -457,6 +515,9 @@ export async function createOrderPaymentSession(
         ...(payload.buyerPeerID ? { buyerPeerID: payload.buyerPeerID } : {}),
         ...(payload.payerAddress ? { payerAddress: payload.payerAddress } : {}),
         ...(payload.moderator ? { moderator: payload.moderator } : {}),
+        ...(payload.paymentSelectionQuoteID
+          ? { paymentSelectionQuoteID: payload.paymentSelectionQuoteID }
+          : {}),
         ...(payload.fiatAmountCents ? { fiatAmountCents: payload.fiatAmountCents } : {}),
         ...(payload.fiatDescription ? { fiatDescription: payload.fiatDescription } : {}),
         ...(payload.fiatReturnURL ? { fiatReturnURL: payload.fiatReturnURL } : {}),
@@ -1428,6 +1489,7 @@ export const ordersApi = {
 
   // 支付
   createOrderPaymentSession,
+  createOrderPaymentSelectionQuote,
   submitPayment,
   fundOrder,
   getPaymentRemaining,
