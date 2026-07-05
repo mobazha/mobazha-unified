@@ -1781,6 +1781,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/platform/v1/deal-commission-statements/promoter': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List provisional commission observations attributed to the current promoter */
+    get: operations['deal-commission-statements-promoter'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-commission-statements/seller': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List provisional commission observations funded by the current seller */
+    get: operations['deal-commission-statements-seller'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/platform/v1/deal-links': {
     parameters: {
       query?: never;
@@ -1845,6 +1879,75 @@ export interface paths {
     put?: never;
     /** Pause a Deal Link */
     post: operations['deal-links-pause'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-promotion-programs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List promotion policies owned by the current seller */
+    get: operations['deal-promotion-programs-list-mine'];
+    put?: never;
+    /** Create an immutable single-level Deal promotion policy */
+    post: operations['deal-promotion-programs-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-promotion-programs/{id}/activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Activate a Deal promotion policy */
+    post: operations['deal-promotion-programs-activate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-promotion-programs/{id}/links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create or reuse the current promoter direct link */
+    post: operations['deal-promotion-links-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/deal-promotion-programs/{id}/pause': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Pause a Deal promotion policy */
+    post: operations['deal-promotion-programs-pause'];
     delete?: never;
     options?: never;
     head?: never;
@@ -2928,6 +3031,40 @@ export interface paths {
     put?: never;
     /** Create or reuse an immutable server-authored Fee Quote */
     post: operations['public-deal-link-fee-quotes-create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public/deal-promotion-links/{token}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Resolve a single-level promoter direct link */
+    get: operations['public-deal-promotion-links-get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/platform/v1/public/deal-promotion-links/{token}/claims': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Issue a short-lived signed attribution claim */
+    post: operations['public-deal-attribution-claims-create'];
     delete?: never;
     options?: never;
     head?: never;
@@ -5164,6 +5301,25 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/auth/admin-session': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Inspect the current standalone administrator session */
+    get: operations['auth-admin-session-get'];
+    put?: never;
+    /** Create a short-lived standalone administrator session */
+    post: operations['auth-admin-session-post'];
+    /** Revoke the current standalone administrator session */
+    delete: operations['auth-admin-session-delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/auth/identity': {
     parameters: {
       query?: never;
@@ -6391,6 +6547,40 @@ export interface paths {
     get: operations['features-get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fiat/provider-actions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List durable fiat provider actions */
+    get: operations['fiat-list-provider-actions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fiat/provider-actions/{actionID}/retry': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Retry a durable fiat provider action */
+    post: operations['fiat-retry-provider-action'];
     delete?: never;
     options?: never;
     head?: never;
@@ -8024,6 +8214,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/orders/{orderID}/payment-selection-quotes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create immutable Deal payment-selection quote
+     * @description Freezes the signed pricing amount, canonical payment asset, conversion rate, numeric provider/platform costs, target amount, policy version and expiry before PaymentSession provisioning.
+     */
+    post: operations['orders-post-payment-selection-quote'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/orders/{orderID}/payment-session': {
     parameters: {
       query?: never;
@@ -8033,13 +8243,13 @@ export interface paths {
     };
     /**
      * Unified payment session view for an order
-     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored, escrow_v1, and provider_checkout.
+     * @description Returns a PaymentSession projection built from existing order, payment, and fiat metadata. Settlement modes include address_monitored (UTXO, Monero, backend-managed EVM, and Solana escrow when persisted), escrow_v1 (legacy EVM / Solana / TRON flows that require buyer-signed escrow), and provider_checkout (Stripe/PayPal).
      */
     get: operations['orders-get-payment-session'];
     put?: never;
     /**
      * Provision unified payment session
-     * @description Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; buyers should declare refundAddress before paying.
+     * @description Creates or idempotently returns a PaymentSession. Fiat: canonical paymentCoin fiat:{provider}:{currency}, fiatAmountCents (>0), and optional PayPal return/cancel URLs. Crypto: optional refundAddress/payerAddress/moderator; buyers should declare refundAddress before paying. Deal cross-currency requests must include paymentSelectionQuoteID from the immutable quote endpoint.
      */
     post: operations['orders-post-payment-session'];
     delete?: never;
@@ -9920,6 +10130,7 @@ export interface components {
       address?: string;
       addressNotes?: string;
       alternateContactInfo?: string;
+      attributionClaim?: string;
       city?: string;
       countryCode?: string;
       feeQuoteID: string;
@@ -9938,6 +10149,15 @@ export interface components {
       purchaseTemplate: components['schemas']['Platform_PurchaseTemplate'];
       terms: unknown;
       title: string;
+    };
+    Platform_DealPromotionProgramRequest: {
+      /** Format: int64 */
+      attributionWindowSeconds: number;
+      /** Format: int64 */
+      commissionRateBPS: number;
+      dealLinkID: string;
+      maxCommissionAmount?: string;
+      name: string;
     };
     Platform_DiscordCheckBodyBody: {
       access_token: string;
@@ -10229,10 +10449,10 @@ export interface components {
       peerID: string;
     };
     Platform_ProductGroupsCreateBodyBody: {
-      description: string;
+      description?: string;
       name: string;
       /** Format: int64 */
-      sortOrder: number;
+      sortOrder?: number;
       userID: string;
     };
     Platform_ProductGroupsUpdateBodyBody: {
@@ -10559,6 +10779,12 @@ export interface components {
     Platform_WalletBindInputBody: {
       nftMint?: string;
       wallet: string;
+    };
+    Node_AdminSessionStatus: {
+      authenticated: boolean;
+      csrfToken?: string;
+      /** Format: date-time */
+      expiresAt?: string;
     };
     Node_AgentProductImportAdvanceCounts: {
       /** Format: int64 */
@@ -14939,6 +15165,64 @@ export interface operations {
       };
     };
   };
+  'deal-commission-statements-promoter': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-commission-statements-seller': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
   'deal-links-list-mine': {
     parameters: {
       query?: never;
@@ -15099,6 +15383,161 @@ export interface operations {
     };
   };
   'deal-links-pause': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-promotion-programs-list-mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-promotion-programs-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Platform_DealPromotionProgramRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-promotion-programs-activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-promotion-links-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'deal-promotion-programs-pause': {
     parameters: {
       query?: never;
       header?: never;
@@ -17421,6 +17860,68 @@ export interface operations {
     };
   };
   'public-deal-link-fee-quotes-create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-deal-promotion-links-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Platform_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'public-deal-attribution-claims-create': {
     parameters: {
       query?: never;
       header?: never;
@@ -22225,6 +22726,99 @@ export interface operations {
       };
     };
   };
+  'auth-admin-session-get': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          'Cache-Control'?: string;
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AdminSessionStatus'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'auth-admin-session-post': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          'Cache-Control'?: string;
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AdminSessionStatus'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'auth-admin-session-delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          'Cache-Control'?: string;
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_AdminSessionStatus'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'auth-identity-get': {
     parameters: {
       query?: never;
@@ -23619,20 +24213,14 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        'application/json': unknown;
-      };
-    };
+    requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description No Content */
+      204: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': unknown;
-        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -23718,20 +24306,14 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        'application/json': unknown;
-      };
-    };
+    requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description No Content */
+      204: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': unknown;
-        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -23790,20 +24372,14 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        'application/json': unknown;
-      };
-    };
+    requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description No Content */
+      204: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': unknown;
-        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -23826,20 +24402,14 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        'application/json': unknown;
-      };
-    };
+    requestBody?: never;
     responses: {
-      /** @description OK */
-      200: {
+      /** @description No Content */
+      204: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': unknown;
-        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -25336,6 +25906,76 @@ export interface operations {
       };
     };
   };
+  'fiat-list-provider-actions': {
+    parameters: {
+      query?: {
+        /** @description Optional fiat provider filter. */
+        provider?: string;
+        /** @description Optional action-kind filter. */
+        action?: string;
+        /** @description Optional durable state filter. */
+        state?: string;
+        /** @description Maximum rows; zero uses the server default. */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
+  'fiat-retry-provider-action': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Durable provider action ID. */
+        actionID: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'fiat-list-enabled-providers': {
     parameters: {
       query?: never;
@@ -25642,7 +26282,10 @@ export interface operations {
   'fiat-refund-payment': {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        /** @description Stable key for this refund intent. */
+        'Idempotency-Key': string;
+      };
       path: {
         /** @description Fiat provider ID. */
         providerID: string;
@@ -28839,6 +29482,42 @@ export interface operations {
       };
     };
   };
+  'orders-post-payment-selection-quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Order ID. */
+        orderID: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': unknown;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Node_EnvelopeError'];
+        };
+      };
+    };
+  };
   'orders-get-payment-session': {
     parameters: {
       query?: never;
@@ -31636,10 +32315,16 @@ export interface operations {
       /** @description OK */
       200: {
         headers: {
+          'Cache-Control'?: string;
+          'Content-Disposition'?: string;
+          'Content-Security-Policy'?: string;
+          'Content-Type'?: string;
+          ETag?: string;
+          'X-Content-Type-Options'?: string;
           [name: string]: unknown;
         };
         content: {
-          'application/json': unknown;
+          'application/json': string;
         };
       };
       /** @description Error */

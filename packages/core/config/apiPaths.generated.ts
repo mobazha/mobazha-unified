@@ -161,10 +161,19 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/community-marketplaces/${encodeURIComponent(platform)}/${encodeURIComponent(instanceID)}/sellers/${encodeURIComponent(sellerID)}/review`,
   COMMUNITY_MARKETPLACES_TELEGRAM_VERIFY_MEMBER: (instanceID: string) =>
     `/platform/v1/community-marketplaces/telegram/${encodeURIComponent(instanceID)}/verify-member`,
+  DEAL_COMMISSION_STATEMENTS_PROMOTER: '/platform/v1/deal-commission-statements/promoter',
+  DEAL_COMMISSION_STATEMENTS_SELLER: '/platform/v1/deal-commission-statements/seller',
   DEAL_LINKS: '/platform/v1/deal-links',
   DEAL_LINKS_ACTIVATE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/activate`,
   DEAL_LINKS_BY_ID: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}`,
   DEAL_LINKS_PAUSE: (id: string) => `/platform/v1/deal-links/${encodeURIComponent(id)}/pause`,
+  DEAL_PROMOTION_PROGRAMS: '/platform/v1/deal-promotion-programs',
+  DEAL_PROMOTION_PROGRAMS_ACTIVATE: (id: string) =>
+    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/activate`,
+  DEAL_PROMOTION_PROGRAMS_LINKS: (id: string) =>
+    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/links`,
+  DEAL_PROMOTION_PROGRAMS_PAUSE: (id: string) =>
+    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/pause`,
   ENCRYPTION_LISTINGS_KEY: (peerID: string, slug: string) =>
     `/platform/v1/encryption/listings/${encodeURIComponent(peerID)}/${encodeURIComponent(slug)}/key`,
   ENCRYPTION_PRODUCT_GROUPS_ROTATE_KEY: (id: string) =>
@@ -261,6 +270,10 @@ export const HOSTING_API_PATHS = {
     `/platform/v1/public/deal-links/${encodeURIComponent(token)}/accept`,
   PUBLIC_DEAL_LINKS_FEE_QUOTES: (token: string) =>
     `/platform/v1/public/deal-links/${encodeURIComponent(token)}/fee-quotes`,
+  PUBLIC_DEAL_PROMOTION_LINKS: (token: string) =>
+    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}`,
+  PUBLIC_DEAL_PROMOTION_LINKS_CLAIMS: (token: string) =>
+    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}/claims`,
   PUBLIC_MARKETPLACES: '/platform/v1/public-marketplaces',
   PUBLIC_MARKETPLACES_ATTRIBUTION_EVENTS: (identifier: string) =>
     `/platform/v1/public-marketplaces/${encodeURIComponent(identifier)}/attribution-events`,
@@ -442,6 +455,7 @@ export const NODE_API_PATHS = {
   AI_STATUS: '/ai/status',
   ANALYTICS_EVENTS: (peerID: string) => `/analytics/${encodeURIComponent(peerID)}/events`,
   ANALYTICS_STATS: '/analytics/stats',
+  AUTH_ADMIN_SESSION: '/auth/admin-session',
   AUTH_IDENTITY: '/auth/identity',
   AUTH_SCOPES: '/auth/scopes',
   AUTH_TOKENS: '/auth/tokens',
@@ -551,6 +565,9 @@ export const NODE_API_PATHS = {
     `/fiat/${encodeURIComponent(providerID)}/payments/${encodeURIComponent(sessionID)}/capture`,
   FIAT_PAYMENTS_REFUND: (providerID: string, paymentID: string) =>
     `/fiat/${encodeURIComponent(providerID)}/payments/${encodeURIComponent(paymentID)}/refund`,
+  FIAT_PROVIDER_ACTIONS: '/fiat/provider-actions',
+  FIAT_PROVIDER_ACTIONS_RETRY: (actionID: string) =>
+    `/fiat/provider-actions/${encodeURIComponent(actionID)}/retry`,
   FIAT_PROVIDERS: '/fiat/providers',
   FIAT_PROVIDERS_BY_PEER_ID: (peerID: string) => `/fiat/${encodeURIComponent(peerID)}/providers`,
   FIAT_SETUP_WEBHOOK: (providerID: string) =>
@@ -675,6 +692,8 @@ export const NODE_API_PATHS = {
     `/orders/${encodeURIComponent(orderID)}/payment/cancel-partial`,
   ORDERS_PAYMENT_REMAINING: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/payment/remaining`,
+  ORDERS_PAYMENT_SELECTION_QUOTES: (orderID: string) =>
+    `/orders/${encodeURIComponent(orderID)}/payment-selection-quotes`,
   ORDERS_PAYMENT_SESSION: (orderID: string) =>
     `/orders/${encodeURIComponent(orderID)}/payment-session`,
   ORDERS_PAYMENT_WATCH: (orderID: string) => `/orders/${encodeURIComponent(orderID)}/payment/watch`,
