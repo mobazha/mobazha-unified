@@ -42,6 +42,9 @@ export const PUBLIC_ROUTES = [
 
   // Deal Link（公开浏览，接受时才需要登录）
   '/deal/:token',
+
+  // Deal promotion entry（公开解析并签发短期 claim，再跳转 Deal Link）
+  '/promo/:token',
 ] as const;
 
 /**

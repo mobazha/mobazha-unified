@@ -1,6 +1,16 @@
-import type { components } from './api-generated';
-
-export type DealLinkAcceptanceRequest = components['schemas']['Platform_DealAcceptanceRequest'];
+export interface DealLinkAcceptanceRequest {
+  feeQuoteID: string;
+  attributionClaim?: string;
+  shipTo?: string;
+  address?: string;
+  addressNotes?: string;
+  alternateContactInfo?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  countryCode?: string;
+  refundAddress?: string;
+}
 
 export type DealLinkStatus = 'draft' | 'active' | 'paused' | 'expired' | string;
 

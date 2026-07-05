@@ -512,6 +512,20 @@ export type {
   PublicDealLink,
 } from './dealLink';
 
+export type {
+  DealAttributionClaim,
+  DealPromotionLink,
+  DealPromotionPageErrorKind,
+  DealPromotionProgram,
+  DealPromotionProgramRequest,
+  DealPromotionProgramStatus,
+  DealPromotionSettlementMode,
+  PublicDealPromotionLink,
+  StoredDealAttributionClaim,
+} from './dealPromotion';
+
+export type { SellerDealLink } from './sellerDealLink';
+
 // Digital asset types (Supply Chain Phase 1.0 — Core MVP)
 export type {
   DigitalAssetType,

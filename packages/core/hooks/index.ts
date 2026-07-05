@@ -24,6 +24,9 @@ export * from './useGuestOrderKind';
 export * from './useGuestSupplyQuote';
 export * from './useCheckoutSupplyQuote';
 export * from './useDealLinkCheckout';
+export * from './useDealPromotionPrograms';
+export * from './useDealPromotionLink';
+export * from './useDealAttributionClaim';
 
 // 用户资料相关
 export * from './useProfile';

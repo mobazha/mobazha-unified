@@ -16,6 +16,7 @@ import {
   isPublicDealLinkExpired,
   resolveDealLinkIdempotencyState,
 } from '../utils/dealLink';
+import { shouldClearDealAttributionClaimOnError } from '../utils/dealPromotion';
 
 export type DealLinkCheckoutPhase =
   | 'loading'
@@ -28,8 +29,10 @@ export type DealLinkCheckoutPhase =
 export interface UseDealLinkCheckoutOptions {
   enabled?: boolean;
   isAuthenticated?: boolean;
+  attributionClaimToken?: string | null;
   onRequireAuth?: () => void;
   onAccepted?: (orderID: string) => void;
+  onClearAttributionClaim?: () => void;
 }
 
 export interface UseDealLinkCheckoutReturn {
@@ -53,7 +56,14 @@ export function useDealLinkCheckout(
   token: string | undefined,
   options: UseDealLinkCheckoutOptions = {}
 ): UseDealLinkCheckoutReturn {
-  const { enabled = true, isAuthenticated = false, onRequireAuth, onAccepted } = options;
+  const {
+    enabled = true,
+    isAuthenticated = false,
+    attributionClaimToken = null,
+    onRequireAuth,
+    onAccepted,
+    onClearAttributionClaim,
+  } = options;
 
   const [deal, setDeal] = useState<PublicDealLink | null>(null);
   const [quote, setQuote] = useState<DealLinkFeeQuote | null>(null);
@@ -166,7 +176,7 @@ export function useDealLinkCheckout(
     setAcceptError(null);
 
     try {
-      const payload = buildDealLinkAcceptanceRequest(quote.id);
+      const payload = buildDealLinkAcceptanceRequest(quote.id, attributionClaimToken ?? undefined);
       const result = await acceptPublicDealLink(
         token,
         payload,
@@ -175,6 +185,7 @@ export function useDealLinkCheckout(
       if (!result.orderID) {
         throw new Error('Missing order ID');
       }
+      onClearAttributionClaim?.();
       onAccepted?.(result.orderID);
     } catch (error) {
       const kind = classifyDealLinkError(error);
@@ -182,11 +193,24 @@ export function useDealLinkCheckout(
         setQuoteError('quote_expired');
         setQuote(null);
       }
+      if (attributionClaimToken && shouldClearDealAttributionClaimOnError(error)) {
+        onClearAttributionClaim?.();
+      }
       setAcceptError(error instanceof Error ? error.message : 'accept_failed');
     } finally {
       setAcceptLoading(false);
     }
-  }, [canAccept, deal, isAuthenticated, onAccepted, onRequireAuth, quote, token]);
+  }, [
+    attributionClaimToken,
+    canAccept,
+    deal,
+    isAuthenticated,
+    onAccepted,
+    onClearAttributionClaim,
+    onRequireAuth,
+    quote,
+    token,
+  ]);
 
   return {
     deal,

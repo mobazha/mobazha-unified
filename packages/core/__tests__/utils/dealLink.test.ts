@@ -107,8 +107,12 @@ describe('normalizeDealLinkFeeQuote', () => {
 });
 
 describe('acceptance helpers', () => {
-  it('submits only feeQuoteID for current acceptance API', () => {
+  it('submits feeQuoteID and optional attribution claim', () => {
     expect(buildDealLinkAcceptanceRequest('quote-1')).toEqual({ feeQuoteID: 'quote-1' });
+    expect(buildDealLinkAcceptanceRequest('quote-1', 'claim-token')).toEqual({
+      feeQuoteID: 'quote-1',
+      attributionClaim: 'claim-token',
+    });
   });
 
   it('creates payment redirect using the established orderID query contract', () => {

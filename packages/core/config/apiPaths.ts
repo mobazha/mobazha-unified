@@ -412,6 +412,19 @@ export const HOSTING_TELEGRAM_MINI_APP_SIGNIN_QUERY = {
 
 export const HOSTING_API = {
   ...HOSTING_API_PATHS,
+  // --- Deal Link direct promotion (single-level attribution pilot) ---
+  DEAL_PROMOTION_PROGRAMS: '/platform/v1/deal-promotion-programs',
+  DEAL_PROMOTION_PROGRAMS_ACTIVATE: (id: string) =>
+    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/activate`,
+  DEAL_PROMOTION_PROGRAMS_PAUSE: (id: string) =>
+    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/pause`,
+  DEAL_PROMOTION_PROGRAMS_LINKS: (id: string) =>
+    `/platform/v1/deal-promotion-programs/${encodeURIComponent(id)}/links`,
+  PUBLIC_DEAL_PROMOTION_LINKS: (token: string) =>
+    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}`,
+  PUBLIC_DEAL_PROMOTION_LINKS_CLAIMS: (token: string) =>
+    `/platform/v1/public/deal-promotion-links/${encodeURIComponent(token)}/claims`,
+
   // --- Auth ---
   AUTH_SIGNIN: '/platform/v1/auth/signin',
   AUTH_TELEGRAM_SIGNIN: '/platform/v1/auth/telegram/signin',

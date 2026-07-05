@@ -152,6 +152,14 @@ function isPublicRoute(pathname: string): boolean {
     }
   }
 
+  // 特殊处理 /promo/:token（公开推广链接入口）
+  if (pathname.startsWith('/promo/')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 2 && segments[0] === 'promo') {
+      return true;
+    }
+  }
+
   return false;
 }
 

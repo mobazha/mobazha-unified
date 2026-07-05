@@ -19,8 +19,14 @@ export function buildDealLinkPaymentHref(orderID: string): string {
   return `/payment?orderID=${encodeURIComponent(orderID)}`;
 }
 
-export function buildDealLinkAcceptanceRequest(feeQuoteID: string): DealLinkAcceptanceRequest {
-  return { feeQuoteID };
+export function buildDealLinkAcceptanceRequest(
+  feeQuoteID: string,
+  attributionClaim?: string
+): DealLinkAcceptanceRequest {
+  const payload: DealLinkAcceptanceRequest = { feeQuoteID };
+  const claim = attributionClaim?.trim();
+  if (claim) payload.attributionClaim = claim;
+  return payload;
 }
 
 export function parseDealLinkTerms(raw: unknown): DealLinkTerms {

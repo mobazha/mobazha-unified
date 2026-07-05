@@ -197,6 +197,14 @@ if (!__SOVEREIGN__) {
       path: '/deal/:token',
       element: lazyPage(() => import('./app/deal/[token]/page')),
     },
+    {
+      path: '/promo/:token',
+      element: lazyPage(() => import('./app/promo/[token]/page')),
+    },
+    {
+      path: '/promote/:programId',
+      element: lazyPage(() => import('./app/promote/[programId]/page')),
+    },
 
     // 结账流程
     {
@@ -415,6 +423,7 @@ if (!__SOVEREIGN__) {
         { path: 'orders', element: lazyPage(() => import('./app/admin/orders/page')) },
         { path: 'payments', element: lazyPage(() => import('./app/admin/payments/page')) },
         { path: 'discounts', element: lazyPage(() => import('./app/admin/discounts/page')) },
+        { path: 'deal-links', element: lazyPage(() => import('./app/admin/deal-links/page')) },
         {
           path: 'discounts/new',
           element: lazyPage(() => import('./app/admin/discounts/new/page')),
@@ -661,6 +670,14 @@ if (__SOVEREIGN__) {
     {
       path: '/deal/:token',
       element: lazyPage(() => import('./app/deal/[token]/page')),
+    },
+    {
+      path: '/promo/:token',
+      element: lazyPage(() => import('./app/promo/[token]/page')),
+    },
+    {
+      path: '/promote/:programId',
+      element: lazyPage(() => import('./app/promote/[programId]/page')),
     },
 
     // Track Order (buyer entry point)

@@ -262,6 +262,31 @@ export type {
 } from '../../types/dealLink';
 export { getPublicDealLink, createDealLinkFeeQuote, acceptPublicDealLink } from './dealLink';
 
+// Deal Link attribution API (single-level promotion pilot)
+export * as dealPromotionApi from './dealPromotion';
+export type {
+  DealPromotionProgram,
+  DealPromotionProgramRequest,
+  DealPromotionLink,
+  PublicDealPromotionLink,
+  DealAttributionClaim,
+  StoredDealAttributionClaim,
+} from '../../types/dealPromotion';
+export {
+  listDealPromotionPrograms,
+  createDealPromotionProgram,
+  activateDealPromotionProgram,
+  pauseDealPromotionProgram,
+  createDealPromotionLink,
+  getPublicDealPromotionLink,
+  issueDealAttributionClaim,
+} from './dealPromotion';
+
+// Seller Deal Link API (authenticated hosting endpoints)
+export * as sellerDealLinkApi from './sellerDealLink';
+export type { SellerDealLink } from '../../types/sellerDealLink';
+export { listSellerDealLinks } from './sellerDealLink';
+
 // Store payment policy API
 export * as paymentPolicyApi from './paymentPolicy';
 export type { StorePaymentPolicy, UtxoConfirmationPolicy } from './paymentPolicy';

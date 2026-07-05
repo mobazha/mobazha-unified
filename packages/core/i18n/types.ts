@@ -3202,6 +3202,7 @@ export interface TranslationResource {
       funds?: string;
       analytics?: string;
       discounts?: string;
+      dealLinks?: string;
       settings?: string;
       system?: string;
       storefront?: string;
@@ -3948,6 +3949,54 @@ export interface TranslationResource {
       deleteConfirmDescription?: string;
       codeAddError?: string;
       codeDeleteError?: string;
+    };
+    dealLinks?: {
+      title?: string;
+      subtitle?: string;
+      immutableEconomicsTitle?: string;
+      immutableEconomicsBody?: string;
+      manualReviewOnlyNotice?: string;
+      createTitle?: string;
+      dealLinkLabel?: string;
+      dealLinkPlaceholder?: string;
+      noDealLinks?: string;
+      programNameLabel?: string;
+      programNamePlaceholder?: string;
+      commissionLabel?: string;
+      maxCommissionLabel?: string;
+      maxCommissionPlaceholder?: string;
+      windowDaysLabel?: string;
+      createCta?: string;
+      createValidationError?: string;
+      createSuccess?: string;
+      createFailed?: string;
+      programsTitle?: string;
+      refresh?: string;
+      loadFailed?: string;
+      noPrograms?: string;
+      dealLinkMissing?: string;
+      statusDraft?: string;
+      statusActive?: string;
+      statusPaused?: string;
+      statusUnknown?: string;
+      activate?: string;
+      pause?: string;
+      activateSuccess?: string;
+      activateFailed?: string;
+      pauseSuccess?: string;
+      pauseFailed?: string;
+      commissionRate?: string;
+      commissionValue?: string;
+      attributionWindow?: string;
+      windowDaysValue?: string;
+      windowUnavailable?: string;
+      fundingSource?: string;
+      fundingSellerManualBudget?: string;
+      fundingUnknown?: string;
+      settlementMode?: string;
+      settlementManualReview?: string;
+      promoterLinkTitle?: string;
+      promoterLinkBody?: string;
     };
     collections?: {
       title?: string;
@@ -5732,6 +5781,43 @@ export interface TranslationResource {
     authRequiredHint?: string;
     sameCurrencyNotice?: string;
     deliveryType?: Record<string, string | undefined>;
+  };
+
+  dealPromotion?: {
+    entryResolving?: string;
+    entryRedirecting?: string;
+    attributionBannerTitle?: string;
+    attributionBannerBody?: string;
+    attributionWindowDays?: string;
+    attributionWindowUnknown?: string;
+    manualReviewOnlyNotice?: string;
+  };
+
+  promote?: {
+    title?: string;
+    subtitle?: string;
+    disclosureTitle?: string;
+    disclosureBody?: string;
+    manualReviewOnlyNotice?: string;
+    directLinkTitle?: string;
+    loadingLink?: string;
+    linkFailed?: string;
+    retry?: string;
+    entryPathHint?: string;
+    copyCta?: string;
+    shareCta?: string;
+    copySuccess?: string;
+    copyFailed?: string;
+    shareTitle?: string;
+    shareText?: string;
+    authRequired?: string;
+    signInCta?: string;
+    invalidProgram?: string;
+    commissionRate?: string;
+    commissionValue?: string;
+    attributionWindow?: string;
+    windowDaysValue?: string;
+    currency?: string;
   };
 
   // Digital asset shared labels (Supply Chain Phase 1.0)
