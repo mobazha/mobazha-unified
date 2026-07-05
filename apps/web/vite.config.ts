@@ -14,6 +14,15 @@ function withStripWwwAuth(opts: ProxyOptions): ProxyOptions {
   return {
     ...opts,
     configure: (proxy, _options) => {
+      proxy.on('proxyReq', (proxyReq, req) => {
+        // Browsers keep the Vite dev-server Origin when a request is proxied.
+        // Standalone nodes correctly reject that as a CSRF mismatch, so make
+        // the dev proxy preserve the same-origin semantics used by Caddy in
+        // packaged deployments.
+        if (req.headers.origin && typeof opts.target === 'string') {
+          proxyReq.setHeader('Origin', new URL(opts.target).origin);
+        }
+      });
       proxy.on('proxyRes', proxyRes => {
         delete proxyRes.headers['www-authenticate'];
       });

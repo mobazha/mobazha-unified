@@ -363,13 +363,15 @@ base.describe('Mobile Experience', () => {
     await page.goto(`/product/${LISTINGS.physical.slug}`);
     await page.waitForLoadState('domcontentloaded');
     const addBtn = page.getByRole('button', { name: /add to cart|加入购物车/i }).first();
-    if (await addBtn.isVisible().catch(() => false)) {
-      await addBtn.click();
-      await page.waitForLoadState('domcontentloaded');
-    }
+    await expect(addBtn).toBeVisible({ timeout: 15000 });
+    await addBtn.click();
 
     await page.goto('/cart');
     await page.waitForLoadState('domcontentloaded');
+
+    // DOMContentLoaded does not wait for the route's lazy Vite chunks. Wait for
+    // cart content so the assertions below do not race the global Suspense fallback.
+    await expect(page.getByText(/29\.99/).first()).toBeVisible({ timeout: 15000 });
 
     // Cart should not have horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
@@ -391,8 +393,9 @@ standaloneTest.describe('Mobile Checkout', () => {
     hasTouch: true,
   });
 
-  standaloneTest('mobile: checkout page uses mobile layout', async ({ authedPage: page }) => {
-    const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
+  standaloneTest('mobile: checkout page uses mobile layout', async ({ buyerPage: page, api }) => {
+    const profile = await api.getProfile();
+    const peerID = profile.peerID || PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
     await page.waitForLoadState('domcontentloaded');
 
@@ -412,8 +415,9 @@ standaloneTest.describe('Mobile Checkout', () => {
     await page.screenshot({ path: 'test-results/mobile-checkout.png', fullPage: true });
   });
 
-  standaloneTest('mobile: place order via bottom bar button', async ({ authedPage: page }) => {
-    const peerID = PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
+  standaloneTest('mobile: place order via bottom bar button', async ({ buyerPage: page, api }) => {
+    const profile = await api.getProfile();
+    const peerID = profile.peerID || PEER_ID || process.env.E2E_STANDALONE_PEER_ID || '';
     await page.goto(`/checkout?slug=${LISTINGS.service.slug}&peerID=${peerID}&quantity=1`);
     await page.waitForLoadState('domcontentloaded');
 
