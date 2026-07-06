@@ -12,7 +12,10 @@ import {
   syncCheckoutPaymentSessionStorage,
 } from '@mobazha/core';
 import {
+  buildFiatPaymentCancelUrl,
+  buildFiatPaymentVerificationUrl,
   resolvePaymentPageRestoreOptions,
+  resolvePaymentPageOrderDestination,
   resolvePaymentRuntimeVendorPeerID,
   isActivePaymentOrderFetch,
 } from '@/app/payment/paymentPolicyRestore';
@@ -78,6 +81,65 @@ describe('PaymentPage payment policy restore', () => {
       expect(isActivePaymentOrderFetch(null, 'order-a')).toBe(false);
       expect(isActivePaymentOrderFetch(undefined, undefined)).toBe(false);
     });
+  });
+
+  describe('resolvePaymentPageOrderDestination', () => {
+    it('keeps payment-open states in checkout', () => {
+      expect(resolvePaymentPageOrderDestination('AWAITING_PAYMENT')).toBe('checkout');
+      expect(resolvePaymentPageOrderDestination('awaiting_payment_verification')).toBe('checkout');
+    });
+
+    it('never presents failed, expired, or refunded orders as payment success', () => {
+      for (const state of [
+        'CANCELED',
+        'CANCELLED',
+        'DECLINED',
+        'EXPIRED',
+        'REFUNDED',
+        'PROCESSING_ERROR',
+      ]) {
+        expect(resolvePaymentPageOrderDestination(state)).toBe('order-detail');
+      }
+    });
+
+    it('allows paid and fulfillment states to use the confirmation page', () => {
+      for (const state of ['PENDING', 'AWAITING_SHIPMENT', 'SHIPPED', 'COMPLETED']) {
+        expect(resolvePaymentPageOrderDestination(state)).toBe('confirmation');
+      }
+    });
+  });
+
+  it('returns redirected fiat authentication to verification instead of confirmation', () => {
+    const url = new URL(
+      buildFiatPaymentVerificationUrl({
+        origin: 'https://market.example',
+        orderID: 'order-1',
+        vendorPeerID: 'seller-1',
+        providerID: 'stripe',
+        isDealBacked: true,
+      })
+    );
+
+    expect(url.pathname).toBe('/payment');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      orderID: 'order-1',
+      fiatReturn: '1',
+      fiatProvider: 'stripe',
+      vendorPeerID: 'seller-1',
+      source: 'deal_link',
+    });
+
+    const cancelUrl = new URL(
+      buildFiatPaymentCancelUrl({
+        origin: 'https://market.example',
+        orderID: 'order-1',
+        vendorPeerID: 'seller-1',
+        providerID: 'stripe',
+        isDealBacked: true,
+      })
+    );
+    expect(cancelUrl.pathname).toBe('/payment');
+    expect(cancelUrl.searchParams.has('fiatReturn')).toBe(false);
   });
 
   describe('resolvePaymentRuntimeVendorPeerID', () => {

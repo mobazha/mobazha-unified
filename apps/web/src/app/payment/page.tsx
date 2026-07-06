@@ -72,7 +72,10 @@ import {
 } from '@mobazha/core';
 import type { Order, PaymentSession } from '@mobazha/core';
 import {
+  buildFiatPaymentCancelUrl,
+  buildFiatPaymentVerificationUrl,
   isActivePaymentOrderFetch,
+  resolvePaymentPageOrderDestination,
   resolvePaymentRuntimeVendorPeerID,
   resolvePaymentPageRestoreOptions,
 } from './paymentPolicyRestore';
@@ -267,6 +270,7 @@ export default function PaymentPage() {
   const urlImage = searchParams.get('image');
   const urlPaymentPolicy = searchParams.get('paymentPolicy');
   const isDealPaymentEntry = searchParams.get('source') === 'deal_link';
+  const isFiatProviderReturn = searchParams.get('fiatReturn') === '1';
 
   // 订单数据状态
   const [isLoadingOrder, setIsLoadingOrder] = useState(true);
@@ -279,7 +283,9 @@ export default function PaymentPage() {
   );
 
   // 支付状态
-  const [paymentStep, setPaymentStep] = useState<PaymentStep>('idle');
+  const [paymentStep, setPaymentStep] = useState<PaymentStep>(() =>
+    isFiatProviderReturn ? 'submitted' : 'idle'
+  );
   const [submittedTxHash, setSubmittedTxHash] = useState<string>();
   const [paymentError, setPaymentError] = useState<string>();
   const isProcessing = paymentStep !== 'idle' && paymentStep !== 'failed';
@@ -412,6 +418,28 @@ export default function PaymentPage() {
       ? selectedFiatProvider
       : undefined;
 
+  const fiatVerificationReturnUrl = useMemo(() => {
+    if (!orderDetails || !visibleFiatProvider || typeof window === 'undefined') return undefined;
+    return buildFiatPaymentVerificationUrl({
+      origin: window.location.origin,
+      orderID: orderDetails.orderID,
+      vendorPeerID: orderDetails.vendor.peerID,
+      providerID: visibleFiatProvider,
+      isDealBacked,
+    });
+  }, [isDealBacked, orderDetails, visibleFiatProvider]);
+
+  const fiatCancelReturnUrl = useMemo(() => {
+    if (!orderDetails || !visibleFiatProvider || typeof window === 'undefined') return undefined;
+    return buildFiatPaymentCancelUrl({
+      origin: window.location.origin,
+      orderID: orderDetails.orderID,
+      vendorPeerID: orderDetails.vendor.peerID,
+      providerID: visibleFiatProvider,
+      isDealBacked,
+    });
+  }, [isDealBacked, orderDetails, visibleFiatProvider]);
+
   const orderAcceptedCurrencies = useMemo(() => {
     if (!isDealBacked) return undefined;
     const listings = normalizeOrderOpenListings(rawOrder?.contract?.orderOpen?.listings);
@@ -508,6 +536,11 @@ export default function PaymentPage() {
 
   const dealQuoteBlocksPayment =
     dealQuoteRequired && (!checkoutCanonicalPaymentCoin || !paymentSelectionQuoteAuthorizesPayment);
+  const showFiatPaymentForm =
+    Boolean(visibleFiatProvider) &&
+    isReadyToPay &&
+    !dealQuoteBlocksPayment &&
+    paymentStep !== 'submitted';
 
   // 链类别检测与统一钱包状态
   const chainCategory = selectedPaymentCoin ? resolveChainCategory(selectedPaymentCoin) : null;
@@ -653,23 +686,27 @@ export default function PaymentPage() {
         );
       }
       if (nextState) {
+        const destination = resolvePaymentPageOrderDestination(nextState);
         setOrderDetails(prev => (prev ? { ...prev, status: nextState } : prev));
         if (!isPaymentOpenState(nextState) || sessionVerified) {
           setExternalWalletInfo(null);
-          if (markSuccess) {
+          if (markSuccess && destination === 'confirmation') {
             setPaymentStep('success');
             haptic.success();
           }
         }
-      }
 
-      if (sessionVerified) {
-        clearNavigationGuard();
-        router.replace(
-          orderDetails
-            ? buildConfirmationUrl(orderDetails)
-            : buildConfirmationUrlFromOrderID(orderID)
-        );
+        if (destination === 'order-detail') {
+          clearNavigationGuard();
+          router.replace(orderDetailPath(orderID, 'purchase'));
+        } else if (sessionVerified) {
+          clearNavigationGuard();
+          router.replace(
+            orderDetails
+              ? buildConfirmationUrl(orderDetails)
+              : buildConfirmationUrlFromOrderID(orderID)
+          );
+        }
       }
 
       void refreshPaymentReadiness();
@@ -1056,12 +1093,17 @@ export default function PaymentPage() {
   ]);
 
   useEffect(() => {
-    if (!orderID || isLoadingOrder || !orderDetails || isPaymentOpenState(orderDetails.status)) {
-      return;
-    }
+    if (!orderID || isLoadingOrder || !orderDetails) return;
+
+    const destination = resolvePaymentPageOrderDestination(orderDetails.status);
+    if (destination === 'checkout') return;
 
     clearNavigationGuard();
-    router.replace(buildConfirmationUrl(orderDetails));
+    router.replace(
+      destination === 'confirmation'
+        ? buildConfirmationUrl(orderDetails)
+        : orderDetailPath(orderID, 'purchase')
+    );
   }, [clearNavigationGuard, isLoadingOrder, orderDetails, orderID, router]);
 
   useEffect(() => {
@@ -1103,6 +1145,23 @@ export default function PaymentPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [externalWalletInfo, orderDetails, orderID, syncOrderStatus]);
+
+  // A provider success means funds were submitted, not that the platform order
+  // has advanced. Keep verifying until the backend confirms payment or reports
+  // an unsuccessful terminal state.
+  useEffect(() => {
+    if (paymentStep !== 'submitted') return;
+
+    const refresh = () => {
+      void syncOrderStatus({ markSuccess: true }).catch(() => {
+        // Keep the verification UI active; the next poll or websocket event retries.
+      });
+    };
+
+    refresh();
+    const interval = window.setInterval(refresh, 3000);
+    return () => window.clearInterval(interval);
+  }, [paymentStep, syncOrderStatus]);
 
   useEffect(() => {
     if (
@@ -1587,12 +1646,12 @@ export default function PaymentPage() {
                       )}
 
                       {/* Fiat Payment Form (Stripe / PayPal) */}
-                      {visibleFiatProvider && isReadyToPay && !dealQuoteBlocksPayment && (
+                      {showFiatPaymentForm && (
                         <Card>
                           <CardContent className="p-4 sm:p-6">
                             <FiatPaymentSection
                               key={`${visibleFiatProvider}:${paymentSelectionQuoteID ?? 'legacy'}`}
-                              providerID={visibleFiatProvider}
+                              providerID={visibleFiatProvider!}
                               vendorPeerID={orderDetails.vendor.peerID}
                               orderID={orderDetails.orderID}
                               amount={
@@ -1606,17 +1665,8 @@ export default function PaymentPage() {
                                   : orderDetails.currency
                               }
                               description={orderDetails.items[0]?.title}
-                              returnUrl={buildConfirmationUrl(orderDetails, {
-                                providerID: visibleFiatProvider,
-                                ...(isDealBacked
-                                  ? {}
-                                  : {
-                                      amount: toMinimalUnit(
-                                        orderDetails.total,
-                                        orderDetails.currency
-                                      ),
-                                    }),
-                              })}
+                              returnUrl={fiatVerificationReturnUrl!}
+                              cancelUrl={fiatCancelReturnUrl!}
                               canCreateSession={
                                 isDealBacked
                                   ? isReadyToPay && paymentSelectionQuoteAuthorizesPayment
@@ -1630,61 +1680,45 @@ export default function PaymentPage() {
                                       paymentCoin: checkoutCanonicalPaymentCoin,
                                       paymentSelectionQuoteID,
                                       fiatDescription: orderDetails.items[0]?.title,
-                                      fiatReturnURL: buildConfirmationUrl(orderDetails, {
-                                        providerID: visibleFiatProvider,
-                                      }),
-                                      fiatCancelURL: buildConfirmationUrl(orderDetails, {
-                                        providerID: visibleFiatProvider,
-                                      }),
+                                      fiatReturnURL: fiatVerificationReturnUrl,
+                                      fiatCancelURL: fiatCancelReturnUrl,
                                     }
                                   : undefined
                               }
                               disabled={dealQuoteBlocksPayment}
                               onPaymentSuccess={async (result: FiatPaymentSuccessResult) => {
-                                if (isDealBacked) {
-                                  router.push(
-                                    buildConfirmationUrl(orderDetails, {
-                                      providerID: result.providerID,
-                                    })
-                                  );
-                                  return;
-                                }
-                                try {
-                                  const submitResult = await ordersApi.submitPayment({
-                                    orderID: orderDetails.orderID,
-                                    transactionID: result.transactionID,
-                                    coin: buildCanonicalFiatPaymentCoin(
-                                      result.providerID,
-                                      result.currency
-                                    ),
-                                    amount: String(result.amount),
-                                    timestamp: new Date().toISOString(),
-                                    method: 5, // FIAT
-                                  });
-                                  if (submitResult?.success === false) {
-                                    throw new Error(submitResult.error || 'submit payment failed');
+                                setPaymentStep('submitted');
+
+                                if (!isDealBacked) {
+                                  try {
+                                    const submitResult = await ordersApi.submitPayment({
+                                      orderID: orderDetails.orderID,
+                                      transactionID: result.transactionID,
+                                      coin: buildCanonicalFiatPaymentCoin(
+                                        result.providerID,
+                                        result.currency
+                                      ),
+                                      amount: String(result.amount),
+                                      timestamp: new Date().toISOString(),
+                                      method: 5, // FIAT
+                                    });
+                                    if (submitResult?.success === false) {
+                                      throw new Error(
+                                        submitResult.error || 'submit payment failed'
+                                      );
+                                    }
+                                  } catch (err) {
+                                    const message =
+                                      err instanceof Error ? err.message : t('fiat.genericError');
+                                    toast({
+                                      title: t('fiat.paymentBeingConfirmed'),
+                                      description: message,
+                                      variant: 'destructive',
+                                    });
                                   }
-                                  router.push(
-                                    buildConfirmationUrl(orderDetails, {
-                                      providerID: result.providerID,
-                                      amount: result.amount,
-                                    })
-                                  );
-                                } catch (err) {
-                                  const message =
-                                    err instanceof Error ? err.message : t('fiat.genericError');
-                                  toast({
-                                    title: t('fiat.paymentBeingConfirmed'),
-                                    description: message,
-                                    variant: 'destructive',
-                                  });
-                                  router.push(
-                                    buildConfirmationUrl(orderDetails, {
-                                      providerID: result.providerID,
-                                      amount: result.amount,
-                                    })
-                                  );
                                 }
+
+                                await syncOrderStatus({ markSuccess: true }).catch(() => null);
                               }}
                               onPaymentError={msg => {
                                 toast({
