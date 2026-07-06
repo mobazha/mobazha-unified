@@ -8350,6 +8350,22 @@ export const en: TranslationResource = {
       recommendedWebAppUrlRow: 'Brand storefront URL',
       botFatherHttpsExactNote: 'The URL must match exactly (HTTPS, no extra path).',
 
+      managedTelegram: {
+        title: 'Telegram Mini App',
+        active: 'Ready',
+        pending: 'Being prepared',
+        suspended: 'Unavailable',
+        readyDesc:
+          'Share this store-specific link with customers. It opens your storefront directly inside Telegram.',
+        pendingDesc:
+          'Your private store link is being activated. It will appear here when it is ready to share.',
+        suspendedDesc:
+          'This sales channel is temporarily unavailable. Contact your service provider for help.',
+        bot: 'Store bot',
+        shareLink: 'Customer share link',
+        open: 'Open store in Telegram',
+      },
+
       bot: {
         diagnosticsTitle: 'Bot health',
         diagnosticsLoading: 'Checking bot health…',

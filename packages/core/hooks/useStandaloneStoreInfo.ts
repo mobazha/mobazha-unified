@@ -9,8 +9,12 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { NetworkConfigResponse, DomainConfigResponse } from '../services/api/system';
-import { getNetworkConfig, getDomainConfig } from '../services/api/system';
+import type {
+  NetworkConfigResponse,
+  DomainConfigResponse,
+  SystemSalesChannelsResponse,
+} from '../services/api/system';
+import { getNetworkConfig, getDomainConfig, getSystemSalesChannels } from '../services/api/system';
 
 export interface StandaloneStoreInfo {
   connectivity: string;
@@ -19,6 +23,7 @@ export interface StandaloneStoreInfo {
   overlayDomain?: string;
   tlsMode: string;
   dockerManaged: boolean;
+  salesChannels: SystemSalesChannelsResponse;
 }
 
 export interface UseStandaloneStoreInfoOptions {
@@ -38,6 +43,7 @@ const DEFAULT_INFO: StandaloneStoreInfo = {
   overlayType: '',
   dockerManaged: false,
   tlsMode: '',
+  salesChannels: {},
 };
 
 export function useStandaloneStoreInfo(
@@ -54,7 +60,7 @@ export function useStandaloneStoreInfo(
     setLoading(true);
     setError(null);
     try {
-      const [network, domain] = await Promise.all([
+      const [network, domain, salesChannels] = await Promise.all([
         getNetworkConfig().catch(
           (): NetworkConfigResponse => ({
             connectivity: 'public',
@@ -71,6 +77,7 @@ export function useStandaloneStoreInfo(
             tlsMode: '',
           })
         ),
+        getSystemSalesChannels().catch((): SystemSalesChannelsResponse => ({})),
       ]);
 
       setInfo({
@@ -80,6 +87,7 @@ export function useStandaloneStoreInfo(
         overlayDomain: network.overlayDomain || domain.overlayDomain,
         tlsMode: domain.tlsMode || '',
         dockerManaged: network.dockerManaged,
+        salesChannels,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load store info');

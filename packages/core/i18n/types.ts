@@ -4804,6 +4804,18 @@ export interface TranslationResource {
       recommendedWebAppUrlsBody?: string;
       recommendedWebAppUrlRow?: string;
       botFatherHttpsExactNote?: string;
+      managedTelegram?: {
+        title?: string;
+        active?: string;
+        pending?: string;
+        suspended?: string;
+        readyDesc?: string;
+        pendingDesc?: string;
+        suspendedDesc?: string;
+        bot?: string;
+        shareLink?: string;
+        open?: string;
+      };
       bot?: {
         diagnosticsTitle?: string;
         diagnosticsLoading?: string;

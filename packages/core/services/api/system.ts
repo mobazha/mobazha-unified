@@ -92,6 +92,18 @@ export interface PaymentRPCStatusEntry {
 
 export type PaymentRPCStatusResponse = Record<string, PaymentRPCStatusEntry>;
 
+export type ManagedSalesChannelStatus = 'active' | 'pending' | 'suspended';
+
+export interface TelegramMiniAppChannel {
+  status: ManagedSalesChannelStatus;
+  botUsername: string;
+  shareUrl?: string;
+}
+
+export interface SystemSalesChannelsResponse {
+  telegramMiniApp?: TelegramMiniAppChannel;
+}
+
 // --- Setup API ---
 
 export async function getSetupStatus(): Promise<SetupStatusResponse> {
@@ -121,6 +133,10 @@ export async function getSystemHealth(): Promise<SystemHealthResponse> {
 
 export async function getPaymentRPCStatus(): Promise<PaymentRPCStatusResponse> {
   return nodeAuthGet<PaymentRPCStatusResponse>(NODE_API.SYSTEM_RPC_STATUS);
+}
+
+export async function getSystemSalesChannels(): Promise<SystemSalesChannelsResponse> {
+  return nodeAuthGet<SystemSalesChannelsResponse>(NODE_API.SYSTEM_SALES_CHANNELS);
 }
 
 export async function getSystemLogs(): Promise<string> {

@@ -298,6 +298,7 @@ export const NODE_API = {
   SYSTEM_CLAIM_STORE: '/system/claim-store',
   SYSTEM_HEALTH: '/system/health',
   SYSTEM_RPC_STATUS: '/system/rpc-status',
+  SYSTEM_SALES_CHANNELS: '/system/sales-channels',
   SYSTEM_LOGS: '/system/logs',
   SYSTEM_INFO: '/system/info',
   SYSTEM_NETWORK: '/system/network',

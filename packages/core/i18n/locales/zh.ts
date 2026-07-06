@@ -7643,6 +7643,19 @@ export const zh: PartialTranslationResource = {
       recommendedWebAppUrlRow: '品牌店铺根地址',
       botFatherHttpsExactNote: '地址须完全一致（HTTPS，无多余路径）。',
 
+      managedTelegram: {
+        title: 'Telegram Mini App',
+        active: '可以分享',
+        pending: '正在准备',
+        suspended: '暂时不可用',
+        readyDesc: '将此店铺专属链接分享给客户，即可在 Telegram 内直接打开你的店铺。',
+        pendingDesc: '正在激活你的专属店铺链接；可以分享后，链接会自动显示在这里。',
+        suspendedDesc: '此销售渠道暂时不可用，请联系服务提供方协助处理。',
+        bot: '店铺 Bot',
+        shareLink: '客户分享链接',
+        open: '在 Telegram 打开店铺',
+      },
+
       bot: {
         diagnosticsTitle: 'Bot 运行状态',
         diagnosticsLoading: '正在检测 Bot 状态…',

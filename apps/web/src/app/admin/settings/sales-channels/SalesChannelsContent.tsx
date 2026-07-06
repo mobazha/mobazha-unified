@@ -12,6 +12,7 @@ import { useStandaloneStoreInfo } from '@mobazha/core/hooks/useStandaloneStoreIn
 import type { StoreBotInfo, BotWebhookStatus } from '@mobazha/core/types/salesChannels';
 import { getLinkedAccounts, startLinkAccount } from '@mobazha/core/services/auth';
 import { getSetupStatus } from '@mobazha/core/services/api/system';
+import type { TelegramMiniAppChannel } from '@mobazha/core/services/api/system';
 import { SettingsSection } from '@/components/SettingsLayout';
 import { ConnectPlatformCard } from '@/components/ConnectPlatformCard';
 import { Button } from '@/components/ui/button';
@@ -1300,6 +1301,89 @@ function UnconnectedBotSection({ connectivity, domain }: { connectivity: string;
   );
 }
 
+function ManagedTelegramMiniAppSection({ channel }: { channel: TelegramMiniAppChannel }) {
+  const { t } = useI18n();
+  const active = channel.status === 'active' && Boolean(channel.shareUrl);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/20 p-3">
+        <div className="rounded-lg bg-primary/10 p-2 text-primary">
+          <Send className="h-5 w-5" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-foreground">
+              {t('admin.salesChannels.managedTelegram.title', {
+                defaultValue: 'Telegram Mini App',
+              })}
+            </p>
+            <Badge variant={active ? 'default' : 'secondary'}>
+              {active
+                ? t('admin.salesChannels.managedTelegram.active', { defaultValue: 'Ready' })
+                : channel.status === 'pending'
+                  ? t('admin.salesChannels.managedTelegram.pending', {
+                      defaultValue: 'Being prepared',
+                    })
+                  : t('admin.salesChannels.managedTelegram.suspended', {
+                      defaultValue: 'Unavailable',
+                    })}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {active
+              ? t('admin.salesChannels.managedTelegram.readyDesc', {
+                  defaultValue:
+                    'Share this store-specific link with customers. It opens your storefront directly inside Telegram.',
+                })
+              : channel.status === 'pending'
+                ? t('admin.salesChannels.managedTelegram.pendingDesc', {
+                    defaultValue:
+                      'Your private store link is being activated. It will appear here when it is ready to share.',
+                  })
+                : t('admin.salesChannels.managedTelegram.suspendedDesc', {
+                    defaultValue:
+                      'This sales channel is temporarily unavailable. Contact your service provider for help.',
+                  })}
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border px-3 py-1">
+        <LinkRow
+          icon={Bot}
+          label={t('admin.salesChannels.managedTelegram.bot', { defaultValue: 'Store bot' })}
+          value={`@${channel.botUsername}`}
+          href={active ? `https://t.me/${channel.botUsername}` : undefined}
+        />
+        {active && channel.shareUrl ? (
+          <div className="border-t border-border">
+            <LinkRow
+              icon={Smartphone}
+              label={t('admin.salesChannels.managedTelegram.shareLink', {
+                defaultValue: 'Customer share link',
+              })}
+              value={channel.shareUrl}
+              href={channel.shareUrl}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {active && channel.shareUrl ? (
+        <Button asChild className="w-full sm:w-auto">
+          <a href={channel.shareUrl} target="_blank" rel="noopener noreferrer">
+            <Send className="mr-2 h-4 w-4" />
+            {t('admin.salesChannels.managedTelegram.open', {
+              defaultValue: 'Open store in Telegram',
+            })}
+          </a>
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 // --- Main Component ---
 
 export default function SalesChannelsContent() {
@@ -1406,6 +1490,7 @@ export default function SalesChannelsContent() {
   const connectivity = storeInfo.info?.connectivity ?? 'public';
   const localDomain = storeInfo.info?.domain ?? '';
   const dockerManaged = storeInfo.info?.dockerManaged ?? false;
+  const managedTelegramMiniApp = storeInfo.info?.salesChannels.telegramMiniApp;
 
   return (
     <div className="space-y-8">
@@ -1486,7 +1571,13 @@ export default function SalesChannelsContent() {
         description={t('admin.salesChannels.telegramBotDesc')}
       >
         <div className="bg-card border border-border rounded-xl p-4 sm:p-5 max-w-xl">
-          {standalone && platformConnected === false ? (
+          {standalone && storeInfo.loading && !storeInfo.info ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : standalone && managedTelegramMiniApp ? (
+            <ManagedTelegramMiniAppSection channel={managedTelegramMiniApp} />
+          ) : standalone && platformConnected === false ? (
             <UnconnectedBotSection connectivity={connectivity} domain={localDomain} />
           ) : (
             <TelegramBotSection
