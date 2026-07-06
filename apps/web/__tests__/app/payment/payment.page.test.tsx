@@ -81,13 +81,13 @@ describe('PaymentPage payment policy restore', () => {
   });
 
   describe('resolvePaymentRuntimeVendorPeerID', () => {
-    it('keeps Deal payment calls on the authenticated buyer runtime', () => {
+    it('routes Deal payment quotes and sessions to the accepted seller order', () => {
       expect(
         resolvePaymentRuntimeVendorPeerID({
           isDealBacked: true,
           vendorPeerID: 'seller-peer-id',
         })
-      ).toBeUndefined();
+      ).toBe('seller-peer-id');
     });
 
     it('preserves the existing store route for non-Deal orders', () => {

@@ -12,15 +12,14 @@ export function isActivePaymentOrderFetch(
 }
 
 /**
- * Deal-backed orders are created in the authenticated buyer runtime. Routing
- * their payment calls to the seller store would query the wrong node and
- * return a misleading order-not-found response.
+ * Payment preparation must stay on the seller runtime that accepted the
+ * order. Passing the peer explicitly also prevents the quote and session
+ * requests from racing the global store context during Deal checkout.
  */
 export function resolvePaymentRuntimeVendorPeerID(options: {
   isDealBacked: boolean;
   vendorPeerID?: string | null;
 }): string | undefined {
-  if (options.isDealBacked) return undefined;
   return options.vendorPeerID?.trim() || undefined;
 }
 
