@@ -11,6 +11,19 @@ export function isActivePaymentOrderFetch(
   return Boolean(requestedOrderID) && requestedOrderID === activeOrderID;
 }
 
+/**
+ * Deal-backed orders are created in the authenticated buyer runtime. Routing
+ * their payment calls to the seller store would query the wrong node and
+ * return a misleading order-not-found response.
+ */
+export function resolvePaymentRuntimeVendorPeerID(options: {
+  isDealBacked: boolean;
+  vendorPeerID?: string | null;
+}): string | undefined {
+  if (options.isDealBacked) return undefined;
+  return options.vendorPeerID?.trim() || undefined;
+}
+
 /** URL paymentPolicy is only a pre-order hint; never pass it after order metadata locks policy. */
 export function resolvePaymentPageRestoreOptions(options: {
   /** Order ID whose listing metadata established checkout payment policy. */

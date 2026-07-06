@@ -13,6 +13,7 @@ import {
 } from '@mobazha/core';
 import {
   resolvePaymentPageRestoreOptions,
+  resolvePaymentRuntimeVendorPeerID,
   isActivePaymentOrderFetch,
 } from '@/app/payment/paymentPolicyRestore';
 
@@ -72,6 +73,26 @@ describe('PaymentPage payment policy restore', () => {
       expect(isActivePaymentOrderFetch('order-a', null)).toBe(false);
       expect(isActivePaymentOrderFetch(null, 'order-a')).toBe(false);
       expect(isActivePaymentOrderFetch(undefined, undefined)).toBe(false);
+    });
+  });
+
+  describe('resolvePaymentRuntimeVendorPeerID', () => {
+    it('keeps Deal payment calls on the authenticated buyer runtime', () => {
+      expect(
+        resolvePaymentRuntimeVendorPeerID({
+          isDealBacked: true,
+          vendorPeerID: 'seller-peer-id',
+        })
+      ).toBeUndefined();
+    });
+
+    it('preserves the existing store route for non-Deal orders', () => {
+      expect(
+        resolvePaymentRuntimeVendorPeerID({
+          isDealBacked: false,
+          vendorPeerID: '  seller-peer-id  ',
+        })
+      ).toBe('seller-peer-id');
     });
   });
 

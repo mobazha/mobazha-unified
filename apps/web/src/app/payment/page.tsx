@@ -73,6 +73,7 @@ import {
 import type { Order, PaymentSession } from '@mobazha/core';
 import {
   isActivePaymentOrderFetch,
+  resolvePaymentRuntimeVendorPeerID,
   resolvePaymentPageRestoreOptions,
 } from './paymentPolicyRestore';
 import { useToast } from '@/components/ui/use-toast';
@@ -267,6 +268,7 @@ export default function PaymentPage() {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [rawOrder, setRawOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isDealBacked = useMemo(() => isDealBackedOrder(rawOrder), [rawOrder]);
 
   // 支付状态
   const [paymentStep, setPaymentStep] = useState<PaymentStep>('idle');
@@ -304,7 +306,10 @@ export default function PaymentPage() {
   const paymentReadinessPollEnabled =
     Boolean(orderID) && Boolean(orderDetails) && isPaymentOpenState(orderDetails?.status);
 
-  const paymentVendorPeerID = orderDetails?.vendor?.peerID || urlVendorPeerID || undefined;
+  const paymentVendorPeerID = resolvePaymentRuntimeVendorPeerID({
+    isDealBacked,
+    vendorPeerID: orderDetails?.vendor?.peerID || urlVendorPeerID,
+  });
 
   const {
     isCheckingReadiness,
@@ -392,8 +397,6 @@ export default function PaymentPage() {
     if (!tokenId) return '';
     return getTokenById(tokenId)?.assetId?.trim() || tokenId;
   }, [visibleTokenId]);
-
-  const isDealBacked = useMemo(() => isDealBackedOrder(rawOrder), [rawOrder]);
 
   const checkoutCanonicalPaymentCoin = useMemo(
     () =>
@@ -510,10 +513,10 @@ export default function PaymentPage() {
             orderId: orderID,
             refundAddress: trimmed,
             paymentCoin: selectedPaymentCoin,
-            vendorPeerID: orderDetails.vendor.peerID,
+            vendorPeerID: paymentVendorPeerID,
           });
           const session = await ordersApi.getOrderPaymentSession(orderID, {
-            vendorPeerID: orderDetails.vendor.peerID,
+            vendorPeerID: paymentVendorPeerID,
           });
           setPaymentSession(session);
         } catch {
@@ -523,7 +526,14 @@ export default function PaymentPage() {
     }, 600);
 
     return () => window.clearTimeout(timer);
-  }, [externalWalletInfo, orderID, selectedPaymentCoin, orderDetails, refundWalletAddress]);
+  }, [
+    externalWalletInfo,
+    orderID,
+    selectedPaymentCoin,
+    orderDetails,
+    refundWalletAddress,
+    paymentVendorPeerID,
+  ]);
 
   const showMobileBottomBar =
     Boolean(orderDetails) && !visibleFiatProvider && !externalWalletInfo && !isPaymentBlocked;
@@ -560,8 +570,7 @@ export default function PaymentPage() {
     async ({ markSuccess = false }: { markSuccess?: boolean } = {}) => {
       if (!orderID) return null;
 
-      const vendorPeerID = orderDetails?.vendor?.peerID || urlVendorPeerID || undefined;
-      const storeOptions = vendorPeerID ? { vendorPeerID } : undefined;
+      const storeOptions = paymentVendorPeerID ? { vendorPeerID: paymentVendorPeerID } : undefined;
 
       const order = await ordersApi.getOrderDetails(orderID, storeOptions);
       const session = await ordersApi
@@ -606,10 +615,10 @@ export default function PaymentPage() {
       haptic,
       orderDetails,
       orderID,
+      paymentVendorPeerID,
       refreshPaymentReadiness,
       router,
       selectedPaymentCoin,
-      urlVendorPeerID,
       visibleTokenId,
     ]
   );
@@ -1150,7 +1159,7 @@ export default function PaymentPage() {
         const session = await ordersApi.createOrderPaymentSession({
           orderId: orderID!,
           paymentCoin: selectedPaymentCoin,
-          vendorPeerID: orderDetails.vendor.peerID,
+          vendorPeerID: paymentVendorPeerID,
           moderator: moderatorPeerID,
           refundAddress: refundWalletAddress.trim() || undefined,
           payFromCustodial: payFromCustodial || undefined,
@@ -1222,6 +1231,7 @@ export default function PaymentPage() {
     saveRefundAsDefault,
     usesPaymentSessionFlow,
     paymentSelectionQuoteID,
+    paymentVendorPeerID,
     dealQuoteBlocksPayment,
     router,
     t,
