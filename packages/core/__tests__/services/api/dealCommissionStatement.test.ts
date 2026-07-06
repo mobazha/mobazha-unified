@@ -79,6 +79,40 @@ describe('dealCommissionStatement API service', () => {
     expect(statements[0]?.status).toBe('pending_review');
   });
 
+  it('preserves reviewed eligibility projection from hosting responses', async () => {
+    vi.mocked(hostingGet).mockResolvedValue([
+      {
+        id: 'stmt-reviewed',
+        attributionClaimID: 'claim-3',
+        acceptanceID: 'acc-3',
+        orderID: 'order-3',
+        programID: 'prog-3',
+        dealLinkID: 'deal-3',
+        status: 'disputed',
+        calculationBase: 'gross_order_amount',
+        commissionRateBPS: 500,
+        commissionBaseAmountAtomic: '10000',
+        proposedCommissionAmountAtomic: '500',
+        currency: 'USD',
+        currencyDivisibility: 2,
+        declaredFundingSource: 'seller_manual_budget',
+        settlementMode: 'manual_review_only',
+        payable: false,
+        reviewNotBefore: '2026-07-10T00:00:00Z',
+        observedAt: '2026-07-05T12:00:00Z',
+        lastEligibilityDecision: 'disputed',
+        lastEligibilityReasons: ['dispute_history', 'already_disputed'],
+        eligibilityReviewedAt: '2026-07-09T10:00:00Z',
+      },
+    ]);
+
+    const statements = await listSellerDealCommissionStatements();
+    expect(statements[0]?.status).toBe('disputed');
+    expect(statements[0]?.lastEligibilityDecision).toBe('disputed');
+    expect(statements[0]?.lastEligibilityReasons).toEqual(['dispute_history', 'already_disputed']);
+    expect(statements[0]?.eligibilityReviewedAt).toBe('2026-07-09T10:00:00Z');
+  });
+
   it('rejects malformed responses instead of presenting an empty statement', async () => {
     vi.mocked(hostingGet).mockResolvedValue({ unexpected: [] });
 

@@ -8,6 +8,7 @@ import { AlertTriangle, FileText, Loader2, ShieldAlert } from 'lucide-react';
 import {
   formatAtomicCommissionAmount,
   formatCommissionRateFromBPS,
+  isKnownDealCommissionEligibilityReasonCode,
   truncateStatementReference,
   useCurrency,
   useDealCommissionStatements,
@@ -85,6 +86,34 @@ const StatementAmount = memo(function StatementAmount({
   );
 });
 
+const STATUS_I18N_KEYS: Record<DealCommissionStatement['status'], string> = {
+  observed: 'dealCommissionStatements.statusObserved',
+  pending_review: 'dealCommissionStatements.statusPendingReview',
+  disputed: 'dealCommissionStatements.statusDisputed',
+  reversed: 'dealCommissionStatements.statusReversed',
+  settled: 'dealCommissionStatements.statusSettled',
+};
+
+const ELIGIBILITY_DECISION_I18N_KEYS: Record<
+  NonNullable<DealCommissionStatement['lastEligibilityDecision']>,
+  string
+> = {
+  deferred: 'dealCommissionStatements.eligibilityDecisionDeferred',
+  eligible: 'dealCommissionStatements.eligibilityDecisionEligible',
+  disputed: 'dealCommissionStatements.eligibilityDecisionDisputed',
+  reversed: 'dealCommissionStatements.eligibilityDecisionReversed',
+};
+
+function localizeEligibilityReason(
+  reason: string,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
+  if (isKnownDealCommissionEligibilityReasonCode(reason)) {
+    return t(`dealCommissionStatements.eligibilityReason.${reason}`);
+  }
+  return t('dealCommissionStatements.eligibilityReasonUnknown', { reason });
+}
+
 const StatementEntry = memo(function StatementEntry({
   statement,
   audience,
@@ -94,12 +123,19 @@ const StatementEntry = memo(function StatementEntry({
 }) {
   const { t, formatDate } = useI18n();
 
-  const statusLabel =
-    statement.status === 'observed'
-      ? t('dealCommissionStatements.statusObserved')
-      : statement.status === 'pending_review'
-        ? t('dealCommissionStatements.statusPendingReview')
-        : t('dealCommissionStatements.statusUnknown', { status: statement.status });
+  const statusLabel = t(STATUS_I18N_KEYS[statement.status]);
+
+  const hasEligibilityReview =
+    statement.lastEligibilityDecision !== undefined ||
+    statement.lastEligibilityReasons !== undefined ||
+    statement.eligibilityReviewedAt !== undefined;
+
+  const eligibilityReviewedAtLabel = statement.eligibilityReviewedAt
+    ? formatDate(statement.eligibilityReviewedAt, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })
+    : null;
 
   const fundingSourceLabel =
     statement.declaredFundingSource === 'seller_manual_budget'
@@ -157,6 +193,48 @@ const StatementEntry = memo(function StatementEntry({
             : t('dealCommissionStatements.promoterEvidenceBody')}
         </p>
       </div>
+
+      {hasEligibilityReview ? (
+        <div
+          className="mt-3 rounded-lg border border-border bg-muted/40 p-3 text-sm"
+          role="note"
+          data-testid="deal-commission-eligibility-audit"
+        >
+          <p className="font-medium text-foreground">
+            {t('dealCommissionStatements.eligibilityAuditTitle')}
+          </p>
+          {statement.lastEligibilityDecision ? (
+            <p className="mt-1 text-muted-foreground">
+              {t('dealCommissionStatements.eligibilityDecisionLabel')}:{' '}
+              <span className="font-medium text-foreground">
+                {t(ELIGIBILITY_DECISION_I18N_KEYS[statement.lastEligibilityDecision])}
+              </span>
+            </p>
+          ) : null}
+          {eligibilityReviewedAtLabel ? (
+            <p className="mt-1 text-muted-foreground">
+              {t('dealCommissionStatements.eligibilityReviewedAt', {
+                date: eligibilityReviewedAtLabel,
+              })}
+            </p>
+          ) : null}
+          {statement.lastEligibilityReasons?.length ? (
+            <div className="mt-2">
+              <p className="text-muted-foreground">
+                {t('dealCommissionStatements.eligibilityReasonsLabel')}
+              </p>
+              <ul className="mt-1 list-inside list-disc space-y-0.5 text-foreground">
+                {statement.lastEligibilityReasons.map(reason => (
+                  <li key={reason}>{localizeEligibilityReason(reason, t)}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <p className="mt-2 text-xs text-muted-foreground">
+            {t('dealCommissionStatements.eligibilityAuditHint')}
+          </p>
+        </div>
+      ) : null}
 
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <StatementAmount

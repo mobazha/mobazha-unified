@@ -2,7 +2,26 @@
 // Copyright (c) 2026 fengzie and the respective contributors.
 
 import BigNumber from 'bignumber.js';
-import type { DealCommissionStatement } from '../types/dealCommissionStatement';
+import type {
+  DealCommissionEligibilityDecision,
+  DealCommissionStatement,
+  DealCommissionStatementStatus,
+} from '../types/dealCommissionStatement';
+
+const DEAL_COMMISSION_STATEMENT_STATUSES: readonly DealCommissionStatementStatus[] = [
+  'observed',
+  'pending_review',
+  'disputed',
+  'reversed',
+  'settled',
+] as const;
+
+const DEAL_COMMISSION_ELIGIBILITY_DECISIONS: readonly DealCommissionEligibilityDecision[] = [
+  'deferred',
+  'eligible',
+  'disputed',
+  'reversed',
+] as const;
 
 function invalidStatementField(field: string): never {
   throw new Error(`Invalid Deal commission statement field: ${field}`);
@@ -38,6 +57,45 @@ function readRequiredTimestamp(value: unknown, field: string): string {
   return timestamp;
 }
 
+function readOptionalTimestamp(value: unknown, field: string): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  return readRequiredTimestamp(value, field);
+}
+
+function readRequiredStatus(value: unknown): DealCommissionStatementStatus {
+  const status = readRequiredString(value, 'status');
+  if (!DEAL_COMMISSION_STATEMENT_STATUSES.includes(status as DealCommissionStatementStatus)) {
+    return invalidStatementField('status');
+  }
+  return status as DealCommissionStatementStatus;
+}
+
+function readOptionalEligibilityDecision(
+  value: unknown
+): DealCommissionEligibilityDecision | undefined {
+  if (value === undefined || value === null) return undefined;
+  const decision = readRequiredString(value, 'lastEligibilityDecision');
+  if (
+    !DEAL_COMMISSION_ELIGIBILITY_DECISIONS.includes(decision as DealCommissionEligibilityDecision)
+  ) {
+    return invalidStatementField('lastEligibilityDecision');
+  }
+  return decision as DealCommissionEligibilityDecision;
+}
+
+function readOptionalEligibilityReasons(value: unknown): string[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) return invalidStatementField('lastEligibilityReasons');
+  return value.map((entry, index) => {
+    if (typeof entry !== 'string') {
+      return invalidStatementField(`lastEligibilityReasons[${index}]`);
+    }
+    const trimmed = entry.trim();
+    if (!trimmed) return invalidStatementField(`lastEligibilityReasons[${index}]`);
+    return trimmed;
+  });
+}
+
 export function buildPromoterCommissionsHref(): string {
   return '/promote/commissions';
 }
@@ -57,7 +115,7 @@ export function normalizeDealCommissionStatement(
     orderID: readRequiredString(raw.orderID, 'orderID'),
     programID: readRequiredString(raw.programID, 'programID'),
     dealLinkID: readRequiredString(raw.dealLinkID, 'dealLinkID'),
-    status: readRequiredString(raw.status, 'status'),
+    status: readRequiredStatus(raw.status),
     calculationBase: readRequiredString(raw.calculationBase, 'calculationBase'),
     commissionRateBPS: readRequiredInteger(raw.commissionRateBPS, 'commissionRateBPS'),
     commissionBaseAmountAtomic: readRequiredAtomicString(
@@ -75,7 +133,37 @@ export function normalizeDealCommissionStatement(
     payable,
     reviewNotBefore: readRequiredTimestamp(raw.reviewNotBefore, 'reviewNotBefore'),
     observedAt: readRequiredTimestamp(raw.observedAt, 'observedAt'),
+    lastEligibilityDecision: readOptionalEligibilityDecision(raw.lastEligibilityDecision),
+    lastEligibilityReasons: readOptionalEligibilityReasons(raw.lastEligibilityReasons),
+    eligibilityReviewedAt: readOptionalTimestamp(
+      raw.eligibilityReviewedAt,
+      'eligibilityReviewedAt'
+    ),
   };
+}
+
+export const KNOWN_DEAL_COMMISSION_ELIGIBILITY_REASON_CODES = [
+  'review_hold_active',
+  'order_not_terminal',
+  'refund_observed',
+  'dispute_history',
+  'provider_dispute_open',
+  'provider_dispute_outcome_unconfirmed',
+  'provider_chargeback_observed',
+  'test_order',
+  'related_account',
+  'automatic_identity_match',
+  'already_disputed',
+  'already_reversed',
+] as const;
+
+export type KnownDealCommissionEligibilityReasonCode =
+  (typeof KNOWN_DEAL_COMMISSION_ELIGIBILITY_REASON_CODES)[number];
+
+export function isKnownDealCommissionEligibilityReasonCode(
+  reason: string
+): reason is KnownDealCommissionEligibilityReasonCode {
+  return (KNOWN_DEAL_COMMISSION_ELIGIBILITY_REASON_CODES as readonly string[]).includes(reason);
 }
 
 export type AtomicAmountFormatFailureReason =

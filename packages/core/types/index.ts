@@ -524,8 +524,10 @@ export type {
   StoredDealAttributionClaim,
 } from './dealPromotion';
 export type {
+  DealCommissionEligibilityDecision,
   DealCommissionStatement,
   DealCommissionStatementAudience,
+  DealCommissionStatementStatus,
 } from './dealCommissionStatement';
 
 export type { SellerDealLink } from './sellerDealLink';

@@ -285,8 +285,10 @@ export {
 // Deal Link provisional commission statements (read-only evidence)
 export * as dealCommissionStatementApi from './dealCommissionStatement';
 export type {
+  DealCommissionEligibilityDecision,
   DealCommissionStatement,
   DealCommissionStatementAudience,
+  DealCommissionStatementStatus,
 } from '../../types/dealCommissionStatement';
 export {
   listDealCommissionStatements,
