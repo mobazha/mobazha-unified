@@ -94,6 +94,14 @@ const STATUS_I18N_KEYS: Record<DealCommissionStatement['status'], string> = {
   settled: 'dealCommissionStatements.statusSettled',
 };
 
+const STATUS_DESCRIPTION_I18N_KEYS: Record<DealCommissionStatement['status'], string> = {
+  observed: 'dealCommissionStatements.statusObservedDescription',
+  pending_review: 'dealCommissionStatements.statusPendingReviewDescription',
+  disputed: 'dealCommissionStatements.statusDisputedDescription',
+  reversed: 'dealCommissionStatements.statusReversedDescription',
+  settled: 'dealCommissionStatements.statusSettledDescription',
+};
+
 const ELIGIBILITY_DECISION_I18N_KEYS: Record<
   NonNullable<DealCommissionStatement['lastEligibilityDecision']>,
   string
@@ -116,14 +124,13 @@ function localizeEligibilityReason(
 
 const StatementEntry = memo(function StatementEntry({
   statement,
-  audience,
 }: {
   statement: DealCommissionStatement;
-  audience: DealCommissionStatementAudience;
 }) {
   const { t, formatDate } = useI18n();
 
   const statusLabel = t(STATUS_I18N_KEYS[statement.status]);
+  const statusDescription = t(STATUS_DESCRIPTION_I18N_KEYS[statement.status]);
 
   const hasEligibilityReview =
     statement.lastEligibilityDecision !== undefined ||
@@ -171,26 +178,31 @@ const StatementEntry = memo(function StatementEntry({
             {t('dealCommissionStatements.observedAt', { date: observedAtLabel })}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">{statusLabel}</Badge>
-          <Badge variant="warning" data-testid="deal-commission-not-payable-badge">
-            {t('dealCommissionStatements.notPayableBadge')}
-          </Badge>
-        </div>
+        <Badge variant="outline">{statusLabel}</Badge>
       </div>
 
       <div
-        className="mt-3 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm"
+        className="mt-4 grid gap-4 rounded-lg bg-muted/40 p-4 sm:grid-cols-2"
         role="note"
-        data-testid="deal-commission-manual-review-notice"
+        data-testid="deal-commission-status-summary"
       >
-        <p className="font-medium text-warning">
-          {t('dealCommissionStatements.manualReviewOnlyTitle')}
-        </p>
-        <p className="mt-1 text-foreground">
-          {audience === 'seller'
-            ? t('dealCommissionStatements.sellerEvidenceBody')
-            : t('dealCommissionStatements.promoterEvidenceBody')}
+        <StatementAmount
+          label={t('dealCommissionStatements.proposedCommission')}
+          amountAtomic={statement.proposedCommissionAmountAtomic}
+          currency={statement.currency}
+          currencyDivisibility={statement.currencyDivisibility}
+        />
+        <div>
+          <p className="text-sm font-medium text-foreground">{statusLabel}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{statusDescription}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 text-sm">
+        <p className="text-muted-foreground">{t('dealCommissionStatements.reviewNotBefore')}</p>
+        <p className="font-medium">{reviewNotBeforeLabel}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t('dealCommissionStatements.reviewNotBeforeHint')}
         </p>
       </div>
 
@@ -236,51 +248,49 @@ const StatementEntry = memo(function StatementEntry({
         </div>
       ) : null}
 
-      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-        <StatementAmount
-          label={t('dealCommissionStatements.proposedCommission')}
-          amountAtomic={statement.proposedCommissionAmountAtomic}
-          currency={statement.currency}
-          currencyDivisibility={statement.currencyDivisibility}
-        />
-        <StatementAmount
-          label={t('dealCommissionStatements.commissionBase')}
-          amountAtomic={statement.commissionBaseAmountAtomic}
-          currency={statement.currency}
-          currencyDivisibility={statement.currencyDivisibility}
-        />
-        <div>
-          <dt className="text-muted-foreground">{t('dealCommissionStatements.commissionRate')}</dt>
-          <dd className="font-medium">
-            {t('dealCommissionStatements.commissionRateValue', {
-              percent: formatCommissionRateFromBPS(statement.commissionRateBPS),
-            })}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('dealCommissionStatements.settlementMode')}</dt>
-          <dd className="font-medium">{t('dealCommissionStatements.settlementManualReview')}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('dealCommissionStatements.fundingSource')}</dt>
-          <dd className="font-medium">{fundingSourceLabel}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('dealCommissionStatements.reviewNotBefore')}</dt>
-          <dd className="font-medium">{reviewNotBeforeLabel}</dd>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t('dealCommissionStatements.reviewNotBeforeHint')}
-          </p>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('dealCommissionStatements.programRef')}</dt>
-          <dd className="font-mono text-xs">{truncateStatementReference(statement.programID)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('dealCommissionStatements.dealLinkRef')}</dt>
-          <dd className="font-mono text-xs">{truncateStatementReference(statement.dealLinkID)}</dd>
-        </div>
-      </dl>
+      <details className="group mt-4 border-t border-border pt-4">
+        <summary className="min-h-11 cursor-pointer list-none text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          {t('dealCommissionStatements.detailsCta')}
+        </summary>
+        <dl className="grid gap-3 pb-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+          <StatementAmount
+            label={t('dealCommissionStatements.commissionBase')}
+            amountAtomic={statement.commissionBaseAmountAtomic}
+            currency={statement.currency}
+            currencyDivisibility={statement.currencyDivisibility}
+          />
+          <div>
+            <dt className="text-muted-foreground">
+              {t('dealCommissionStatements.commissionRate')}
+            </dt>
+            <dd className="font-medium">
+              {t('dealCommissionStatements.commissionRateValue', {
+                percent: formatCommissionRateFromBPS(statement.commissionRateBPS),
+              })}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">
+              {t('dealCommissionStatements.settlementMode')}
+            </dt>
+            <dd className="font-medium">{t('dealCommissionStatements.settlementManualReview')}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t('dealCommissionStatements.fundingSource')}</dt>
+            <dd className="font-medium">{fundingSourceLabel}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t('dealCommissionStatements.programRef')}</dt>
+            <dd className="font-mono text-xs">{truncateStatementReference(statement.programID)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t('dealCommissionStatements.dealLinkRef')}</dt>
+            <dd className="font-mono text-xs">
+              {truncateStatementReference(statement.dealLinkID)}
+            </dd>
+          </div>
+        </dl>
+      </details>
     </article>
   );
 });
@@ -311,7 +321,7 @@ export const ProvisionalCommissionStatementsPanel = memo(
         data-testid={`deal-commission-statements-${audience}`}
         aria-busy={loading}
       >
-        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+        <CardHeader className="flex flex-col items-stretch justify-between gap-3 space-y-0 sm:flex-row sm:items-start">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -323,7 +333,7 @@ export const ProvisionalCommissionStatementsPanel = memo(
             type="button"
             variant="outline"
             size="sm"
-            className="min-h-11 shrink-0"
+            className="min-h-11 w-full shrink-0 sm:w-auto"
             onClick={() => void reload()}
             disabled={loading}
             data-testid="deal-commission-statements-refresh"
@@ -343,9 +353,6 @@ export const ProvisionalCommissionStatementsPanel = memo(
                 <p className="font-medium">{t('dealCommissionStatements.disclosureTitle')}</p>
                 <p className="text-muted-foreground">
                   {t('dealCommissionStatements.disclosureBody')}
-                </p>
-                <p className="font-medium text-foreground">
-                  {t('dealCommissionStatements.notPayableNotice')}
                 </p>
                 <p className="text-muted-foreground">
                   {t('dealCommissionStatements.manualReviewOnlyNotice')}
@@ -404,7 +411,7 @@ export const ProvisionalCommissionStatementsPanel = memo(
 
           {!loading && !error
             ? statements.map(statement => (
-                <StatementEntry key={statement.id} statement={statement} audience={audience} />
+                <StatementEntry key={statement.id} statement={statement} />
               ))
             : null}
         </CardContent>

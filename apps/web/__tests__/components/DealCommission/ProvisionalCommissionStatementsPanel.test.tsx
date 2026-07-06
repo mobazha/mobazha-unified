@@ -53,12 +53,8 @@ const buildTMock = () => (key: string, params?: Record<string, unknown>) => {
     'dealCommissionStatements.promoterSubtitle': 'Observations only',
     'dealCommissionStatements.disclosureTitle': 'Evidence only',
     'dealCommissionStatements.disclosureBody': 'Not a balance',
-    'dealCommissionStatements.notPayableNotice': 'Not payable',
     'dealCommissionStatements.manualReviewOnlyNotice': 'Manual review only',
     'dealCommissionStatements.refresh': 'Refresh',
-    'dealCommissionStatements.manualReviewOnlyTitle': 'Manual review only',
-    'dealCommissionStatements.promoterEvidenceBody': 'No payout guarantee',
-    'dealCommissionStatements.notPayableBadge': 'Not payable',
     'dealCommissionStatements.observedAt': `Observed ${params?.date}`,
     'dealCommissionStatements.proposedCommission': 'Proposed commission',
     'dealCommissionStatements.commissionBase': 'Commission base',
@@ -76,6 +72,12 @@ const buildTMock = () => (key: string, params?: Record<string, unknown>) => {
     'dealCommissionStatements.statusDisputed': 'Disputed',
     'dealCommissionStatements.statusReversed': 'Reversed',
     'dealCommissionStatements.statusSettled': 'Settled',
+    'dealCommissionStatements.statusObservedDescription': 'Waiting period in progress',
+    'dealCommissionStatements.statusPendingReviewDescription': 'Ready for review',
+    'dealCommissionStatements.statusDisputedDescription': 'Review paused',
+    'dealCommissionStatements.statusReversedDescription': 'Did not pass eligibility checks',
+    'dealCommissionStatements.statusSettledDescription': 'Review approved',
+    'dealCommissionStatements.detailsCta': 'View calculation and references',
     'dealCommissionStatements.eligibilityAuditTitle': 'Eligibility review record',
     'dealCommissionStatements.eligibilityAuditHint': 'Audit does not change not-payable status',
     'dealCommissionStatements.eligibilityDecisionLabel': 'Last decision',
@@ -148,19 +150,19 @@ describe('ProvisionalCommissionStatementsPanel', () => {
     mockStatements = [defaultStatement];
   });
 
-  it('renders manual-review and not-payable disclosures with statement entries', async () => {
+  it('renders reward status, review timing, and the estimated amount', async () => {
     render(<ProvisionalCommissionStatementsPanel audience="promoter" />);
 
     expect(screen.getByTestId('deal-commission-statements-promoter')).toBeInTheDocument();
     expect(screen.getByTestId('deal-commission-global-disclosure')).toHaveTextContent(
-      'Not payable'
+      'Not a balance'
     );
-    expect(screen.getByTestId('deal-commission-manual-review-notice')).toBeInTheDocument();
-    expect(screen.getByTestId('deal-commission-not-payable-badge')).toHaveTextContent(
-      'Not payable'
+    expect(screen.getByTestId('deal-commission-status-summary')).toHaveTextContent(
+      'Waiting period in progress'
     );
     expect(screen.getByTestId('deal-commission-statement-stmt-1')).toBeInTheDocument();
     expect(screen.getByText('$5')).toBeInTheDocument();
+    expect(screen.getByText('View calculation and references')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.queryByTestId('deal-commission-statements-loading')).not.toBeInTheDocument();
@@ -194,9 +196,8 @@ describe('ProvisionalCommissionStatementsPanel', () => {
     expect(screen.getByText('Reason: provider_dispute_outcome_unconfirmed')).toBeInTheDocument();
     expect(screen.getByText('Reason: provider_chargeback_observed')).toBeInTheDocument();
     expect(screen.getByText('Other reason (future_reason_code)')).toBeInTheDocument();
-    expect(screen.getByTestId('deal-commission-not-payable-badge')).toHaveTextContent(
-      'Not payable'
+    expect(screen.getByTestId('deal-commission-status-summary')).toHaveTextContent(
+      'Did not pass eligibility checks'
     );
-    expect(screen.getByTestId('deal-commission-manual-review-notice')).toBeInTheDocument();
   });
 });

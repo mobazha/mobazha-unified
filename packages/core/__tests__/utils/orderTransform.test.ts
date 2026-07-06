@@ -54,6 +54,24 @@ function buildOrder(progress: {
 }
 
 describe('transformCoreOrder payment progress formatting', () => {
+  it('preserves the immutable Deal Link source on the display order', () => {
+    const rawOrder = buildOrder({});
+    rawOrder.contract.orderOpen.dealLinkID = 'deal-link-123456789';
+    rawOrder.contract.orderOpen.dealRevision = 3;
+    rawOrder.contract.orderOpen.termsHash = 'terms-hash';
+
+    const order = transformCoreOrder(rawOrder, {
+      currentUserPeerID: 'buyer-peer',
+      viewingContext: 'purchase',
+    });
+
+    expect(order).toMatchObject({
+      dealLinkID: 'deal-link-123456789',
+      dealRevision: 3,
+      dealTermsHash: 'terms-hash',
+    });
+  });
+
   it('formats large EVM minimal-unit strings without Number precision loss', () => {
     const order = transformCoreOrder(
       buildOrder({

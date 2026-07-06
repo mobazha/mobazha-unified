@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ShieldCheck, Store } from 'lucide-react';
+import { ImageIcon, ShieldCheck, Store } from 'lucide-react';
 import {
   buildDealLinkPaymentHref,
   formatUserName,
+  getCurrencySymbol,
+  getImageUrl,
   resolveDealLinkAcceptanceWindowDays,
   resolveDealLinkProtectionWindowDays,
   setLoginRedirectPath,
@@ -27,6 +29,51 @@ import { DealLinkStatusPanel } from '@/components/DealLink/DealLinkStatusPanel';
 
 function resolveDealPath(token: string): string {
   return `/deal/${encodeURIComponent(token)}`;
+}
+
+function DealLinkProductImage({ src, title }: { src?: string; title: string }) {
+  const { t } = useI18n();
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(src ? 'loading' : 'failed');
+
+  useEffect(() => {
+    if (!src) {
+      setStatus('failed');
+      return;
+    }
+    setStatus('loading');
+  }, [src]);
+
+  useEffect(() => {
+    if (!src || status !== 'loading') return;
+    const timeout = window.setTimeout(() => setStatus('failed'), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [src, status]);
+
+  return (
+    <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:aspect-square sm:max-w-[180px]">
+      {status !== 'loaded' ? (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/60 to-muted"
+          aria-hidden="true"
+        >
+          <ImageIcon className="h-9 w-9 text-muted-foreground/50" />
+        </div>
+      ) : null}
+      {src && status !== 'failed' ? (
+        <img
+          src={src}
+          alt={t('dealLink.productImageAlt', { product: title })}
+          className={`h-full w-full object-cover transition-opacity ${
+            status === 'loaded' ? 'opacity-100' : 'opacity-0'
+          }`}
+          loading="eager"
+          decoding="async"
+          onLoad={() => setStatus('loaded')}
+          onError={() => setStatus('failed')}
+        />
+      ) : null}
+    </div>
+  );
 }
 
 export default function DealLinkPage() {
@@ -63,10 +110,15 @@ export default function DealLinkPage() {
   const deal = checkout.deal;
   const quote = checkout.quote;
 
-  const sellerFallback = t('dealLink.sellerFallback');
-  const sellerName = deal?.sellerPeerID
-    ? formatUserName({ peerID: deal.sellerPeerID }, { fallback: sellerFallback, truncateChars: 6 })
-    : sellerFallback;
+  const catalog = deal?.catalog;
+  const productTitle = catalog?.title || deal?.title || '';
+  const sellerName = formatUserName(
+    { name: catalog?.sellerName, peerID: deal?.sellerPeerID },
+    { prefix: t('dealLink.storeIdPrefix'), fallback: t('dealLink.sellerFallback') }
+  );
+  const productImage = getImageUrl(catalog?.image);
+  const sellerAvatar = getImageUrl(catalog?.sellerAvatar);
+  const acceptedCurrencies = catalog?.acceptedCurrencies?.filter(Boolean) ?? [];
 
   const acceptanceDays = deal ? resolveDealLinkAcceptanceWindowDays(deal) : undefined;
   const protectionDays = deal ? resolveDealLinkProtectionWindowDays(deal) : undefined;
@@ -149,33 +201,61 @@ export default function DealLinkPage() {
   const totalCurrency = quote?.priceCurrency ?? deal.priceCurrency;
 
   return (
-    <div className="min-h-dvh bg-background pb-28 md:pb-10" data-testid="deal-link-page">
+    <div
+      className="min-h-dvh overflow-x-hidden bg-background pb-28 md:pb-10"
+      data-testid="deal-link-page"
+    >
       <Header />
       <Container className="py-6 md:py-10">
-        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-          <div className="space-y-6">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+          <div className="min-w-0 space-y-6">
             <section className="space-y-3" aria-labelledby="deal-link-summary-heading">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">{t('dealLink.pageEyebrow')}</p>
-                <h1
-                  id="deal-link-summary-heading"
-                  className="text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                  {deal.title}
-                </h1>
-                {deal.description ? (
-                  <p className="text-sm leading-6 text-muted-foreground md:text-base">
-                    {deal.description}
-                  </p>
-                ) : null}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                {catalog ? <DealLinkProductImage src={productImage} title={productTitle} /> : null}
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="text-sm text-muted-foreground">{t('dealLink.pageEyebrow')}</p>
+                  <h1
+                    id="deal-link-summary-heading"
+                    className="text-2xl font-semibold tracking-tight break-words md:text-3xl"
+                  >
+                    {productTitle}
+                  </h1>
+                  {deal.description ? (
+                    <p className="text-sm leading-6 text-muted-foreground break-words md:text-base">
+                      {deal.description}
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
               <Card>
-                <CardContent className="space-y-3 p-4 md:p-5">
-                  <div className="text-base font-medium">{deal.title}</div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Store className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span data-testid="deal-link-seller-name">{sellerName}</span>
+                <CardContent className="space-y-4 p-4 md:p-5">
+                  {!catalog ? (
+                    <div className="text-base font-medium break-words">{productTitle}</div>
+                  ) : null}
+                  <div className="flex min-w-0 items-center gap-2.5 text-sm text-muted-foreground">
+                    {sellerAvatar ? (
+                      <img
+                        src={sellerAvatar}
+                        alt=""
+                        className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted"
+                        aria-hidden="true"
+                      >
+                        <Store className="h-4 w-4" />
+                      </span>
+                    )}
+                    <span
+                      className="min-w-0 truncate font-medium text-foreground"
+                      data-testid="deal-link-seller-name"
+                    >
+                      {sellerName}
+                    </span>
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {t(`dealLink.deliveryType.${deal.deliveryType}`, {
@@ -184,6 +264,34 @@ export default function DealLinkPage() {
                   </div>
                   <div className="text-lg font-semibold text-primary tabular-nums">
                     {formatPrice(deal.priceAmount, deal.priceCurrency)}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      {t('dealLink.acceptedPaymentsLabel')}
+                    </div>
+                    {acceptedCurrencies.length > 0 ? (
+                      <ul
+                        className="flex flex-wrap gap-2"
+                        aria-label={t('dealLink.acceptedPaymentsLabel')}
+                      >
+                        {acceptedCurrencies.map(currencyCode => {
+                          const symbol = getCurrencySymbol(currencyCode);
+                          const label =
+                            symbol === currencyCode ? currencyCode : `${symbol} ${currencyCode}`;
+                          return (
+                            <li key={currencyCode}>
+                              <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-muted/40 px-2.5 text-xs font-medium text-foreground">
+                                {label}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {t('dealLink.acceptedPaymentsFallback')}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -278,7 +386,7 @@ export default function DealLinkPage() {
               <Button
                 type="button"
                 size="lg"
-                className="min-h-11 w-full"
+                className="min-h-11 w-full min-w-0"
                 disabled={!checkout.canAccept || checkout.acceptLoading}
                 onClick={checkout.acceptDeal}
                 data-testid="deal-link-accept-desktop"

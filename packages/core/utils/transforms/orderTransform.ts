@@ -106,6 +106,10 @@ interface RealOrderData {
     OrderID?: string;
     orderOpen?: {
       timestamp?: string;
+      feeQuoteID?: string;
+      dealLinkID?: string;
+      dealRevision?: number;
+      termsHash?: string;
       buyerID?: { peerID?: string; name?: string; handle?: string };
       listings?: Array<{
         vendorID?: { peerID?: string; name?: string; handle?: string };
@@ -1448,6 +1452,9 @@ export function transformCoreOrder(
   const result: DisplayOrder = {
     id: fullOrderId,
     orderId: fullOrderId,
+    dealLinkID: orderOpen?.dealLinkID || undefined,
+    dealRevision: orderOpen?.dealRevision,
+    dealTermsHash: orderOpen?.termsHash || undefined,
     slug: listingSlug,
     status: displayStatus,
     isModerated:

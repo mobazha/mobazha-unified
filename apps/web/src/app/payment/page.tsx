@@ -76,6 +76,10 @@ import {
   resolvePaymentRuntimeVendorPeerID,
   resolvePaymentPageRestoreOptions,
 } from './paymentPolicyRestore';
+import {
+  resolveDealDefaultProtectionProvider,
+  resolveDealDefaultTokenID,
+} from './dealPaymentDefaults';
 import { useToast } from '@/components/ui/use-toast';
 import { useHaptic } from '@/lib/platform';
 import { orderDetailPath } from '@/lib/ordersNavigation';
@@ -384,17 +388,75 @@ export default function PaymentPage() {
     selectedTokenId,
     selectedFiatProvider,
     selectedModerator: paymentModerator,
+    availableFiatProviders,
+    availableCryptoTokenIds,
+    moderators,
+    isLoadingModerators,
     openPaymentSelector,
     openModeratorSelector,
     restoreFromSession,
+    setSelectedTokenId,
+    setSelectedModerator,
     setCheckoutPaymentPolicy,
+    setCheckoutAcceptedCurrencies,
     setVendorPeerID,
     showFiatCheckoutMethods,
   } = usePaymentSelector();
 
   const visibleTokenId = useMemo(() => sanitizeCheckoutTokenId(selectedTokenId), [selectedTokenId]);
   const visibleFiatProvider =
-    fiatVisible && showFiatCheckoutMethods ? selectedFiatProvider : undefined;
+    fiatVisible &&
+    showFiatCheckoutMethods &&
+    selectedFiatProvider &&
+    availableFiatProviders.includes(selectedFiatProvider)
+      ? selectedFiatProvider
+      : undefined;
+
+  const orderAcceptedCurrencies = useMemo(() => {
+    if (!isDealBacked) return undefined;
+    const listings = normalizeOrderOpenListings(rawOrder?.contract?.orderOpen?.listings);
+    return listings[0]?.metadata?.acceptedCurrencies ?? [];
+  }, [isDealBacked, rawOrder]);
+
+  useEffect(() => {
+    setCheckoutAcceptedCurrencies(orderAcceptedCurrencies);
+    return () => setCheckoutAcceptedCurrencies(undefined);
+  }, [orderAcceptedCurrencies, setCheckoutAcceptedCurrencies]);
+
+  useEffect(() => {
+    const defaultTokenID = resolveDealDefaultTokenID({
+      isDealBacked,
+      currentTokenID: visibleTokenId,
+      availableCryptoTokenIds,
+      hasVisibleFiatMethod: showFiatCheckoutMethods && availableFiatProviders.length > 0,
+    });
+    if (defaultTokenID) setSelectedTokenId(defaultTokenID);
+  }, [
+    availableCryptoTokenIds,
+    availableFiatProviders.length,
+    isDealBacked,
+    setSelectedTokenId,
+    showFiatCheckoutMethods,
+    visibleTokenId,
+  ]);
+
+  useEffect(() => {
+    const defaultProvider = resolveDealDefaultProtectionProvider({
+      isDealBacked,
+      protectionEnabled: paymentProtectionEnabled,
+      isLoading: isLoadingModerators,
+      currentProviderPeerID: paymentModerator?.peerID,
+      candidates: moderators,
+    });
+    if (defaultProvider) setSelectedModerator(defaultProvider);
+  }, [
+    isDealBacked,
+    isLoadingModerators,
+    moderators,
+    paymentModerator?.peerID,
+    paymentProtectionEnabled,
+    setSelectedModerator,
+  ]);
 
   const selectedPaymentCoin = useMemo(() => {
     const tokenId = (visibleTokenId || '').trim();
@@ -1456,6 +1518,7 @@ export default function PaymentPage() {
                       : undefined
                   }
                   memo={orderDetails.memo}
+                  compact={isDealBacked}
                 />
 
                 {externalWalletInfo ? (

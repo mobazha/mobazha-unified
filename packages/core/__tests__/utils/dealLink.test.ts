@@ -76,9 +76,63 @@ describe('normalizePublicDealLink', () => {
     });
     expect(deal).not.toHaveProperty('seller');
     expect(deal).not.toHaveProperty('listing');
+    expect(deal).not.toHaveProperty('catalog');
     expect(deal.terms.deliverables).toEqual(['course access', 'support call']);
     expect(deal.terms.refund).toBe('before_download');
     expect(resolveDealLinkAcceptanceWindowDays(deal)).toBe(3);
+  });
+
+  it('normalizes a complete optional catalog snapshot', () => {
+    const deal = normalizePublicDealLink(
+      {
+        ...hostingDealResponse,
+        catalog: {
+          title: 'Private offer',
+          sellerName: 'Studio North',
+          sellerAvatar: 'https://cdn.example/avatar.png',
+          image: 'https://cdn.example/cover.png',
+          acceptedCurrencies: ['USD', 'USDC'],
+          contractType: 'DIGITAL_GOOD',
+        },
+      },
+      'fallback'
+    );
+
+    expect(deal.catalog).toEqual({
+      title: 'Private offer',
+      sellerName: 'Studio North',
+      sellerAvatar: 'https://cdn.example/avatar.png',
+      image: 'https://cdn.example/cover.png',
+      acceptedCurrencies: ['USD', 'USDC'],
+      contractType: 'DIGITAL_GOOD',
+    });
+  });
+
+  it('keeps backward compatibility when catalog is absent or invalid', () => {
+    expect(normalizePublicDealLink(hostingDealResponse, 'fallback')).not.toHaveProperty('catalog');
+    expect(
+      normalizePublicDealLink({ ...hostingDealResponse, catalog: null }, 'fallback')
+    ).not.toHaveProperty('catalog');
+    expect(
+      normalizePublicDealLink({ ...hostingDealResponse, catalog: 'not-an-object' }, 'fallback')
+    ).not.toHaveProperty('catalog');
+  });
+
+  it('trims, filters, and dedupes acceptedCurrencies while preserving order', () => {
+    const deal = normalizePublicDealLink(
+      {
+        ...hostingDealResponse,
+        catalog: {
+          title: 'Private offer',
+          sellerName: 'Studio North',
+          acceptedCurrencies: [' USD ', 'BTC', '', 42, null, 'USD', 'ETH', 'BTC'],
+          contractType: 'DIGITAL_GOOD',
+        },
+      },
+      'fallback'
+    );
+
+    expect(deal.catalog?.acceptedCurrencies).toEqual(['USD', 'BTC', 'ETH']);
   });
 });
 

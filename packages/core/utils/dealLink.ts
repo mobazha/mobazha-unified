@@ -6,6 +6,7 @@ import type {
   DealLinkPageErrorKind,
   DealLinkTerms,
   PublicDealLink,
+  PublicDealLinkCatalog,
 } from '../types/dealLink';
 
 export function createDealLinkIdempotencyKey(): string {
@@ -68,6 +69,35 @@ function readRequiredNumber(value: unknown, fallback = 0): number {
   return readOptionalNumber(value) ?? fallback;
 }
 
+function readAcceptedCurrencies(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const currencies: string[] = [];
+  for (const item of value) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    currencies.push(trimmed);
+  }
+  return currencies;
+}
+
+function readPublicDealLinkCatalog(raw: unknown): PublicDealLinkCatalog | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return undefined;
+  }
+  const source = raw as Record<string, unknown>;
+  return {
+    title: readString(source.title) ?? '',
+    sellerName: readString(source.sellerName) ?? '',
+    sellerAvatar: readString(source.sellerAvatar),
+    image: readString(source.image),
+    acceptedCurrencies: readAcceptedCurrencies(source.acceptedCurrencies),
+    contractType: readString(source.contractType) ?? '',
+  };
+}
+
 function readPurchaseTemplate(raw: unknown): PublicDealLink['purchaseTemplate'] {
   const source =
     raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
@@ -97,7 +127,8 @@ export function normalizePublicDealLink(
   raw: Record<string, unknown>,
   token: string
 ): PublicDealLink {
-  return {
+  const catalog = readPublicDealLinkCatalog(raw.catalog);
+  const deal: PublicDealLink = {
     token: readString(raw.token) ?? readString(raw.publicToken) ?? token,
     status: readString(raw.status) ?? 'unknown',
     title: readString(raw.title) ?? '',
@@ -110,6 +141,10 @@ export function normalizePublicDealLink(
     terms: parseDealLinkTerms(raw.terms),
     purchaseTemplate: readPurchaseTemplate(raw.purchaseTemplate),
   };
+  if (catalog) {
+    deal.catalog = catalog;
+  }
+  return deal;
 }
 
 /** Normalize immutable fee quote payload (`dealFeeQuoteResponse`). */

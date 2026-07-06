@@ -9,6 +9,7 @@ export { OrderDisputeBanner, type OrderDisputeBannerProps } from './OrderDispute
 export { FiatDisputeBanner, type FiatDisputeBannerProps } from './FiatDisputeBanner';
 export { OrderMemoCard, type OrderMemoCardProps } from './OrderMemoCard';
 export { OrderStatusCard, type OrderStatusCardProps } from './OrderStatusCard';
+export { OrderDealLinkNotice, type OrderDealLinkNoticeProps } from './OrderDealLinkNotice';
 export { OrderCreatedAtMeta, type OrderCreatedAtMetaProps } from './OrderCreatedAtMeta';
 export { OrderSettlementCard, type OrderSettlementCardProps } from './OrderSettlementCard';
 export { OrderProtectionStatus, type OrderProtectionStatusProps } from './OrderProtectionStatus';

@@ -8,6 +8,11 @@ import {
   CHAINS as CORE_CHAINS,
   isPaymentCoinEnabled,
 } from '@mobazha/core/data/tokens';
+import {
+  filterVisiblePaymentTokens,
+  getTokenIdFromPaymentCoin,
+  isFiatCurrency,
+} from '@mobazha/core';
 import { TokenConfig, ChainConfig, FiatMethodConfig } from './types';
 
 // 代币配置统一复用 core 注册表，避免 web 侧手写表漂移。
@@ -59,6 +64,63 @@ export const FIAT_METHODS: FiatMethodConfig[] = [
     brandLabels: ['PayPal'],
   },
 ];
+
+/**
+ * Resolve the exact crypto choices shown by the normal checkout selector.
+ * Deal checkout defaults must use this list so they never preselect a hidden,
+ * disabled, coming-soon, or seller-unsupported token.
+ */
+export function getAvailablePaymentTokens(acceptedCurrencies?: string[]): TokenConfig[] {
+  const comingSoonChains = new Set(CHAINS.filter(chain => chain.comingSoon).map(chain => chain.id));
+  let tokens = TOKENS.filter(token => !comingSoonChains.has(token.chain));
+
+  if (acceptedCurrencies) {
+    const accepted = new Set<string>();
+    for (const value of acceptedCurrencies) {
+      const normalized = value?.trim();
+      if (!normalized) continue;
+      accepted.add(normalized.toLowerCase());
+      const tokenID = getTokenIdFromPaymentCoin(normalized);
+      if (tokenID) accepted.add(tokenID.toLowerCase());
+    }
+    tokens = tokens.filter(token => {
+      const tokenID = token.id.trim().toLowerCase();
+      const canonical = token.assetId?.trim().toLowerCase();
+      return accepted.has(tokenID) || (canonical ? accepted.has(canonical) : false);
+    });
+  }
+
+  return filterVisiblePaymentTokens(tokens);
+}
+
+/**
+ * Keep fiat methods inside the immutable order currency set when checkout
+ * provides one. Undefined preserves normal seller-configured checkout;
+ * an empty list intentionally exposes no fiat method.
+ */
+export function getAvailableFiatProviderIDs(
+  providerIDs: string[],
+  acceptedCurrencies?: string[]
+): string[] {
+  const providers = [...new Set(providerIDs.map(value => value.trim()).filter(Boolean))];
+  if (acceptedCurrencies === undefined) return providers;
+
+  const acceptedProviders = new Set<string>();
+  let acceptsGenericFiat = false;
+  for (const raw of acceptedCurrencies) {
+    const value = raw.trim();
+    if (!value) continue;
+    const parts = value.split(':');
+    if (parts.length === 3 && parts[0]?.toLowerCase() === 'fiat' && parts[1]) {
+      acceptedProviders.add(parts[1].toLowerCase());
+      continue;
+    }
+    if (isFiatCurrency(value.toUpperCase())) acceptsGenericFiat = true;
+  }
+
+  if (acceptsGenericFiat) return providers;
+  return providers.filter(provider => acceptedProviders.has(provider.toLowerCase()));
+}
 
 // 获取代币图标
 export function getTokenIcon(tokenId: string): string {

@@ -58,6 +58,7 @@ import {
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
+  OrderDealLinkNotice,
   OrderSettlementCard,
   OrderCreatedAtMeta,
   DisputeSummaryCard,
@@ -834,6 +835,10 @@ export function OrderDetailDesktop({
                   />
                 ) : (
                   <OrderStatusCard displayOrder={displayOrder} className="mb-4" />
+                )}
+
+                {displayOrder.dealLinkID && (
+                  <OrderDealLinkNotice displayOrder={displayOrder} className="mb-4" />
                 )}
 
                 {buyerNeedsRefundAddress && (

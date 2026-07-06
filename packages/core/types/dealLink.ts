@@ -36,6 +36,16 @@ export interface DealLinkPurchaseTemplate {
   optionalFeatures: string[] | null;
 }
 
+/** Optional buyer-facing catalog snapshot from hosting public deal link responses. */
+export interface PublicDealLinkCatalog {
+  title: string;
+  sellerName: string;
+  sellerAvatar?: string;
+  image?: string;
+  acceptedCurrencies: string[];
+  contractType: string;
+}
+
 /** Public buyer-facing Deal Link payload from hosting `/public/deal-links/{token}`. */
 export interface PublicDealLink {
   token: string;
@@ -49,6 +59,7 @@ export interface PublicDealLink {
   expiresAt?: string;
   terms: DealLinkTerms;
   purchaseTemplate: DealLinkPurchaseTemplate;
+  catalog?: PublicDealLinkCatalog;
 }
 
 /** Immutable server-authored fee quote (`dealFeeQuoteResponse`). */

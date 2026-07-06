@@ -4,8 +4,10 @@
 'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { Link2, Loader2, Pause, Play, Plus } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Copy, ExternalLink, Link2, Loader2, Pause, Play, Plus, ShieldCheck } from 'lucide-react';
 import {
+  buildSellerDealLinkBrowseHref,
   buildPromoterProgramHref,
   formatAttributionWindowDays,
   formatCommissionRateFromBPS,
@@ -15,6 +17,8 @@ import {
   useCurrency,
   useDealPromotionPrograms,
   useI18n,
+  useMyListings,
+  type DealLinkDeliveryType,
 } from '@mobazha/core';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { copyToClipboard } from '@/lib/clipboard';
 import { ProvisionalCommissionStatementsPanel } from '@/components/DealCommission/ProvisionalCommissionStatementsPanel';
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'success' | 'warning'> =
@@ -40,20 +45,30 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'succ
 
 export default function AdminDealLinksPage() {
   const { t } = useI18n();
-  const { formatPrice } = useCurrency();
+  const searchParams = useSearchParams();
+  const { formatPrice, fromMinimalUnit } = useCurrency();
   const { toast } = useToast();
+  const { listings, isLoading: listingsLoading } = useMyListings();
   const {
     programs,
     dealLinks,
     loading,
     error,
     reload,
+    createActiveDealLink,
     createProgram,
     activateProgram,
     pauseProgram,
     busyProgramId,
   } = useDealPromotionPrograms();
 
+  const [selectedProductSlug, setSelectedProductSlug] = useState('');
+  const [deliveryType, setDeliveryType] = useState<DealLinkDeliveryType>('digital_file');
+  const [reviewDays, setReviewDays] = useState('3');
+  const [creatingDealLink, setCreatingDealLink] = useState(false);
+  const [createdDealLinkId, setCreatedDealLinkId] = useState('');
+  const [manualCopyToken, setManualCopyToken] = useState('');
+  const [showAllDealLinks, setShowAllDealLinks] = useState(false);
   const [selectedDealLinkId, setSelectedDealLinkId] = useState('');
   const [programName, setProgramName] = useState('');
   const [commissionPercent, setCommissionPercent] = useState('5');
@@ -62,6 +77,111 @@ export default function AdminDealLinksPage() {
   const [creating, setCreating] = useState(false);
 
   const dealLinkById = useMemo(() => new Map(dealLinks.map(link => [link.id, link])), [dealLinks]);
+
+  const eligibleListings = useMemo(
+    () =>
+      listings.filter(
+        listing =>
+          (listing.status ?? 'published') === 'published' &&
+          Boolean(listing.cid) &&
+          !listing.priceHasRange &&
+          (listing.contractType === 'DIGITAL_GOOD' || listing.contractType === 'SERVICE')
+      ),
+    [listings]
+  );
+
+  const activeDealLinks = useMemo(
+    () => dealLinks.filter(link => link.status === 'active'),
+    [dealLinks]
+  );
+  const displayedActiveDealLinks = showAllDealLinks ? activeDealLinks : activeDealLinks.slice(0, 5);
+
+  const handleProductChange = useCallback(
+    (slug: string) => {
+      setSelectedProductSlug(slug);
+      const listing = eligibleListings.find(item => item.slug === slug);
+      const nextDeliveryType: DealLinkDeliveryType =
+        listing?.contractType === 'SERVICE' ? 'fixed_service' : 'digital_file';
+      setDeliveryType(nextDeliveryType);
+      setReviewDays(nextDeliveryType === 'fixed_service' ? '7' : '3');
+    },
+    [eligibleListings]
+  );
+
+  React.useEffect(() => {
+    const requestedProduct = searchParams.get('product');
+    if (!requestedProduct || selectedProductSlug) return;
+    if (eligibleListings.some(item => item.slug === requestedProduct)) {
+      handleProductChange(requestedProduct);
+    }
+  }, [eligibleListings, handleProductChange, searchParams, selectedProductSlug]);
+
+  const handleCreateDealLink = useCallback(async () => {
+    const listing = eligibleListings.find(item => item.slug === selectedProductSlug);
+    const parsedReviewDays = Number(reviewDays);
+    const minimumReviewDays = deliveryType === 'fixed_service' ? 7 : 3;
+    if (
+      !listing?.cid ||
+      !Number.isInteger(parsedReviewDays) ||
+      parsedReviewDays < minimumReviewDays ||
+      parsedReviewDays > 365
+    ) {
+      toast({ variant: 'destructive', title: t('admin.dealLinks.dealCreateValidationError') });
+      return;
+    }
+
+    setCreatingDealLink(true);
+    try {
+      const currency = listing.price.currency.code;
+      const created = await createActiveDealLink({
+        title: listing.title,
+        deliveryType,
+        priceAmount: String(fromMinimalUnit(listing.price.amount, currency)),
+        priceCurrency: currency,
+        terms: {
+          acceptanceHours: parsedReviewDays * 24,
+          deliverables: [listing.title],
+        },
+        purchaseTemplate: {
+          listingHash: listing.cid,
+          quantity: '1',
+          options: [],
+          optionalFeatures: [],
+        },
+      });
+      setCreatedDealLinkId(created.id);
+      setSelectedDealLinkId(created.id);
+      toast({ title: t('admin.dealLinks.dealCreateSuccess') });
+    } catch {
+      toast({ variant: 'destructive', title: t('admin.dealLinks.dealCreateFailed') });
+    } finally {
+      setCreatingDealLink(false);
+    }
+  }, [
+    createActiveDealLink,
+    deliveryType,
+    eligibleListings,
+    fromMinimalUnit,
+    reviewDays,
+    selectedProductSlug,
+    t,
+    toast,
+  ]);
+
+  const handleCopyDealLink = useCallback(
+    async (publicToken: string) => {
+      const href = `${window.location.origin}${buildSellerDealLinkBrowseHref({ publicToken })}`;
+      const copied = await copyToClipboard(href);
+      if (copied) {
+        setManualCopyToken('');
+        toast({ title: t('admin.dealLinks.dealCopySuccess') });
+      } else {
+        setManualCopyToken(publicToken);
+        toast({ variant: 'destructive', title: t('admin.dealLinks.dealCopyFailed') });
+      }
+    },
+    [t, toast]
+  );
 
   const handleCreateProgram = useCallback(async () => {
     const commissionRateBPS = parseCommissionPercentToBPS(commissionPercent);
@@ -140,6 +260,178 @@ export default function AdminDealLinksPage() {
         <p className="text-sm text-muted-foreground">{t('admin.dealLinks.subtitle')}</p>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+            {t('admin.dealLinks.dealCreateTitle')}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">{t('admin.dealLinks.dealCreateSubtitle')}</p>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="deal-product-select">{t('admin.dealLinks.productLabel')}</Label>
+              <Select value={selectedProductSlug} onValueChange={handleProductChange}>
+                <SelectTrigger id="deal-product-select" className="min-h-11">
+                  <SelectValue placeholder={t('admin.dealLinks.productPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {eligibleListings.map(listing => (
+                    <SelectItem key={listing.slug} value={listing.slug}>
+                      {listing.title} ·{' '}
+                      {formatPrice(
+                        fromMinimalUnit(listing.price.amount, listing.price.currency.code),
+                        listing.price.currency.code
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!listingsLoading && !eligibleListings.length ? (
+                <p className="text-sm text-muted-foreground">
+                  {t('admin.dealLinks.noEligibleProducts')}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deal-delivery-type">{t('admin.dealLinks.deliveryTypeLabel')}</Label>
+              <Select
+                value={deliveryType}
+                onValueChange={value => {
+                  setDeliveryType(value);
+                  setReviewDays(value === 'fixed_service' ? '7' : '3');
+                }}
+              >
+                <SelectTrigger id="deal-delivery-type" className="min-h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="digital_file">
+                    {t('admin.dealLinks.deliveryDigitalFile')}
+                  </SelectItem>
+                  <SelectItem value="license_key">
+                    {t('admin.dealLinks.deliveryLicenseKey')}
+                  </SelectItem>
+                  <SelectItem value="fixed_service">
+                    {t('admin.dealLinks.deliveryFixedService')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deal-review-days">{t('admin.dealLinks.reviewDaysLabel')}</Label>
+              <Input
+                id="deal-review-days"
+                inputMode="numeric"
+                value={reviewDays}
+                onChange={event => setReviewDays(event.target.value)}
+                className="min-h-11"
+              />
+              <p className="text-xs text-muted-foreground">
+                {deliveryType === 'fixed_service'
+                  ? t('admin.dealLinks.reviewDaysServiceHint')
+                  : t('admin.dealLinks.reviewDaysDigitalHint')}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            className="min-h-11 w-full sm:w-auto"
+            disabled={creatingDealLink || listingsLoading || !eligibleListings.length}
+            onClick={() => void handleCreateDealLink()}
+            data-testid="admin-deal-links-create-link"
+          >
+            {creatingDealLink ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Link2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            )}
+            {t('admin.dealLinks.dealCreateCta')}
+          </Button>
+
+          {activeDealLinks.length ? (
+            <div className="space-y-3 border-t border-border pt-5">
+              <h2 className="text-sm font-medium">{t('admin.dealLinks.activeDealsTitle')}</h2>
+              {displayedActiveDealLinks.map(link => {
+                const href = buildSellerDealLinkBrowseHref(link);
+                const absoluteHref =
+                  typeof window === 'undefined' ? href : `${window.location.origin}${href}`;
+                return (
+                  <div
+                    key={link.id}
+                    className={`flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between ${
+                      link.id === createdDealLinkId
+                        ? 'border-primary/40 bg-primary/5'
+                        : 'border-border'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{link.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatPrice(link.priceAmount, link.priceCurrency)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11 flex-1 sm:flex-none"
+                        onClick={() => void handleCopyDealLink(link.publicToken)}
+                      >
+                        <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                        {t('admin.dealLinks.copyDealCta')}
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11 flex-1 sm:flex-none"
+                      >
+                        <a href={href} target="_blank" rel="noreferrer">
+                          <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                          {t('admin.dealLinks.openDealCta')}
+                        </a>
+                      </Button>
+                    </div>
+                    {manualCopyToken === link.publicToken ? (
+                      <div className="w-full basis-full space-y-1.5 border-t border-border pt-3">
+                        <Label htmlFor={`manual-copy-${link.id}`} className="text-xs">
+                          {t('admin.dealLinks.manualCopyLabel')}
+                        </Label>
+                        <Input
+                          id={`manual-copy-${link.id}`}
+                          value={absoluteHref}
+                          readOnly
+                          className="min-h-11 font-mono text-xs"
+                          onFocus={event => event.currentTarget.select()}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {activeDealLinks.length > 5 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-11 w-full"
+                  onClick={() => setShowAllDealLinks(current => !current)}
+                >
+                  {showAllDealLinks
+                    ? t('admin.dealLinks.showFewerDeals')
+                    : t('admin.dealLinks.showAllDeals', { count: activeDealLinks.length })}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="space-y-2 p-4 text-sm leading-6">
           <p className="font-medium">{t('admin.dealLinks.immutableEconomicsTitle')}</p>
@@ -160,7 +452,7 @@ export default function AdminDealLinksPage() {
                 <SelectValue placeholder={t('admin.dealLinks.dealLinkPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {dealLinks.map(link => (
+                {activeDealLinks.map(link => (
                   <SelectItem key={link.id} value={link.id}>
                     {link.title} ({link.status})
                   </SelectItem>

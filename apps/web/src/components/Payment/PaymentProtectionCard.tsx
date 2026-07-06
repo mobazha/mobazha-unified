@@ -116,7 +116,7 @@ export const PaymentProtectionCard: React.FC<PaymentProtectionCardProps> = ({
           ) : (
             <Button
               variant="outline"
-              className="w-full justify-between"
+              className="min-h-11 w-full justify-between"
               onClick={onChangeModerator}
             >
               <span>{t('payment.selectModerator')}</span>

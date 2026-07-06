@@ -32,6 +32,7 @@ import {
   Download,
   PackagePlus,
   KeyRound,
+  ShieldCheck,
   Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -69,6 +70,7 @@ type SupplyFilter = 'all' | 'needs_attention';
 interface ProductActionsProps {
   slug: string;
   peerID?: string;
+  canCreateDealLink?: boolean;
   canRestock?: boolean;
   canImportKeys?: boolean;
   onRestock?: () => void;
@@ -80,6 +82,7 @@ interface ProductActionsProps {
 function ProductActions({
   slug,
   peerID,
+  canCreateDealLink,
   canRestock,
   canImportKeys,
   onRestock,
@@ -104,6 +107,14 @@ function ProductActions({
         <DropdownMenuItem onClick={() => router.push(`/listing/edit/${slug}?from=admin`)}>
           <Pencil className="mr-2 h-4 w-4" /> {t('admin.products.edit')}
         </DropdownMenuItem>
+        {canCreateDealLink && (
+          <DropdownMenuItem
+            onClick={() => router.push(`/admin/deal-links?product=${encodeURIComponent(slug)}`)}
+          >
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            {t('admin.products.createProtectedLink')}
+          </DropdownMenuItem>
+        )}
         {canRestock && onRestock && (
           <DropdownMenuItem onClick={onRestock}>
             <PackagePlus className="mr-2 h-4 w-4" /> {t('admin.products.actionRestock')}
@@ -282,6 +293,11 @@ export default function AdminProductsPage() {
       return {
         slug: product.slug,
         peerID: product.vendorPeerID,
+        canCreateDealLink:
+          getEffectiveStatus(product) === 'published' &&
+          Boolean(product.cid) &&
+          !product.priceHasRange &&
+          (product.contractType === 'DIGITAL_GOOD' || product.contractType === 'SERVICE'),
         canRestock: supplyAvailabilityEnabled && isBulkRestockEligible(ctx),
         canImportKeys: supplyAvailabilityEnabled && isBulkImportKeysEligible(ctx),
         onRestock: () => setRestockTargets([{ slug: product.slug, title: product.title }]),
@@ -290,7 +306,7 @@ export default function AdminProductsPage() {
         deleting: deletingSlug === product.slug,
       };
     },
-    [supplyContextFor, supplyAvailabilityEnabled, deletingSlug]
+    [supplyContextFor, supplyAvailabilityEnabled, deletingSlug, getEffectiveStatus]
   );
 
   const statusCounts = useMemo(() => {

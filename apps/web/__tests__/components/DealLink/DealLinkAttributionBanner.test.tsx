@@ -7,28 +7,21 @@ import React from 'react';
 
 vi.mock('@mobazha/core', () => ({
   useI18n: () => ({
-    t: (key: string, params?: Record<string, unknown>) => {
-      if (key === 'dealPromotion.attributionBannerBody') {
-        return `commission ${params?.commission} ${params?.currency}`;
-      }
-      if (key === 'dealPromotion.attributionWindowDays') {
-        return `window ${params?.count}`;
-      }
+    t: (key: string) => {
       const translations: Record<string, string> = {
-        'dealPromotion.attributionBannerTitle': 'Referred offer',
-        'dealPromotion.manualReviewOnlyNotice': 'Manual review only',
+        'dealPromotion.attributionBannerTitle': 'You arrived through a partner link',
+        'dealPromotion.attributionBannerBody':
+          'Your price stays the same. Any partner reward is handled after order review.',
       };
       return translations[key] ?? key;
     },
   }),
-  formatAttributionWindowDays: (seconds: number) => Math.round(seconds / 86400),
-  formatCommissionRateFromBPS: (bps: number) => String(bps / 100),
 }));
 
 import { DealLinkAttributionBanner } from '@/components/DealLink/DealLinkAttributionBanner';
 
 describe('DealLinkAttributionBanner', () => {
-  it('renders manual-review attribution disclosure', () => {
+  it('explains partner attribution without exposing commission mechanics to the buyer', () => {
     render(
       <DealLinkAttributionBanner
         claim={{
@@ -49,9 +42,12 @@ describe('DealLinkAttributionBanner', () => {
     );
 
     expect(screen.getByTestId('deal-link-attribution-banner')).toBeInTheDocument();
-    expect(screen.getByText('Referred offer')).toBeInTheDocument();
-    expect(screen.getByText('commission 5 USD')).toBeInTheDocument();
-    expect(screen.getByText('window 7')).toBeInTheDocument();
-    expect(screen.getByText('Manual review only')).toBeInTheDocument();
+    expect(screen.getByText('You arrived through a partner link')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Your price stays the same. Any partner reward is handled after order review.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/5|USD|window|manual review/i)).not.toBeInTheDocument();
   });
 });

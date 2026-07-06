@@ -4,16 +4,20 @@ import React, { useMemo, useCallback } from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  getTokenIdFromPaymentCoin,
   useI18n,
   useFiatPaymentVisible,
-  filterVisiblePaymentTokens,
   applyExchangeUsdtCheckoutTokenOrdering,
   isExchangeUsdtPaymentGuideLocale,
 } from '@mobazha/core';
 import { useMiniAppPayment } from '@/hooks/useMiniAppPayment';
 import { PaymentCryptoSelectorProps, TokenConfig, FiatMethodConfig } from './types';
-import { TOKENS, CHAINS, FIAT_METHODS, groupTokensByCurrency, getChainById } from './config';
+import {
+  TOKENS,
+  FIAT_METHODS,
+  groupTokensByCurrency,
+  getAvailablePaymentTokens,
+  getChainById,
+} from './config';
 import type { CurrencyGroup } from './config';
 import { CryptoTokenCard } from './CryptoTokenCard';
 import { MultiChainTokenCard } from './MultiChainTokenCard';
@@ -56,26 +60,7 @@ export const PaymentCryptoSelector: React.FC<PaymentCryptoSelectorProps> = ({
         token => token.chain === rwaBlockchain && !token.isNative && !token.disabled
       );
     }
-    const comingSoonChains = CHAINS.filter(c => c.comingSoon).map(c => c.id);
-    let tokens = TOKENS.filter(tok => !comingSoonChains.includes(tok.chain));
-    if (acceptedCurrencies) {
-      const accepted = new Set<string>();
-      for (const value of acceptedCurrencies) {
-        const normalized = value?.trim();
-        if (!normalized) continue;
-        accepted.add(normalized.toLowerCase());
-        const tokenID = getTokenIdFromPaymentCoin(normalized);
-        if (tokenID) {
-          accepted.add(tokenID.toLowerCase());
-        }
-      }
-      tokens = tokens.filter(token => {
-        const tokenID = token.id.trim().toLowerCase();
-        const canonical = token.assetId?.trim().toLowerCase();
-        return accepted.has(tokenID) || (canonical ? accepted.has(canonical) : false);
-      });
-    }
-    return filterVisiblePaymentTokens(tokens);
+    return getAvailablePaymentTokens(acceptedCurrencies);
   }, [isRwaTokenPurchase, rwaBlockchain, acceptedCurrencies]);
 
   const currencyGroups = useMemo(() => {

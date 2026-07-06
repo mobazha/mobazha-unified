@@ -67,6 +67,7 @@ import {
   FiatDisputeBanner,
   OrderMemoCard,
   OrderStatusCard,
+  OrderDealLinkNotice,
   OrderSettlementCard,
   OrderCreatedAtMeta,
   DisputeOverviewCard,
@@ -1079,6 +1080,8 @@ export function OrderDetailMobile({
 
               {/* 3. Order summary — total, shipping, status badge */}
               <OrderSummaryCard displayOrder={displayOrder} statusLabel={statusLabel} />
+
+              {displayOrder.dealLinkID && <OrderDealLinkNotice displayOrder={displayOrder} />}
 
               {/* 4a. Fiat dispute banner (independent of order state) */}
               {displayOrder.fiatDispute && (

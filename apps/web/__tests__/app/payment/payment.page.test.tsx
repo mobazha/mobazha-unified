@@ -16,6 +16,10 @@ import {
   resolvePaymentRuntimeVendorPeerID,
   isActivePaymentOrderFetch,
 } from '@/app/payment/paymentPolicyRestore';
+import {
+  resolveDealDefaultProtectionProvider,
+  resolveDealDefaultTokenID,
+} from '@/app/payment/dealPaymentDefaults';
 
 function applyPaymentPageRestore(
   restoreFromSession: (options: ReturnType<typeof resolvePaymentPageRestoreOptions>) => void,
@@ -93,6 +97,91 @@ describe('PaymentPage payment policy restore', () => {
           vendorPeerID: '  seller-peer-id  ',
         })
       ).toBe('seller-peer-id');
+    });
+  });
+
+  describe('Deal payment defaults', () => {
+    it('preselects only one seller-supported crypto choice when no fiat choice competes', () => {
+      expect(
+        resolveDealDefaultTokenID({
+          isDealBacked: true,
+          availableCryptoTokenIds: ['SOLUSDC'],
+          hasVisibleFiatMethod: false,
+        })
+      ).toBe('SOLUSDC');
+
+      expect(
+        resolveDealDefaultTokenID({
+          isDealBacked: true,
+          availableCryptoTokenIds: ['SOLUSDC', 'ETHUSDC'],
+          hasVisibleFiatMethod: false,
+        })
+      ).toBeUndefined();
+
+      expect(
+        resolveDealDefaultTokenID({
+          isDealBacked: true,
+          availableCryptoTokenIds: ['SOLUSDC'],
+          hasVisibleFiatMethod: true,
+        })
+      ).toBeUndefined();
+    });
+
+    it('replaces a stale token only when the current Deal has one valid choice', () => {
+      expect(
+        resolveDealDefaultTokenID({
+          isDealBacked: true,
+          currentTokenID: 'STALE',
+          availableCryptoTokenIds: ['SOLUSDC'],
+          hasVisibleFiatMethod: false,
+        })
+      ).toBe('SOLUSDC');
+      expect(
+        resolveDealDefaultTokenID({
+          isDealBacked: true,
+          currentTokenID: 'SOLUSDC',
+          availableCryptoTokenIds: ['SOLUSDC'],
+          hasVisibleFiatMethod: false,
+        })
+      ).toBeUndefined();
+    });
+
+    it('uses the first rating-sorted verified protection provider for a Deal', () => {
+      const candidates = [
+        { peerID: 'unverified', verified: false },
+        { peerID: 'recommended', verifiedMod: true },
+        { peerID: 'also-verified', verified: true },
+      ];
+
+      expect(
+        resolveDealDefaultProtectionProvider({
+          isDealBacked: true,
+          protectionEnabled: true,
+          isLoading: false,
+          candidates,
+        })
+      ).toEqual(candidates[1]);
+    });
+
+    it('preserves a current seller-listed provider and never defaults while loading', () => {
+      const candidates = [{ peerID: 'current', verified: false }];
+      expect(
+        resolveDealDefaultProtectionProvider({
+          isDealBacked: true,
+          protectionEnabled: true,
+          isLoading: false,
+          currentProviderPeerID: 'current',
+          candidates,
+        })
+      ).toBeUndefined();
+      expect(
+        resolveDealDefaultProtectionProvider({
+          isDealBacked: true,
+          protectionEnabled: true,
+          isLoading: true,
+          candidates: [{ peerID: 'verified', verified: true }],
+        })
+      ).toBeUndefined();
     });
   });
 

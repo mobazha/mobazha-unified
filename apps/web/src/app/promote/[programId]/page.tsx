@@ -34,6 +34,9 @@ export default function PromoteProgramPage() {
     programId,
     isAuthenticated
   );
+  const promotionWindowDays = promotion
+    ? (formatAttributionWindowDays(promotion.attributionWindowSeconds) ?? 1)
+    : undefined;
 
   const handleRequireAuth = useCallback(() => {
     if (!programId) return;
@@ -113,9 +116,12 @@ export default function PromoteProgramPage() {
               <div>
                 <dt className="text-muted-foreground">{t('promote.attributionWindow')}</dt>
                 <dd className="font-medium">
-                  {t('promote.windowDaysValue', {
-                    count: formatAttributionWindowDays(promotion.attributionWindowSeconds) ?? 1,
-                  })}
+                  {t(
+                    promotionWindowDays === 1
+                      ? 'promote.windowDayValue'
+                      : 'promote.windowDaysValue',
+                    { count: promotionWindowDays ?? 1 }
+                  )}
                 </dd>
               </div>
               <div>

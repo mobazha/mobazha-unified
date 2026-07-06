@@ -3459,6 +3459,7 @@ export interface TranslationResource {
       subtitle?: string;
       count?: string;
       addProduct?: string;
+      createProtectedLink?: string;
       searchPlaceholder?: string;
       filterAll?: string;
       filterActive?: string;
@@ -3953,6 +3954,30 @@ export interface TranslationResource {
     dealLinks?: {
       title?: string;
       subtitle?: string;
+      dealCreateTitle?: string;
+      dealCreateSubtitle?: string;
+      productLabel?: string;
+      productPlaceholder?: string;
+      noEligibleProducts?: string;
+      deliveryTypeLabel?: string;
+      deliveryDigitalFile?: string;
+      deliveryLicenseKey?: string;
+      deliveryFixedService?: string;
+      reviewDaysLabel?: string;
+      reviewDaysDigitalHint?: string;
+      reviewDaysServiceHint?: string;
+      dealCreateCta?: string;
+      dealCreateValidationError?: string;
+      dealCreateSuccess?: string;
+      dealCreateFailed?: string;
+      activeDealsTitle?: string;
+      copyDealCta?: string;
+      openDealCta?: string;
+      dealCopySuccess?: string;
+      dealCopyFailed?: string;
+      manualCopyLabel?: string;
+      showAllDeals?: string;
+      showFewerDeals?: string;
       immutableEconomicsTitle?: string;
       immutableEconomicsBody?: string;
       manualReviewOnlyNotice?: string;
@@ -5735,6 +5760,7 @@ export interface TranslationResource {
   sovereign?: TranslationSection;
 
   dealLink?: {
+    storeIdPrefix?: string;
     pageEyebrow?: string;
     loading?: string;
     notFoundTitle?: string;
@@ -5751,6 +5777,9 @@ export interface TranslationResource {
     quoteErrorDescription?: string;
     retry?: string;
     sellerFallback?: string;
+    productImageAlt?: string;
+    acceptedPaymentsLabel?: string;
+    acceptedPaymentsFallback?: string;
     termsTitle?: string;
     acceptanceWindow?: string;
     protectionWindow?: string;
@@ -5776,6 +5805,7 @@ export interface TranslationResource {
     paymentNeutralTitle?: string;
     paymentNeutralBody?: string;
     acceptCta?: string;
+    acceptCtaMobile?: string;
     accepting?: string;
     acceptFailed?: string;
     authRequiredHint?: string;
@@ -5816,6 +5846,7 @@ export interface TranslationResource {
     commissionRate?: string;
     commissionValue?: string;
     attributionWindow?: string;
+    windowDayValue?: string;
     windowDaysValue?: string;
     currency?: string;
     commissionsLinkTitle?: string;
@@ -5833,12 +5864,7 @@ export interface TranslationResource {
     promoterPageSubtitle?: string;
     disclosureTitle?: string;
     disclosureBody?: string;
-    notPayableNotice?: string;
     manualReviewOnlyNotice?: string;
-    manualReviewOnlyTitle?: string;
-    sellerEvidenceBody?: string;
-    promoterEvidenceBody?: string;
-    notPayableBadge?: string;
     loading?: string;
     loadFailed?: string;
     retry?: string;
@@ -5865,6 +5891,12 @@ export interface TranslationResource {
     statusDisputed?: string;
     statusReversed?: string;
     statusSettled?: string;
+    statusObservedDescription?: string;
+    statusPendingReviewDescription?: string;
+    statusDisputedDescription?: string;
+    statusReversedDescription?: string;
+    statusSettledDescription?: string;
+    detailsCta?: string;
     statusUnknown?: string;
     eligibilityAuditTitle?: string;
     eligibilityAuditHint?: string;

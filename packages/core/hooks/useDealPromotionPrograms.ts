@@ -10,9 +10,13 @@ import {
   listDealPromotionPrograms,
   pauseDealPromotionProgram,
 } from '../services/api/dealPromotion';
-import { listSellerDealLinks } from '../services/api/sellerDealLink';
+import {
+  activateSellerDealLink,
+  createSellerDealLink,
+  listSellerDealLinks,
+} from '../services/api/sellerDealLink';
 import type { DealPromotionProgram, DealPromotionProgramRequest } from '../types/dealPromotion';
-import type { SellerDealLink } from '../types/sellerDealLink';
+import type { SellerDealLink, SellerDealLinkRequest } from '../types/sellerDealLink';
 
 export interface UseDealPromotionProgramsReturn {
   programs: DealPromotionProgram[];
@@ -20,6 +24,7 @@ export interface UseDealPromotionProgramsReturn {
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
+  createActiveDealLink: (input: SellerDealLinkRequest) => Promise<SellerDealLink>;
   createProgram: (input: DealPromotionProgramRequest) => Promise<DealPromotionProgram>;
   activateProgram: (programId: string) => Promise<DealPromotionProgram>;
   pauseProgram: (programId: string) => Promise<DealPromotionProgram>;
@@ -69,6 +74,13 @@ export function useDealPromotionPrograms(enabled = true): UseDealPromotionProgra
     return created;
   }, []);
 
+  const createActiveDealLink = useCallback(async (input: SellerDealLinkRequest) => {
+    const draft = await createSellerDealLink(input);
+    const active = await activateSellerDealLink(draft.id);
+    setDealLinks(current => [active, ...current.filter(item => item.id !== active.id)]);
+    return active;
+  }, []);
+
   const activateProgram = useCallback(async (programId: string) => {
     setBusyProgramId(programId);
     try {
@@ -98,6 +110,7 @@ export function useDealPromotionPrograms(enabled = true): UseDealPromotionProgra
       loading,
       error,
       reload,
+      createActiveDealLink,
       createProgram,
       activateProgram,
       pauseProgram,
@@ -109,6 +122,7 @@ export function useDealPromotionPrograms(enabled = true): UseDealPromotionProgra
       loading,
       error,
       reload,
+      createActiveDealLink,
       createProgram,
       activateProgram,
       pauseProgram,

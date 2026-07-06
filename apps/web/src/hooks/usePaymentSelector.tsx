@@ -19,7 +19,12 @@ import {
   normalizeCheckoutPaymentPolicy,
   type CheckoutPaymentPolicy,
 } from '@mobazha/core';
-import { PaymentDrawer, Moderator } from '@/components/Payment';
+import {
+  getAvailableFiatProviderIDs,
+  getAvailablePaymentTokens,
+  PaymentDrawer,
+  Moderator,
+} from '@/components/Payment';
 
 type PaymentCategory = 'crypto' | 'fiat';
 
@@ -33,6 +38,7 @@ interface PaymentSelectorState {
   selectedTokenId?: string;
   selectedFiatProvider?: string;
   selectedModerator?: Moderator;
+  checkoutAcceptedCurrencies?: string[];
   checkoutPaymentPolicy: CheckoutPaymentPolicy;
 }
 
@@ -41,7 +47,10 @@ interface PaymentSelectorState {
  */
 interface PaymentSelectorContextValue extends PaymentSelectorState {
   availableFiatProviders: string[];
+  availableCryptoTokenIds: string[];
   acceptedCurrencies: string[];
+  moderators: Moderator[];
+  isLoadingModerators: boolean;
   showFiatCheckoutMethods: boolean;
   openPaymentSelector: (returnUrl?: string) => void;
   openModeratorSelector: (returnUrl?: string) => void;
@@ -51,6 +60,7 @@ interface PaymentSelectorContextValue extends PaymentSelectorState {
   setSelectedFiatProvider: (providerID: string) => void;
   setSelectedModerator: (moderator: Moderator) => void;
   setVendorPeerID: (peerID: string | undefined) => void;
+  setCheckoutAcceptedCurrencies: (currencies: string[] | undefined) => void;
   setCheckoutPaymentPolicy: (policy: CheckoutPaymentPolicy, orderID?: string) => void;
   restoreFromSession: (options?: {
     orderID?: string;
@@ -89,8 +99,8 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     autoFetch: true,
     vendorPeerID,
   });
-  const { activeFiat, crypto: acceptedCurrencies } = usePaymentMethods(vendorPeerID);
-  const availableFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
+  const { activeFiat, crypto: sellerAcceptedCurrencies } = usePaymentMethods(vendorPeerID);
+  const configuredFiatProviders = useMemo(() => activeFiat.map(p => p.providerID), [activeFiat]);
 
   const [state, setState] = useState<PaymentSelectorState>(() => {
     if (typeof window === 'undefined') {
@@ -101,6 +111,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
         selectedTokenId: undefined,
         selectedFiatProvider: undefined,
         selectedModerator: undefined,
+        checkoutAcceptedCurrencies: undefined,
         checkoutPaymentPolicy: 'all' as CheckoutPaymentPolicy,
       };
     }
@@ -112,8 +123,19 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
       isModeratorDrawerOpen: false,
       ...readInitialPaymentSelection(),
       selectedModerator: savedModeratorJson ? JSON.parse(savedModeratorJson) : undefined,
+      checkoutAcceptedCurrencies: undefined,
     };
   });
+
+  const acceptedCurrencies = state.checkoutAcceptedCurrencies ?? sellerAcceptedCurrencies;
+  const availableFiatProviders = useMemo(
+    () => getAvailableFiatProviderIDs(configuredFiatProviders, state.checkoutAcceptedCurrencies),
+    [configuredFiatProviders, state.checkoutAcceptedCurrencies]
+  );
+  const availableCryptoTokenIds = useMemo(
+    () => getAvailablePaymentTokens(acceptedCurrencies).map(token => token.id),
+    [acceptedCurrencies]
+  );
 
   const restoreFromSession = useCallback(
     (options?: { orderID?: string; paymentPolicy?: CheckoutPaymentPolicy }) => {
@@ -271,6 +293,13 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     }
   }, []);
 
+  const setCheckoutAcceptedCurrencies = useCallback((currencies: string[] | undefined) => {
+    const normalized = currencies
+      ? [...new Set(currencies.map(currency => currency.trim()).filter(Boolean))]
+      : undefined;
+    setState(prev => ({ ...prev, checkoutAcceptedCurrencies: normalized }));
+  }, []);
+
   const handleTokenSelect = useCallback(
     (tokenId: string) => {
       setSelectedTokenId(tokenId);
@@ -301,7 +330,10 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
   const contextValue: PaymentSelectorContextValue = {
     ...state,
     availableFiatProviders,
+    availableCryptoTokenIds,
     acceptedCurrencies,
+    moderators,
+    isLoadingModerators,
     showFiatCheckoutMethods,
     openPaymentSelector,
     openModeratorSelector,
@@ -311,6 +343,7 @@ export function PaymentSelectorProvider({ children }: { children: React.ReactNod
     setSelectedFiatProvider,
     setSelectedModerator,
     setVendorPeerID,
+    setCheckoutAcceptedCurrencies,
     setCheckoutPaymentPolicy,
     restoreFromSession,
   };

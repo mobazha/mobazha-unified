@@ -298,8 +298,12 @@ export {
 
 // Seller Deal Link API (authenticated hosting endpoints)
 export * as sellerDealLinkApi from './sellerDealLink';
-export type { SellerDealLink } from '../../types/sellerDealLink';
-export { listSellerDealLinks } from './sellerDealLink';
+export type { SellerDealLink, SellerDealLinkRequest } from '../../types/sellerDealLink';
+export {
+  activateSellerDealLink,
+  createSellerDealLink,
+  listSellerDealLinks,
+} from './sellerDealLink';
 
 // Store payment policy API
 export * as paymentPolicyApi from './paymentPolicy';

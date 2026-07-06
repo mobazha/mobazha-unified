@@ -199,6 +199,12 @@ export interface DisplayOrder {
   id: string;
   /** 订单 ID（用于显示，与 id 相同） */
   orderId: string;
+  /** Present when this order was accepted from a seller-authored Deal Link. */
+  dealLinkID?: string;
+  /** Immutable Deal Link revision accepted by the buyer. */
+  dealRevision?: number;
+  /** Hash of the immutable Deal Link terms snapshot. */
+  dealTermsHash?: string;
   /** 商品 slug（用于商品链接） */
   slug?: string;
   /** 订单状态 */

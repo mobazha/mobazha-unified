@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { initializeRuntimeConfig } from '@mobazha/core/config/runtimeConfig';
 
 import { PaymentCryptoSelector } from '@/components/Payment/PaymentCryptoSelector';
+import {
+  getAvailableFiatProviderIDs,
+  getAvailablePaymentTokens,
+} from '@/components/Payment/config';
 
 vi.mock('@/hooks/useMiniAppPayment', () => ({
   useMiniAppPayment: () => ({ isEmbedded: false }),
@@ -11,10 +15,12 @@ vi.mock('@/hooks/useMiniAppPayment', () => ({
 
 vi.mock('@mobazha/core', async () => {
   const tokens = await import('../../../../../packages/core/data/tokens');
+  const currencies = await import('../../../../../packages/core/data/currencies');
   const visibility = await import('../../../../../packages/core/config/paymentMethodVisibility');
   const guide = await import('../../../../../packages/core/config/exchangeUsdtPaymentGuide');
   return {
     ...tokens,
+    ...currencies,
     ...visibility,
     ...guide,
     useI18n: () => ({
@@ -56,10 +62,27 @@ describe('PaymentCryptoSelector', () => {
           methods: [
             { id: 'BSC', kind: 'crypto', flow: 'external-wallet' },
             { id: 'BASE', kind: 'crypto', flow: 'external-wallet' },
+            { id: 'ETH', kind: 'crypto', flow: 'external-wallet' },
           ],
         },
       },
     });
+  });
+
+  it('resolves the signed Deal currency to the same single visible token used by the selector', () => {
+    expect(getAvailablePaymentTokens(['ETH']).map(token => token.id)).toEqual(['ETH']);
+  });
+
+  it('keeps fiat providers inside the signed Deal currency set', () => {
+    expect(getAvailableFiatProviderIDs(['stripe', 'paypal'], ['fiat:stripe:USD'])).toEqual([
+      'stripe',
+    ]);
+    expect(getAvailableFiatProviderIDs(['stripe'], ['ETH'])).toEqual([]);
+    expect(getAvailableFiatProviderIDs(['stripe', 'paypal'], ['USD'])).toEqual([
+      'stripe',
+      'paypal',
+    ]);
+    expect(getAvailableFiatProviderIDs(['stripe'], undefined)).toEqual(['stripe']);
   });
 
   it('shows native BNB when accepted payment methods contain the BSC chain id', () => {

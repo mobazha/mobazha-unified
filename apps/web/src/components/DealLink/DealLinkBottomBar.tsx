@@ -38,7 +38,7 @@ export function DealLinkBottomBar({
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
         <div>
           <div className="text-xs text-muted-foreground">{t('dealLink.buyerTotal')}</div>
-          <div className="text-lg font-semibold text-primary tabular-nums">
+          <div className="whitespace-nowrap text-lg font-semibold text-primary tabular-nums">
             {formatPrice(total, currency)}
           </div>
         </div>
@@ -57,7 +57,7 @@ export function DealLinkBottomBar({
               {t('dealLink.accepting')}
             </>
           ) : (
-            t('dealLink.acceptCta')
+            t('dealLink.acceptCtaMobile')
           )}
         </Button>
       </div>

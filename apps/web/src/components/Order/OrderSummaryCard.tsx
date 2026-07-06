@@ -39,6 +39,7 @@ export interface OrderSummaryCardProps {
   vendor: OrderSummaryVendor;
   shippingAddress?: OrderSummaryAddress;
   memo?: string;
+  compact?: boolean;
   className?: string;
 }
 
@@ -61,6 +62,7 @@ export function OrderSummaryCard({
   vendor,
   shippingAddress,
   memo,
+  compact = false,
   className,
 }: OrderSummaryCardProps) {
   const { t } = useI18n();
@@ -68,9 +70,9 @@ export function OrderSummaryCard({
 
   return (
     <Card className={cn(className)}>
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className={compact ? 'p-4' : 'p-4 sm:p-6'}>
         {/* Header */}
-        <HStack justify="between" align="center" className="mb-4">
+        <HStack justify="between" align="center" className={compact ? 'mb-3' : 'mb-4'}>
           <h2 className="text-base sm:text-lg font-semibold text-foreground">
             {t('order.orderSummary')}
           </h2>
@@ -80,7 +82,10 @@ export function OrderSummaryCard({
         </HStack>
 
         {/* Items */}
-        <VStack gap="sm" className="mb-4 pb-4 border-b border-border">
+        <VStack
+          gap="sm"
+          className={cn('border-b border-border', compact ? 'mb-3 pb-3' : 'mb-4 pb-4')}
+        >
           {items.map(item => {
             const productHref = resolveOrderItemProductHref(item, vendor.peerID);
             const content = (
@@ -135,7 +140,7 @@ export function OrderSummaryCard({
         </VStack>
 
         {/* Vendor */}
-        <div className="mb-4 pb-4 border-b border-border">
+        <div className={cn(!compact && 'mb-4 border-b border-border pb-4')}>
           <p className="text-xs text-muted-foreground mb-2">{t('order.seller')}</p>
           <Link
             href={vendor.peerID ? `/store/${vendor.peerID}` : '#'}
@@ -144,11 +149,6 @@ export function OrderSummaryCard({
             <Avatar src={vendor.avatar} name={vendor.name} size="md" />
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{vendor.name}</p>
-              {vendor.peerID && (
-                <p className="text-xs text-muted-foreground truncate">
-                  {vendor.peerID.slice(0, 16)}...
-                </p>
-              )}
             </div>
           </Link>
         </div>

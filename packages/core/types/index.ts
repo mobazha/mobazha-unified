@@ -510,6 +510,7 @@ export type {
   DealLinkStatus,
   DealLinkTerms,
   PublicDealLink,
+  PublicDealLinkCatalog,
 } from './dealLink';
 
 export type {
@@ -530,7 +531,7 @@ export type {
   DealCommissionStatementStatus,
 } from './dealCommissionStatement';
 
-export type { SellerDealLink } from './sellerDealLink';
+export type { SellerDealLink, SellerDealLinkRequest } from './sellerDealLink';
 
 // Digital asset types (Supply Chain Phase 1.0 — Core MVP)
 export type {
